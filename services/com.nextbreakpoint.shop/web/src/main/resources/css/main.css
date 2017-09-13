@@ -1,0 +1,102 @@
+body {
+    font-size: 12pt;
+    color: #080808;
+}
+
+header {
+    position: relative;
+    padding: 4%;
+    border-bottom: 1pt solid #e0e0e0;
+    margin-bottom: 4%;
+}
+
+footer {
+    position: relative;
+    padding: 4%;
+    border-top: 1pt solid #e0e0e0;
+    margin-top: 4%;
+    text-align: center;
+}
+
+.designs-grid-container {
+    position: relative;
+    text-align: center;
+    padding: 2% 5% 2% 5%;
+}
+
+.designs-grid-container .designs-grid-element {
+    position: relative;
+    display: inline-block;
+    margin: 3%;
+}
+
+.designs-grid-element-image {
+    position: relative;
+    display: inline-block;
+    width: 256px;
+    height: 256px;
+    border-radius: 3%;
+    border: 1pt solid #e0e0e0;
+}
+
+.design-container {
+    position: relative;
+    text-align: center;
+    padding: 10% 2% 10% 2%;
+}
+
+.design-image {
+    position: relative;
+    display: inline-block;
+    text-align: center;
+    width: 100%;
+    border-radius: 3%;
+    border: 1.5pt solid #e0e0e0;
+}
+
+.design-script {
+    padding: 3%;
+    border-radius: 2%;
+    border: 1pt solid #e0e0e0;
+    margin: 2%;
+    text-align: left;
+}
+
+.design-preview-container {
+    position: relative;
+    text-align: center;
+    padding: 1%;
+}
+
+.design-preview {
+    min-height: 800px;
+    position: relative;
+}
+
+.anchor-left {
+    left: 0;
+}
+
+.anchor-right {
+    right: 0;
+}
+
+.anchor-top {
+    top: 0;
+}
+
+.anchor-bottom {
+    bottom: 0;
+}
+
+a, a:active, a:hover, a:visited {
+    color: #222222;
+}
+
+.leaflet-container {
+    width: 100%;
+    position: relative;
+    display: inline-block;
+    margin: 0px;
+}
+

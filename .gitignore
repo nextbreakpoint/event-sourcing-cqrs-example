@@ -1,0 +1,8 @@
+*.jceks
+*.jks
+*.crt
+*.key
+*.iml
+**/.idea
+**/.vertx
+**/node_modules

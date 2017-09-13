@@ -1,0 +1,50 @@
+package com.nextbreakpoint.shop.common;
+
+import io.vertx.core.json.JsonObject;
+import io.vertx.rxjava.core.Vertx;
+import io.vertx.rxjava.ext.auth.jwt.JWTAuth;
+import io.vertx.rxjava.ext.web.Cookie;
+
+import java.util.List;
+
+public class TestHelper {
+    private TestHelper() {}
+
+    public static String makeAuthorization(String user, List<String> authorities) {
+        Vertx vertx = Vertx.vertx();
+
+        try {
+            final JWTAuth jwtProvider = createJWTProvider(vertx);
+
+            return "Bearer " + Authentication.generateToken(jwtProvider, user, authorities);
+        } finally {
+            vertx.close();
+        }
+    }
+
+    public static Cookie makeCookie(String user, List<String> authorities, String domain) {
+        Vertx vertx = Vertx.vertx();
+
+        try {
+            final JWTAuth jwtProvider = createJWTProvider(vertx);
+
+            final Cookie cookie = Authentication.createCookie(Authentication.generateToken(jwtProvider, user, authorities), domain);
+
+            return cookie;
+        } finally {
+            vertx.close();
+        }
+    }
+
+    private static JWTAuth createJWTProvider(Vertx vertx) {
+        final JsonObject keyStoreObject = new JsonObject()
+                .put("path", "../keystores/keystore-auth.jceks")
+                .put("type", "jceks")
+                .put("password", "secret");
+
+        final JsonObject config = new JsonObject()
+                .put("keyStore", keyStoreObject);
+
+        return JWTAuth.create(vertx, config);
+    }
+}

@@ -1,1 +1,1 @@
-# example-online-shop
+# example-images-shop

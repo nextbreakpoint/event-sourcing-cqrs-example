@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-service
+  namespace: default
+  labels:
+    app: auth-service
+spec:
+  ports:
+    - port: 3000
+      name: auth-service
+  selector:
+    app: auth-service
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: auth-service
+  namespace: default
+  labels:
+    app: auth-service
+spec:
+  template:
+    metadata:
+      name: auth-service
+      namespace: default
+      labels:
+        app: auth-service
+    spec:
+      containers:
+      - image: docker/auth-service:1.0.0
+        name: auth-service
+        volumeMounts:
+        - name: auth-service-config
+          mountPath: /config
+          readOnly: true
+        - name: keystores
+          mountPath: /keystores
+          readOnly: true
+      volumes:
+      - name: auth-service-config
+        secret:
+          secretName: auth-service-config
+      - name: keystores
+        secret:
+          secretName: keystores

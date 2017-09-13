@@ -1,0 +1,19 @@
+apiVersion: extensions/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: permissive
+  namespace: default
+spec:
+  seLinux:
+    rule: RunAsAny
+  supplementalGroups:
+    rule: RunAsAny
+  runAsUser:
+    rule: RunAsAny
+  fsGroup:
+    rule: RunAsAny
+  hostPorts:
+  - min: 8000
+    max: 8080
+  volumes:
+  - '*'

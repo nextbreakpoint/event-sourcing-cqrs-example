@@ -1,0 +1,4 @@
+DROP DATABASE IF EXISTS `accounts`;
+DROP DATABASE IF EXISTS `designs`;
+CREATE DATABASE `accounts`;
+CREATE DATABASE `designs`;

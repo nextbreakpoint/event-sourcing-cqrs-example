@@ -1,0 +1,27 @@
+{
+  "host_port": 3001,
+
+  "server_keystore_path": "../keystores/keystore-server.jks",
+  "server_keystore_secret": "secret",
+
+  "jwt_keystore_path": "../keystores/keystore-auth.jceks",
+  "jwt_keystore_type": "jceks",
+  "jwt_keystore_secret": "secret",
+
+  "web_url": "https://localhost:8080",
+
+  "jdbc_url": "jdbc:hsqldb:mem:test?shutdown=true;user=root;password=root",
+  "jdbc_driver": "org.hsqldb.jdbcDriver",
+  "jdbc_username": "root",
+  "jdbc_password": "root",
+  "jdbc_liquibase_username": "root",
+  "jdbc_liquibase_password": "root",
+  "jdbc_max_pool_size": 200,
+  "jdbc_min_pool_size": 20,
+
+  "graphite_reporter_enabled": false,
+  "graphite_host": "localhost",
+  "graphite_port": 2003,
+
+  "max_execution_time_in_millis": 30000
+}

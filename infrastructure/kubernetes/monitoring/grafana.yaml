@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana-server
+  namespace: default
+  labels:
+    app: grafana
+spec:
+  ports:
+  - name: grafana
+    port: 3000
+    nodePort: 32000
+    protocol: TCP
+  type: NodePort
+  selector:
+    app: grafana
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: grafana-server
+  namespace: default
+  labels:
+    app: grafana
+spec:
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      name: grafana-server
+      namespace: default
+      labels:
+        app: grafana
+    spec:
+      containers:
+      - image: grafana/grafana
+        name: grafana-server

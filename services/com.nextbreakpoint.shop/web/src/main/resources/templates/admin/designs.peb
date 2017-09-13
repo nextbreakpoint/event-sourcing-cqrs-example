@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>List of published designs</title>
+        <meta charset="UTF-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons"/>
+        <link rel="stylesheet" href="/css/materialize.min.css" media="screen,projection"/>
+        <link rel="stylesheet" href="/css/main.css" media="screen,projection"/>
+        <script type="text/javascript" src="/js/jquery-3.1.1.min.js"></script>
+        <script type="text/javascript" src="/js/materialize.min.js"></script>
+    </head>
+    <body>
+        <div id="app-designs"></div>
+        <script type="text/javascript" src="/js/designs.js"></script>
+    </body>
+</html>

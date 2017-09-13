@@ -1,0 +1,31 @@
+{
+  "host_port": 8080,
+
+  "server_keystore_path": "/keystores/keystore-server.jks",
+  "server_keystore_secret": "secret",
+
+  "client_keystore_path": "/keystores/keystore-client.jks",
+  "client_keystore_secret": "secret",
+
+  "client_truststore_path": "/keystores/truststore-client.jks",
+  "client_truststore_secret": "secret",
+
+  "client_verify_host": false,
+
+  "jwt_keystore_path": "/keystores/keystore-auth.jceks",
+  "jwt_keystore_type": "jceks",
+  "jwt_keystore_secret": "secret",
+
+  "web_url": "https://nginx.nextbreakpoint.com:32443",
+
+  "auth_url": "https://nginx.nextbreakpoint.com:32443",
+  
+  "designs_url": "https://designs-service:3001",
+  "accounts_url": "https://accounts-service:3002",
+
+  "csrf_secret": "tshirts",
+
+  "graphite_reporter_enabled": true,
+  "graphite_host": "graphite-server",
+  "graphite_port": 2003
+}

@@ -6,3 +6,11 @@
 **/.idea
 **/.vertx
 **/node_modules
+*.tfstate
+*.tfstate.backup
+*.pem
+*.pub
+config_vars.json
+config.tfvars
+terraform.tfstate*
+.terraform

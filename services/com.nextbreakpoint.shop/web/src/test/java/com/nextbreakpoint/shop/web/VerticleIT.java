@@ -9,6 +9,7 @@ import com.nextbreakpoint.shop.common.Authority;
 import com.nextbreakpoint.shop.common.TestHelper;
 import com.xebialabs.restito.server.StubServer;
 import io.vertx.rxjava.ext.web.Cookie;
+import org.apache.http.annotation.NotThreadSafe;
 import org.glassfish.grizzly.http.util.HttpStatus;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -21,12 +22,16 @@ import org.junit.runner.RunWith;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.UUID;
 
 import static com.jayway.restassured.RestAssured.given;
+import static com.nextbreakpoint.shop.common.TimeUtil.TIMESTAMP_PATTERN;
 import static com.xebialabs.restito.builder.stub.StubHttp.whenHttp;
 import static com.xebialabs.restito.semantics.Action.contentType;
+import static com.xebialabs.restito.semantics.Action.header;
 import static com.xebialabs.restito.semantics.Action.status;
 import static com.xebialabs.restito.semantics.Action.stringContent;
 import static com.xebialabs.restito.semantics.Condition.get;
@@ -37,6 +42,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 @RunWith(JUnitPlatform.class)
 @Tag("slow")
 @DisplayName("Web service")
+@NotThreadSafe
 public class VerticleIT {
   private static RestAssuredConfig restAssuredConfig;
 
@@ -80,9 +86,11 @@ public class VerticleIT {
   public void shouldReturnHTMLWhenRequestingDesignsContentPageWithoutToken() throws MalformedURLException {
     final UUID uuid = UUID.randomUUID();
 
+    final Date date = new Date();
+
     whenHttp(stubServer)
             .match(get("/designs"), withHeader("accept", "application/json"))
-            .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("[\"" + uuid + "\"]"));
+            .then(status(HttpStatus.OK_200), header("X-Modified", "" + date.getTime()), contentType("application/json"), stringContent("[\"" + uuid + "\"]"));
 
     given().config(restAssuredConfig)
             .when().get(makeBaseURL("/content/designs"))
@@ -95,9 +103,13 @@ public class VerticleIT {
   public void shouldReturnHTMLWhenRequestingPreviewContentPageWithoutToken() throws MalformedURLException {
     final UUID uuid = UUID.randomUUID();
 
+    final SimpleDateFormat df = new SimpleDateFormat(TIMESTAMP_PATTERN);
+
+    final Date date = new Date();
+
     whenHttp(stubServer)
             .match(get("/designs/" + uuid), withHeader("accept", "application/json"))
-            .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"uuid\":\"" + uuid + "\"}"));
+            .then(status(HttpStatus.OK_200), header("X-Modified", "" + date.getTime()), contentType("application/json"), stringContent("{\"uuid\":\"" + uuid + "\",\"created\":\"" + df.format(date) + "\",\"updated\":\"" + df.format(date) + "\"}"));
 
     given().config(restAssuredConfig)
             .when().get(makeBaseURL("/content/designs/" + uuid))
@@ -108,13 +120,20 @@ public class VerticleIT {
   @Test
   @DisplayName("should return HTML when requesting designs content page with token")
   public void shouldReturnHTMLWhenRequestingDesignsContentPageWithToken() throws MalformedURLException {
-    final UUID uuid = UUID.randomUUID();
+    final UUID designUuid = UUID.randomUUID();
+    final UUID accountUuid = UUID.randomUUID();
+
+    final Date date = new Date();
 
     whenHttp(stubServer)
             .match(get("/designs"), withHeader("accept", "application/json"))
-            .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("[\"" + uuid + "\"]"));
+            .then(status(HttpStatus.OK_200), header("X-Modified", "" + date.getTime()), contentType("application/json"), stringContent("[\"" + designUuid + "\"]"));
 
-    final Cookie cookie = TestHelper.makeCookie("test", Arrays.asList(Authority.GUEST), "localhost");
+    whenHttp(stubServer)
+            .match(get("/accounts/" + accountUuid), withHeader("accept", "application/json"))
+            .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"name\":\"test\",\"role\":\"guest\",\"uuid\":\"" + accountUuid + "\"}"));
+
+    final Cookie cookie = TestHelper.makeCookie(accountUuid.toString(), Arrays.asList(Authority.GUEST), "localhost");
 
     given().config(restAssuredConfig)
             .with().cookie("token", cookie.getValue())
@@ -126,17 +145,26 @@ public class VerticleIT {
   @Test
   @DisplayName("should return HTML when requesting preview content page with token")
   public void shouldReturnHTMLWhenRequestingPreviewContentPageWithToken() throws MalformedURLException {
-    final UUID uuid = UUID.randomUUID();
+    final UUID designUuid = UUID.randomUUID();
+    final UUID accountUuid = UUID.randomUUID();
+
+    final SimpleDateFormat df = new SimpleDateFormat(TIMESTAMP_PATTERN);
+
+    final Date date = new Date();
 
     whenHttp(stubServer)
-            .match(get("/designs/" + uuid), withHeader("accept", "application/json"))
-            .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"uuid\":\"" + uuid + "\"}"));
+            .match(get("/designs/" + designUuid), withHeader("accept", "application/json"))
+            .then(status(HttpStatus.OK_200), header("X-Modified", "" + date.getTime()), contentType("application/json"), stringContent("{\"uuid\":\"" + designUuid + "\",\"created\":\"" + df.format(date) + "\",\"updated\":\"" + df.format(date) + "\"}"));
 
-    final Cookie cookie = TestHelper.makeCookie("test", Arrays.asList(Authority.GUEST), "localhost");
+    whenHttp(stubServer)
+            .match(get("/accounts/" + accountUuid), withHeader("accept", "application/json"))
+            .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"name\":\"test\",\"role\":\"guest\",\"uuid\":\"" + accountUuid + "\"}"));
+
+    final Cookie cookie = TestHelper.makeCookie(accountUuid.toString(), Arrays.asList(Authority.GUEST), "localhost");
 
     given().config(restAssuredConfig)
             .with().cookie("token", cookie.getValue())
-            .when().get(makeBaseURL("/content/designs/" + uuid))
+            .when().get(makeBaseURL("/content/designs/" + designUuid))
             .then().assertThat().statusCode(200)
             .and().contentType(ContentType.HTML);
   }

@@ -10,12 +10,12 @@
 
   "web_url": "https://localhost:8080",
 
-  "jdbc_url": "jdbc:hsqldb:mem:test?shutdown=true;user=root;password=root",
+  "jdbc_url": "jdbc:hsqldb:mem:test?shutdown=true;user=test;password=password",
   "jdbc_driver": "org.hsqldb.jdbcDriver",
-  "jdbc_username": "root",
-  "jdbc_password": "root",
-  "jdbc_liquibase_username": "root",
-  "jdbc_liquibase_password": "root",
+  "jdbc_username": "test",
+  "jdbc_password": "password",
+  "jdbc_liquibase_username": "test",
+  "jdbc_liquibase_password": "password",
   "jdbc_max_pool_size": 200,
   "jdbc_min_pool_size": 20,
 

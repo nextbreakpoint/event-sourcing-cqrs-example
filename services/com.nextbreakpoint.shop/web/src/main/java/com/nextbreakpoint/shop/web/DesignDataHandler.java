@@ -43,7 +43,7 @@ public class DesignDataHandler implements Handler<RoutingContext> {
             request.putHeader(AUTHORIZATION, token);
         }
 
-      request.putHeader(ACCEPT, APPLICATION_JSON).rxSend()
+        request.putHeader(ACCEPT, APPLICATION_JSON).rxSend()
               .subscribe(response -> handleDesign(routingContext, response), e -> routingContext.fail(Failure.requestFailed(e)));
     }
 
@@ -75,6 +75,8 @@ public class DesignDataHandler implements Handler<RoutingContext> {
 
             routingContext.next();
         } catch (Exception e) {
+            e.printStackTrace();
+
             routingContext.fail(Failure.requestFailed(e));
         }
     }

@@ -13,6 +13,7 @@ import java.util.UUID;
 import static com.nextbreakpoint.shop.common.ContentType.APPLICATION_JSON;
 import static com.nextbreakpoint.shop.common.Headers.CONTENT_TYPE;
 import static com.nextbreakpoint.shop.common.Headers.MODIFIED;
+import static com.nextbreakpoint.shop.common.TimeUtil.TIMESTAMP_EXT_PATTERN;
 import static com.nextbreakpoint.shop.common.TimeUtil.TIMESTAMP_PATTERN;
 
 public class GetDesignHandler implements Handler<RoutingContext> {
@@ -27,6 +28,8 @@ public class GetDesignHandler implements Handler<RoutingContext> {
         try {
             processGetDesign(routingContext);
         } catch (Exception e) {
+            e.printStackTrace();
+
             routingContext.fail(Failure.requestFailed(e));
         }
     }
@@ -52,7 +55,8 @@ public class GetDesignHandler implements Handler<RoutingContext> {
                 final String metadata = parsedJson.getString("metadata");
                 final String script = parsedJson.getString("script");
 
-                final SimpleDateFormat df = new SimpleDateFormat(TIMESTAMP_PATTERN);
+
+                final SimpleDateFormat df = new SimpleDateFormat(updated.length() > 20 ? TIMESTAMP_EXT_PATTERN : TIMESTAMP_PATTERN);
 
                 final Date modifiedValue = df.parse(updated);
 

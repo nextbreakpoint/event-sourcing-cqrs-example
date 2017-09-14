@@ -22,6 +22,8 @@ public class DeleteAccountHandler implements Handler<RoutingContext> {
         try {
             processRemoveAccount(routingContext);
         } catch (Exception e) {
+            e.printStackTrace();
+
             routingContext.fail(Failure.requestFailed(e));
         }
     }

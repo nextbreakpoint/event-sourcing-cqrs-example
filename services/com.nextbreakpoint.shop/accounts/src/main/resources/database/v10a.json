@@ -24,6 +24,11 @@
                   "dbms": {
                     "type": "hsqldb"
                   }
+                },
+                {
+                  "runningAs": {
+                    "username": "test"
+                  }
                 }
               ]
             }

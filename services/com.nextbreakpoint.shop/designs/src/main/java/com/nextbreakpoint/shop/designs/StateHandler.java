@@ -27,6 +27,8 @@ public abstract class StateHandler implements Handler<RoutingContext> {
         try {
             processState(routingContext);
         } catch (Exception e) {
+            e.printStackTrace();
+
             routingContext.fail(Failure.requestFailed(e));
         }
     }

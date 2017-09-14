@@ -5,6 +5,7 @@ import com.jayway.restassured.config.RedirectConfig;
 import com.jayway.restassured.config.RestAssuredConfig;
 import com.jayway.restassured.config.SSLConfig;
 import com.xebialabs.restito.server.StubServer;
+import org.apache.http.annotation.NotThreadSafe;
 import org.glassfish.grizzly.http.util.HttpStatus;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -36,9 +37,11 @@ import static org.hamcrest.CoreMatchers.startsWith;
 @RunWith(JUnitPlatform.class)
 @Tag("slow")
 @DisplayName("Auth service")
+@NotThreadSafe
 public class VerticleIT {
   private static final String OAUTH_TOKEN_PATH = "/login/oauth/access_token";
-  private static final String OAUTH_USER_PATH = "/user/emails";
+  private static final String OAUTH_USER_PATH = "/user";
+  private static final String OAUTH_USER_EMAILS_PATH = "/user/emails";
   private static final String ACCOUNTS_PATH = "/accounts";
   private static final String SOME_UUID = new UUID(0, 1).toString();
 
@@ -97,6 +100,10 @@ public class VerticleIT {
 
     whenHttp(stubServer)
             .match(get(OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"))
+            .then(status(HttpStatus.OK_200), stringContent("{\"name\":\"test\"}"));
+
+    whenHttp(stubServer)
+            .match(get(OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
             .then(status(HttpStatus.OK_200), stringContent("[{\"email\":\"test@localhost\", \"primary\":true}]"));
 
     whenHttp(stubServer)
@@ -109,15 +116,15 @@ public class VerticleIT {
 
     given().config(restAssuredConfig)
             .with().param("code", "xxx")
-            .and().param("state", "/auth/signin/designs")
+            .and().param("state", "/auth/signin/content/designs")
             .when().get(makeBaseURL("/auth/callback"))
             .then().assertThat().statusCode(303)
             .and().header("Location", startsWith("https://localhost:8080/content/designs"));
 
     verifyHttp(stubServer).once(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
+            .then().once(get(OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
             .then().once(get(OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"))
-            .then().once(get(ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"))
-            .then().once(post(ACCOUNTS_PATH), withPostBody(), withHeader("Authorization"));
+            .then().once(post(ACCOUNTS_PATH), withPostBody(), withHeader("authorization"));
   }
 
   @Test
@@ -128,7 +135,7 @@ public class VerticleIT {
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"access_token\":\"abcdef\"}"));
 
     whenHttp(stubServer)
-            .match(get(OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"))
+            .match(get(OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
             .then(status(HttpStatus.OK_200), stringContent("[{\"email\":\"test@localhost\", \"primary\":true}]"));
 
     whenHttp(stubServer)
@@ -141,13 +148,14 @@ public class VerticleIT {
 
     given().config(restAssuredConfig)
             .with().param("code", "xxx")
-            .and().param("state", "/auth/signin/designs")
+            .and().param("state", "/auth/signin/content/designs")
             .when().get(makeBaseURL("/auth/callback"))
             .then().assertThat().statusCode(303)
             .and().header("Location", startsWith("https://localhost:8080/content/designs"));
 
     verifyHttp(stubServer).once(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
-            .then().once(get(OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"))
+            .then().once(get(OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
+            .then().never(get(OAUTH_USER_PATH))
             .then().once(get(ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"))
             .then().once(get(ACCOUNTS_PATH + "/" + SOME_UUID));
   }
@@ -161,13 +169,13 @@ public class VerticleIT {
 
     given().config(restAssuredConfig)
             .with().param("code", "xxx")
-            .and().param("state", "/auth/signin/designs")
+            .and().param("state", "/auth/signin/content/designs")
             .when().get(makeBaseURL("/auth/callback"))
             .then().assertThat().statusCode(303)
             .and().header("Location", startsWith("https://localhost:8080/error/500"));
 
     verifyHttp(stubServer).once(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
-            .then().never(get(OAUTH_USER_PATH));
+            .then().never(get(OAUTH_USER_EMAILS_PATH));
   }
 
   @Test
@@ -178,18 +186,19 @@ public class VerticleIT {
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"access_token\":\"abcdef\"}"));
 
     whenHttp(stubServer)
-            .match(get(OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"))
+            .match(get(OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
             .then(status(HttpStatus.INTERNAL_SERVER_ERROR_500));
 
     given().config(restAssuredConfig)
             .with().param("code", "xxx")
-            .and().param("state", "/auth/signin/designs")
+            .and().param("state", "/auth/signin/content/designs")
             .when().get(makeBaseURL("/auth/callback"))
             .then().assertThat().statusCode(303)
             .and().header("Location", startsWith("https://localhost:8080/error/403"));
 
     verifyHttp(stubServer).once(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
-            .then().once(get(OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"))
+            .then().once(get(OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
+            .then().never(get(OAUTH_USER_PATH))
             .then().never(post(ACCOUNTS_PATH));
   }
 
@@ -201,7 +210,7 @@ public class VerticleIT {
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"access_token\":\"abcdef\"}"));
 
     whenHttp(stubServer)
-            .match(get(OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"))
+            .match(get(OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
             .then(status(HttpStatus.OK_200), stringContent("[{\"email\":\"test@localhost\", \"primary\":true}]"));
 
     whenHttp(stubServer)
@@ -210,13 +219,14 @@ public class VerticleIT {
 
     given().config(restAssuredConfig)
             .with().param("code", "xxx")
-            .and().param("state", "/auth/signin/designs")
+            .and().param("state", "/auth/signin/content/designs")
             .when().get(makeBaseURL("/auth/callback"))
             .then().assertThat().statusCode(303)
             .and().header("Location", startsWith("https://localhost:8080/error/403"));
 
     verifyHttp(stubServer).once(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
-            .then().once(get(OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"))
+            .then().once(get(OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
+            .then().never(get(OAUTH_USER_PATH))
             .then().once(get(ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"))
             .then().never(post(ACCOUNTS_PATH));
   }
@@ -229,7 +239,7 @@ public class VerticleIT {
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"access_token\":\"abcdef\"}"));
 
     whenHttp(stubServer)
-            .match(get(OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"))
+            .match(get(OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
             .then(status(HttpStatus.OK_200), stringContent("[{\"email\":\"test@localhost\", \"primary\":true}]"));
 
     whenHttp(stubServer)
@@ -238,13 +248,14 @@ public class VerticleIT {
 
     given().config(restAssuredConfig)
             .with().param("code", "xxx")
-            .and().param("state", "/auth/signin/designs")
+            .and().param("state", "/auth/signin/content/designs")
             .when().get(makeBaseURL("/auth/callback"))
             .then().assertThat().statusCode(303)
             .and().header("Location", startsWith("https://localhost:8080/error/500"));
 
     verifyHttp(stubServer).once(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
-            .then().once(get(OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"))
+            .then().once(get(OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
+            .then().never(get(OAUTH_USER_PATH))
             .then().once(get(ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"))
             .then().never(post(ACCOUNTS_PATH));
   }
@@ -258,6 +269,10 @@ public class VerticleIT {
 
     whenHttp(stubServer)
             .match(get(OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"))
+            .then(status(HttpStatus.OK_200), stringContent("{\"name\":\"test\"}"));
+
+    whenHttp(stubServer)
+            .match(get(OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
             .then(status(HttpStatus.OK_200), stringContent("[{\"email\":\"test@localhost\", \"primary\":true}]"));
 
     whenHttp(stubServer)
@@ -270,14 +285,14 @@ public class VerticleIT {
 
     given().config(restAssuredConfig)
             .with().param("code", "xxx")
-            .and().param("state", "/auth/signin/designs")
+            .and().param("state", "/auth/signin/content/designs")
             .when().get(makeBaseURL("/auth/callback"))
             .then().assertThat().statusCode(303)
             .and().header("Location", startsWith("https://localhost:8080/error/403"));
 
     verifyHttp(stubServer).once(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
+            .then().once(get(OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
             .then().once(get(OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"))
-            .then().once(get(ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"))
             .then().once(post(ACCOUNTS_PATH), withPostBody(), withHeader("Authorization"));
   }
 
@@ -289,7 +304,11 @@ public class VerticleIT {
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"access_token\":\"abcdef\"}"));
 
     whenHttp(stubServer)
-            .match(get(OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"))
+            .match(get(OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
+            .then(status(HttpStatus.OK_200), stringContent("[{\"name\":\"test\"}]"));
+
+    whenHttp(stubServer)
+            .match(get(OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
             .then(status(HttpStatus.OK_200), stringContent("[{\"email\":\"test@localhost\", \"primary\":true}]"));
 
     whenHttp(stubServer)
@@ -302,13 +321,14 @@ public class VerticleIT {
 
     given().config(restAssuredConfig)
             .with().param("code", "xxx")
-            .and().param("state", "/auth/signin/designs")
+            .and().param("state", "/auth/signin/content/designs")
             .when().get(makeBaseURL("/auth/callback"))
             .then().assertThat().statusCode(303)
             .and().header("Location", startsWith("https://localhost:8080/error/403"));
 
     verifyHttp(stubServer).once(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
-            .then().once(get(OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"))
+            .then().once(get(OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
+            .then().never(get(OAUTH_USER_PATH))
             .then().once(get(ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"))
             .then().once(get(ACCOUNTS_PATH + "/" + SOME_UUID));
   }
@@ -321,7 +341,7 @@ public class VerticleIT {
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"access_token\":\"abcdef\"}"));
 
     whenHttp(stubServer)
-            .match(get(OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"))
+            .match(get(OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
             .then(status(HttpStatus.OK_200), stringContent("[{\"email\":\"test@localhost\", \"primary\":true}]"));
 
     whenHttp(stubServer)
@@ -334,7 +354,7 @@ public class VerticleIT {
 
     given().config(restAssuredConfig)
             .with().param("code", "xxx")
-            .and().param("state", "/auth/signin/designs")
+            .and().param("state", "/auth/signin/content/designs")
             .when().get(makeBaseURL("/auth/callback"))
             .then().assertThat().statusCode(303)
             .and().header("Location", startsWith("https://localhost:8080/error/403"));
@@ -345,13 +365,14 @@ public class VerticleIT {
 
     given().config(restAssuredConfig)
             .with().param("code", "xxx")
-            .and().param("state", "/auth/signin/designs")
+            .and().param("state", "/auth/signin/content/designs")
             .when().get(makeBaseURL("/auth/callback"))
             .then().assertThat().statusCode(303)
             .and().header("Location", startsWith("https://localhost:8080/error/403"));
 
     verifyHttp(stubServer).times(2, post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
-            .then().once(get(OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"))
+            .then().once(get(OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
+            .then().never(get(OAUTH_USER_PATH))
             .then().once(get(ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"))
             .then().once(get(ACCOUNTS_PATH + "/" + SOME_UUID));
   }
@@ -364,7 +385,7 @@ public class VerticleIT {
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"access_token\":\"abcdef\"}"));
 
     whenHttp(stubServer)
-            .match(get(OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"))
+            .match(get(OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
             .then(status(HttpStatus.OK_200), stringContent("[{\"email\":\"test@localhost\", \"primary\":true}]"));
 
     whenHttp(stubServer)
@@ -377,13 +398,14 @@ public class VerticleIT {
 
     given().config(restAssuredConfig)
             .with().param("code", "xxx")
-            .and().param("state", "/auth/signin/designs")
+            .and().param("state", "/auth/signin/content/designs")
             .when().get(makeBaseURL("/auth/callback"))
             .then().assertThat().statusCode(303)
             .and().header("Location", startsWith("https://localhost:8080/error/500"));
 
     verifyHttp(stubServer).once(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
-            .then().once(get(OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"))
+            .then().once(get(OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
+            .then().never(get(OAUTH_USER_PATH))
             .then().once(get(ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"))
             .then().once(get(ACCOUNTS_PATH + "/" + SOME_UUID));
   }
@@ -396,18 +418,19 @@ public class VerticleIT {
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"access_token\":\"abcdef\"}"));
 
     whenHttp(stubServer)
-            .match(get(OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"))
+            .match(get(OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
             .then(status(HttpStatus.OK_200), stringContent("x"));
 
     given().config(restAssuredConfig)
             .with().param("code", "xxx")
-            .and().param("state", "/auth/signin/designs")
+            .and().param("state", "/auth/signin/content/designs")
             .when().get(makeBaseURL("/auth/callback"))
             .then().assertThat().statusCode(303)
             .and().header("Location", startsWith("https://localhost:8080/error/500"));
 
     verifyHttp(stubServer).once(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
-            .then().once(get(OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"))
+            .then().once(get(OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
+            .then().never(get(OAUTH_USER_PATH))
             .then().never(post(ACCOUNTS_PATH));
   }
 
@@ -420,12 +443,12 @@ public class VerticleIT {
 
     given().config(restAssuredConfig)
             .with().param("code", "xxx")
-            .and().param("state", "/auth/signin/designs")
+            .and().param("state", "/auth/signin/content/designs")
             .when().get(makeBaseURL("/auth/callback"))
             .then().assertThat().statusCode(303)
             .and().header("Location", startsWith("https://localhost:8080/error/403"));
 
     verifyHttp(stubServer).once(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
-            .then().never(get(OAUTH_USER_PATH));
+            .then().never(get(OAUTH_USER_EMAILS_PATH));
   }
 }

@@ -24,6 +24,11 @@
                   "dbms": {
                     "type": "hsqldb"
                   }
+                },
+                {
+                  "runningAs": {
+                    "username": "test"
+                  }
                 }
               ]
             }
@@ -110,14 +115,15 @@
           },
           {
             "createIndex": {
-              "indexName": "IDX_UPDATED",
+              "indexName": "IDX_UPDATED_UUID",
               "catalogName": "designs",
               "tableName": "DESIGNS",
               "unique": true,
               "columns": [
                 {
                   "column": {
-                    "name": "UPDATED"
+                    "name": "UPDATED",
+                    "name": "UUID"
                   }
                 }
               ]

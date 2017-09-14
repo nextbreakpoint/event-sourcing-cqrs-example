@@ -8,6 +8,7 @@ import com.jayway.restassured.http.ContentType;
 import com.jayway.restassured.path.json.JsonPath;
 import com.nextbreakpoint.shop.common.Authority;
 import com.nextbreakpoint.shop.common.TestHelper;
+import org.apache.http.annotation.NotThreadSafe;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -32,6 +33,7 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 @RunWith(JUnitPlatform.class)
 @Tag("slow")
 @DisplayName("Accounts service")
+@NotThreadSafe
 public class VerticleIT {
   private static RestAssuredConfig restAssuredConfig;
   private static AtomicInteger counter = new AtomicInteger(1);
@@ -101,8 +103,6 @@ public class VerticleIT {
   @Test
   @DisplayName("should forbid post request without access token")
   public void shouldForbidPostRequestWithoutAccessToken() throws MalformedURLException {
-    final String cookie = TestHelper.makeAuthorization("test", Arrays.asList(Authority.ADMIN));
-
     given().config(restAssuredConfig)
             .and().contentType(ContentType.JSON)
             .and().accept(ContentType.JSON)
@@ -183,7 +183,7 @@ public class VerticleIT {
   }
 
   @Test
-  @DisplayName("should createWithAll and delete accounts")
+  @DisplayName("should create and delete accounts")
   public void shouldCreateAndDeleteDesigns() throws MalformedURLException {
     final String authorization = TestHelper.makeAuthorization("test", Arrays.asList(Authority.ADMIN));
 
@@ -288,6 +288,7 @@ public class VerticleIT {
   private Map<String, String> createPostData(String email, String role) {
     final Map<String, String> data = new HashMap<>();
     data.put("email", email);
+    data.put("name", "test");
     data.put("role", role);
     return data;
   }

@@ -164,13 +164,6 @@
                             <goal>stop</goal>
                         </goals>
                     </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>io.fabric8</groupId>
-                <artifactId>docker-maven-plugin</artifactId>
-                <version>0.21.0</version>
-                <executions>
                     <execution>
                         <id>package</id>
                         <phase>package</phase>

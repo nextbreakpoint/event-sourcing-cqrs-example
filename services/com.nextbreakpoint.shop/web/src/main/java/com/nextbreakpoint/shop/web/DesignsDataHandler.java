@@ -62,6 +62,8 @@ public class DesignsDataHandler implements Handler<RoutingContext> {
 
             routingContext.next();
         } catch (Exception e) {
+            e.printStackTrace();
+
             routingContext.fail(Failure.requestFailed(e));
         }
     }

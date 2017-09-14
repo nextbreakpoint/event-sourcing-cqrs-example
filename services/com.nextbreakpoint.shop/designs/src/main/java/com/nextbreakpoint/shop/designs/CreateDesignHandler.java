@@ -22,6 +22,8 @@ public class CreateDesignHandler implements Handler<RoutingContext> {
         try {
             processCreateDesign(routingContext);
         } catch (Exception e) {
+            e.printStackTrace();
+
             routingContext.fail(Failure.requestFailed(e));
         }
     }

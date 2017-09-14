@@ -14,6 +14,8 @@ import io.vertx.rxjava.ext.web.client.WebClient;
 import java.util.Arrays;
 
 import static com.nextbreakpoint.shop.common.Authority.PLATFORM;
+import static com.nextbreakpoint.shop.common.ContentType.APPLICATION_JSON;
+import static com.nextbreakpoint.shop.common.Headers.ACCEPT;
 import static com.nextbreakpoint.shop.common.Headers.AUTHORIZATION;
 import static java.util.Arrays.asList;
 
@@ -30,6 +32,8 @@ public class UserHandler implements Handler<RoutingContext> {
         try {
             Authentication.getUser(jwtProvider, routingContext).subscribe(user -> handleUser(routingContext, user), err -> routingContext.next());
         } catch (Exception e) {
+            e.printStackTrace();
+
             // TODO log error
             routingContext.put("username", "Stranger");
             routingContext.next();
@@ -45,6 +49,8 @@ public class UserHandler implements Handler<RoutingContext> {
                 fetchAccount(routingContext, user);
             }
         } catch (Exception e) {
+            e.printStackTrace();
+
             // TODO log error
             routingContext.put("username", "Stranger");
             routingContext.next();
@@ -58,6 +64,7 @@ public class UserHandler implements Handler<RoutingContext> {
 
         accountsClient.get("/accounts/" + userUuid)
                 .putHeader(AUTHORIZATION, Authentication.makeAuthorization(token))
+                .putHeader(ACCEPT, APPLICATION_JSON)
                 .rxSend().subscribe(response -> handleAccount(routingContext, user, response), err -> routingContext.next());
     }
 

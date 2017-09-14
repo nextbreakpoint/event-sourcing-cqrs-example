@@ -14,6 +14,7 @@ import java.util.List;
 import static com.nextbreakpoint.shop.common.ContentType.APPLICATION_JSON;
 import static com.nextbreakpoint.shop.common.Headers.CONTENT_TYPE;
 import static com.nextbreakpoint.shop.common.Headers.MODIFIED;
+import static com.nextbreakpoint.shop.common.TimeUtil.TIMESTAMP_EXT_PATTERN;
 import static com.nextbreakpoint.shop.common.TimeUtil.TIMESTAMP_PATTERN;
 
 public class ListDesignsHandler implements Handler<RoutingContext> {
@@ -28,6 +29,8 @@ public class ListDesignsHandler implements Handler<RoutingContext> {
         try {
             processListDesigns(routingContext);
         } catch (Exception e) {
+            e.printStackTrace();
+
             routingContext.fail(Failure.requestFailed(e));
         }
     }
@@ -42,15 +45,23 @@ public class ListDesignsHandler implements Handler<RoutingContext> {
 
             final String modified = result.stream().findFirst().map(json -> json.getString("MODIFIED")).orElse("");
 
-            final SimpleDateFormat df = new SimpleDateFormat(TIMESTAMP_PATTERN);
+            if (modified.equals("")) {
+                routingContext.response()
+                        .putHeader(CONTENT_TYPE, APPLICATION_JSON)
+                        .putHeader(MODIFIED, String.valueOf(new Date()))
+                        .setStatusCode(200)
+                        .end(output.encode());
+            } else {
+                final SimpleDateFormat df = new SimpleDateFormat(modified.length() > 20 ? TIMESTAMP_EXT_PATTERN : TIMESTAMP_PATTERN);
 
-            final Date modifiedValue = df.parse(modified);
+                final Date modifiedValue = df.parse(modified);
 
-            routingContext.response()
-                    .putHeader(CONTENT_TYPE, APPLICATION_JSON)
-                    .putHeader(MODIFIED, String.valueOf(modifiedValue.getTime()))
-                    .setStatusCode(200)
-                    .end(output.encode());
+                routingContext.response()
+                        .putHeader(CONTENT_TYPE, APPLICATION_JSON)
+                        .putHeader(MODIFIED, String.valueOf(modifiedValue.getTime()))
+                        .setStatusCode(200)
+                        .end(output.encode());
+            }
         } catch (ParseException e) {
             throw new RuntimeException(e);
         }

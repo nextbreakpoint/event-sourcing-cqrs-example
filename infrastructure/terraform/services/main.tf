@@ -12,6 +12,10 @@ provider "terraform" {
   version = "~> 0.1"
 }
 
+provider "template" {
+  version = "~> 0.1"
+}
+
 ##############################################################################
 # ECS Services and Tasks
 ##############################################################################
@@ -191,7 +195,7 @@ resource "aws_ecs_service" "accounts" {
   name            = "accounts"
   cluster         = "${data.terraform_remote_state.ecs.ecs-cluster-id}"
   task_definition = "${aws_ecs_task_definition.accounts.arn}"
-  desired_count   = 2
+  desired_count   = 1
   depends_on      = ["aws_iam_role_policy.container_role_policy"]
 
   placement_strategy {
@@ -220,7 +224,7 @@ resource "aws_ecs_service" "designs" {
   name            = "designs"
   cluster         = "${data.terraform_remote_state.ecs.ecs-cluster-id}"
   task_definition = "${aws_ecs_task_definition.designs.arn}"
-  desired_count   = 2
+  desired_count   = 1
   depends_on      = ["aws_iam_role_policy.container_role_policy"]
 
   placement_strategy {
@@ -249,7 +253,7 @@ resource "aws_ecs_service" "auth" {
   name            = "auth"
   cluster         = "${data.terraform_remote_state.ecs.ecs-cluster-id}"
   task_definition = "${aws_ecs_task_definition.auth.arn}"
-  desired_count   = 2
+  desired_count   = 1
   depends_on      = ["aws_iam_role_policy.container_role_policy"]
 
   placement_strategy {
@@ -278,7 +282,7 @@ resource "aws_ecs_service" "web" {
   name            = "web"
   cluster         = "${data.terraform_remote_state.ecs.ecs-cluster-id}"
   task_definition = "${aws_ecs_task_definition.server.arn}"
-  desired_count   = 2
+  desired_count   = 1
   depends_on      = ["aws_iam_role_policy.server_role_policy"]
 
   placement_strategy {
@@ -352,28 +356,28 @@ resource "aws_s3_bucket_object" "keystore-auth" {
 
 resource "aws_s3_bucket_object" "keystore-client" {
   bucket = "${data.terraform_remote_state.ecs.ecs-cluster-bucket-name}"
-  key    = "environments/production/keystores/keystore-client.jceks"
-  source = "environments/production/keystores/keystore-client.jceks"
-  etag   = "${md5(file("environments/production/keystores/keystore-client.jceks"))}"
+  key    = "environments/production/keystores/keystore-client.jks"
+  source = "environments/production/keystores/keystore-client.jks"
+  etag   = "${md5(file("environments/production/keystores/keystore-client.jks"))}"
 }
 
 resource "aws_s3_bucket_object" "keystore-server" {
   bucket = "${data.terraform_remote_state.ecs.ecs-cluster-bucket-name}"
-  key    = "environments/production/keystores/keystore-server.jceks"
-  source = "environments/production/keystores/keystore-server.jceks"
-  etag   = "${md5(file("environments/production/keystores/keystore-server.jceks"))}"
+  key    = "environments/production/keystores/keystore-server.jks"
+  source = "environments/production/keystores/keystore-server.jks"
+  etag   = "${md5(file("environments/production/keystores/keystore-server.jks"))}"
 }
 
 resource "aws_s3_bucket_object" "truststore-client" {
   bucket = "${data.terraform_remote_state.ecs.ecs-cluster-bucket-name}"
-  key    = "environments/production/keystores/truststore-client.jceks"
-  source = "environments/production/keystores/truststore-client.jceks"
-  etag   = "${md5(file("environments/production/keystores/truststore-client.jceks"))}"
+  key    = "environments/production/keystores/truststore-client.jks"
+  source = "environments/production/keystores/truststore-client.jks"
+  etag   = "${md5(file("environments/production/keystores/truststore-client.jks"))}"
 }
 
 resource "aws_s3_bucket_object" "truststore-server" {
   bucket = "${data.terraform_remote_state.ecs.ecs-cluster-bucket-name}"
-  key    = "environments/production/keystores/truststore-server.jceks"
-  source = "environments/production/keystores/truststore-server.jceks"
-  etag   = "${md5(file("environments/production/keystores/truststore-server.jceks"))}"
+  key    = "environments/production/keystores/truststore-server.jks"
+  source = "environments/production/keystores/truststore-server.jks"
+  etag   = "${md5(file("environments/production/keystores/truststore-server.jks"))}"
 }

@@ -13,3 +13,7 @@ variable "aws_profile" {
 variable "stream_tag" {
   default = "terraform"
 }
+
+### MANDATORY ###
+variable "account_id" {
+}

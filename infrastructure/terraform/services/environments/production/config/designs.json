@@ -1,16 +1,16 @@
 {
   "host_port": 3001,
 
-  "server_keystore_path": "../keystores/keystore-server.jks",
+  "server_keystore_path": "/keystores/keystore-server.jks",
   "server_keystore_secret": "secret",
 
-  "jwt_keystore_path": "../keystores/keystore-auth.jceks",
+  "jwt_keystore_path": "/keystores/keystore-auth.jceks",
   "jwt_keystore_type": "jceks",
   "jwt_keystore_secret": "secret",
 
-  "web_url": "https://localhost:8080",
+  "web_url": "https://cluster.nextbreakpoint.com",
 
-  "jdbc_url": "jdbc:mysql://localhost:3306/designs?useSSL=false&nullNamePatternMatchesAll=true",
+  "jdbc_url": "jdbc:mysql://rds-services.internal:3306/designs?useSSL=false&nullNamePatternMatchesAll=true",
   "jdbc_driver": "com.mysql.cj.jdbc.Driver",
   "jdbc_username": "verticle",
   "jdbc_password": "password",

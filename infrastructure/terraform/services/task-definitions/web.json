@@ -8,7 +8,7 @@
     "PortMappings": [
       {
         "ContainerPort": 8080,
-        "HostPort": 80
+        "HostPort": 443
       }
     ],
     "environment" : [

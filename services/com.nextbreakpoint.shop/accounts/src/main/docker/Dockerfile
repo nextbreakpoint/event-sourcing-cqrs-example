@@ -28,5 +28,7 @@ EXPOSE ${container.port}
 
 ENV SERVICE_JAR ${service.jar}
 ENV CONFIG_NAME ${config.name}
+ENV SECRETS_BUCKET_NAME ""
+ENV ENVIRONMENT ""
 
 ENTRYPOINT ["/entrypoint.sh"]

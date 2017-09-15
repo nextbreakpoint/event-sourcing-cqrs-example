@@ -11,6 +11,10 @@ variable "aws_profile" {
 }
 
 ### MANDATORY ###
+variable "account_id" {
+}
+
+### MANDATORY ###
 variable "public_hosted_zone_id" {
 }
 

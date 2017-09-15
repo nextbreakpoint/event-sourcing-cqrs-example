@@ -18,7 +18,7 @@ provider "terraform" {
 
 terraform {
   backend "s3" {
-    bucket = "nextbreakpoint-terraform-state"
+    bucket = "_BUCKET_NAME_"
     region = "eu-west-1"
     key = "services-ecr.tfstate"
   }
@@ -28,33 +28,33 @@ terraform {
 # ECR
 ##############################################################################
 
-resource "aws_ecr_repository" "accounts-service" {
-  name = "docker/accounts-service"
+resource "aws_ecr_repository" "accounts" {
+  name = "services/accounts"
 }
 
-resource "aws_ecr_repository" "designs-service" {
-  name = "docker/designs-service"
+resource "aws_ecr_repository" "designs" {
+  name = "services/designs"
 }
 
-resource "aws_ecr_repository" "auth-service" {
-  name = "docker/auth-service"
+resource "aws_ecr_repository" "auth" {
+  name = "services/auth"
 }
 
-resource "aws_ecr_repository" "web-service" {
-  name = "docker/web-service"
+resource "aws_ecr_repository" "web" {
+  name = "services/web"
 }
 
 ##############################################################################
 # Route 53
 ##############################################################################
 
-resource "aws_route53_record" "ecr_dns" {
+resource "aws_route53_record" "ecr" {
   zone_id = "${var.public_hosted_zone_id}"
   name = "registry.${var.public_hosted_zone_name}"
   type = "CNAME"
   ttl = "300"
 
   records = [
-    "${var.aws_account_id}.dkr.ecr.region.amazonaws.com"
+    "${var.account_id}.dkr.ecr.region.amazonaws.com"
   ]
 }

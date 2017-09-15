@@ -24,24 +24,6 @@ terraform {
   }
 }
 
-data "terraform_remote_state" "vpc" {
-    backend = "s3"
-    config {
-        bucket = "nextbreakpoint-terraform-state"
-        region = "${var.aws_region}"
-        key = "vpc.tfstate"
-    }
-}
-
-data "terraform_remote_state" "network" {
-    backend = "s3"
-    config {
-        bucket = "nextbreakpoint-terraform-state"
-        region = "${var.aws_region}"
-        key = "network.tfstate"
-    }
-}
-
 data "terraform_remote_state" "ecs" {
     backend = "s3"
     config {
@@ -52,7 +34,7 @@ data "terraform_remote_state" "ecs" {
 }
 
 ##############################################################################
-# ECS
+# ECS Services and Tasks
 ##############################################################################
 
 resource "aws_iam_role" "server_role" {
@@ -213,11 +195,6 @@ resource "aws_ecs_task_definition" "accounts" {
   container_definitions = "${file("task-definitions/accounts.json")}"
   task_role_arn         = "${aws_iam_role.container_tasks_role.arn}"
 
-  volume {
-    name = "config"
-    host_path = "/config/accounts"
-  }
-
   placement_constraints {
     type       = "memberOf"
     expression = "${format("attribute:ecs.availability-zone in [%sa, %sb]", var.aws_region, var.aws_region)}"
@@ -247,11 +224,6 @@ resource "aws_ecs_task_definition" "designs" {
   container_definitions = "${file("task-definitions/designs.json")}"
   task_role_arn         = "${aws_iam_role.container_tasks_role.arn}"
 
-  volume {
-    name = "config"
-    host_path = "/config/designs"
-  }
-
   placement_constraints {
     type       = "memberOf"
     expression = "${format("attribute:ecs.availability-zone in [%sa, %sb]", var.aws_region, var.aws_region)}"
@@ -280,11 +252,6 @@ resource "aws_ecs_task_definition" "auth" {
   family                = "auth"
   container_definitions = "${file("task-definitions/auth.json")}"
   task_role_arn         = "${aws_iam_role.container_tasks_role.arn}"
-
-  volume {
-    name = "config"
-    host_path = "/config/auth"
-  }
 
   placement_constraints {
     type       = "memberOf"
@@ -323,13 +290,75 @@ resource "aws_ecs_task_definition" "server" {
   container_definitions = "${file("task-definitions/web.json")}"
   task_role_arn         = "${aws_iam_role.container_tasks_role.arn}"
 
-  volume {
-    name = "config"
-    host_path = "/config/web"
-  }
-
   placement_constraints {
     type       = "memberOf"
     expression = "${format("attribute:ecs.availability-zone in [%sa, %sb]", var.aws_region, var.aws_region)}"
   }
+}
+
+##############################################################################
+# S3 Bucket objects
+##############################################################################
+
+resource "aws_s3_bucket_object" "accounts" {
+  bucket = "${data.terraform_remote_state.ecs.ecs-cluster-bucket-name}"
+  key    = "environments/production/config/accounts.json"
+  source = "environments/production/config/accounts.json"
+  etag   = "${md5(file("environments/production/config/accounts.json"))}"
+}
+
+resource "aws_s3_bucket_object" "designs" {
+  bucket = "${data.terraform_remote_state.ecs.ecs-cluster-bucket-name}"
+  key    = "environments/production/config/designs.json"
+  source = "environments/production/config/designs.json"
+  etag   = "${md5(file("environments/production/config/designs.json"))}"
+}
+
+resource "aws_s3_bucket_object" "auth" {
+  bucket = "${data.terraform_remote_state.ecs.ecs-cluster-bucket-name}"
+  key    = "environments/production/config/auth.json"
+  source = "environments/production/config/auth.json"
+  etag   = "${md5(file("environments/production/config/auth.json"))}"
+}
+
+resource "aws_s3_bucket_object" "web" {
+  bucket = "${data.terraform_remote_state.ecs.ecs-cluster-bucket-name}"
+  key    = "environments/production/config/web.json"
+  source = "environments/production/config/web.json"
+  etag   = "${md5(file("environments/production/config/web.json"))}"
+}
+
+resource "aws_s3_bucket_object" "keystore-auth" {
+  bucket = "${data.terraform_remote_state.ecs.ecs-cluster-bucket-name}"
+  key    = "environments/production/keystores/keystore-auth.jceks"
+  source = "environments/production/keystores/keystore-auth.jceks"
+  etag   = "${md5(file("environments/production/keystores/keystore-auth.jceks"))}"
+}
+
+resource "aws_s3_bucket_object" "keystore-client" {
+  bucket = "${data.terraform_remote_state.ecs.ecs-cluster-bucket-name}"
+  key    = "environments/production/keystores/keystore-client.jceks"
+  source = "environments/production/keystores/keystore-client.jceks"
+  etag   = "${md5(file("environments/production/keystores/keystore-client.jceks"))}"
+}
+
+resource "aws_s3_bucket_object" "keystore-server" {
+  bucket = "${data.terraform_remote_state.ecs.ecs-cluster-bucket-name}"
+  key    = "environments/production/keystores/keystore-server.jceks"
+  source = "environments/production/keystores/keystore-server.jceks"
+  etag   = "${md5(file("environments/production/keystores/keystore-server.jceks"))}"
+}
+
+resource "aws_s3_bucket_object" "truststore-client" {
+  bucket = "${data.terraform_remote_state.ecs.ecs-cluster-bucket-name}"
+  key    = "environments/production/keystores/truststore-client.jceks"
+  source = "environments/production/keystores/truststore-client.jceks"
+  etag   = "${md5(file("environments/production/keystores/truststore-client.jceks"))}"
+}
+
+resource "aws_s3_bucket_object" "truststore-server" {
+  bucket = "${data.terraform_remote_state.ecs.ecs-cluster-bucket-name}"
+  key    = "environments/production/keystores/truststore-server.jceks"
+  source = "environments/production/keystores/truststore-server.jceks"
+  etag   = "${md5(file("environments/production/keystores/truststore-server.jceks"))}"
 }

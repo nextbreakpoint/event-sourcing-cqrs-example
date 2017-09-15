@@ -43,3 +43,18 @@ resource "aws_ecr_repository" "auth-service" {
 resource "aws_ecr_repository" "web-service" {
   name = "docker/web-service"
 }
+
+##############################################################################
+# Route 53
+##############################################################################
+
+resource "aws_route53_record" "ecr_dns" {
+  zone_id = "${var.public_hosted_zone_id}"
+  name = "registry.${var.public_hosted_zone_name}"
+  type = "CNAME"
+  ttl = "300"
+
+  records = [
+    "${var.aws_account_id}.dkr.ecr.region.amazonaws.com"
+  ]
+}

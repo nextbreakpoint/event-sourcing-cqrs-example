@@ -1,7 +1,7 @@
 [
   {
     "Name": "designs",
-    "Image": "620835497377.dkr.ecr.eu-west-1.amazonaws.com/docker/designs-service:1.0.0",
+    "Image": "registry.nextbreakpoint.com/services/designs:1.0.0",
     "Essential": true,
     "Memory": 1100,
     "Cpu": 1024,
@@ -17,6 +17,10 @@
         "SourceVolume" : "config",
         "ReadOnly" : true
       }
+    ],
+    "environment" : [
+      { "name": "SECRETS_BUCKET_NAME", "value": "services-secrets" },
+      { "name": "ENVIRONMENT", "value": "production" }
     ],
     "ulimits": [
       {

@@ -9,15 +9,20 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>com.nextbreakpoint.shop.auth</artifactId>
+    <properties>
+        <container.port>3000</container.port>
+        <service.jar>${project.build.finalName}.${project.packaging}</service.jar>
+        <config.name>auth.json</config.name>
+    </properties>
     <build>
         <resources>
             <resource>
                 <directory>src/main/resources</directory>
             </resource>
             <resource>
-                <directory>config</directory>
+                <directory>environments</directory>
                 <filtering>true</filtering>
-                <targetPath>config</targetPath>
+                <targetPath>environments</targetPath>
                 <includes>
                     <include>**/*.json</include>
                 </includes>
@@ -96,15 +101,13 @@
                             <images>
                                 <image>
                                     <alias>service</alias>
-                                    <name>fabric8/auth-service:${project.version}</name>
+                                    <name>services/auth:${project.version}</name>
                                     <build>
-                                        <from>java:8</from>
+                                        <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
+                                        <filter>${*}</filter>
                                         <assembly>
                                             <descriptorRef>artifact-with-dependencies</descriptorRef>
                                         </assembly>
-                                        <cmd>
-                                            <shell>java -Xmx512M -jar /maven/${project.build.finalName}.${project.packaging} config/integration-tests-docker.json</shell>
-                                        </cmd>
                                     </build>
                                     <run>
                                         <ports>
@@ -112,7 +115,7 @@
                                         </ports>
                                         <volumes>
                                             <bind>
-                                                <volume>${project.basedir}/target/classes/config:/config</volume>
+                                                <volume>${project.basedir}/target/classes/environments/integration:/config</volume>
                                                 <volume>${project.basedir}/../keystores:/keystores</volume>
                                             </bind>
                                         </volumes>
@@ -147,15 +150,13 @@
                             <images>
                                 <image>
                                     <alias>auth-service</alias>
-                                    <name>docker/auth-service:${project.version}</name>
+                                    <name>services/auth:${project.version}</name>
                                     <build>
-                                        <from>java:8</from>
+                                        <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
+                                        <filter>${*}</filter>
                                         <assembly>
                                             <descriptorRef>artifact-with-dependencies</descriptorRef>
                                         </assembly>
-                                        <cmd>
-                                            <shell>java -Xmx512M -jar /maven/${project.build.finalName}.${project.packaging} /config/docker.json</shell>
-                                        </cmd>
                                     </build>
                                 </image>
                             </images>

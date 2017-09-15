@@ -9,3 +9,11 @@ variable "aws_region" {
 variable "aws_profile" {
   default = "default"
 }
+
+### MANDATORY ###
+variable "public_hosted_zone_id" {
+}
+
+### MANDATORY ###
+variable "public_hosted_zone_name" {
+}

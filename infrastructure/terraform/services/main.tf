@@ -151,6 +151,42 @@ resource "aws_iam_role_policy" "container_tasks_role_policy" {
 EOF
 }
 
+data "template_file" "accounts_template" {
+  template = "${file("task-definitions/accounts.json")}"
+
+  vars {
+    account_id         = "${var.account_id}"
+    bucket_name        = "${data.terraform_remote_state.ecs.ecs-cluster-bucket-name}"
+  }
+}
+
+data "template_file" "designs_template" {
+  template = "${file("task-definitions/designs.json")}"
+
+  vars {
+    account_id         = "${var.account_id}"
+    bucket_name        = "${data.terraform_remote_state.ecs.ecs-cluster-bucket-name}"
+  }
+}
+
+data "template_file" "auth_template" {
+  template = "${file("task-definitions/auth.json")}"
+
+  vars {
+    account_id         = "${var.account_id}"
+    bucket_name        = "${data.terraform_remote_state.ecs.ecs-cluster-bucket-name}"
+  }
+}
+
+data "template_file" "web_template" {
+  template = "${file("task-definitions/web.json")}"
+
+  vars {
+    account_id         = "${var.account_id}"
+    bucket_name        = "${data.terraform_remote_state.ecs.ecs-cluster-bucket-name}"
+  }
+}
+
 resource "aws_ecs_service" "accounts" {
   name            = "accounts"
   cluster         = "${data.terraform_remote_state.ecs.ecs-cluster-id}"
@@ -171,7 +207,7 @@ resource "aws_ecs_service" "accounts" {
 
 resource "aws_ecs_task_definition" "accounts" {
   family                = "accounts"
-  container_definitions = "${file("task-definitions/accounts.json")}"
+  container_definitions = "${data.template_file.accounts_template.rendered}"
   task_role_arn         = "${aws_iam_role.container_tasks_role.arn}"
 
   placement_constraints {
@@ -200,7 +236,7 @@ resource "aws_ecs_service" "designs" {
 
 resource "aws_ecs_task_definition" "designs" {
   family                = "designs"
-  container_definitions = "${file("task-definitions/designs.json")}"
+  container_definitions = "${data.template_file.designs_template.rendered}"
   task_role_arn         = "${aws_iam_role.container_tasks_role.arn}"
 
   placement_constraints {
@@ -229,7 +265,7 @@ resource "aws_ecs_service" "auth" {
 
 resource "aws_ecs_task_definition" "auth" {
   family                = "auth"
-  container_definitions = "${file("task-definitions/auth.json")}"
+  container_definitions = "${data.template_file.auth_template.rendered}"
   task_role_arn         = "${aws_iam_role.container_tasks_role.arn}"
 
   placement_constraints {
@@ -266,7 +302,7 @@ resource "aws_ecs_service" "web" {
 
 resource "aws_ecs_task_definition" "server" {
   family                = "web"
-  container_definitions = "${file("task-definitions/web.json")}"
+  container_definitions = "${data.template_file.web_template.rendered}"
   task_role_arn         = "${aws_iam_role.container_tasks_role.arn}"
 
   placement_constraints {

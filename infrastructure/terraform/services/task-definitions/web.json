@@ -1,7 +1,7 @@
 [
   {
     "Name": "web",
-    "Image": "registry.nextbreakpoint.com/services/web:1.0.0",
+    "Image": "${account_id}.dkr.ecr.eu-west-1.amazonaws.com/services/web:1.0.0",
     "Essential": true,
     "Memory": 600,
     "Cpu": 512,
@@ -11,15 +11,8 @@
         "HostPort": 80
       }
     ],
-    "MountPoints": [
-      {
-        "ContainerPath" : "/config",
-        "SourceVolume" : "config",
-        "ReadOnly" : true
-      }
-    ],
     "environment" : [
-      { "name": "SECRETS_BUCKET_NAME", "value": "services-secrets" },
+      { "name": "SECRETS_BUCKET_NAME", "value": "${bucket_name}" },
       { "name": "ENVIRONMENT", "value": "production" }
     ],
     "ulimits": [

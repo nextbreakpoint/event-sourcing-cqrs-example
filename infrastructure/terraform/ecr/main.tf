@@ -31,18 +31,3 @@ resource "aws_ecr_repository" "auth" {
 resource "aws_ecr_repository" "web" {
   name = "services/web"
 }
-
-##############################################################################
-# Route 53
-##############################################################################
-
-resource "aws_route53_record" "ecr" {
-  zone_id = "${var.public_hosted_zone_id}"
-  name = "registry.${var.public_hosted_zone_name}"
-  type = "CNAME"
-  ttl = "300"
-
-  records = [
-    "${var.account_id}.dkr.ecr.region.amazonaws.com"
-  ]
-}

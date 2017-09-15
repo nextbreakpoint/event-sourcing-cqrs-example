@@ -88,6 +88,21 @@
                 <groupId>io.fabric8</groupId>
                 <artifactId>docker-maven-plugin</artifactId>
                 <version>0.21.0</version>
+                <configuration>
+                    <images>
+                        <image>
+                            <alias>web-service</alias>
+                            <name>services/web:${project.version}</name>
+                            <build>
+                                <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
+                                <filter>${*}</filter>
+                                <assembly>
+                                    <descriptorRef>artifact-with-dependencies</descriptorRef>
+                                </assembly>
+                            </build>
+                        </image>
+                    </images>
+                </configuration>
                 <executions>
                     <execution>
                         <id>start</id>
@@ -146,21 +161,13 @@
                         <goals>
                             <goal>build</goal>
                         </goals>
-                        <configuration>
-                            <images>
-                                <image>
-                                    <alias>web-service</alias>
-                                    <name>services/web:${project.version}</name>
-                                    <build>
-                                        <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
-                                        <filter>${*}</filter>
-                                        <assembly>
-                                            <descriptorRef>artifact-with-dependencies</descriptorRef>
-                                        </assembly>
-                                    </build>
-                                </image>
-                            </images>
-                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>push</id>
+                        <phase>none</phase>
+                        <goals>
+                            <goal>push</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>

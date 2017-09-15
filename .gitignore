@@ -6,6 +6,7 @@
 **/.idea
 **/.vertx
 **/node_modules
+*.tf.bkp
 *.tfstate
 *.tfstate.backup
 *.pem

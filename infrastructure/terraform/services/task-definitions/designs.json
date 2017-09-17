@@ -13,7 +13,8 @@
     ],
     "environment" : [
       { "name": "SECRETS_BUCKET_NAME", "value": "${bucket_name}" },
-      { "name": "ENVIRONMENT", "value": "production" }
+      { "name": "ENVIRONMENT", "value": "production" },
+      { "name": "SERVICE_3001_NAME", "value": "designs" }
     ],
     "ulimits": [
       {

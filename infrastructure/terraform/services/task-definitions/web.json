@@ -8,12 +8,13 @@
     "PortMappings": [
       {
         "ContainerPort": 8080,
-        "HostPort": 443
+        "HostPort": 8080
       }
     ],
     "environment" : [
       { "name": "SECRETS_BUCKET_NAME", "value": "${bucket_name}" },
-      { "name": "ENVIRONMENT", "value": "production" }
+      { "name": "ENVIRONMENT", "value": "production" },
+      { "name": "SERVICE_8080_NAME", "value": "web" }
     ],
     "ulimits": [
       {

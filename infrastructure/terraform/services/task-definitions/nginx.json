@@ -1,20 +1,23 @@
 [
   {
-    "Name": "auth",
-    "Image": "${account_id}.dkr.ecr.eu-west-1.amazonaws.com/services/auth:1.0.0",
+    "Name": "nginx",
+    "Image": "${account_id}.dkr.ecr.eu-west-1.amazonaws.com/services/nginx:1.0.0",
     "Essential": true,
     "Memory": 600,
     "Cpu": 512,
     "PortMappings": [
       {
-        "ContainerPort": 3000,
-        "HostPort": 3000
+        "ContainerPort": 443,
+        "HostPort": 443
+      },
+      {
+        "ContainerPort": 80,
+        "HostPort": 80
       }
     ],
     "environment" : [
       { "name": "SECRETS_BUCKET_NAME", "value": "${bucket_name}" },
-      { "name": "ENVIRONMENT", "value": "production" },
-      { "name": "SERVICE_3000_NAME", "value": "auth" }
+      { "name": "ENVIRONMENT", "value": "production" }
     ],
     "ulimits": [
       {

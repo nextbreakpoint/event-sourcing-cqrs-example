@@ -25,7 +25,7 @@ resource "aws_security_group" "services" {
     to_port = 3306
 
     protocol = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["${var.aws_network_vpc_cidr}"]
   }
 
   tags = {

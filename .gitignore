@@ -2,6 +2,7 @@
 *.jks
 *.crt
 *.key
+*.cer
 *.iml
 **/.idea
 **/.vertx

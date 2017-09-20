@@ -1,8 +1,6 @@
 #!/bin/bash
 export DIR=terraform/services/environments/production
 
-openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout $DIR/nginx/nginx.key -out $DIR/nginx/nginx.crt
-
 keytool -genseckey -keystore $DIR/keystores/keystore.jceks -storetype jceks -storepass secret -keyalg HMacSHA256 -keysize 2048 -alias HS256 -keypass secret
 keytool -genseckey -keystore $DIR/keystores/keystore.jceks -storetype jceks -storepass secret -keyalg HMacSHA384 -keysize 2048 -alias HS384 -keypass secret
 keytool -genseckey -keystore $DIR/keystores/keystore.jceks -storetype jceks -storepass secret -keyalg HMacSHA512 -keysize 2048 -alias HS512 -keypass secret

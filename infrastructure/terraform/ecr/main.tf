@@ -31,7 +31,3 @@ resource "aws_ecr_repository" "auth" {
 resource "aws_ecr_repository" "web" {
   name = "services/web"
 }
-
-resource "aws_ecr_repository" "nginx" {
-  name = "services/nginx"
-}

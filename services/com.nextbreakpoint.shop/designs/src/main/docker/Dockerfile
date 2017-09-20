@@ -10,8 +10,7 @@ RUN echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true 
 
 RUN apt-get update && \
     apt-get -y install python curl unzip && cd /tmp && \
-    curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" \
-    -o "awscli-bundle.zip" && \
+    curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" -o "awscli-bundle.zip" && \
     unzip awscli-bundle.zip && \
     ./awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws && \
     rm awscli-bundle.zip && rm -rf awscli-bundle
@@ -28,7 +27,5 @@ EXPOSE ${container.port}
 
 ENV SERVICE_JAR ${service.jar}
 ENV CONFIG_NAME ${config.name}
-ENV SECRETS_BUCKET_NAME nextbreakpoint-services
-ENV ENVIRONMENT production
 
 ENTRYPOINT ["/entrypoint.sh"]

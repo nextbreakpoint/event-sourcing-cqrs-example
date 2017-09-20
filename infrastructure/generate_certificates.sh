@@ -17,3 +17,5 @@ keytool -export -keystore $DIR/keystores/keystore-server.jks -alias fractals -fi
 keytool -export -keystore $DIR/keystores/keystore-client.jks -alias fractals -file $DIR/keystores/client.cer -storepass "secret"
 keytool -import -alias fractals -file $DIR/keystores/server.cer -keystore $DIR/keystores/truststore-client.jks -storepass "secret" -noprompt
 keytool -import -alias fractals -file $DIR/keystores/client.cer -keystore $DIR/keystores/truststore-server.jks -storepass "secret" -noprompt
+
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout web-server-elb.key -out web-server-elb.crt

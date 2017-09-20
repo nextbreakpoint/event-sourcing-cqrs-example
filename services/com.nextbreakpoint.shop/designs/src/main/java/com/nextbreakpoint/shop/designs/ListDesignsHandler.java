@@ -48,7 +48,7 @@ public class ListDesignsHandler implements Handler<RoutingContext> {
             if (modified.equals("")) {
                 routingContext.response()
                         .putHeader(CONTENT_TYPE, APPLICATION_JSON)
-                        .putHeader(MODIFIED, String.valueOf(new Date()))
+                        .putHeader(MODIFIED, String.valueOf(new Date().getTime()))
                         .setStatusCode(200)
                         .end(output.encode());
             } else {

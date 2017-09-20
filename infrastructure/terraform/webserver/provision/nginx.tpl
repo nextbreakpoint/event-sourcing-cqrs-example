@@ -150,7 +150,7 @@ http {
     server_name shop.${public_hosted_zone_name};
 
     location / {
-
+        
     }
   }
 
@@ -167,7 +167,22 @@ http {
     location / {
         set \$$upstream_web web.service.terraform.consul;
         proxy_pass https://\$$upstream_web:8080;
-        proxy_redirect https://\$$upstream_web:8080 https://shop.${public_hosted_zone_name};
+        #proxy_redirect https://\$$upstream_web:8080 https://shop.${public_hosted_zone_name};
+    }
+
+    location /auth {
+        set \$$upstream_auth auth.service.terraform.consul;
+        proxy_pass https://\$$upstream_auth:3000;
+    }
+
+    location /designs {
+        set \$$upstream_designs designs.service.terraform.consul;
+        proxy_pass https://\$$upstream_designs:3001;
+    }
+
+    location /accounts {
+        set \$$upstream_accounts accounts.service.terraform.consul;
+        proxy_pass https://\$$upstream_accounts:3002;
     }
   }
 }

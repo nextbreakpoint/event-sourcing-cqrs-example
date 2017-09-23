@@ -20,8 +20,8 @@ provider "template" {
 # Web servers
 ##############################################################################
 
-resource "aws_security_group" "web_server" {
-  name = "web-server-security-group"
+resource "aws_security_group" "webserver" {
+  name = "shop-webserver-security-group"
   description = "NGINX server security group"
   vpc_id = "${data.terraform_remote_state.vpc.network-vpc-id}"
 
@@ -44,6 +44,20 @@ resource "aws_security_group" "web_server" {
     to_port = 22
     protocol = "tcp"
     cidr_blocks = ["${var.aws_bastion_vpc_cidr}"]
+  }
+
+  ingress {
+    from_port = 8301
+    to_port = 8301
+    protocol = "tcp"
+    cidr_blocks = ["${var.aws_network_vpc_cidr}"]
+  }
+
+  ingress {
+    from_port = 8301
+    to_port = 8301
+    protocol = "udp"
+    cidr_blocks = ["${var.aws_network_vpc_cidr}"]
   }
 
   egress {
@@ -72,14 +86,14 @@ resource "aws_security_group" "web_server" {
   }
 }
 
-data "template_file" "web_server_user_data_a" {
+data "template_file" "webserver_user_data_a" {
   template = "${file("provision/nginx.tpl")}"
 
   vars {
     aws_region              = "${var.aws_region}"
     environment             = "${var.environment}"
     bucker_name             = "${var.webserver_bucker_name}"
-    security_groups         = "${aws_security_group.web_server.id}"
+    security_groups         = "${aws_security_group.webserver.id}"
     consul_log_file         = "${var.consul_log_file}"
     log_group_name          = "${var.log_group_name}"
     log_stream_name         = "${var.log_stream_name}"
@@ -89,14 +103,14 @@ data "template_file" "web_server_user_data_a" {
   }
 }
 
-data "template_file" "web_server_user_data_b" {
+data "template_file" "webserver_user_data_b" {
   template = "${file("provision/nginx.tpl")}"
 
   vars {
     aws_region              = "${var.aws_region}"
     environment             = "${var.environment}"
     bucker_name             = "${var.webserver_bucker_name}"
-    security_groups         = "${aws_security_group.web_server.id}"
+    security_groups         = "${aws_security_group.webserver.id}"
     consul_log_file         = "${var.consul_log_file}"
     log_group_name          = "${var.log_group_name}"
     log_stream_name         = "${var.log_stream_name}"
@@ -106,13 +120,13 @@ data "template_file" "web_server_user_data_b" {
   }
 }
 
-resource "aws_iam_instance_profile" "web_server_profile" {
-    name = "web-server-profile"
-    role = "${aws_iam_role.web_server_role.name}"
+resource "aws_iam_instance_profile" "webserver_profile" {
+    name = "shop-webserver-profile"
+    role = "${aws_iam_role.webserver_role.name}"
 }
 
-resource "aws_iam_role" "web_server_role" {
-  name = "web-server-role"
+resource "aws_iam_role" "webserver_role" {
+  name = "shop-webserver-role"
 
   assume_role_policy = <<EOF
 {
@@ -139,9 +153,9 @@ resource "aws_iam_role" "web_server_role" {
 EOF
 }
 
-resource "aws_iam_role_policy" "web_server_role_policy" {
-  name = "web-server-role-policy"
-  role = "${aws_iam_role.web_server_role.id}"
+resource "aws_iam_role_policy" "webserver_role_policy" {
+  name = "shop-webserver-role-policy"
+  role = "${aws_iam_role.webserver_role.id}"
 
   policy = <<EOF
 {
@@ -152,14 +166,14 @@ resource "aws_iam_role_policy" "web_server_role_policy" {
             "s3:GetObject"
         ],
         "Effect": "Allow",
-        "Resource": "arn:aws:s3:::${aws_s3_bucket.web_server.id}/*"
+        "Resource": "arn:aws:s3:::${aws_s3_bucket.webserver.id}/*"
     }
   ]
 }
 EOF
 }
 
-data "aws_ami" "web_server" {
+data "aws_ami" "webserver" {
   most_recent = true
 
   filter {
@@ -176,25 +190,25 @@ data "aws_ami" "web_server" {
 }
 
 /*
-resource "aws_instance" "web_server_a" {
+resource "aws_instance" "webserver_a" {
   instance_type = "${var.web_instance_type}"
 
-  ami = "${data.aws_ami.web_server.id}"
+  ami = "${data.aws_ami.webserver.id}"
 
   subnet_id = "${data.terraform_remote_state.vpc.network-private-subnet-a-id}"
   associate_public_ip_address = "true"
-  security_groups = ["${aws_security_group.web_server.id}"]
+  security_groups = ["${aws_security_group.webserver.id}"]
   key_name = "${var.key_name}"
 
-  iam_instance_profile = "${aws_iam_instance_profile.web_server_profile.id}"
+  iam_instance_profile = "${aws_iam_instance_profile.webserver_profile.id}"
 
   tags {
-    Name = "web-server-a"
+    Name = "shop-webserver-a"
     Stream = "${var.stream_tag}"
   }
 
   connection {
-    host = "${element(aws_instance.web_server_a.*.private_ip, 0)}"
+    host = "${element(aws_instance.webserver_a.*.private_ip, 0)}"
     # The default username for our AMI
     user = "ubuntu"
     type = "ssh"
@@ -205,29 +219,29 @@ resource "aws_instance" "web_server_a" {
   }
 
   provisioner "remote-exec" {
-    inline = "${data.template_file.web_server_user_data_a.rendered}"
+    inline = "${data.template_file.webserver_user_data_a.rendered}"
   }
 }
 
-resource "aws_instance" "web_server_b" {
+resource "aws_instance" "webserver_b" {
   instance_type = "${var.web_instance_type}"
 
-  ami = "${data.aws_ami.web_server.id}"
+  ami = "${data.aws_ami.webserver.id}"
 
   subnet_id = "${data.terraform_remote_state.vpc.network-private-subnet-b-id}"
   associate_public_ip_address = "true"
-  security_groups = ["${aws_security_group.web_server.id}"]
+  security_groups = ["${aws_security_group.webserver.id}"]
   key_name = "${var.key_name}"
 
-  iam_instance_profile = "${aws_iam_instance_profile.web_server_profile.id}"
+  iam_instance_profile = "${aws_iam_instance_profile.webserver_profile.id}"
 
   tags {
-    Name = "web-server-b"
+    Name = "shop-webserver-b"
     Stream = "${var.stream_tag}"
   }
 
   connection {
-    host = "${element(aws_instance.web_server_b.*.private_ip, 0)}"
+    host = "${element(aws_instance.webserver_b.*.private_ip, 0)}"
     # The default username for our AMI
     user = "ubuntu"
     type = "ssh"
@@ -238,58 +252,58 @@ resource "aws_instance" "web_server_b" {
   }
 
   provisioner "remote-exec" {
-    inline = "${data.template_file.web_server_user_data_b.rendered}"
+    inline = "${data.template_file.webserver_user_data_b.rendered}"
   }
 }
 */
 
-resource "aws_launch_configuration" "web_server_launch_configuration_a" {
-  name_prefix   = "web-server-"
+resource "aws_launch_configuration" "webserver_launch_configuration_a" {
+  name_prefix   = "shop-webserver-"
   instance_type = "${var.web_instance_type}"
 
-  image_id = "${data.aws_ami.web_server.id}"
+  image_id = "${data.aws_ami.webserver.id}"
 
   associate_public_ip_address = "false"
-  security_groups = ["${aws_security_group.web_server.id}"]
+  security_groups = ["${aws_security_group.webserver.id}"]
   key_name = "${var.key_name}"
 
-  iam_instance_profile = "${aws_iam_instance_profile.web_server_profile.name}"
+  iam_instance_profile = "${aws_iam_instance_profile.webserver_profile.name}"
 
-  user_data = "${data.template_file.web_server_user_data_a.rendered}"
+  user_data = "${data.template_file.webserver_user_data_a.rendered}"
 
   lifecycle {
     create_before_destroy = true
   }
 }
 
-resource "aws_launch_configuration" "web_server_launch_configuration_b" {
-  name_prefix   = "web-server-"
+resource "aws_launch_configuration" "webserver_launch_configuration_b" {
+  name_prefix   = "shop-webserver-"
   instance_type = "${var.web_instance_type}"
 
-  image_id = "${data.aws_ami.web_server.id}"
+  image_id = "${data.aws_ami.webserver.id}"
 
   associate_public_ip_address = "false"
-  security_groups = ["${aws_security_group.web_server.id}"]
+  security_groups = ["${aws_security_group.webserver.id}"]
   key_name = "${var.key_name}"
 
-  iam_instance_profile = "${aws_iam_instance_profile.web_server_profile.name}"
+  iam_instance_profile = "${aws_iam_instance_profile.webserver_profile.name}"
 
-  user_data = "${data.template_file.web_server_user_data_b.rendered}"
+  user_data = "${data.template_file.webserver_user_data_b.rendered}"
 
   lifecycle {
     create_before_destroy = true
   }
 }
 
-resource "aws_autoscaling_group" "web_server_asg_a" {
-  name                      = "web-server-asg-a"
+resource "aws_autoscaling_group" "webserver_asg_a" {
+  name                      = "shop-webserver-asg-a"
   max_size                  = 4
   min_size                  = 0
   health_check_grace_period = 300
   health_check_type         = "ELB"
   desired_capacity          = 1
   force_delete              = true
-  launch_configuration      = "${aws_launch_configuration.web_server_launch_configuration_a.name}"
+  launch_configuration      = "${aws_launch_configuration.webserver_launch_configuration_a.name}"
 
   vpc_zone_identifier = [
     "${data.terraform_remote_state.vpc.network-private-subnet-a-id}"
@@ -307,7 +321,7 @@ resource "aws_autoscaling_group" "web_server_asg_a" {
 
   tag {
     key                 = "Name"
-    value               = "web-server-a"
+    value               = "shop-webserver-a"
     propagate_at_launch = true
   }
 
@@ -316,15 +330,15 @@ resource "aws_autoscaling_group" "web_server_asg_a" {
   }
 }
 
-resource "aws_autoscaling_group" "web_server_asg_b" {
-  name                      = "web-server-asg-b"
+resource "aws_autoscaling_group" "webserver_asg_b" {
+  name                      = "shop-webserver-asg-b"
   max_size                  = 4
   min_size                  = 0
   health_check_grace_period = 300
   health_check_type         = "ELB"
   desired_capacity          = 1
   force_delete              = true
-  launch_configuration      = "${aws_launch_configuration.web_server_launch_configuration_b.name}"
+  launch_configuration      = "${aws_launch_configuration.webserver_launch_configuration_b.name}"
 
   vpc_zone_identifier = [
     "${data.terraform_remote_state.vpc.network-private-subnet-b-id}"
@@ -342,7 +356,7 @@ resource "aws_autoscaling_group" "web_server_asg_b" {
 
   tag {
     key                 = "Name"
-    value               = "web-server-b"
+    value               = "shop-webserver-b"
     propagate_at_launch = true
   }
 
@@ -351,8 +365,8 @@ resource "aws_autoscaling_group" "web_server_asg_b" {
   }
 }
 
-resource "aws_security_group" "web_elb" {
-  name = "web-server-elb-security-group"
+resource "aws_security_group" "webserver_elb" {
+  name = "shop-webserver-elb-security-group"
   description = "NGINX load balacer security group"
   vpc_id = "${data.terraform_remote_state.vpc.network-vpc-id}"
 
@@ -378,23 +392,23 @@ resource "aws_security_group" "web_elb" {
   }
 
   tags {
-    stream = "${var.stream_tag}"
+    Stream = "${var.stream_tag}"
   }
 }
 
-resource "aws_iam_server_certificate" "web_elb" {
-  name_prefix      = "web-server-elb-certificate"
-  certificate_body = "${file("${var.web_server_elb_certificate_path}")}"
-  private_key      = "${file("${var.web_server_elb_private_key_path}")}"
+resource "aws_iam_server_certificate" "webserver_elb" {
+  name_prefix      = "shop-webserver-elb-certificate"
+  certificate_body = "${file("${var.webserver_elb_certificate_path}")}"
+  private_key      = "${file("${var.webserver_elb_private_key_path}")}"
 
   lifecycle {
     create_before_destroy = true
   }
 }
 
-resource "aws_elb" "web_elb" {
-  name = "web-elb"
-  security_groups = ["${aws_security_group.web_elb.id}"]
+resource "aws_elb" "webserver_elb" {
+  name = "shop-webserver-elb"
+  security_groups = ["${aws_security_group.webserver_elb.id}"]
   subnets = ["${data.terraform_remote_state.vpc.network-public-subnet-a-id}","${data.terraform_remote_state.vpc.network-public-subnet-b-id}"]
 
   listener {
@@ -409,7 +423,7 @@ resource "aws_elb" "web_elb" {
     instance_protocol   = "HTTPS"
     lb_port             = 443
     lb_protocol         = "HTTPS"
-    ssl_certificate_id  = "${aws_iam_server_certificate.web_elb.arn}"
+    ssl_certificate_id  = "${aws_iam_server_certificate.webserver_elb.arn}"
   }
 
   health_check {
@@ -427,50 +441,50 @@ resource "aws_elb" "web_elb" {
   internal = false
 
   tags {
-    stream = "${var.stream_tag}"
+    Stream = "${var.stream_tag}"
   }
 }
 
-resource "aws_autoscaling_attachment" "web_server_asg_a" {
-  autoscaling_group_name = "${aws_autoscaling_group.web_server_asg_a.id}"
-  elb = "${aws_elb.web_elb.id}"
+resource "aws_autoscaling_attachment" "webserver_asg_a" {
+  autoscaling_group_name = "${aws_autoscaling_group.webserver_asg_a.id}"
+  elb = "${aws_elb.webserver_elb.id}"
 }
 
-resource "aws_autoscaling_attachment" "web_server_asg_b" {
-  autoscaling_group_name = "${aws_autoscaling_group.web_server_asg_b.id}"
-  elb = "${aws_elb.web_elb.id}"
+resource "aws_autoscaling_attachment" "webserver_asg_b" {
+  autoscaling_group_name = "${aws_autoscaling_group.webserver_asg_b.id}"
+  elb = "${aws_elb.webserver_elb.id}"
 }
 
 ##############################################################################
 # Route 53
 ##############################################################################
 
-resource "aws_route53_record" "web_server_elb" {
+resource "aws_route53_record" "webserver_elb" {
   zone_id = "${var.public_hosted_zone_id}"
-  name = "nginx.${var.public_hosted_zone_name}"
+  name = "shop.${var.public_hosted_zone_name}"
   type = "A"
 
   alias {
-    name = "${aws_elb.web_elb.dns_name}"
-    zone_id = "${aws_elb.web_elb.zone_id}"
+    name = "${aws_elb.webserver_elb.dns_name}"
+    zone_id = "${aws_elb.webserver_elb.zone_id}"
     evaluate_target_health = true
   }
 }
 
-resource "aws_route53_record" "web_server_dns" {
+resource "aws_route53_record" "webserver_dns" {
   zone_id = "${data.terraform_remote_state.vpc.hosted-zone-id}"
-  name = "nginx.${var.hosted_zone_name}"
+  name = "shop.${var.hosted_zone_name}"
   type = "CNAME"
   ttl = "30"
 
-  records = ["${aws_elb.web_elb.dns_name}"]
+  records = ["${aws_elb.webserver_elb.dns_name}"]
 }
 
 ##############################################################################
 # S3 Bucket
 ##############################################################################
 
-resource "aws_s3_bucket" "web_server" {
+resource "aws_s3_bucket" "webserver" {
   bucket = "${var.webserver_bucker_name}"
   region = "${var.aws_region}"
   versioning = {
@@ -480,19 +494,19 @@ resource "aws_s3_bucket" "web_server" {
   force_destroy  = true
 
   tags {
-    stream = "${var.stream_tag}"
+    Stream = "${var.stream_tag}"
   }
 }
 
 resource "aws_s3_bucket_object" "nginx-certificate" {
-  bucket = "${aws_s3_bucket.web_server.id}"
+  bucket = "${aws_s3_bucket.webserver.id}"
   key    = "environments/production/nginx/nginx.crt"
   source = "environments/production/nginx/nginx.crt"
   etag   = "${md5(file("environments/production/nginx/nginx.crt"))}"
 }
 
 resource "aws_s3_bucket_object" "nginx-private-key" {
-  bucket = "${aws_s3_bucket.web_server.id}"
+  bucket = "${aws_s3_bucket.webserver.id}"
   key    = "environments/production/nginx/nginx.key"
   source = "environments/production/nginx/nginx.key"
   etag   = "${md5(file("environments/production/nginx/nginx.key"))}"

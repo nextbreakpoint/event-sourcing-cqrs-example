@@ -17,12 +17,17 @@ export WEBSERVER_HOST=`ifconfig eth0 | grep "inet " | awk '{ print substr($2,6) 
 # Configure the consul agent
 cat <<EOF >/tmp/consul.json
 {
-    "addresses"                   : {
-        "http" : "0.0.0.0"
+    "addresses": {
+        "http": "0.0.0.0"
     },
-    "disable_anonymous_signature" : true,
-    "disable_update_check"        : true,
-    "data_dir"                    : "/mnt/consul"
+    "disable_anonymous_signature": true,
+    "disable_update_check": true,
+    "datacenter": "terraform",
+    "data_dir": "/mnt/consul",
+    "log_level": "TRACE",
+    "retry_join": ["consul.internal"],
+    "enable_script_checks": true,
+    "leave_on_terminate": true
 }
 EOF
 sudo mv /tmp/consul.json /etc/consul.d/consul.json
@@ -52,15 +57,9 @@ EOF
 sudo sed -i -e 's/WEBSERVER_HOST/'$WEBSERVER_HOST'/g' /tmp/consul.service
 sudo mv /tmp/consul.service /etc/systemd/system/consul.service
 
-# Setup the consul agent config
-sudo cat <<EOF >/tmp/webserver-consul.json
+# Configure the webserver healthchecks
+sudo cat <<EOF >/tmp/webserver.json
 {
-    "datacenter": "terraform",
-    "data_dir": "/mnt/consul",
-    "log_level": "TRACE",
-    "retry_join": ["consul.internal"],
-    "enable_script_checks": true,
-    "leave_on_terminate": true,
     "services": [{
         "name": "webserver-80",
         "tags": [
@@ -71,12 +70,11 @@ sudo cat <<EOF >/tmp/webserver-consul.json
             "id": "1",
             "name": "NGINX HTTP",
             "notes": "Use curl to check the web service every 60 seconds",
-            "script": "curl `ifconfig eth0 | grep 'inet ' | awk '{ print substr($2,6) }'`:80 >/dev/null 2>&1",
+            "script": "nc -zv `ifconfig eth0 | grep 'inet ' | awk '{ print substr($2,6) }'` 80 >/dev/null 2>&1 ",
             "interval": "60s"
         } ],
         "leave_on_terminate": true
-    },
-    {
+    },{
         "name": "webserver-443",
         "tags": [
             "tcp", "index"
@@ -93,7 +91,7 @@ sudo cat <<EOF >/tmp/webserver-consul.json
     }]
 }
 EOF
-sudo mv /tmp/webserver-consul.json /etc/consul.d/webserver.json
+sudo mv /tmp/webserver.json /etc/consul.d/webserver.json
 
 sudo cat <<EOF >/tmp/filebeat.yml
 filebeat:
@@ -145,13 +143,11 @@ http {
   ssl_session_timeout   10m;
 
   server {
-    listen 80;
+    listen 80 default_server;
 
     server_name shop.${public_hosted_zone_name};
 
-    location / {
-
-    }
+  	return 301 https://\$$server_name\$$request_uri;
   }
 
   server {
@@ -164,25 +160,40 @@ http {
     ssl_protocols       TLSv1 TLSv1.1 TLSv1.2;
     ssl_ciphers         HIGH:!aNULL:!MD5;
 
-    location / {
-        set \$$upstream_web web.service.terraform.consul;
-        proxy_pass https://\$$upstream_web:8080;
-        #proxy_redirect https://\$$upstream_web:8080 https://shop.${public_hosted_zone_name};
-    }
-
     location /auth {
+        resolver 127.0.0.1;
         set \$$upstream_auth auth.service.terraform.consul;
-        proxy_pass https://\$$upstream_auth:3000;
+        proxy_pass https://\$$upstream_auth:3000\$$uri;
+        proxy_set_header Host \$$host;
+        proxy_set_header X-Real-IP \$$remote_addr;
+        proxy_set_header X-Forwarded-For \$$proxy_add_x_forwarded_for;
     }
 
     location /designs {
+        resolver 127.0.0.1;
         set \$$upstream_designs designs.service.terraform.consul;
-        proxy_pass https://\$$upstream_designs:3001;
+        proxy_pass https://\$$upstream_designs:3001\$$uri;
+        proxy_set_header Host \$$host;
+        proxy_set_header X-Real-IP \$$remote_addr;
+        proxy_set_header X-Forwarded-For \$$proxy_add_x_forwarded_for;
     }
 
     location /accounts {
+        resolver 127.0.0.1;
         set \$$upstream_accounts accounts.service.terraform.consul;
-        proxy_pass https://\$$upstream_accounts:3002;
+        proxy_pass https://\$$upstream_accounts:3002\$$uri;
+        proxy_set_header Host \$$host;
+        proxy_set_header X-Real-IP \$$remote_addr;
+        proxy_set_header X-Forwarded-For \$$proxy_add_x_forwarded_for;
+    }
+
+    location / {
+        resolver 127.0.0.1;
+        set \$$upstream_web web.service.terraform.consul;
+        proxy_pass https://\$$upstream_web:8080\$$uri;
+        proxy_set_header Host \$$host;
+        proxy_set_header X-Real-IP \$$remote_addr;
+        proxy_set_header X-Forwarded-For \$$proxy_add_x_forwarded_for;
     }
   }
 }

@@ -29,7 +29,7 @@ resource "aws_security_group" "services" {
   }
 
   tags = {
-    stream = "${var.stream_tag}"
+    Stream = "${var.stream_tag}"
   }
 }
 
@@ -53,7 +53,7 @@ resource "aws_db_instance" "services" {
   depends_on = ["aws_db_subnet_group.services"]
 
   tags {
-    stream = "${var.stream_tag}"
+    Stream = "${var.stream_tag}"
   }
 }
 
@@ -66,7 +66,7 @@ resource "aws_db_subnet_group" "services" {
   ]
 
   tags {
-    stream = "${var.stream_tag}"
+    Stream = "${var.stream_tag}"
   }
 }
 

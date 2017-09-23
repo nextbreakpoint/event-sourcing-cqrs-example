@@ -77,12 +77,12 @@ variable "environment" {
 variable "webserver_bucker_name" {
 }
 
-### MANDATORY ###
-variable "web_server_elb_certificate_path" {
+variable "webserver_elb_certificate_path" {
+  default = "environments/production/nginx/nginx.crt"
 }
 
-### MANDATORY ###
-variable "web_server_elb_private_key_path" {
+variable "webserver_elb_private_key_path" {
+  default = "environments/production/nginx/nginx.key"
 }
 
 ###################################################################

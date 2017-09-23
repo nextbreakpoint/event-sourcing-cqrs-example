@@ -48,8 +48,6 @@ public abstract class WatchHandler implements Handler<RoutingContext> {
         try {
             createWatcher(routingContext);
         } catch (Exception e) {
-            e.printStackTrace();
-
             routingContext.fail(Failure.requestFailed(e));
         }
     }

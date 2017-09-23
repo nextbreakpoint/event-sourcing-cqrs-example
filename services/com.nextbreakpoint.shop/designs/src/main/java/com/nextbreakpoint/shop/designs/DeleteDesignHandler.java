@@ -22,8 +22,6 @@ public class DeleteDesignHandler implements Handler<RoutingContext> {
         try {
             processRemoveDesign(routingContext);
         } catch (Exception e) {
-            e.printStackTrace();
-
             routingContext.fail(Failure.requestFailed(e));
         }
     }

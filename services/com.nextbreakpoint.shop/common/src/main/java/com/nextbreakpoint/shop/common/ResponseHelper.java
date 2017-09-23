@@ -25,8 +25,6 @@ public class ResponseHelper {
 
         logger.log(Level.WARNING, message);
 
-        throwable.filter(e -> !(e instanceof Failure)).ifPresent(e -> e.printStackTrace());
-
         routingContext.response()
                 .putHeader(Headers.CONTENT_TYPE, ContentType.APPLICATION_JSON)
                 .setStatusCode(statusCode)
@@ -44,8 +42,6 @@ public class ResponseHelper {
                 .orElseGet(() -> routingContext.statusCode() > 0 ? routingContext.statusCode() : 500);
 
         logger.log(Level.WARNING, message);
-
-        throwable.filter(e -> !(e instanceof Failure)).ifPresent(e -> e.printStackTrace());
 
         routingContext.response()
                 .putHeader("Location", getErrorRedirectURL.apply(statusCode))

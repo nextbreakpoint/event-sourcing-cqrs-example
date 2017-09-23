@@ -23,8 +23,6 @@ public class ListAccountsHandler implements Handler<RoutingContext> {
         try {
             processListAccounts(routingContext);
         } catch (Exception e) {
-            e.printStackTrace();
-
             routingContext.fail(Failure.requestFailed(e));
         }
     }

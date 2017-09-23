@@ -28,8 +28,6 @@ public class GetDesignHandler implements Handler<RoutingContext> {
         try {
             processGetDesign(routingContext);
         } catch (Exception e) {
-            e.printStackTrace();
-
             routingContext.fail(Failure.requestFailed(e));
         }
     }

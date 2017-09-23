@@ -23,8 +23,6 @@ public class GetSelfAccountHandler implements Handler<RoutingContext> {
         try {
             processGetSelfAccount(routingContext);
         } catch (Exception e) {
-            e.printStackTrace();
-
             routingContext.fail(Failure.requestFailed(e));
         }
     }

@@ -32,8 +32,6 @@ public class UserHandler implements Handler<RoutingContext> {
         try {
             Authentication.getUser(jwtProvider, routingContext).subscribe(user -> handleUser(routingContext, user), err -> routingContext.next());
         } catch (Exception e) {
-            e.printStackTrace();
-
             // TODO log error
             routingContext.put("username", "Stranger");
             routingContext.next();
@@ -49,8 +47,6 @@ public class UserHandler implements Handler<RoutingContext> {
                 fetchAccount(routingContext, user);
             }
         } catch (Exception e) {
-            e.printStackTrace();
-
             // TODO log error
             routingContext.put("username", "Stranger");
             routingContext.next();

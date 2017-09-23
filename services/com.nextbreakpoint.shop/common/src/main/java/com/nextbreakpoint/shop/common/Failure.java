@@ -12,14 +12,6 @@ public class Failure extends RuntimeException {
         return statusCode;
     }
 
-    public static Failure authenticationError(Throwable err) {
-        return new Failure(500, "Failed to authenticate user");
-    }
-
-    public static Failure requestFailed(Throwable err) {
-        return new Failure(500, "Failed to process request");
-    }
-
     public static Failure accessDenied() {
         return new Failure(403, "Access denied");
     }
@@ -32,7 +24,18 @@ public class Failure extends RuntimeException {
         return new Failure(404, "Not found");
     }
 
+    public static Failure authenticationError(Throwable err) {
+        err.printStackTrace();
+        return new Failure(500, "Failed to authenticate user");
+    }
+
     public static Failure databaseError(Throwable err) {
-        return new Failure(500, "Database error");
+        err.printStackTrace();
+        return new Failure(500, "Failed to execute statement");
+    }
+
+    public static Failure requestFailed(Throwable err) {
+        err.printStackTrace();
+        return new Failure(500, "Failed to process request");
     }
 }

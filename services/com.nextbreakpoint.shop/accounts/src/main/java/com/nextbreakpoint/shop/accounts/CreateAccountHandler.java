@@ -22,8 +22,6 @@ public class CreateAccountHandler implements Handler<RoutingContext> {
         try {
             processCreateAccount(routingContext);
         } catch (Exception e) {
-            e.printStackTrace();
-
             routingContext.fail(Failure.requestFailed(e));
         }
     }

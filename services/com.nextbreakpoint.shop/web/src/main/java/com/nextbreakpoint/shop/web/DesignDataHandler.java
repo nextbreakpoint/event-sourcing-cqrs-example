@@ -33,18 +33,22 @@ public class DesignDataHandler implements Handler<RoutingContext> {
     }
 
     public void handle(RoutingContext routingContext) {
-        final String token = Authentication.getToken(routingContext);
+        try {
+            final String token = Authentication.getToken(routingContext);
 
-        final String uuid = routingContext.pathParam("param0");
+            final String uuid = routingContext.pathParam("param0");
 
-        final HttpRequest<Buffer> request = client.get("/designs/" + uuid);
+            final HttpRequest<Buffer> request = client.get("/designs/" + uuid);
 
-        if (token != null) {
-            request.putHeader(AUTHORIZATION, token);
+            if (token != null) {
+                request.putHeader(AUTHORIZATION, token);
+            }
+
+            request.putHeader(ACCEPT, APPLICATION_JSON).rxSend()
+                  .subscribe(response -> handleDesign(routingContext, response), e -> routingContext.fail(Failure.requestFailed(e)));
+        } catch (Exception e) {
+            routingContext.fail(Failure.requestFailed(e));
         }
-
-        request.putHeader(ACCEPT, APPLICATION_JSON).rxSend()
-              .subscribe(response -> handleDesign(routingContext, response), e -> routingContext.fail(Failure.requestFailed(e)));
     }
 
     private void handleDesign(RoutingContext routingContext, HttpResponse<Buffer> response) {
@@ -75,8 +79,6 @@ public class DesignDataHandler implements Handler<RoutingContext> {
 
             routingContext.next();
         } catch (Exception e) {
-            e.printStackTrace();
-
             routingContext.fail(Failure.requestFailed(e));
         }
     }

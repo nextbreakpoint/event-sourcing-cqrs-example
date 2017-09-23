@@ -38,8 +38,6 @@ public class GetTileHandler implements Handler<RoutingContext> {
         try {
             processGetTileAsync(routingContext);
         } catch (Exception e) {
-            e.printStackTrace();
-
             routingContext.fail(Failure.requestFailed(e));
         }
     }

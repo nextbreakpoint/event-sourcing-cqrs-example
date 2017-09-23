@@ -19,8 +19,6 @@ public class UpdateDesignHandler implements Handler<RoutingContext> {
         try {
             processUpdateDesign(routingContext);
         } catch (Exception e) {
-            e.printStackTrace();
-
             routingContext.fail(Failure.requestFailed(e));
         }
     }

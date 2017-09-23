@@ -8,7 +8,7 @@
   "jwt_keystore_type": "jceks",
   "jwt_keystore_secret": "secret",
 
-  "web_url": "https://cluster.nextbreakpoint.com",
+  "web_url": "https://shop.nextbreakpoint.com",
 
   "jdbc_url": "jdbc:mysql://rds-services.internal:3306/accounts?useSSL=false&nullNamePatternMatchesAll=true",
   "jdbc_driver": "com.mysql.cj.jdbc.Driver",
@@ -20,6 +20,6 @@
   "jdbc_min_pool_size": 20,
 
   "graphite_reporter_enabled": false,
-  "graphite_host": "localhost",
+  "graphite_host": "graphite.internal",
   "graphite_port": 2003
 }

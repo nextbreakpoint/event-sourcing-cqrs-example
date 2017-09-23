@@ -16,14 +16,14 @@
   "jwt_keystore_type": "jceks",
   "jwt_keystore_secret": "secret",
 
-  "web_url": "https://cluster.nextbreakpoint.com",
-  "auth_url": "https://auth.nextbreakpoint.com",
-  "designs_url": "https://designs.nextbreakpoint.com",
-  "accounts_url": "https://accounts.nextbreakpoint.com",
+  "web_url": "https://shop.nextbreakpoint.com",
+  "auth_url": "https://shop.nextbreakpoint.com",
+  "designs_url": "https://shop.nextbreakpoint.com",
+  "accounts_url": "https://shop.nextbreakpoint.com",
 
   "csrf_secret": "tshirts",
 
   "graphite_reporter_enabled": false,
-  "graphite_host": "localhost",
+  "graphite_host": "graphite.internal",
   "graphite_port": 2003
 }

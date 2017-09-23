@@ -19,7 +19,7 @@ const position = [0, 0]
 
 var uuid = "00000000-0000-0000-0000-000000000000"
 
-const regexp = /https?:\/\/.*:.*\/admin\/designs\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/g
+const regexp = /https?:\/\/.*\/admin\/designs\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/g
 const match = regexp.exec(window.location.href)
 
 if (match != null && match.length == 2) {

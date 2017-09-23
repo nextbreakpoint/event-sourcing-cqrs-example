@@ -32,9 +32,9 @@
   "oauth_authorize_path": "/oauth/authorize",
   "oauth_authority": "user:email",
 
-  "cookie_domain": "nginx.nextbreakpoint.com",
+  "cookie_domain": "shop.nextbreakpoint.com",
 
-  "admin_users": ["admin@nextbreakpoint.com"],
+  "admin_users": ["andrea@nextbreakpoint.com"],
 
   "graphite_reporter_enabled": true,
   "graphite_host": "graphite-server",

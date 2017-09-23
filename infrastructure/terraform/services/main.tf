@@ -115,7 +115,7 @@ resource "aws_iam_role_policy" "container_tasks_role_policy" {
                 "s3:GetObject"
             ],
             "Effect": "Allow",
-            "Resource": "arn:aws:s3:::${data.terraform_remote_state.ecs.ecs-cluster-bucket-name}/*"
+            "Resource": "arn:aws:s3:::${var.secrets_bucket_name}/*"
         }
     ]
 }
@@ -127,7 +127,7 @@ data "template_file" "accounts_template" {
 
   vars {
     account_id         = "${var.account_id}"
-    bucket_name        = "${data.terraform_remote_state.ecs.ecs-cluster-bucket-name}"
+    bucket_name        = "${var.secrets_bucket_name}"
   }
 }
 
@@ -136,7 +136,7 @@ data "template_file" "designs_template" {
 
   vars {
     account_id         = "${var.account_id}"
-    bucket_name        = "${data.terraform_remote_state.ecs.ecs-cluster-bucket-name}"
+    bucket_name        = "${var.secrets_bucket_name}"
   }
 }
 
@@ -145,7 +145,7 @@ data "template_file" "auth_template" {
 
   vars {
     account_id         = "${var.account_id}"
-    bucket_name        = "${data.terraform_remote_state.ecs.ecs-cluster-bucket-name}"
+    bucket_name        = "${var.secrets_bucket_name}"
   }
 }
 
@@ -154,7 +154,7 @@ data "template_file" "web_template" {
 
   vars {
     account_id         = "${var.account_id}"
-    bucket_name        = "${data.terraform_remote_state.ecs.ecs-cluster-bucket-name}"
+    bucket_name        = "${var.secrets_bucket_name}"
   }
 }
 
@@ -283,64 +283,29 @@ resource "aws_ecs_task_definition" "server" {
 ##############################################################################
 
 resource "aws_s3_bucket_object" "accounts" {
-  bucket = "${data.terraform_remote_state.ecs.ecs-cluster-bucket-name}"
+  bucket = "${var.secrets_bucket_name}"
   key    = "environments/production/config/accounts.json"
   source = "environments/production/config/accounts.json"
   etag   = "${md5(file("environments/production/config/accounts.json"))}"
 }
 
 resource "aws_s3_bucket_object" "designs" {
-  bucket = "${data.terraform_remote_state.ecs.ecs-cluster-bucket-name}"
+  bucket = "${var.secrets_bucket_name}"
   key    = "environments/production/config/designs.json"
   source = "environments/production/config/designs.json"
   etag   = "${md5(file("environments/production/config/designs.json"))}"
 }
 
 resource "aws_s3_bucket_object" "auth" {
-  bucket = "${data.terraform_remote_state.ecs.ecs-cluster-bucket-name}"
+  bucket = "${var.secrets_bucket_name}"
   key    = "environments/production/config/auth.json"
   source = "environments/production/config/auth.json"
   etag   = "${md5(file("environments/production/config/auth.json"))}"
 }
 
 resource "aws_s3_bucket_object" "web" {
-  bucket = "${data.terraform_remote_state.ecs.ecs-cluster-bucket-name}"
+  bucket = "${var.secrets_bucket_name}"
   key    = "environments/production/config/web.json"
   source = "environments/production/config/web.json"
   etag   = "${md5(file("environments/production/config/web.json"))}"
-}
-
-resource "aws_s3_bucket_object" "keystore-auth" {
-  bucket = "${data.terraform_remote_state.ecs.ecs-cluster-bucket-name}"
-  key    = "environments/production/keystores/keystore-auth.jceks"
-  source = "environments/production/keystores/keystore-auth.jceks"
-  etag   = "${md5(file("environments/production/keystores/keystore-auth.jceks"))}"
-}
-
-resource "aws_s3_bucket_object" "keystore-client" {
-  bucket = "${data.terraform_remote_state.ecs.ecs-cluster-bucket-name}"
-  key    = "environments/production/keystores/keystore-client.jks"
-  source = "environments/production/keystores/keystore-client.jks"
-  etag   = "${md5(file("environments/production/keystores/keystore-client.jks"))}"
-}
-
-resource "aws_s3_bucket_object" "keystore-server" {
-  bucket = "${data.terraform_remote_state.ecs.ecs-cluster-bucket-name}"
-  key    = "environments/production/keystores/keystore-server.jks"
-  source = "environments/production/keystores/keystore-server.jks"
-  etag   = "${md5(file("environments/production/keystores/keystore-server.jks"))}"
-}
-
-resource "aws_s3_bucket_object" "truststore-client" {
-  bucket = "${data.terraform_remote_state.ecs.ecs-cluster-bucket-name}"
-  key    = "environments/production/keystores/truststore-client.jks"
-  source = "environments/production/keystores/truststore-client.jks"
-  etag   = "${md5(file("environments/production/keystores/truststore-client.jks"))}"
-}
-
-resource "aws_s3_bucket_object" "truststore-server" {
-  bucket = "${data.terraform_remote_state.ecs.ecs-cluster-bucket-name}"
-  key    = "environments/production/keystores/truststore-server.jks"
-  source = "environments/production/keystores/truststore-server.jks"
-  etag   = "${md5(file("environments/production/keystores/truststore-server.jks"))}"
 }

@@ -3,6 +3,8 @@
 *.crt
 *.key
 *.cer
+*.pem
+*.pub
 *.iml
 **/.idea
 **/.vertx
@@ -10,8 +12,6 @@
 *.tf.bkp
 *.tfstate
 *.tfstate.backup
-*.pem
-*.pub
 config_vars.json
 config.tfvars
 terraform.tfstate*

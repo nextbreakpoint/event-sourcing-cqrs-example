@@ -155,15 +155,15 @@ http {
 
     server_name shop.${public_hosted_zone_name};
 
-    ssl_certificate     /nginx/nginx.crt;
-    ssl_certificate_key /nginx/nginx.key;
+    ssl_certificate     /nginx/ca_and_server_cert.pem;
+    ssl_certificate_key /nginx/server_key.pem;
     ssl_protocols       TLSv1 TLSv1.1 TLSv1.2;
     ssl_ciphers         HIGH:!aNULL:!MD5;
 
     location /auth {
         resolver 127.0.0.1;
         set \$$upstream_auth auth.service.terraform.consul;
-        proxy_pass https://\$$upstream_auth:3000\$$uri;
+        proxy_pass https://\$$upstream_auth:3000\$$request_uri;
         proxy_set_header Host \$$host;
         proxy_set_header X-Real-IP \$$remote_addr;
         proxy_set_header X-Forwarded-For \$$proxy_add_x_forwarded_for;
@@ -172,7 +172,7 @@ http {
     location /designs {
         resolver 127.0.0.1;
         set \$$upstream_designs designs.service.terraform.consul;
-        proxy_pass https://\$$upstream_designs:3001\$$uri;
+        proxy_pass https://\$$upstream_designs:3001\$$request_uri;
         proxy_set_header Host \$$host;
         proxy_set_header X-Real-IP \$$remote_addr;
         proxy_set_header X-Forwarded-For \$$proxy_add_x_forwarded_for;
@@ -181,7 +181,7 @@ http {
     location /accounts {
         resolver 127.0.0.1;
         set \$$upstream_accounts accounts.service.terraform.consul;
-        proxy_pass https://\$$upstream_accounts:3002\$$uri;
+        proxy_pass https://\$$upstream_accounts:3002\$$request_uri;
         proxy_set_header Host \$$host;
         proxy_set_header X-Real-IP \$$remote_addr;
         proxy_set_header X-Forwarded-For \$$proxy_add_x_forwarded_for;
@@ -190,7 +190,7 @@ http {
     location / {
         resolver 127.0.0.1;
         set \$$upstream_web web.service.terraform.consul;
-        proxy_pass https://\$$upstream_web:8080\$$uri;
+        proxy_pass https://\$$upstream_web:8080\$$request_uri;
         proxy_set_header Host \$$host;
         proxy_set_header X-Real-IP \$$remote_addr;
         proxy_set_header X-Forwarded-For \$$proxy_add_x_forwarded_for;
@@ -205,8 +205,11 @@ server=/consul/127.0.0.1#8600
 EOF
 sudo mv /tmp/dnsmasq.consul /etc/dnsmasq.d/10-consul
 
-aws s3 cp s3://${bucker_name}/environments/${environment}/nginx/nginx.crt /nginx/nginx.crt
-aws s3 cp s3://${bucker_name}/environments/${environment}/nginx/nginx.key /nginx/nginx.key
+aws s3 cp s3://${bucket_name}/environments/${environment}/nginx/server_cert.pem /nginx/server_cert.pem
+aws s3 cp s3://${bucket_name}/environments/${environment}/nginx/server_key.pem /nginx/server_key.pem
+aws s3 cp s3://${bucket_name}/environments/${environment}/nginx/ca_cert.pem /nginx/ca_cert.pem
+
+cat /nginx/server_cert.pem /nginx/ca_cert.pem > /nginx/ca_and_server_cert.pem
 
 sudo service dnsmasq restart
 

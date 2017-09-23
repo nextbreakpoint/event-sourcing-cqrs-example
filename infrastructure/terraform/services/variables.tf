@@ -17,3 +17,7 @@ variable "stream_tag" {
 ### MANDATORY ###
 variable "account_id" {
 }
+
+### MANDATORY ###
+variable "secrets_bucket_name" {
+}

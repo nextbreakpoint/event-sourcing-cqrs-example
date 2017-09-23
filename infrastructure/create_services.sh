@@ -9,3 +9,5 @@ cd $DIR/terraform/rds && tf_init && tf_apply
 cd $DIR/terraform/databases && tf_init && tf_apply && tf_destroy -force
 
 cd $DIR/terraform/services && tf_init && tf_apply
+
+cd $DIR/terraform/webserver && tf_init && tf_apply

@@ -1,0 +1,27 @@
+{
+  "host_port": 3001,
+
+  "server_keystore_path": "../keystores/keystore-server.jks",
+  "server_keystore_secret": "secret",
+
+  "jwt_keystore_path": "../keystores/keystore-auth.jceks",
+  "jwt_keystore_type": "jceks",
+  "jwt_keystore_secret": "secret",
+
+  "web_url": "https://shop.nextbreakpoint.com",
+
+  "jdbc_url": "jdbc:mysql://database:3306/designs?useSSL=false&nullNamePatternMatchesAll=true",
+  "jdbc_driver": "com.mysql.cj.jdbc.Driver",
+  "jdbc_username": "verticle",
+  "jdbc_password": "password",
+  "jdbc_liquibase_username": "liquibase",
+  "jdbc_liquibase_password": "password",
+  "jdbc_max_pool_size": 200,
+  "jdbc_min_pool_size": 20,
+
+  "graphite_reporter_enabled": false,
+  "graphite_host": "localhost",
+  "graphite_port": 2003,
+
+  "max_execution_time_in_millis": 30000
+}

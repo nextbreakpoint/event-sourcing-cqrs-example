@@ -28,8 +28,8 @@ public class DesignDataHandler implements Handler<RoutingContext> {
 
     public DesignDataHandler(WebClient client, JsonObject config) {
         this.client = client;
-        this.webUrl = config.getString("web_url");
-        this.designsUrl = config.getString("designs_url");
+        this.webUrl = config.getString("client_web_url");
+        this.designsUrl = config.getString("client_designs_url");
     }
 
     public void handle(RoutingContext routingContext) {

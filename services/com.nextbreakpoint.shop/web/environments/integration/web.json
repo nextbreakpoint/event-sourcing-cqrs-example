@@ -16,10 +16,14 @@
   "jwt_keystore_type": "jceks",
   "jwt_keystore_secret": "secret",
 
-  "web_url": "https://localhost:8080",
-  "auth_url": "http://${stub.host}:${stub.port}",
-  "designs_url": "http://${stub.host}:${stub.port}",
-  "accounts_url": "http://${stub.host}:${stub.port}",
+  "client_web_url": "https://localhost:8080",
+  "client_auth_url": "http://${stub.host}:${stub.port}",
+  "client_designs_url": "http://${stub.host}:${stub.port}",
+  "client_accounts_url": "http://${stub.host}:${stub.port}",
+
+  "server_auth_url": "http://${stub.host}:${stub.port}",
+  "server_designs_url": "http://${stub.host}:${stub.port}",
+  "server_accounts_url": "http://${stub.host}:${stub.port}",
 
   "csrf_secret": "tshirts",
 

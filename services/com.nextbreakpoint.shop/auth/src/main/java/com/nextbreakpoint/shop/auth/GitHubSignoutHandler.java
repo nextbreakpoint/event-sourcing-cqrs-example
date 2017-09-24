@@ -20,7 +20,7 @@ public class GitHubSignoutHandler implements Handler<RoutingContext> {
 
     public GitHubSignoutHandler(Vertx vertx, JsonObject config, Router router) throws MalformedURLException {
         cookieDomain = config.getString("cookie_domain");
-        webUrl = config.getString("web_url");
+        webUrl = config.getString("client_web_url");
         githubClient = WebClientFactory.create(vertx, config.getString("github_url"));
     }
 

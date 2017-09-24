@@ -16,10 +16,14 @@
   "jwt_keystore_type": "jceks",
   "jwt_keystore_secret": "secret",
 
-  "web_url": "https://localhost:8080",
-  "auth_url": "https://localhost:3000",
-  "designs_url": "https://localhost:3001",
-  "accounts_url": "https://localhost:3002",
+  "client_web_url": "https://localhost:8080",
+  "client_auth_url": "https://localhost:3000",
+  "client_designs_url": "https://localhost:3001",
+  "client_accounts_url": "https://localhost:3002",
+
+  "server_auth_url": "https://localhost:3000",
+  "server_designs_url": "https://localhost:3001",
+  "server_accounts_url": "https://localhost:3002",
 
   "csrf_secret": "tshirts",
 

@@ -8,7 +8,7 @@
   "jwt_keystore_type": "jceks",
   "jwt_keystore_secret": "secret",
 
-  "web_url": "https://shop.nextbreakpoint.com",
+  "client_web_url": "https://shop.nextbreakpoint.com",
 
   "jdbc_url": "jdbc:mysql://database:3306/designs?useSSL=false&nullNamePatternMatchesAll=true",
   "jdbc_driver": "com.mysql.cj.jdbc.Driver",

@@ -47,8 +47,8 @@ public class GitHubSigninHandler implements Handler<RoutingContext> {
         adminUsers = config.getJsonArray("admin_users")
                 .stream().map(x -> (String) x).collect(Collectors.toSet());
         cookieDomain = config.getString("cookie_domain");
-        webUrl = config.getString("web_url");
-        accountsClient = WebClientFactory.create(vertx, config.getString("accounts_url"), config);
+        webUrl = config.getString("client_web_url");
+        accountsClient = WebClientFactory.create(vertx, config.getString("server_accounts_url"), config);
         githubClient = WebClientFactory.create(vertx, config.getString("github_url"));
         jwtProvider = JWTProviderFactory.create(vertx, config);
         oauthHandler = createOAuth2Handler(vertx, config, router);
@@ -199,7 +199,7 @@ public class GitHubSigninHandler implements Handler<RoutingContext> {
         final String oauthTokenPath = config.getString("oauth_token_path");
         final String oauthAuthorisePath = config.getString("oauth_authorize_path");
         final String oauthAuthority = config.getString("oauth_authority");
-        final String authUrl = config.getString("auth_url");
+        final String authUrl = config.getString("client_auth_url");
 
         final OAuth2ClientOptions oauth2Options = new OAuth2ClientOptions()
                 .setClientID(clientId)

@@ -61,7 +61,7 @@ public class Verticle extends AbstractVerticle {
 
         final Integer port = config.getInteger("host_port");
 
-        final String webUrl = config.getString("web_url");
+        final String webUrl = config.getString("client_web_url");
 
         final Router router = Router.router(vertx);
         router.route().handler(LoggerHandler.create());

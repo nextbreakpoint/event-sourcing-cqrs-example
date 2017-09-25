@@ -135,14 +135,18 @@
                                             </bind>
                                         </volumes>
                                         <wait>
-                                            <http>
-                                                <url>https://localhost:${http.port}/accounts</url>
-                                                <method>OPTIONS</method>
-                                                <status>204</status>
-                                                <allowAllHosts>true</allowAllHosts>
-                                            </http>
-                                            <time>20000</time>
+                                            <log>INFO: Succeeded in deploying verticle</log>
+                                            <time>30000</time>
                                         </wait>
+                                        <!--<wait>-->
+                                            <!--<http>-->
+                                                <!--<url>https://localhost:${http.port}/accounts</url>-->
+                                                <!--<method>OPTIONS</method>-->
+                                                <!--<status>204</status>-->
+                                                <!--<allowAllHosts>true</allowAllHosts>-->
+                                            <!--</http>-->
+                                            <!--<time>20000</time>-->
+                                        <!--</wait>-->
                                         <links>
                                             <link>database</link>
                                         </links>

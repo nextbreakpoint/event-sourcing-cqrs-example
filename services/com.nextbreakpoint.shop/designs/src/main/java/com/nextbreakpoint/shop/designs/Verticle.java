@@ -125,6 +125,7 @@ public class Verticle extends AbstractVerticle {
         router.delete("/designs").handler(new DeleteDesignsHandler(store));
 
         router.options("/designs/*").handler(routingContext -> routingContext.response().setStatusCode(204).end());
+        router.options("/designs").handler(routingContext -> routingContext.response().setStatusCode(204).end());
 
         router.get("/designs/state").produces(APPLICATION_JSON).consumes(APPLICATION_JSON).handler(new DesignStateHandler(store));
         router.get("/designs/state").produces(APPLICATION_JSON).handler(new DesignsStateHandler(store));

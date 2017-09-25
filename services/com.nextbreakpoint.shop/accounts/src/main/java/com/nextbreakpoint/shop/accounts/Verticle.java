@@ -115,6 +115,7 @@ public class Verticle extends AbstractVerticle {
         router.delete("/accounts").handler(new DeleteAccountsHandler(store));
 
         router.options("/accounts/*").handler(routingContext -> routingContext.response().setStatusCode(204).end());
+        router.options("/accounts").handler(routingContext -> routingContext.response().setStatusCode(204).end());
 
         router.route().failureHandler(routingContext -> ResponseHelper.sendFailure(routingContext));
 

@@ -63,21 +63,22 @@ public class Verticle extends AbstractVerticle {
 
         final String webUrl = config.getString("client_web_url");
 
-        final Router router = Router.router(vertx);
-        router.route().handler(LoggerHandler.create());
-        router.route().handler(CookieHandler.create());
-        router.route().handler(BodyHandler.create());
+        final Router mainRouter = Router.router(vertx);
+
+        mainRouter.route().handler(LoggerHandler.create());
+        mainRouter.route().handler(CookieHandler.create());
+        mainRouter.route().handler(BodyHandler.create());
 
         final CorsHandler corsHandler = CORSHandlerFactory.createWithGetOnly(webUrl, asList(AUTHORIZATION, CONTENT_TYPE, ACCEPT));
 
-        router.route("/auth/*").handler(corsHandler);
+        mainRouter.route("/auth/*").handler(corsHandler);
 
-        router.get("/auth/signin/*").handler(createSigninHandler(config, router));
-        router.get("/auth/signout/*").handler(createSignoutHandler(config, router));
+        mainRouter.get("/auth/signin/*").handler(createSigninHandler(config, mainRouter));
+        mainRouter.get("/auth/signout/*").handler(createSignoutHandler(config, mainRouter));
 
-        router.route().failureHandler(routingContext -> redirectOnFailure(routingContext, webUrl));
+        mainRouter.route().failureHandler(routingContext -> redirectOnFailure(routingContext, webUrl));
 
-        server = vertx.createHttpServer(ServerUtil.makeServerOptions(config)).requestHandler(router::accept).listen(port);
+        server = vertx.createHttpServer(ServerUtil.makeServerOptions(config)).requestHandler(mainRouter::accept).listen(port);
 
         return null;
     }

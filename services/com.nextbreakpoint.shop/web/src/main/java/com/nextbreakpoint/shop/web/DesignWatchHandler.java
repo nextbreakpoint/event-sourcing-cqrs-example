@@ -25,7 +25,7 @@ public class DesignWatchHandler extends WatchHandler {
     protected void pollBucket(List<String> bucket) {
         final JsonArray uuids = bucket.stream().collect(JsonArray::new, JsonArray::add, (a, b) -> {});
 
-        getClient().get("/designs/state")
+        getClient().get("/api/designs/state")
                 .putHeader(AUTHORIZATION, makeAccessToken())
                 .putHeader(ACCEPT, APPLICATION_JSON)
                 .putHeader(CONTENT_TYPE, APPLICATION_JSON)

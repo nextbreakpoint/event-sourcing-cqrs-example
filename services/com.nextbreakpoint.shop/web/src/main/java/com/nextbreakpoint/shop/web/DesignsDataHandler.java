@@ -37,7 +37,7 @@ public class DesignsDataHandler implements Handler<RoutingContext> {
         try {
             final String token = Authentication.getToken(routingContext);
 
-            final HttpRequest<Buffer> request = client.get("/designs");
+            final HttpRequest<Buffer> request = client.get("/api/designs");
 
             if (token != null) {
                 request.putHeader(AUTHORIZATION, token);
@@ -71,7 +71,7 @@ public class DesignsDataHandler implements Handler<RoutingContext> {
     }
 
     private Design makeDesign(String uuid) {
-        return new Design(uuid, webUrl + "/content/designs/" + uuid, designsUrl + "/designs/" + uuid + "/0/0/0/256.png", "", "", "", "", "");
+        return new Design(uuid, webUrl + "/content/designs/" + uuid, designsUrl + "/api/designs/" + uuid + "/0/0/0/256.png", "", "", "", "", "");
     }
 
     public static DesignsDataHandler create(WebClient client, JsonObject config) {

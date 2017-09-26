@@ -16,7 +16,7 @@
                     var image = $('<img></img>')
                         .attr('class', 'design-image')
                         .attr('id', design.uuid)
-                        .attr('src', '{{context.get('designs_url')}}/designs/' + uuid + '/0/0/0/512.png?t=' + modified)
+                        .attr('src', '{{context.get('designs_url')}}/api/designs/' + uuid + '/0/0/0/512.png?t=' + modified)
                         .attr('alt', '{{context.get('web_url')}}/content/designs/' + uuid);
 
                     var script = $('<pre></pre>')
@@ -64,7 +64,7 @@
                        if (json.offset > offset) {
                             offset = json.offset;
 
-                            $.get("{{context.get('designs_url')}}/designs/" + uuid, function(data) {
+                            $.get("{{context.get('designs_url')}}/api/designs/" + uuid, function(data) {
                                 console.log(data);
                             }).done(function(data) {
                                 updateDesign(offset, data);

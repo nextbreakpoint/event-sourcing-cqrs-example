@@ -46,7 +46,7 @@ class App extends React.Component {
             withCredentials: true
         }
 
-        axios.post(component.state.config.designs_url + '/designs', data, config)
+        axios.post(component.state.config.designs_url + '/api/designs', data, config)
             .then(function (response) {
                 if (response.status == 201) {
                     var designs = component.state.designs.slice()
@@ -73,7 +73,7 @@ class App extends React.Component {
             .filter((design) => {
                 return design.selected
             }).map((design) => {
-                return axios.delete(component.state.config.designs_url + '/designs/' + design.uuid, config)
+                return axios.delete(component.state.config.designs_url + '/api/designs/' + design.uuid, config)
             })
 
         axios.all(promises)
@@ -181,7 +181,7 @@ class App extends React.Component {
             withCredentials: true
         }
 
-        axios.get(component.state.config.accounts_url + '/accounts/me', config)
+        axios.get(component.state.config.accounts_url + '/api/accounts/me', config)
             .then(function (response) {
                 let role = response.data.role
                 let name = response.data.name
@@ -207,7 +207,7 @@ class App extends React.Component {
             withCredentials: true
         }
 
-        axios.get(component.state.config.designs_url + '/designs', config)
+        axios.get(component.state.config.designs_url + '/api/designs', config)
             .then(function (response) {
                 let designs = response.data.map((uuid) => { return { uuid: uuid, selected: false }})
 
@@ -232,7 +232,7 @@ class App extends React.Component {
             withCredentials: true
         }
 
-        axios.get(component.state.config.designs_url + '/designs', config)
+        axios.get(component.state.config.designs_url + '/api/designs', config)
             .then(function (response) {
                 let designs = response.data.map((uuid) => { return { uuid: uuid, selected: false }})
 

@@ -169,7 +169,7 @@ http {
         proxy_set_header X-Forwarded-For \$$proxy_add_x_forwarded_for;
     }
 
-    location /designs {
+    location /api/designs {
         resolver 127.0.0.1;
         set \$$upstream_designs designs.service.terraform.consul;
         proxy_pass https://\$$upstream_designs:3001\$$request_uri;
@@ -178,7 +178,7 @@ http {
         proxy_set_header X-Forwarded-For \$$proxy_add_x_forwarded_for;
     }
 
-    location /accounts {
+    location /api/accounts {
         resolver 127.0.0.1;
         set \$$upstream_accounts accounts.service.terraform.consul;
         proxy_pass https://\$$upstream_accounts:3002\$$request_uri;

@@ -92,47 +92,51 @@ public class Verticle extends AbstractVerticle {
 
         final Store store = new Store(JDBCClientFactory.create(vertx, config));
 
-        final Router router = Router.router(vertx);
+        final Router mainRouter = Router.router(vertx);
 
-        router.route().handler(LoggerHandler.create());
-        router.route().handler(BodyHandler.create());
-        router.route().handler(CookieHandler.create());
-        router.route().handler(TimeoutHandler.create(30000));
+        final Router apiRouter = Router.router(vertx);
+
+        mainRouter.route().handler(LoggerHandler.create());
+        mainRouter.route().handler(BodyHandler.create());
+        mainRouter.route().handler(CookieHandler.create());
+        mainRouter.route().handler(TimeoutHandler.create(30000));
 
         final CorsHandler corsHandler = CORSHandlerFactory.createWithAll(webUrl, asList(AUTHORIZATION, CONTENT_TYPE, ACCEPT, XSRFTOKEN, MODIFIED), asList(CONTENT_TYPE, XSRFTOKEN, MODIFIED));
 
-        router.route("/designs/*").handler(corsHandler);
+        apiRouter.route("/designs/*").handler(corsHandler);
 
         final Consumer<RoutingContext> onAccessDenied = rc -> rc.fail(Failure.accessDenied());
 
-        router.get("/designs/*").handler(new AccessHandler(jwtProvider, onAccessDenied, asList(ADMIN, GUEST, ANONYMOUS)));
-        router.put("/designs/*").handler(new AccessHandler(jwtProvider, onAccessDenied, asList(ADMIN)));
-        router.post("/designs").handler(new AccessHandler(jwtProvider, onAccessDenied, asList(ADMIN)));
-        router.patch("/designs/*").handler(new AccessHandler(jwtProvider, onAccessDenied, asList(ADMIN)));
-        router.delete("/designs/*").handler(new AccessHandler(jwtProvider, onAccessDenied, asList(ADMIN)));
+        apiRouter.get("/designs/*").handler(new AccessHandler(jwtProvider, onAccessDenied, asList(ADMIN, GUEST, ANONYMOUS)));
+        apiRouter.put("/designs/*").handler(new AccessHandler(jwtProvider, onAccessDenied, asList(ADMIN)));
+        apiRouter.post("/designs").handler(new AccessHandler(jwtProvider, onAccessDenied, asList(ADMIN)));
+        apiRouter.patch("/designs/*").handler(new AccessHandler(jwtProvider, onAccessDenied, asList(ADMIN)));
+        apiRouter.delete("/designs/*").handler(new AccessHandler(jwtProvider, onAccessDenied, asList(ADMIN)));
 
-        router.get("/designs/:uuid/:zoom/:x/:y/:size.png").produces(IMAGE_PNG).handler(new GetTileHandler(store, executor));
+        apiRouter.get("/designs/:uuid/:zoom/:x/:y/:size.png").produces(IMAGE_PNG).handler(new GetTileHandler(store, executor));
 
-        router.get("/designs").produces(APPLICATION_JSON).handler(new ListDesignsHandler(store));
+        apiRouter.get("/designs").produces(APPLICATION_JSON).handler(new ListDesignsHandler(store));
 
-        router.getWithRegex("/designs/" + UUID_REGEXP).produces(APPLICATION_JSON).handler(new GetDesignHandler(store));
+        apiRouter.getWithRegex("/designs/" + UUID_REGEXP).produces(APPLICATION_JSON).handler(new GetDesignHandler(store));
 
-        router.post("/designs").produces(APPLICATION_JSON).consumes(APPLICATION_JSON).handler(new CreateDesignHandler(store));
-        router.putWithRegex("/designs/" + UUID_REGEXP).produces(APPLICATION_JSON).consumes(APPLICATION_JSON).handler(new UpdateDesignHandler(store));
+        apiRouter.post("/designs").produces(APPLICATION_JSON).consumes(APPLICATION_JSON).handler(new CreateDesignHandler(store));
+        apiRouter.putWithRegex("/designs/" + UUID_REGEXP).produces(APPLICATION_JSON).consumes(APPLICATION_JSON).handler(new UpdateDesignHandler(store));
 
-        router.deleteWithRegex("/designs/" + UUID_REGEXP).produces(APPLICATION_JSON).handler(new DeleteDesignHandler(store));
+        apiRouter.deleteWithRegex("/designs/" + UUID_REGEXP).produces(APPLICATION_JSON).handler(new DeleteDesignHandler(store));
 
-        router.delete("/designs").handler(new DeleteDesignsHandler(store));
+        apiRouter.delete("/designs").handler(new DeleteDesignsHandler(store));
 
-        router.options("/designs/*").handler(routingContext -> routingContext.response().setStatusCode(204).end());
-        router.options("/designs").handler(routingContext -> routingContext.response().setStatusCode(204).end());
+        apiRouter.options("/designs/*").handler(routingContext -> routingContext.response().setStatusCode(204).end());
+        apiRouter.options("/designs").handler(routingContext -> routingContext.response().setStatusCode(204).end());
 
-        router.get("/designs/state").produces(APPLICATION_JSON).consumes(APPLICATION_JSON).handler(new DesignStateHandler(store));
-        router.get("/designs/state").produces(APPLICATION_JSON).handler(new DesignsStateHandler(store));
+        apiRouter.get("/designs/state").produces(APPLICATION_JSON).consumes(APPLICATION_JSON).handler(new DesignStateHandler(store));
+        apiRouter.get("/designs/state").produces(APPLICATION_JSON).handler(new DesignsStateHandler(store));
 
-        router.route().failureHandler(routingContext -> ResponseHelper.sendFailure(routingContext));
+        mainRouter.route().failureHandler(routingContext -> ResponseHelper.sendFailure(routingContext));
 
-        server = vertx.createHttpServer(ServerUtil.makeServerOptions(config)).requestHandler(router::accept).listen(port);
+        mainRouter.mountSubRouter("/api", apiRouter);
+
+        server = vertx.createHttpServer(ServerUtil.makeServerOptions(config)).requestHandler(mainRouter::accept).listen(port);
 
         return null;
     }

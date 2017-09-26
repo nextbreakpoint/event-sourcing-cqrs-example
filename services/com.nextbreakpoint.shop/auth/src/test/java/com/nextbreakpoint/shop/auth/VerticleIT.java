@@ -42,7 +42,7 @@ public class VerticleIT {
   private static final String OAUTH_TOKEN_PATH = "/login/oauth/access_token";
   private static final String OAUTH_USER_PATH = "/user";
   private static final String OAUTH_USER_EMAILS_PATH = "/user/emails";
-  private static final String ACCOUNTS_PATH = "/accounts";
+  private static final String ACCOUNTS_PATH = "/api/accounts";
   private static final String SOME_UUID = new UUID(0, 1).toString();
 
   private static RestAssuredConfig restAssuredConfig;

@@ -15,7 +15,7 @@
                     var image = $('<img></img>')
                         .attr('class', 'designs-grid-element-image')
                         .attr('id', uuid)
-                        .attr('src', '{{context.get('designs_url')}}/designs/' + uuid + '/0/0/0/256.png?t=' + modified)
+                        .attr('src', '{{context.get('designs_url')}}/api/designs/' + uuid + '/0/0/0/256.png?t=' + modified)
                         .attr('alt', '{{context.get('web_url')}}/content/designs/' + uuid);
 
                     var anchor = $('<a></a>')
@@ -50,7 +50,7 @@
                        if (json.offset > offset) {
                             offset = json.offset;
 
-                            $.get("{{context.get('designs_url')}}/designs", function(data) {
+                            $.get("{{context.get('designs_url')}}/api/designs", function(data) {
                                 console.log(data);
                             }).done(function(data) {
                                 updateDesigns(offset, data);

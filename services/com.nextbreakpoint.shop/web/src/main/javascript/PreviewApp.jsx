@@ -69,7 +69,7 @@ class App extends React.Component {
             withCredentials: true
         }
 
-        axios.put(component.state.config.designs_url + '/designs/' + uuid, this.state.design, config)
+        axios.put(component.state.config.designs_url + '/api/designs/' + uuid, this.state.design, config)
             .then(function (response) {
                 if (response.status != 200) {
                     console.log("Can't update design")
@@ -151,7 +151,7 @@ class App extends React.Component {
             withCredentials: true
         }
 
-        axios.get(component.state.config.accounts_url + '/accounts/me', config)
+        axios.get(component.state.config.accounts_url + '/api/accounts/me', config)
             .then(function (response) {
                 let role = response.data.role
                 let name = response.data.name
@@ -177,7 +177,7 @@ class App extends React.Component {
             withCredentials: true
         }
 
-        axios.get(component.state.config.designs_url + '/designs/' + uuid, config)
+        axios.get(component.state.config.designs_url + '/api/designs/' + uuid, config)
             .then(function (response) {
                 let design = response.data
 
@@ -204,7 +204,7 @@ class App extends React.Component {
             withCredentials: true
         }
 
-        axios.get(component.state.config.designs_url + '/designs/' + uuid, config)
+        axios.get(component.state.config.designs_url + '/api/designs/' + uuid, config)
             .then(function (response) {
                 let design = response.data
 
@@ -223,7 +223,7 @@ class App extends React.Component {
 
     render() {
         if (this.state.config) {
-            const url = this.state.config.designs_url + '/designs/' + uuid + '/{z}/{x}/{y}/256.png?t=' + this.state.modified
+            const url = this.state.config.designs_url + '/api/designs/' + uuid + '/{z}/{x}/{y}/256.png?t=' + this.state.modified
 
             const parent = { label: 'Designs', link: base_url + '/admin/designs' };
 

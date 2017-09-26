@@ -98,7 +98,7 @@ public class GitHubSigninHandler implements Handler<RoutingContext> {
     protected void findAccount(RoutingContext routingContext, String redirectTo, String oauthAccessToken, String userEmail) {
         final String accessToken = Authentication.generateToken(jwtProvider, NULL_USER_UUID, Arrays.asList(Authority.PLATFORM));
 
-        accountsClient.get("/accounts")
+        accountsClient.get("/api/accounts")
                 .putHeader(AUTHORIZATION, Authentication.makeAuthorization(accessToken))
                 .addQueryParam("email", userEmail)
                 .rxSend()
@@ -145,7 +145,7 @@ public class GitHubSigninHandler implements Handler<RoutingContext> {
     }
 
     protected void createAccount(RoutingContext routingContext, String redirectTo, String accessToken, String userEmail, JsonObject userInfo) {
-        accountsClient.post("/accounts")
+        accountsClient.post("/api/accounts")
                 .putHeader(AUTHORIZATION, Authentication.makeAuthorization(accessToken))
                 .putHeader(CONTENT_TYPE, APPLICATION_JSON)
                 .putHeader(ACCEPT, APPLICATION_JSON)
@@ -154,7 +154,7 @@ public class GitHubSigninHandler implements Handler<RoutingContext> {
     }
 
     protected void fetchAccount(RoutingContext routingContext, String redirectTo, String accessToken, JsonArray accounts) {
-        accountsClient.get("/accounts/" + accounts.getString(0))
+        accountsClient.get("/api/accounts/" + accounts.getString(0))
                 .putHeader(AUTHORIZATION, Authentication.makeAuthorization(accessToken))
                 .putHeader(ACCEPT, APPLICATION_JSON)
                 .rxSend()

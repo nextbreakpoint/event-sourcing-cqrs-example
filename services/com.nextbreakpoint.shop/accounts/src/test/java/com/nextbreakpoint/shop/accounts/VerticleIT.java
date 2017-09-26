@@ -61,21 +61,21 @@ public class VerticleIT {
   public void shouldAllowOptionsRequestWithoutAccessToken() throws MalformedURLException {
     given().config(restAssuredConfig)
             .with().header("Origin", "https://localhost:8080")
-            .when().options(makeBaseURL("/accounts"))
+            .when().options(makeBaseURL("/api/accounts"))
             .then().assertThat().statusCode(204)
             .and().header("Access-Control-Allow-Origin", "https://localhost:8080")
             .and().header("Access-Control-Allow-Credentials", "true");
 
     given().config(restAssuredConfig)
             .with().header("Origin", "https://localhost:8080")
-            .when().options(makeBaseURL("/accounts/me"))
+            .when().options(makeBaseURL("/api/accounts/me"))
             .then().assertThat().statusCode(204)
             .and().header("Access-Control-Allow-Origin", "https://localhost:8080")
             .and().header("Access-Control-Allow-Credentials", "true");
 
     given().config(restAssuredConfig)
             .with().header("Origin", "https://localhost:8080")
-            .when().options(makeBaseURL("/accounts/" + UUID.randomUUID().toString()))
+            .when().options(makeBaseURL("/api/accounts/" + UUID.randomUUID().toString()))
             .then().assertThat().statusCode(204)
             .and().header("Access-Control-Allow-Origin", "https://localhost:8080")
             .and().header("Access-Control-Allow-Credentials", "true");
@@ -86,17 +86,17 @@ public class VerticleIT {
   public void shouldForbidGetRequestWithoutAccessToken() throws MalformedURLException {
     given().config(restAssuredConfig)
             .with().accept(ContentType.JSON)
-            .when().get(makeBaseURL("/accounts"))
+            .when().get(makeBaseURL("/api/accounts"))
             .then().assertThat().statusCode(403);
 
     given().config(restAssuredConfig)
             .with().accept(ContentType.JSON)
-            .when().get(makeBaseURL("/accounts/me"))
+            .when().get(makeBaseURL("/api/accounts/me"))
             .then().assertThat().statusCode(403);
 
     given().config(restAssuredConfig)
             .with().accept(ContentType.JSON)
-            .when().get(makeBaseURL("/accounts/" + UUID.randomUUID().toString()))
+            .when().get(makeBaseURL("/api/accounts/" + UUID.randomUUID().toString()))
             .then().assertThat().statusCode(403);
   }
 
@@ -107,7 +107,7 @@ public class VerticleIT {
             .and().contentType(ContentType.JSON)
             .and().accept(ContentType.JSON)
             .and().body(createPostData(makeUniqueEmail(), "guest"))
-            .when().post(makeBaseURL("/accounts"))
+            .when().post(makeBaseURL("/api/accounts"))
             .then().assertThat().statusCode(403);
   }
 
@@ -120,7 +120,7 @@ public class VerticleIT {
 
     given().config(restAssuredConfig)
             .and().accept(ContentType.JSON)
-            .when().delete(makeBaseURL("/accounts/" + uuid))
+            .when().delete(makeBaseURL("/api/accounts/" + uuid))
             .then().assertThat().statusCode(403);
   }
 
@@ -136,19 +136,19 @@ public class VerticleIT {
     given().config(restAssuredConfig)
             .with().header(AUTHORIZATION, otherAuthorization)
             .and().accept(ContentType.JSON)
-            .when().get(makeBaseURL("/accounts" ))
+            .when().get(makeBaseURL("/api/accounts" ))
             .then().assertThat().statusCode(403);
 
     given().config(restAssuredConfig)
             .with().header(AUTHORIZATION, otherAuthorization)
             .and().accept(ContentType.JSON)
-            .when().get(makeBaseURL("/accounts/" + uuid))
+            .when().get(makeBaseURL("/api/accounts/" + uuid))
             .then().assertThat().statusCode(403);
 
     given().config(restAssuredConfig)
             .with().header(AUTHORIZATION, otherAuthorization)
             .and().accept(ContentType.JSON)
-            .when().get(makeBaseURL("/accounts/me"))
+            .when().get(makeBaseURL("/api/accounts/me"))
             .then().assertThat().statusCode(403);
   }
 
@@ -164,13 +164,13 @@ public class VerticleIT {
     given().config(restAssuredConfig)
             .with().header(AUTHORIZATION, adminAuthorization)
             .and().accept(ContentType.JSON)
-            .when().get(makeBaseURL("/accounts" ))
+            .when().get(makeBaseURL("/api/accounts" ))
             .then().assertThat().statusCode(200);
 
     given().config(restAssuredConfig)
             .with().header(AUTHORIZATION, adminAuthorization)
             .and().accept(ContentType.JSON)
-            .when().get(makeBaseURL("/accounts/" + uuid))
+            .when().get(makeBaseURL("/api/accounts/" + uuid))
             .then().assertThat().statusCode(200);
 
     final String guestAuthorization = TestHelper.makeAuthorization(uuid, Arrays.asList(Authority.GUEST));
@@ -178,7 +178,7 @@ public class VerticleIT {
     given().config(restAssuredConfig)
             .with().header(AUTHORIZATION, guestAuthorization)
             .and().accept(ContentType.JSON)
-            .when().get(makeBaseURL("/accounts/me" ))
+            .when().get(makeBaseURL("/api/accounts/me" ))
             .then().assertThat().statusCode(200);
   }
 
@@ -228,7 +228,7 @@ public class VerticleIT {
     given().config(restAssuredConfig)
             .and().header(AUTHORIZATION, authorization)
             .and().accept(ContentType.JSON)
-            .when().delete(makeBaseURL("/accounts/" + uuid))
+            .when().delete(makeBaseURL("/api/accounts/" + uuid))
             .then().assertThat().statusCode(200)
             .and().contentType(ContentType.JSON)
             .and().body("uuid", notNullValue());
@@ -239,7 +239,7 @@ public class VerticleIT {
             .and().header(AUTHORIZATION, authorization)
             .and().accept(ContentType.JSON)
             .and().queryParam("email", email)
-            .when().get(makeBaseURL("/accounts"))
+            .when().get(makeBaseURL("/api/accounts"))
             .then().assertThat().statusCode(200)
             .and().contentType(ContentType.JSON)
             .and().extract().as(String[].class);
@@ -249,7 +249,7 @@ public class VerticleIT {
     return given().config(restAssuredConfig)
             .and().header(AUTHORIZATION, authorization)
             .and().accept(ContentType.JSON)
-            .when().get(makeBaseURL("/accounts"))
+            .when().get(makeBaseURL("/api/accounts"))
             .then().assertThat().statusCode(200)
             .and().contentType(ContentType.JSON)
             .and().extract().body().as(String[].class);
@@ -259,7 +259,7 @@ public class VerticleIT {
     return given().config(restAssuredConfig)
             .with().header(AUTHORIZATION, authorization)
             .and().accept(ContentType.JSON)
-            .when().get(makeBaseURL("/accounts/" + uuid))
+            .when().get(makeBaseURL("/api/accounts/" + uuid))
             .then().assertThat().statusCode(200)
             .and().extract().jsonPath();
   }
@@ -268,7 +268,7 @@ public class VerticleIT {
     given().config(restAssuredConfig)
             .and().header(AUTHORIZATION, authorization)
             .and().accept(ContentType.JSON)
-            .when().delete(makeBaseURL("/accounts"))
+            .when().delete(makeBaseURL("/api/accounts"))
             .then().assertThat().statusCode(204);
   }
 
@@ -278,7 +278,7 @@ public class VerticleIT {
             .and().contentType(ContentType.JSON)
             .and().accept(ContentType.JSON)
             .and().body(account)
-            .when().post(makeBaseURL("/accounts"))
+            .when().post(makeBaseURL("/api/accounts"))
             .then().assertThat().statusCode(201)
             .and().contentType(ContentType.JSON)
             .and().body("uuid", notNullValue())

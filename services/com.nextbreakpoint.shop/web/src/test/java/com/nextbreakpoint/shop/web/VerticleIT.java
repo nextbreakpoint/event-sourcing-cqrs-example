@@ -89,7 +89,7 @@ public class VerticleIT {
     final Date date = new Date();
 
     whenHttp(stubServer)
-            .match(get("/designs"), withHeader("accept", "application/json"))
+            .match(get("/api/designs"), withHeader("accept", "application/json"))
             .then(status(HttpStatus.OK_200), header("X-Modified", "" + date.getTime()), contentType("application/json"), stringContent("[\"" + uuid + "\"]"));
 
     given().config(restAssuredConfig)
@@ -108,7 +108,7 @@ public class VerticleIT {
     final Date date = new Date();
 
     whenHttp(stubServer)
-            .match(get("/designs/" + uuid), withHeader("accept", "application/json"))
+            .match(get("/api/designs/" + uuid), withHeader("accept", "application/json"))
             .then(status(HttpStatus.OK_200), header("X-Modified", "" + date.getTime()), contentType("application/json"), stringContent("{\"uuid\":\"" + uuid + "\",\"created\":\"" + df.format(date) + "\",\"updated\":\"" + df.format(date) + "\"}"));
 
     given().config(restAssuredConfig)
@@ -126,11 +126,11 @@ public class VerticleIT {
     final Date date = new Date();
 
     whenHttp(stubServer)
-            .match(get("/designs"), withHeader("accept", "application/json"))
+            .match(get("/api/designs"), withHeader("accept", "application/json"))
             .then(status(HttpStatus.OK_200), header("X-Modified", "" + date.getTime()), contentType("application/json"), stringContent("[\"" + designUuid + "\"]"));
 
     whenHttp(stubServer)
-            .match(get("/accounts/" + accountUuid), withHeader("accept", "application/json"))
+            .match(get("/api/accounts/" + accountUuid), withHeader("accept", "application/json"))
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"name\":\"test\",\"role\":\"guest\",\"uuid\":\"" + accountUuid + "\"}"));
 
     final Cookie cookie = TestHelper.makeCookie(accountUuid.toString(), Arrays.asList(Authority.GUEST), "localhost");
@@ -153,11 +153,11 @@ public class VerticleIT {
     final Date date = new Date();
 
     whenHttp(stubServer)
-            .match(get("/designs/" + designUuid), withHeader("accept", "application/json"))
+            .match(get("/api/designs/" + designUuid), withHeader("accept", "application/json"))
             .then(status(HttpStatus.OK_200), header("X-Modified", "" + date.getTime()), contentType("application/json"), stringContent("{\"uuid\":\"" + designUuid + "\",\"created\":\"" + df.format(date) + "\",\"updated\":\"" + df.format(date) + "\"}"));
 
     whenHttp(stubServer)
-            .match(get("/accounts/" + accountUuid), withHeader("accept", "application/json"))
+            .match(get("/api/accounts/" + accountUuid), withHeader("accept", "application/json"))
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"name\":\"test\",\"role\":\"guest\",\"uuid\":\"" + accountUuid + "\"}"));
 
     final Cookie cookie = TestHelper.makeCookie(accountUuid.toString(), Arrays.asList(Authority.GUEST), "localhost");

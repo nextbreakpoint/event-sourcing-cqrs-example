@@ -81,45 +81,49 @@ public class Verticle extends AbstractVerticle {
 
         final Store store = new Store(JDBCClientFactory.create(vertx, config));
 
-        final Router router = Router.router(vertx);
+        final Router mainRouter = Router.router(vertx);
 
-        router.route().handler(LoggerHandler.create());
-        router.route().handler(BodyHandler.create());
-        router.route().handler(CookieHandler.create());
-        router.route().handler(TimeoutHandler.create(30000));
+        final Router apiRouter = Router.router(vertx);
+
+        mainRouter.route().handler(LoggerHandler.create());
+        mainRouter.route().handler(BodyHandler.create());
+        mainRouter.route().handler(CookieHandler.create());
+        mainRouter.route().handler(TimeoutHandler.create(30000));
 
         final CorsHandler corsHandler = CORSHandlerFactory.createWithAll(webUrl, asList(AUTHORIZATION, CONTENT_TYPE, ACCEPT, XSRFTOKEN));
 
-        router.route("/accounts/*").handler(corsHandler);
+        apiRouter.route("/accounts/*").handler(corsHandler);
 
         final Consumer<RoutingContext> onAccessDenied = rc -> rc.fail(Failure.accessDenied());
 
-        router.get("/accounts").handler(new AccessHandler(jwtProvider, onAccessDenied, asList(ADMIN, PLATFORM)));
-        router.get("/accounts/me").handler(new AccessHandler(jwtProvider, onAccessDenied, asList(ADMIN, GUEST)));
-        router.getWithRegex("/accounts/" + UUID_REGEXP).handler(new AccessHandler(jwtProvider, onAccessDenied, asList(ADMIN, PLATFORM)));
-        router.put("/accounts/*").handler(new AccessHandler(jwtProvider, onAccessDenied, asList(ADMIN)));
-        router.post("/accounts").handler(new AccessHandler(jwtProvider, onAccessDenied, asList(ADMIN, PLATFORM)));
-        router.patch("/accounts/*").handler(new AccessHandler(jwtProvider, onAccessDenied, asList(ADMIN)));
-        router.delete("/accounts/*").handler(new AccessHandler(jwtProvider, onAccessDenied, asList(ADMIN)));
+        apiRouter.get("/accounts").handler(new AccessHandler(jwtProvider, onAccessDenied, asList(ADMIN, PLATFORM)));
+        apiRouter.get("/accounts/me").handler(new AccessHandler(jwtProvider, onAccessDenied, asList(ADMIN, GUEST)));
+        apiRouter.getWithRegex("/accounts/" + UUID_REGEXP).handler(new AccessHandler(jwtProvider, onAccessDenied, asList(ADMIN, PLATFORM)));
+        apiRouter.put("/accounts/*").handler(new AccessHandler(jwtProvider, onAccessDenied, asList(ADMIN)));
+        apiRouter.post("/accounts").handler(new AccessHandler(jwtProvider, onAccessDenied, asList(ADMIN, PLATFORM)));
+        apiRouter.patch("/accounts/*").handler(new AccessHandler(jwtProvider, onAccessDenied, asList(ADMIN)));
+        apiRouter.delete("/accounts/*").handler(new AccessHandler(jwtProvider, onAccessDenied, asList(ADMIN)));
 
-        router.get("/accounts").produces(APPLICATION_JSON).handler(new ListAccountsHandler(store));
+        apiRouter.get("/accounts").produces(APPLICATION_JSON).handler(new ListAccountsHandler(store));
 
-        router.get("/accounts/me").produces(APPLICATION_JSON).handler(new GetSelfAccountHandler(store));
+        apiRouter.get("/accounts/me").produces(APPLICATION_JSON).handler(new GetSelfAccountHandler(store));
 
-        router.getWithRegex("/accounts/" + UUID_REGEXP).produces(APPLICATION_JSON).handler(new GetAccountHandler(store));
+        apiRouter.getWithRegex("/accounts/" + UUID_REGEXP).produces(APPLICATION_JSON).handler(new GetAccountHandler(store));
 
-        router.post("/accounts").produces(APPLICATION_JSON).consumes(APPLICATION_JSON).handler(new CreateAccountHandler(store));
+        apiRouter.post("/accounts").produces(APPLICATION_JSON).consumes(APPLICATION_JSON).handler(new CreateAccountHandler(store));
 
-        router.deleteWithRegex("/accounts/" + UUID_REGEXP).produces(APPLICATION_JSON).handler(new DeleteAccountHandler(store));
+        apiRouter.deleteWithRegex("/accounts/" + UUID_REGEXP).produces(APPLICATION_JSON).handler(new DeleteAccountHandler(store));
 
-        router.delete("/accounts").handler(new DeleteAccountsHandler(store));
+        apiRouter.delete("/accounts").handler(new DeleteAccountsHandler(store));
 
-        router.options("/accounts/*").handler(routingContext -> routingContext.response().setStatusCode(204).end());
-        router.options("/accounts").handler(routingContext -> routingContext.response().setStatusCode(204).end());
+        apiRouter.options("/accounts/*").handler(routingContext -> routingContext.response().setStatusCode(204).end());
+        apiRouter.options("/accounts").handler(routingContext -> routingContext.response().setStatusCode(204).end());
 
-        router.route().failureHandler(routingContext -> ResponseHelper.sendFailure(routingContext));
+        mainRouter.route().failureHandler(routingContext -> ResponseHelper.sendFailure(routingContext));
 
-        server = vertx.createHttpServer(ServerUtil.makeServerOptions(config)).requestHandler(router::accept).listen(port);
+        mainRouter.mountSubRouter("/api", apiRouter);
+
+        server = vertx.createHttpServer(ServerUtil.makeServerOptions(config)).requestHandler(mainRouter::accept).listen(port);
 
         return null;
     }

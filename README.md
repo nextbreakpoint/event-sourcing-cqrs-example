@@ -2,5 +2,4 @@
 
 THIS PROJECT IS WORK IN PROGRESS
 
-This repository contains deployment scripts and source code of an example
-of micro-services based application.
+This repository contains source code and deployment scripts of a micro-services based example application.

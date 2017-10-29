@@ -1,234 +1,161 @@
-#!/bin/bash
-set -e
+#cloud-config
+manage_etc_hosts: True
+runcmd:
+  - sudo usermod -aG docker ubuntu
+  - sudo mkdir -p /filebeat/config
+  - sudo mkdir -p /consul/config
+  - sudo mkdir -p /nginx/logs
+  - sudo mkdir -p /nginx/config
+  - sudo mkdir -p /nginx/secrets
+  - sudo chmod -R ubuntu.ubuntu /nginx
+  - sudo chmod -R ubuntu.ubuntu /consul
+  - sudo chmod -R ubuntu.ubuntu /filebeat
+  - aws s3 cp s3://${bucket_name}/environments/${environment}/nginx/ca_and_server_cert.pem /nginx/secrets/ca_and_server_cert.pem
+  - aws s3 cp s3://${bucket_name}/environments/${environment}/nginx/server_key.pem /nginx/secrets/server_key.pem
+  - export HOST_IP_ADDRESS=`ifconfig eth0 | grep "inet " | awk '{ print substr($2,6) }'`
+  - sudo -u ubuntu docker run -d --name=consul --restart unless-stopped --env HOST_IP_ADDRESS=$HOST_IP_ADDRESS --net=host -v /consul/config:/consul/config consul:latest agent -bind=$HOST_IP_ADDRESS -client=$HOST_IP_ADDRESS -node=shop-webserver-$HOST_IP_ADDRESS -retry-join=${consul_hostname} -datacenter=${consul_datacenter}
+  - sudo -u ubuntu docker run -d --name=nginx --restart unless-stopped --net=host --privileged -v /nginx/config/nginx.conf:/etc/nginx/nginx.conf -v /nginx/logs:/var/log/nginx -v /nginx/secrets:/nginx/secrets nginx:latest
+  - sudo -u ubuntu docker run -d --name=filebeat --restart unless-stopped --net=host -v /filebeat/config/filebeat.yml:/usr/share/filebeat/filebeat.yml -v /nginx/logs:/logs docker.elastic.co/beats/filebeat:${filebeat_version}
+write_files:
+  - path: /consul/config/consul.json
+    permissions: '0644'
+    content: |
+        {
+          "enable_script_checks": true,
+          "leave_on_terminate": true,
+          "dns_config": {
+            "allow_stale": true,
+            "max_stale": "1s",
+            "service_ttl": {
+              "*": "5s"
+            }
+          }
+        }
+  - path: /consul/config/webserver.json
+    permissions: '0644'
+    content: |
+        {
+            "services": [{
+                "name": "webserver-http",
+                "tags": [
+                    "http", "http"
+                ],
+                "port": 80,
+                "checks": [{
+                    "id": "1",
+                    "name": "NGINX HTTP",
+                    "notes": "Use nc to check the tcp port every 60 seconds",
+                    "script": "nc -zv $HOST_IP_ADDRESS 80 >/dev/null 2>&1",
+                    "interval": "60s"
+                }]
+            },{
+                "name": "webserver-https",
+                "tags": [
+                    "tcp", "https"
+                ],
+                "port": 443,
+                "checks": [{
+                    "id": "1",
+                    "name": "NGINX HTTPS",
+                    "notes": "Use nc to check the tcp port every 60 seconds",
+                    "script": "nc -zv $HOST_IP_ADDRESS 443 >/dev/null 2>&1",
+                    "interval": "60s"
+                }]
+            }]
+        }
+  - path: /filebeat/config/filebeat.yml
+    permissions: '0644'
+    content: |
+        filebeat.prospectors:
+        - input_type: log
+          paths:
+          - /logs/*.log
 
-export WEBSERVER_HOST=`ifconfig eth0 | grep "inet " | awk '{ print substr($2,6) }'`
+        output.logstash:
+          hosts: ["${logstash_host}:5044"]
+  - path: /nginx/config/nginx.conf
+    permissions: '0644'
+    content: |
+        worker_processes 4;
+        worker_rlimit_nofile 8192;
 
-#sudo cat <<EOF >/tmp/cloudwatch.cfg
-#[general]
-#state_file = /var/awslogs/state/agent-state
-#
-#[consul]
-#file = ${consul_log_file}
-#log_group_name = ${log_group_name}
-#log_stream_name = ${log_stream_name}-consul
-#datetime_format = %b %d %H:%M:%S
-#EOF
+        events {
+          worker_connections 4096;
+        }
 
-# Configure the consul agent
-cat <<EOF >/tmp/consul.json
-{
-    "addresses": {
-        "http": "0.0.0.0"
-    },
-    "disable_anonymous_signature": true,
-    "disable_update_check": true,
-    "datacenter": "terraform",
-    "data_dir": "/mnt/consul",
-    "log_level": "TRACE",
-    "retry_join": ["consul.internal"],
-    "enable_script_checks": true,
-    "leave_on_terminate": true
-}
-EOF
-sudo mv /tmp/consul.json /etc/consul.d/consul.json
+        user www-data www-data;
 
-sudo cat <<EOF >/tmp/consul.service
-[Unit]
-Description=Consul service discovery agent
-Requires=network-online.target
-After=network.target
+        http {
+          ssl_session_cache     shared:SSL:10m;
+          ssl_session_timeout   10m;
 
-[Service]
-User=ubuntu
-Group=ubuntu
-PIDFile=/var/consul/consul.pid
-Restart=on-failure
-Environment=GOMAXPROCS=2
-ExecStartPre=/bin/rm -f /var/consul/consul.pid
-ExecStartPre=/usr/local/bin/consul configtest -config-dir=/etc/consul.d
-ExecStart=/usr/local/bin/consul agent -pid-file=/var/consul/consul.pid -config-dir=/etc/consul.d -bind="WEBSERVER_HOST" -node="webserver-WEBSERVER_HOST" >>/${consul_log_file} 2>&1
-ExecReload=/bin/kill -s HUP
-KillSignal=SIGINT
-TimeoutStopSec=5
+          server {
+            listen 80;
+            server_name shop.${public_hosted_zone_name};
+          	return 301 https://$$server_name$$request_uri;
+          }
 
-[Install]
-WantedBy=multi-user.target
-EOF
-sudo sed -i -e 's/WEBSERVER_HOST/'$WEBSERVER_HOST'/g' /tmp/consul.service
-sudo mv /tmp/consul.service /etc/systemd/system/consul.service
+          server {
+            listen 443 ssl;
+            server_name consul.${public_hosted_zone_name};
 
-# Configure the webserver healthchecks
-sudo cat <<EOF >/tmp/webserver.json
-{
-    "services": [{
-        "name": "webserver-80",
-        "tags": [
-            "http", "query"
-        ],
-        "port": 80,
-        "checks": [{
-            "id": "1",
-            "name": "NGINX HTTP",
-            "notes": "Use curl to check the web service every 60 seconds",
-            "script": "nc -zv `ifconfig eth0 | grep 'inet ' | awk '{ print substr($2,6) }'` 80 >/dev/null 2>&1 ",
-            "interval": "60s"
-        } ],
-        "leave_on_terminate": true
-    },{
-        "name": "webserver-443",
-        "tags": [
-            "tcp", "index"
-        ],
-        "port": 443,
-        "checks": [{
-            "id": "1",
-            "name": "NGINX TCP",
-            "notes": "Use nc to check the tcp port every 60 seconds",
-            "script": "nc -zv `ifconfig eth0 | grep 'inet ' | awk '{ print substr($2,6) }'` 443 >/dev/null 2>&1 ",
-            "interval": "60s"
-        }],
-        "leave_on_terminate": true
-    }]
-}
-EOF
-sudo mv /tmp/webserver.json /etc/consul.d/webserver.json
+            ssl_certificate     /nginx/secrets/ca_and_server_cert.pem;
+            ssl_certificate_key /nginx/secrets/server_key.pem;
+            ssl_protocols       TLSv1 TLSv1.1 TLSv1.2;
+            ssl_ciphers         HIGH:!aNULL:!MD5;
 
-sudo cat <<EOF >/tmp/filebeat.yml
-filebeat:
-  prospectors:
-    -
-      paths:
-        - /var/log/auth.log
-        - /var/log/syslog
-        - /var/log/nginx/access.log
-        - /var/log/nginx/error.log
+            location /auth {
+                resolver 127.0.0.1;
+                set $upstream_auth auth.service.terraform.consul;
+                proxy_pass https://$upstream_auth:3000$request_uri;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            }
 
-      input_type: log
+            location /api/designs {
+                resolver 127.0.0.1;
+                set $upstream_designs designs.service.terraform.consul;
+                proxy_pass https://$upstream_designs:3001$request_uri;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            }
 
-      document_type: syslog
+            location /api/accounts {
+                resolver 127.0.0.1;
+                set $upstream_accounts accounts.service.terraform.consul;
+                proxy_pass https://$upstream_accounts:3002$request_uri;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            }
 
-  registry_file: /var/lib/filebeat/registry
+            location /watch {
+                resolver 127.0.0.1;
+                set $upstream_web web.service.terraform.consul;
+                proxy_pass https://$upstream_web:8080$request_uri;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header Connection '';
+                proxy_http_version 1.1;
+                chunked_transfer_encoding off;
+                proxy_buffering off;
+                proxy_cache off;
+            }
 
-output:
-  logstash:
-    hosts: ["${logstash_host}:5044"]
-    bulk_max_size: 1024
-    ssl.enabled: false
-
-shipper:
-
-logging:
-  files:
-    rotateeverybytes: 10485760 # = 10MB
-EOF
-sudo mv /tmp/filebeat.yml /etc/filebeat/filebeat.yml
-sudo chown root.root /etc/filebeat/filebeat.yml
-sudo chmod go-w /etc/filebeat/filebeat.yml
-
-sudo update-rc.d filebeat defaults 95 10
-sudo service filebeat start
-
-sudo cat <<EOF >/tmp/nginx.conf
-worker_processes 4;
-worker_rlimit_nofile 8192;
-
-events {
-  worker_connections 4096;
-}
-
-user www-data www-data;
-
-http {
-  ssl_session_cache     shared:SSL:10m;
-  ssl_session_timeout   10m;
-
-  server {
-    listen 80 default_server;
-
-    server_name shop.${public_hosted_zone_name};
-
-  	return 301 https://\$$server_name\$$request_uri;
-  }
-
-  server {
-    listen 443 ssl;
-
-    server_name shop.${public_hosted_zone_name};
-
-    ssl_certificate     /nginx/ca_and_server_cert.pem;
-    ssl_certificate_key /nginx/server_key.pem;
-    ssl_protocols       TLSv1 TLSv1.1 TLSv1.2;
-    ssl_ciphers         HIGH:!aNULL:!MD5;
-
-    location /auth {
-        resolver 127.0.0.1;
-        set \$$upstream_auth auth.service.terraform.consul;
-        proxy_pass https://\$$upstream_auth:3000\$$request_uri;
-        proxy_set_header Host \$$host;
-        proxy_set_header X-Real-IP \$$remote_addr;
-        proxy_set_header X-Forwarded-For \$$proxy_add_x_forwarded_for;
-    }
-
-    location /api/designs {
-        resolver 127.0.0.1;
-        set \$$upstream_designs designs.service.terraform.consul;
-        proxy_pass https://\$$upstream_designs:3001\$$request_uri;
-        proxy_set_header Host \$$host;
-        proxy_set_header X-Real-IP \$$remote_addr;
-        proxy_set_header X-Forwarded-For \$$proxy_add_x_forwarded_for;
-    }
-
-    location /api/accounts {
-        resolver 127.0.0.1;
-        set \$$upstream_accounts accounts.service.terraform.consul;
-        proxy_pass https://\$$upstream_accounts:3002\$$request_uri;
-        proxy_set_header Host \$$host;
-        proxy_set_header X-Real-IP \$$remote_addr;
-        proxy_set_header X-Forwarded-For \$$proxy_add_x_forwarded_for;
-    }
-
-    location /watch {
-        resolver 127.0.0.1;
-        set \$$upstream_web web.service.terraform.consul;
-        proxy_pass https://\$$upstream_web:8080\$$request_uri;
-        proxy_set_header Host \$$host;
-        proxy_set_header X-Real-IP \$$remote_addr;
-        proxy_set_header X-Forwarded-For \$$proxy_add_x_forwarded_for;
-        proxy_set_header Connection '';
-        proxy_http_version 1.1;
-        chunked_transfer_encoding off;
-        proxy_buffering off;
-        proxy_cache off;
-    }
-
-    location / {
-        resolver 127.0.0.1;
-        set \$$upstream_web web.service.terraform.consul;
-        proxy_pass https://\$$upstream_web:8080\$$request_uri;
-        proxy_set_header Host \$$host;
-        proxy_set_header X-Real-IP \$$remote_addr;
-        proxy_set_header X-Forwarded-For \$$proxy_add_x_forwarded_for;
-    }
-  }
-}
-EOF
-sudo mv /tmp/nginx.conf /etc/nginx/nginx.conf
-
-sudo cat <<EOF >/tmp/dnsmasq.consul
-server=/consul/127.0.0.1#8600
-EOF
-sudo mv /tmp/dnsmasq.consul /etc/dnsmasq.d/10-consul
-
-aws s3 cp s3://${bucket_name}/environments/${environment}/nginx/server_cert.pem /nginx/server_cert.pem
-aws s3 cp s3://${bucket_name}/environments/${environment}/nginx/server_key.pem /nginx/server_key.pem
-aws s3 cp s3://${bucket_name}/environments/${environment}/nginx/ca_cert.pem /nginx/ca_cert.pem
-
-cat /nginx/server_cert.pem /nginx/ca_cert.pem > /nginx/ca_and_server_cert.pem
-
-sudo service dnsmasq restart
-
-sudo service nginx restart
-
-sudo service consul start
-
-echo "Done"
+            location / {
+                resolver 127.0.0.1;
+                set $upstream_web web.service.terraform.consul;
+                proxy_pass https://$upstream_web:8080$request_uri;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            }
+          }
+        }
+  - path: /etc/dnsmasq.d/10-consul
+    permissions: '0644'
+    content: |
+        server=/consul/127.0.0.1#8600

@@ -1,19 +1,8 @@
-FROM ubuntu:16.04
+FROM java:8-jdk-alpine
 
-RUN apt-get update && \
-    apt-get install -y software-properties-common && \
-    add-apt-repository -y ppa:webupd8team/java && apt-get update
+RUN apk update && apk add ca-certificates && update-ca-certificates && apk add openssl python bash
 
-RUN echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | /usr/bin/debconf-set-selections && \
-    apt-get install -y oracle-java8-installer && \
-    apt-get install -y oracle-java8-set-default
-
-RUN apt-get update && \
-    apt-get -y install python curl unzip && cd /tmp && \
-    curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" -o "awscli-bundle.zip" && \
-    unzip awscli-bundle.zip && \
-    ./awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws && \
-    rm awscli-bundle.zip && rm -rf awscli-bundle
+RUN wget https://bootstrap.pypa.io/get-pip.py && python get-pip.py && pip install awscli
 
 COPY maven/ /maven
 COPY entrypoint.sh /entrypoint.sh

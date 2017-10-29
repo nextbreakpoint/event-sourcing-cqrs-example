@@ -16,10 +16,14 @@
   "jwt_keystore_type": "jceks",
   "jwt_keystore_secret": "secret",
 
-  "web_url": "https://shop.nextbreakpoint.com",
-  "auth_url": "https://shop.nextbreakpoint.com",
-  "designs_url": "https://shop.nextbreakpoint.com",
-  "accounts_url": "https://shop.nextbreakpoint.com",
+  "client_web_url": "https://shop.nextbreakpoint.com",
+  "client_auth_url": "https://shop.nextbreakpoint.com",
+  "client_designs_url": "https://shop.nextbreakpoint.com",
+  "client_accounts_url": "https://shop.nextbreakpoint.com",
+
+  "server_auth_url": "https://shop.nextbreakpoint.com",
+  "server_designs_url": "https://shop.nextbreakpoint.com",
+  "server_accounts_url": "https://shop.nextbreakpoint.com",
 
   "csrf_secret": "tshirts",
 

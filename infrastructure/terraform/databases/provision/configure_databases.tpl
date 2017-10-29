@@ -10,6 +10,8 @@ sudo unzip -d /tmp terraform_0.10.5_linux_amd64.zip
 
 cd /tmp
 
-./terraform init
+./terraform init -input=false
 
-./terraform apply
+./terraform plan -input=false -out=tfplan
+
+./terraform apply -input=false tfplan

@@ -97,7 +97,7 @@ write_files:
 
           server {
             listen 443 ssl;
-            server_name consul.${public_hosted_zone_name};
+            server_name shop.${public_hosted_zone_name};
 
             ssl_certificate     /nginx/secrets/ca_and_server_cert.pem;
             ssl_certificate_key /nginx/secrets/server_key.pem;

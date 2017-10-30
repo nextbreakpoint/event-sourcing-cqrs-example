@@ -81,6 +81,7 @@ write_files:
         - input_type: log
           paths:
           - /logs/*.log
+            /logs/syslog
 
         output.logstash:
           hosts: ["${logstash_host}:5044"]

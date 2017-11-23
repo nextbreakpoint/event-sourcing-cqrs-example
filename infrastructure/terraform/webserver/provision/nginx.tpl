@@ -1,21 +1,21 @@
 #cloud-config
 manage_etc_hosts: True
 runcmd:
-  - sudo usermod -aG docker ubuntu
-  - sudo mkdir -p /filebeat/config
-  - sudo mkdir -p /consul/config
+  - sudo mkdir -p /filebeat/config/secrets
+  - sudo mkdir -p /consul/config/secrets
+  - sudo mkdir -p /nginx/config/secrets
   - sudo mkdir -p /nginx/logs
-  - sudo mkdir -p /nginx/config
-  - sudo mkdir -p /nginx/secrets
+  - aws s3 cp s3://${bucket_name}/environments/${environment}/nginx/ca_and_server_cert.pem /nginx/config/secrets/ca_and_server_cert.pem
+  - aws s3 cp s3://${bucket_name}/environments/${environment}/nginx/server_key.pem /nginx/config/secrets/server_key.pem
+  - aws s3 cp s3://${bucket_name}/environments/${environment}/consul/ca_cert.pem /consul/config/secrets/ca_cert.pem
+  - sudo usermod -aG docker ubuntu
   - sudo chmod -R ubuntu.ubuntu /nginx
   - sudo chmod -R ubuntu.ubuntu /consul
   - sudo chmod -R ubuntu.ubuntu /filebeat
-  - aws s3 cp s3://${bucket_name}/environments/${environment}/nginx/ca_and_server_cert.pem /nginx/secrets/ca_and_server_cert.pem
-  - aws s3 cp s3://${bucket_name}/environments/${environment}/nginx/server_key.pem /nginx/secrets/server_key.pem
   - export HOST_IP_ADDRESS=`ifconfig eth0 | grep "inet " | awk '{ print substr($2,6) }'`
-  - sudo -u ubuntu docker run -d --name=consul --restart unless-stopped --env HOST_IP_ADDRESS=$HOST_IP_ADDRESS --net=host -v /consul/config:/consul/config consul:latest agent -bind=$HOST_IP_ADDRESS -client=$HOST_IP_ADDRESS -node=shop-webserver-$HOST_IP_ADDRESS -retry-join=${consul_hostname} -datacenter=${consul_datacenter}
-  - sudo -u ubuntu docker run -d --name=nginx --restart unless-stopped --net=host --privileged -v /nginx/config/nginx.conf:/etc/nginx/nginx.conf -v /nginx/logs:/var/log/nginx -v /nginx/secrets:/nginx/secrets nginx:latest
-  - sudo -u ubuntu docker run -d --name=filebeat --restart unless-stopped --net=host -v /filebeat/config/filebeat.yml:/usr/share/filebeat/filebeat.yml -v /nginx/logs:/logs docker.elastic.co/beats/filebeat:${filebeat_version}
+  - sudo -u ubuntu docker run -d --name=consul --restart unless-stopped --net=host -e HOST_IP_ADDRESS=$HOST_IP_ADDRESS -v /consul/config:/consul/config consul:latest agent -bind=$HOST_IP_ADDRESS -client=$HOST_IP_ADDRESS -node=shop-webserver-$HOST_IP_ADDRESS
+  - sudo -u ubuntu docker run -d --name=nginx --restart unless-stopped --net=host --privileged -v /nginx/config/nginx.conf:/etc/nginx/nginx.conf -v /nginx/logs:/var/log/nginx -v /nginx/config/secrets:/nginx/config/secrets nginx:latest
+  - sudo -u ubuntu docker run -d --name=filebeat --restart unless-stopped --net=host -v /filebeat/config/filebeat.yml:/usr/share/filebeat/filebeat.yml -v /filebeat/config/secrets:/filebeat/config/secrets -v /nginx/logs:/logs docker.elastic.co/beats/filebeat:${filebeat_version}
   - sudo sed -e 's/$HOST_IP_ADDRESS/'$HOST_IP_ADDRESS'/g' /tmp/10-consul > /etc/dnsmasq.d/10-consul
   - sudo service dnsmasq restart
 write_files:
@@ -23,8 +23,13 @@ write_files:
     permissions: '0644'
     content: |
         {
+          "ca_file": "/consul/config/secrets/ca_cert.pem",
+          "verify_outgoing" : true,
           "enable_script_checks": true,
           "leave_on_terminate": true,
+          "encrypt": "${consul_secret}",
+          "retry_join": "${consul_hostname}",
+          "datacenter": "${consul_datacenter}",
           "dns_config": {
             "allow_stale": true,
             "max_stale": "1s",
@@ -84,6 +89,9 @@ write_files:
 
         output.logstash:
           hosts: ["${logstash_host}:5044"]
+          ssl.certificate_authorities: ["/filebeat/config/secrets/ca_cert.pem"]
+          ssl.certificate: "/filebeat/config/secrets/filebeat_cert.pem"
+          ssl.key: "/filebeat/config/secrets/filebeat_key.pem"
   - path: /nginx/config/nginx.conf
     permissions: '0644'
     content: |
@@ -110,8 +118,8 @@ write_files:
             listen 443 ssl;
             server_name shop.${public_hosted_zone_name};
 
-            ssl_certificate     /nginx/secrets/ca_and_server_cert.pem;
-            ssl_certificate_key /nginx/secrets/server_key.pem;
+            ssl_certificate     /nginx/config/secrets/ca_and_server_cert.pem;
+            ssl_certificate_key /nginx/config/secrets/server_key.pem;
             ssl_protocols       TLSv1 TLSv1.1 TLSv1.2;
             ssl_ciphers         HIGH:!aNULL:!MD5;
 

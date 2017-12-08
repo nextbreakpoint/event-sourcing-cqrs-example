@@ -20,6 +20,6 @@
   "jdbc_min_pool_size": 20,
 
   "graphite_reporter_enabled": false,
-  "graphite_host": "graphite.internal",
+  "graphite_host": "graphite.service.terraform.consul",
   "graphite_port": 2003
 }

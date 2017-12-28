@@ -13,7 +13,3 @@ variable "aws_profile" {
 variable "stream_tag" {
   default = "terraform"
 }
-
-### MANDATORY ###
-variable "hosted_zone_name" {
-}

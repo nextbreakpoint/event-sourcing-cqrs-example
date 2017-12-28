@@ -51,7 +51,7 @@
         <maven-failsafe-plugin.version>2.18.1</maven-failsafe-plugin.version>
         <build-helper-maven-plugin.version>1.9.1</build-helper-maven-plugin.version>
         <maven-jar-plugin.version>3.0.2</maven-jar-plugin.version>
-        <docker-maven-plugin.version>0.21.0</docker-maven-plugin.version>
+        <docker-maven-plugin.version>0.23.0</docker-maven-plugin.version>
         <maven-source-plugin.version>3.0.1</maven-source-plugin.version>
         <maven-javadoc-plugin.version>2.10.4</maven-javadoc-plugin.version>
     </properties>

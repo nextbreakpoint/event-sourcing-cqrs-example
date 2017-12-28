@@ -8,16 +8,12 @@ provider "aws" {
   version = "~> 0.1"
 }
 
-provider "terraform" {
-  version = "~> 0.1"
-}
-
 ##############################################################################
 # RDS configuration
 ##############################################################################
 
-resource "aws_security_group" "services" {
-  name = "rds-services-security-group"
+resource "aws_security_group" "shop" {
+  name = "shop-rds-security-group"
   vpc_id = "${data.terraform_remote_state.vpc.network-vpc-id}"
 
   ingress = {
@@ -25,7 +21,11 @@ resource "aws_security_group" "services" {
     to_port = 3306
 
     protocol = "tcp"
-    cidr_blocks = ["${var.aws_network_vpc_cidr}"]
+    cidr_blocks = [
+      "${var.aws_network_vpc_cidr}",
+      "${var.aws_bastion_vpc_cidr}",
+      "${var.aws_openvpn_vpc_cidr}"
+    ]
   }
 
   tags = {
@@ -33,36 +33,37 @@ resource "aws_security_group" "services" {
   }
 }
 
-resource "aws_db_instance" "services" {
+resource "aws_db_instance" "shop" {
   availability_zone    = "${format("%sa", var.aws_region)}"
   allocated_storage    = 5
   storage_type         = "gp2"
   engine               = "mysql"
   engine_version       = "5.7.17"
   instance_class       = "db.t2.small"
-  name                 = "services"
-  username             = "test"
+  name                 = "shop"
+  username             = "shop"
   password             = "password"
-  db_subnet_group_name = "rds-services-subnet-group"
+  db_subnet_group_name = "shop-rds-subnet-group"
   parameter_group_name = "default.mysql5.7"
-  publicly_accessible  = true
+  publicly_accessible  = false
   apply_immediately    = true
   skip_final_snapshot  = true
-  vpc_security_group_ids = ["${aws_security_group.services.id}"]
+  vpc_security_group_ids = ["${aws_security_group.shop.id}"]
 
-  depends_on = ["aws_db_subnet_group.services"]
+  depends_on = ["aws_db_subnet_group.shop"]
 
   tags {
     Stream = "${var.stream_tag}"
   }
 }
 
-resource "aws_db_subnet_group" "services" {
-  name       = "rds-services-subnet-group"
+resource "aws_db_subnet_group" "shop" {
+  name       = "shop-rds-subnet-group"
 
   subnet_ids = [
-    "${data.terraform_remote_state.vpc.network-private-subnet-a-id}",
-    "${data.terraform_remote_state.vpc.network-private-subnet-b-id}"
+    "${data.terraform_remote_state.network.network-private-subnet-a-id}",
+    "${data.terraform_remote_state.network.network-private-subnet-b-id}",
+    "${data.terraform_remote_state.network.network-private-subnet-c-id}"
   ]
 
   tags {
@@ -74,13 +75,24 @@ resource "aws_db_subnet_group" "services" {
 # Route 53
 ##############################################################################
 
-resource "aws_route53_record" "services" {
-  zone_id = "${data.terraform_remote_state.vpc.hosted-zone-id}"
-  name = "rds-services.${var.hosted_zone_name}"
+resource "aws_route53_record" "shop-network" {
+  zone_id = "${data.terraform_remote_state.vpc.network-hosted-zone-id}"
+  name = "shop-rds.${data.terraform_remote_state.vpc.network-hosted-zone-name}"
   type = "CNAME"
-  ttl = "300"
+  ttl = "60"
 
   records = [
-    "${aws_db_instance.services.address}"
+    "${aws_db_instance.shop.address}"
+  ]
+}
+
+resource "aws_route53_record" "shop-bastion" {
+  zone_id = "${data.terraform_remote_state.vpc.bastion-hosted-zone-id}"
+  name = "shop-rds.${data.terraform_remote_state.vpc.bastion-hosted-zone-name}"
+  type = "CNAME"
+  ttl = "60"
+
+  records = [
+    "${aws_db_instance.shop.address}"
   ]
 }

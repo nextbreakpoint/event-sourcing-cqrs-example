@@ -16,5 +16,6 @@ config_vars.json
 config.tfvars
 terraform.tfstate*
 .terraform
-**/*ftplan
+**/tfplan
 consul.tfvars
+infrastructure/setup/provider.tf

@@ -20,7 +20,7 @@ runcmd:
   - sudo -u ubuntu docker run -d --name=consul --restart unless-stopped --net=host -e HOST_IP_ADDRESS=$HOST_IP_ADDRESS -v /consul/config:/consul/config consul:latest agent -bind=$HOST_IP_ADDRESS -client=$HOST_IP_ADDRESS -node=shop-webserver-$HOST_IP_ADDRESS
   - sudo -u ubuntu docker run -d --name=nginx --restart unless-stopped --net=host --privileged -v /nginx/config/nginx.conf:/etc/nginx/nginx.conf -v /nginx/logs:/var/log/nginx -v /nginx/config/secrets:/nginx/config/secrets nginx:latest
   - sudo -u ubuntu docker build -t filebeat:${filebeat_version} /filebeat/docker
-  - sudo -u ubuntu docker run -d --name=filebeat --restart unless-stopped --net=host --log-driver json-file -v /filebeat/config/filebeat.yml:/usr/share/filebeat/filebeat.yml -v /filebeat/config/secrets:/filebeat/config/secrets -v /nginx/logs:/logs filebeat:${filebeat_version}
+  - sudo -u ubuntu docker run -d --name=filebeat --restart unless-stopped --net=host --log-driver json-file -v /filebeat/config/filebeat.yml:/usr/share/filebeat/filebeat.yml -v /filebeat/config/secrets:/filebeat/config/secrets -v /var/log/syslog:/var/log/docker -v /nginx/logs:/var/log/nginx filebeat:${filebeat_version}
   - sudo sed -e 's/$HOST_IP_ADDRESS/'$HOST_IP_ADDRESS'/g' /tmp/10-consul > /etc/dnsmasq.d/10-consul
   - sudo service dnsmasq restart
 write_files:
@@ -33,7 +33,7 @@ write_files:
           "enable_script_checks": true,
           "leave_on_terminate": true,
           "encrypt": "${consul_secret}",
-          "retry_join": ["${consul_hostname}"],
+          "retry_join": ["${element(split(",", consul_nodes), 0)}","${element(split(",", consul_nodes), 1)}","${element(split(",", consul_nodes), 2)}"],
           "datacenter": "${consul_datacenter}",
           "dns_config": {
             "allow_stale": true,
@@ -65,7 +65,7 @@ write_files:
     content: |
         {
             "services": [{
-                "name": "webserver-http",
+                "name": "shop-webserver-http",
                 "tags": [
                     "http", "http"
                 ],
@@ -78,7 +78,7 @@ write_files:
                     "interval": "60s"
                 }]
             },{
-                "name": "webserver-https",
+                "name": "shop-webserver-https",
                 "tags": [
                     "tcp", "https"
                 ],
@@ -98,8 +98,18 @@ write_files:
         filebeat.prospectors:
         - input_type: log
           paths:
-          - /logs/*.log
-
+          - /var/log/docker
+          tags: ["nginx","syslog"]
+        - input_type: log
+          paths:
+          - /var/log/nginx/access.log*
+          tags: ["nginx","access"]
+          exclude_files: [".gz$"]
+        - input_type: log
+          paths:
+          - /var/log/nginx/error.log*
+          tags: ["nginx","error"]
+          exclude_files: [".gz$"]
         output.logstash:
           hosts: ["logstash.service.terraform.consul:5044"]
           ssl.certificate_authorities: ["/filebeat/config/secrets/ca_cert.pem"]
@@ -123,13 +133,13 @@ write_files:
 
           server {
             listen 80;
-            server_name shop.${public_hosted_zone_name};
+            server_name shop.${hosted_zone_name};
           	return 301 https://$$server_name$$request_uri;
           }
 
           server {
             listen 443 ssl;
-            server_name shop.${public_hosted_zone_name};
+            server_name shop.${hosted_zone_name};
 
             ssl_certificate     /nginx/config/secrets/ca_and_server_cert.pem;
             ssl_certificate_key /nginx/config/secrets/server_key.pem;

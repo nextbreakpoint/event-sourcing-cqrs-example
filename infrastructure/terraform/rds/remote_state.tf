@@ -6,7 +6,7 @@ terraform {
   backend "s3" {
     bucket = "nextbreakpoint-terraform-state"
     region = "eu-west-1"
-    key = "services-rds.tfstate"
+    key = "shop-rds.tfstate"
   }
 }
 
@@ -16,5 +16,14 @@ data "terraform_remote_state" "vpc" {
         bucket = "nextbreakpoint-terraform-state"
         region = "${var.aws_region}"
         key = "vpc.tfstate"
+    }
+}
+
+data "terraform_remote_state" "network" {
+    backend = "s3"
+    config {
+        bucket = "nextbreakpoint-terraform-state"
+        region = "${var.aws_region}"
+        key = "network.tfstate"
     }
 }

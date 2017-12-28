@@ -33,10 +33,6 @@ variable "log_stream_name" {
 }
 
 ### MANDATORY ###
-variable "hosted_zone_name" {
-}
-
-### MANDATORY ###
 variable "public_hosted_zone_name" {
 }
 
@@ -50,6 +46,25 @@ variable "aws_bastion_vpc_cidr" {
 
 ### MANDATORY ###
 variable "aws_network_vpc_cidr" {
+}
+
+### MANDATORY ###
+variable "aws_openvpn_vpc_cidr" {
+}
+
+### MANDATORY ###
+variable "aws_network_private_subnet_cidr_a" {
+  description = "Private subnet A cidr block"
+}
+
+### MANDATORY ###
+variable "aws_network_private_subnet_cidr_b" {
+  description = "Private subnet B cidr block"
+}
+
+### MANDATORY ###
+variable "aws_network_private_subnet_cidr_c" {
+  description = "Private subnet C cidr block"
 }
 
 ### MANDATORY ###
@@ -91,6 +106,10 @@ variable "webserver_elb_private_key_path" {
 ###################################################################
 # Consul configuration below
 ###################################################################
+
+### MANDATORY ###
+variable "consul_secret" {
+}
 
 variable "consul_record" {
   default = "consul"

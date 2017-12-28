@@ -8,10 +8,6 @@ provider "aws" {
   version = "~> 0.1"
 }
 
-provider "terraform" {
-  version = "~> 0.1"
-}
-
 provider "template" {
   version = "~> 0.1"
 }
@@ -21,8 +17,8 @@ provider "template" {
 ##############################################################################
 
 resource "aws_security_group" "webserver" {
-  name = "shop-webserver-security-group"
-  description = "NGINX server security group"
+  name = "shop-nginx-security-group"
+  description = "Shop NGINX security group"
   vpc_id = "${data.terraform_remote_state.vpc.network-vpc-id}"
 
   ingress {
@@ -43,7 +39,7 @@ resource "aws_security_group" "webserver" {
     from_port = 22
     to_port = 22
     protocol = "tcp"
-    cidr_blocks = ["${var.aws_bastion_vpc_cidr}"]
+    cidr_blocks = ["${var.aws_bastion_vpc_cidr}", "${var.aws_openvpn_vpc_cidr}"]
   }
 
   ingress {
@@ -64,20 +60,6 @@ resource "aws_security_group" "webserver" {
     from_port = 0
     to_port = 0
     protocol = "-1"
-    cidr_blocks = ["${var.aws_network_vpc_cidr}"]
-  }
-
-  egress {
-    from_port = 80
-    to_port = 80
-    protocol = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port = 443
-    to_port = 443
-    protocol = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
@@ -93,24 +75,23 @@ data "template_file" "webserver_user_data" {
     aws_region              = "${var.aws_region}"
     environment             = "${var.environment}"
     bucket_name             = "${var.secrets_bucket_name}"
-    security_groups         = "${aws_security_group.webserver.id}"
+    consul_secret           = "${var.consul_secret}"
     consul_datacenter       = "${var.consul_datacenter}"
     consul_nodes            = "${replace(var.aws_network_private_subnet_cidr_a, "0/24", "90")},${replace(var.aws_network_private_subnet_cidr_b, "0/24", "90")},${replace(var.aws_network_private_subnet_cidr_c, "0/24", "90")}"
     consul_logfile          = "${var.consul_logfile}"
-    hosted_zone_name        = "${var.hosted_zone_name}"
-    public_hosted_zone_name = "${var.public_hosted_zone_name}"
-    logstash_host           = "logstash.${var.hosted_zone_name}"
+    security_groups         = "${aws_security_group.webserver.id}"
+    hosted_zone_name        = "${var.public_hosted_zone_name}"
     filebeat_version        = "${var.filebeat_version}"
   }
 }
 
 resource "aws_iam_instance_profile" "webserver_profile" {
-    name = "shop-webserver-profile"
+    name = "shop-nginx-profile"
     role = "${aws_iam_role.webserver_role.name}"
 }
 
 resource "aws_iam_role" "webserver_role" {
-  name = "shop-webserver-role"
+  name = "shop-nginx-role"
 
   assume_role_policy = <<EOF
 {
@@ -138,13 +119,20 @@ EOF
 }
 
 resource "aws_iam_role_policy" "webserver_role_policy" {
-  name = "shop-webserver-role-policy"
+  name = "shop-nginx-role-policy"
   role = "${aws_iam_role.webserver_role.id}"
 
   policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
+    {
+      "Action": [
+        "ec2:DescribeInstances"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    },
     {
         "Action": [
             "s3:GetObject"
@@ -173,76 +161,8 @@ data "aws_ami" "webserver" {
   owners = ["${var.account_id}"]
 }
 
-/*
-resource "aws_instance" "webserver_a" {
-  instance_type = "${var.web_instance_type}"
-
-  ami = "${data.aws_ami.webserver.id}"
-
-  subnet_id = "${data.terraform_remote_state.vpc.network-private-subnet-a-id}"
-  associate_public_ip_address = "true"
-  security_groups = ["${aws_security_group.webserver.id}"]
-  key_name = "${var.key_name}"
-
-  iam_instance_profile = "${aws_iam_instance_profile.webserver_profile.id}"
-
-  tags {
-    Name = "shop-webserver-a"
-    Stream = "${var.stream_tag}"
-  }
-
-  connection {
-    host = "${element(aws_instance.webserver_a.*.private_ip, 0)}"
-    # The default username for our AMI
-    user = "ubuntu"
-    type = "ssh"
-    # The path to your keyfile
-    private_key = "${file(var.key_path)}"
-    bastion_user = "ec2-user"
-    bastion_host = "bastion.${var.public_hosted_zone_name}"
-  }
-
-  provisioner "remote-exec" {
-    inline = "${data.template_file.webserver_user_data.rendered}"
-  }
-}
-
-resource "aws_instance" "webserver_b" {
-  instance_type = "${var.web_instance_type}"
-
-  ami = "${data.aws_ami.webserver.id}"
-
-  subnet_id = "${data.terraform_remote_state.vpc.network-private-subnet-b-id}"
-  associate_public_ip_address = "true"
-  security_groups = ["${aws_security_group.webserver.id}"]
-  key_name = "${var.key_name}"
-
-  iam_instance_profile = "${aws_iam_instance_profile.webserver_profile.id}"
-
-  tags {
-    Name = "shop-webserver-b"
-    Stream = "${var.stream_tag}"
-  }
-
-  connection {
-    host = "${element(aws_instance.webserver_b.*.private_ip, 0)}"
-    # The default username for our AMI
-    user = "ubuntu"
-    type = "ssh"
-    # The path to your keyfile
-    private_key = "${file(var.key_path)}"
-    bastion_user = "ec2-user"
-    bastion_host = "bastion.${var.public_hosted_zone_name}"
-  }
-
-  provisioner "remote-exec" {
-    inline = "${data.template_file.webserver_user_data.rendered}"
-  }
-}
-*/
-
-resource "aws_launch_configuration" "webserver_launch_configuration_a" {
-  name_prefix   = "shop-webserver-"
+resource "aws_launch_configuration" "webserver_launch_configuration" {
+  name_prefix   = "shop-nginx-server-"
   instance_type = "${var.web_instance_type}"
 
   image_id = "${data.aws_ami.webserver.id}"
@@ -260,37 +180,20 @@ resource "aws_launch_configuration" "webserver_launch_configuration_a" {
   }
 }
 
-resource "aws_launch_configuration" "webserver_launch_configuration_b" {
-  name_prefix   = "shop-webserver-"
-  instance_type = "${var.web_instance_type}"
-
-  image_id = "${data.aws_ami.webserver.id}"
-
-  associate_public_ip_address = "false"
-  security_groups = ["${aws_security_group.webserver.id}"]
-  key_name = "${var.key_name}"
-
-  iam_instance_profile = "${aws_iam_instance_profile.webserver_profile.name}"
-
-  user_data = "${data.template_file.webserver_user_data.rendered}"
-
-  lifecycle {
-    create_before_destroy = true
-  }
-}
-
-resource "aws_autoscaling_group" "webserver_asg_a" {
-  name                      = "shop-webserver-asg-a"
-  max_size                  = 4
+resource "aws_autoscaling_group" "webserver_asg" {
+  name                      = "shop-nginx-asg"
+  max_size                  = 8
   min_size                  = 0
   health_check_grace_period = 300
   health_check_type         = "ELB"
-  desired_capacity          = 1
+  desired_capacity          = 2
   force_delete              = true
-  launch_configuration      = "${aws_launch_configuration.webserver_launch_configuration_a.name}"
+  launch_configuration      = "${aws_launch_configuration.webserver_launch_configuration.name}"
 
   vpc_zone_identifier = [
-    "${data.terraform_remote_state.vpc.network-private-subnet-a-id}"
+    "${data.terraform_remote_state.network.network-private-subnet-a-id}",
+    "${data.terraform_remote_state.network.network-private-subnet-b-id}",
+    "${data.terraform_remote_state.network.network-private-subnet-c-id}"
   ]
 
   lifecycle {
@@ -305,42 +208,7 @@ resource "aws_autoscaling_group" "webserver_asg_a" {
 
   tag {
     key                 = "Name"
-    value               = "shop-webserver-a"
-    propagate_at_launch = true
-  }
-
-  timeouts {
-    delete = "15m"
-  }
-}
-
-resource "aws_autoscaling_group" "webserver_asg_b" {
-  name                      = "shop-webserver-asg-b"
-  max_size                  = 4
-  min_size                  = 0
-  health_check_grace_period = 300
-  health_check_type         = "ELB"
-  desired_capacity          = 1
-  force_delete              = true
-  launch_configuration      = "${aws_launch_configuration.webserver_launch_configuration_b.name}"
-
-  vpc_zone_identifier = [
-    "${data.terraform_remote_state.vpc.network-private-subnet-b-id}"
-  ]
-
-  lifecycle {
-    create_before_destroy = true
-  }
-
-  tag {
-    key                 = "Stream"
-    value               = "${var.stream_tag}"
-    propagate_at_launch = true
-  }
-
-  tag {
-    key                 = "Name"
-    value               = "shop-webserver-b"
+    value               = "shop-nginx-server"
     propagate_at_launch = true
   }
 
@@ -350,8 +218,8 @@ resource "aws_autoscaling_group" "webserver_asg_b" {
 }
 
 resource "aws_security_group" "webserver_elb" {
-  name = "shop-webserver-elb-security-group"
-  description = "NGINX load balacer security group"
+  name = "shop-elb-security-group"
+  description = "Shop ELB security group"
   vpc_id = "${data.terraform_remote_state.vpc.network-vpc-id}"
 
   ingress {
@@ -381,7 +249,7 @@ resource "aws_security_group" "webserver_elb" {
 }
 
 resource "aws_iam_server_certificate" "webserver_elb" {
-  name_prefix      = "shop-webserver-elb-certificate"
+  name_prefix      = "shop-elb-certificate"
   certificate_body = "${file("${var.webserver_elb_certificate_path}")}"
   private_key      = "${file("${var.webserver_elb_private_key_path}")}"
 
@@ -391,9 +259,13 @@ resource "aws_iam_server_certificate" "webserver_elb" {
 }
 
 resource "aws_elb" "webserver_elb" {
-  name = "shop-webserver-elb"
+  name = "shop-elb"
   security_groups = ["${aws_security_group.webserver_elb.id}"]
-  subnets = ["${data.terraform_remote_state.vpc.network-public-subnet-a-id}","${data.terraform_remote_state.vpc.network-public-subnet-b-id}"]
+  subnets = [
+    "${data.terraform_remote_state.network.network-public-subnet-a-id}",
+    "${data.terraform_remote_state.network.network-public-subnet-b-id}",
+    "${data.terraform_remote_state.network.network-public-subnet-c-id}"
+  ]
 
   listener {
     instance_port = 80
@@ -429,13 +301,8 @@ resource "aws_elb" "webserver_elb" {
   }
 }
 
-resource "aws_autoscaling_attachment" "webserver_asg_a" {
-  autoscaling_group_name = "${aws_autoscaling_group.webserver_asg_a.id}"
-  elb = "${aws_elb.webserver_elb.id}"
-}
-
-resource "aws_autoscaling_attachment" "webserver_asg_b" {
-  autoscaling_group_name = "${aws_autoscaling_group.webserver_asg_b.id}"
+resource "aws_autoscaling_attachment" "webserver_asg" {
+  autoscaling_group_name = "${aws_autoscaling_group.webserver_asg.id}"
   elb = "${aws_elb.webserver_elb.id}"
 }
 
@@ -443,7 +310,7 @@ resource "aws_autoscaling_attachment" "webserver_asg_b" {
 # Route 53
 ##############################################################################
 
-resource "aws_route53_record" "webserver_elb" {
+resource "aws_route53_record" "webserver_elb_public" {
   zone_id = "${var.public_hosted_zone_id}"
   name = "shop.${var.public_hosted_zone_name}"
   type = "A"
@@ -455,11 +322,14 @@ resource "aws_route53_record" "webserver_elb" {
   }
 }
 
-resource "aws_route53_record" "webserver_dns" {
-  zone_id = "${data.terraform_remote_state.vpc.hosted-zone-id}"
-  name = "shop.${var.hosted_zone_name}"
-  type = "CNAME"
-  ttl = "30"
+resource "aws_route53_record" "webserver_elb_network" {
+  zone_id = "${data.terraform_remote_state.vpc.network-hosted-zone-id}"
+  name = "shop.${data.terraform_remote_state.vpc.network-hosted-zone-name}"
+  type = "A"
 
-  records = ["${aws_elb.webserver_elb.dns_name}"]
+  alias {
+    name = "${aws_elb.webserver_elb.dns_name}"
+    zone_id = "${aws_elb.webserver_elb.zone_id}"
+    evaluate_target_health = true
+  }
 }

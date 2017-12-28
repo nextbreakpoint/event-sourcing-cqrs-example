@@ -1,3 +1,5 @@
+#!/bin/sh
+
 keytool -genkey -alias fractals -dname "CN=NextBreakpoint" -keystore keystore-server.jks -keyalg RSA -keysize 2048 -keypass "secret" -storepass "secret" -storetype JKS -validity 999
 keytool -genkey -alias fractals -dname "CN=NextBreakpoint" -keystore keystore-client.jks -keyalg RSA -keysize 2048 -keypass "secret" -storepass "secret" -storetype JKS -validity 999
 keytool -export -keystore keystore-server.jks -alias fractals -file server.cer -storepass "secret"

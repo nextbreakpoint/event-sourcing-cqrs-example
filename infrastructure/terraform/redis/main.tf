@@ -8,16 +8,12 @@ provider "aws" {
   version = "~> 0.1"
 }
 
-provider "terraform" {
-  version = "~> 0.1"
-}
-
 ##############################################################################
 # Redis
 ##############################################################################
 
 resource "aws_elasticache_cluster" "redis" {
-  cluster_id = "services"
+  cluster_id = "shop"
   engine = "redis"
   engine_version = "3.2.4"
   node_type = "cache.t2.medium"
@@ -29,16 +25,17 @@ resource "aws_elasticache_cluster" "redis" {
 }
 
 resource "aws_elasticache_subnet_group" "redis" {
-  name = "redis-subnet-group"
+  name = "shop-subnet-group"
 
   subnet_ids = [
-    "${data.terraform_remote_state.vpc.network-private-subnet-a-id}",
-    "${data.terraform_remote_state.vpc.network-private-subnet-b-id}"
+    "${data.terraform_remote_state.network.network-private-subnet-a-id}",
+    "${data.terraform_remote_state.network.network-private-subnet-b-id}",
+    "${data.terraform_remote_state.network.network-private-subnet-c-id}"
   ]
 }
 
 resource "aws_security_group" "redis" {
-  name = "redis-security-group"
+  name = "shop-security-group"
 
   vpc_id = "${data.terraform_remote_state.vpc.network-vpc-id}"
 
@@ -54,11 +51,22 @@ resource "aws_security_group" "redis" {
 # Route 53
 ##############################################################################
 
-resource "aws_route53_record" "redis" {
-  zone_id = "${data.terraform_remote_state.vpc.hosted-zone-id}"
-  name = "redis-services.${var.hosted_zone_name}"
+resource "aws_route53_record" "redis-network" {
+  zone_id = "${data.terraform_remote_state.vpc.network-hosted-zone-id}"
+  name = "shop-redis.${data.terraform_remote_state.vpc.network-hosted-zone-name}"
   type = "CNAME"
-  ttl = "30"
+  ttl = "60"
+
+  records = [
+    "${aws_elasticache_cluster.redis.cache_nodes.0.address}"
+  ]
+}
+
+resource "aws_route53_record" "redis-bastion" {
+  zone_id = "${data.terraform_remote_state.vpc.bastion-hosted-zone-id}"
+  name = "shop-redis.${data.terraform_remote_state.vpc.bastion-hosted-zone-name}"
+  type = "CNAME"
+  ttl = "60"
 
   records = [
     "${aws_elasticache_cluster.redis.cache_nodes.0.address}"

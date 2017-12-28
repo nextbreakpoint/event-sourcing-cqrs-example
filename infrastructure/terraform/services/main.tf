@@ -8,10 +8,6 @@ provider "aws" {
   version = "~> 0.1"
 }
 
-provider "terraform" {
-  version = "~> 0.1"
-}
-
 provider "template" {
   version = "~> 0.1"
 }
@@ -21,7 +17,7 @@ provider "template" {
 ##############################################################################
 
 resource "aws_iam_role" "service_role" {
-  name = "service-role"
+  name = "shop-service-role"
   assume_role_policy = <<POLICY
 {
   "Version": "2012-10-17",
@@ -40,7 +36,7 @@ POLICY
 }
 
 resource "aws_iam_role_policy" "service_role_policy" {
-  name = "service-role-policy"
+  name = "shop-service-role-policy"
   role = "${aws_iam_role.service_role.id}"
 
   policy = <<EOF
@@ -66,7 +62,7 @@ EOF
 }
 
 resource "aws_iam_role" "container_tasks_role" {
-  name = "container-tasks-role"
+  name = "shop-container-role"
   assume_role_policy = <<POLICY
 {
   "Version": "2012-10-17",
@@ -93,7 +89,7 @@ POLICY
 }
 
 resource "aws_iam_role_policy" "container_tasks_role_policy" {
-  name = "container-tasks-role-policy"
+  name = "shop-container-role-policy"
   role = "${aws_iam_role.container_tasks_role.id}"
 
   policy = <<EOF
@@ -171,7 +167,7 @@ resource "aws_ecs_service" "accounts" {
 
   placement_constraints {
     type       = "memberOf"
-    expression = "${format("attribute:ecs.availability-zone in [%sa, %sb]", var.aws_region, var.aws_region)}"
+    expression = "${format("attribute:ecs.availability-zone in [%sa, %sb, %sc]", var.aws_region, var.aws_region, var.aws_region)}"
   }
 }
 
@@ -184,7 +180,7 @@ resource "aws_ecs_task_definition" "accounts" {
 
   placement_constraints {
     type       = "memberOf"
-    expression = "${format("attribute:ecs.availability-zone in [%sa, %sb]", var.aws_region, var.aws_region)}"
+    expression = "${format("attribute:ecs.availability-zone in [%sa, %sb, %sc]", var.aws_region, var.aws_region, var.aws_region)}"
   }
 }
 
@@ -201,7 +197,7 @@ resource "aws_ecs_service" "designs" {
 
   placement_constraints {
     type       = "memberOf"
-    expression = "${format("attribute:ecs.availability-zone in [%sa, %sb]", var.aws_region, var.aws_region)}"
+    expression = "${format("attribute:ecs.availability-zone in [%sa, %sb, %sc]", var.aws_region, var.aws_region, var.aws_region)}"
   }
 }
 
@@ -214,7 +210,7 @@ resource "aws_ecs_task_definition" "designs" {
 
   placement_constraints {
     type       = "memberOf"
-    expression = "${format("attribute:ecs.availability-zone in [%sa, %sb]", var.aws_region, var.aws_region)}"
+    expression = "${format("attribute:ecs.availability-zone in [%sa, %sb, %sc]", var.aws_region, var.aws_region, var.aws_region)}"
   }
 }
 
@@ -231,7 +227,7 @@ resource "aws_ecs_service" "auth" {
 
   placement_constraints {
     type       = "memberOf"
-    expression = "${format("attribute:ecs.availability-zone in [%sa, %sb]", var.aws_region, var.aws_region)}"
+    expression = "${format("attribute:ecs.availability-zone in [%sa, %sb, %sc]", var.aws_region, var.aws_region, var.aws_region)}"
   }
 }
 
@@ -244,7 +240,7 @@ resource "aws_ecs_task_definition" "auth" {
 
   placement_constraints {
     type       = "memberOf"
-    expression = "${format("attribute:ecs.availability-zone in [%sa, %sb]", var.aws_region, var.aws_region)}"
+    expression = "${format("attribute:ecs.availability-zone in [%sa, %sb, %sc]", var.aws_region, var.aws_region, var.aws_region)}"
   }
 }
 
@@ -261,7 +257,7 @@ resource "aws_ecs_service" "web" {
 
   placement_constraints {
     type       = "memberOf"
-    expression = "${format("attribute:ecs.availability-zone in [%sa, %sb]", var.aws_region, var.aws_region)}"
+    expression = "${format("attribute:ecs.availability-zone in [%sa, %sb, %sc]", var.aws_region, var.aws_region, var.aws_region)}"
   }
 }
 
@@ -274,7 +270,7 @@ resource "aws_ecs_task_definition" "server" {
 
   placement_constraints {
     type       = "memberOf"
-    expression = "${format("attribute:ecs.availability-zone in [%sa, %sb]", var.aws_region, var.aws_region)}"
+    expression = "${format("attribute:ecs.availability-zone in [%sa, %sb, %sc]", var.aws_region, var.aws_region, var.aws_region)}"
   }
 }
 

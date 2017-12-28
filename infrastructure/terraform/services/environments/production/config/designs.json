@@ -10,7 +10,7 @@
 
   "client_web_url": "https://shop.nextbreakpoint.com",
 
-  "jdbc_url": "jdbc:mysql://rds-services.internal:3306/designs?useSSL=false&nullNamePatternMatchesAll=true",
+  "jdbc_url": "jdbc:mysql://shop-rds.nextbreakpoint.com:3306/designs?useSSL=false&nullNamePatternMatchesAll=true",
   "jdbc_driver": "com.mysql.cj.jdbc.Driver",
   "jdbc_username": "verticle",
   "jdbc_password": "password",

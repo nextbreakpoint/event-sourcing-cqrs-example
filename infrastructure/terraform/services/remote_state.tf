@@ -4,7 +4,7 @@
 
 terraform {
   backend "s3" {
-    bucket = "nextbreakpoint-terraform-state"
+    bucket = "terraform"
     region = "eu-west-1"
     key = "shop-ecs.tfstate"
   }
@@ -13,8 +13,8 @@ terraform {
 data "terraform_remote_state" "ecs" {
     backend = "s3"
     config {
-        bucket = "nextbreakpoint-terraform-state"
-        region = "${var.aws_region}"
+        bucket = "terraform"
+        region = "eu-west-1"
         key = "ecs.tfstate"
     }
 }

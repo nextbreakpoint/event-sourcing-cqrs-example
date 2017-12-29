@@ -10,6 +10,7 @@
 **/.vertx
 **/node_modules
 *.tf.bkp
+*.tf.backup
 *.tfstate
 *.tfstate.backup
 config_vars.json

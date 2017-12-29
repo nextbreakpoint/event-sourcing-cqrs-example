@@ -23,5 +23,9 @@ variable "aws_network_vpc_cidr" {
 }
 
 ### MANDATORY ###
-variable "aws_openvpn_vpc_cidr" {
+variable "rds_mysql_username" {
+}
+
+### MANDATORY ###
+variable "rds_mysql_password" {
 }

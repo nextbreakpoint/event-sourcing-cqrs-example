@@ -33,11 +33,11 @@ variable "log_stream_name" {
 }
 
 ### MANDATORY ###
-variable "public_hosted_zone_name" {
+variable "hosted_zone_name" {
 }
 
 ### MANDATORY ###
-variable "public_hosted_zone_id" {
+variable "hosted_zone_id" {
 }
 
 ### MANDATORY ###
@@ -46,10 +46,6 @@ variable "aws_bastion_vpc_cidr" {
 
 ### MANDATORY ###
 variable "aws_network_vpc_cidr" {
-}
-
-### MANDATORY ###
-variable "aws_openvpn_vpc_cidr" {
 }
 
 ### MANDATORY ###

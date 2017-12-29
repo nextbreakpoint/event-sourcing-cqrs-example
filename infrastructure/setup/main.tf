@@ -7,14 +7,14 @@ resource "mysql_database" "designs" {
 }
 
 resource "mysql_user" "verticle" {
-  user     = "verticle"
-  password = "password"
+  user     = "${var.mysql_verticle_username}"
+  password = "${var.mysql_verticle_password}"
   host     = "%"
 }
 
 resource "mysql_user" "liquibase" {
-  user     = "liquibase"
-  password = "password"
+  user     = "${var.mysql_liquibase_username}"
+  password = "${var.mysql_liquibase_password}"
   host     = "%"
 }
 

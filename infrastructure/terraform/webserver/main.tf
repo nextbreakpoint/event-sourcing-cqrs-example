@@ -39,7 +39,7 @@ resource "aws_security_group" "webserver" {
     from_port = 22
     to_port = 22
     protocol = "tcp"
-    cidr_blocks = ["${var.aws_bastion_vpc_cidr}", "${var.aws_openvpn_vpc_cidr}"]
+    cidr_blocks = ["${var.aws_bastion_vpc_cidr}"]
   }
 
   ingress {
@@ -80,7 +80,7 @@ data "template_file" "webserver_user_data" {
     consul_nodes            = "${replace(var.aws_network_private_subnet_cidr_a, "0/24", "90")},${replace(var.aws_network_private_subnet_cidr_b, "0/24", "90")},${replace(var.aws_network_private_subnet_cidr_c, "0/24", "90")}"
     consul_logfile          = "${var.consul_logfile}"
     security_groups         = "${aws_security_group.webserver.id}"
-    hosted_zone_name        = "${var.public_hosted_zone_name}"
+    hosted_zone_name        = "${var.hosted_zone_name}"
     filebeat_version        = "${var.filebeat_version}"
   }
 }
@@ -311,8 +311,8 @@ resource "aws_autoscaling_attachment" "webserver_asg" {
 ##############################################################################
 
 resource "aws_route53_record" "webserver_elb_public" {
-  zone_id = "${var.public_hosted_zone_id}"
-  name = "shop.${var.public_hosted_zone_name}"
+  zone_id = "${var.hosted_zone_id}"
+  name = "shop.${var.hosted_zone_name}"
   type = "A"
 
   alias {
@@ -323,8 +323,8 @@ resource "aws_route53_record" "webserver_elb_public" {
 }
 
 resource "aws_route53_record" "webserver_elb_network" {
-  zone_id = "${data.terraform_remote_state.vpc.network-hosted-zone-id}"
-  name = "shop.${data.terraform_remote_state.vpc.network-hosted-zone-name}"
+  zone_id = "${data.terraform_remote_state.zones.network-hosted-zone-id}"
+  name = "shop.${data.terraform_remote_state.zones.network-hosted-zone-name}"
   type = "A"
 
   alias {

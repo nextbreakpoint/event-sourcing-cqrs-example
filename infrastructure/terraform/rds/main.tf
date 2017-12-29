@@ -23,8 +23,7 @@ resource "aws_security_group" "shop" {
     protocol = "tcp"
     cidr_blocks = [
       "${var.aws_network_vpc_cidr}",
-      "${var.aws_bastion_vpc_cidr}",
-      "${var.aws_openvpn_vpc_cidr}"
+      "${var.aws_bastion_vpc_cidr}"
     ]
   }
 
@@ -41,8 +40,8 @@ resource "aws_db_instance" "shop" {
   engine_version       = "5.7.17"
   instance_class       = "db.t2.small"
   name                 = "shop"
-  username             = "shop"
-  password             = "password"
+  username             = "${var.rds_mysql_username}"
+  password             = "${var.rds_mysql_password}"
   db_subnet_group_name = "shop-rds-subnet-group"
   parameter_group_name = "default.mysql5.7"
   publicly_accessible  = false
@@ -76,8 +75,8 @@ resource "aws_db_subnet_group" "shop" {
 ##############################################################################
 
 resource "aws_route53_record" "shop-network" {
-  zone_id = "${data.terraform_remote_state.vpc.network-hosted-zone-id}"
-  name = "shop-rds.${data.terraform_remote_state.vpc.network-hosted-zone-name}"
+  zone_id = "${data.terraform_remote_state.zones.network-hosted-zone-id}"
+  name = "shop-rds.${data.terraform_remote_state.zones.network-hosted-zone-name}"
   type = "CNAME"
   ttl = "60"
 
@@ -87,8 +86,8 @@ resource "aws_route53_record" "shop-network" {
 }
 
 resource "aws_route53_record" "shop-bastion" {
-  zone_id = "${data.terraform_remote_state.vpc.bastion-hosted-zone-id}"
-  name = "shop-rds.${data.terraform_remote_state.vpc.bastion-hosted-zone-name}"
+  zone_id = "${data.terraform_remote_state.zones.bastion-hosted-zone-id}"
+  name = "shop-rds.${data.terraform_remote_state.zones.bastion-hosted-zone-name}"
   type = "CNAME"
   ttl = "60"
 

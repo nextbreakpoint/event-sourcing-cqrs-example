@@ -91,14 +91,6 @@ variable "web_instance_type" {
   default = "t2.small"
 }
 
-variable "webserver_elb_certificate_path" {
-  default = "../../secrets/ca_and_server_cert.pem"
-}
-
-variable "webserver_elb_private_key_path" {
-  default = "../../secrets/server_key.pem"
-}
-
 ###################################################################
 # Consul configuration below
 ###################################################################

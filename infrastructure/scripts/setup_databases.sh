@@ -1,5 +1,7 @@
 #!/bin/sh
 
+. $ROOT/bash_aliases
+
 cd $ROOT/terraform/rds
 
 echo "Creating provider config..."
@@ -16,6 +18,7 @@ echo "done."
 
 echo "Copying files..."
 scp -i $ROOT/deployer_key.pem $ROOT/config/mysql.tfvars ec2-user@$1:~
+scp -i $ROOT/deployer_key.pem $ROOT/setup/variables.tf ec2-user@$1:~
 scp -i $ROOT/deployer_key.pem $ROOT/setup/provider.tf ec2-user@$1:~
 scp -i $ROOT/deployer_key.pem $ROOT/setup/main.tf ec2-user@$1:~
 echo "done."

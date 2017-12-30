@@ -15,21 +15,41 @@ variable "stream_tag" {
 }
 
 ### MANDATORY ###
+variable "account_id" {
+}
+
+### MANDATORY ###
+variable "secrets_bucket_name" {
+}
+
+### MANDATORY ###
 variable "hosted_zone_name" {
 }
 
 ### MANDATORY ###
-variable "aws_bastion_vpc_cidr" {
+variable "github_client_id" {
 }
 
 ### MANDATORY ###
-variable "aws_network_vpc_cidr" {
+variable "github_client_secret" {
 }
 
 ### MANDATORY ###
-variable "rds_mysql_username" {
+variable "github_user_email" {
 }
 
 ### MANDATORY ###
-variable "rds_mysql_password" {
+variable "mysql_verticle_username" {
+}
+
+### MANDATORY ###
+variable "mysql_verticle_password" {
+}
+
+### MANDATORY ###
+variable "mysql_liquibase_username" {
+}
+
+### MANDATORY ###
+variable "mysql_liquibase_password" {
 }

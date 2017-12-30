@@ -7,5 +7,5 @@ output "shop-password" {
 }
 
 output "shop-endpoint" {
-  value = "shop-rds.${data.terraform_remote_state.vpc.bastion-hosted-zone-name}:3306"
+  value = "shop-rds.${var.hosted_zone_name}:3306"
 }

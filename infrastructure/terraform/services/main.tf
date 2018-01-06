@@ -1,9 +1,9 @@
 ##############################################################################
-# Provider
+# Providers
 ##############################################################################
 
 provider "aws" {
-  region = "${var.aws_region}"
+  region  = "${var.aws_region}"
   profile = "${var.aws_profile}"
   version = "~> 0.1"
 }
@@ -12,16 +12,13 @@ provider "template" {
   version = "~> 0.1"
 }
 
-provider "local" {
-  version = "~> 0.1"
-}
-
 ##############################################################################
-# ECS Services and Tasks
+# Resources
 ##############################################################################
 
-resource "aws_iam_role" "service_role" {
-  name = "shop-service-role"
+resource "aws_iam_role" "service" {
+  name = "shop-service"
+
   assume_role_policy = <<POLICY
 {
   "Version": "2012-10-17",
@@ -39,9 +36,9 @@ resource "aws_iam_role" "service_role" {
 POLICY
 }
 
-resource "aws_iam_role_policy" "service_role_policy" {
-  name = "shop-service-role-policy"
-  role = "${aws_iam_role.service_role.id}"
+resource "aws_iam_role_policy" "service" {
+  name = "shop-service"
+  role = "${aws_iam_role.service.id}"
 
   policy = <<EOF
 {
@@ -65,8 +62,9 @@ resource "aws_iam_role_policy" "service_role_policy" {
 EOF
 }
 
-resource "aws_iam_role" "container_tasks_role" {
-  name = "shop-container-role"
+resource "aws_iam_role" "container" {
+  name = "shop-container"
+
   assume_role_policy = <<POLICY
 {
   "Version": "2012-10-17",
@@ -92,9 +90,9 @@ resource "aws_iam_role" "container_tasks_role" {
 POLICY
 }
 
-resource "aws_iam_role_policy" "container_tasks_role_policy" {
-  name = "shop-container-role-policy"
-  role = "${aws_iam_role.container_tasks_role.id}"
+resource "aws_iam_role_policy" "container" {
+  name = "shop-container"
+  role = "${aws_iam_role.container.id}"
 
   policy = <<EOF
 {
@@ -126,8 +124,8 @@ data "template_file" "auth_template" {
   template = "${file("task-definitions/auth.json")}"
 
   vars {
-    account_id         = "${var.account_id}"
-    bucket_name        = "${var.secrets_bucket_name}"
+    account_id  = "${var.account_id}"
+    bucket_name = "${var.secrets_bucket_name}"
   }
 }
 
@@ -135,8 +133,8 @@ data "template_file" "designs_template" {
   template = "${file("task-definitions/designs.json")}"
 
   vars {
-    account_id         = "${var.account_id}"
-    bucket_name        = "${var.secrets_bucket_name}"
+    account_id  = "${var.account_id}"
+    bucket_name = "${var.secrets_bucket_name}"
   }
 }
 
@@ -144,8 +142,8 @@ data "template_file" "accounts_template" {
   template = "${file("task-definitions/accounts.json")}"
 
   vars {
-    account_id         = "${var.account_id}"
-    bucket_name        = "${var.secrets_bucket_name}"
+    account_id  = "${var.account_id}"
+    bucket_name = "${var.secrets_bucket_name}"
   }
 }
 
@@ -153,8 +151,8 @@ data "template_file" "web_template" {
   template = "${file("task-definitions/web.json")}"
 
   vars {
-    account_id         = "${var.account_id}"
-    bucket_name        = "${var.secrets_bucket_name}"
+    account_id  = "${var.account_id}"
+    bucket_name = "${var.secrets_bucket_name}"
   }
 }
 
@@ -178,9 +176,9 @@ resource "aws_ecs_service" "auth" {
 resource "aws_ecs_task_definition" "auth" {
   family                = "auth"
   container_definitions = "${data.template_file.auth_template.rendered}"
-  task_role_arn         = "${aws_iam_role.container_tasks_role.arn}"
+  task_role_arn         = "${aws_iam_role.container.arn}"
 
-  depends_on      = ["aws_iam_role_policy.container_tasks_role_policy"]
+  depends_on = ["aws_iam_role_policy.container"]
 
   placement_constraints {
     type       = "memberOf"
@@ -208,9 +206,9 @@ resource "aws_ecs_service" "designs" {
 resource "aws_ecs_task_definition" "designs" {
   family                = "designs"
   container_definitions = "${data.template_file.designs_template.rendered}"
-  task_role_arn         = "${aws_iam_role.container_tasks_role.arn}"
+  task_role_arn         = "${aws_iam_role.container.arn}"
 
-  depends_on      = ["aws_iam_role_policy.container_tasks_role_policy"]
+  depends_on = ["aws_iam_role_policy.container"]
 
   placement_constraints {
     type       = "memberOf"
@@ -238,9 +236,9 @@ resource "aws_ecs_service" "accounts" {
 resource "aws_ecs_task_definition" "accounts" {
   family                = "accounts"
   container_definitions = "${data.template_file.accounts_template.rendered}"
-  task_role_arn         = "${aws_iam_role.container_tasks_role.arn}"
+  task_role_arn         = "${aws_iam_role.container.arn}"
 
-  depends_on      = ["aws_iam_role_policy.container_tasks_role_policy"]
+  depends_on = ["aws_iam_role_policy.container"]
 
   placement_constraints {
     type       = "memberOf"
@@ -251,7 +249,7 @@ resource "aws_ecs_task_definition" "accounts" {
 resource "aws_ecs_service" "web" {
   name            = "web"
   cluster         = "${data.terraform_remote_state.ecs.ecs-cluster-id}"
-  task_definition = "${aws_ecs_task_definition.server.arn}"
+  task_definition = "${aws_ecs_task_definition.web.arn}"
   desired_count   = 1
 
   placement_strategy {
@@ -265,22 +263,18 @@ resource "aws_ecs_service" "web" {
   }
 }
 
-resource "aws_ecs_task_definition" "server" {
+resource "aws_ecs_task_definition" "web" {
   family                = "web"
   container_definitions = "${data.template_file.web_template.rendered}"
-  task_role_arn         = "${aws_iam_role.container_tasks_role.arn}"
+  task_role_arn         = "${aws_iam_role.container.arn}"
 
-  depends_on      = ["aws_iam_role_policy.container_tasks_role_policy"]
+  depends_on = ["aws_iam_role_policy.container"]
 
   placement_constraints {
     type       = "memberOf"
     expression = "${format("attribute:ecs.availability-zone in [%sa, %sb, %sc]", var.aws_region, var.aws_region, var.aws_region)}"
   }
 }
-
-##############################################################################
-# S3 Bucket objects
-##############################################################################
 
 resource "aws_s3_bucket_object" "auth" {
   bucket = "${var.secrets_bucket_name}"

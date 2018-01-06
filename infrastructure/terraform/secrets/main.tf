@@ -1,9 +1,9 @@
 ##############################################################################
-# Provider
+# Providers
 ##############################################################################
 
 provider "aws" {
-  region = "${var.aws_region}"
+  region  = "${var.aws_region}"
   profile = "${var.aws_profile}"
   version = "~> 0.1"
 }
@@ -13,11 +13,11 @@ provider "local" {
 }
 
 ##############################################################################
-# Local files
+# Resources
 ##############################################################################
 
 resource "local_file" "auth_config" {
-    content = <<EOF
+  content = <<EOF
 {
   "host_port": 3000,
 
@@ -61,11 +61,12 @@ resource "local_file" "auth_config" {
   "graphite_port": 2003
 }
 EOF
-    filename = "../../secrets/environments/production/config/auth.json"
+
+  filename = "../../secrets/environments/production/config/auth.json"
 }
 
 resource "local_file" "designs_config" {
-    content = <<EOF
+  content = <<EOF
 {
   "host_port": 3001,
 
@@ -94,11 +95,12 @@ resource "local_file" "designs_config" {
   "max_execution_time_in_millis": 30000
 }
 EOF
-    filename = "../../secrets/environments/production/config/designs.json"
+
+  filename = "../../secrets/environments/production/config/designs.json"
 }
 
 resource "local_file" "accounts_config" {
-    content = <<EOF
+  content = <<EOF
 {
   "host_port": 3002,
 
@@ -125,11 +127,12 @@ resource "local_file" "accounts_config" {
   "graphite_port": 2003
 }
 EOF
-    filename = "../../secrets/environments/production/config/accounts.json"
+
+  filename = "../../secrets/environments/production/config/accounts.json"
 }
 
 resource "local_file" "web_config" {
-    content = <<EOF
+  content = <<EOF
 {
   "host_port": 8080,
 
@@ -164,5 +167,6 @@ resource "local_file" "web_config" {
   "graphite_port": 2003
 }
 EOF
-    filename = "../../secrets/environments/production/config/web.json"
+
+  filename = "../../secrets/environments/production/config/web.json"
 }

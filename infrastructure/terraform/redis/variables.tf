@@ -10,6 +10,16 @@ variable "aws_profile" {
   default = "default"
 }
 
+##############################################################################
+# Resources configuration below
+##############################################################################
+
 variable "stream_tag" {
   default = "terraform"
 }
+
+### MANDATORY ###
+variable "hosted_zone_name" {}
+
+### MANDATORY ###
+variable "hosted_zone_id" {}

@@ -6,33 +6,26 @@ terraform {
   backend "s3" {
     bucket = "terraform"
     region = "eu-west-1"
-    key = "shop-rds.tfstate"
+    key    = "shop-rds.tfstate"
   }
 }
 
 data "terraform_remote_state" "vpc" {
-    backend = "s3"
-    config {
-        bucket = "terraform"
-        region = "eu-west-1"
-        key = "vpc.tfstate"
-    }
-}
+  backend = "s3"
 
-data "terraform_remote_state" "zones" {
-    backend = "s3"
-    config {
-        bucket = "terraform"
-        region = "eu-west-1"
-        key = "zones.tfstate"
-    }
+  config {
+    bucket = "terraform"
+    region = "eu-west-1"
+    key    = "vpc.tfstate"
+  }
 }
 
 data "terraform_remote_state" "network" {
-    backend = "s3"
-    config {
-        bucket = "terraform"
-        region = "eu-west-1"
-        key = "network.tfstate"
-    }
+  backend = "s3"
+
+  config {
+    bucket = "terraform"
+    region = "eu-west-1"
+    key    = "network.tfstate"
+  }
 }

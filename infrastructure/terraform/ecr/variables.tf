@@ -9,3 +9,11 @@ variable "aws_region" {
 variable "aws_profile" {
   default = "default"
 }
+
+##############################################################################
+# Resources configuration below
+##############################################################################
+
+variable "stream_tag" {
+  default = "terraform"
+}

@@ -10,26 +10,28 @@ variable "aws_profile" {
   default = "default"
 }
 
+###################################################################
+# Resources configuration below
+###################################################################
+
 variable "stream_tag" {
   default = "terraform"
 }
 
 ### MANDATORY ###
-variable "hosted_zone_name" {
-}
+variable "hosted_zone_name" {}
 
 ### MANDATORY ###
-variable "aws_bastion_vpc_cidr" {
-}
+variable "hosted_zone_id" {}
 
 ### MANDATORY ###
-variable "aws_network_vpc_cidr" {
-}
+variable "aws_bastion_vpc_cidr" {}
 
 ### MANDATORY ###
-variable "rds_mysql_username" {
-}
+variable "aws_network_vpc_cidr" {}
 
 ### MANDATORY ###
-variable "rds_mysql_password" {
-}
+variable "rds_mysql_username" {}
+
+### MANDATORY ###
+variable "rds_mysql_password" {}

@@ -1,9 +1,9 @@
 ##############################################################################
-# Provider
+# Providers
 ##############################################################################
 
 provider "aws" {
-  region = "${var.aws_region}"
+  region  = "${var.aws_region}"
   profile = "${var.aws_profile}"
   version = "~> 0.1"
 }
@@ -13,53 +13,67 @@ provider "template" {
 }
 
 ##############################################################################
-# Web servers
+# Resources
 ##############################################################################
 
 resource "aws_security_group" "webserver" {
-  name = "shop-nginx-security-group"
+  name        = "shop-webserver"
   description = "Shop NGINX security group"
-  vpc_id = "${data.terraform_remote_state.vpc.network-vpc-id}"
+  vpc_id      = "${data.terraform_remote_state.vpc.network-vpc-id}"
 
   ingress {
-    from_port = 80
-    to_port = 80
-    protocol = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["${var.aws_network_vpc_cidr}"]
   }
 
   ingress {
-    from_port = 443
-    to_port = 443
-    protocol = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["${var.aws_network_vpc_cidr}"]
   }
 
   ingress {
-    from_port = 22
-    to_port = 22
-    protocol = "tcp"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
     cidr_blocks = ["${var.aws_bastion_vpc_cidr}"]
   }
 
   ingress {
-    from_port = 8301
-    to_port = 8301
-    protocol = "tcp"
+    from_port   = 8301
+    to_port     = 8301
+    protocol    = "tcp"
     cidr_blocks = ["${var.aws_network_vpc_cidr}"]
   }
 
   ingress {
-    from_port = 8301
-    to_port = 8301
-    protocol = "udp"
+    from_port   = 8301
+    to_port     = 8301
+    protocol    = "udp"
     cidr_blocks = ["${var.aws_network_vpc_cidr}"]
   }
 
   egress {
-    from_port = 0
-    to_port = 0
-    protocol = "-1"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["${var.aws_network_vpc_cidr}"]
+  }
+
+  egress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
@@ -68,30 +82,8 @@ resource "aws_security_group" "webserver" {
   }
 }
 
-data "template_file" "webserver_user_data" {
-  template = "${file("provision/nginx.tpl")}"
-
-  vars {
-    aws_region              = "${var.aws_region}"
-    environment             = "${var.environment}"
-    bucket_name             = "${var.secrets_bucket_name}"
-    consul_secret           = "${var.consul_secret}"
-    consul_datacenter       = "${var.consul_datacenter}"
-    consul_nodes            = "${replace(var.aws_network_private_subnet_cidr_a, "0/24", "90")},${replace(var.aws_network_private_subnet_cidr_b, "0/24", "90")},${replace(var.aws_network_private_subnet_cidr_c, "0/24", "90")}"
-    consul_logfile          = "${var.consul_logfile}"
-    security_groups         = "${aws_security_group.webserver.id}"
-    hosted_zone_name        = "${var.hosted_zone_name}"
-    filebeat_version        = "${var.filebeat_version}"
-  }
-}
-
-resource "aws_iam_instance_profile" "webserver_profile" {
-    name = "shop-nginx-profile"
-    role = "${aws_iam_role.webserver_role.name}"
-}
-
-resource "aws_iam_role" "webserver_role" {
-  name = "shop-nginx-role"
+resource "aws_iam_role" "webserver" {
+  name = "shop-webserver"
 
   assume_role_policy = <<EOF
 {
@@ -118,9 +110,9 @@ resource "aws_iam_role" "webserver_role" {
 EOF
 }
 
-resource "aws_iam_role_policy" "webserver_role_policy" {
-  name = "shop-nginx-role-policy"
-  role = "${aws_iam_role.webserver_role.id}"
+resource "aws_iam_role_policy" "webserver" {
+  name = "shop-webserver"
+  role = "${aws_iam_role.webserver.id}"
 
   policy = <<EOF
 {
@@ -145,55 +137,72 @@ resource "aws_iam_role_policy" "webserver_role_policy" {
 EOF
 }
 
+resource "aws_iam_instance_profile" "webserver" {
+  name = "shop-webserver"
+  role = "${aws_iam_role.webserver.name}"
+}
+
+data "template_file" "webserver" {
+  template = "${file("provision/nginx.tpl")}"
+
+  vars {
+    aws_region        = "${var.aws_region}"
+    environment       = "${var.environment}"
+    bucket_name       = "${var.secrets_bucket_name}"
+    consul_secret     = "${var.consul_secret}"
+    consul_datacenter = "${var.consul_datacenter}"
+    consul_nodes      = "${replace(var.aws_network_private_subnet_cidr_a, "0/24", "90")},${replace(var.aws_network_private_subnet_cidr_b, "0/24", "90")},${replace(var.aws_network_private_subnet_cidr_c, "0/24", "90")}"
+    security_groups   = "${aws_security_group.webserver.id}"
+    hosted_zone_name  = "${var.hosted_zone_name}"
+    filebeat_version  = "${var.filebeat_version}"
+  }
+}
+
 data "aws_ami" "webserver" {
   most_recent = true
 
   filter {
-    name = "name"
+    name   = "name"
     values = ["base-${var.base_version}-*"]
   }
 
   filter {
-    name = "virtualization-type"
+    name   = "virtualization-type"
     values = ["hvm"]
   }
 
   owners = ["${var.account_id}"]
 }
 
-resource "aws_launch_configuration" "webserver_launch_configuration" {
-  name_prefix   = "shop-nginx-server-"
-  instance_type = "${var.web_instance_type}"
-
-  image_id = "${data.aws_ami.webserver.id}"
-
+resource "aws_launch_configuration" "webserver" {
+  name_prefix                 = "shop-webserver-"
+  image_id                    = "${data.aws_ami.webserver.id}"
+  instance_type               = "${var.web_instance_type}"
+  security_groups             = ["${aws_security_group.webserver.id}"]
+  iam_instance_profile        = "${aws_iam_instance_profile.webserver.name}"
+  user_data                   = "${data.template_file.webserver.rendered}"
+  key_name                    = "${var.key_name}"
   associate_public_ip_address = "false"
-  security_groups = ["${aws_security_group.webserver.id}"]
-  key_name = "${var.key_name}"
-
-  iam_instance_profile = "${aws_iam_instance_profile.webserver_profile.name}"
-
-  user_data = "${data.template_file.webserver_user_data.rendered}"
 
   lifecycle {
     create_before_destroy = true
   }
 }
 
-resource "aws_autoscaling_group" "webserver_asg" {
-  name                      = "shop-nginx-asg"
+resource "aws_autoscaling_group" "webserver" {
+  name                      = "shop-webserver"
   max_size                  = 8
   min_size                  = 0
   health_check_grace_period = 300
   health_check_type         = "ELB"
   desired_capacity          = 2
   force_delete              = true
-  launch_configuration      = "${aws_launch_configuration.webserver_launch_configuration.name}"
+  launch_configuration      = "${aws_launch_configuration.webserver.name}"
 
   vpc_zone_identifier = [
     "${data.terraform_remote_state.network.network-private-subnet-a-id}",
     "${data.terraform_remote_state.network.network-private-subnet-b-id}",
-    "${data.terraform_remote_state.network.network-private-subnet-c-id}"
+    "${data.terraform_remote_state.network.network-private-subnet-c-id}",
   ]
 
   lifecycle {
@@ -208,7 +217,7 @@ resource "aws_autoscaling_group" "webserver_asg" {
 
   tag {
     key                 = "Name"
-    value               = "shop-nginx-server"
+    value               = "shop-webserver"
     propagate_at_launch = true
   }
 
@@ -217,114 +226,84 @@ resource "aws_autoscaling_group" "webserver_asg" {
   }
 }
 
-resource "aws_security_group" "webserver_elb" {
-  name = "shop-elb-security-group"
-  description = "Shop ELB security group"
-  vpc_id = "${data.terraform_remote_state.vpc.network-vpc-id}"
-
-  ingress {
-    from_port = 80
-    to_port = 80
-    protocol = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    from_port = 443
-    to_port = 443
-    protocol = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port = 0
-    to_port = 0
-    protocol = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags {
-    Stream = "${var.stream_tag}"
-  }
-}
-
-data "aws_acm_certificate" "webserver_elb" {
-  domain   = "*.${var.hosted_zone_name}"
-  statuses = ["ISSUED"]
-}
-
-resource "aws_elb" "webserver_elb" {
-  name = "shop-elb"
-  security_groups = ["${aws_security_group.webserver_elb.id}"]
-  subnets = [
-    "${data.terraform_remote_state.network.network-public-subnet-a-id}",
-    "${data.terraform_remote_state.network.network-public-subnet-b-id}",
-    "${data.terraform_remote_state.network.network-public-subnet-c-id}"
-  ]
-
-  listener {
-    instance_port = 80
-    instance_protocol = "HTTP"
-    lb_port = 80
-    lb_protocol = "HTTP"
-  }
-
-  listener {
-    instance_port       = 443
-    instance_protocol   = "HTTPS"
-    lb_port             = 443
-    lb_protocol         = "HTTPS"
-    ssl_certificate_id  = "${data.aws_acm_certificate.webserver_elb.arn}"
-  }
+resource "aws_alb_target_group" "webserver_http" {
+  name     = "shop-webserver-http"
+  port     = 80
+  protocol = "HTTP"
+  vpc_id   = "${data.terraform_remote_state.vpc.network-vpc-id}"
 
   health_check {
-    healthy_threshold = 2
+    healthy_threshold   = 2
     unhealthy_threshold = 3
-    timeout = 10
-    target = "TCP:80"
-    interval = 30
-  }
-
-  cross_zone_load_balancing = true
-  idle_timeout = 400
-  connection_draining = true
-  connection_draining_timeout = 400
-  internal = false
-
-  tags {
-    Stream = "${var.stream_tag}"
+    timeout             = 10
+    interval            = 30
+    matcher             = "200,301,400,404"
   }
 }
 
-resource "aws_autoscaling_attachment" "webserver_asg" {
-  autoscaling_group_name = "${aws_autoscaling_group.webserver_asg.id}"
-  elb = "${aws_elb.webserver_elb.id}"
+resource "aws_alb_target_group" "webserver_https" {
+  name     = "shop-webserver-https"
+  port     = 443
+  protocol = "HTTPS"
+  vpc_id   = "${data.terraform_remote_state.vpc.network-vpc-id}"
+
+  health_check {
+    healthy_threshold   = 2
+    unhealthy_threshold = 3
+    timeout             = 10
+    interval            = 30
+    matcher             = "200,301,400,404"
+  }
 }
 
-##############################################################################
-# Route 53
-##############################################################################
+resource "aws_alb_listener_rule" "webserver_http" {
+  listener_arn = "${data.terraform_remote_state.lb.lb-public-listener-http-arn}"
+  priority     = 100
 
-resource "aws_route53_record" "webserver_elb_public" {
+  action {
+    type             = "forward"
+    target_group_arn = "${aws_alb_target_group.webserver_http.arn}"
+  }
+
+  condition {
+    field  = "host-header"
+    values = ["shop.${var.hosted_zone_name}"]
+  }
+}
+
+resource "aws_alb_listener_rule" "webserver_https" {
+  listener_arn = "${data.terraform_remote_state.lb.lb-public-listener-https-arn}"
+  priority     = 100
+
+  action {
+    type             = "forward"
+    target_group_arn = "${aws_alb_target_group.webserver_https.arn}"
+  }
+
+  condition {
+    field  = "host-header"
+    values = ["shop.${var.hosted_zone_name}"]
+  }
+}
+
+resource "aws_autoscaling_attachment" "webserver_http" {
+  autoscaling_group_name = "${aws_autoscaling_group.webserver.id}"
+  alb_target_group_arn   = "${aws_alb_target_group.webserver_http.arn}"
+}
+
+resource "aws_autoscaling_attachment" "webserver_https" {
+  autoscaling_group_name = "${aws_autoscaling_group.webserver.id}"
+  alb_target_group_arn   = "${aws_alb_target_group.webserver_https.arn}"
+}
+
+resource "aws_route53_record" "webserver" {
   zone_id = "${var.hosted_zone_id}"
-  name = "shop.${var.hosted_zone_name}"
-  type = "A"
+  name    = "shop.${var.hosted_zone_name}"
+  type    = "A"
 
   alias {
-    name = "${aws_elb.webserver_elb.dns_name}"
-    zone_id = "${aws_elb.webserver_elb.zone_id}"
-    evaluate_target_health = true
-  }
-}
-
-resource "aws_route53_record" "webserver_elb_network" {
-  zone_id = "${data.terraform_remote_state.zones.network-hosted-zone-id}"
-  name = "shop.${data.terraform_remote_state.zones.network-hosted-zone-name}"
-  type = "A"
-
-  alias {
-    name = "${aws_elb.webserver_elb.dns_name}"
-    zone_id = "${aws_elb.webserver_elb.zone_id}"
+    name                   = "${data.terraform_remote_state.lb.lb-public-alb-dns-name}"
+    zone_id                = "${data.terraform_remote_state.lb.lb-public-alb-zone-id}"
     evaluate_target_health = true
   }
 }

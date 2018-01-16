@@ -2,7 +2,6 @@
 
 . $ROOT/bash_aliases
 
-cd $ROOT/terraform/lb && tf_destroy
 cd $ROOT/terraform/services && tf_destroy
 cd $ROOT/terraform/webserver && tf_destroy
 cd $ROOT/terraform/rds && tf_destroy

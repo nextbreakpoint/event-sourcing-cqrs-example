@@ -275,31 +275,3 @@ resource "aws_ecs_task_definition" "web" {
     expression = "${format("attribute:ecs.availability-zone in [%sa, %sb, %sc]", var.aws_region, var.aws_region, var.aws_region)}"
   }
 }
-
-resource "aws_s3_bucket_object" "auth" {
-  bucket = "${var.secrets_bucket_name}"
-  key    = "environments/production/config/auth.json"
-  source = "../../secrets/environments/production/config/auth.json"
-  etag   = "${md5(file("../../secrets/environments/production/config/auth.json"))}"
-}
-
-resource "aws_s3_bucket_object" "designs" {
-  bucket = "${var.secrets_bucket_name}"
-  key    = "environments/production/config/designs.json"
-  source = "../../secrets/environments/production/config/designs.json"
-  etag   = "${md5(file("../../secrets/environments/production/config/designs.json"))}"
-}
-
-resource "aws_s3_bucket_object" "accounts" {
-  bucket = "${var.secrets_bucket_name}"
-  key    = "environments/production/config/accounts.json"
-  source = "../../secrets/environments/production/config/accounts.json"
-  etag   = "${md5(file("../../secrets/environments/production/config/accounts.json"))}"
-}
-
-resource "aws_s3_bucket_object" "web" {
-  bucket = "${var.secrets_bucket_name}"
-  key    = "environments/production/config/web.json"
-  source = "../../secrets/environments/production/config/web.json"
-  etag   = "${md5(file("../../secrets/environments/production/config/web.json"))}"
-}

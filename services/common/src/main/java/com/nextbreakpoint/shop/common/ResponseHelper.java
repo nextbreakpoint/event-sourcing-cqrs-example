@@ -1,15 +1,15 @@
 package com.nextbreakpoint.shop.common;
 
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import io.vertx.rxjava.ext.web.RoutingContext;
 
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class ResponseHelper {
-    private static final Logger logger = Logger.getLogger(ResponseHelper.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(ResponseHelper.class.getName());
 
     private ResponseHelper() {}
 
@@ -23,7 +23,7 @@ public class ResponseHelper {
                 .map(x -> ((Failure) x).getStatusCode())
                 .orElseGet(() -> routingContext.statusCode() > 0 ? routingContext.statusCode() : 500);
 
-        logger.log(Level.WARNING, message);
+        logger.warn(message);
 
         routingContext.response()
                 .putHeader(Headers.CONTENT_TYPE, ContentType.APPLICATION_JSON)
@@ -41,7 +41,7 @@ public class ResponseHelper {
                 .map(x -> ((Failure) x).getStatusCode())
                 .orElseGet(() -> routingContext.statusCode() > 0 ? routingContext.statusCode() : 500);
 
-        logger.log(Level.WARNING, message);
+        logger.warn(message);
 
         routingContext.response()
                 .putHeader("Location", getErrorRedirectURL.apply(statusCode))
@@ -50,8 +50,6 @@ public class ResponseHelper {
     }
 
     private static JsonObject createErrorResponseObject(String error) {
-        final JsonObject json = new JsonObject();
-        json.put("error", error);
-        return json;
+        return new JsonObject().put("error", error);
     }
 }

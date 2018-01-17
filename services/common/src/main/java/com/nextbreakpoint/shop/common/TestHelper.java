@@ -1,6 +1,8 @@
 package com.nextbreakpoint.shop.common;
 
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.auth.KeyStoreOptions;
+import io.vertx.ext.auth.jwt.JWTAuthOptions;
 import io.vertx.rxjava.core.Vertx;
 import io.vertx.rxjava.ext.auth.jwt.JWTAuth;
 import io.vertx.rxjava.ext.web.Cookie;
@@ -37,14 +39,11 @@ public class TestHelper {
     }
 
     private static JWTAuth createJWTProvider(Vertx vertx) {
-        final JsonObject keyStoreObject = new JsonObject()
-                .put("path", "../keystores/keystore-auth.jceks")
-                .put("type", "jceks")
-                .put("password", "secret");
+        final KeyStoreOptions options = new KeyStoreOptions()
+                .setPath("../keystores/keystore-auth.jceks")
+                .setType("jceks")
+                .setPassword("secret");
 
-        final JsonObject config = new JsonObject()
-                .put("keyStore", keyStoreObject);
-
-        return JWTAuth.create(vertx, config);
+        return JWTAuth.create(vertx, new JWTAuthOptions().setKeyStore(options));
     }
 }

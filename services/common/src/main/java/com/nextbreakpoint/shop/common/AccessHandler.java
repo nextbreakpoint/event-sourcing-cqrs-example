@@ -1,17 +1,17 @@
 package com.nextbreakpoint.shop.common;
 
 import io.vertx.core.Handler;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import io.vertx.rxjava.ext.auth.User;
 import io.vertx.rxjava.ext.auth.jwt.JWTAuth;
 import io.vertx.rxjava.ext.web.RoutingContext;
 
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class AccessHandler implements Handler<RoutingContext> {
-    private static final Logger logger = Logger.getLogger(AccessHandler.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(AccessHandler.class.getName());
 
     private final JWTAuth jwtProvider;
     private final List<String> authorities;
@@ -25,16 +25,8 @@ public class AccessHandler implements Handler<RoutingContext> {
 
     @Override
     public void handle(RoutingContext routingContext) {
-        try {
-            processAccess(routingContext, onAccessDenied, authorities);
-        } catch (Exception e) {
-            routingContext.fail(Failure.requestFailed(e));
-        }
-    }
-
-    private void processAccess(RoutingContext routingContext, Consumer<RoutingContext> onAccessDenied, List<String> roles) {
-        Authentication.isUserAuthorized(jwtProvider, routingContext, roles)
-                .doOnError(err -> logger.log(Level.FINE, err.getMessage(), err))
+        Authentication.isUserAuthorized(jwtProvider, routingContext, authorities)
+                .doOnError(err -> logger.debug("Authorization failed", err))
                 .subscribe(user -> processUser(routingContext, user), err -> onAccessDenied.accept(routingContext));
     }
 

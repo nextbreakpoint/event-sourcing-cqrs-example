@@ -3,8 +3,8 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>com.nextbreakpoint.shop.parent</artifactId>
         <groupId>com.nextbreakpoint.shop</groupId>
+        <artifactId>com.nextbreakpoint.shop</artifactId>
         <version>1.0.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -28,7 +28,7 @@
                             <autoCreateCustomNetworks>true</autoCreateCustomNetworks>
                             <images>
                                 <image>
-                                    <alias>nginx</alias>
+                                    <alias>service-nginx</alias>
                                     <name>nginx:latest</name>
                                     <run>
                                         <privileged>true</privileged>

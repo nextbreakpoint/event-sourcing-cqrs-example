@@ -3,8 +3,8 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>com.nextbreakpoint.shop.parent</artifactId>
         <groupId>com.nextbreakpoint.shop</groupId>
+        <artifactId>com.nextbreakpoint.shop</artifactId>
         <version>1.0.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -115,7 +115,7 @@
                             <showLogs>true</showLogs>
                             <images>
                                 <image>
-                                    <alias>service</alias>
+                                    <alias>service-designs</alias>
                                     <name>services/designs:${project.version}</name>
                                     <build>
                                         <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
@@ -135,7 +135,7 @@
                                             </bind>
                                         </volumes>
                                         <wait>
-                                            <log>INFO: Succeeded in deploying verticle</log>
+                                            <log>Succeeded in deploying verticle</log>
                                             <time>30000</time>
                                         </wait>
                                         <!--<wait>-->
@@ -148,12 +148,12 @@
                                             <!--<time>20000</time>-->
                                         <!--</wait>-->
                                         <links>
-                                            <link>database</link>
+                                            <link>database-designs</link>
                                         </links>
                                     </run>
                                 </image>
                                 <image>
-                                    <alias>database</alias>
+                                    <alias>database-designs</alias>
                                     <name>mysql:8.0.2</name>
                                     <run>
                                         <ports>
@@ -172,7 +172,7 @@
                                         </volumes>
                                         <wait>
                                             <log>/usr/sbin/mysqld: ready for connections. Version: '8.0.2-dmr'  socket: '/var/run/mysqld/mysqld.sock'  port: 3306</log>
-                                            <time>30000</time>
+                                            <time>60000</time>
                                         </wait>
                                     </run>
                                 </image>
@@ -277,14 +277,6 @@
             <artifactId>liquibase-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>jcl-over-slf4j</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
-        </dependency>
-        <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-web</artifactId>
         </dependency>
@@ -307,6 +299,10 @@
         <dependency>
             <groupId>io.dropwizard.metrics</groupId>
             <artifactId>metrics-graphite</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.mattbertolini</groupId>
+            <artifactId>liquibase-slf4j</artifactId>
         </dependency>
         <dependency>
             <groupId>io.vertx</groupId>

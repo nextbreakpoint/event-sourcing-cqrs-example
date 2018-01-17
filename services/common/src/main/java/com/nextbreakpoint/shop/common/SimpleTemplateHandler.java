@@ -2,6 +2,7 @@ package com.nextbreakpoint.shop.common;
 
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpHeaders;
+import io.vertx.rxjava.core.buffer.Buffer;
 import io.vertx.rxjava.ext.web.RoutingContext;
 import io.vertx.rxjava.ext.web.templ.TemplateEngine;
 
@@ -20,7 +21,11 @@ public class SimpleTemplateHandler implements Handler<RoutingContext> {
 
     public void handle(RoutingContext context) {
         engine.rxRender(context, templateDirectory + "/" + fileName)
-                .subscribe(buffer -> context.response().putHeader(HttpHeaders.CONTENT_TYPE.toString(), contentType).end(buffer), err -> context.fail(err));
+                .subscribe(buffer -> emitResponse(context, buffer), err -> context.fail(err));
+    }
+
+    private void emitResponse(RoutingContext context, Buffer buffer) {
+        context.response().putHeader(HttpHeaders.CONTENT_TYPE.toString(), contentType).end(buffer);
     }
 
     public static Handler<RoutingContext> create(TemplateEngine engine, String templateDirectory, String contentType, String fileName) {

@@ -15,6 +15,7 @@ import java.util.UUID;
 
 import static com.nextbreakpoint.shop.common.Authority.ANONYMOUS;
 import static com.nextbreakpoint.shop.common.Headers.AUTHORIZATION;
+import static rx.Single.fromCallable;
 
 public class Authentication {
     public static final String NULL_USER_UUID = new UUID(0, 0).toString();
@@ -41,28 +42,28 @@ public class Authentication {
     }
 
     public static JsonObject makeUserObject(String userUuid) {
-        final JsonObject jsonObject = new JsonObject();
-        jsonObject.put("user", userUuid);
-        return jsonObject;
+        return new JsonObject().put("user", userUuid);
     }
 
     public static Single<User> isUserAuthorized(JWTAuth jwtProvider, RoutingContext routingContext, List<String> roles) {
-        return getUser(jwtProvider, routingContext).flatMap(user -> hasRole(user, roles)
-                .map(role -> Single.just(user)).orElseGet(() -> Single.error(Failure.accessDenied())));
+        return getUser(jwtProvider, routingContext).flatMap(user -> userHasRole(roles, user));
+    }
+
+    protected static Single<User> userHasRole(List<String> roles, User user) {
+        return hasRole(user, roles).map(role -> Single.just(user)).orElseGet(() -> Single.error(Failure.accessDenied()));
     }
 
     public static Cookie createCookie(String token, String domain) {
-        final Cookie cookie = Cookie.cookie(COOKIE_NAME, token);
-        cookie.setDomain(domain);
-        cookie.setPath(COOKIE_PATH);
-        cookie.setMaxAge(COOKIE_MAX_AGE);
-        return cookie;
+        return Cookie.cookie(COOKIE_NAME, token)
+                .setDomain(domain)
+                .setPath(COOKIE_PATH)
+                .setMaxAge(COOKIE_MAX_AGE);
     }
 
     private static JWTOptions makeJWTOptions(List<String> authorities) {
-        final JWTOptions jwtOptions = new JWTOptions();
-        jwtOptions.setExpiresInMinutes(JWT_EXPIRES_IN_MINUTES);
-        jwtOptions.setSubject(JWT_SUBJECT);
+        final JWTOptions jwtOptions = new JWTOptions()
+                .setExpiresInMinutes(JWT_EXPIRES_IN_MINUTES)
+                .setSubject(JWT_SUBJECT);
         authorities.forEach(jwtOptions::addPermission);
         return jwtOptions;
     }
@@ -72,7 +73,7 @@ public class Authentication {
     }
 
     public static Single<User> getUser(JWTAuth jwtProvider, RoutingContext routingContext) {
-        return Single.fromCallable(() -> getToken(routingContext))
+        return fromCallable(() -> getToken(routingContext))
                 .flatMap(authorization -> makeAuthInfo(jwtProvider, authorization))
                 .flatMap(json -> jwtProvider.rxAuthenticate(json));
     }
@@ -95,8 +96,6 @@ public class Authentication {
     }
 
     private static JsonObject makeJWT(String authorization) {
-        final JsonObject json = new JsonObject();
-        json.put("jwt", authorization);
-        return json;
+        return new JsonObject().put("jwt", authorization);
     }
 }

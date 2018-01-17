@@ -1,6 +1,8 @@
 #!/bin/sh
 
-OUTPUT=$ROOT/keystores
+OUTPUT=keystores/generated
+
+rm -fR $OUTPUT
 
 mkdir -p $OUTPUT
 
@@ -47,3 +49,9 @@ keytool -noprompt -keystore $OUTPUT/truststore-client.jks -alias CARoot -import 
 
 ## Import CA into server truststore
 keytool -noprompt -keystore $OUTPUT/truststore-server.jks -alias CARoot -import -file $OUTPUT/ca_cert.pem -storepass secret
+
+DST=keystores
+
+mkdir -p $DST
+
+cp $OUTPUT/*.jks $OUTPUT/*.jceks $DST

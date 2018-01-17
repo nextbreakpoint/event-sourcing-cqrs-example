@@ -21,3 +21,4 @@ terraform.tfstate*
 consul.tfvars
 infrastructure/setup/provider.tf
 **/secrets
+services/keystores/generated

@@ -1,29 +1,72 @@
 package com.nextbreakpoint.shop.designs;
 
+import com.nextbreakpoint.shop.designs.delete.DeleteDesignRequest;
+import com.nextbreakpoint.shop.designs.delete.DeleteDesignResponse;
+import com.nextbreakpoint.shop.designs.delete.DeleteDesignsRequest;
+import com.nextbreakpoint.shop.designs.delete.DeleteDesignsResponse;
+import com.nextbreakpoint.shop.designs.insert.InsertDesignRequest;
+import com.nextbreakpoint.shop.designs.insert.InsertDesignResponse;
+import com.nextbreakpoint.shop.designs.list.ListDesignsRequest;
+import com.nextbreakpoint.shop.designs.list.ListDesignsResponse;
+import com.nextbreakpoint.shop.designs.load.LoadDesignRequest;
+import com.nextbreakpoint.shop.designs.load.LoadDesignResponse;
+import com.nextbreakpoint.shop.designs.model.Design;
+import com.nextbreakpoint.shop.designs.get.GetStatusRequest;
+import com.nextbreakpoint.shop.designs.get.GetStatusResponse;
+import com.nextbreakpoint.shop.designs.list.ListStatusRequest;
+import com.nextbreakpoint.shop.designs.list.ListStatusResponse;
+import com.nextbreakpoint.shop.designs.model.Status;
+import com.nextbreakpoint.shop.designs.update.UpdateDesignRequest;
+import com.nextbreakpoint.shop.designs.update.UpdateDesignResponse;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.sql.ResultSet;
+import io.vertx.ext.sql.UpdateResult;
 import io.vertx.rxjava.ext.jdbc.JDBCClient;
 import io.vertx.rxjava.ext.sql.SQLConnection;
 import rx.Single;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
+import static com.nextbreakpoint.shop.common.TimeUtil.TIMESTAMP_EXT_PATTERN;
+import static com.nextbreakpoint.shop.common.TimeUtil.TIMESTAMP_PATTERN;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 public class Store {
+    private final Logger logger = LoggerFactory.getLogger(Store.class.getName());
+
+    private static final String ERROR_GET_CONNECTION = "An error occurred while getting a connection";
+    private static final String ERROR_INSERT_DESIGN = "An error occurred while inserting a design";
+    private static final String ERROR_UPDATE_DESIGN = "An error occurred while updating a design";
+    private static final String ERROR_LOAD_DESIGN = "An error occurred while loading a design";
+    private static final String ERROR_DELETE_DESIGN = "An error occurred while deleting a design";
+    private static final String ERROR_DELETE_DESIGNS = "An error occurred while deleting all designs";
+    private static final String ERROR_LIST_DESIGNS = "An error occurred while loading designs";
+    private static final String ERROR_GET_DESIGNS_STATUS = "An error occurred while loading designs status";
+    private static final String ERROR_GET_DESIGN_STATUS = "An error occurred while loading design status";
+
     private static final String INSERT_DESIGN = "INSERT INTO DESIGNS (UUID, JSON, CREATED, UPDATED) VALUES (?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
     private static final String UPDATE_DESIGN = "UPDATE DESIGNS SET JSON=?, UPDATED=CURRENT_TIMESTAMP WHERE UUID=?";
     private static final String SELECT_DESIGN = "SELECT * FROM DESIGNS WHERE UUID = ?";
     private static final String DELETE_DESIGN = "DELETE FROM DESIGNS WHERE UUID = ?";
     private static final String DELETE_DESIGNS = "DELETE FROM DESIGNS";
     private static final String SELECT_DESIGNS = "SELECT DESIGNS.*,STATE.MODIFIED FROM DESIGNS LEFT JOIN STATE ON (STATE.NAME = 'designs')";
-    private static final String SELECT_DESIGN_STATE = "SELECT UUID,UPDATED FROM DESIGNS WHERE UUID IN ($values)";
-    private static final String SELECT_DESIGNS_STATE = "SELECT NAME,MODIFIED FROM STATE WHERE NAME = 'designs'";
-    private static final String UPDATE_DESIGNS_STATE = "UPDATE STATE SET MODIFIED = CURRENT_TIMESTAMP WHERE NAME = 'designs'";
+    private static final String SELECT_DESIGNS_BY_STATUS = "SELECT UUID,UPDATED FROM DESIGNS WHERE UUID IN ($values)";
+    private static final String SELECT_STATUS = "SELECT NAME,MODIFIED FROM STATE WHERE NAME = 'designs'";
+    private static final String UPDATE_STATUS = "UPDATE STATE SET MODIFIED = CURRENT_TIMESTAMP WHERE NAME = 'designs'";
+
+    private static final int EXECUTE_TIMEOUT = 10;
+    private static final int CONNECT_TIMEOUT = 5;
+
+    private DateTimeFormatter formatter = DateTimeFormatter.ofPattern(TIMESTAMP_PATTERN);
 
     private final JDBCClient client;
 
@@ -31,158 +74,210 @@ public class Store {
         this.client = client;
     }
 
-    public Single<Integer> insertDesign(UUID uuid, JsonObject json) {
-        final JsonArray params = makeCreateParams(uuid, json.toString());
-
-        return client.rxGetConnection().timeout(5, SECONDS)
-                .flatMap(conn -> doInsertDesign(params, conn)).doOnError(this::handleError);
+    public Single<InsertDesignResponse> insertDesign(InsertDesignRequest request) {
+        return withConnection()
+                .flatMap(conn -> doInsertDesign(conn, request))
+                .doOnError(err -> handleError(ERROR_INSERT_DESIGN, err));
     }
 
-    public Single<Integer> updateDesign(UUID uuid, JsonObject json) {
-        final JsonArray params = makeUpdateParams(uuid, json.toString());
-
-        return client.rxGetConnection().timeout(5, SECONDS)
-                .flatMap(conn -> doUpdateDesign(params, conn)).doOnError(this::handleError);
+    public Single<UpdateDesignResponse> updateDesign(UpdateDesignRequest request) {
+        return withConnection()
+                .flatMap(conn -> doUpdateDesign(request, conn))
+                .doOnError(err -> handleError(ERROR_UPDATE_DESIGN, err));
     }
 
-    public Single<Optional<JsonObject>> loadDesign(UUID uuid) {
-        final JsonArray params = makeSelectParams(uuid);
-
-        return client.rxGetConnection().timeout(5, SECONDS)
-                .flatMap(conn -> doLoadDesign(params, conn)).doOnError(this::handleError);
+    public Single<LoadDesignResponse> loadDesign(LoadDesignRequest request) {
+        return withConnection()
+                .flatMap(conn -> doLoadDesign(conn, request))
+                .doOnError(err -> handleError(ERROR_LOAD_DESIGN, err));
     }
 
-    public Single<Integer> deleteDesign(UUID uuid) {
-        final JsonArray params = makeSelectParams(uuid);
-
-        return client.rxGetConnection().timeout(5, SECONDS)
-                .flatMap(conn -> doDeleteDesign(params, conn)).doOnError(this::handleError);
+    public Single<DeleteDesignResponse> deleteDesign(DeleteDesignRequest request) {
+        return withConnection()
+                .flatMap(conn -> doDeleteDesign(conn, request))
+                .doOnError(err -> handleError(ERROR_DELETE_DESIGN, err));
     }
 
-    public Single<Integer> deleteDesigns() {
-        return client.rxGetConnection().timeout(5, SECONDS)
-                .flatMap(this::doDeleteDesigns).doOnError(this::handleError);
+    public Single<DeleteDesignsResponse> deleteDesigns(DeleteDesignsRequest request) {
+        return withConnection()
+                .flatMap(conn -> doDeleteDesigns(conn))
+                .doOnError(err -> handleError(ERROR_DELETE_DESIGNS, err));
     }
 
-    public Single<List<JsonObject>> findDesigns() {
-        return client.rxGetConnection().timeout(5, SECONDS)
-                .flatMap(conn -> doFindDesigns(conn)).doOnError(this::handleError);
+    public Single<ListDesignsResponse> listDesigns(ListDesignsRequest request) {
+        return withConnection()
+                .flatMap(conn -> doListDesigns(conn))
+                .doOnError(err -> handleError(ERROR_LIST_DESIGNS, err));
     }
 
-    public Single<Optional<JsonObject>> getDesignsState() {
-        return client.rxGetConnection().timeout(5, SECONDS)
-                .flatMap(conn -> doGetDesignsState(conn)).doOnError(this::handleError);
+    public Single<GetStatusResponse> getStatus(GetStatusRequest request) {
+        return withConnection()
+                .flatMap(conn -> doGetStatus(conn, request))
+                .doOnError(err -> handleError(ERROR_GET_DESIGN_STATUS, err));
     }
 
-    public Single<List<JsonObject>> getDesignState(JsonArray uuids) {
-        return client.rxGetConnection().timeout(5, SECONDS)
-                .flatMap(conn -> doGetDesignState(conn, uuids))
-                .doOnError(this::handleError);
+    public Single<ListStatusResponse> listStatus(ListStatusRequest request) {
+        return withConnection()
+                .flatMap(conn -> doListStatus(conn, request))
+                .doOnError(err -> handleError(ERROR_GET_DESIGNS_STATUS, err));
     }
 
-    private Single<Integer> doInsertDesign(JsonArray params, SQLConnection conn) {
+    private Single<SQLConnection> withConnection() {
+        return client.rxGetConnection()
+                .timeout(CONNECT_TIMEOUT, SECONDS)
+                .doOnError(err -> handleError(ERROR_GET_CONNECTION, err));
+    }
+
+    private Single<InsertDesignResponse> doInsertDesign(SQLConnection conn, InsertDesignRequest request) {
         return conn.rxSetAutoCommit(false)
-                .flatMap(x -> conn.rxUpdate(UPDATE_DESIGNS_STATE).timeout(10, SECONDS))
-                .flatMap(x -> conn.rxUpdateWithParams(INSERT_DESIGN, params).timeout(10, SECONDS))
+                .timeout(EXECUTE_TIMEOUT, SECONDS)
+                .flatMap(x -> conn.rxUpdate(UPDATE_STATUS).timeout(EXECUTE_TIMEOUT, SECONDS))
+                .flatMap(x -> conn.rxUpdateWithParams(INSERT_DESIGN, makeInsertParams(request)).timeout(EXECUTE_TIMEOUT, SECONDS))
+                .map(UpdateResult::getUpdated)
+                .map(result -> new InsertDesignResponse(request.getUuid(), result))
                 .doOnError(x -> conn.rxRollback().subscribe())
                 .doOnSuccess(x -> conn.rxCommit().subscribe())
-                .doAfterTerminate(() -> conn.rxClose().subscribe())
-                .flatMap(x -> Single.just(x.getUpdated()));
+                .doAfterTerminate(() -> conn.rxClose().subscribe());
     }
 
-    private Single<Integer> doUpdateDesign(JsonArray params, SQLConnection conn) {
+    private Single<UpdateDesignResponse> doUpdateDesign(UpdateDesignRequest request, SQLConnection conn) {
         return conn.rxSetAutoCommit(false)
-                .flatMap(x -> conn.rxUpdate(UPDATE_DESIGNS_STATE).timeout(10, SECONDS))
-                .flatMap(x -> conn.rxUpdateWithParams(UPDATE_DESIGN, params).timeout(10, SECONDS))
+                .timeout(EXECUTE_TIMEOUT, SECONDS)
+                .flatMap(x -> conn.rxUpdate(UPDATE_STATUS).timeout(EXECUTE_TIMEOUT, SECONDS))
+                .flatMap(x -> conn.rxUpdateWithParams(UPDATE_DESIGN, makeUpdateParams(request)).timeout(EXECUTE_TIMEOUT, SECONDS))
+                .map(UpdateResult::getUpdated)
+                .map(result -> new UpdateDesignResponse(request.getUuid(), result))
                 .doOnError(x -> conn.rxRollback().subscribe())
                 .doOnSuccess(x -> conn.rxCommit().subscribe())
-                .doAfterTerminate(() -> conn.rxClose().subscribe())
-                .flatMap(x -> Single.just(x.getUpdated()));
+                .doAfterTerminate(() -> conn.rxClose().subscribe());
     }
 
-    private Single<Optional<JsonObject>> doLoadDesign(JsonArray params, SQLConnection conn) {
+    private Single<LoadDesignResponse> doLoadDesign(SQLConnection conn, LoadDesignRequest request) {
+        return conn.rxQueryWithParams(SELECT_DESIGN, new JsonArray().add(request.getUuid().toString()))
+                .timeout(EXECUTE_TIMEOUT, SECONDS)
+                .map(ResultSet::getRows)
+                .map(this::exactlyOne)
+                .map(result -> result.map(row -> {
+                    final String uuid = row.getString("UUID");
+                    final String json = row.getString("JSON");
+                    final String created = row.getString("CREATED");
+                    final String updated = row.getString("UPDATED");
+                    final Design design = new Design(uuid.toString(), json, parseDate(created).toString(), parseDate(updated).toString());
+                    return new LoadDesignResponse(request.getUuid(), design);
+                }).orElseGet(() -> new LoadDesignResponse(request.getUuid(), null)))
+                .doAfterTerminate(() -> conn.rxClose().subscribe());
+    }
+
+    private Single<DeleteDesignResponse> doDeleteDesign(SQLConnection conn, DeleteDesignRequest request) {
         return conn.rxSetAutoCommit(false)
-                .flatMap(x -> conn.rxQueryWithParams(SELECT_DESIGN, params).timeout(10, SECONDS))
-                .doOnError(x -> conn.rxRollback().subscribe())
-                .doOnSuccess(x -> conn.rxCommit().subscribe())
-                .doAfterTerminate(() -> conn.rxClose().subscribe())
-                .flatMap(resultSet -> Single.just(optionalResult(resultSet)));
+                .flatMap(x -> conn.rxUpdate(UPDATE_STATUS).timeout(EXECUTE_TIMEOUT, SECONDS))
+                .flatMap(x -> conn.rxUpdateWithParams(DELETE_DESIGN, makeDeleteParams(request)).timeout(EXECUTE_TIMEOUT, SECONDS))
+                .map(UpdateResult::getUpdated)
+                .map(result -> new DeleteDesignResponse(request.getUuid(), result))
+                .doOnError(err -> conn.rxRollback().subscribe())
+                .doOnSuccess(result -> conn.rxCommit().subscribe())
+                .doAfterTerminate(() -> conn.rxClose().subscribe());
     }
 
-    private Single<Integer> doDeleteDesign(JsonArray params, SQLConnection conn) {
+    private Single<DeleteDesignsResponse> doDeleteDesigns(SQLConnection conn) {
         return conn.rxSetAutoCommit(false)
-                .flatMap(x -> conn.rxUpdate(UPDATE_DESIGNS_STATE).timeout(10, SECONDS))
-                .flatMap(x -> conn.rxUpdateWithParams(DELETE_DESIGN, params).timeout(10, SECONDS))
-                .doOnError(x -> conn.rxRollback().subscribe())
-                .doOnSuccess(x -> conn.rxCommit().subscribe())
-                .doAfterTerminate(() -> conn.rxClose().subscribe())
-                .flatMap(x -> Single.just(x.getUpdated()));
+                .timeout(EXECUTE_TIMEOUT, SECONDS)
+                .flatMap(x -> conn.rxUpdate(UPDATE_STATUS).timeout(EXECUTE_TIMEOUT, SECONDS))
+                .flatMap(x -> conn.rxUpdate(DELETE_DESIGNS).timeout(EXECUTE_TIMEOUT, SECONDS))
+                .map(UpdateResult::getUpdated)
+                .map(result -> new DeleteDesignsResponse(result))
+                .doOnError(err -> conn.rxRollback().subscribe())
+                .doOnSuccess(result -> conn.rxCommit().subscribe())
+                .doAfterTerminate(() -> conn.rxClose().subscribe());
     }
 
-    private Single<Integer> doDeleteDesigns(SQLConnection conn) {
-        return conn.rxSetAutoCommit(false)
-                .flatMap(x -> conn.rxUpdate(UPDATE_DESIGNS_STATE).timeout(10, SECONDS))
-                .flatMap(x -> conn.rxUpdate(DELETE_DESIGNS).timeout(10, SECONDS))
-                .doOnError(x -> conn.rxRollback().subscribe())
-                .doOnSuccess(x -> conn.rxCommit().subscribe())
-                .doAfterTerminate(() -> conn.rxClose().subscribe())
-                .flatMap(x -> Single.just(x.getUpdated()));
+    private Single<ListDesignsResponse> doListDesigns(SQLConnection conn) {
+        return conn.rxQuery(SELECT_DESIGNS)
+                .timeout(EXECUTE_TIMEOUT, SECONDS)
+                .map(ResultSet::getRows)
+                .map(result -> {
+                    final String date = result
+                            .stream()
+                            .findFirst()
+                            .map(json -> json.getString("MODIFIED"))
+                            .map(modified -> parseDate(modified).toString())
+                            .orElse(new Date(0).toString());
+                    final List<String> list = result
+                            .stream()
+                            .map(x -> x.getString("UUID"))
+                            .collect(Collectors.toList());
+                    return new ListDesignsResponse(date, list);
+                })
+                .doAfterTerminate(() -> conn.rxClose().subscribe());
     }
 
-    private Single<List<JsonObject>> doFindDesigns(SQLConnection conn) {
-        return conn.rxSetAutoCommit(false)
-                .flatMap(x -> conn.rxQuery(SELECT_DESIGNS).timeout(10, SECONDS))
-                .doOnError(x -> conn.rxRollback().subscribe())
-                .doOnSuccess(x -> conn.rxCommit().subscribe())
-                .doAfterTerminate(() -> conn.rxClose().subscribe())
-                .flatMap(resultSet -> Single.just(resultSet.getRows()));
+    private Single<GetStatusResponse> doGetStatus(SQLConnection conn, GetStatusRequest request) {
+        return conn.rxQuery(SELECT_STATUS)
+                .timeout(EXECUTE_TIMEOUT, SECONDS)
+                .map(ResultSet::getRows)
+                .map(this::exactlyOne)
+                .map(result -> {
+                    final String date = result
+                            .map(row -> row.getString("MODIFIED"))
+                            .map(modified -> parseDate(modified).toString())
+                            .orElse(new Date(0).toString());
+                    return new GetStatusResponse(new Status("designs", date));
+                })
+                .doAfterTerminate(() -> conn.rxClose().subscribe());
     }
 
-    private Single<Optional<JsonObject>> doGetDesignsState(SQLConnection conn) {
-        return conn.rxSetAutoCommit(false)
-                .flatMap(x -> conn.rxQuery(SELECT_DESIGNS_STATE).timeout(10, SECONDS))
-                .doOnError(x -> conn.rxRollback().subscribe())
-                .doOnSuccess(x -> conn.rxCommit().subscribe())
-                .doAfterTerminate(() -> conn.rxClose().subscribe())
-                .flatMap(resultSet -> Single.just(optionalResult(resultSet)));
+    private Single<ListStatusResponse> doListStatus(SQLConnection conn, ListStatusRequest request) {
+        return conn.rxQueryWithParams(SELECT_DESIGNS_BY_STATUS.replace("$values", makeValues(request.getUuids())), makeListStatusParams(request))
+                .timeout(EXECUTE_TIMEOUT, SECONDS)
+                .map(ResultSet::getRows)
+                .map(result -> {
+                    final List<Status> list = result.stream()
+                            .map(row -> {
+                                final String uuid = row.getString("UUID");
+                                final String updated = row.getString("UPDATED");
+                                return new Status(uuid, parseDate(updated).toString());
+                            })
+                            .collect(Collectors.toList());
+                    return new ListStatusResponse(list);
+                })
+                .doAfterTerminate(() -> conn.rxClose().subscribe());
     }
 
-    public Single<List<JsonObject>> doGetDesignState(SQLConnection conn, JsonArray uuids) {
-        final String params = uuids.stream().map(x -> "?").collect(Collectors.joining(","));
-
-        return conn.rxSetAutoCommit(false)
-                .flatMap(x -> conn.rxQueryWithParams(SELECT_DESIGN_STATE.replace("$values", params), uuids).timeout(10, SECONDS))
-                .doOnError(x -> conn.rxRollback().subscribe())
-                .doOnSuccess(x -> conn.rxCommit().subscribe())
-                .doAfterTerminate(() -> conn.rxClose().subscribe())
-                .flatMap(resultSet -> Single.just(resultSet.getRows()));
+    private String makeValues(List<String> uuids) {
+        return uuids.stream().map(x1 -> "?").collect(Collectors.joining(","));
     }
 
-    private Optional<JsonObject> optionalResult(ResultSet resultSet) {
-        return Optional.ofNullable(resultSet.getRows()).filter(rows -> rows.size() == 1).map(rows -> rows.get(0));
+    private Optional<JsonObject> exactlyOne(List<JsonObject> list) {
+        return Optional.ofNullable(list).filter(rows -> rows.size() == 1).map(rows -> rows.get(0));
     }
 
-    private void handleError(Throwable err) {
-        err.printStackTrace();
+    private void handleError(String message, Throwable err) {
+        logger.error(message, err);
     }
 
-    private JsonArray makeCreateParams(UUID uuid, String json) {
-        final JsonArray params = new JsonArray();
-        params.add(uuid.toString());
-        params.add(json);
-        return params;
+    private JsonArray makeInsertParams(InsertDesignRequest request) {
+        return new JsonArray().add(request.getUuid().toString()).add(request.getJson());
     }
 
-    private JsonArray makeUpdateParams(UUID uuid, String json) {
-        final JsonArray params = new JsonArray();
-        params.add(json);
-        params.add(uuid.toString());
-        return params;
+    private JsonArray makeUpdateParams(UpdateDesignRequest request) {
+        return new JsonArray().add(request.getJson()).add(request.getUuid().toString());
     }
 
-    private JsonArray makeSelectParams(UUID uuid) {
-        JsonArray params = new JsonArray();
-        params.add(uuid.toString());
-        return params;
+    private JsonArray makeDeleteParams(DeleteDesignRequest request) {
+        return new JsonArray().add(request.getUuid().toString());
+    }
+
+    private JsonArray makeListStatusParams(ListStatusRequest request) {
+        return request.getUuids().stream().collect(() -> new JsonArray(), (a, x) -> a.add(x), (a, b) -> a.addAll(b));
+    }
+
+    private Date parseDate(String value) {
+        try {
+            final SimpleDateFormat df = new SimpleDateFormat(value.length() > 20 ? TIMESTAMP_EXT_PATTERN : TIMESTAMP_PATTERN);
+            return df.parse(value);
+        } catch (ParseException e) {
+            logger.error("An error occurred while parsing date", e);
+            return new Date(0);
+        }
     }
 }

@@ -1,6 +1,11 @@
 package com.nextbreakpoint.shop.common;
 
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
+
 public class Failure extends RuntimeException {
+    private static final Logger logger = LoggerFactory.getLogger(Failure.class.getName());
+
     private final int statusCode;
 
     public Failure(int statusCode, String message) {
@@ -25,17 +30,20 @@ public class Failure extends RuntimeException {
     }
 
     public static Failure authenticationError(Throwable err) {
-        err.printStackTrace();
+        logger.error("An error occurred while authenticating user", err);
+
         return new Failure(500, "Failed to authenticate user");
     }
 
     public static Failure databaseError(Throwable err) {
-        err.printStackTrace();
+        logger.error("An error occurred while accessing database", err);
+
         return new Failure(500, "Failed to execute statement");
     }
 
     public static Failure requestFailed(Throwable err) {
-        err.printStackTrace();
+        logger.error("An error occurred while processing request", err);
+
         return new Failure(500, "Failed to process request");
     }
 }

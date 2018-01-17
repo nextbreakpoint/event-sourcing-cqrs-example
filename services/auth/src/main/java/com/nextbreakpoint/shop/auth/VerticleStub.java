@@ -30,8 +30,7 @@ public class VerticleStub extends Verticle {
 
             @Override
             protected void fetchUserInfo(RoutingContext routingContext, String redirectTo, String accessToken, String oauthAccessToken, String userEmail) {
-                final JsonObject userInfo = new JsonObject();
-                userInfo.put("name", "Micky Mouse");
+                final JsonObject userInfo = new JsonObject().put("name", "Micky Mouse");
                 createAccount(routingContext, redirectTo, accessToken, userEmail, userInfo);
             }
         };

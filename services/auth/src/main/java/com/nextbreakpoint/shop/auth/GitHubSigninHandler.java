@@ -68,11 +68,15 @@ public class GitHubSigninHandler implements Handler<RoutingContext> {
     }
 
     protected void processSignin(RoutingContext routingContext) {
-        final String oauthAccessToken = getAccessToken(routingContext);
-        if (oauthAccessToken != null) {
-            fetchUserEmail(routingContext, oauthAccessToken, getRedirectTo(routingContext));
-        } else {
-            routingContext.fail(Failure.accessDenied());
+        try {
+            final String oauthAccessToken = getAccessToken(routingContext);
+            if (oauthAccessToken != null) {
+                fetchUserEmail(routingContext, oauthAccessToken, getRedirectTo(routingContext));
+            } else {
+                routingContext.fail(Failure.accessDenied());
+            }
+        } catch (Exception e) {
+            routingContext.fail(Failure.requestFailed(e));
         }
     }
 
@@ -232,11 +236,10 @@ public class GitHubSigninHandler implements Handler<RoutingContext> {
     }
 
     protected JsonObject makeAccount(String userEmail, JsonObject userInfo) {
-        final JsonObject account = new JsonObject();
-        account.put("email", userEmail);
-        account.put("name", userInfo.getString("name"));
-        account.put("role", getAuthority(userEmail));
-        return account;
+        return new JsonObject()
+            .put("email", userEmail)
+            .put("name", userInfo.getString("name"))
+            .put("role", getAuthority(userEmail));
     }
 
     protected String getAuthority(String userEmail) {

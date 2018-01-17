@@ -196,6 +196,10 @@ public class VerticleIT {
   public void shouldReturnHTMLWhenRequestingDesignsAdminPageWithToken() throws MalformedURLException {
     final Cookie cookie = TestHelper.makeCookie("test", Arrays.asList(Authority.GUEST), "localhost");
 
+    whenHttp(stubServer)
+            .match(get("/api/accounts/test"), withHeader("accept", "application/json"))
+            .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"name\":\"test\",\"role\":\"guest\",\"uuid\":\"test\"}"));
+
     given().config(restAssuredConfig)
             .with().cookie("token", cookie.getValue())
             .when().get(makeBaseURL("/admin/designs"))
@@ -210,6 +214,10 @@ public class VerticleIT {
     final UUID uuid = UUID.randomUUID();
 
     final Cookie cookie = TestHelper.makeCookie("test", Arrays.asList(Authority.GUEST), "localhost");
+
+    whenHttp(stubServer)
+            .match(get("/api/accounts/test"), withHeader("accept", "application/json"))
+            .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"name\":\"test\",\"role\":\"guest\",\"uuid\":\"test\"}"));
 
     given().config(restAssuredConfig)
             .with().cookie("token", cookie.getValue())

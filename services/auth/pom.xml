@@ -3,8 +3,8 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>com.nextbreakpoint.shop.parent</artifactId>
         <groupId>com.nextbreakpoint.shop</groupId>
+        <artifactId>com.nextbreakpoint.shop</artifactId>
         <version>1.0.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -115,7 +115,7 @@
                             <showLogs>true</showLogs>
                             <images>
                                 <image>
-                                    <alias>service</alias>
+                                    <alias>service-auth</alias>
                                     <name>services/auth:${project.version}</name>
                                     <build>
                                         <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
@@ -135,7 +135,7 @@
                                             </bind>
                                         </volumes>
                                         <wait>
-                                            <log>INFO: Succeeded in deploying verticle</log>
+                                            <log>Succeeded in deploying verticle</log>
                                             <time>30000</time>
                                         </wait>
                                         <!--<wait>-->
@@ -228,14 +228,6 @@
             <groupId>com.nextbreakpoint.shop</groupId>
             <artifactId>com.nextbreakpoint.shop.common</artifactId>
             <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>jcl-over-slf4j</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
         </dependency>
         <dependency>
             <groupId>io.vertx</groupId>

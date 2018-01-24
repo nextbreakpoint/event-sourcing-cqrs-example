@@ -10,7 +10,7 @@
 
   "client_web_url": "https://localhost",
 
-  "jdbc_url": "jdbc:mysql://database:3306/designs?useSSL=false&nullNamePatternMatchesAll=true",
+  "jdbc_url": "jdbc:mysql://database-designs:3306/designs?useSSL=false&nullNamePatternMatchesAll=true",
   "jdbc_driver": "com.mysql.cj.jdbc.Driver",
   "jdbc_username": "verticle",
   "jdbc_password": "password",

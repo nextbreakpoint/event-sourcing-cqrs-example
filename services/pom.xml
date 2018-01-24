@@ -127,10 +127,17 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${maven-surefire-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                    </execution>
+                </executions>
                 <configuration>
-                    <argLine>--add-modules java.xml.bind</argLine>
                     <parallel>both</parallel>
                     <threadCount>5</threadCount>
+                    <argLine>--add-modules java.xml.bind --add-opens java.base/java.nio=ALL-UNNAMED --add-opens java.base/sun.nio.ch=ALL-UNNAMED --add-opens java.base/sun.net.dns=ALL-UNNAMED</argLine>
                 </configuration>
             </plugin>
             <plugin>
@@ -146,7 +153,7 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <argLine>--add-modules java.xml.bind</argLine>
+                    <argLine>--add-modules java.xml.bind --add-opens java.base/java.nio=ALL-UNNAMED --add-opens java.base/sun.nio.ch=ALL-UNNAMED --add-opens java.base/sun.net.dns=ALL-UNNAMED</argLine>
                 </configuration>
             </plugin>
             <plugin>

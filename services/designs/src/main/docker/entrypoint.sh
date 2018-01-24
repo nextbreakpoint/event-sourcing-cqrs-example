@@ -11,4 +11,4 @@ if [ -n "$SECRETS_BUCKET_NAME" ]; then
   aws s3 cp s3://$SECRETS_BUCKET_NAME/environments/$ENVIRONMENT/shop/keystores/truststore-server.jks /keystores/truststore-server.jks
 fi
 
-java -Xmx1024M --add-modules java.xml.bind -Dvertx.logger-delegate-factory-class-name=io.vertx.core.logging.SLF4JLogDelegateFactory -jar /maven/$SERVICE_JAR /config/$CONFIG_NAME
+java -Xmx1024M --add-modules java.xml.bind -Dvertx.logger-delegate-factory-class-name=io.vertx.core.logging.SLF4JLogDelegateFactory --add-opens java.base/java.nio=ALL-UNNAMED --add-opens java.base/sun.nio.ch=ALL-UNNAMED --add-opens java.base/sun.net.dns=ALL-UNNAMED -jar /maven/$SERVICE_JAR /config/$CONFIG_NAME

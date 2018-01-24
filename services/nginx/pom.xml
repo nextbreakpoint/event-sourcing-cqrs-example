@@ -45,7 +45,7 @@
                                         </volumes>
                                         <network>
                                             <mode>custom</mode>
-                                            <name>local</name>
+                                            <name>shop-dev</name>
                                             <alias>nginx</alias>
                                         </network>
                                     </run>

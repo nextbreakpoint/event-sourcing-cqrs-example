@@ -44,7 +44,7 @@
                                         </volumes>
                                         <network>
                                             <mode>custom</mode>
-                                            <name>local</name>
+                                            <name>shop-dev</name>
                                             <alias>database</alias>
                                         </network>
                                         <wait>

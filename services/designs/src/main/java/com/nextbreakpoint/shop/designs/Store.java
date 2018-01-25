@@ -162,7 +162,7 @@ public class Store {
                     final String json = row.getString("JSON");
                     final String created = row.getString("CREATED");
                     final String updated = row.getString("UPDATED");
-                    final Design design = new Design(uuid.toString(), json, parseDate(created).toString(), parseDate(updated).toString());
+                    final Design design = new Design(uuid, json, formatDate(parseDate(created)), formatDate(parseDate(updated)), parseDate(updated).getTime());
                     return new LoadDesignResponse(request.getUuid(), design);
                 }).orElseGet(() -> new LoadDesignResponse(request.getUuid(), null)))
                 .doAfterTerminate(() -> conn.rxClose().subscribe());
@@ -196,17 +196,17 @@ public class Store {
                 .timeout(EXECUTE_TIMEOUT, SECONDS)
                 .map(ResultSet::getRows)
                 .map(result -> {
-                    final String date = result
+                    final Long updated = result
                             .stream()
                             .findFirst()
                             .map(json -> json.getString("MODIFIED"))
-                            .map(modified -> parseDate(modified).toString())
-                            .orElse(new Date(0).toString());
-                    final List<String> list = result
+                            .map(modified -> parseDate(modified).getTime())
+                            .orElse(0L);
+                    final List<String> uuids = result
                             .stream()
                             .map(x -> x.getString("UUID"))
                             .collect(Collectors.toList());
-                    return new ListDesignsResponse(date, list);
+                    return new ListDesignsResponse(updated, uuids);
                 })
                 .doAfterTerminate(() -> conn.rxClose().subscribe());
     }
@@ -217,11 +217,11 @@ public class Store {
                 .map(ResultSet::getRows)
                 .map(this::exactlyOne)
                 .map(result -> {
-                    final String date = result
+                    final Long updated = result
                             .map(row -> row.getString("MODIFIED"))
-                            .map(modified -> parseDate(modified).toString())
-                            .orElse(new Date(0).toString());
-                    return new GetStatusResponse(new Status("designs", date));
+                            .map(modified -> parseDate(modified).getTime())
+                            .orElse(0L);
+                    return new GetStatusResponse(new Status("designs", updated));
                 })
                 .doAfterTerminate(() -> conn.rxClose().subscribe());
     }
@@ -235,7 +235,7 @@ public class Store {
                             .map(row -> {
                                 final String uuid = row.getString("UUID");
                                 final String updated = row.getString("UPDATED");
-                                return new Status(uuid, parseDate(updated).toString());
+                                return new Status(uuid, parseDate(updated).getTime());
                             })
                             .collect(Collectors.toList());
                     return new ListStatusResponse(list);
@@ -279,5 +279,10 @@ public class Store {
             logger.error("An error occurred while parsing date", e);
             return new Date(0);
         }
+    }
+
+    private String formatDate(Date value) {
+        final SimpleDateFormat df = new SimpleDateFormat(TIMESTAMP_PATTERN);
+        return df.format(value);
     }
 }

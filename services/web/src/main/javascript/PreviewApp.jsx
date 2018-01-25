@@ -179,11 +179,13 @@ class App extends React.Component {
 
         axios.get(component.state.config.designs_url + '/api/designs/' + uuid, config)
             .then(function (response) {
-                let design = response.data
+                let envelop = response.data
 
                 let modified = response.headers['x-modified']
 
-                console.log(design)
+                console.log(envelop)
+
+                let design = JSON.parse(envelop.json)
 
                 component.setState(Object.assign(component.state, {design: design, modified: modified}))
 
@@ -206,11 +208,13 @@ class App extends React.Component {
 
         axios.get(component.state.config.designs_url + '/api/designs/' + uuid, config)
             .then(function (response) {
-                let design = response.data
+                let envelop = response.data
 
                 let modified = response.headers['x-modified']
 
-                console.log(design)
+                console.log(envelop)
+
+                let design = JSON.parse(envelop.json)
 
                 component.setState(Object.assign(component.state, {design: design, modified: modified}))
             })
@@ -225,7 +229,7 @@ class App extends React.Component {
         if (this.state.config) {
             const url = this.state.config.designs_url + '/api/designs/' + uuid + '/{z}/{x}/{y}/256.png?t=' + this.state.modified
 
-            const parent = { label: 'Designs', link: base_url + '/admin/designs' };
+            const parent = { label: 'Designs', link: base_url + '/admin/designs' }
 
             return <div className="container s12">
                 <Row>

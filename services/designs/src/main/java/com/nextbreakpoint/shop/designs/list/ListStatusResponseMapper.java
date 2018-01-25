@@ -21,6 +21,6 @@ public class ListStatusResponseMapper implements ResponseMapper<ListStatusRespon
     private JsonObject convert(Status status) {
         return new JsonObject()
                 .put("name", status.getName())
-                .put("date", status.getDate());
+                .put("updated", status.getUpdated());
     }
 }

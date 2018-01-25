@@ -1,7 +1,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.nextbreakpoint.shop</groupId>
+    <groupId>com.nextbreakpoint</groupId>
     <artifactId>com.nextbreakpoint.shop</artifactId>
     <version>1.0.0</version>
     <modules>
@@ -45,7 +45,7 @@
         <hsqldb.version>2.4.0</hsqldb.version>
         <mysqlconnector.version>8.0.7-dmr</mysqlconnector.version>
         <liquibase.version>3.5.3</liquibase.version>
-        <nf.version>2.0.1</nf.version>
+        <nf.version>2.0.3</nf.version>
         <stub.host>docker.for.mac.localhost</stub.host>
         <maven-jar-plugin.version>3.0.2</maven-jar-plugin.version>
         <maven-compiler-plugin.version>3.7.0</maven-compiler-plugin.version>
@@ -166,7 +166,7 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>com.nextbreakpoint.nextfractal</groupId>
+                <groupId>com.nextbreakpoint</groupId>
                 <artifactId>com.nextbreakpoint.nextfractal.core</artifactId>
                 <version>${nf.version}</version>
                 <exclusions>
@@ -177,7 +177,7 @@
                 </exclusions>
             </dependency>
             <dependency>
-                <groupId>com.nextbreakpoint.nextfractal</groupId>
+                <groupId>com.nextbreakpoint</groupId>
                 <artifactId>com.nextbreakpoint.nextfractal.mandelbrot</artifactId>
                 <version>${nf.version}</version>
                 <exclusions>

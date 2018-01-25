@@ -4,16 +4,16 @@ import java.util.Objects;
 import java.util.List;
 
 public class ListDesignsResponse {
-    private final String date;
+    private final Long updated;
     private final List<String> uuids;
 
-    public ListDesignsResponse(String date, List<String> uuids) {
-        this.date = Objects.requireNonNull(date);
+    public ListDesignsResponse(Long updated, List<String> uuids) {
+        this.updated = Objects.requireNonNull(updated);
         this.uuids = Objects.requireNonNull(uuids);
     }
 
-    public String getDate() {
-        return date;
+    public Long getUpdated() {
+        return updated;
     }
 
     public List<String> getUuids() {

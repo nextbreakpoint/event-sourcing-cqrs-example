@@ -24,7 +24,7 @@ public class DesignsWatchHandler extends WatchHandler {
 
     @Override
     protected void pollBucket(List<String> bucket) {
-        getClient().get("/api/designs/state")
+        getClient().get("/api/designs/status")
                 .putHeader(AUTHORIZATION, makeAccessToken())
                 .putHeader(ACCEPT, APPLICATION_JSON)
                 .rxSend()

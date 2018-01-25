@@ -174,8 +174,8 @@ public class Verticle extends AbstractVerticle {
         apiRouter.options("/designs/*").handler(routingContext -> routingContext.response().setStatusCode(204).end());
         apiRouter.options("/designs").handler(routingContext -> routingContext.response().setStatusCode(204).end());
 
-        apiRouter.get("/designs/state").produces(APPLICATION_JSON).consumes(APPLICATION_JSON).handler(createGetStatusHandler(store));
-        apiRouter.get("/designs/state").produces(APPLICATION_JSON).handler(createListStatusHandler(store));
+        apiRouter.get("/designs/status").produces(APPLICATION_JSON).handler(createGetStatusHandler(store));
+        apiRouter.get("/designs/statusList").produces(APPLICATION_JSON).handler(createListStatusHandler(store));
 
         mainRouter.route().failureHandler(routingContext -> ResponseHelper.sendFailure(routingContext));
 

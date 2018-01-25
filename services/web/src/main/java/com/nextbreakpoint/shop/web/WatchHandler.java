@@ -6,6 +6,8 @@ import com.nextbreakpoint.shop.common.Failure;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import io.vertx.rxjava.core.Vertx;
 import io.vertx.rxjava.core.buffer.Buffer;
 import io.vertx.rxjava.core.eventbus.MessageConsumer;
@@ -28,6 +30,8 @@ import static com.nextbreakpoint.shop.common.Authentication.NULL_USER_UUID;
 import static java.util.Arrays.asList;
 
 public abstract class WatchHandler implements Handler<RoutingContext> {
+    private final Logger logger = LoggerFactory.getLogger(WatchHandler.class.getName());
+
     private Map<String, Set<Watcher>> watcherMap = new HashMap<>();
 
     private final Vertx vertx;
@@ -157,9 +161,9 @@ public abstract class WatchHandler implements Handler<RoutingContext> {
             IntStream.range(0, result.size()).forEach(i -> {
                 final JsonObject object = result.getJsonObject(i);
 
-                final String watchKey = object.getString("watch_key");
+                final String watchKey = object.getString("name");
 
-                final Long lastModified = object.getLong("last_modified");
+                final Long lastModified = object.getLong("updated");
 
                 final Set<Watcher> watchers = watcherMap.get(watchKey);
 

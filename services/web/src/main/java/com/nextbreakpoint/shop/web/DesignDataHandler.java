@@ -3,7 +3,6 @@ package com.nextbreakpoint.shop.web;
 import com.nextbreakpoint.shop.common.Authentication;
 import com.nextbreakpoint.shop.common.Design;
 import com.nextbreakpoint.shop.common.Failure;
-import com.nextbreakpoint.shop.common.Headers;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
 import io.vertx.rxjava.core.buffer.Buffer;
@@ -12,14 +11,10 @@ import io.vertx.rxjava.ext.web.client.HttpRequest;
 import io.vertx.rxjava.ext.web.client.HttpResponse;
 import io.vertx.rxjava.ext.web.client.WebClient;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
 import static com.nextbreakpoint.shop.common.ContentType.APPLICATION_JSON;
 import static com.nextbreakpoint.shop.common.Headers.ACCEPT;
 import static com.nextbreakpoint.shop.common.Headers.AUTHORIZATION;
 import static com.nextbreakpoint.shop.common.Headers.MODIFIED;
-import static com.nextbreakpoint.shop.common.TimeUtil.TIMESTAMP_PATTERN;
 
 public class DesignDataHandler implements Handler<RoutingContext> {
     private final WebClient client;
@@ -55,26 +50,20 @@ public class DesignDataHandler implements Handler<RoutingContext> {
         try {
             final JsonObject jsonObject = response.bodyAsJsonObject();
 
+            final String uuid = jsonObject.getString("uuid");
             final String updated = jsonObject.getString("updated");
-
             final String created = jsonObject.getString("created");
 
             final String manifest = jsonObject.getString("manifest");
-
             final String metadata = jsonObject.getString("metadata");
-
             final String script = jsonObject.getString("script");
 
-            final Design object = makeDesign(jsonObject.getString("uuid"), created, updated, manifest, metadata, script);
+            final Design object = makeDesign(uuid, created, updated, manifest, metadata, script);
 
             final String modified = response.getHeader(MODIFIED);
 
-            final SimpleDateFormat df = new SimpleDateFormat(TIMESTAMP_PATTERN);
-
-            routingContext.put("modified", df.format(new Date(Long.parseLong(modified))));
-
+            routingContext.put("modified", modified);
             routingContext.put("offset", modified);
-
             routingContext.put("design", object);
 
             routingContext.next();

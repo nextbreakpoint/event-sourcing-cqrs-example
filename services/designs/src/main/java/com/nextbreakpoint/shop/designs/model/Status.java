@@ -4,18 +4,18 @@ import java.util.Objects;
 
 public class Status {
     private String name;
-    private String date;
+    private Long updated;
 
-    public Status(String name, String date) {
+    public Status(String name, Long updated) {
         this.name = Objects.requireNonNull(name);
-        this.date = Objects.requireNonNull(date);
+        this.updated = Objects.requireNonNull(updated);
     }
 
     public String getName() {
         return name;
     }
 
-    public String getDate() {
-        return date;
+    public Long getUpdated() {
+        return updated;
     }
 }

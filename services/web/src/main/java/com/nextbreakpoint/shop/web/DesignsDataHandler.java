@@ -11,8 +11,6 @@ import io.vertx.rxjava.ext.web.client.HttpRequest;
 import io.vertx.rxjava.ext.web.client.HttpResponse;
 import io.vertx.rxjava.ext.web.client.WebClient;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -20,7 +18,6 @@ import static com.nextbreakpoint.shop.common.ContentType.APPLICATION_JSON;
 import static com.nextbreakpoint.shop.common.Headers.ACCEPT;
 import static com.nextbreakpoint.shop.common.Headers.AUTHORIZATION;
 import static com.nextbreakpoint.shop.common.Headers.MODIFIED;
-import static com.nextbreakpoint.shop.common.TimeUtil.TIMESTAMP_PATTERN;
 
 public class DesignsDataHandler implements Handler<RoutingContext> {
     private final WebClient client;
@@ -56,12 +53,8 @@ public class DesignsDataHandler implements Handler<RoutingContext> {
 
             final String modified = response.getHeader(MODIFIED);
 
-            final SimpleDateFormat df = new SimpleDateFormat(TIMESTAMP_PATTERN);
-
-            routingContext.put("modified", df.format(new Date(Long.parseLong(modified))));
-
+            routingContext.put("modified", modified);
             routingContext.put("offset", modified);
-
             routingContext.put("designs", objects);
 
             routingContext.next();

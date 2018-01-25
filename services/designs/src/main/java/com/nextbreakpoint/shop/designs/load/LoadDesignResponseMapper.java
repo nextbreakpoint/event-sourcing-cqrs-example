@@ -15,7 +15,7 @@ public class LoadDesignResponseMapper implements ResponseMapper<LoadDesignRespon
     @Override
     public Result apply(LoadDesignResponse response) {
         final Set<Header> headers = response.getDesign()
-                .map(design -> singleton(new Header(MODIFIED, design.getUpdated())))
+                .map(design -> singleton(new Header(MODIFIED, String.valueOf(design.getModified()))))
                 .orElse(Collections.emptySet());
 
         final String json = response.getDesign()

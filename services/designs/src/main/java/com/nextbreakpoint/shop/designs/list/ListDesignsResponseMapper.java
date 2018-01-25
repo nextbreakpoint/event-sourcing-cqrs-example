@@ -18,7 +18,9 @@ public class ListDesignsResponseMapper implements ResponseMapper<ListDesignsResp
                 .collect(() -> new JsonArray(), (a, x) -> a.add(x), (a, b) -> a.addAll(b))
                 .encode();
 
-        final Set<Header> headers = singleton(new Header(MODIFIED, response.getDate()));
+        final String modified = String.valueOf(response.getUpdated());
+
+        final Set<Header> headers = singleton(new Header(MODIFIED, modified));
 
         return new Result(json, headers);
     }

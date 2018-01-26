@@ -179,13 +179,11 @@ class App extends React.Component {
 
         axios.get(component.state.config.designs_url + '/api/designs/' + uuid, config)
             .then(function (response) {
-                let envelop = response.data
+                console.log(response.data)
 
                 let modified = response.headers['x-modified']
 
-                console.log(envelop)
-
-                let design = JSON.parse(envelop.json)
+                let design = JSON.parse(response.data.json)
 
                 component.setState(Object.assign(component.state, {design: design, modified: modified}))
 
@@ -231,40 +229,76 @@ class App extends React.Component {
 
             const parent = { label: 'Designs', link: base_url + '/admin/designs' }
 
-            return <div className="container s12">
-                <Row>
-                    <Col s={12}>
-                        <Header role={this.state.role} name={this.state.name} onLogin={this.handleLogin} onLogout={this.handleLogout} parent={parent}/>
-                    </Col>
-                </Row>
-                <Row>
-                    <Col s={8} className="center-align">
-                        <div className="design-preview-container">
-                            <Map center={position} zoom={2} className="design-preview z-depth-3">
-                                <TileLayer url={url} attribution='&copy; Andrea Medeghini' minZoom={2} maxZoom={6} tileSize={256} updateWhenIdle={true} updateWhenZooming={false} updateInterval={500} keepBuffer={1}/>
-                            </Map>
-                        </div>
-                    </Col>
-                    <Col s={4} className="left-align">
-                        <form className="design-script">
-                            <div className="input-field">
-                                <label htmlFor="script"><Icon left>mode_edit</Icon>Script</label>
-                                <textarea className="materialize-textarea" rows="20" cols="80" id="script" name="script" value={this.state.design.script} onChange={(e) => this.handleScriptChanged(e)}></textarea>
+            if (this.state.role == 'admin') {
+                return <div className="container s12">
+                    <Row>
+                        <Col s={12}>
+                            <Header role={this.state.role} name={this.state.name} onLogin={this.handleLogin} onLogout={this.handleLogout} parent={parent}/>
+                        </Col>
+                    </Row>
+                    <Row>
+                        <Col s={8} className="center-align">
+                            <div className="design-preview-container">
+                                <Map center={position} zoom={2} className="design-preview z-depth-3">
+                                    <TileLayer url={url} attribution='&copy; Andrea Medeghini' minZoom={2} maxZoom={6} tileSize={256} updateWhenIdle={true} updateWhenZooming={false} updateInterval={500} keepBuffer={1}/>
+                                </Map>
                             </div>
-                            <div className="input-field">
-                                <label htmlFor="metadata"><Icon left>mode_edit</Icon>Metadata</label>
-                                <textarea className="materialize-textarea" rows="20" cols="80" id="metadata" name="metadata" value={this.state.design.metadata} onChange={(e) => this.handleMetadataChanged(e)}></textarea>
+                        </Col>
+                        <Col s={4} className="left-align">
+                            <form className="design-script">
+                                <div className="input-field">
+                                    <label htmlFor="script"><Icon left>mode_edit</Icon>Script</label>
+                                    <textarea className="materialize-textarea" rows="20" cols="80" id="script" name="script" value={this.state.design.script} onChange={(e) => this.handleScriptChanged(e)}></textarea>
+                                </div>
+                                <div className="input-field">
+                                    <label htmlFor="metadata"><Icon left>mode_edit</Icon>Metadata</label>
+                                    <textarea className="materialize-textarea" rows="20" cols="80" id="metadata" name="metadata" value={this.state.design.metadata} onChange={(e) => this.handleMetadataChanged(e)}></textarea>
+                                </div>
+                                <Button waves='light' onClick={(e) => this.handleUpdateDesign(e)}>Update</Button>
+                            </form>
+                        </Col>
+                    </Row>
+                    <Row>
+                        <Col s={12}>
+                            <Footer role={this.state.role} name={this.state.name}/>
+                        </Col>
+                    </Row>
+                </div>
+            } else {
+                return <div className="container s12">
+                    <Row>
+                        <Col s={12}>
+                            <Header role={this.state.role} name={this.state.name} onLogin={this.handleLogin} onLogout={this.handleLogout} parent={parent}/>
+                        </Col>
+                    </Row>
+                    <Row>
+                        <Col s={8} className="center-align">
+                            <div className="design-preview-container">
+                                <Map center={position} zoom={2} className="design-preview z-depth-3">
+                                    <TileLayer url={url} attribution='&copy; Andrea Medeghini' minZoom={2} maxZoom={6} tileSize={256} updateWhenIdle={true} updateWhenZooming={false} updateInterval={500} keepBuffer={1}/>
+                                </Map>
                             </div>
-                            <Button waves='light' onClick={(e) => this.handleUpdateDesign(e)}>Update</Button>
-                        </form>
-                    </Col>
-                </Row>
-                <Row>
-                    <Col s={12}>
-                        <Footer role={this.state.role} name={this.state.name}/>
-                    </Col>
-                </Row>
-            </div>
+                        </Col>
+                        <Col s={4} className="left-align">
+                            <form className="design-script">
+                                <div className="input-field">
+                                    <label htmlFor="script"><Icon left>mode_edit</Icon>Script</label>
+                                    <textarea readonly className="materialize-textarea" rows="20" cols="80" id="script" name="script" value={this.state.design.script} onChange={(e) => this.handleScriptChanged(e)}></textarea>
+                                </div>
+                                <div className="input-field">
+                                    <label htmlFor="metadata"><Icon left>mode_edit</Icon>Metadata</label>
+                                    <textarea readonly className="materialize-textarea" rows="20" cols="80" id="metadata" name="metadata" value={this.state.design.metadata} onChange={(e) => this.handleMetadataChanged(e)}></textarea>
+                                </div>
+                            </form>
+                        </Col>
+                    </Row>
+                    <Row>
+                        <Col s={12}>
+                            <Footer role={this.state.role} name={this.state.name}/>
+                        </Col>
+                    </Row>
+                </div>
+            }
         } else {
             return <div className="container s12"></div>
         }

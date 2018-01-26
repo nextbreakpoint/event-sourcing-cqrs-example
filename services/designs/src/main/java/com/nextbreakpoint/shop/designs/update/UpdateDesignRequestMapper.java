@@ -13,11 +13,12 @@ public class UpdateDesignRequestMapper implements RequestMapper<UpdateDesignRequ
 
         final JsonObject bodyAsJson = context.getBodyAsJson();
 
-        final JsonObject jsonObject = new JsonObject()
+        final String json = new JsonObject()
                 .put("manifest", bodyAsJson.getString("manifest"))
                 .put("metadata", bodyAsJson.getString("metadata"))
-                .put("script", bodyAsJson.getString("script"));
+                .put("script", bodyAsJson.getString("script"))
+                .encode();
 
-        return new UpdateDesignRequest(UUID.fromString(uuid), jsonObject.encode());
+        return new UpdateDesignRequest(UUID.fromString(uuid), json);
     }
 }

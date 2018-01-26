@@ -52,4 +52,8 @@ public class ResponseHelper {
     private static JsonObject createErrorResponseObject(String error) {
         return new JsonObject().put("error", error);
     }
+
+    public static void sendNoContent(RoutingContext routingContext) {
+        routingContext.response().setStatusCode(204).end();
+    }
 }

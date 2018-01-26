@@ -15,23 +15,36 @@ public class AccessHandler implements Handler<RoutingContext> {
 
     private final JWTAuth jwtProvider;
     private final List<String> authorities;
-    private final Consumer<RoutingContext> onAccessDenied;
+    private final Handler<RoutingContext> onAccessDenied;
+    private final Handler<RoutingContext> onAccessGranted;
 
     public AccessHandler(JWTAuth jwtProvider, Consumer<RoutingContext> onAccessDenied, List<String> authorities) {
         this.jwtProvider = jwtProvider;
         this.authorities = authorities;
+        this.onAccessDenied = routingContext -> onAccessDenied.accept(routingContext);
+        this.onAccessGranted = routingContext -> routingContext.next();
+    }
+
+    public AccessHandler(JWTAuth jwtProvider, Handler<RoutingContext> onAccessGranted, Handler<RoutingContext> onAccessDenied, List<String> authorities) {
+        this.jwtProvider = jwtProvider;
+        this.authorities = authorities;
         this.onAccessDenied = onAccessDenied;
+        this.onAccessGranted = onAccessGranted;
     }
 
     @Override
     public void handle(RoutingContext routingContext) {
         Authentication.isUserAuthorized(jwtProvider, routingContext, authorities)
                 .doOnError(err -> logger.debug("Authorization failed", err))
-                .subscribe(user -> processUser(routingContext, user), err -> onAccessDenied.accept(routingContext));
+                .subscribe(user -> processUser(routingContext, user), err -> processError(routingContext));
+    }
+
+    private void processError(RoutingContext routingContext) {
+        onAccessDenied.handle(routingContext);
     }
 
     private void processUser(RoutingContext routingContext, User user) {
         routingContext.setUser(user);
-        routingContext.next();
+        onAccessGranted.handle(routingContext);
     }
 }

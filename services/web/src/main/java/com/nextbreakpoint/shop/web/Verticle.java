@@ -9,6 +9,7 @@ import com.nextbreakpoint.shop.common.WebClientFactory;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Launcher;
+import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.json.JsonObject;
 import io.vertx.rxjava.core.AbstractVerticle;
 import io.vertx.rxjava.core.http.HttpServer;
@@ -105,33 +106,49 @@ public class Verticle extends AbstractVerticle {
 
         mainRouter.route("/*").handler(UserHandler.create(jwtProvider, accountsClient));
 
-        final JsonObject webConfig = new JsonObject();
-        webConfig.put("web_url", config.getString("client_web_url"));
-        webConfig.put("auth_url", config.getString("client_auth_url"));
-        webConfig.put("designs_url", config.getString("client_designs_url"));
-        webConfig.put("accounts_url", config.getString("client_accounts_url"));
+        final JsonObject webConfig = new JsonObject()
+                .put("web_url", config.getString("client_web_url"))
+                .put("auth_url", config.getString("client_auth_url"))
+                .put("designs_url", config.getString("client_designs_url"))
+                .put("accounts_url", config.getString("client_accounts_url"));
 
         mainRouter.get("/*").handler(routingContext -> injectConfig(routingContext, webConfig));
 
         mainRouter.get("/config").handler(ConfigHandler.create(webConfig));
 
-        mainRouter.getWithRegex("/admin/designs/" + UUID_REGEXP).handler(createPageHandler(engine, "admin/preview"));
-        mainRouter.get("/admin/designs").handler(createPageHandler(engine, "admin/designs"));
+        mainRouter.getWithRegex("/admin/designs/" + UUID_REGEXP)
+                .handler(createPageHandler(engine, "admin/preview"));
 
-        mainRouter.getWithRegex("/content/designs/" + UUID_REGEXP).handler(DesignDataHandler.create(designsClient, config));
-        mainRouter.get("/content/designs").handler(DesignsDataHandler.create(designsClient, config));
+        mainRouter.get("/admin/designs")
+                .handler(createPageHandler(engine, "admin/designs"));
 
-        mainRouter.getWithRegex("/content/designs/" + UUID_REGEXP).handler(createPageHandler(engine, "content/preview"));
-        mainRouter.get("/content/designs").handler(createPageHandler(engine, "content/designs"));
+        mainRouter.getWithRegex("/content/designs/" + UUID_REGEXP)
+                .handler(DesignDataHandler.create(designsClient, config));
 
-        mainRouter.getWithRegex("/watch/([0-9]+)/designs/" + UUID_REGEXP).handler(DesignWatchHandler.create(vertx, jwtProvider, designsClient, config));
-        mainRouter.getWithRegex("/watch/([0-9]+)/designs").handler(DesignsWatchHandler.create(vertx, jwtProvider, designsClient, config));
+        mainRouter.getWithRegex("/content/designs/" + UUID_REGEXP)
+                .handler(createPageHandler(engine, "content/preview"));
+
+        mainRouter.get("/content/designs")
+                .handler(DesignsDataHandler.create(designsClient, config));
+
+        mainRouter.get("/content/designs")
+                .handler(createPageHandler(engine, "content/designs"));
+
+        mainRouter.getWithRegex("/watch/([0-9]+)/designs/" + UUID_REGEXP)
+                .handler(DesignWatchHandler.create(vertx, jwtProvider, designsClient, config));
+
+        mainRouter.getWithRegex("/watch/([0-9]+)/designs")
+                .handler(DesignsWatchHandler.create(vertx, jwtProvider, designsClient, config));
 
         mainRouter.get("/error/*").handler(createErrorHandler(engine));
 
-        mainRouter.route().failureHandler(routingContext -> ResponseHelper.sendFailure(routingContext));
+        mainRouter.route().failureHandler(ResponseHelper::sendFailure);
 
-        server = vertx.createHttpServer(ServerUtil.makeServerOptions(config)).requestHandler(mainRouter::accept).listen(port);
+        final HttpServerOptions options = ServerUtil.makeServerOptions(config);
+
+        server = vertx.createHttpServer(options)
+                .requestHandler(mainRouter::accept)
+                .listen(port);
 
         return null;
     }

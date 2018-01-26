@@ -40,11 +40,14 @@ import com.nextbreakpoint.shop.common.ResponseHelper;
 import com.nextbreakpoint.shop.common.CORSHandlerFactory;
 import com.nextbreakpoint.shop.common.ServerUtil;
 import io.vertx.core.Future;
+import io.vertx.core.Handler;
 import io.vertx.core.Launcher;
+import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.json.JsonObject;
 import io.vertx.rxjava.core.AbstractVerticle;
 import io.vertx.rxjava.core.http.HttpServer;
 import io.vertx.rxjava.ext.auth.jwt.JWTAuth;
+import io.vertx.rxjava.ext.jdbc.JDBCClient;
 import io.vertx.rxjava.ext.web.Router;
 import io.vertx.rxjava.ext.web.RoutingContext;
 import io.vertx.rxjava.ext.web.handler.BodyHandler;
@@ -53,8 +56,6 @@ import io.vertx.rxjava.ext.web.handler.CorsHandler;
 import io.vertx.rxjava.ext.web.handler.LoggerHandler;
 import io.vertx.rxjava.ext.web.handler.TimeoutHandler;
 import rx.Single;
-
-import java.util.function.Consumer;
 
 import static com.nextbreakpoint.shop.common.Authority.ADMIN;
 import static com.nextbreakpoint.shop.common.Authority.GUEST;
@@ -109,7 +110,9 @@ public class Verticle extends AbstractVerticle {
 
         final JWTAuth jwtProvider = JWTProviderFactory.create(vertx, config);
 
-        final Store store = new Store(JDBCClientFactory.create(vertx, config));
+        final JDBCClient jdbcClient = JDBCClientFactory.create(vertx, config);
+
+        final Store store = new Store(jdbcClient);
 
         final Router mainRouter = Router.router(vertx);
 
@@ -124,36 +127,56 @@ public class Verticle extends AbstractVerticle {
 
         apiRouter.route("/accounts/*").handler(corsHandler);
 
-        final Consumer<RoutingContext> onAccessDenied = rc -> rc.fail(Failure.accessDenied());
+        final Handler<RoutingContext> onAccessDenied = rc -> rc.fail(Failure.accessDenied());
 
-        apiRouter.get("/accounts").handler(new AccessHandler(jwtProvider, onAccessDenied, asList(ADMIN, PLATFORM)));
-        apiRouter.get("/accounts/me").handler(new AccessHandler(jwtProvider, onAccessDenied, asList(ADMIN, GUEST)));
-        apiRouter.getWithRegex("/accounts/" + UUID_REGEXP).handler(new AccessHandler(jwtProvider, onAccessDenied, asList(ADMIN, PLATFORM)));
-        apiRouter.put("/accounts/*").handler(new AccessHandler(jwtProvider, onAccessDenied, asList(ADMIN)));
-        apiRouter.post("/accounts").handler(new AccessHandler(jwtProvider, onAccessDenied, asList(ADMIN, PLATFORM)));
-        apiRouter.patch("/accounts/*").handler(new AccessHandler(jwtProvider, onAccessDenied, asList(ADMIN)));
-        apiRouter.delete("/accounts/*").handler(new AccessHandler(jwtProvider, onAccessDenied, asList(ADMIN)));
+        final AccessHandler listAccountsHandler = new AccessHandler(jwtProvider, createListAccountsHandler(store), onAccessDenied, asList(ADMIN, PLATFORM));
 
-        apiRouter.get("/accounts").produces(APPLICATION_JSON).handler(createListAccountsHandler(store));
+        final AccessHandler loadSelfAccountHandler = new AccessHandler(jwtProvider, createLoadSelfAccountHandler(store), onAccessDenied, asList(ADMIN, GUEST));
 
-        apiRouter.get("/accounts/me").produces(APPLICATION_JSON).handler(createLoadSelfAccountHandler(store));
+        final AccessHandler loadAccountHandler = new AccessHandler(jwtProvider, createLoadAccountHandler(store), onAccessDenied, asList(ADMIN, PLATFORM));
 
-        apiRouter.getWithRegex("/accounts/" + UUID_REGEXP).produces(APPLICATION_JSON).handler(createLoadAccountHandler(store));
+        final AccessHandler insertAccountHandler = new AccessHandler(jwtProvider, createInsertAccountHandler(store), onAccessDenied, asList(ADMIN, PLATFORM));
 
-        apiRouter.post("/accounts").produces(APPLICATION_JSON).consumes(APPLICATION_JSON).handler(createInsertAccountHandler(store));
+        final AccessHandler deleteAccountHandler = new AccessHandler(jwtProvider, createDeleteAccountHandler(store), onAccessDenied, asList(ADMIN));
 
-        apiRouter.deleteWithRegex("/accounts/" + UUID_REGEXP).produces(APPLICATION_JSON).handler(createDeleteAccountHandler(store));
+        final AccessHandler deleteAccountaHandler = new AccessHandler(jwtProvider, createDeleteAccountsHandler(store), onAccessDenied, asList(ADMIN));
 
-        apiRouter.delete("/accounts").handler(createDeleteAccountsHandler(store));
+        apiRouter.get("/accounts")
+                .produces(APPLICATION_JSON)
+                .handler(listAccountsHandler);
 
-        apiRouter.options("/accounts/*").handler(routingContext -> routingContext.response().setStatusCode(204).end());
-        apiRouter.options("/accounts").handler(routingContext -> routingContext.response().setStatusCode(204).end());
+        apiRouter.get("/accounts/me")
+                .produces(APPLICATION_JSON)
+                .handler(loadSelfAccountHandler);
 
-        mainRouter.route().failureHandler(routingContext -> ResponseHelper.sendFailure(routingContext));
+        apiRouter.getWithRegex("/accounts/" + UUID_REGEXP)
+                .produces(APPLICATION_JSON)
+                .handler(loadAccountHandler);
+
+        apiRouter.post("/accounts")
+                .produces(APPLICATION_JSON)
+                .consumes(APPLICATION_JSON)
+                .handler(insertAccountHandler);
+
+        apiRouter.deleteWithRegex("/accounts/" + UUID_REGEXP)
+                .produces(APPLICATION_JSON)
+                .handler(deleteAccountHandler);
+
+        apiRouter.delete("/accounts")
+                .handler(deleteAccountaHandler);
+
+        apiRouter.options("/accounts/*")
+                .handler(ResponseHelper::sendNoContent);
+
+        mainRouter.route().failureHandler(ResponseHelper::sendFailure);
 
         mainRouter.mountSubRouter("/api", apiRouter);
 
-        server = vertx.createHttpServer(ServerUtil.makeServerOptions(config)).requestHandler(mainRouter::accept).listen(port);
+        final HttpServerOptions options = ServerUtil.makeServerOptions(config);
+
+        server = vertx.createHttpServer(options)
+                .requestHandler(mainRouter::accept)
+                .listen(port);
 
         return null;
     }

@@ -67,7 +67,9 @@
                             $.get("{{context.get('designs_url')}}/api/designs/" + uuid, function(data) {
                                 console.log(data);
                             }).done(function(data) {
-                                updateDesign(offset, data);
+                                var design = JSON.parse(data.json)
+
+                                updateDesign(offset, design);
                             }).fail(function(e) {
                                 console.log(e);
                             });

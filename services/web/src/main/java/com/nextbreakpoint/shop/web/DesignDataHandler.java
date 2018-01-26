@@ -54,9 +54,11 @@ public class DesignDataHandler implements Handler<RoutingContext> {
             final String updated = jsonObject.getString("updated");
             final String created = jsonObject.getString("created");
 
-            final String manifest = jsonObject.getString("manifest");
-            final String metadata = jsonObject.getString("metadata");
-            final String script = jsonObject.getString("script");
+            final JsonObject design = new JsonObject(jsonObject.getString("json"));
+
+            final String manifest = design.getString("manifest");
+            final String metadata = design.getString("metadata");
+            final String script = design.getString("script");
 
             final Design object = makeDesign(uuid, created, updated, manifest, metadata, script);
 

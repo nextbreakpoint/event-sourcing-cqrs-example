@@ -11,11 +11,12 @@ public class InsertDesignRequestMapper implements RequestMapper<InsertDesignRequ
     public InsertDesignRequest apply(RoutingContext context) {
         final JsonObject bodyAsJson = context.getBodyAsJson();
 
-        final JsonObject jsonObject = new JsonObject()
+        final String json = new JsonObject()
                 .put("manifest", bodyAsJson.getString("manifest"))
                 .put("metadata", bodyAsJson.getString("metadata"))
-                .put("script", bodyAsJson.getString("script"));
+                .put("script", bodyAsJson.getString("script"))
+                .encode();
 
-        return new InsertDesignRequest(UUID.randomUUID(), jsonObject.encode());
+        return new InsertDesignRequest(UUID.randomUUID(), json);
     }
 }

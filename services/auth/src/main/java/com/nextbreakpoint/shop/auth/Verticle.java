@@ -7,6 +7,7 @@ import com.nextbreakpoint.shop.common.ServerUtil;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Launcher;
+import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.json.JsonObject;
 import io.vertx.rxjava.core.AbstractVerticle;
 import io.vertx.rxjava.core.http.HttpServer;
@@ -71,14 +72,22 @@ public class Verticle extends AbstractVerticle {
 
         final CorsHandler corsHandler = CORSHandlerFactory.createWithGetOnly(webUrl, asList(AUTHORIZATION, CONTENT_TYPE, ACCEPT));
 
+        final Handler<RoutingContext> signinHandler = createSigninHandler(config, mainRouter);
+
+        final Handler<RoutingContext> signoutHandler = createSignoutHandler(config, mainRouter);
+
         mainRouter.route("/auth/*").handler(corsHandler);
 
-        mainRouter.get("/auth/signin/*").handler(createSigninHandler(config, mainRouter));
-        mainRouter.get("/auth/signout/*").handler(createSignoutHandler(config, mainRouter));
+        mainRouter.get("/auth/signin/*").handler(signinHandler);
+        mainRouter.get("/auth/signout/*").handler(signoutHandler);
 
         mainRouter.route().failureHandler(routingContext -> redirectOnFailure(routingContext, webUrl));
 
-        server = vertx.createHttpServer(ServerUtil.makeServerOptions(config)).requestHandler(mainRouter::accept).listen(port);
+        final HttpServerOptions options = ServerUtil.makeServerOptions(config);
+
+        server = vertx.createHttpServer(options)
+                .requestHandler(mainRouter::accept)
+                .listen(port);
 
         return null;
     }

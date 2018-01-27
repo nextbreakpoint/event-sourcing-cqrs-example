@@ -8,6 +8,7 @@ import com.jayway.restassured.http.ContentType;
 import com.nextbreakpoint.shop.common.Authority;
 import com.nextbreakpoint.shop.common.TestHelper;
 import com.xebialabs.restito.server.StubServer;
+import io.vertx.core.json.JsonObject;
 import io.vertx.rxjava.ext.web.Cookie;
 import org.apache.http.annotation.NotThreadSafe;
 import org.glassfish.grizzly.http.util.HttpStatus;
@@ -35,7 +36,6 @@ import static com.xebialabs.restito.semantics.Action.header;
 import static com.xebialabs.restito.semantics.Action.status;
 import static com.xebialabs.restito.semantics.Action.stringContent;
 import static com.xebialabs.restito.semantics.Condition.get;
-import static com.xebialabs.restito.semantics.Condition.post;
 import static com.xebialabs.restito.semantics.Condition.withHeader;
 import static org.hamcrest.CoreMatchers.equalTo;
 
@@ -44,6 +44,10 @@ import static org.hamcrest.CoreMatchers.equalTo;
 @DisplayName("Web service")
 @NotThreadSafe
 public class VerticleIT {
+  private static final String SCRIPT = "fractal {\norbit [-2.0 - 2.0i,+2.0 + 2.0i] [x,n] {\nloop [0, 200] (mod2(x) > 40) {\nx = x * x + w;\n}\n}\ncolor [#FF000000] {\npalette gradient {\n[#FFFFFFFF > #FF000000, 100];\n[#FF000000 > #FFFFFFFF, 100];\n}\ninit {\nm = 100 * (1 + sin(mod(x) * 0.2 / pi));\n}\nrule (n > 0) [1] {\ngradient[m - 1]\n}\n}\n}\n";
+  private static final String METADATA = "{\"translation\":{\"x\":0.0,\"y\":0.0,\"z\":1.0,\"w\":0.0},\"rotation\":{\"x\":0.0,\"y\":0.0,\"z\":0.0,\"w\":0.0},\"scale\":{\"x\":1.0,\"y\":1.0,\"z\":1.0,\"w\":1.0},\"point\":{\"x\":0.0,\"y\":0.0},\"julia\":false,\"options\":{\"showPreview\":false,\"showTraps\":false,\"showOrbit\":false,\"showPoint\":false,\"previewOrigin\":{\"x\":0.0,\"y\":0.0},\"previewSize\":{\"x\":0.25,\"y\":0.25}}}";
+  private static final String MANIFEST = "{\"pluginId\":\"Mandelbrot\"}";
+
   private static RestAssuredConfig restAssuredConfig;
 
   private static StubServer stubServer;
@@ -101,18 +105,31 @@ public class VerticleIT {
   @Test
   @DisplayName("should return HTML when requesting preview content page without token")
   public void shouldReturnHTMLWhenRequestingPreviewContentPageWithoutToken() throws MalformedURLException {
-    final UUID uuid = UUID.randomUUID();
+    final UUID designUuid = UUID.randomUUID();
 
     final SimpleDateFormat df = new SimpleDateFormat(TIMESTAMP_PATTERN);
 
     final Date date = new Date();
 
+    final String json = new JsonObject()
+            .put("manifest", MANIFEST)
+            .put("metadata", METADATA)
+            .put("script", SCRIPT)
+            .encode();
+
+    final String content = new JsonObject()
+            .put("uuid", designUuid.toString())
+            .put("json", json)
+            .put("created", df.format(date))
+            .put("updated", df.format(date))
+            .encode();
+
     whenHttp(stubServer)
-            .match(get("/api/designs/" + uuid), withHeader("accept", "application/json"))
-            .then(status(HttpStatus.OK_200), header("X-Modified", "" + date.getTime()), contentType("application/json"), stringContent("{\"uuid\":\"" + uuid + "\",\"created\":\"" + df.format(date) + "\",\"updated\":\"" + df.format(date) + "\"}"));
+            .match(get("/api/designs/" + designUuid), withHeader("accept", "application/json"))
+            .then(status(HttpStatus.OK_200), header("X-Modified", "" + date.getTime()), contentType("application/json"), stringContent(content));
 
     given().config(restAssuredConfig)
-            .when().get(makeBaseURL("/content/designs/" + uuid))
+            .when().get(makeBaseURL("/content/designs/" + designUuid))
             .then().assertThat().statusCode(200)
             .and().contentType(ContentType.HTML);
   }
@@ -152,9 +169,22 @@ public class VerticleIT {
 
     final Date date = new Date();
 
+    final String json = new JsonObject()
+            .put("manifest", MANIFEST)
+            .put("metadata", METADATA)
+            .put("script", SCRIPT)
+            .encode();
+
+    final String content = new JsonObject()
+            .put("uuid", designUuid.toString())
+            .put("json", json)
+            .put("created", df.format(date))
+            .put("updated", df.format(date))
+            .encode();
+
     whenHttp(stubServer)
             .match(get("/api/designs/" + designUuid), withHeader("accept", "application/json"))
-            .then(status(HttpStatus.OK_200), header("X-Modified", "" + date.getTime()), contentType("application/json"), stringContent("{\"uuid\":\"" + designUuid + "\",\"created\":\"" + df.format(date) + "\",\"updated\":\"" + df.format(date) + "\"}"));
+            .then(status(HttpStatus.OK_200), header("X-Modified", "" + date.getTime()), contentType("application/json"), stringContent(content));
 
     whenHttp(stubServer)
             .match(get("/api/accounts/" + accountUuid), withHeader("accept", "application/json"))

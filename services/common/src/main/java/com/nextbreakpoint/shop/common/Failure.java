@@ -17,8 +17,8 @@ public class Failure extends RuntimeException {
         return statusCode;
     }
 
-    public static Failure accessDenied() {
-        return new Failure(403, "Access denied");
+    public static Failure accessDenied(String reason) {
+        return new Failure(403, "Access denied: " + reason);
     }
 
     public static Failure badRequest() {

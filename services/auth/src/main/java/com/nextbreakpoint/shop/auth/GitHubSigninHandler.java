@@ -73,7 +73,7 @@ public class GitHubSigninHandler implements Handler<RoutingContext> {
             if (oauthAccessToken != null) {
                 fetchUserEmail(routingContext, oauthAccessToken, getRedirectTo(routingContext));
             } else {
-                routingContext.fail(Failure.accessDenied());
+                routingContext.fail(Failure.accessDenied("Missing OAuth access token"));
             }
         } catch (Exception e) {
             routingContext.fail(Failure.requestFailed(e));
@@ -92,7 +92,7 @@ public class GitHubSigninHandler implements Handler<RoutingContext> {
             if (response.statusCode() == 200) {
                 findAccount(routingContext, redirectTo, oauthAccessToken, extractPrimaryEmail(response.bodyAsJsonArray()));
             } else {
-                routingContext.fail(Failure.accessDenied());
+                routingContext.fail(Failure.accessDenied("Cannot retrieve user's email"));
             }
         } catch (Exception e) {
             routingContext.fail(Failure.requestFailed(e));
@@ -114,7 +114,7 @@ public class GitHubSigninHandler implements Handler<RoutingContext> {
             if (response.statusCode() == 200) {
                 fetchOrCreateAccount(routingContext, redirectTo, accessToken, oauthAccessToken, userEmail, response.bodyAsJsonArray());
             } else {
-                routingContext.fail(Failure.accessDenied());
+                routingContext.fail(Failure.accessDenied("Cannot find user account"));
             }
         } catch (Exception e) {
             routingContext.fail(Failure.requestFailed(e));
@@ -141,7 +141,7 @@ public class GitHubSigninHandler implements Handler<RoutingContext> {
             if (response.statusCode() == 200) {
                 createAccount(routingContext, redirectTo, accessToken, userEmail, response.bodyAsJsonObject());
             } else {
-                routingContext.fail(Failure.accessDenied());
+                routingContext.fail(Failure.accessDenied("Cannot retrieve user's details"));
             }
         } catch (Exception e) {
             routingContext.fail(Failure.requestFailed(e));
@@ -154,7 +154,7 @@ public class GitHubSigninHandler implements Handler<RoutingContext> {
                 .putHeader(CONTENT_TYPE, APPLICATION_JSON)
                 .putHeader(ACCEPT, APPLICATION_JSON)
                 .rxSendJsonObject(makeAccount(userEmail, userInfo))
-                .subscribe(response -> handleAccount(routingContext, redirectTo, response), err -> routingContext.fail(Failure.authenticationError(err)));
+                .subscribe(response -> handleAccount(routingContext, redirectTo, response, "Cannot create account"), err -> routingContext.fail(Failure.authenticationError(err)));
     }
 
     protected void fetchAccount(RoutingContext routingContext, String redirectTo, String accessToken, JsonArray accounts) {
@@ -162,15 +162,15 @@ public class GitHubSigninHandler implements Handler<RoutingContext> {
                 .putHeader(AUTHORIZATION, Authentication.makeAuthorization(accessToken))
                 .putHeader(ACCEPT, APPLICATION_JSON)
                 .rxSend()
-                .subscribe(response -> handleAccount(routingContext, redirectTo, response), err -> routingContext.fail(Failure.authenticationError(err)));
+                .subscribe(response -> handleAccount(routingContext, redirectTo, response, "Cannot fetch account"), err -> routingContext.fail(Failure.authenticationError(err)));
     }
 
-    protected void handleAccount(RoutingContext routingContext, String redirectTo, HttpResponse<Buffer> response) {
+    protected void handleAccount(RoutingContext routingContext, String redirectTo, HttpResponse<Buffer> response, String errorMessage) {
         try {
             if (response.statusCode() == 200 || response.statusCode() == 201) {
                 processAccount(routingContext, redirectTo, response.bodyAsJsonObject());
             } else {
-                routingContext.fail(Failure.accessDenied());
+                routingContext.fail(Failure.accessDenied(errorMessage));
             }
         } catch (Exception e) {
             routingContext.fail(Failure.requestFailed(e));
@@ -184,7 +184,7 @@ public class GitHubSigninHandler implements Handler<RoutingContext> {
             final String token = Authentication.generateToken(jwtProvider, uuid, Arrays.asList(role));
             sendRedirectResponse(routingContext, redirectTo, Authentication.createCookie(token, cookieDomain));
         } else {
-            routingContext.fail(Failure.accessDenied());
+            routingContext.fail(Failure.accessDenied("Missing account's uuid or role"));
         }
     }
 

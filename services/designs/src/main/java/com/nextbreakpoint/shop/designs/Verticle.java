@@ -155,7 +155,7 @@ public class Verticle extends AbstractVerticle {
 
         apiRouter.route("/designs/*").handler(corsHandler);
 
-        final Handler<RoutingContext> onAccessDenied = rc -> rc.fail(Failure.accessDenied());
+        final Handler<RoutingContext> onAccessDenied = rc -> rc.fail(Failure.accessDenied("Authorisation failed"));
 
         final AccessHandler getTileHandler = new AccessHandler(jwtProvider, new GetTileHandler(store, executor), onAccessDenied, asList(ADMIN, GUEST, ANONYMOUS));
 

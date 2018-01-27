@@ -1,6 +1,8 @@
 package com.nextbreakpoint.shop.common;
 
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.auth.jwt.JWTOptions;
 import io.vertx.rxjava.ext.auth.User;
 import io.vertx.rxjava.ext.auth.jwt.JWTAuth;
@@ -18,6 +20,8 @@ import static com.nextbreakpoint.shop.common.Headers.AUTHORIZATION;
 import static rx.Single.fromCallable;
 
 public class Authentication {
+    private static final Logger logger = LoggerFactory.getLogger(Authentication.class.getName());
+
     public static final String NULL_USER_UUID = new UUID(0, 0).toString();
 
     public static final String JWT_SUBJECT = "designs";
@@ -38,6 +42,7 @@ public class Authentication {
     }
 
     public static String generateToken(JWTAuth jwtProvider, String userUuid, List<String> authorities) {
+        logger.debug("Generate new JWT token for user " + userUuid);
         return jwtProvider.generateToken(makeUserObject(userUuid), makeJWTOptions(authorities));
     }
 
@@ -50,7 +55,8 @@ public class Authentication {
     }
 
     protected static Single<User> userHasRole(List<String> roles, User user) {
-        return hasRole(user, roles).map(role -> Single.just(user)).orElseGet(() -> Single.error(Failure.accessDenied()));
+        return hasRole(user, roles).map(role -> Single.just(user))
+                .orElseGet(() -> Single.error(Failure.accessDenied("User doesn't have required role")));
     }
 
     public static Cookie createCookie(String token, String domain) {
@@ -81,13 +87,16 @@ public class Authentication {
     public static String getToken(RoutingContext routingContext) {
         final String authorization = routingContext.request().getHeader(AUTHORIZATION);
         if (authorization != null && authorization.startsWith("Bearer ")) {
+            logger.debug("Authorisation header is present");
             return authorization.substring("Bearer ".length());
         } else {
             final Cookie cookie = routingContext.getCookie("token");
             if (cookie != null && !cookie.getValue().isEmpty()) {
+                logger.debug("Token cookie is present");
                 return cookie.getValue();
             }
         }
+        logger.debug("Authorisation header and token cookie not present");
         return null;
     }
 

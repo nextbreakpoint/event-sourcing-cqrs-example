@@ -127,7 +127,7 @@ public class Verticle extends AbstractVerticle {
 
         apiRouter.route("/accounts/*").handler(corsHandler);
 
-        final Handler<RoutingContext> onAccessDenied = rc -> rc.fail(Failure.accessDenied());
+        final Handler<RoutingContext> onAccessDenied = rc -> rc.fail(Failure.accessDenied("Authentication failed"));
 
         final AccessHandler listAccountsHandler = new AccessHandler(jwtProvider, createListAccountsHandler(store), onAccessDenied, asList(ADMIN, PLATFORM));
 

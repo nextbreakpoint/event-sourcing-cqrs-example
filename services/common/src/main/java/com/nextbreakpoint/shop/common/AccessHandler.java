@@ -8,7 +8,6 @@ import io.vertx.rxjava.ext.auth.jwt.JWTAuth;
 import io.vertx.rxjava.ext.web.RoutingContext;
 
 import java.util.List;
-import java.util.function.Consumer;
 
 public class AccessHandler implements Handler<RoutingContext> {
     private static final Logger logger = LoggerFactory.getLogger(AccessHandler.class.getName());
@@ -17,13 +16,6 @@ public class AccessHandler implements Handler<RoutingContext> {
     private final List<String> authorities;
     private final Handler<RoutingContext> onAccessDenied;
     private final Handler<RoutingContext> onAccessGranted;
-
-    public AccessHandler(JWTAuth jwtProvider, Consumer<RoutingContext> onAccessDenied, List<String> authorities) {
-        this.jwtProvider = jwtProvider;
-        this.authorities = authorities;
-        this.onAccessDenied = routingContext -> onAccessDenied.accept(routingContext);
-        this.onAccessGranted = routingContext -> routingContext.next();
-    }
 
     public AccessHandler(JWTAuth jwtProvider, Handler<RoutingContext> onAccessGranted, Handler<RoutingContext> onAccessDenied, List<String> authorities) {
         this.jwtProvider = jwtProvider;
@@ -35,6 +27,7 @@ public class AccessHandler implements Handler<RoutingContext> {
     @Override
     public void handle(RoutingContext routingContext) {
         Authentication.isUserAuthorized(jwtProvider, routingContext, authorities)
+                .doOnSuccess(user -> logger.debug("User is authenticated and authorized"))
                 .doOnError(err -> logger.debug("Authorization failed", err))
                 .subscribe(user -> processUser(routingContext, user), err -> processError(routingContext));
     }

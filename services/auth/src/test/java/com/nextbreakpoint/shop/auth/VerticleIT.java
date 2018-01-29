@@ -1,6 +1,7 @@
 package com.nextbreakpoint.shop.auth;
 
 import com.jayway.restassured.RestAssured;
+import com.jayway.restassured.config.LogConfig;
 import com.jayway.restassured.config.RedirectConfig;
 import com.jayway.restassured.config.RestAssuredConfig;
 import com.jayway.restassured.config.SSLConfig;
@@ -59,7 +60,8 @@ public class VerticleIT {
   public static void configureRestAssured() {
     final RedirectConfig redirectConfig = new RedirectConfig().followRedirects(false);
     final SSLConfig sslConfig = new SSLConfig().allowAllHostnames().and().relaxedHTTPSValidation();
-    restAssuredConfig = RestAssuredConfig.newConfig().redirect(redirectConfig).sslConfig(sslConfig);
+    final LogConfig logConfig = new LogConfig().enableLoggingOfRequestAndResponseIfValidationFails();
+    restAssuredConfig = RestAssuredConfig.newConfig().redirect(redirectConfig).sslConfig(sslConfig).logConfig(logConfig);
   }
 
   @AfterAll

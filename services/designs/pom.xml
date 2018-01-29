@@ -193,6 +193,18 @@
                         <goals>
                             <goal>stop</goal>
                         </goals>
+                        <configuration>
+                            <images>
+                                <image>
+                                    <alias>service-designs</alias>
+                                    <name>services/designs:${project.version}</name>
+                                </image>
+                                <image>
+                                    <alias>database-designs</alias>
+                                    <name>mysql:8.0.2</name>
+                                </image>
+                            </images>
+                        </configuration>
                     </execution>
                     <execution>
                         <id>package</id>

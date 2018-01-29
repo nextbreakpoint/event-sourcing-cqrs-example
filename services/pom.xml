@@ -5,8 +5,8 @@
     <artifactId>com.nextbreakpoint.shop</artifactId>
     <version>1.0.0</version>
     <modules>
-        <module>mysql</module>
-        <module>nginx</module>
+        <!--<module>mysql</module>-->
+        <!--<module>nginx</module>-->
         <module>common</module>
         <module>designs</module>
         <module>accounts</module>

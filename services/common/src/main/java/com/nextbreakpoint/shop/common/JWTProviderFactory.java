@@ -15,6 +15,10 @@ public class JWTProviderFactory {
                 .setType(config.getString("jwt_keystore_type"))
                 .setPassword(config.getString("jwt_keystore_secret"));
 
-        return JWTAuth.create(vertx, new JWTAuthOptions().setKeyStore(options));
+        final JWTAuthOptions authOptions = new JWTAuthOptions()
+                .setKeyStore(options)
+                .setLeeway(5);
+
+        return JWTAuth.create(vertx, authOptions);
     }
 }

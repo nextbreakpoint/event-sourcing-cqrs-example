@@ -118,6 +118,8 @@ public class VerticleIT {
   public void shouldForbidDeleteRequestWithoutAccessToken() throws MalformedURLException {
     final String authorization = TestHelper.makeAuthorization("test", Arrays.asList(Authority.ADMIN));
 
+    pause();
+
     final String uuid = createAccount(authorization, createPostData(makeUniqueEmail(), "guest"));
 
     given().config(restAssuredConfig)
@@ -130,6 +132,8 @@ public class VerticleIT {
   @DisplayName("should forbid get request when user doesn't have permissions")
   public void shouldForbidGetRequestWhenUserDoNotHavePermissions() throws MalformedURLException {
     final String authorization = TestHelper.makeAuthorization("test", Arrays.asList(Authority.ADMIN));
+
+    pause();
 
     final String uuid = createAccount(authorization, createPostData(makeUniqueEmail(), "guest"));
 
@@ -158,6 +162,8 @@ public class VerticleIT {
   @DisplayName("should allow get request when user has permissions")
   public void shouldAllowGetRequestWhenUserHasPlatformPermissions() throws MalformedURLException {
     final String authorization = TestHelper.makeAuthorization("test", Arrays.asList(Authority.ADMIN));
+
+    pause();
 
     final String uuid = createAccount(authorization, createPostData(makeUniqueEmail(), "guest"));
 
@@ -188,6 +194,8 @@ public class VerticleIT {
   @DisplayName("should create and delete accounts")
   public void shouldCreateAndDeleteDesigns() throws MalformedURLException {
     final String authorization = TestHelper.makeAuthorization("test", Arrays.asList(Authority.ADMIN));
+
+    pause();
 
     deleteAccounts(authorization);
 
@@ -224,6 +232,13 @@ public class VerticleIT {
     deleteAccount(authorization, uuid2);
 
     assertThat(getAccounts(authorization)).isEmpty();
+  }
+
+  private void pause() {
+    try {
+      Thread.sleep(1000);
+    } catch (InterruptedException e) {
+    }
   }
 
   private void deleteAccount(String authorization, String uuid) throws MalformedURLException {

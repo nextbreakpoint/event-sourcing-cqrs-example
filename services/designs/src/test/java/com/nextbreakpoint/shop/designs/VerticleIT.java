@@ -98,6 +98,8 @@ public class VerticleIT {
   public void shouldForbidDeleteRequestWithoutAccessToken() throws MalformedURLException {
     final String authorization = TestHelper.makeAuthorization("test", Arrays.asList(Authority.ADMIN));
 
+    pause();
+
     final String uuid = createDesign(authorization, createPostData());
 
     given().config(restAssuredConfig)
@@ -110,6 +112,8 @@ public class VerticleIT {
   @DisplayName("should forbid get request when user doesn't have permissions")
   public void shouldForbidGetRequestWhenUserDoNotHavePermissions() throws MalformedURLException {
     final String authorization = TestHelper.makeAuthorization("test", Arrays.asList(Authority.ADMIN));
+
+    pause();
 
     final String uuid = createDesign(authorization, createPostData());
 
@@ -139,6 +143,8 @@ public class VerticleIT {
   public void shouldAllowGetRequestWhenUserIsAnonymous() throws MalformedURLException {
     final String authorization = TestHelper.makeAuthorization("test", Arrays.asList(Authority.ADMIN));
 
+    pause();
+
     final String uuid = createDesign(authorization, createPostData());
 
     given().config(restAssuredConfig)
@@ -161,6 +167,8 @@ public class VerticleIT {
   @DisplayName("should create and delete designs")
   public void shouldCreateAndDeleteDesigns() throws IOException {
     final String authorization = TestHelper.makeAuthorization("test", Arrays.asList(Authority.ADMIN));
+
+    pause();
 
     deleteDesigns(authorization);
 
@@ -191,6 +199,13 @@ public class VerticleIT {
     deleteDesign(authorization, uuid2);
 
     assertThat(getDesigns(authorization)).isEmpty();
+  }
+
+  private void pause() {
+    try {
+      Thread.sleep(1000);
+    } catch (InterruptedException e) {
+    }
   }
 
   private void deleteDesign(String authorization, String uuid1) throws MalformedURLException {

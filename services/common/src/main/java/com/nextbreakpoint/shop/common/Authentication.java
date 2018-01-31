@@ -25,9 +25,9 @@ public class Authentication {
     public static final String NULL_USER_UUID = new UUID(0, 0).toString();
 
     public static final String JWT_SUBJECT = "designs";
-    public static final long JWT_EXPIRES_IN_MINUTES = 30L;
+    public static final long JWT_EXPIRES_IN_MINUTES = 60 * 24;
 
-    public static final int COOKIE_MAX_AGE = 3600;
+    public static final int COOKIE_MAX_AGE = 3600 * 24;
     public static final String COOKIE_NAME = "token";
     public static final String COOKIE_PATH = "/";
 

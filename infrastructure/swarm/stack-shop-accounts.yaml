@@ -1,0 +1,66 @@
+version: '3.4'
+services:
+  shop-accounts:
+    labels:
+        service: shop-accounts
+    image: ${SHOP_ACCOUNTS_IMAGE}
+    volumes:
+      - storage:/data
+    logging:
+      options:
+        labels: "service"
+    ports:
+      - target: 43002
+        published: 43002
+        protocol: tcp
+        mode: ingress
+    deploy:
+      replicas: 3
+      placement:
+        constraints:
+          - node.role == worker
+      update_config:
+        parallelism: 1
+        failure_action: rollback
+        delay: 30s
+        order: stop-first
+      restart_policy:
+        condition: any
+        delay: 5s
+        window: 120s
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1024M
+        reservations:
+          cpus: '0.1'
+          memory: 256M
+    secrets:
+      - source: server_conf
+        target: /config/accounts.json
+        uid: '1000'
+        gid: '1000'
+        mode: 0440
+      - source: keystore_auth
+        target: /keystores/keystore-auth.jceks
+        uid: '1000'
+        gid: '1000'
+        mode: 0440
+      - source: keystore_server
+        target: /keystores/keystore-server.jks
+        uid: '1000'
+        gid: '1000'
+        mode: 0440
+networks:
+  default:
+    external:
+      name: services
+volumes:
+    storage:
+secrets:
+  server_conf:
+    file: ${ENVIRONMENT_SECRETS_PATH}/config/accounts.json
+  keystore_auth:
+    file: ${ENVIRONMENT_SECRETS_PATH}/keystores/keystore-auth.jceks
+  keystore_server:
+    file: ${ENVIRONMENT_SECRETS_PATH}/keystores/keystore-server.jks

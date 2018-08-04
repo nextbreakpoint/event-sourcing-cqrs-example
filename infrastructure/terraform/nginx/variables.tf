@@ -21,13 +21,10 @@ variable "environment" {}
 variable "colour" {}
 
 ### MANDATORY ###
+variable "account_id" {}
+
+### MANDATORY ###
+variable "secrets_bucket_name" {}
+
+### MANDATORY ###
 variable "hosted_zone_name" {}
-
-### MANDATORY ###
-variable "hosted_zone_id" {}
-
-### MANDATORY ###
-variable "aws_bastion_vpc_cidr" {}
-
-### MANDATORY ###
-variable "aws_network_vpc_cidr" {}

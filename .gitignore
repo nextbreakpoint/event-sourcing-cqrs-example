@@ -13,12 +13,8 @@
 *.tf.backup
 *.tfstate
 *.tfstate.backup
-config_vars.json
-config.tfvars
+main.json
 terraform.tfstate*
 .terraform
 **/tfplan
-consul.tfvars
-infrastructure/setup/provider.tf
-**/secrets
-services/keystores/generated
+secrets

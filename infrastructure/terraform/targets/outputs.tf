@@ -1,11 +1,7 @@
 ##############################################################################
-# Remote state
+# Outputs
 ##############################################################################
 
-terraform {
-  backend "s3" {
-    bucket = "terraform"
-    region = "eu-west-1"
-    key    = "shop-services.tfstate"
-  }
+output "shop-targets-created" {
+  value = "true"
 }

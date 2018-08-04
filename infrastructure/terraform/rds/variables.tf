@@ -14,9 +14,11 @@ variable "aws_profile" {
 # Resources configuration below
 ###################################################################
 
-variable "stream_tag" {
-  default = "terraform"
-}
+### MANDATORY ###
+variable "environment" {}
+
+### MANDATORY ###
+variable "colour" {}
 
 ### MANDATORY ###
 variable "hosted_zone_name" {}
@@ -29,6 +31,9 @@ variable "aws_bastion_vpc_cidr" {}
 
 ### MANDATORY ###
 variable "aws_network_vpc_cidr" {}
+
+### MANDATORY ###
+variable "aws_openvpn_vpc_cidr" {}
 
 ### MANDATORY ###
 variable "rds_mysql_username" {}

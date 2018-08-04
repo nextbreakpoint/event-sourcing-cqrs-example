@@ -1,0 +1,29 @@
+{
+  "account_id": "your_account_id",
+
+  "environment": "prod",
+  "colour": "green",
+
+  "hosted_zone_name": "yourdomain.com",
+  "hosted_zone_id": "your_public_zone_id",
+
+  "bastion_host": "bastion.yourdomain.com",
+
+  "secrets_bucket_name": "your_secrets_bucket_name",
+
+  "github_user_email": "your_github_user_email",
+  "github_client_id": "your_github_client_id",
+  "github_client_secret": "your_github_client_secret",
+
+  "key_password": "your_key_password",
+  "keystore_password": "your_keystore_password",
+  "truststore_password": "your_truststore_password",
+
+  "rds_mysql_username": "shop",
+  "rds_mysql_password": "changeme",
+
+  "mysql_verticle_username": "verticle",
+  "mysql_verticle_password": "changeme",
+  "mysql_liquibase_username": "liquibase",
+  "mysql_liquibase_password": "changeme"
+}

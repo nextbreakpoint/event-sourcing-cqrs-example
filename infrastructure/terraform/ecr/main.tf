@@ -13,17 +13,17 @@ provider "aws" {
 ##############################################################################
 
 resource "aws_ecr_repository" "accounts" {
-  name = "services/accounts"
+  name = "${var.environment}-${var.colour}-shop/accounts"
 }
 
 resource "aws_ecr_repository" "designs" {
-  name = "services/designs"
+  name = "${var.environment}-${var.colour}-shop/designs"
 }
 
 resource "aws_ecr_repository" "auth" {
-  name = "services/auth"
+  name = "${var.environment}-${var.colour}-shop/auth"
 }
 
 resource "aws_ecr_repository" "web" {
-  name = "services/web"
+  name = "${var.environment}-${var.colour}-shop/web"
 }

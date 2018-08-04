@@ -6,7 +6,7 @@ terraform {
   backend "s3" {
     bucket = "nextbreakpoint-terraform"
     region = "eu-west-1"
-    key    = "shop-webserver.tfstate"
+    key    = "shop-targets.tfstate"
   }
 }
 
@@ -16,7 +16,7 @@ data "terraform_remote_state" "vpc" {
   config {
     bucket = "nextbreakpoint-terraform"
     region = "eu-west-1"
-    key    = "vpc.tfstate"
+    key    = "env:/${terraform.workspace}/vpc.tfstate"
   }
 }
 
@@ -26,7 +26,17 @@ data "terraform_remote_state" "network" {
   config {
     bucket = "nextbreakpoint-terraform"
     region = "eu-west-1"
-    key    = "network.tfstate"
+    key    = "env:/${terraform.workspace}/network.tfstate"
+  }
+}
+
+data "terraform_remote_state" "swarm" {
+  backend = "s3"
+
+  config {
+    bucket = "nextbreakpoint-terraform"
+    region = "eu-west-1"
+    key    = "env:/${terraform.workspace}/swarm.tfstate"
   }
 }
 
@@ -36,6 +46,6 @@ data "terraform_remote_state" "lb" {
   config {
     bucket = "nextbreakpoint-terraform"
     region = "eu-west-1"
-    key    = "lb.tfstate"
+    key    = "env:/${terraform.workspace}/lb.tfstate"
   }
 }

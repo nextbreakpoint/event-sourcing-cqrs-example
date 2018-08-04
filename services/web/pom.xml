@@ -92,7 +92,7 @@
                     <images>
                         <image>
                             <alias>web-service</alias>
-                            <name>services/web:${project.version}</name>
+                            <name>${environment}-${colour}-shop/web:${project.version}</name>
                             <build>
                                 <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
                                 <filter>${*}</filter>
@@ -122,7 +122,7 @@
                             <images>
                                 <image>
                                     <alias>service-web</alias>
-                                    <name>services/web:${project.version}</name>
+                                    <name>${environment}-${colour}-shop/web:${project.version}</name>
                                     <build>
                                         <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
                                         <filter>${*}</filter>
@@ -137,7 +137,7 @@
                                         <volumes>
                                             <bind>
                                                 <volume>${project.basedir}/target/classes/environments/integration:/config</volume>
-                                                <volume>${project.basedir}/../keystores:/keystores</volume>
+                                                <volume>${project.basedir}/../secrets:/keystores</volume>
                                             </bind>
                                         </volumes>
                                         <wait>
@@ -181,7 +181,7 @@
                             <images>
                                 <image>
                                     <alias>web-service</alias>
-                                    <name>services/web:${project.version}</name>
+                                    <name>${environment}-${colour}-shop/web:${project.version}</name>
                                     <build>
                                         <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
                                         <filter>${*}</filter>
@@ -196,7 +196,7 @@
                                         <volumes>
                                             <bind>
                                                 <volume>${project.basedir}/target/classes/environments/docker:/config</volume>
-                                                <volume>${project.basedir}/../keystores:/keystores</volume>
+                                                <volume>${project.basedir}/../secrets:/keystores</volume>
                                             </bind>
                                         </volumes>
                                         <network>

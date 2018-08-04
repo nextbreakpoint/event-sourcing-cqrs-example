@@ -10,9 +10,9 @@ variable "aws_profile" {
   default = "default"
 }
 
-##############################################################################
+###################################################################
 # Resources configuration below
-##############################################################################
+###################################################################
 
 ### MANDATORY ###
 variable "environment" {}
@@ -25,9 +25,3 @@ variable "hosted_zone_name" {}
 
 ### MANDATORY ###
 variable "hosted_zone_id" {}
-
-### MANDATORY ###
-variable "aws_bastion_vpc_cidr" {}
-
-### MANDATORY ###
-variable "aws_network_vpc_cidr" {}

@@ -29,6 +29,8 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <environment>prod</environment>
+        <colour>green</colour>
         <try.version>2.0.3</try.version>
         <junit4.version>4.12</junit4.version>
         <junit5jupiter.version>5.0.2</junit5jupiter.version>

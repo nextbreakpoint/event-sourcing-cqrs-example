@@ -18,4 +18,3 @@ terraform.tfstate*
 .terraform
 **/tfplan
 secrets
-services/keystores/generated

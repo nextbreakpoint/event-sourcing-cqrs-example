@@ -92,7 +92,7 @@
                     <images>
                         <image>
                             <alias>accounts</alias>
-                            <name>services/accounts:${project.version}</name>
+                            <name>${environment}-${colour}-shop/accounts:${project.version}</name>
                             <build>
                                 <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
                                 <filter>${*}</filter>
@@ -152,7 +152,7 @@
                                 </image>
                                 <image>
                                     <alias>service-accounts</alias>
-                                    <name>services/accounts:${project.version}</name>
+                                    <name>${environment}-${colour}-shop/accounts:${project.version}</name>
                                     <build>
                                         <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
                                         <filter>${*}</filter>
@@ -167,7 +167,7 @@
                                         <volumes>
                                             <bind>
                                                 <volume>${project.basedir}/target/classes/environments/integration:/config</volume>
-                                                <volume>${project.basedir}/../keystores:/keystores</volume>
+                                                <volume>${project.basedir}/../secrets:/keystores</volume>
                                             </bind>
                                         </volumes>
                                         <network>
@@ -197,7 +197,7 @@
                             <images>
                                 <image>
                                     <alias>service-accounts</alias>
-                                    <name>services/accounts:${project.version}</name>
+                                    <name>${environment}-${colour}-shop/accounts:${project.version}</name>
                                 </image>
                                 <image>
                                     <alias>database-accounts</alias>
@@ -231,7 +231,7 @@
                             <images>
                                 <image>
                                     <alias>service</alias>
-                                    <name>services/accounts:${project.version}</name>
+                                    <name>${environment}-${colour}-shop/accounts:${project.version}</name>
                                     <build>
                                         <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
                                         <filter>${*}</filter>
@@ -246,7 +246,7 @@
                                         <volumes>
                                             <bind>
                                                 <volume>${project.basedir}/target/classes/environments/docker:/config</volume>
-                                                <volume>${project.basedir}/../keystores:/keystores</volume>
+                                                <volume>${project.basedir}/../secrets:/keystores</volume>
                                             </bind>
                                         </volumes>
                                         <network>

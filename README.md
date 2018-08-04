@@ -1,12 +1,8 @@
 # example-images-shop
 
-This repository contains the source code and the deployment scripts of an example of micro-services based application.
+This repository contains the source code and the deployment scripts of an example of micro-services based application. The application depends on the infrastructure explained [here](https://github.com/nextbreakpoint/infrastructure-as-code).
 
     THIS PROJECT IS WORK IN PROGRESS
-
-This application depends on the cloud-based infrastructure explained here:
-
-https://github.com/nextbreakpoint/infrastructure-as-code
 
 ## How to deploy the application
 

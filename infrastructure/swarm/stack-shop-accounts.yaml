@@ -9,6 +9,11 @@ services:
     logging:
       options:
         labels: "service"
+    ports:
+      - target: 43002
+        published: 43002
+        protocol: tcp
+        mode: ingress
     deploy:
       replicas: 3
       placement:

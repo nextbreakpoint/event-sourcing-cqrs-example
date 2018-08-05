@@ -1,6 +1,6 @@
 # example-images-shop
 
-This repository contains the source code and the deployment scripts of an example of micro-services based application. The application depends on the infrastructure explained [here](https://github.com/nextbreakpoint/infrastructure-as-code).
+This repository contains the source code and the deployment scripts of an example of micro-services based application. The application depends on the infrastructure explained at https://github.com/nextbreakpoint/infrastructure-as-code. The micro-services are written in Java using [Vert.x](https://vertx.io) framework and they require a MySQL database.
 
     THIS PROJECT IS WORK IN PROGRESS
 

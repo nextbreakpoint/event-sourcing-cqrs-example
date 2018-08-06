@@ -129,17 +129,17 @@ public class Verticle extends AbstractVerticle {
 
         final Handler<RoutingContext> onAccessDenied = rc -> rc.fail(Failure.accessDenied("Authentication failed"));
 
-        final AccessHandler listAccountsHandler = new AccessHandler(jwtProvider, createListAccountsHandler(store), onAccessDenied, asList(ADMIN, PLATFORM));
+        final Handler listAccountsHandler = new AccessHandler(jwtProvider, createListAccountsHandler(store), onAccessDenied, asList(ADMIN, PLATFORM));
 
-        final AccessHandler loadSelfAccountHandler = new AccessHandler(jwtProvider, createLoadSelfAccountHandler(store), onAccessDenied, asList(ADMIN, GUEST));
+        final Handler loadSelfAccountHandler = new AccessHandler(jwtProvider, createLoadSelfAccountHandler(store), onAccessDenied, asList(ADMIN, GUEST));
 
-        final AccessHandler loadAccountHandler = new AccessHandler(jwtProvider, createLoadAccountHandler(store), onAccessDenied, asList(ADMIN, PLATFORM));
+        final Handler loadAccountHandler = new AccessHandler(jwtProvider, createLoadAccountHandler(store), onAccessDenied, asList(ADMIN, PLATFORM));
 
-        final AccessHandler insertAccountHandler = new AccessHandler(jwtProvider, createInsertAccountHandler(store), onAccessDenied, asList(ADMIN, PLATFORM));
+        final Handler insertAccountHandler = new AccessHandler(jwtProvider, createInsertAccountHandler(store), onAccessDenied, asList(ADMIN, PLATFORM));
 
-        final AccessHandler deleteAccountHandler = new AccessHandler(jwtProvider, createDeleteAccountHandler(store), onAccessDenied, asList(ADMIN));
+        final Handler deleteAccountHandler = new AccessHandler(jwtProvider, createDeleteAccountHandler(store), onAccessDenied, asList(ADMIN));
 
-        final AccessHandler deleteAccountaHandler = new AccessHandler(jwtProvider, createDeleteAccountsHandler(store), onAccessDenied, asList(ADMIN));
+        final Handler deleteAccountaHandler = new AccessHandler(jwtProvider, createDeleteAccountsHandler(store), onAccessDenied, asList(ADMIN));
 
         apiRouter.get("/accounts")
                 .produces(APPLICATION_JSON)

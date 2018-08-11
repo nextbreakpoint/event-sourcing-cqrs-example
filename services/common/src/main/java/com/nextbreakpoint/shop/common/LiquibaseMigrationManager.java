@@ -10,8 +10,8 @@ import liquibase.resource.ClassLoaderResourceAccessor;
 import java.sql.Driver;
 import java.util.Properties;
 
-public class LiquibaseManager {
-    private LiquibaseManager() {}
+public class LiquibaseMigrationManager {
+    private LiquibaseMigrationManager() {}
 
     public static void migrateDatabase(JsonObject config) throws Exception {
         final String jdbcUrl = config.getString("jdbc_url");

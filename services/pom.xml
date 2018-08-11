@@ -5,7 +5,8 @@
     <artifactId>com.nextbreakpoint.shop</artifactId>
     <version>1.0.0</version>
     <modules>
-        <module>mysql</module>
+        <!--<module>mysql</module>-->
+        <module>cassandra</module>
         <module>nginx</module>
         <module>common</module>
         <module>designs</module>
@@ -45,6 +46,7 @@
         <dropwizard.version>3.1.0</dropwizard.version>
         <log4j2.version>2.10.0</log4j2.version>
         <hsqldb.version>2.4.0</hsqldb.version>
+        <vertx-cassandra.version>3.2.0</vertx-cassandra.version>
         <mysqlconnector.version>8.0.7-dmr</mysqlconnector.version>
         <liquibase.version>3.5.3</liquibase.version>
         <nf.version>2.0.3</nf.version>
@@ -64,6 +66,8 @@
         <maven.compiler.source>1.9</maven.compiler.source>
         <maven.compiler.target>1.9</maven.compiler.target>
         <liquibase-slf4j.version>2.0.0</liquibase-slf4j.version>
+        <cassandra-driver-core.version>3.5.1</cassandra-driver-core.version>
+        <cassandra-migration.version>2.2.0</cassandra-migration.version>
     </properties>
     <build>
         <plugins>
@@ -283,6 +287,22 @@
                 <groupId>io.vertx</groupId>
                 <artifactId>vertx-dropwizard-metrics</artifactId>
                 <version>${vertx.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.cognitor.cassandra</groupId>
+                <artifactId>cassandra-migration</artifactId>
+                <version>${cassandra-migration.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.datastax.cassandra</groupId>
+                <artifactId>cassandra-driver-core</artifactId>
+                <version>${cassandra-driver-core.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>io.netty</groupId>
+                        <artifactId>netty-codec</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>io.dropwizard.metrics</groupId>

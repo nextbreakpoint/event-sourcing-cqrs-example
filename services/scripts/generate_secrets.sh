@@ -49,3 +49,11 @@ keytool -noprompt -keystore $OUTPUT/truststore-client.jks -alias CARoot -import 
 
 ## Import CA into server truststore
 keytool -noprompt -keystore $OUTPUT/truststore-server.jks -alias CARoot -import -file $OUTPUT/ca_cert.pem -storepass secret
+
+openssl pkcs12 -in $OUTPUT/keystore-client.jks -nocerts -nodes -passin pass:secret -out $OUTPUT/client_key.pem
+openssl pkcs12 -in $OUTPUT/keystore-server.jks -nocerts -nodes -passin pass:secret -out $OUTPUT/server_key.pem
+
+cat $OUTPUT/server_cert.pem > $OUTPUT/../nginx/etc/nginx/ca_and_server_cert.pem
+cat $OUTPUT/ca_cert.pem >> $OUTPUT/../nginx/etc/nginx/ca_and_server_cert.pem
+cp $OUTPUT/server_key.pem $OUTPUT/../nginx/etc/nginx/server_key.pem
+

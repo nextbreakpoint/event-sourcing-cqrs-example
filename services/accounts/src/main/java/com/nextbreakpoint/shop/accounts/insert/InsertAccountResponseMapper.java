@@ -9,6 +9,7 @@ public class InsertAccountResponseMapper implements ResponseMapper<InsertAccount
     public Result apply(InsertAccountResponse response) {
         final String json = new JsonObject()
                 .put("uuid", response.getUuid().toString())
+                .put("role", response.getRole())
                 .encode();
 
         return new Result(json);

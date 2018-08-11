@@ -8,7 +8,7 @@
         <version>1.0.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>com.nextbreakpoint.shop.nginx</artifactId>
+    <artifactId>com.nextbreakpoint.shop.cassandra</artifactId>
     <packaging>pom</packaging>
     <build>
         <plugins>
@@ -28,26 +28,31 @@
                             <autoCreateCustomNetworks>true</autoCreateCustomNetworks>
                             <images>
                                 <image>
-                                    <alias>service-nginx</alias>
-                                    <name>nginx:latest</name>
+                                    <name>nextbreakpoint/cassandra:3.11</name>
+                                    <alias>database-cassandra</alias>
                                     <run>
-                                        <privileged>true</privileged>
                                         <ports>
-                                            <port>80:80</port>
-                                            <port>443:443</port>
+                                            <port>9042:9042</port>
                                         </ports>
+                                        <env>
+                                            <CASSANDRA_RACK>rack1</CASSANDRA_RACK>
+                                            <CASSANDRA_DC>datacenter1</CASSANDRA_DC>
+                                            <JVM_OPTS>-Xms2G -Xmx2G</JVM_OPTS>
+                                        </env>
                                         <volumes>
                                             <bind>
-                                                <volume>${project.basedir}/etc/nginx/nginx.conf:/etc/nginx/nginx.conf</volume>
-                                                <volume>${project.basedir}/etc/nginx/ca_and_server_cert.pem:/etc/nginx/ca_and_server_cert.pem</volume>
-                                                <volume>${project.basedir}/etc/nginx/server_key.pem:/etc/nginx/server_key.pem</volume>
+                                                <volume>${project.basedir}/scripts:/docker-entrypoint-initdb.d</volume>
                                             </bind>
                                         </volumes>
                                         <network>
                                             <mode>custom</mode>
                                             <name>shop-dev</name>
-                                            <alias>nginx</alias>
+                                            <alias>cassandra</alias>
                                         </network>
+                                        <wait>
+                                            <log>Created default superuser role 'cassandra'</log>
+                                            <time>60000</time>
+                                        </wait>
                                     </run>
                                 </image>
                             </images>
@@ -62,8 +67,8 @@
                         <configuration>
                             <images>
                                 <image>
-                                    <alias>nginx</alias>
-                                    <name>nginx:latest</name>
+                                    <alias>cassandra</alias>
+                                    <name>nextbreakpoint/cassandra:3.11</name>
                                 </image>
                             </images>
                         </configuration>

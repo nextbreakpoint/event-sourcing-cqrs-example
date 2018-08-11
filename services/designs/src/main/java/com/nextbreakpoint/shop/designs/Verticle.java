@@ -1,12 +1,16 @@
 package com.nextbreakpoint.shop.designs;
 
+import com.datastax.driver.core.Cluster;
+import com.datastax.driver.core.Session;
 import com.nextbreakpoint.shop.common.AccessHandler;
+import com.nextbreakpoint.shop.common.CassandraClusterFactory;
+import com.nextbreakpoint.shop.common.CassandraMigrationManager;
 import com.nextbreakpoint.shop.common.DelegateHandler;
 import com.nextbreakpoint.shop.common.Failure;
 import com.nextbreakpoint.shop.common.GraphiteManager;
 import com.nextbreakpoint.shop.common.JDBCClientFactory;
 import com.nextbreakpoint.shop.common.JWTProviderFactory;
-import com.nextbreakpoint.shop.common.LiquibaseManager;
+import com.nextbreakpoint.shop.common.LiquibaseMigrationManager;
 import com.nextbreakpoint.shop.common.ResponseHelper;
 import com.nextbreakpoint.shop.common.CORSHandlerFactory;
 import com.nextbreakpoint.shop.common.ServerUtil;
@@ -73,8 +77,6 @@ import io.vertx.rxjava.ext.web.handler.LoggerHandler;
 import io.vertx.rxjava.ext.web.handler.TimeoutHandler;
 import rx.Single;
 
-import java.util.function.Consumer;
-
 import static com.nextbreakpoint.shop.common.Authority.ADMIN;
 import static com.nextbreakpoint.shop.common.Authority.ANONYMOUS;
 import static com.nextbreakpoint.shop.common.Authority.GUEST;
@@ -128,7 +130,7 @@ public class Verticle extends AbstractVerticle {
     }
 
     private Void createServer(JsonObject config) throws Exception {
-        LiquibaseManager.migrateDatabase(config);
+        CassandraMigrationManager.migrateDatabase(config);
 
         GraphiteManager.configureMetrics(config);
 
@@ -136,11 +138,15 @@ public class Verticle extends AbstractVerticle {
 
         final String webUrl = config.getString("client_web_url");
 
+        final String keyspace = config.getString("cassandra_keyspace");
+
         final JWTAuth jwtProvider = JWTProviderFactory.create(vertx, config);
 
-        final JDBCClient jdbcClient = JDBCClientFactory.create(vertx, config);
+        final Cluster cluster = CassandraClusterFactory.create(config);
 
-        final Store store = new Store(jdbcClient);
+        final Session session = cluster.connect(keyspace);
+
+        final Store store = new CassandraStore(session);
 
         final Router mainRouter = Router.router(vertx);
 

@@ -1,0 +1,7 @@
+DROP KEYSPACE designs IF EXISTS;
+DROP KEYSPACE accounts IF EXISTS;
+
+DROP ROLE admin IF NOT EXISTS;
+
+DROP ROLE designs_admin IF NOT EXISTS;
+DROP ROLE accounts_admin IF NOT EXISTS;

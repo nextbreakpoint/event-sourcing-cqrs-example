@@ -1,6 +1,6 @@
 # example-images-shop
 
-This repository contains the source code and the deployment scripts of an example of micro-services based application. The application depends on the infrastructure explained at https://github.com/nextbreakpoint/infrastructure-as-code. The micro-services are written in Java using [Vert.x](https://vertx.io) framework and they require a MySQL database.
+This repository contains the source code and the deployment scripts of an example of micro-services based application. The application depends on the infrastructure explained at https://github.com/nextbreakpoint/infrastructure-as-code. The micro-services are written in Java using [Vert.x](https://vertx.io) framework and they require Apache Cassandra.
 
     THIS PROJECT IS WORK IN PROGRESS
 
@@ -29,13 +29,8 @@ Create a file main.json in the infrastructure/config directory. Copy the content
       "keystore_password": "your_keystore_password",
       "truststore_password": "your_truststore_password",
 
-      "rds_mysql_username": "shop",
-      "rds_mysql_password": "changeme",
-
-      "mysql_verticle_username": "verticle",
-      "mysql_verticle_password": "changeme",
-      "mysql_liquibase_username": "liquibase",
-      "mysql_liquibase_password": "changeme"
+      "cassandra_username": "shop",
+      "cassandra_password": "changeme"
     }
 
 Configure the Terraform's backend with command:
@@ -80,9 +75,9 @@ Copy SSH key for accessing EC2 machines and change permissions:
 
     cd infrastructure && chmod 600 prod-green-deployer.pem
 
-Configure the database with command:
+Create Cassandra keyspaces and users with command:
 
-    cd infrastructure && ./docker_run.sh setup_databases
+    cd infrastructure && ./cassandra_script.sh create
 
 Deploy the micro-services on Docker Swarm with commands:
 
@@ -113,6 +108,10 @@ Remove the micro-services with commands:
     cd infrastructure && ./swarm_run.sh remove_stack shop-accounts
     cd infrastructure && ./swarm_run.sh remove_stack shop-designs
     cd infrastructure && ./swarm_run.sh remove_stack shop-web
+
+Delete Cassandra keyspaces and users with command:
+
+    cd infrastructure && ./cassandra_script.sh destroy
 
 Destroy the target groups and Route53's records with command:
 

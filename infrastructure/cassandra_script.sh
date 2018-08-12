@@ -1,6 +1,6 @@
 #!/bin/sh
 
-  export HOSTED_ZONE_NAME=$(cat $(pwd)/config/main.json | jq -r ".hosted_zone_name")
+export HOSTED_ZONE_NAME=$(cat $(pwd)/config/main.json | jq -r ".hosted_zone_name")
 export ENVIRONMENT=$(cat $(pwd)/config/main.json | jq -r ".environment")
 export COLOUR=$(cat $(pwd)/config/main.json | jq -r ".colour")
 

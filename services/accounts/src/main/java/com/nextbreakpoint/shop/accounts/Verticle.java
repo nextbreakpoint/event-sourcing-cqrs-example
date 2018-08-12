@@ -30,7 +30,6 @@ import com.nextbreakpoint.shop.accounts.load.LoadAccountResponseMapper;
 import com.nextbreakpoint.shop.accounts.load.LoadSelfAccountRequestMapper;
 import com.nextbreakpoint.shop.common.AccessHandler;
 import com.nextbreakpoint.shop.common.CassandraClusterFactory;
-import com.nextbreakpoint.shop.common.CassandraMigrationManager;
 import com.nextbreakpoint.shop.common.ContentHandler;
 import com.nextbreakpoint.shop.common.DelegateHandler;
 import com.nextbreakpoint.shop.common.FailedRequestHandler;
@@ -101,7 +100,7 @@ public class Verticle extends AbstractVerticle {
     }
 
     private Void createServer(JsonObject config) throws Exception {
-        CassandraMigrationManager.migrateDatabase(config);
+//        CassandraMigrationManager.migrateDatabase(config);
 
         GraphiteManager.configureMetrics(config);
 

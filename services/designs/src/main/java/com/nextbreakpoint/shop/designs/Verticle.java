@@ -4,7 +4,6 @@ import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Session;
 import com.nextbreakpoint.shop.common.AccessHandler;
 import com.nextbreakpoint.shop.common.CassandraClusterFactory;
-import com.nextbreakpoint.shop.common.CassandraMigrationManager;
 import com.nextbreakpoint.shop.common.DelegateHandler;
 import com.nextbreakpoint.shop.common.Failure;
 import com.nextbreakpoint.shop.common.GraphiteManager;
@@ -127,7 +126,7 @@ public class Verticle extends AbstractVerticle {
     }
 
     private Void createServer(JsonObject config) throws Exception {
-        CassandraMigrationManager.migrateDatabase(config);
+//        CassandraMigrationManager.migrateDatabase(config);
 
         GraphiteManager.configureMetrics(config);
 

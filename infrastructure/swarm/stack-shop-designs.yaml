@@ -15,7 +15,7 @@ services:
         protocol: tcp
         mode: ingress
     deploy:
-      replicas: 1
+      replicas: 3
       placement:
         constraints:
           - node.role == worker

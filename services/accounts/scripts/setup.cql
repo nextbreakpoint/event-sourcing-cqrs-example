@@ -8,3 +8,14 @@ GRANT ALL PERMISSIONS on KEYSPACE accounts TO accounts_admin;
 
 GRANT accounts_admin TO admin;
 
+USE accounts;
+
+CREATE TABLE IF NOT EXISTS ACCOUNTS (
+  UUID UUID PRIMARY KEY,
+  NAME TEXT,
+  ROLE TEXT,
+  EMAIL TEXT,
+  CREATED TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS accounts_email_idx ON accounts.ACCOUNTS ( EMAIL );

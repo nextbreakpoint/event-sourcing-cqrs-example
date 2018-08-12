@@ -176,7 +176,7 @@
                                         </network>
                                         <wait>
                                             <log>Succeeded in deploying verticle</log>
-                                            <time>30000</time>
+                                            <time>60000</time>
                                         </wait>
                                         <dependsOn>
                                             <container>cassandra-designs</container>

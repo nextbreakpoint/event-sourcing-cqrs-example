@@ -1,6 +1,6 @@
 # example-images-shop
 
-This repository contains the source code and the deployment scripts of an example of micro-services based application. The application depends on the infrastructure explained at https://github.com/nextbreakpoint/infrastructure-as-code. The micro-services are written in Java using [Vert.x](https://vertx.io) framework and they require Apache Cassandra.
+This repository contains the source code and the deployment scripts of an example of micro-services based application. The application depends on the infrastructure explained at https://github.com/nextbreakpoint/infrastructure-as-code. The micro-services are written in Java using [Vert.x](https://vertx.io) framework and they depend on Apache Cassandra, Apache Kafka and Apache Zookeeper provided by the infrastructure.
 
     THIS PROJECT IS WORK IN PROGRESS
 

@@ -1,3 +1,5 @@
+ALTER KEYSPACE "system_auth" WITH REPLICATION = { 'class' : 'NetworkTopologyStrategy', 'datacenter1' : 3 };
+
 CREATE KEYSPACE IF NOT EXISTS designs WITH REPLICATION = { 'class' : 'NetworkTopologyStrategy', 'datacenter1' : 3 };
 CREATE KEYSPACE IF NOT EXISTS accounts WITH REPLICATION = { 'class' : 'NetworkTopologyStrategy', 'datacenter1' : 3 };
 

@@ -39,8 +39,8 @@ resource "local_file" "auth_config" {
   "jwt_keystore_type": "jceks",
   "jwt_keystore_secret": "${var.keystore_password}",
 
-  "client_web_url": "https://${var.environment}-${var.colour}-shop.${var.hosted_zone_name}",
-  "client_auth_url": "https://${var.environment}-${var.colour}-shop.${var.hosted_zone_name}",
+  "client_web_url": "https://${var.environment}-${var.colour}-swarm-worker.${var.hosted_zone_name}:7443",
+  "client_auth_url": "https://${var.environment}-${var.colour}-swarm-worker.${var.hosted_zone_name}:7443",
 
   "server_auth_url": "https://shop-auth:43000",
   "server_accounts_url": "https://shop-accounts:43002",
@@ -52,12 +52,12 @@ resource "local_file" "auth_config" {
   "oauth_authorize_path": "/oauth/authorize",
   "oauth_authority": "user:email",
 
-  "cookie_domain": "${var.environment}-${var.colour}-shop.${var.hosted_zone_name}",
+  "cookie_domain": "${var.environment}-${var.colour}-swarm-worker.${var.hosted_zone_name}",
 
   "admin_users": ["${var.github_user_email}"],
 
   "graphite_reporter_enabled": false,
-  "graphite_host": "http://${var.environment}-${var.colour}-shop.${var.hosted_zone_name}",
+  "graphite_host": "http://${var.environment}-${var.colour}-swarm-worker.${var.hosted_zone_name}",
   "graphite_port": 2003
 }
 EOF
@@ -77,20 +77,18 @@ resource "local_file" "designs_config" {
   "jwt_keystore_type": "jceks",
   "jwt_keystore_secret": "${var.keystore_password}",
 
-  "client_web_url": "https://${var.environment}-${var.colour}-shop.${var.hosted_zone_name}",
-
-  "jdbc_url": "jdbc:mysql://${var.environment}-${var.colour}-shop-rds.${var.hosted_zone_name}:3306/designs?useSSL=false&nullNamePatternMatchesAll=true",
-  "jdbc_driver": "com.mysql.cj.jdbc.Driver",
-  "jdbc_username": "${var.mysql_verticle_username}",
-  "jdbc_password": "${var.mysql_verticle_password}",
-  "jdbc_liquibase_username": "${var.mysql_liquibase_username}",
-  "jdbc_liquibase_password": "${var.mysql_liquibase_password}",
-  "jdbc_max_pool_size": 200,
-  "jdbc_min_pool_size": 20,
+  "client_web_url": "https://${var.environment}-${var.colour}-swarm-worker.${var.hosted_zone_name}:7443",
 
   "graphite_reporter_enabled": false,
   "graphite_host": "http://${var.environment}-${var.colour}-swarm-manager.${var.hosted_zone_name}",
   "graphite_port": 2003,
+
+  "cassandra_cluster": "${var.environment}-${var.colour}",
+  "cassandra_keyspace": "designs",
+  "cassandra_username": "${var.verticle_username}",
+  "cassandra_password": "${var.verticle_password}",
+  "cassandra_contactPoint": "${var.environment}-${var.colour}-swarm-worker.${var.hosted_zone_name}",
+  "cassandra_port": 9042,
 
   "max_execution_time_in_millis": 30000
 }
@@ -111,20 +109,18 @@ resource "local_file" "accounts_config" {
   "jwt_keystore_type": "jceks",
   "jwt_keystore_secret": "${var.keystore_password}",
 
-  "client_web_url": "https://${var.environment}-${var.colour}-shop.${var.hosted_zone_name}",
-
-  "jdbc_url": "jdbc:mysql://${var.environment}-${var.colour}-shop-rds.${var.hosted_zone_name}:3306/accounts?useSSL=false&nullNamePatternMatchesAll=true",
-  "jdbc_driver": "com.mysql.cj.jdbc.Driver",
-  "jdbc_username": "${var.mysql_verticle_username}",
-  "jdbc_password": "${var.mysql_verticle_password}",
-  "jdbc_liquibase_username": "${var.mysql_liquibase_username}",
-  "jdbc_liquibase_password": "${var.mysql_liquibase_password}",
-  "jdbc_max_pool_size": 200,
-  "jdbc_min_pool_size": 20,
+  "client_web_url": "https://${var.environment}-${var.colour}-swarm-worker.${var.hosted_zone_name}:7443",
 
   "graphite_reporter_enabled": false,
   "graphite_host": "http://${var.environment}-${var.colour}-swarm-manager.${var.hosted_zone_name}",
-  "graphite_port": 2003
+  "graphite_port": 2003,
+
+  "cassandra_cluster": "${var.environment}-${var.colour}",
+  "cassandra_keyspace": "accounts",
+  "cassandra_username": "${var.verticle_username}",
+  "cassandra_password": "${var.verticle_password}",
+  "cassandra_contactPoint": "${var.environment}-${var.colour}-swarm-worker.${var.hosted_zone_name}",
+  "cassandra_port": 9042
 }
 EOF
 
@@ -151,10 +147,10 @@ resource "local_file" "web_config" {
   "jwt_keystore_type": "jceks",
   "jwt_keystore_secret": "${var.keystore_password}",
 
-  "client_web_url": "https://${var.environment}-${var.colour}-shop.${var.hosted_zone_name}",
-  "client_auth_url": "https://${var.environment}-${var.colour}-shop.${var.hosted_zone_name}",
-  "client_designs_url": "https://${var.environment}-${var.colour}-shop.${var.hosted_zone_name}",
-  "client_accounts_url": "https://${var.environment}-${var.colour}-shop.${var.hosted_zone_name}",
+  "client_web_url": "https://${var.environment}-${var.colour}-swarm-worker.${var.hosted_zone_name}:7443",
+  "client_auth_url": "https://${var.environment}-${var.colour}-swarm-worker.${var.hosted_zone_name}:7443",
+  "client_designs_url": "https://${var.environment}-${var.colour}-swarm-worker.${var.hosted_zone_name}:7443",
+  "client_accounts_url": "https://${var.environment}-${var.colour}-swarm-worker.${var.hosted_zone_name}:7443",
 
   "server_auth_url": "https://shop-auth:43000",
   "server_designs_url": "https://shop-designs:43001",

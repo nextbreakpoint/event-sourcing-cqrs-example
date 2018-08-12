@@ -29,8 +29,11 @@ Create a file main.json in the infrastructure/config directory. Copy the content
       "keystore_password": "your_keystore_password",
       "truststore_password": "your_truststore_password",
 
-      "cassandra_username": "shop",
-      "cassandra_password": "changeme"
+      "cassandra_username": "cassandra",
+      "cassandra_password": "cassandra",
+
+      "verticle_username": "shop",
+      "verticle_password": "changeme"
     }
 
 Configure the Terraform's backend with command:

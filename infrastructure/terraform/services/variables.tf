@@ -45,13 +45,7 @@ variable "keystore_password" {}
 variable "truststore_password" {}
 
 ### MANDATORY ###
-variable "mysql_verticle_username" {}
+variable "verticle_username" {}
 
 ### MANDATORY ###
-variable "mysql_verticle_password" {}
-
-### MANDATORY ###
-variable "mysql_liquibase_username" {}
-
-### MANDATORY ###
-variable "mysql_liquibase_password" {}
+variable "verticle_password" {}

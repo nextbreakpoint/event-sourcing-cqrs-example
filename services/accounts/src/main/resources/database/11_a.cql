@@ -1,1 +1,0 @@
-CREATE INDEX IF NOT EXISTS accounts_email_idx ON accounts.ACCOUNTS ( EMAIL )

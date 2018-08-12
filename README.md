@@ -70,10 +70,6 @@ Create secrets files in S3 with command:
 
     cd infrastructure && ./docker_run.sh module_create secrets
 
-Create RDS database with command:
-
-    cd infrastructure && ./docker_run.sh module_create rds
-
 Create target groups and Route53's records with command:
 
     cd infrastructure && ./docker_run.sh module_create targets
@@ -121,10 +117,6 @@ Remove the micro-services with commands:
 Destroy the target groups and Route53's records with command:
 
     cd infrastructure && ./docker_run.sh module_destroy targets
-
-Destroy the RDS database with command:
-
-    cd infrastructure && ./docker_run.sh module_destroy rds
 
 Destroy secrets files in S3 with command:
 

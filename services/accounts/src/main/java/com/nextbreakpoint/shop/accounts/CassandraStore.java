@@ -38,7 +38,7 @@ public class CassandraStore implements Store {
     private static final String INSERT_ACCOUNT = "INSERT INTO ACCOUNTS (UUID, NAME, EMAIL, ROLE, CREATED) VALUES (?, ?, ?, ?, toTimeStamp(now()))";
     private static final String SELECT_ACCOUNT = "SELECT * FROM ACCOUNTS WHERE UUID = ?";
     private static final String DELETE_ACCOUNT = "DELETE FROM ACCOUNTS WHERE UUID = ?";
-    private static final String DELETE_ACCOUNTS = "DELETE FROM ACCOUNTS";
+    private static final String DELETE_ACCOUNTS = "TRUNCATE ACCOUNTS";
     private static final String SELECT_ACCOUNTS = "SELECT * FROM ACCOUNTS";
     private static final String SELECT_ACCOUNTS_BY_EMAIL = "SELECT * FROM ACCOUNTS WHERE EMAIL = ?";
 
@@ -176,7 +176,7 @@ public class CassandraStore implements Store {
     }
 
     private Object[] makeDeleteParams(DeleteAccountRequest request) {
-        return new Object[] { request.getUuid().toString() };
+        return new Object[] { request.getUuid() };
     }
 
     private Object[] makeLoadParams(LoadAccountRequest request) {

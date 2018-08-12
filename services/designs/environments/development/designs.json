@@ -10,25 +10,16 @@
 
   "client_web_url": "https://localhost:8080",
 
-  "jdbc_url": "jdbc:mysql://localhost:3306/designs?useSSL=false&nullNamePatternMatchesAll=true",
-  "jdbc_driver": "com.mysql.cj.jdbc.Driver",
-  "jdbc_username": "verticle",
-  "jdbc_password": "password",
-  "jdbc_liquibase_username": "liquibase",
-  "jdbc_liquibase_password": "password",
-  "jdbc_max_pool_size": 200,
-  "jdbc_min_pool_size": 20,
-
   "graphite_reporter_enabled": false,
   "graphite_host": "localhost",
   "graphite_port": 2003,
-
-  "max_execution_time_in_millis": 30000,
 
   "cassandra_cluster": "test",
   "cassandra_keyspace": "designs",
   "cassandra_username": "admin",
   "cassandra_password": "password",
   "cassandra_contactPoint": "localhost",
-  "cassandra_port": 9042
+  "cassandra_port": 9042,
+
+  "max_execution_time_in_millis": 30000
 }

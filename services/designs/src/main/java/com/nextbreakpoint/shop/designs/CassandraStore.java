@@ -57,7 +57,7 @@ public class CassandraStore implements Store {
     private static final String UPDATE_DESIGN = "UPDATE DESIGNS SET JSON=?, UPDATED=toTimeStamp(now()) WHERE UUID=?";
     private static final String SELECT_DESIGN = "SELECT * FROM DESIGNS WHERE UUID = ?";
     private static final String DELETE_DESIGN = "DELETE FROM DESIGNS WHERE UUID = ?";
-    private static final String DELETE_DESIGNS = "DELETE FROM DESIGNS";
+    private static final String DELETE_DESIGNS = "TRUNCATE DESIGNS";
     private static final String SELECT_DESIGNS = "SELECT * FROM DESIGNS";
     private static final String SELECT_STATUS = "SELECT NAME,MODIFIED FROM STATE WHERE NAME = 'designs'";
     private static final String UPDATE_STATUS = "UPDATE STATE SET MODIFIED = toTimeStamp(now()) WHERE NAME = 'designs'";

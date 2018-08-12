@@ -137,7 +137,7 @@
                                         <volumes>
                                             <bind>
                                                 <volume>${project.basedir}/target/classes/environments/integration:/config</volume>
-                                                <volume>${project.basedir}/../secrets:/keystores</volume>
+                                                <volume>${project.basedir}/../secrets:/secrets</volume>
                                             </bind>
                                         </volumes>
                                         <wait>
@@ -196,7 +196,7 @@
                                         <volumes>
                                             <bind>
                                                 <volume>${project.basedir}/target/classes/environments/docker:/config</volume>
-                                                <volume>${project.basedir}/../secrets:/keystores</volume>
+                                                <volume>${project.basedir}/../secrets:/secrets</volume>
                                             </bind>
                                         </volumes>
                                         <network>

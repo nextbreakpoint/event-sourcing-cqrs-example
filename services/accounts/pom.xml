@@ -122,17 +122,16 @@
                             <autoCreateCustomNetworks>true</autoCreateCustomNetworks>
                             <images>
                                 <image>
-                                    <alias>database-accounts</alias>
-                                    <name>mysql:8.0.2</name>
+                                    <name>nextbreakpoint/cassandra:3.11</name>
+                                    <alias>cassandra-accounts</alias>
                                     <run>
                                         <ports>
-                                            <port>${database.port}:3306</port>
+                                            <port>9042:9042</port>
                                         </ports>
                                         <env>
-                                            <MYSQL_DATABASE>accounts</MYSQL_DATABASE>
-                                            <MYSQL_USER>test</MYSQL_USER>
-                                            <MYSQL_PASSWORD>password</MYSQL_PASSWORD>
-                                            <MYSQL_ROOT_PASSWORD>password</MYSQL_ROOT_PASSWORD>
+                                            <CASSANDRA_RACK>rack1</CASSANDRA_RACK>
+                                            <CASSANDRA_DC>datacenter1</CASSANDRA_DC>
+                                            <JVM_OPTS>-Xms2G -Xmx2G</JVM_OPTS>
                                         </env>
                                         <volumes>
                                             <bind>
@@ -142,10 +141,10 @@
                                         <network>
                                             <mode>custom</mode>
                                             <name>shop-test</name>
-                                            <alias>database-accounts</alias>
+                                            <alias>cassandra-accounts</alias>
                                         </network>
                                         <wait>
-                                            <log>/usr/sbin/mysqld: ready for connections. Version: '8.0.2-dmr'  socket: '/var/run/mysqld/mysqld.sock'  port: 3306</log>
+                                            <log>Created default superuser role 'cassandra'</log>
                                             <time>60000</time>
                                         </wait>
                                     </run>
@@ -167,7 +166,7 @@
                                         <volumes>
                                             <bind>
                                                 <volume>${project.basedir}/target/classes/environments/integration:/config</volume>
-                                                <volume>${project.basedir}/../secrets:/keystores</volume>
+                                                <volume>${project.basedir}/../secrets:/secrets</volume>
                                             </bind>
                                         </volumes>
                                         <network>
@@ -180,7 +179,7 @@
                                             <time>30000</time>
                                         </wait>
                                         <dependsOn>
-                                            <container>database-accounts</container>
+                                            <container>cassandra-accounts</container>
                                         </dependsOn>
                                     </run>
                                 </image>
@@ -200,8 +199,8 @@
                                     <name>${environment}-${colour}-shop/accounts:${project.version}</name>
                                 </image>
                                 <image>
-                                    <alias>database-accounts</alias>
-                                    <name>mysql:8.0.2</name>
+                                    <alias>cassandra-accounts</alias>
+                                    <name>nextbreakpoint/cassandra:3.11</name>
                                 </image>
                             </images>
                         </configuration>
@@ -246,7 +245,7 @@
                                         <volumes>
                                             <bind>
                                                 <volume>${project.basedir}/target/classes/environments/docker:/config</volume>
-                                                <volume>${project.basedir}/../secrets:/keystores</volume>
+                                                <volume>${project.basedir}/../secrets:/secrets</volume>
                                             </bind>
                                         </volumes>
                                         <network>
@@ -277,28 +276,12 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.hsqldb</groupId>
-            <artifactId>hsqldb</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.liquibase</groupId>
-            <artifactId>liquibase-core</artifactId>
-        </dependency>
-        <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-core</artifactId>
         </dependency>
         <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-web</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.vertx</groupId>
-            <artifactId>vertx-jdbc-client</artifactId>
         </dependency>
         <dependency>
             <groupId>io.vertx</groupId>
@@ -323,10 +306,6 @@
         <dependency>
             <groupId>io.dropwizard.metrics</groupId>
             <artifactId>metrics-graphite</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.mattbertolini</groupId>
-            <artifactId>liquibase-slf4j</artifactId>
         </dependency>
         <dependency>
             <groupId>io.vertx</groupId>

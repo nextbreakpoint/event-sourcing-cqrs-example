@@ -40,7 +40,7 @@ public class TestHelper {
 
     private static JWTAuth createJWTProvider(Vertx vertx) {
         final KeyStoreOptions options = new KeyStoreOptions()
-                .setPath("../keystores/keystore-auth.jceks")
+                .setPath("../secrets/keystore-auth.jceks")
                 .setType("jceks")
                 .setPassword("secret");
 

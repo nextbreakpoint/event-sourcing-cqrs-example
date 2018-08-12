@@ -9,12 +9,9 @@ COPY entrypoint.sh /entrypoint.sh
 
 RUN chmod u+x /entrypoint.sh
 
-VOLUME /config
-VOLUME /keystores
-
 EXPOSE ${container.port}
 
-ENV SERVICE_JAR ${service.jar}
 ENV CONFIG_NAME ${config.name}
+ENV SERVICE_JAR ${service.jar}
 
 ENTRYPOINT ["/entrypoint.sh"]

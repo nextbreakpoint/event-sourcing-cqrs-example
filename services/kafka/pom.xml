@@ -8,7 +8,7 @@
         <version>1.0.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>com.nextbreakpoint.shop.cassandra</artifactId>
+    <artifactId>com.nextbreakpoint.shop.kafka</artifactId>
     <packaging>pom</packaging>
     <build>
         <plugins>
@@ -28,29 +28,23 @@
                             <autoCreateCustomNetworks>true</autoCreateCustomNetworks>
                             <images>
                                 <image>
-                                    <name>nextbreakpoint/cassandra:3.11-1</name>
-                                    <alias>cassandra</alias>
+                                    <name>nextbreakpoint/kafka:1.1.0-1</name>
+                                    <alias>kafka</alias>
                                     <run>
                                         <ports>
-                                            <port>9042:9042</port>
+                                            <port>9092:9092</port>
                                         </ports>
                                         <env>
-                                            <CASSANDRA_RACK>rack1</CASSANDRA_RACK>
-                                            <CASSANDRA_DC>datacenter1</CASSANDRA_DC>
-                                            <JVM_OPTS>-Xms2G -Xmx2G</JVM_OPTS>
+                                          <ZK_CONNECT>zookeeper:2181</ZK_CONNECT>
+                                          <BROKER_ID>1</BROKER_ID>
                                         </env>
-                                        <volumes>
-                                            <bind>
-                                                <volume>${project.basedir}/scripts:/docker-entrypoint-initdb.d</volume>
-                                            </bind>
-                                        </volumes>
                                         <network>
                                             <mode>custom</mode>
                                             <name>shop-dev</name>
-                                            <alias>cassandra</alias>
+                                            <alias>kafka</alias>
                                         </network>
                                         <wait>
-                                            <log>Created default superuser role 'cassandra'</log>
+                                            <log>started \(kafka.server.KafkaServer\)</log>
                                             <time>60000</time>
                                         </wait>
                                     </run>
@@ -67,8 +61,8 @@
                         <configuration>
                             <images>
                                 <image>
-                                    <name>nextbreakpoint/cassandra:3.11-1</name>
-                                    <alias>cassandra</alias>
+                                    <name>nextbreakpoint/kafka:1.1.0-1</name>
+                                    <alias>kafka</alias>
                                 </image>
                             </images>
                         </configuration>

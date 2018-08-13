@@ -91,8 +91,8 @@
                 <configuration>
                     <images>
                         <image>
-                            <alias>web-service</alias>
                             <name>${environment}-${colour}-shop/web:${project.version}</name>
+                            <alias>service-web</alias>
                             <build>
                                 <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
                                 <filter>${*}</filter>
@@ -121,8 +121,8 @@
                             <showLogs>true</showLogs>
                             <images>
                                 <image>
-                                    <alias>service-web</alias>
                                     <name>${environment}-${colour}-shop/web:${project.version}</name>
+                                    <alias>service-web</alias>
                                     <build>
                                         <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
                                         <filter>${*}</filter>
@@ -180,8 +180,8 @@
                             <showLogs>true</showLogs>
                             <images>
                                 <image>
-                                    <alias>web-service</alias>
                                     <name>${environment}-${colour}-shop/web:${project.version}</name>
+                                    <alias>service-web</alias>
                                     <build>
                                         <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
                                         <filter>${*}</filter>

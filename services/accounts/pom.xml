@@ -91,8 +91,8 @@
                 <configuration>
                     <images>
                         <image>
-                            <alias>accounts</alias>
                             <name>${environment}-${colour}-shop/accounts:${project.version}</name>
+                            <alias>service-accounts</alias>
                             <build>
                                 <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
                                 <filter>${*}</filter>
@@ -122,7 +122,7 @@
                             <autoCreateCustomNetworks>true</autoCreateCustomNetworks>
                             <images>
                                 <image>
-                                    <name>nextbreakpoint/cassandra:3.11</name>
+                                    <name>nextbreakpoint/cassandra:3.11-1</name>
                                     <alias>cassandra-accounts</alias>
                                     <run>
                                         <ports>
@@ -150,8 +150,8 @@
                                     </run>
                                 </image>
                                 <image>
-                                    <alias>service-accounts</alias>
                                     <name>${environment}-${colour}-shop/accounts:${project.version}</name>
+                                    <alias>service-accounts</alias>
                                     <build>
                                         <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
                                         <filter>${*}</filter>
@@ -195,12 +195,12 @@
                         <configuration>
                             <images>
                                 <image>
-                                    <alias>service-accounts</alias>
                                     <name>${environment}-${colour}-shop/accounts:${project.version}</name>
+                                    <alias>service-accounts</alias>
                                 </image>
                                 <image>
+                                    <name>nextbreakpoint/cassandra:3.11-1</name>
                                     <alias>cassandra-accounts</alias>
-                                    <name>nextbreakpoint/cassandra:3.11</name>
                                 </image>
                             </images>
                         </configuration>
@@ -229,8 +229,8 @@
                             <showLogs>true</showLogs>
                             <images>
                                 <image>
-                                    <alias>service</alias>
                                     <name>${environment}-${colour}-shop/accounts:${project.version}</name>
+                                    <alias>service-accounts</alias>
                                     <build>
                                         <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
                                         <filter>${*}</filter>

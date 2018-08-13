@@ -91,8 +91,8 @@
                 <configuration>
                     <images>
                         <image>
-                            <alias>designs-service</alias>
                             <name>${environment}-${colour}-shop/designs:${project.version}</name>
+                            <alias>designs-service</alias>
                             <build>
                                 <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
                                 <filter>${*}</filter>
@@ -150,8 +150,8 @@
                                     </run>
                                 </image>
                                 <image>
-                                    <alias>service-designs</alias>
                                     <name>${environment}-${colour}-shop/designs:${project.version}</name>
+                                    <alias>service-designs</alias>
                                     <build>
                                         <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
                                         <filter>${*}</filter>
@@ -195,12 +195,12 @@
                         <configuration>
                             <images>
                                 <image>
-                                    <alias>service-designs</alias>
                                     <name>${environment}-${colour}-shop/designs:${project.version}</name>
+                                    <alias>service-designs</alias>
                                 </image>
                                 <image>
-                                    <alias>cassandra-designs</alias>
                                     <name>nextbreakpoint/cassandra:3.11</name>
+                                    <alias>cassandra-designs</alias>
                                 </image>
                             </images>
                         </configuration>
@@ -229,8 +229,8 @@
                             <showLogs>true</showLogs>
                             <images>
                                 <image>
-                                    <alias>service</alias>
                                     <name>${environment}-${colour}-shop/designs:${project.version}</name>
+                                    <alias>service-designs</alias>
                                     <build>
                                         <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
                                         <filter>${*}</filter>

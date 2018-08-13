@@ -28,8 +28,8 @@
                             <autoCreateCustomNetworks>true</autoCreateCustomNetworks>
                             <images>
                                 <image>
-                                    <alias>service-nginx</alias>
                                     <name>nginx:latest</name>
+                                    <alias>nginx</alias>
                                     <run>
                                         <privileged>true</privileged>
                                         <ports>
@@ -62,8 +62,8 @@
                         <configuration>
                             <images>
                                 <image>
-                                    <alias>nginx</alias>
                                     <name>nginx:latest</name>
+                                    <alias>nginx</alias>
                                 </image>
                             </images>
                         </configuration>

@@ -88,21 +88,6 @@
                 <groupId>io.fabric8</groupId>
                 <artifactId>docker-maven-plugin</artifactId>
                 <version>${docker-maven-plugin.version}</version>
-                <configuration>
-                    <images>
-                        <image>
-                            <name>${environment}-${colour}-shop/auth:${project.version}</name>
-                            <alias>service-auth</alias>
-                            <build>
-                                <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
-                                <filter>${*}</filter>
-                                <assembly>
-                                    <descriptorRef>artifact-with-dependencies</descriptorRef>
-                                </assembly>
-                            </build>
-                        </image>
-                    </images>
-                </configuration>
                 <executions>
                     <execution>
                         <id>build-integration-test</id>
@@ -110,9 +95,24 @@
                         <goals>
                             <goal>build</goal>
                         </goals>
+                        <configuration>
+                            <images>
+                                <image>
+                                    <name>${environment}-${colour}-shop/auth:${project.version}</name>
+                                    <alias>service-auth</alias>
+                                    <build>
+                                        <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
+                                        <filter>${*}</filter>
+                                        <assembly>
+                                            <descriptorRef>artifact-with-dependencies</descriptorRef>
+                                        </assembly>
+                                    </build>
+                                </image>
+                            </images>
+                        </configuration>
                     </execution>
                     <execution>
-                        <id>start</id>
+                        <id>start-integration-test</id>
                         <phase>pre-integration-test</phase>
                         <goals>
                             <goal>start</goal>
@@ -150,11 +150,19 @@
                         </configuration>
                     </execution>
                     <execution>
-                        <id>stop</id>
+                        <id>stop-integration-test</id>
                         <phase>post-integration-test</phase>
                         <goals>
                             <goal>stop</goal>
                         </goals>
+                        <configuration>
+                            <images>
+                                <image>
+                                    <name>${environment}-${colour}-shop/auth:${project.version}</name>
+                                    <alias>service-auth</alias>
+                                </image>
+                            </images>
+                        </configuration>
                     </execution>
                     <execution>
                         <id>package</id>
@@ -162,6 +170,21 @@
                         <goals>
                             <goal>build</goal>
                         </goals>
+                        <configuration>
+                            <images>
+                                <image>
+                                    <name>${environment}-${colour}-shop/auth:${project.version}</name>
+                                    <alias>service-auth</alias>
+                                    <build>
+                                        <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
+                                        <filter>${*}</filter>
+                                        <assembly>
+                                            <descriptorRef>artifact-with-dependencies</descriptorRef>
+                                        </assembly>
+                                    </build>
+                                </image>
+                            </images>
+                        </configuration>
                     </execution>
                     <execution>
                         <id>push</id>
@@ -169,9 +192,17 @@
                         <goals>
                             <goal>push</goal>
                         </goals>
+                        <configuration>
+                            <images>
+                                <image>
+                                    <name>${environment}-${colour}-shop/auth:${project.version}</name>
+                                    <alias>service-auth</alias>
+                                </image>
+                            </images>
+                        </configuration>
                     </execution>
                     <execution>
-                        <id>start-dev</id>
+                        <id>start-service</id>
                         <phase>none</phase>
                         <goals>
                             <goal>start</goal>
@@ -210,11 +241,19 @@
                         </configuration>
                     </execution>
                     <execution>
-                        <id>stop-dev</id>
+                        <id>stop-service</id>
                         <phase>none</phase>
                         <goals>
                             <goal>stop</goal>
                         </goals>
+                        <configuration>
+                            <images>
+                                <image>
+                                    <name>${environment}-${colour}-shop/auth:${project.version}</name>
+                                    <alias>service-auth</alias>
+                                </image>
+                            </images>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>

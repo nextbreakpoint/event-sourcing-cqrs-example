@@ -18,7 +18,7 @@
                 <version>${docker-maven-plugin.version}</version>
                 <executions>
                     <execution>
-                        <id>start-dev</id>
+                        <id>start-infrastructure</id>
                         <phase>none</phase>
                         <goals>
                             <goal>start</goal>
@@ -53,7 +53,7 @@
                         </configuration>
                     </execution>
                     <execution>
-                        <id>stop-dev</id>
+                        <id>stop-infrastructure</id>
                         <phase>none</phase>
                         <goals>
                             <goal>stop</goal>

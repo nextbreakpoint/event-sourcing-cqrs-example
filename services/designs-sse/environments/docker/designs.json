@@ -1,0 +1,25 @@
+{
+  "host_port": 3001,
+
+  "server_keystore_path": "../secrets/keystore-server.jks",
+  "server_keystore_secret": "secret",
+
+  "jwt_keystore_path": "../secrets/keystore-auth.jceks",
+  "jwt_keystore_type": "jceks",
+  "jwt_keystore_secret": "secret",
+
+  "client_web_url": "https://localhost",
+
+  "graphite_reporter_enabled": false,
+  "graphite_host": "localhost",
+  "graphite_port": 2003,
+
+  "cassandra_cluster": "test",
+  "cassandra_keyspace": "designs",
+  "cassandra_username": "admin",
+  "cassandra_password": "password",
+  "cassandra_contactPoint": "cassandra",
+  "cassandra_port": 9042,
+
+  "max_execution_time_in_millis": 30000
+}

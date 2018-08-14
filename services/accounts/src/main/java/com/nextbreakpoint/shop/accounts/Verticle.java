@@ -100,8 +100,6 @@ public class Verticle extends AbstractVerticle {
     }
 
     private Void createServer(JsonObject config) throws Exception {
-//        CassandraMigrationManager.migrateDatabase(config);
-
         GraphiteManager.configureMetrics(config);
 
         final Integer port = config.getInteger("host_port");

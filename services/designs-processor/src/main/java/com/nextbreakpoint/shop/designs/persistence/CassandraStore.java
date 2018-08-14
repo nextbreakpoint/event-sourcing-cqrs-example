@@ -1,69 +1,45 @@
-package com.nextbreakpoint.shop.designs;
+package com.nextbreakpoint.shop.designs.persistence;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.ResultSetFuture;
 import com.datastax.driver.core.Session;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.nextbreakpoint.shop.designs.delete.DeleteDesignRequest;
-import com.nextbreakpoint.shop.designs.delete.DeleteDesignResponse;
-import com.nextbreakpoint.shop.designs.delete.DeleteDesignsRequest;
-import com.nextbreakpoint.shop.designs.delete.DeleteDesignsResponse;
-import com.nextbreakpoint.shop.designs.insert.InsertDesignRequest;
-import com.nextbreakpoint.shop.designs.insert.InsertDesignResponse;
-import com.nextbreakpoint.shop.designs.update.UpdateDesignRequest;
-import com.nextbreakpoint.shop.designs.update.UpdateDesignResponse;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import rx.Single;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import static com.nextbreakpoint.shop.common.TimeUtil.TIMESTAMP_PATTERN;
 
-public class CassandraStore implements Store {
+public class CassandraStore implements com.nextbreakpoint.shop.designs.Store {
     private final Logger logger = LoggerFactory.getLogger(CassandraStore.class.getName());
 
     private static final String ERROR_INSERT_DESIGN = "An error occurred while inserting a design";
     private static final String ERROR_UPDATE_DESIGN = "An error occurred while updating a design";
-    private static final String ERROR_LOAD_DESIGN = "An error occurred while loading a design";
     private static final String ERROR_DELETE_DESIGN = "An error occurred while deleting a design";
     private static final String ERROR_DELETE_DESIGNS = "An error occurred while deleting all designs";
-    private static final String ERROR_LIST_DESIGNS = "An error occurred while loading designs";
-    private static final String ERROR_GET_DESIGNS_STATUS = "An error occurred while loading designs status";
-    private static final String ERROR_GET_DESIGN_STATUS = "An error occurred while loading design status";
 
     private static final String INSERT_DESIGN = "INSERT INTO DESIGNS (UUID, JSON, CREATED, UPDATED) VALUES (?, ?, toTimeStamp(now()), toTimeStamp(now()))";
     private static final String UPDATE_DESIGN = "UPDATE DESIGNS SET JSON=?, UPDATED=toTimeStamp(now()) WHERE UUID=?";
-    private static final String SELECT_DESIGN = "SELECT * FROM DESIGNS WHERE UUID = ?";
     private static final String DELETE_DESIGN = "DELETE FROM DESIGNS WHERE UUID = ?";
     private static final String DELETE_DESIGNS = "TRUNCATE DESIGNS";
-    private static final String SELECT_DESIGNS = "SELECT * FROM DESIGNS";
-    private static final String SELECT_STATUS = "SELECT NAME,MODIFIED FROM STATE WHERE NAME = 'designs'";
-    private static final String UPDATE_STATUS = "UPDATE STATE SET MODIFIED = toTimeStamp(now()) WHERE NAME = 'designs'";
-    private static final String FIND_DESIGNS = "SELECT UUID,UPDATED FROM DESIGNS WHERE UUID IN ($params)";
 
     private static final int EXECUTE_TIMEOUT = 10;
 
     private final Session session;
 
-    private final ListenableFuture<PreparedStatement> updateStatus;
     private final ListenableFuture<PreparedStatement> insertDesign;
     private final ListenableFuture<PreparedStatement> updateDesign;
     private final ListenableFuture<PreparedStatement> deleteDesign;
     private final ListenableFuture<PreparedStatement> deleteDesigns;
-    private final Map<Integer, ListenableFuture<PreparedStatement>> selectDesignsByUUIDS = new HashMap<>();
 
     public CassandraStore(Session session) {
         this.session = Objects.requireNonNull(session);
-        updateStatus = session.prepareAsync(UPDATE_STATUS);
         insertDesign = session.prepareAsync(INSERT_DESIGN);
         updateDesign = session.prepareAsync(UPDATE_DESIGN);
         deleteDesign = session.prepareAsync(DELETE_DESIGN);
@@ -168,10 +144,6 @@ public class CassandraStore implements Store {
 
     private void handleError(String message, Throwable err) {
         logger.error(message, err);
-    }
-
-    private String makeParams(int size) {
-        return IntStream.range(0, size).mapToObj(i -> "?").collect(Collectors.joining(","));
     }
 
     private String formatDate(Date value) {

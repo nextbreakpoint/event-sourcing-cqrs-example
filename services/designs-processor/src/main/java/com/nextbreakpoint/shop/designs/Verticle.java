@@ -1,11 +1,15 @@
 package com.nextbreakpoint.shop.designs;
 
+import com.datastax.driver.core.Cluster;
+import com.datastax.driver.core.Session;
 import com.nextbreakpoint.shop.common.CORSHandlerFactory;
+import com.nextbreakpoint.shop.common.CassandraClusterFactory;
 import com.nextbreakpoint.shop.common.Failure;
 import com.nextbreakpoint.shop.common.GraphiteManager;
 import com.nextbreakpoint.shop.common.JWTProviderFactory;
 import com.nextbreakpoint.shop.common.ResponseHelper;
 import com.nextbreakpoint.shop.common.ServerUtil;
+import com.nextbreakpoint.shop.designs.persistence.CassandraStore;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Launcher;
@@ -71,8 +75,6 @@ public class Verticle extends AbstractVerticle {
     }
 
     private Void createServer(JsonObject config) throws Exception {
-//        CassandraMigrationManager.migrateDatabase(config);
-
         GraphiteManager.configureMetrics(config);
 
         final Integer port = config.getInteger("host_port");
@@ -82,6 +84,12 @@ public class Verticle extends AbstractVerticle {
         final String keyspace = config.getString("cassandra_keyspace");
 
         final JWTAuth jwtProvider = JWTProviderFactory.create(vertx, config);
+
+        final Cluster cluster = CassandraClusterFactory.create(config);
+
+        final Session session = cluster.connect(keyspace);
+
+        final Store store = new CassandraStore(session);
 
         final Router mainRouter = Router.router(vertx);
 

@@ -122,34 +122,6 @@
                             <autoCreateCustomNetworks>true</autoCreateCustomNetworks>
                             <images>
                                 <image>
-                                    <name>nextbreakpoint/cassandra:3.11</name>
-                                    <alias>cassandra-designs</alias>
-                                    <run>
-                                        <ports>
-                                            <port>9042:9042</port>
-                                        </ports>
-                                        <env>
-                                            <CASSANDRA_RACK>rack1</CASSANDRA_RACK>
-                                            <CASSANDRA_DC>datacenter1</CASSANDRA_DC>
-                                            <JVM_OPTS>-Xms2G -Xmx2G</JVM_OPTS>
-                                        </env>
-                                        <volumes>
-                                            <bind>
-                                                <volume>${project.basedir}/scripts:/docker-entrypoint-initdb.d</volume>
-                                            </bind>
-                                        </volumes>
-                                        <network>
-                                            <mode>custom</mode>
-                                            <name>shop-test</name>
-                                            <alias>cassandra-designs</alias>
-                                        </network>
-                                        <wait>
-                                            <log>Created default superuser role 'cassandra'</log>
-                                            <time>60000</time>
-                                        </wait>
-                                    </run>
-                                </image>
-                                <image>
                                     <name>${environment}-${colour}-shop/designs:${project.version}</name>
                                     <alias>service-designs-command</alias>
                                     <build>
@@ -178,9 +150,6 @@
                                             <log>Succeeded in deploying verticle</log>
                                             <time>60000</time>
                                         </wait>
-                                        <dependsOn>
-                                            <container>cassandra-designs</container>
-                                        </dependsOn>
                                     </run>
                                 </image>
                             </images>
@@ -197,10 +166,6 @@
                                 <image>
                                     <name>${environment}-${colour}-shop/designs:${project.version}</name>
                                     <alias>service-designs-command</alias>
-                                </image>
-                                <image>
-                                    <name>nextbreakpoint/cassandra:3.11</name>
-                                    <alias>cassandra-designs</alias>
                                 </image>
                             </images>
                         </configuration>
@@ -337,14 +302,6 @@
         <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-dropwizard-metrics</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.cognitor.cassandra</groupId>
-            <artifactId>cassandra-migration</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.datastax.cassandra</groupId>
-            <artifactId>cassandra-driver-core</artifactId>
         </dependency>
         <dependency>
             <groupId>io.dropwizard.metrics</groupId>

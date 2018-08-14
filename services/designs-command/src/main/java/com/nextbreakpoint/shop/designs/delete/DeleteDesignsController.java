@@ -1,20 +1,20 @@
 package com.nextbreakpoint.shop.designs.delete;
 
 import com.nextbreakpoint.shop.common.Controller;
-import com.nextbreakpoint.shop.designs.Store;
+import io.vertx.rxjava.kafka.client.producer.KafkaProducer;
 import rx.Single;
 
 import java.util.Objects;
 
 public class DeleteDesignsController implements Controller<DeleteDesignsRequest, DeleteDesignsResponse> {
-    private final Store store;
+    private final KafkaProducer<String, String> producer;
 
-    public DeleteDesignsController(Store store) {
-        this.store = Objects.requireNonNull(store);
+    public DeleteDesignsController(KafkaProducer<String, String> producer) {
+        this.producer = Objects.requireNonNull(producer);
     }
 
     @Override
     public Single<DeleteDesignsResponse> apply(DeleteDesignsRequest request) {
-        return store.deleteDesigns(request);
+        return Single.error(new RuntimeException());
     }
 }

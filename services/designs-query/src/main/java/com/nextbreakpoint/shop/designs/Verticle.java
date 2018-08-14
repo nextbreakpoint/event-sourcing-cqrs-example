@@ -13,27 +13,18 @@ import com.nextbreakpoint.shop.common.GraphiteManager;
 import com.nextbreakpoint.shop.common.JWTProviderFactory;
 import com.nextbreakpoint.shop.common.ResponseHelper;
 import com.nextbreakpoint.shop.common.ServerUtil;
-import com.nextbreakpoint.shop.designs.get.GetStatusController;
-import com.nextbreakpoint.shop.designs.get.GetStatusRequest;
-import com.nextbreakpoint.shop.designs.get.GetStatusRequestMapper;
-import com.nextbreakpoint.shop.designs.get.GetStatusResponse;
-import com.nextbreakpoint.shop.designs.get.GetStatusResponseMapper;
 import com.nextbreakpoint.shop.designs.get.GetTileHandler;
 import com.nextbreakpoint.shop.designs.list.ListDesignsController;
 import com.nextbreakpoint.shop.designs.list.ListDesignsRequest;
 import com.nextbreakpoint.shop.designs.list.ListDesignsRequestMapper;
 import com.nextbreakpoint.shop.designs.list.ListDesignsResponse;
 import com.nextbreakpoint.shop.designs.list.ListDesignsResponseMapper;
-import com.nextbreakpoint.shop.designs.list.ListStatusController;
-import com.nextbreakpoint.shop.designs.list.ListStatusRequest;
-import com.nextbreakpoint.shop.designs.list.ListStatusRequestMapper;
-import com.nextbreakpoint.shop.designs.list.ListStatusResponse;
-import com.nextbreakpoint.shop.designs.list.ListStatusResponseMapper;
 import com.nextbreakpoint.shop.designs.load.LoadDesignController;
 import com.nextbreakpoint.shop.designs.load.LoadDesignRequest;
 import com.nextbreakpoint.shop.designs.load.LoadDesignRequestMapper;
 import com.nextbreakpoint.shop.designs.load.LoadDesignResponse;
 import com.nextbreakpoint.shop.designs.load.LoadDesignResponseMapper;
+import com.nextbreakpoint.shop.designs.persistence.CassandraStore;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Launcher;
@@ -105,8 +96,6 @@ public class Verticle extends AbstractVerticle {
     }
 
     private Void createServer(JsonObject config) throws Exception {
-//        CassandraMigrationManager.migrateDatabase(config);
-
         GraphiteManager.configureMetrics(config);
 
         final Integer port = config.getInteger("host_port");
@@ -144,10 +133,6 @@ public class Verticle extends AbstractVerticle {
 
         final Handler loadDesignHandler = new AccessHandler(jwtProvider, createLoadDesignHandler(store), onAccessDenied, asList(ADMIN, GUEST, ANONYMOUS));
 
-        final Handler getStatusHandler = new AccessHandler(jwtProvider, createGetStatusHandler(store), onAccessDenied, asList(ADMIN, GUEST, ANONYMOUS));
-
-        final Handler getStatusListHandler = new AccessHandler(jwtProvider, createListStatusHandler(store), onAccessDenied, asList(ADMIN, GUEST, ANONYMOUS));
-
         apiRouter.get("/designs/:uuid/:zoom/:x/:y/:size.png")
                 .produces(IMAGE_PNG)
                 .handler(getTileHandler);
@@ -165,14 +150,6 @@ public class Verticle extends AbstractVerticle {
 
         apiRouter.options("/designs")
                 .handler(ResponseHelper::sendNoContent);
-
-        apiRouter.get("/designs/status")
-                .produces(APPLICATION_JSON)
-                .handler(getStatusHandler);
-
-        apiRouter.get("/designs/statusList")
-                .produces(APPLICATION_JSON)
-                .handler(getStatusListHandler);
 
         mainRouter.route().failureHandler(ResponseHelper::sendFailure);
 
@@ -209,26 +186,6 @@ public class Verticle extends AbstractVerticle {
                 .with(new LoadDesignResponseMapper())
                 .with(new LoadDesignController(store))
                 .with(new ContentHandler(200, 404))
-                .with(new FailedRequestHandler())
-                .build();
-    }
-
-    private DelegateHandler<GetStatusRequest, GetStatusResponse> createGetStatusHandler(Store store) {
-        return DelegateHandler.<GetStatusRequest, GetStatusResponse>builder()
-                .with(new GetStatusRequestMapper())
-                .with(new GetStatusResponseMapper())
-                .with(new GetStatusController(store))
-                .with(new ContentHandler(200))
-                .with(new FailedRequestHandler())
-                .build();
-    }
-
-    private DelegateHandler<ListStatusRequest, ListStatusResponse> createListStatusHandler(Store store) {
-        return DelegateHandler.<ListStatusRequest, ListStatusResponse>builder()
-                .with(new ListStatusRequestMapper())
-                .with(new ListStatusResponseMapper())
-                .with(new ListStatusController(store))
-                .with(new ContentHandler(200))
                 .with(new FailedRequestHandler())
                 .build();
     }

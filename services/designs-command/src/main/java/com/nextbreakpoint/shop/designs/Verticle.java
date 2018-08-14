@@ -1,16 +1,14 @@
 package com.nextbreakpoint.shop.designs;
 
-import com.datastax.driver.core.Cluster;
-import com.datastax.driver.core.Session;
 import com.nextbreakpoint.shop.common.AccessHandler;
 import com.nextbreakpoint.shop.common.CORSHandlerFactory;
-import com.nextbreakpoint.shop.common.CassandraClusterFactory;
 import com.nextbreakpoint.shop.common.ContentHandler;
 import com.nextbreakpoint.shop.common.DelegateHandler;
 import com.nextbreakpoint.shop.common.FailedRequestHandler;
 import com.nextbreakpoint.shop.common.Failure;
 import com.nextbreakpoint.shop.common.GraphiteManager;
 import com.nextbreakpoint.shop.common.JWTProviderFactory;
+import com.nextbreakpoint.shop.common.KafkaClientFactory;
 import com.nextbreakpoint.shop.common.NoContentHandler;
 import com.nextbreakpoint.shop.common.ResponseHelper;
 import com.nextbreakpoint.shop.common.ServerUtil;
@@ -50,6 +48,7 @@ import io.vertx.rxjava.ext.web.handler.CookieHandler;
 import io.vertx.rxjava.ext.web.handler.CorsHandler;
 import io.vertx.rxjava.ext.web.handler.LoggerHandler;
 import io.vertx.rxjava.ext.web.handler.TimeoutHandler;
+import io.vertx.rxjava.kafka.client.producer.KafkaProducer;
 import rx.Single;
 
 import static com.nextbreakpoint.shop.common.Authority.ADMIN;
@@ -102,23 +101,15 @@ public class Verticle extends AbstractVerticle {
     }
 
     private Void createServer(JsonObject config) throws Exception {
-//        CassandraMigrationManager.migrateDatabase(config);
-
         GraphiteManager.configureMetrics(config);
 
         final Integer port = config.getInteger("host_port");
 
         final String webUrl = config.getString("client_web_url");
 
-        final String keyspace = config.getString("cassandra_keyspace");
-
         final JWTAuth jwtProvider = JWTProviderFactory.create(vertx, config);
 
-        final Cluster cluster = CassandraClusterFactory.create(config);
-
-        final Session session = cluster.connect(keyspace);
-
-        final Store store = new CassandraStore(session);
+        final KafkaProducer<String, String> producer = KafkaClientFactory.createProducer(vertx, config);
 
         final Router mainRouter = Router.router(vertx);
 
@@ -135,13 +126,13 @@ public class Verticle extends AbstractVerticle {
 
         final Handler<RoutingContext> onAccessDenied = rc -> rc.fail(Failure.accessDenied("Authorisation failed"));
 
-        final Handler insertDesignHandler = new AccessHandler(jwtProvider, createInsertDesignHandler(store), onAccessDenied, asList(ADMIN));
+        final Handler insertDesignHandler = new AccessHandler(jwtProvider, createInsertDesignHandler(producer), onAccessDenied, asList(ADMIN));
 
-        final Handler updateDesignHandler = new AccessHandler(jwtProvider, createUpdateDesignHandler(store), onAccessDenied, asList(ADMIN));
+        final Handler updateDesignHandler = new AccessHandler(jwtProvider, createUpdateDesignHandler(producer), onAccessDenied, asList(ADMIN));
 
-        final Handler deleteDesignHandler = new AccessHandler(jwtProvider, createDeleteDesignHandler(store), onAccessDenied, asList(ADMIN));
+        final Handler deleteDesignHandler = new AccessHandler(jwtProvider, createDeleteDesignHandler(producer), onAccessDenied, asList(ADMIN));
 
-        final Handler deleteDesignsHandler = new AccessHandler(jwtProvider, createDeleteDesignsHandler(store), onAccessDenied, asList(ADMIN));
+        final Handler deleteDesignsHandler = new AccessHandler(jwtProvider, createDeleteDesignsHandler(producer), onAccessDenied, asList(ADMIN));
 
         apiRouter.post("/designs")
                 .produces(APPLICATION_JSON)
@@ -185,41 +176,41 @@ public class Verticle extends AbstractVerticle {
         return vertx.createSharedWorkerExecutor("worker", poolSize, maxExecuteTime);
     }
 
-    private DelegateHandler<DeleteDesignRequest, DeleteDesignResponse> createDeleteDesignHandler(Store store) {
+    private DelegateHandler<DeleteDesignRequest, DeleteDesignResponse> createDeleteDesignHandler(KafkaProducer<String, String> producer) {
         return DelegateHandler.<DeleteDesignRequest, DeleteDesignResponse>builder()
                 .with(new DeleteDesignRequestMapper())
                 .with(new DeleteDesignResponseMapper())
-                .with(new DeleteDesignController(store))
+                .with(new DeleteDesignController(producer))
                 .with(new ContentHandler(200))
                 .with(new FailedRequestHandler())
                 .build();
     }
 
-    private DelegateHandler<DeleteDesignsRequest, DeleteDesignsResponse> createDeleteDesignsHandler(Store store) {
+    private DelegateHandler<DeleteDesignsRequest, DeleteDesignsResponse> createDeleteDesignsHandler(KafkaProducer<String, String> producer) {
         return DelegateHandler.<DeleteDesignsRequest, DeleteDesignsResponse>builder()
                 .with(new DeleteDesignsRequestMapper())
                 .with(new DeleteDesignsResponseMapper())
-                .with(new DeleteDesignsController(store))
+                .with(new DeleteDesignsController(producer))
                 .with(new NoContentHandler(204))
                 .with(new FailedRequestHandler())
                 .build();
     }
 
-    private DelegateHandler<InsertDesignRequest, InsertDesignResponse> createInsertDesignHandler(Store store) {
+    private DelegateHandler<InsertDesignRequest, InsertDesignResponse> createInsertDesignHandler(KafkaProducer<String, String> producer) {
         return DelegateHandler.<InsertDesignRequest, InsertDesignResponse>builder()
                 .with(new InsertDesignRequestMapper())
                 .with(new InsertDesignResponseMapper())
-                .with(new InsertDesignController(store))
+                .with(new InsertDesignController(producer))
                 .with(new ContentHandler(201))
                 .with(new FailedRequestHandler())
                 .build();
     }
 
-    private DelegateHandler<UpdateDesignRequest, UpdateDesignResponse> createUpdateDesignHandler(Store store) {
+    private DelegateHandler<UpdateDesignRequest, UpdateDesignResponse> createUpdateDesignHandler(KafkaProducer<String, String> producer) {
         return DelegateHandler.<UpdateDesignRequest, UpdateDesignResponse>builder()
                 .with(new UpdateDesignRequestMapper())
                 .with(new UpdateDesignResponseMapper())
-                .with(new UpdateDesignController(store))
+                .with(new UpdateDesignController(producer))
                 .with(new ContentHandler(200))
                 .with(new FailedRequestHandler())
                 .build();

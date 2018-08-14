@@ -71,8 +71,6 @@ public class Verticle extends AbstractVerticle {
     }
 
     private Void createServer(JsonObject config) throws Exception {
-//        CassandraMigrationManager.migrateDatabase(config);
-
         GraphiteManager.configureMetrics(config);
 
         final Integer port = config.getInteger("host_port");
@@ -95,18 +93,6 @@ public class Verticle extends AbstractVerticle {
         apiRouter.route("/designs/*").handler(corsHandler);
 
         final Handler<RoutingContext> onAccessDenied = rc -> rc.fail(Failure.accessDenied("Authorisation failed"));
-
-//        final Handler getStatusHandler = new AccessHandler(jwtProvider, createGetStatusHandler(store), onAccessDenied, asList(ADMIN, GUEST, ANONYMOUS));
-//
-//        final Handler getStatusListHandler = new AccessHandler(jwtProvider, createListStatusHandler(store), onAccessDenied, asList(ADMIN, GUEST, ANONYMOUS));
-//
-//        apiRouter.get("/designs/status")
-//                .produces(APPLICATION_JSON)
-//                .handler(getStatusHandler);
-//
-//        apiRouter.get("/designs/statusList")
-//                .produces(APPLICATION_JSON)
-//                .handler(getStatusListHandler);
 
         mainRouter.route().failureHandler(ResponseHelper::sendFailure);
 

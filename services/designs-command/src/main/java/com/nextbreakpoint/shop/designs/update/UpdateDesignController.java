@@ -1,20 +1,20 @@
 package com.nextbreakpoint.shop.designs.update;
 
 import com.nextbreakpoint.shop.common.Controller;
-import com.nextbreakpoint.shop.designs.Store;
+import io.vertx.rxjava.kafka.client.producer.KafkaProducer;
 import rx.Single;
 
 import java.util.Objects;
 
 public class UpdateDesignController implements Controller<UpdateDesignRequest, UpdateDesignResponse> {
-    private final Store store;
+    private final KafkaProducer<String, String> producer;
 
-    public UpdateDesignController(Store store) {
-        this.store = Objects.requireNonNull(store);
+    public UpdateDesignController(KafkaProducer<String, String> producer) {
+        this.producer = Objects.requireNonNull(producer);
     }
 
     @Override
     public Single<UpdateDesignResponse> apply(UpdateDesignRequest request) {
-        return store.updateDesign(request);
+        return Single.error(new RuntimeException());
     }
 }

@@ -63,7 +63,7 @@ public abstract class WatchHandler implements Handler<RoutingContext> {
 
         final String sessionId = UUID.randomUUID().toString();
 
-        final String lastEventId = routingContext.request().headers().get("Last-Event-ID");
+        final String lastEventId = routingContext.request().headers().get("Last-Message-ID");
 
         if (lastEventId != null) {
             offset = Long.parseLong(lastEventId);

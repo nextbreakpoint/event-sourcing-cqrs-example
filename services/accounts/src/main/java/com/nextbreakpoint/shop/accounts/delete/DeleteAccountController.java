@@ -14,7 +14,7 @@ public class DeleteAccountController implements Controller<DeleteAccountRequest,
     }
 
     @Override
-    public Single<DeleteAccountResponse> apply(DeleteAccountRequest request) {
+    public Single<DeleteAccountResponse> onNext(DeleteAccountRequest request) {
         return store.deleteAccount(request);
     }
 }

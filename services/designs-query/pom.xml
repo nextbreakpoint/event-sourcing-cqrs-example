@@ -145,7 +145,7 @@
                                         </network>
                                         <wait>
                                             <log>Created default superuser role 'cassandra'</log>
-                                            <time>60000</time>
+                                            <time>90000</time>
                                         </wait>
                                     </run>
                                 </image>

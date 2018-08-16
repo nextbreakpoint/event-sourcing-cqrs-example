@@ -21,5 +21,8 @@
   "cassandra_contactPoint": "localhost",
   "cassandra_port": 9042,
 
+  "kafka_bootstrap_servers": "localhost:9092",
+  "kafka_group_id": "designs-sse",
+
   "max_execution_time_in_millis": 30000
 }

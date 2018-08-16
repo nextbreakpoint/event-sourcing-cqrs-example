@@ -1,11 +1,11 @@
 package com.nextbreakpoint.shop.designs.list;
 
-import com.nextbreakpoint.shop.common.RequestMapper;
+import com.nextbreakpoint.shop.common.Mapper;
 import io.vertx.rxjava.ext.web.RoutingContext;
 
-public class ListDesignsRequestMapper implements RequestMapper<ListDesignsRequest> {
+public class ListDesignsRequestMapper implements Mapper<RoutingContext, ListDesignsRequest> {
     @Override
-    public ListDesignsRequest apply(RoutingContext context) {
+    public ListDesignsRequest transform(RoutingContext context) {
         return new ListDesignsRequest();
     }
 }

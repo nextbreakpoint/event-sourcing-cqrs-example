@@ -1,12 +1,12 @@
 package com.nextbreakpoint.shop.accounts.load;
 
-import com.nextbreakpoint.shop.common.ResponseMapper;
-import com.nextbreakpoint.shop.common.Result;
+import com.nextbreakpoint.shop.common.Content;
+import com.nextbreakpoint.shop.common.Mapper;
 import io.vertx.core.json.JsonObject;
 
-public class LoadAccountResponseMapper implements ResponseMapper<LoadAccountResponse> {
+public class LoadAccountResponseMapper implements Mapper<LoadAccountResponse, Content> {
     @Override
-    public Result apply(LoadAccountResponse response) {
+    public Content transform(LoadAccountResponse response) {
         final String json = response.getAccount()
                 .map(Account -> new JsonObject()
                         .put("uuid", Account.getUuid())
@@ -15,6 +15,6 @@ public class LoadAccountResponseMapper implements ResponseMapper<LoadAccountResp
                         .encode())
                 .orElse(null);
 
-        return new Result(json);
+        return new Content(json);
     }
 }

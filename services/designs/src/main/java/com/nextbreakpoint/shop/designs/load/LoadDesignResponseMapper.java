@@ -1,21 +1,21 @@
 package com.nextbreakpoint.shop.designs.load;
 
-import com.nextbreakpoint.shop.common.Header;
-import com.nextbreakpoint.shop.common.ResponseMapper;
-import com.nextbreakpoint.shop.common.Result;
+import com.nextbreakpoint.shop.common.Content;
+import com.nextbreakpoint.shop.common.Metadata;
+import com.nextbreakpoint.shop.common.Mapper;
 import io.vertx.core.json.JsonObject;
 
 import java.util.Collections;
 import java.util.Set;
 
-import static com.nextbreakpoint.shop.common.Headers.MODIFIED;
+import static com.nextbreakpoint.shop.common.Metadata.MODIFIED;
 import static java.util.Collections.singleton;
 
-public class LoadDesignResponseMapper implements ResponseMapper<LoadDesignResponse> {
+public class LoadDesignResponseMapper implements Mapper<LoadDesignResponse, Content> {
     @Override
-    public Result apply(LoadDesignResponse response) {
-        final Set<Header> headers = response.getDesign()
-                .map(design -> singleton(new Header(MODIFIED, String.valueOf(design.getModified()))))
+    public Content transform(LoadDesignResponse response) {
+        final Set<Metadata> metadata = response.getDesign()
+                .map(design -> singleton(new Metadata(MODIFIED, String.valueOf(design.getModified()))))
                 .orElse(Collections.emptySet());
 
         final String json = response.getDesign()
@@ -27,6 +27,6 @@ public class LoadDesignResponseMapper implements ResponseMapper<LoadDesignRespon
                         .encode())
                 .orElse(null);
 
-        return new Result(json, headers);
+        return new Content(json, metadata);
     }
 }

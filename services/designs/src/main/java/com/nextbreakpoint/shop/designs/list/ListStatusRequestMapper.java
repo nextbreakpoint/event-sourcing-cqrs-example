@@ -1,15 +1,15 @@
 package com.nextbreakpoint.shop.designs.list;
 
-import com.nextbreakpoint.shop.common.RequestMapper;
+import com.nextbreakpoint.shop.common.Mapper;
 import io.vertx.core.json.JsonArray;
 import io.vertx.rxjava.ext.web.RoutingContext;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class ListStatusRequestMapper implements RequestMapper<ListStatusRequest> {
+public class ListStatusRequestMapper implements Mapper<RoutingContext, ListStatusRequest> {
     @Override
-    public ListStatusRequest apply(RoutingContext context) {
+    public ListStatusRequest transform(RoutingContext context) {
         final JsonArray jsonArray = context.getBodyAsJsonArray();
 
         final List<String> uuids = new ArrayList<>();

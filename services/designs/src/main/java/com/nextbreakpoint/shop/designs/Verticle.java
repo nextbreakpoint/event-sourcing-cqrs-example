@@ -4,7 +4,7 @@ import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Session;
 import com.nextbreakpoint.shop.common.AccessHandler;
 import com.nextbreakpoint.shop.common.CassandraClusterFactory;
-import com.nextbreakpoint.shop.common.DelegateHandler;
+import com.nextbreakpoint.shop.common.RESTContentHandler;
 import com.nextbreakpoint.shop.common.Failure;
 import com.nextbreakpoint.shop.common.GraphiteManager;
 import com.nextbreakpoint.shop.common.JWTProviderFactory;
@@ -13,23 +13,23 @@ import com.nextbreakpoint.shop.common.CORSHandlerFactory;
 import com.nextbreakpoint.shop.common.ServerUtil;
 import com.nextbreakpoint.shop.common.FailedRequestHandler;
 import com.nextbreakpoint.shop.common.ContentHandler;
-import com.nextbreakpoint.shop.designs.delete.DeleteDesignRequest;
-import com.nextbreakpoint.shop.designs.delete.DeleteDesignController;
-import com.nextbreakpoint.shop.designs.delete.DeleteDesignRequestMapper;
-import com.nextbreakpoint.shop.designs.delete.DeleteDesignResponse;
-import com.nextbreakpoint.shop.designs.delete.DeleteDesignResponseMapper;
+import com.nextbreakpoint.shop.designs.handlers.delete.DeleteDesignRequest;
+import com.nextbreakpoint.shop.designs.handlers.delete.DeleteDesignController;
+import com.nextbreakpoint.shop.designs.handlers.delete.DeleteDesignRequestMapper;
+import com.nextbreakpoint.shop.designs.handlers.delete.DeleteDesignResponse;
+import com.nextbreakpoint.shop.designs.handlers.delete.DeleteDesignResponseMapper;
 import com.nextbreakpoint.shop.common.NoContentHandler;
-import com.nextbreakpoint.shop.designs.delete.DeleteDesignsRequest;
-import com.nextbreakpoint.shop.designs.delete.DeleteDesignsController;
-import com.nextbreakpoint.shop.designs.delete.DeleteDesignsRequestMapper;
-import com.nextbreakpoint.shop.designs.delete.DeleteDesignsResponse;
-import com.nextbreakpoint.shop.designs.delete.DeleteDesignsResponseMapper;
+import com.nextbreakpoint.shop.designs.handlers.delete.DeleteDesignsRequest;
+import com.nextbreakpoint.shop.designs.handlers.delete.DeleteDesignsController;
+import com.nextbreakpoint.shop.designs.handlers.delete.DeleteDesignsRequestMapper;
+import com.nextbreakpoint.shop.designs.handlers.delete.DeleteDesignsResponse;
+import com.nextbreakpoint.shop.designs.handlers.delete.DeleteDesignsResponseMapper;
 import com.nextbreakpoint.shop.designs.get.GetTileHandler;
-import com.nextbreakpoint.shop.designs.insert.InsertDesignRequest;
-import com.nextbreakpoint.shop.designs.insert.InsertDesignController;
-import com.nextbreakpoint.shop.designs.insert.InsertDesignRequestMapper;
-import com.nextbreakpoint.shop.designs.insert.InsertDesignResponse;
-import com.nextbreakpoint.shop.designs.insert.InsertDesignResponseMapper;
+import com.nextbreakpoint.shop.designs.handlers.insert.InsertDesignRequest;
+import com.nextbreakpoint.shop.designs.handlers.insert.InsertDesignController;
+import com.nextbreakpoint.shop.designs.handlers.insert.InsertDesignRequestMapper;
+import com.nextbreakpoint.shop.designs.handlers.insert.InsertDesignResponse;
+import com.nextbreakpoint.shop.designs.handlers.insert.InsertDesignResponseMapper;
 import com.nextbreakpoint.shop.designs.list.ListDesignsRequest;
 import com.nextbreakpoint.shop.designs.list.ListDesignsController;
 import com.nextbreakpoint.shop.designs.list.ListDesignsRequestMapper;
@@ -50,11 +50,11 @@ import com.nextbreakpoint.shop.designs.list.ListStatusController;
 import com.nextbreakpoint.shop.designs.list.ListStatusRequestMapper;
 import com.nextbreakpoint.shop.designs.list.ListStatusResponse;
 import com.nextbreakpoint.shop.designs.list.ListStatusResponseMapper;
-import com.nextbreakpoint.shop.designs.update.UpdateDesignRequest;
-import com.nextbreakpoint.shop.designs.update.UpdateDesignController;
-import com.nextbreakpoint.shop.designs.update.UpdateDesignRequestMapper;
-import com.nextbreakpoint.shop.designs.update.UpdateDesignResponse;
-import com.nextbreakpoint.shop.designs.update.UpdateDesignResponseMapper;
+import com.nextbreakpoint.shop.designs.handlers.update.UpdateDesignRequest;
+import com.nextbreakpoint.shop.designs.handlers.update.UpdateDesignController;
+import com.nextbreakpoint.shop.designs.handlers.update.UpdateDesignRequestMapper;
+import com.nextbreakpoint.shop.designs.handlers.update.UpdateDesignResponse;
+import com.nextbreakpoint.shop.designs.handlers.update.UpdateDesignResponseMapper;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Launcher;
@@ -81,8 +81,8 @@ import static com.nextbreakpoint.shop.common.ContentType.IMAGE_PNG;
 import static com.nextbreakpoint.shop.common.Headers.ACCEPT;
 import static com.nextbreakpoint.shop.common.Headers.AUTHORIZATION;
 import static com.nextbreakpoint.shop.common.Headers.CONTENT_TYPE;
-import static com.nextbreakpoint.shop.common.Headers.MODIFIED;
-import static com.nextbreakpoint.shop.common.Headers.XSRFTOKEN;
+import static com.nextbreakpoint.shop.common.Headers.X_MODIFIED;
+import static com.nextbreakpoint.shop.common.Headers.X_XSRF_TOKEN;
 import static com.nextbreakpoint.shop.common.ServerUtil.UUID_REGEXP;
 import static java.util.Arrays.asList;
 
@@ -151,7 +151,7 @@ public class Verticle extends AbstractVerticle {
         mainRouter.route().handler(CookieHandler.create());
         mainRouter.route().handler(TimeoutHandler.create(30000));
 
-        final CorsHandler corsHandler = CORSHandlerFactory.createWithAll(webUrl, asList(AUTHORIZATION, CONTENT_TYPE, ACCEPT, XSRFTOKEN, MODIFIED), asList(CONTENT_TYPE, XSRFTOKEN, MODIFIED));
+        final CorsHandler corsHandler = CORSHandlerFactory.createWithAll(webUrl, asList(AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN, X_MODIFIED), asList(CONTENT_TYPE, X_XSRF_TOKEN, X_MODIFIED));
 
         apiRouter.route("/designs/*").handler(corsHandler);
 
@@ -237,83 +237,83 @@ public class Verticle extends AbstractVerticle {
         return vertx.createSharedWorkerExecutor("worker", poolSize, maxExecuteTime);
     }
 
-    private DelegateHandler<DeleteDesignRequest, DeleteDesignResponse> createDeleteDesignHandler(Store store) {
-        return DelegateHandler.<DeleteDesignRequest, DeleteDesignResponse>builder()
-                .with(new DeleteDesignRequestMapper())
-                .with(new DeleteDesignResponseMapper())
-                .with(new DeleteDesignController(store))
-                .with(new ContentHandler(200))
-                .with(new FailedRequestHandler())
+    private RESTContentHandler<DeleteDesignRequest, DeleteDesignResponse> createDeleteDesignHandler(Store store) {
+        return RESTContentHandler.<DeleteDesignRequest, DeleteDesignResponse>builder()
+                .withInputMapper(new DeleteDesignRequestMapper())
+                .withOutputMapper(new DeleteDesignResponseMapper())
+                .withController(new DeleteDesignController(store))
+                .onSuccess(new ContentHandler(200))
+                .onFailure(new FailedRequestHandler())
                 .build();
     }
 
-    private DelegateHandler<DeleteDesignsRequest, DeleteDesignsResponse> createDeleteDesignsHandler(Store store) {
-        return DelegateHandler.<DeleteDesignsRequest, DeleteDesignsResponse>builder()
-                .with(new DeleteDesignsRequestMapper())
-                .with(new DeleteDesignsResponseMapper())
-                .with(new DeleteDesignsController(store))
-                .with(new NoContentHandler(204))
-                .with(new FailedRequestHandler())
+    private RESTContentHandler<DeleteDesignsRequest, DeleteDesignsResponse> createDeleteDesignsHandler(Store store) {
+        return RESTContentHandler.<DeleteDesignsRequest, DeleteDesignsResponse>builder()
+                .withInputMapper(new DeleteDesignsRequestMapper())
+                .withOutputMapper(new DeleteDesignsResponseMapper())
+                .withController(new DeleteDesignsController(store))
+                .onSuccess(new NoContentHandler(204))
+                .onFailure(new FailedRequestHandler())
                 .build();
     }
 
-    private DelegateHandler<InsertDesignRequest, InsertDesignResponse> createInsertDesignHandler(Store store) {
-        return DelegateHandler.<InsertDesignRequest, InsertDesignResponse>builder()
-                .with(new InsertDesignRequestMapper())
-                .with(new InsertDesignResponseMapper())
-                .with(new InsertDesignController(store))
-                .with(new ContentHandler(201))
-                .with(new FailedRequestHandler())
+    private RESTContentHandler<InsertDesignRequest, InsertDesignResponse> createInsertDesignHandler(Store store) {
+        return RESTContentHandler.<InsertDesignRequest, InsertDesignResponse>builder()
+                .withInputMapper(new InsertDesignRequestMapper())
+                .withOutputMapper(new InsertDesignResponseMapper())
+                .withController(new InsertDesignController(store))
+                .onSuccess(new ContentHandler(201))
+                .onFailure(new FailedRequestHandler())
                 .build();
     }
 
-    private DelegateHandler<UpdateDesignRequest, UpdateDesignResponse> createUpdateDesignHandler(Store store) {
-        return DelegateHandler.<UpdateDesignRequest, UpdateDesignResponse>builder()
-                .with(new UpdateDesignRequestMapper())
-                .with(new UpdateDesignResponseMapper())
-                .with(new UpdateDesignController(store))
-                .with(new ContentHandler(200))
-                .with(new FailedRequestHandler())
+    private RESTContentHandler<UpdateDesignRequest, UpdateDesignResponse> createUpdateDesignHandler(Store store) {
+        return RESTContentHandler.<UpdateDesignRequest, UpdateDesignResponse>builder()
+                .withInputMapper(new UpdateDesignRequestMapper())
+                .withOutputMapper(new UpdateDesignResponseMapper())
+                .withController(new UpdateDesignController(store))
+                .onSuccess(new ContentHandler(200))
+                .onFailure(new FailedRequestHandler())
                 .build();
     }
 
-    private DelegateHandler<ListDesignsRequest, ListDesignsResponse> createListDesignsHandler(Store store) {
-        return DelegateHandler.<ListDesignsRequest, ListDesignsResponse>builder()
-                .with(new ListDesignsRequestMapper())
-                .with(new ListDesignsResponseMapper())
-                .with(new ListDesignsController(store))
-                .with(new ContentHandler(200))
-                .with(new FailedRequestHandler())
+    private RESTContentHandler<ListDesignsRequest, ListDesignsResponse> createListDesignsHandler(Store store) {
+        return RESTContentHandler.<ListDesignsRequest, ListDesignsResponse>builder()
+                .withInputMapper(new ListDesignsRequestMapper())
+                .withOutputMapper(new ListDesignsResponseMapper())
+                .withController(new ListDesignsController(store))
+                .onSuccess(new ContentHandler(200))
+                .onFailure(new FailedRequestHandler())
                 .build();
     }
 
-    private DelegateHandler<LoadDesignRequest, LoadDesignResponse> createLoadDesignHandler(Store store) {
-        return DelegateHandler.<LoadDesignRequest, LoadDesignResponse>builder()
-                .with(new LoadDesignRequestMapper())
-                .with(new LoadDesignResponseMapper())
-                .with(new LoadDesignController(store))
-                .with(new ContentHandler(200, 404))
-                .with(new FailedRequestHandler())
+    private RESTContentHandler<LoadDesignRequest, LoadDesignResponse> createLoadDesignHandler(Store store) {
+        return RESTContentHandler.<LoadDesignRequest, LoadDesignResponse>builder()
+                .withInputMapper(new LoadDesignRequestMapper())
+                .withOutputMapper(new LoadDesignResponseMapper())
+                .withController(new LoadDesignController(store))
+                .onSuccess(new ContentHandler(200, 404))
+                .onFailure(new FailedRequestHandler())
                 .build();
     }
 
-    private DelegateHandler<GetStatusRequest, GetStatusResponse> createGetStatusHandler(Store store) {
-        return DelegateHandler.<GetStatusRequest, GetStatusResponse>builder()
-                .with(new GetStatusRequestMapper())
-                .with(new GetStatusResponseMapper())
-                .with(new GetStatusController(store))
-                .with(new ContentHandler(200))
-                .with(new FailedRequestHandler())
+    private RESTContentHandler<GetStatusRequest, GetStatusResponse> createGetStatusHandler(Store store) {
+        return RESTContentHandler.<GetStatusRequest, GetStatusResponse>builder()
+                .withInputMapper(new GetStatusRequestMapper())
+                .withOutputMapper(new GetStatusResponseMapper())
+                .withController(new GetStatusController(store))
+                .onSuccess(new ContentHandler(200))
+                .onFailure(new FailedRequestHandler())
                 .build();
     }
 
-    private DelegateHandler<ListStatusRequest, ListStatusResponse> createListStatusHandler(Store store) {
-        return DelegateHandler.<ListStatusRequest, ListStatusResponse>builder()
-                .with(new ListStatusRequestMapper())
-                .with(new ListStatusResponseMapper())
-                .with(new ListStatusController(store))
-                .with(new ContentHandler(200))
-                .with(new FailedRequestHandler())
+    private RESTContentHandler<ListStatusRequest, ListStatusResponse> createListStatusHandler(Store store) {
+        return RESTContentHandler.<ListStatusRequest, ListStatusResponse>builder()
+                .withInputMapper(new ListStatusRequestMapper())
+                .withOutputMapper(new ListStatusResponseMapper())
+                .withController(new ListStatusController(store))
+                .onSuccess(new ContentHandler(200))
+                .onFailure(new FailedRequestHandler())
                 .build();
     }
 }

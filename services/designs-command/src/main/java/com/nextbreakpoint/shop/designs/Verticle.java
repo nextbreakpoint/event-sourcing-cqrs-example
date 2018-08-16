@@ -2,36 +2,12 @@ package com.nextbreakpoint.shop.designs;
 
 import com.nextbreakpoint.shop.common.AccessHandler;
 import com.nextbreakpoint.shop.common.CORSHandlerFactory;
-import com.nextbreakpoint.shop.common.ContentHandler;
-import com.nextbreakpoint.shop.common.DelegateHandler;
-import com.nextbreakpoint.shop.common.FailedRequestHandler;
 import com.nextbreakpoint.shop.common.Failure;
 import com.nextbreakpoint.shop.common.GraphiteManager;
 import com.nextbreakpoint.shop.common.JWTProviderFactory;
 import com.nextbreakpoint.shop.common.KafkaClientFactory;
-import com.nextbreakpoint.shop.common.NoContentHandler;
 import com.nextbreakpoint.shop.common.ResponseHelper;
 import com.nextbreakpoint.shop.common.ServerUtil;
-import com.nextbreakpoint.shop.designs.delete.DeleteDesignController;
-import com.nextbreakpoint.shop.designs.delete.DeleteDesignRequest;
-import com.nextbreakpoint.shop.designs.delete.DeleteDesignRequestMapper;
-import com.nextbreakpoint.shop.designs.delete.DeleteDesignResponse;
-import com.nextbreakpoint.shop.designs.delete.DeleteDesignResponseMapper;
-import com.nextbreakpoint.shop.designs.delete.DeleteDesignsController;
-import com.nextbreakpoint.shop.designs.delete.DeleteDesignsRequest;
-import com.nextbreakpoint.shop.designs.delete.DeleteDesignsRequestMapper;
-import com.nextbreakpoint.shop.designs.delete.DeleteDesignsResponse;
-import com.nextbreakpoint.shop.designs.delete.DeleteDesignsResponseMapper;
-import com.nextbreakpoint.shop.designs.insert.InsertDesignController;
-import com.nextbreakpoint.shop.designs.insert.InsertDesignRequest;
-import com.nextbreakpoint.shop.designs.insert.InsertDesignRequestMapper;
-import com.nextbreakpoint.shop.designs.insert.InsertDesignResponse;
-import com.nextbreakpoint.shop.designs.insert.InsertDesignResponseMapper;
-import com.nextbreakpoint.shop.designs.update.UpdateDesignController;
-import com.nextbreakpoint.shop.designs.update.UpdateDesignRequest;
-import com.nextbreakpoint.shop.designs.update.UpdateDesignRequestMapper;
-import com.nextbreakpoint.shop.designs.update.UpdateDesignResponse;
-import com.nextbreakpoint.shop.designs.update.UpdateDesignResponseMapper;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Launcher;
@@ -56,9 +32,13 @@ import static com.nextbreakpoint.shop.common.ContentType.APPLICATION_JSON;
 import static com.nextbreakpoint.shop.common.Headers.ACCEPT;
 import static com.nextbreakpoint.shop.common.Headers.AUTHORIZATION;
 import static com.nextbreakpoint.shop.common.Headers.CONTENT_TYPE;
-import static com.nextbreakpoint.shop.common.Headers.MODIFIED;
-import static com.nextbreakpoint.shop.common.Headers.XSRFTOKEN;
+import static com.nextbreakpoint.shop.common.Headers.X_MODIFIED;
+import static com.nextbreakpoint.shop.common.Headers.X_XSRF_TOKEN;
 import static com.nextbreakpoint.shop.common.ServerUtil.UUID_REGEXP;
+import static com.nextbreakpoint.shop.designs.Factory.createDeleteDesignHandler;
+import static com.nextbreakpoint.shop.designs.Factory.createDeleteDesignsHandler;
+import static com.nextbreakpoint.shop.designs.Factory.createInsertDesignHandler;
+import static com.nextbreakpoint.shop.designs.Factory.createUpdateDesignHandler;
 import static java.util.Arrays.asList;
 
 public class Verticle extends AbstractVerticle {
@@ -67,6 +47,7 @@ public class Verticle extends AbstractVerticle {
     private HttpServer server;
 
     public static void main(String[] args) {
+        System.setProperty("crypto.policy", "unlimited");
         System.setProperty("vertx.metrics.options.enabled", "true");
         System.setProperty("vertx.metrics.options.registryName", "exported");
 
@@ -84,7 +65,7 @@ public class Verticle extends AbstractVerticle {
     }
 
     @Override
-    public void stop(Future<Void> stopFuture) throws Exception {
+    public void stop(Future<Void> stopFuture) {
         if (executor != null) {
             executor.close();
         }
@@ -100,12 +81,16 @@ public class Verticle extends AbstractVerticle {
         Single.fromCallable(() -> createServer(config)).subscribe(x -> future.complete(), err -> future.fail(err));
     }
 
-    private Void createServer(JsonObject config) throws Exception {
+    private Void createServer(JsonObject config) {
         GraphiteManager.configureMetrics(config);
 
         final Integer port = config.getInteger("host_port");
 
         final String webUrl = config.getString("client_web_url");
+
+        final String topic = config.getString("events_topic");
+
+        final String messageSource = config.getString("message_source");
 
         final JWTAuth jwtProvider = JWTProviderFactory.create(vertx, config);
 
@@ -120,19 +105,19 @@ public class Verticle extends AbstractVerticle {
         mainRouter.route().handler(CookieHandler.create());
         mainRouter.route().handler(TimeoutHandler.create(30000));
 
-        final CorsHandler corsHandler = CORSHandlerFactory.createWithAll(webUrl, asList(AUTHORIZATION, CONTENT_TYPE, ACCEPT, XSRFTOKEN, MODIFIED), asList(CONTENT_TYPE, XSRFTOKEN, MODIFIED));
+        final CorsHandler corsHandler = CORSHandlerFactory.createWithAll(webUrl, asList(AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN, X_MODIFIED), asList(CONTENT_TYPE, X_XSRF_TOKEN, X_MODIFIED));
 
         apiRouter.route("/designs/*").handler(corsHandler);
 
         final Handler<RoutingContext> onAccessDenied = rc -> rc.fail(Failure.accessDenied("Authorisation failed"));
 
-        final Handler insertDesignHandler = new AccessHandler(jwtProvider, createInsertDesignHandler(producer), onAccessDenied, asList(ADMIN));
+        final Handler insertDesignHandler = new AccessHandler(jwtProvider, createInsertDesignHandler(producer, topic, messageSource), onAccessDenied, asList(ADMIN));
 
-        final Handler updateDesignHandler = new AccessHandler(jwtProvider, createUpdateDesignHandler(producer), onAccessDenied, asList(ADMIN));
+        final Handler updateDesignHandler = new AccessHandler(jwtProvider, createUpdateDesignHandler(producer, topic, messageSource), onAccessDenied, asList(ADMIN));
 
-        final Handler deleteDesignHandler = new AccessHandler(jwtProvider, createDeleteDesignHandler(producer), onAccessDenied, asList(ADMIN));
+        final Handler deleteDesignHandler = new AccessHandler(jwtProvider, createDeleteDesignHandler(producer, topic, messageSource), onAccessDenied, asList(ADMIN));
 
-        final Handler deleteDesignsHandler = new AccessHandler(jwtProvider, createDeleteDesignsHandler(producer), onAccessDenied, asList(ADMIN));
+        final Handler deleteDesignsHandler = new AccessHandler(jwtProvider, createDeleteDesignsHandler(producer, topic, messageSource), onAccessDenied, asList(ADMIN));
 
         apiRouter.post("/designs")
                 .produces(APPLICATION_JSON)
@@ -174,45 +159,5 @@ public class Verticle extends AbstractVerticle {
         final int poolSize = Runtime.getRuntime().availableProcessors();
         final long maxExecuteTime = config.getInteger("max_execution_time_in_millis", 2000) * 1000000L;
         return vertx.createSharedWorkerExecutor("worker", poolSize, maxExecuteTime);
-    }
-
-    private DelegateHandler<DeleteDesignRequest, DeleteDesignResponse> createDeleteDesignHandler(KafkaProducer<String, String> producer) {
-        return DelegateHandler.<DeleteDesignRequest, DeleteDesignResponse>builder()
-                .with(new DeleteDesignRequestMapper())
-                .with(new DeleteDesignResponseMapper())
-                .with(new DeleteDesignController(producer))
-                .with(new ContentHandler(200))
-                .with(new FailedRequestHandler())
-                .build();
-    }
-
-    private DelegateHandler<DeleteDesignsRequest, DeleteDesignsResponse> createDeleteDesignsHandler(KafkaProducer<String, String> producer) {
-        return DelegateHandler.<DeleteDesignsRequest, DeleteDesignsResponse>builder()
-                .with(new DeleteDesignsRequestMapper())
-                .with(new DeleteDesignsResponseMapper())
-                .with(new DeleteDesignsController(producer))
-                .with(new NoContentHandler(204))
-                .with(new FailedRequestHandler())
-                .build();
-    }
-
-    private DelegateHandler<InsertDesignRequest, InsertDesignResponse> createInsertDesignHandler(KafkaProducer<String, String> producer) {
-        return DelegateHandler.<InsertDesignRequest, InsertDesignResponse>builder()
-                .with(new InsertDesignRequestMapper())
-                .with(new InsertDesignResponseMapper())
-                .with(new InsertDesignController(producer))
-                .with(new ContentHandler(201))
-                .with(new FailedRequestHandler())
-                .build();
-    }
-
-    private DelegateHandler<UpdateDesignRequest, UpdateDesignResponse> createUpdateDesignHandler(KafkaProducer<String, String> producer) {
-        return DelegateHandler.<UpdateDesignRequest, UpdateDesignResponse>builder()
-                .with(new UpdateDesignRequestMapper())
-                .with(new UpdateDesignResponseMapper())
-                .with(new UpdateDesignController(producer))
-                .with(new ContentHandler(200))
-                .with(new FailedRequestHandler())
-                .build();
     }
 }

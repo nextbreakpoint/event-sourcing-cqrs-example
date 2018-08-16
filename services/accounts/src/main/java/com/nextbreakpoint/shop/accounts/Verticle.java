@@ -31,7 +31,7 @@ import com.nextbreakpoint.shop.accounts.load.LoadSelfAccountRequestMapper;
 import com.nextbreakpoint.shop.common.AccessHandler;
 import com.nextbreakpoint.shop.common.CassandraClusterFactory;
 import com.nextbreakpoint.shop.common.ContentHandler;
-import com.nextbreakpoint.shop.common.DelegateHandler;
+import com.nextbreakpoint.shop.common.RESTContentHandler;
 import com.nextbreakpoint.shop.common.FailedRequestHandler;
 import com.nextbreakpoint.shop.common.Failure;
 import com.nextbreakpoint.shop.common.GraphiteManager;
@@ -64,7 +64,7 @@ import static com.nextbreakpoint.shop.common.ContentType.APPLICATION_JSON;
 import static com.nextbreakpoint.shop.common.Headers.ACCEPT;
 import static com.nextbreakpoint.shop.common.Headers.AUTHORIZATION;
 import static com.nextbreakpoint.shop.common.Headers.CONTENT_TYPE;
-import static com.nextbreakpoint.shop.common.Headers.XSRFTOKEN;
+import static com.nextbreakpoint.shop.common.Headers.X_XSRF_TOKEN;
 import static com.nextbreakpoint.shop.common.ServerUtil.UUID_REGEXP;
 import static java.util.Arrays.asList;
 
@@ -125,7 +125,7 @@ public class Verticle extends AbstractVerticle {
         mainRouter.route().handler(CookieHandler.create());
         mainRouter.route().handler(TimeoutHandler.create(30000));
 
-        final CorsHandler corsHandler = CORSHandlerFactory.createWithAll(webUrl, asList(AUTHORIZATION, CONTENT_TYPE, ACCEPT, XSRFTOKEN));
+        final CorsHandler corsHandler = CORSHandlerFactory.createWithAll(webUrl, asList(AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN));
 
         apiRouter.route("/accounts/*").handler(corsHandler);
 
@@ -183,63 +183,63 @@ public class Verticle extends AbstractVerticle {
         return null;
     }
 
-    private DelegateHandler<DeleteAccountRequest, DeleteAccountResponse> createDeleteAccountHandler(Store store) {
-        return DelegateHandler.<DeleteAccountRequest, DeleteAccountResponse>builder()
-                .with(new DeleteAccountRequestMapper())
-                .with(new DeleteAccountResponseMapper())
-                .with(new DeleteAccountController(store))
-                .with(new ContentHandler(200))
-                .with(new FailedRequestHandler())
+    private RESTContentHandler<DeleteAccountRequest, DeleteAccountResponse> createDeleteAccountHandler(Store store) {
+        return RESTContentHandler.<DeleteAccountRequest, DeleteAccountResponse>builder()
+                .withInputMapper(new DeleteAccountRequestMapper())
+                .withOutputMapper(new DeleteAccountResponseMapper())
+                .withController(new DeleteAccountController(store))
+                .onSuccess(new ContentHandler(200))
+                .onFailure(new FailedRequestHandler())
                 .build();
     }
 
-    private DelegateHandler<DeleteAccountsRequest, DeleteAccountsResponse> createDeleteAccountsHandler(Store store) {
-        return DelegateHandler.<DeleteAccountsRequest, DeleteAccountsResponse>builder()
-                .with(new DeleteAccountsRequestMapper())
-                .with(new DeleteAccountsResponseMapper())
-                .with(new DeleteAccountsController(store))
-                .with(new NoContentHandler(204))
-                .with(new FailedRequestHandler())
+    private RESTContentHandler<DeleteAccountsRequest, DeleteAccountsResponse> createDeleteAccountsHandler(Store store) {
+        return RESTContentHandler.<DeleteAccountsRequest, DeleteAccountsResponse>builder()
+                .withInputMapper(new DeleteAccountsRequestMapper())
+                .withOutputMapper(new DeleteAccountsResponseMapper())
+                .withController(new DeleteAccountsController(store))
+                .onSuccess(new NoContentHandler(204))
+                .onFailure(new FailedRequestHandler())
                 .build();
     }
 
-    private DelegateHandler<InsertAccountRequest, InsertAccountResponse> createInsertAccountHandler(Store store) {
-        return DelegateHandler.<InsertAccountRequest, InsertAccountResponse>builder()
-                .with(new InsertAccountRequestMapper())
-                .with(new InsertAccountResponseMapper())
-                .with(new InsertAccountController(store))
-                .with(new ContentHandler(201))
-                .with(new FailedRequestHandler())
+    private RESTContentHandler<InsertAccountRequest, InsertAccountResponse> createInsertAccountHandler(Store store) {
+        return RESTContentHandler.<InsertAccountRequest, InsertAccountResponse>builder()
+                .withInputMapper(new InsertAccountRequestMapper())
+                .withOutputMapper(new InsertAccountResponseMapper())
+                .withController(new InsertAccountController(store))
+                .onSuccess(new ContentHandler(201))
+                .onFailure(new FailedRequestHandler())
                 .build();
     }
 
-    private DelegateHandler<ListAccountsRequest, ListAccountsResponse> createListAccountsHandler(Store store) {
-        return DelegateHandler.<ListAccountsRequest, ListAccountsResponse>builder()
-                .with(new ListAccountsRequestMapper())
-                .with(new ListAccountsResponseMapper())
-                .with(new ListAccountsController(store))
-                .with(new ContentHandler(200))
-                .with(new FailedRequestHandler())
+    private RESTContentHandler<ListAccountsRequest, ListAccountsResponse> createListAccountsHandler(Store store) {
+        return RESTContentHandler.<ListAccountsRequest, ListAccountsResponse>builder()
+                .withInputMapper(new ListAccountsRequestMapper())
+                .withOutputMapper(new ListAccountsResponseMapper())
+                .withController(new ListAccountsController(store))
+                .onSuccess(new ContentHandler(200))
+                .onFailure(new FailedRequestHandler())
                 .build();
     }
 
-    private DelegateHandler<LoadAccountRequest, LoadAccountResponse> createLoadAccountHandler(Store store) {
-        return DelegateHandler.<LoadAccountRequest, LoadAccountResponse>builder()
-                .with(new LoadAccountRequestMapper())
-                .with(new LoadAccountResponseMapper())
-                .with(new LoadAccountController(store))
-                .with(new ContentHandler(200, 404))
-                .with(new FailedRequestHandler())
+    private RESTContentHandler<LoadAccountRequest, LoadAccountResponse> createLoadAccountHandler(Store store) {
+        return RESTContentHandler.<LoadAccountRequest, LoadAccountResponse>builder()
+                .withInputMapper(new LoadAccountRequestMapper())
+                .withOutputMapper(new LoadAccountResponseMapper())
+                .withController(new LoadAccountController(store))
+                .onSuccess(new ContentHandler(200, 404))
+                .onFailure(new FailedRequestHandler())
                 .build();
     }
 
-    private DelegateHandler<LoadAccountRequest, LoadAccountResponse> createLoadSelfAccountHandler(Store store) {
-        return DelegateHandler.<LoadAccountRequest, LoadAccountResponse>builder()
-                .with(new LoadSelfAccountRequestMapper())
-                .with(new LoadAccountResponseMapper())
-                .with(new LoadAccountController(store))
-                .with(new ContentHandler(200, 404))
-                .with(new FailedRequestHandler())
+    private RESTContentHandler<LoadAccountRequest, LoadAccountResponse> createLoadSelfAccountHandler(Store store) {
+        return RESTContentHandler.<LoadAccountRequest, LoadAccountResponse>builder()
+                .withInputMapper(new LoadSelfAccountRequestMapper())
+                .withOutputMapper(new LoadAccountResponseMapper())
+                .withController(new LoadAccountController(store))
+                .onSuccess(new ContentHandler(200, 404))
+                .onFailure(new FailedRequestHandler())
                 .build();
     }
 }

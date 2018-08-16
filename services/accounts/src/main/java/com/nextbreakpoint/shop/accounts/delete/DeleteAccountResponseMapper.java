@@ -1,16 +1,16 @@
 package com.nextbreakpoint.shop.accounts.delete;
 
-import com.nextbreakpoint.shop.common.ResponseMapper;
-import com.nextbreakpoint.shop.common.Result;
+import com.nextbreakpoint.shop.common.Mapper;
+import com.nextbreakpoint.shop.common.Content;
 import io.vertx.core.json.JsonObject;
 
-public class DeleteAccountResponseMapper implements ResponseMapper<DeleteAccountResponse> {
+public class DeleteAccountResponseMapper implements Mapper<DeleteAccountResponse, Content> {
     @Override
-    public Result apply(DeleteAccountResponse response) {
+    public Content transform(DeleteAccountResponse response) {
         final String json = new JsonObject()
                 .put("uuid", response.getUuid().toString())
                 .encode();
 
-        return new Result(json);
+        return new Content(json);
     }
 }

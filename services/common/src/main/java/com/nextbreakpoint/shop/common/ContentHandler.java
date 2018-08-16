@@ -21,15 +21,15 @@ public class ContentHandler implements SuccessHandler {
     }
 
     @Override
-    public void apply(RoutingContext context, Result result) {
+    public void apply(RoutingContext context, Content content) {
         final HttpServerResponse response = context.response()
                 .putHeader(CONTENT_TYPE, APPLICATION_JSON);
 
-        result.getHeaders().stream()
-                .forEach(header -> response.putHeader(header.getName(), header.getValue()));
+        content.getMetadata().stream()
+                .forEach(header -> response.putHeader("X-" + header.getName(), header.getValue()));
 
-        if (result.getJson().isPresent()) {
-            response.setStatusCode(statusCode).end(result.getJson().get());
+        if (content.getJson().isPresent()) {
+            response.setStatusCode(statusCode).end(content.getJson().get());
         } else {
             response.setStatusCode(emptyStatusCode).end();
         }

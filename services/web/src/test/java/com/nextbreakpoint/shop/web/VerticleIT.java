@@ -137,7 +137,7 @@ public class VerticleIT {
   }
 
   @Test
-  @DisplayName("should return HTML when requesting designs content page with token")
+  @DisplayName("should return HTML when requesting designs content page onSuccess token")
   public void shouldReturnHTMLWhenRequestingDesignsContentPageWithToken() throws MalformedURLException {
     final UUID designUuid = UUID.randomUUID();
     final UUID accountUuid = UUID.randomUUID();
@@ -162,7 +162,7 @@ public class VerticleIT {
   }
 
   @Test
-  @DisplayName("should return HTML when requesting preview content page with token")
+  @DisplayName("should return HTML when requesting preview content page onSuccess token")
   public void shouldReturnHTMLWhenRequestingPreviewContentPageWithToken() throws MalformedURLException {
     final UUID designUuid = UUID.randomUUID();
     final UUID accountUuid = UUID.randomUUID();
@@ -224,7 +224,7 @@ public class VerticleIT {
   }
 
   @Test
-  @DisplayName("should return HTML when requesting designs admin page with token")
+  @DisplayName("should return HTML when requesting designs admin page onSuccess token")
   public void shouldReturnHTMLWhenRequestingDesignsAdminPageWithToken() throws MalformedURLException {
     final Cookie cookie = TestHelper.makeCookie("test", Arrays.asList(Authority.GUEST), "localhost");
 
@@ -241,7 +241,7 @@ public class VerticleIT {
   }
 
   @Test
-  @DisplayName("should return HTML when requesting preview admin page with token")
+  @DisplayName("should return HTML when requesting preview admin page onSuccess token")
   public void shouldReturnHTMLWhenRequestingPreviewAdminPageWithToken() throws MalformedURLException {
     final UUID uuid = UUID.randomUUID();
 

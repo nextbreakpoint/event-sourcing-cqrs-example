@@ -42,16 +42,16 @@ class App extends React.Component {
 
         let config = {
             timeout: 10000,
-            headers: {'content-type': 'application/json'},
+            metadata: {'content-type': 'application/json'},
             withCredentials: true
         }
 
         axios.post(component.state.config.designs_url + '/api/designs', data, config)
-            .then(function (response) {
-                if (response.status == 201) {
+            .then(function (content) {
+                if (content.status == 201) {
                     var designs = component.state.designs.slice()
 
-                    designs.push({uuid:response.data.uuid, selected: false})
+                    designs.push({uuid:content.data.uuid, selected: false})
 
                     component.setState(Object.assign(component.state, {designs: designs}))
                 }
@@ -163,8 +163,8 @@ class App extends React.Component {
         }
 
         axios.get(base_url + '/config', config)
-            .then(function (response) {
-                component.setState(Object.assign(component.state, {config: response.data}))
+            .then(function (content) {
+                component.setState(Object.assign(component.state, {config: content.data}))
 
                 component.loadAccount()
             })
@@ -182,9 +182,9 @@ class App extends React.Component {
         }
 
         axios.get(component.state.config.accounts_url + '/api/accounts/me', config)
-            .then(function (response) {
-                let role = response.data.role
-                let name = response.data.name
+            .then(function (content) {
+                let role = content.data.role
+                let name = content.data.name
 
                 component.setState(Object.assign(component.state, {role: role, name: name}))
 
@@ -208,10 +208,10 @@ class App extends React.Component {
         }
 
         axios.get(component.state.config.designs_url + '/api/designs', config)
-            .then(function (response) {
-                let designs = response.data.map((uuid) => { return { uuid: uuid, selected: false }})
+            .then(function (content) {
+                let designs = content.data.map((uuid) => { return { uuid: uuid, selected: false }})
 
-                let modified = response.headers['x-modified']
+                let modified = content.metadata['x-modified']
 
                 component.setState(Object.assign(component.state, {designs: designs, modified: modified}))
 
@@ -233,10 +233,10 @@ class App extends React.Component {
         }
 
         axios.get(component.state.config.designs_url + '/api/designs', config)
-            .then(function (response) {
-                let designs = response.data.map((uuid) => { return { uuid: uuid, selected: false }})
+            .then(function (content) {
+                let designs = content.data.map((uuid) => { return { uuid: uuid, selected: false }})
 
-                let modified = response.headers['x-modified']
+                let modified = content.metadata['x-modified']
 
                 component.setState(Object.assign(component.state, {designs: designs, modified: modified}))
             })

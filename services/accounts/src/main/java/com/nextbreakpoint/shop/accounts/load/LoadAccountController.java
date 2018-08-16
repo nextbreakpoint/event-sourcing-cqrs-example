@@ -14,7 +14,7 @@ public class LoadAccountController implements Controller<LoadAccountRequest, Loa
     }
 
     @Override
-    public Single<LoadAccountResponse> apply(LoadAccountRequest request) {
+    public Single<LoadAccountResponse> onNext(LoadAccountRequest request) {
         return store.loadAccount(request);
     }
 }

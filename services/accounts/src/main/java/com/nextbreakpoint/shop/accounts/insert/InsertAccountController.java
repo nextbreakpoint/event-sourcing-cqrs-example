@@ -14,7 +14,7 @@ public class InsertAccountController implements Controller<InsertAccountRequest,
     }
 
     @Override
-    public Single<InsertAccountResponse> apply(InsertAccountRequest request) {
+    public Single<InsertAccountResponse> onNext(InsertAccountRequest request) {
         return store.insertAccount(request);
     }
 }

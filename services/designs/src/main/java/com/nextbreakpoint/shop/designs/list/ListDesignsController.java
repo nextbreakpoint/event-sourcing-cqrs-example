@@ -14,7 +14,7 @@ public class ListDesignsController implements Controller<ListDesignsRequest, Lis
     }
 
     @Override
-    public Single<ListDesignsResponse> apply(ListDesignsRequest request) {
+    public Single<ListDesignsResponse> onNext(ListDesignsRequest request) {
         return store.listDesigns(request);
     }
 }

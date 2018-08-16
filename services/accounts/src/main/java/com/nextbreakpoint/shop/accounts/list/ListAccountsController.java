@@ -14,7 +14,7 @@ public class ListAccountsController implements Controller<ListAccountsRequest, L
     }
 
     @Override
-    public Single<ListAccountsResponse> apply(ListAccountsRequest request) {
+    public Single<ListAccountsResponse> onNext(ListAccountsRequest request) {
         return store.listAccounts(request);
     }
 }

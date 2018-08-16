@@ -27,8 +27,8 @@ import rx.Single;
 import static com.nextbreakpoint.shop.common.Headers.ACCEPT;
 import static com.nextbreakpoint.shop.common.Headers.AUTHORIZATION;
 import static com.nextbreakpoint.shop.common.Headers.CONTENT_TYPE;
-import static com.nextbreakpoint.shop.common.Headers.MODIFIED;
-import static com.nextbreakpoint.shop.common.Headers.XSRFTOKEN;
+import static com.nextbreakpoint.shop.common.Headers.X_MODIFIED;
+import static com.nextbreakpoint.shop.common.Headers.X_XSRF_TOKEN;
 import static java.util.Arrays.asList;
 
 public class Verticle extends AbstractVerticle {
@@ -54,7 +54,7 @@ public class Verticle extends AbstractVerticle {
     }
 
     @Override
-    public void stop(Future<Void> stopFuture) throws Exception {
+    public void stop(Future<Void> stopFuture) {
         if (executor != null) {
             executor.close();
         }
@@ -70,7 +70,7 @@ public class Verticle extends AbstractVerticle {
         Single.fromCallable(() -> createServer(config)).subscribe(x -> future.complete(), err -> future.fail(err));
     }
 
-    private Void createServer(JsonObject config) throws Exception {
+    private Void createServer(JsonObject config) {
         GraphiteManager.configureMetrics(config);
 
         final Integer port = config.getInteger("host_port");
@@ -88,7 +88,7 @@ public class Verticle extends AbstractVerticle {
         mainRouter.route().handler(CookieHandler.create());
         mainRouter.route().handler(TimeoutHandler.create(30000));
 
-        final CorsHandler corsHandler = CORSHandlerFactory.createWithAll(webUrl, asList(AUTHORIZATION, CONTENT_TYPE, ACCEPT, XSRFTOKEN, MODIFIED), asList(CONTENT_TYPE, XSRFTOKEN, MODIFIED));
+        final CorsHandler corsHandler = CORSHandlerFactory.createWithAll(webUrl, asList(AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN, X_MODIFIED), asList(CONTENT_TYPE, X_XSRF_TOKEN, X_MODIFIED));
 
         apiRouter.route("/designs/*").handler(corsHandler);
 

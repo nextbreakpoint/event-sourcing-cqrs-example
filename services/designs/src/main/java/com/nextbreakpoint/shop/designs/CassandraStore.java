@@ -5,14 +5,14 @@ import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.ResultSetFuture;
 import com.datastax.driver.core.Session;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.nextbreakpoint.shop.designs.delete.DeleteDesignRequest;
-import com.nextbreakpoint.shop.designs.delete.DeleteDesignResponse;
-import com.nextbreakpoint.shop.designs.delete.DeleteDesignsRequest;
-import com.nextbreakpoint.shop.designs.delete.DeleteDesignsResponse;
+import com.nextbreakpoint.shop.designs.handlers.delete.DeleteDesignRequest;
+import com.nextbreakpoint.shop.designs.handlers.delete.DeleteDesignResponse;
+import com.nextbreakpoint.shop.designs.handlers.delete.DeleteDesignsRequest;
+import com.nextbreakpoint.shop.designs.handlers.delete.DeleteDesignsResponse;
 import com.nextbreakpoint.shop.designs.get.GetStatusRequest;
 import com.nextbreakpoint.shop.designs.get.GetStatusResponse;
-import com.nextbreakpoint.shop.designs.insert.InsertDesignRequest;
-import com.nextbreakpoint.shop.designs.insert.InsertDesignResponse;
+import com.nextbreakpoint.shop.designs.handlers.insert.InsertDesignRequest;
+import com.nextbreakpoint.shop.designs.handlers.insert.InsertDesignResponse;
 import com.nextbreakpoint.shop.designs.list.ListDesignsRequest;
 import com.nextbreakpoint.shop.designs.list.ListDesignsResponse;
 import com.nextbreakpoint.shop.designs.list.ListStatusRequest;
@@ -21,8 +21,8 @@ import com.nextbreakpoint.shop.designs.load.LoadDesignRequest;
 import com.nextbreakpoint.shop.designs.load.LoadDesignResponse;
 import com.nextbreakpoint.shop.designs.model.Design;
 import com.nextbreakpoint.shop.designs.model.Status;
-import com.nextbreakpoint.shop.designs.update.UpdateDesignRequest;
-import com.nextbreakpoint.shop.designs.update.UpdateDesignResponse;
+import com.nextbreakpoint.shop.designs.handlers.update.UpdateDesignRequest;
+import com.nextbreakpoint.shop.designs.handlers.update.UpdateDesignResponse;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import rx.Single;
@@ -59,8 +59,8 @@ public class CassandraStore implements Store {
     private static final String DELETE_DESIGN = "DELETE FROM DESIGNS WHERE UUID = ?";
     private static final String DELETE_DESIGNS = "TRUNCATE DESIGNS";
     private static final String SELECT_DESIGNS = "SELECT * FROM DESIGNS";
-    private static final String SELECT_STATUS = "SELECT NAME,MODIFIED FROM STATE WHERE NAME = 'designs'";
-    private static final String UPDATE_STATUS = "UPDATE STATE SET MODIFIED = toTimeStamp(now()) WHERE NAME = 'designs'";
+    private static final String SELECT_STATUS = "SELECT NAME,X_MODIFIED FROM STATE WHERE NAME = 'designs'";
+    private static final String UPDATE_STATUS = "UPDATE STATE SET X_MODIFIED = toTimeStamp(now()) WHERE NAME = 'designs'";
     private static final String FIND_DESIGNS = "SELECT UUID,UPDATED FROM DESIGNS WHERE UUID IN ($params)";
 
     private static final int EXECUTE_TIMEOUT = 10;
@@ -245,7 +245,7 @@ public class CassandraStore implements Store {
                 .map(rs -> Optional.ofNullable(rs.one()))
                 .map(result -> {
                     final Long updated = result
-                            .map(row -> row.getTimestamp("MODIFIED").getTime())
+                            .map(row -> row.getTimestamp("X_MODIFIED").getTime())
                             .orElse(0L);
                     return new GetStatusResponse(new Status("designs", updated));
                 });

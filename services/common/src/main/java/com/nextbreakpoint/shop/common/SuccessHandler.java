@@ -4,5 +4,5 @@ import io.vertx.rxjava.ext.web.RoutingContext;
 
 @FunctionalInterface
 public interface SuccessHandler {
-    void apply(RoutingContext context, Result result);
+    void apply(RoutingContext context, Content content);
 }

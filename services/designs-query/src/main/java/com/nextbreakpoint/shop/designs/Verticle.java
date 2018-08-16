@@ -5,25 +5,12 @@ import com.datastax.driver.core.Session;
 import com.nextbreakpoint.shop.common.AccessHandler;
 import com.nextbreakpoint.shop.common.CORSHandlerFactory;
 import com.nextbreakpoint.shop.common.CassandraClusterFactory;
-import com.nextbreakpoint.shop.common.ContentHandler;
-import com.nextbreakpoint.shop.common.DelegateHandler;
-import com.nextbreakpoint.shop.common.FailedRequestHandler;
 import com.nextbreakpoint.shop.common.Failure;
 import com.nextbreakpoint.shop.common.GraphiteManager;
 import com.nextbreakpoint.shop.common.JWTProviderFactory;
 import com.nextbreakpoint.shop.common.ResponseHelper;
 import com.nextbreakpoint.shop.common.ServerUtil;
-import com.nextbreakpoint.shop.designs.get.GetTileHandler;
-import com.nextbreakpoint.shop.designs.list.ListDesignsController;
-import com.nextbreakpoint.shop.designs.list.ListDesignsRequest;
-import com.nextbreakpoint.shop.designs.list.ListDesignsRequestMapper;
-import com.nextbreakpoint.shop.designs.list.ListDesignsResponse;
-import com.nextbreakpoint.shop.designs.list.ListDesignsResponseMapper;
-import com.nextbreakpoint.shop.designs.load.LoadDesignController;
-import com.nextbreakpoint.shop.designs.load.LoadDesignRequest;
-import com.nextbreakpoint.shop.designs.load.LoadDesignRequestMapper;
-import com.nextbreakpoint.shop.designs.load.LoadDesignResponse;
-import com.nextbreakpoint.shop.designs.load.LoadDesignResponseMapper;
+import com.nextbreakpoint.shop.designs.handlers.GetTileHandler;
 import com.nextbreakpoint.shop.designs.persistence.CassandraStore;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -51,9 +38,11 @@ import static com.nextbreakpoint.shop.common.ContentType.IMAGE_PNG;
 import static com.nextbreakpoint.shop.common.Headers.ACCEPT;
 import static com.nextbreakpoint.shop.common.Headers.AUTHORIZATION;
 import static com.nextbreakpoint.shop.common.Headers.CONTENT_TYPE;
-import static com.nextbreakpoint.shop.common.Headers.MODIFIED;
-import static com.nextbreakpoint.shop.common.Headers.XSRFTOKEN;
+import static com.nextbreakpoint.shop.common.Headers.X_MODIFIED;
+import static com.nextbreakpoint.shop.common.Headers.X_XSRF_TOKEN;
 import static com.nextbreakpoint.shop.common.ServerUtil.UUID_REGEXP;
+import static com.nextbreakpoint.shop.designs.Factory.createListDesignsHandler;
+import static com.nextbreakpoint.shop.designs.Factory.createLoadDesignHandler;
 import static java.util.Arrays.asList;
 
 public class Verticle extends AbstractVerticle {
@@ -79,7 +68,7 @@ public class Verticle extends AbstractVerticle {
     }
 
     @Override
-    public void stop(Future<Void> stopFuture) throws Exception {
+    public void stop(Future<Void> stopFuture) {
         if (executor != null) {
             executor.close();
         }
@@ -95,7 +84,7 @@ public class Verticle extends AbstractVerticle {
         Single.fromCallable(() -> createServer(config)).subscribe(x -> future.complete(), err -> future.fail(err));
     }
 
-    private Void createServer(JsonObject config) throws Exception {
+    private Void createServer(JsonObject config) {
         GraphiteManager.configureMetrics(config);
 
         final Integer port = config.getInteger("host_port");
@@ -121,7 +110,7 @@ public class Verticle extends AbstractVerticle {
         mainRouter.route().handler(CookieHandler.create());
         mainRouter.route().handler(TimeoutHandler.create(30000));
 
-        final CorsHandler corsHandler = CORSHandlerFactory.createWithAll(webUrl, asList(AUTHORIZATION, CONTENT_TYPE, ACCEPT, XSRFTOKEN, MODIFIED), asList(CONTENT_TYPE, XSRFTOKEN, MODIFIED));
+        final CorsHandler corsHandler = CORSHandlerFactory.createWithAll(webUrl, asList(AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN, X_MODIFIED), asList(CONTENT_TYPE, X_XSRF_TOKEN, X_MODIFIED));
 
         apiRouter.route("/designs/*").handler(corsHandler);
 
@@ -168,25 +157,5 @@ public class Verticle extends AbstractVerticle {
         final int poolSize = Runtime.getRuntime().availableProcessors();
         final long maxExecuteTime = config.getInteger("max_execution_time_in_millis", 2000) * 1000000L;
         return vertx.createSharedWorkerExecutor("worker", poolSize, maxExecuteTime);
-    }
-
-    private DelegateHandler<ListDesignsRequest, ListDesignsResponse> createListDesignsHandler(Store store) {
-        return DelegateHandler.<ListDesignsRequest, ListDesignsResponse>builder()
-                .with(new ListDesignsRequestMapper())
-                .with(new ListDesignsResponseMapper())
-                .with(new ListDesignsController(store))
-                .with(new ContentHandler(200))
-                .with(new FailedRequestHandler())
-                .build();
-    }
-
-    private DelegateHandler<LoadDesignRequest, LoadDesignResponse> createLoadDesignHandler(Store store) {
-        return DelegateHandler.<LoadDesignRequest, LoadDesignResponse>builder()
-                .with(new LoadDesignRequestMapper())
-                .with(new LoadDesignResponseMapper())
-                .with(new LoadDesignController(store))
-                .with(new ContentHandler(200, 404))
-                .with(new FailedRequestHandler())
-                .build();
     }
 }

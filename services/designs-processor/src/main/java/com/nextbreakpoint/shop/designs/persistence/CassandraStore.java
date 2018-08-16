@@ -5,18 +5,23 @@ import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.ResultSetFuture;
 import com.datastax.driver.core.Session;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.nextbreakpoint.shop.designs.Store;
+import com.nextbreakpoint.shop.designs.model.DeleteDesignRequest;
+import com.nextbreakpoint.shop.designs.model.DeleteDesignResponse;
+import com.nextbreakpoint.shop.designs.model.DeleteDesignsRequest;
+import com.nextbreakpoint.shop.designs.model.DeleteDesignsResponse;
+import com.nextbreakpoint.shop.designs.model.InsertDesignRequest;
+import com.nextbreakpoint.shop.designs.model.InsertDesignResponse;
+import com.nextbreakpoint.shop.designs.model.UpdateDesignRequest;
+import com.nextbreakpoint.shop.designs.model.UpdateDesignResponse;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import rx.Single;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
-import static com.nextbreakpoint.shop.common.TimeUtil.TIMESTAMP_PATTERN;
-
-public class CassandraStore implements com.nextbreakpoint.shop.designs.Store {
+public class CassandraStore implements Store {
     private final Logger logger = LoggerFactory.getLogger(CassandraStore.class.getName());
 
     private static final String ERROR_INSERT_DESIGN = "An error occurred while inserting a design";
@@ -83,11 +88,7 @@ public class CassandraStore implements com.nextbreakpoint.shop.designs.Store {
     }
 
     private Single<InsertDesignResponse> doInsertDesign(Session session, InsertDesignRequest request) {
-        return Single.from(updateStatus)
-                .map(pst -> pst.bind())
-                .map(bst -> session.executeAsync(bst))
-                .flatMap(rsf -> getResultSet(rsf))
-                .flatMap(x -> Single.from(insertDesign))
+        return Single.from(insertDesign)
                 .map(pst -> pst.bind(makeInsertParams(request)))
                 .map(bst -> session.executeAsync(bst))
                 .flatMap(rsf -> getResultSet(rsf))
@@ -95,11 +96,7 @@ public class CassandraStore implements com.nextbreakpoint.shop.designs.Store {
     }
 
     private Single<UpdateDesignResponse> doUpdateDesign(Session session, UpdateDesignRequest request) {
-        return Single.from(updateStatus)
-                .map(pst -> pst.bind())
-                .map(bst -> session.executeAsync(bst))
-                .flatMap(rsf -> getResultSet(rsf))
-                .flatMap(x -> Single.from(updateDesign))
+        return Single.from(updateDesign)
                 .map(pst -> pst.bind(makeUpdateParams(request)))
                 .map(bst -> session.executeAsync(bst))
                 .flatMap(rsf -> getResultSet(rsf))
@@ -107,11 +104,7 @@ public class CassandraStore implements com.nextbreakpoint.shop.designs.Store {
     }
 
     private Single<DeleteDesignResponse> doDeleteDesign(Session session, DeleteDesignRequest request) {
-        return Single.from(updateStatus)
-                .map(pst -> pst.bind())
-                .map(bst -> session.executeAsync(bst))
-                .flatMap(rsf -> getResultSet(rsf))
-                .flatMap(x -> Single.from(deleteDesign))
+        return Single.from(deleteDesign)
                 .map(pst -> pst.bind(makeDeleteParams(request)))
                 .map(bst -> session.executeAsync(bst))
                 .flatMap(rsf -> getResultSet(rsf))
@@ -119,11 +112,7 @@ public class CassandraStore implements com.nextbreakpoint.shop.designs.Store {
     }
 
     private Single<DeleteDesignsResponse> doDeleteDesigns(Session session, DeleteDesignsRequest request) {
-        return Single.from(updateStatus)
-                .map(pst -> pst.bind())
-                .map(bst -> session.executeAsync(bst))
-                .flatMap(rsf -> getResultSet(rsf))
-                .flatMap(x -> Single.from(deleteDesigns))
+        return Single.from(deleteDesigns)
                 .map(pst -> pst.bind())
                 .map(bst -> session.executeAsync(bst))
                 .flatMap(rsf -> getResultSet(rsf))
@@ -144,10 +133,5 @@ public class CassandraStore implements com.nextbreakpoint.shop.designs.Store {
 
     private void handleError(String message, Throwable err) {
         logger.error(message, err);
-    }
-
-    private String formatDate(Date value) {
-        final SimpleDateFormat df = new SimpleDateFormat(TIMESTAMP_PATTERN);
-        return df.format(value);
     }
 }

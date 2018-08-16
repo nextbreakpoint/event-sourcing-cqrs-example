@@ -21,5 +21,11 @@
   "cassandra_contactPoint": "localhost",
   "cassandra_port": 9042,
 
+  "kafka_bootstrap_servers": "localhost:9092",
+
+  "events_topic": "designs-events",
+
+  "message_source": "service-designs",
+
   "max_execution_time_in_millis": 30000
 }

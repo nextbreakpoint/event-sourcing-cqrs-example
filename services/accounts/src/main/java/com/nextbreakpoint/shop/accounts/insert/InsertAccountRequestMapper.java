@@ -1,14 +1,14 @@
 package com.nextbreakpoint.shop.accounts.insert;
 
-import com.nextbreakpoint.shop.common.RequestMapper;
+import com.nextbreakpoint.shop.common.Mapper;
 import io.vertx.core.json.JsonObject;
 import io.vertx.rxjava.ext.web.RoutingContext;
 
 import java.util.UUID;
 
-public class InsertAccountRequestMapper implements RequestMapper<InsertAccountRequest> {
+public class InsertAccountRequestMapper implements Mapper<RoutingContext, InsertAccountRequest> {
     @Override
-    public InsertAccountRequest apply(RoutingContext context) {
+    public InsertAccountRequest transform(RoutingContext context) {
         final UUID uuid = UUID.randomUUID();
 
         final JsonObject bodyAsJson = context.getBodyAsJson();

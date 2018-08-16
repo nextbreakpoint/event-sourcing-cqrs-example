@@ -11,10 +11,10 @@ public class NoContentHandler implements SuccessHandler {
     }
 
     @Override
-    public void apply(RoutingContext context, Result result) {
+    public void apply(RoutingContext context, Content result) {
         final HttpServerResponse response = context.response();
 
-        result.getHeaders().stream()
+        result.getMetadata().stream()
                 .forEach(header -> response.putHeader(header.getName(), header.getValue()));
 
         response.setStatusCode(statusCode).end();

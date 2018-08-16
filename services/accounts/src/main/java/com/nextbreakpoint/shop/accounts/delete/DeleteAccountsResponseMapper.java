@@ -1,11 +1,11 @@
 package com.nextbreakpoint.shop.accounts.delete;
 
-import com.nextbreakpoint.shop.common.ResponseMapper;
-import com.nextbreakpoint.shop.common.Result;
+import com.nextbreakpoint.shop.common.Mapper;
+import com.nextbreakpoint.shop.common.Content;
 
-public class DeleteAccountsResponseMapper implements ResponseMapper<DeleteAccountsResponse> {
+public class DeleteAccountsResponseMapper implements Mapper<DeleteAccountsResponse, Content> {
     @Override
-    public Result apply(DeleteAccountsResponse response) {
-        return new Result();
+    public Content transform(DeleteAccountsResponse response) {
+        return new Content();
     }
 }

@@ -14,7 +14,7 @@ public class LoadDesignController implements Controller<LoadDesignRequest, LoadD
     }
 
     @Override
-    public Single<LoadDesignResponse> apply(LoadDesignRequest request) {
+    public Single<LoadDesignResponse> onNext(LoadDesignRequest request) {
         return store.loadDesign(request);
     }
 }

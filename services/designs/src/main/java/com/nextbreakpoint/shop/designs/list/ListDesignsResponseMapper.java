@@ -1,18 +1,18 @@
 package com.nextbreakpoint.shop.designs.list;
 
-import com.nextbreakpoint.shop.common.Header;
-import com.nextbreakpoint.shop.common.ResponseMapper;
-import com.nextbreakpoint.shop.common.Result;
+import com.nextbreakpoint.shop.common.Metadata;
+import com.nextbreakpoint.shop.common.Mapper;
+import com.nextbreakpoint.shop.common.Content;
 import io.vertx.core.json.JsonArray;
 
 import java.util.Set;
 
-import static com.nextbreakpoint.shop.common.Headers.MODIFIED;
+import static com.nextbreakpoint.shop.common.Metadata.MODIFIED;
 import static java.util.Collections.singleton;
 
-public class ListDesignsResponseMapper implements ResponseMapper<ListDesignsResponse> {
+public class ListDesignsResponseMapper implements Mapper<ListDesignsResponse, Content> {
     @Override
-    public Result apply(ListDesignsResponse response) {
+    public Content transform(ListDesignsResponse response) {
         final String json = response.getUuids()
                 .stream()
                 .collect(() -> new JsonArray(), (a, x) -> a.add(x), (a, b) -> a.addAll(b))
@@ -20,8 +20,8 @@ public class ListDesignsResponseMapper implements ResponseMapper<ListDesignsResp
 
         final String modified = String.valueOf(response.getUpdated());
 
-        final Set<Header> headers = singleton(new Header(MODIFIED, modified));
+        final Set<Metadata> metadata = singleton(new Metadata(MODIFIED, modified));
 
-        return new Result(json, headers);
+        return new Content(json, metadata);
     }
 }

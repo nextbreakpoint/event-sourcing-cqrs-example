@@ -14,7 +14,7 @@ public class GetStatusController implements Controller<GetStatusRequest, GetStat
     }
 
     @Override
-    public Single<GetStatusResponse> apply(GetStatusRequest request) {
+    public Single<GetStatusResponse> onNext(GetStatusRequest request) {
         return store.getStatus(request);
     }
 }

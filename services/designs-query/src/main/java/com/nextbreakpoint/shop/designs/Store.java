@@ -1,9 +1,9 @@
 package com.nextbreakpoint.shop.designs;
 
-import com.nextbreakpoint.shop.designs.list.ListDesignsRequest;
-import com.nextbreakpoint.shop.designs.list.ListDesignsResponse;
-import com.nextbreakpoint.shop.designs.load.LoadDesignRequest;
-import com.nextbreakpoint.shop.designs.load.LoadDesignResponse;
+import com.nextbreakpoint.shop.designs.model.ListDesignsRequest;
+import com.nextbreakpoint.shop.designs.model.ListDesignsResponse;
+import com.nextbreakpoint.shop.designs.model.LoadDesignRequest;
+import com.nextbreakpoint.shop.designs.model.LoadDesignResponse;
 import rx.Single;
 
 public interface Store {

@@ -65,13 +65,13 @@ class App extends React.Component {
 
         let config = {
             timeout: 10000,
-            headers: {'content-type': 'application/json'},
+            metadata: {'content-type': 'application/json'},
             withCredentials: true
         }
 
         axios.put(component.state.config.designs_url + '/api/designs/' + uuid, this.state.design, config)
-            .then(function (response) {
-                if (response.status != 200) {
+            .then(function (content) {
+                if (content.status != 200) {
                     console.log("Can't update design")
                 }
             })
@@ -133,8 +133,8 @@ class App extends React.Component {
         }
 
         axios.get(base_url + '/config', config)
-            .then(function (response) {
-                component.setState(Object.assign(component.state, {config: response.data}))
+            .then(function (content) {
+                component.setState(Object.assign(component.state, {config: content.data}))
 
                 component.loadAccount()
             })
@@ -152,9 +152,9 @@ class App extends React.Component {
         }
 
         axios.get(component.state.config.accounts_url + '/api/accounts/me', config)
-            .then(function (response) {
-                let role = response.data.role
-                let name = response.data.name
+            .then(function (content) {
+                let role = content.data.role
+                let name = content.data.name
 
                 component.setState(Object.assign(component.state, {role: role, name: name}))
 
@@ -178,12 +178,12 @@ class App extends React.Component {
         }
 
         axios.get(component.state.config.designs_url + '/api/designs/' + uuid, config)
-            .then(function (response) {
-                console.log(response.data)
+            .then(function (content) {
+                console.log(content.data)
 
-                let modified = response.headers['x-modified']
+                let modified = content.metadata['x-modified']
 
-                let design = JSON.parse(response.data.json)
+                let design = JSON.parse(content.data.json)
 
                 component.setState(Object.assign(component.state, {design: design, modified: modified}))
 
@@ -205,10 +205,10 @@ class App extends React.Component {
         }
 
         axios.get(component.state.config.designs_url + '/api/designs/' + uuid, config)
-            .then(function (response) {
-                let envelop = response.data
+            .then(function (content) {
+                let envelop = content.data
 
-                let modified = response.headers['x-modified']
+                let modified = content.metadata['x-modified']
 
                 console.log(envelop)
 

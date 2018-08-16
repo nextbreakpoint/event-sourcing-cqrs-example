@@ -14,7 +14,7 @@ public class ListStatusController implements Controller<ListStatusRequest, ListS
     }
 
     @Override
-    public Single<ListStatusResponse> apply(ListStatusRequest request) {
+    public Single<ListStatusResponse> onNext(ListStatusRequest request) {
         return store.listStatus(request);
     }
 }

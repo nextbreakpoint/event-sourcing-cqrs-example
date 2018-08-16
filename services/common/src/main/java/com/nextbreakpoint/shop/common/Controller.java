@@ -4,5 +4,5 @@ import rx.Single;
 
 @FunctionalInterface
 public interface Controller<T, R> {
-    Single<R> apply(T request);
+    Single<R> onNext(T object);
 }

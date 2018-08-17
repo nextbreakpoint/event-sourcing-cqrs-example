@@ -99,7 +99,7 @@
                             <images>
                                 <image>
                                     <name>${environment}-${colour}-shop/designs:${project.version}</name>
-                                    <alias>service-designs-command-command</alias>
+                                    <alias>service-designs-command</alias>
                                     <build>
                                         <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
                                         <filter>${*}</filter>
@@ -180,7 +180,7 @@
                             <images>
                                 <image>
                                     <name>${environment}-${colour}-shop/designs:${project.version}</name>
-                                    <alias>service-designs-command-command</alias>
+                                    <alias>service-designs-command</alias>
                                     <build>
                                         <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
                                         <filter>${*}</filter>
@@ -202,7 +202,7 @@
                             <images>
                                 <image>
                                     <name>${environment}-${colour}-shop/designs:${project.version}</name>
-                                    <alias>service-designs-command-command</alias>
+                                    <alias>service-designs-command</alias>
                                 </image>
                             </images>
                         </configuration>
@@ -256,7 +256,7 @@
                             <images>
                                 <image>
                                     <name>${environment}-${colour}-shop/designs:${project.version}</name>
-                                    <alias>service-designs-command-command</alias>
+                                    <alias>service-designs-command</alias>
                                 </image>
                             </images>
                         </configuration>

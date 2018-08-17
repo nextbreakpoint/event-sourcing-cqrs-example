@@ -59,8 +59,8 @@ public class CassandraStore implements Store {
     private static final String DELETE_DESIGN = "DELETE FROM DESIGNS WHERE UUID = ?";
     private static final String DELETE_DESIGNS = "TRUNCATE DESIGNS";
     private static final String SELECT_DESIGNS = "SELECT * FROM DESIGNS";
-    private static final String SELECT_STATUS = "SELECT NAME,X_MODIFIED FROM STATE WHERE NAME = 'designs'";
-    private static final String UPDATE_STATUS = "UPDATE STATE SET X_MODIFIED = toTimeStamp(now()) WHERE NAME = 'designs'";
+    private static final String SELECT_STATUS = "SELECT NAME,MODIFIED FROM STATE WHERE NAME = 'designs'";
+    private static final String UPDATE_STATUS = "UPDATE STATE SET MODIFIED = toTimeStamp(now()) WHERE NAME = 'designs'";
     private static final String FIND_DESIGNS = "SELECT UUID,UPDATED FROM DESIGNS WHERE UUID IN ($params)";
 
     private static final int EXECUTE_TIMEOUT = 10;
@@ -245,7 +245,7 @@ public class CassandraStore implements Store {
                 .map(rs -> Optional.ofNullable(rs.one()))
                 .map(result -> {
                     final Long updated = result
-                            .map(row -> row.getTimestamp("X_MODIFIED").getTime())
+                            .map(row -> row.getTimestamp("MODIFIED").getTime())
                             .orElse(0L);
                     return new GetStatusResponse(new Status("designs", updated));
                 });

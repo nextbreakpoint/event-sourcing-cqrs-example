@@ -21,5 +21,10 @@
   "cassandra_contactPoint": "cassandra-designs",
   "cassandra_port": 9042,
 
+  "kafka_bootstrap_servers": "kafka-designs:9092",
+  "kafka_group_id": "designs-processor",
+
+  "events_topic": "designs-events",
+
   "max_execution_time_in_millis": 30000
 }

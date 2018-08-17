@@ -39,7 +39,7 @@ public class Factory {
                 .withInputMapper(new InsertDesignInputMapper())
                 .withOutputMapper(new InsertDesignOutputMapper())
                 .withController(new InsertDesignController(topic, producer, new InsertDesignMessageMapper(messageSource)))
-                .onSuccess(new ContentHandler(201))
+                .onSuccess(new ContentHandler(202))
                 .onFailure(new RequestFailedHandler())
                 .build();
     }
@@ -49,7 +49,7 @@ public class Factory {
                 .withInputMapper(new UpdateDesignInputMapper())
                 .withOutputMapper(new UpdateDesignOutputMapper())
                 .withController(new UpdateDesignController(topic, producer, new UpdateDesignMessageMapper(messageSource)))
-                .onSuccess(new ContentHandler(200))
+                .onSuccess(new ContentHandler(202))
                 .onFailure(new RequestFailedHandler())
                 .build();
     }
@@ -59,7 +59,7 @@ public class Factory {
                 .withInputMapper(new DeleteDesignInputMapper())
                 .withOutputMapper(new DeleteDesignOutputMapper())
                 .withController(new DeleteDesignController(topic, producer, new DeleteDesignMessageMapper(messageSource)))
-                .onSuccess(new ContentHandler(200))
+                .onSuccess(new ContentHandler(202))
                 .onFailure(new RequestFailedHandler())
                 .build();
     }
@@ -69,7 +69,7 @@ public class Factory {
                 .withInputMapper(new DeleteDesignsInputMapper())
                 .withOutputMapper(new DeleteDesignsOutputMapper())
                 .withController(new DeleteDesignsController(topic, producer, new DeleteDesignsMessageMapper(messageSource)))
-                .onSuccess(new ContentHandler(200))
+                .onSuccess(new ContentHandler(202))
                 .onFailure(new RequestFailedHandler())
                 .build();
     }

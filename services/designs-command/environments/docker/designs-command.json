@@ -14,12 +14,11 @@
   "graphite_host": "localhost",
   "graphite_port": 2003,
 
-  "cassandra_cluster": "test",
-  "cassandra_keyspace": "designs",
-  "cassandra_username": "admin",
-  "cassandra_password": "password",
-  "cassandra_contactPoint": "cassandra",
-  "cassandra_port": 9042,
+  "kafka_bootstrap_servers": "kafka:9092",
+
+  "events_topic": "designs-events",
+
+  "message_source": "service-designs",
 
   "max_execution_time_in_millis": 30000
 }

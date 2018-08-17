@@ -14,13 +14,6 @@
   "graphite_host": "localhost",
   "graphite_port": 2003,
 
-  "cassandra_cluster": "test",
-  "cassandra_keyspace": "designs",
-  "cassandra_username": "admin",
-  "cassandra_password": "password",
-  "cassandra_contactPoint": "localhost",
-  "cassandra_port": 9042,
-
   "kafka_bootstrap_servers": "localhost:9092",
   "kafka_group_id": "designs-sse",
 

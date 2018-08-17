@@ -1,25 +1,23 @@
 package com.nextbreakpoint.shop.designs.model;
 
-import com.nextbreakpoint.shop.designs.model.Design;
-
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
 public class LoadDesignResponse {
     private final UUID uuid;
-    private final Design design;
+    private final DesignDocument designDocument;
 
-    public LoadDesignResponse(UUID uuid, Design design) {
+    public LoadDesignResponse(UUID uuid, DesignDocument designDocument) {
         this.uuid = Objects.requireNonNull(uuid);
-        this.design = design;
+        this.designDocument = designDocument;
     }
 
     public UUID getUuid() {
         return uuid;
     }
 
-    public Optional<Design> getDesign() {
-        return Optional.ofNullable(design);
+    public Optional<DesignDocument> getDesignDocument() {
+        return Optional.ofNullable(designDocument);
     }
 }

@@ -2,17 +2,21 @@ package com.nextbreakpoint.shop.designs.handlers;
 
 import com.nextbreakpoint.shop.common.Mapper;
 import com.nextbreakpoint.shop.common.Message;
-import com.nextbreakpoint.shop.designs.model.UpdateDesignRequest;
-import io.vertx.core.json.JsonObject;
+import com.nextbreakpoint.shop.common.MessageType;
+import com.nextbreakpoint.shop.common.UpdateDesignEvent;
+import io.vertx.core.json.DecodeException;
+import io.vertx.core.json.Json;
 
-import java.util.UUID;
-
-public class UpdateDesignInputMapper implements Mapper<Message, UpdateDesignRequest> {
+public class UpdateDesignInputMapper implements Mapper<Message, UpdateDesignEvent> {
     @Override
-    public UpdateDesignRequest transform(Message message) {
-        final JsonObject jsonObject = JsonObject.mapFrom(message);
-        final String uuid = jsonObject.getString("uuid");
-        final String json = jsonObject.getString("json");
-        return new UpdateDesignRequest(UUID.fromString(uuid), json);
+    public UpdateDesignEvent transform(Message message) {
+        if (!message.getMessageType().equals(MessageType.DESIGN_UPDATE)) {
+            throw new IllegalArgumentException("message type must be " + MessageType.DESIGN_UPDATE);
+        }
+        try {
+            return Json.decodeValue(message.getMessageBody(), UpdateDesignEvent.class);
+        } catch (DecodeException e) {
+            throw new IllegalArgumentException("message body cannot be decoded");
+        }
     }
 }

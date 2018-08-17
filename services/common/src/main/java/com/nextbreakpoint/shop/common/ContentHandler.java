@@ -3,10 +3,12 @@ package com.nextbreakpoint.shop.common;
 import io.vertx.rxjava.core.http.HttpServerResponse;
 import io.vertx.rxjava.ext.web.RoutingContext;
 
+import java.util.function.BiConsumer;
+
 import static com.nextbreakpoint.shop.common.ContentType.APPLICATION_JSON;
 import static com.nextbreakpoint.shop.common.Headers.CONTENT_TYPE;
 
-public class ContentHandler implements SuccessHandler {
+public class ContentHandler implements BiConsumer<RoutingContext, Content> {
     private int statusCode;
     private int emptyStatusCode;
 
@@ -21,7 +23,7 @@ public class ContentHandler implements SuccessHandler {
     }
 
     @Override
-    public void apply(RoutingContext context, Content content) {
+    public void accept(RoutingContext context, Content content) {
         final HttpServerResponse response = context.response()
                 .putHeader(CONTENT_TYPE, APPLICATION_JSON);
 

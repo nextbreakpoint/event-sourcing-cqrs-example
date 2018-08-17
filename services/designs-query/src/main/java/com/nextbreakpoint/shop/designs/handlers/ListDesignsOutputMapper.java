@@ -4,7 +4,7 @@ import com.nextbreakpoint.shop.common.Metadata;
 import com.nextbreakpoint.shop.common.Mapper;
 import com.nextbreakpoint.shop.common.Content;
 import com.nextbreakpoint.shop.designs.model.ListDesignsResponse;
-import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.Json;
 
 import java.util.Set;
 
@@ -14,10 +14,7 @@ import static java.util.Collections.singleton;
 public class ListDesignsOutputMapper implements Mapper<ListDesignsResponse, Content> {
     @Override
     public Content transform(ListDesignsResponse response) {
-        final String json = response.getUuids()
-                .stream()
-                .collect(() -> new JsonArray(), (a, x) -> a.add(x), (a, b) -> a.addAll(b))
-                .encode();
+        final String json = Json.encode(response.getUuids());
 
         final String modified = String.valueOf(response.getUpdated());
 

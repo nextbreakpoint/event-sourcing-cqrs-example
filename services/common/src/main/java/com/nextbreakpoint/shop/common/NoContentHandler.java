@@ -3,7 +3,9 @@ package com.nextbreakpoint.shop.common;
 import io.vertx.rxjava.core.http.HttpServerResponse;
 import io.vertx.rxjava.ext.web.RoutingContext;
 
-public class NoContentHandler implements SuccessHandler {
+import java.util.function.BiConsumer;
+
+public class NoContentHandler implements BiConsumer<RoutingContext, Content> {
     private int statusCode;
 
     public NoContentHandler(int statusCode) {
@@ -11,7 +13,7 @@ public class NoContentHandler implements SuccessHandler {
     }
 
     @Override
-    public void apply(RoutingContext context, Content result) {
+    public void accept(RoutingContext context, Content result) {
         final HttpServerResponse response = context.response();
 
         result.getMetadata().stream()

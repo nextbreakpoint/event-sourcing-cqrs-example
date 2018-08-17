@@ -3,8 +3,8 @@ package com.nextbreakpoint.shop.designs.handlers;
 import com.nextbreakpoint.shop.common.Controller;
 import com.nextbreakpoint.shop.common.Mapper;
 import com.nextbreakpoint.shop.common.Message;
-import com.nextbreakpoint.shop.designs.model.InsertDesignEvent;
-import com.nextbreakpoint.shop.designs.model.InsertDesignResponse;
+import com.nextbreakpoint.shop.common.InsertDesignEvent;
+import com.nextbreakpoint.shop.designs.model.InsertDesignResult;
 import io.vertx.core.json.Json;
 import io.vertx.rxjava.kafka.client.producer.KafkaProducer;
 import io.vertx.rxjava.kafka.client.producer.KafkaProducerRecord;
@@ -12,7 +12,7 @@ import rx.Single;
 
 import java.util.Objects;
 
-public class InsertDesignController implements Controller<InsertDesignEvent, InsertDesignResponse> {
+public class InsertDesignController implements Controller<InsertDesignEvent, InsertDesignResult> {
     private final String topic;
     private final KafkaProducer<String, String> producer;
     private final Mapper<InsertDesignEvent, Message> messageMapper;
@@ -24,11 +24,11 @@ public class InsertDesignController implements Controller<InsertDesignEvent, Ins
     }
 
     @Override
-    public Single<InsertDesignResponse> onNext(InsertDesignEvent event) {
+    public Single<InsertDesignResult> onNext(InsertDesignEvent event) {
         return createRecord(event)
                 .flatMap(record -> producer.rxWrite(record))
-                .map(record -> new InsertDesignResponse(event.getUuid(), 1))
-                .onErrorReturn(err -> new InsertDesignResponse(event.getUuid(), 0));
+                .map(record -> new InsertDesignResult(event.getUuid(), 1))
+                .onErrorReturn(err -> new InsertDesignResult(event.getUuid(), 0));
     }
 
     protected Single<KafkaProducerRecord<String, String>> createRecord(InsertDesignEvent request) {

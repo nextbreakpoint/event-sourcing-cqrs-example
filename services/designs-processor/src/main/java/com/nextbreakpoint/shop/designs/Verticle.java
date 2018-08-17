@@ -10,7 +10,6 @@ import com.nextbreakpoint.shop.common.GraphiteManager;
 import com.nextbreakpoint.shop.common.JWTProviderFactory;
 import com.nextbreakpoint.shop.common.KafkaClientFactory;
 import com.nextbreakpoint.shop.common.Message;
-import com.nextbreakpoint.shop.common.MessageHandler;
 import com.nextbreakpoint.shop.common.MessageType;
 import com.nextbreakpoint.shop.common.ResponseHelper;
 import com.nextbreakpoint.shop.common.ServerUtil;
@@ -139,7 +138,7 @@ public class Verticle extends AbstractVerticle {
 
         mainRouter.mountSubRouter("/api", apiRouter);
 
-        final Map<String, MessageHandler> handlers = new HashMap<>();
+        final Map<String, Handler<Message>> handlers = new HashMap<>();
 
         final HttpServerOptions options = ServerUtil.makeServerOptions(config);
 
@@ -163,11 +162,11 @@ public class Verticle extends AbstractVerticle {
     private void handleError(Throwable err) {
     }
 
-    private void processRecord(Map<String, MessageHandler> handlers, KafkaConsumerRecord<String, String> record) {
+    private void processRecord(Map<String, Handler<Message>> handlers, KafkaConsumerRecord<String, String> record) {
         final Message message = Json.decodeValue(record.value(), Message.class);
-        final MessageHandler handler = handlers.get(message.getMessageType());
+        final Handler<Message> handler = handlers.get(message.getMessageType());
         if (handler != null) {
-            handler.onMessage(message);
+            handler.handle(message);
         }
     }
 

@@ -5,15 +5,15 @@ import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.ResultSetFuture;
 import com.datastax.driver.core.Session;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.nextbreakpoint.shop.common.DeleteDesignEvent;
+import com.nextbreakpoint.shop.common.DeleteDesignsEvent;
+import com.nextbreakpoint.shop.common.InsertDesignEvent;
+import com.nextbreakpoint.shop.common.UpdateDesignEvent;
 import com.nextbreakpoint.shop.designs.Store;
-import com.nextbreakpoint.shop.designs.model.DeleteDesignRequest;
-import com.nextbreakpoint.shop.designs.model.DeleteDesignResponse;
-import com.nextbreakpoint.shop.designs.model.DeleteDesignsRequest;
-import com.nextbreakpoint.shop.designs.model.DeleteDesignsResponse;
-import com.nextbreakpoint.shop.designs.model.InsertDesignRequest;
-import com.nextbreakpoint.shop.designs.model.InsertDesignResponse;
-import com.nextbreakpoint.shop.designs.model.UpdateDesignRequest;
-import com.nextbreakpoint.shop.designs.model.UpdateDesignResponse;
+import com.nextbreakpoint.shop.designs.model.DeleteDesignResult;
+import com.nextbreakpoint.shop.designs.model.DeleteDesignsResult;
+import com.nextbreakpoint.shop.designs.model.InsertDesignResult;
+import com.nextbreakpoint.shop.designs.model.UpdateDesignResult;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import rx.Single;
@@ -52,28 +52,28 @@ public class CassandraStore implements Store {
     }
 
     @Override
-    public Single<InsertDesignResponse> insertDesign(InsertDesignRequest request) {
+    public Single<InsertDesignResult> insertDesign(InsertDesignEvent request) {
         return withSession()
                 .flatMap(session -> doInsertDesign(session, request))
                 .doOnError(err -> handleError(ERROR_INSERT_DESIGN, err));
     }
 
     @Override
-    public Single<UpdateDesignResponse> updateDesign(UpdateDesignRequest request) {
+    public Single<UpdateDesignResult> updateDesign(UpdateDesignEvent request) {
         return withSession()
                 .flatMap(conn -> doUpdateDesign(session, request))
                 .doOnError(err -> handleError(ERROR_UPDATE_DESIGN, err));
     }
 
     @Override
-    public Single<DeleteDesignResponse> deleteDesign(DeleteDesignRequest request) {
+    public Single<DeleteDesignResult> deleteDesign(DeleteDesignEvent request) {
         return withSession()
                 .flatMap(session -> doDeleteDesign(session, request))
                 .doOnError(err -> handleError(ERROR_DELETE_DESIGN, err));
     }
 
     @Override
-    public Single<DeleteDesignsResponse> deleteDesigns(DeleteDesignsRequest request) {
+    public Single<DeleteDesignsResult> deleteDesigns(DeleteDesignsEvent request) {
         return withSession()
                 .flatMap(session -> doDeleteDesigns(session, request))
                 .doOnError(err -> handleError(ERROR_DELETE_DESIGNS, err));
@@ -87,47 +87,47 @@ public class CassandraStore implements Store {
         return Single.fromCallable(() -> rsf.getUninterruptibly(EXECUTE_TIMEOUT, TimeUnit.SECONDS));
     }
 
-    private Single<InsertDesignResponse> doInsertDesign(Session session, InsertDesignRequest request) {
+    private Single<InsertDesignResult> doInsertDesign(Session session, InsertDesignEvent request) {
         return Single.from(insertDesign)
                 .map(pst -> pst.bind(makeInsertParams(request)))
                 .map(bst -> session.executeAsync(bst))
                 .flatMap(rsf -> getResultSet(rsf))
-                .map(rs -> new InsertDesignResponse(request.getUuid(), rs.wasApplied() ? 1 : 0));
+                .map(rs -> new InsertDesignResult(request.getUuid(), rs.wasApplied() ? 1 : 0));
     }
 
-    private Single<UpdateDesignResponse> doUpdateDesign(Session session, UpdateDesignRequest request) {
+    private Single<UpdateDesignResult> doUpdateDesign(Session session, UpdateDesignEvent request) {
         return Single.from(updateDesign)
                 .map(pst -> pst.bind(makeUpdateParams(request)))
                 .map(bst -> session.executeAsync(bst))
                 .flatMap(rsf -> getResultSet(rsf))
-                .map(rs -> new UpdateDesignResponse(request.getUuid(), rs.wasApplied() ? 1 : 0));
+                .map(rs -> new UpdateDesignResult(request.getUuid(), rs.wasApplied() ? 1 : 0));
     }
 
-    private Single<DeleteDesignResponse> doDeleteDesign(Session session, DeleteDesignRequest request) {
+    private Single<DeleteDesignResult> doDeleteDesign(Session session, DeleteDesignEvent request) {
         return Single.from(deleteDesign)
                 .map(pst -> pst.bind(makeDeleteParams(request)))
                 .map(bst -> session.executeAsync(bst))
                 .flatMap(rsf -> getResultSet(rsf))
-                .map(rs -> new DeleteDesignResponse(request.getUuid(), rs.wasApplied() ? 1 : 0));
+                .map(rs -> new DeleteDesignResult(request.getUuid(), rs.wasApplied() ? 1 : 0));
     }
 
-    private Single<DeleteDesignsResponse> doDeleteDesigns(Session session, DeleteDesignsRequest request) {
+    private Single<DeleteDesignsResult> doDeleteDesigns(Session session, DeleteDesignsEvent request) {
         return Single.from(deleteDesigns)
                 .map(pst -> pst.bind())
                 .map(bst -> session.executeAsync(bst))
                 .flatMap(rsf -> getResultSet(rsf))
-                .map(rs -> new DeleteDesignsResponse(rs.wasApplied() ? 1 : 0));
+                .map(rs -> new DeleteDesignsResult(rs.wasApplied() ? 1 : 0));
     }
 
-    private Object[] makeInsertParams(InsertDesignRequest request) {
+    private Object[] makeInsertParams(InsertDesignEvent request) {
         return new Object[] { request.getUuid(), request.getJson() };
     }
 
-    private Object[] makeUpdateParams(UpdateDesignRequest request) {
+    private Object[] makeUpdateParams(UpdateDesignEvent request) {
         return new Object[] { request.getJson(), request.getUuid() };
     }
 
-    private Object[] makeDeleteParams(DeleteDesignRequest request) {
+    private Object[] makeDeleteParams(DeleteDesignEvent request) {
         return new Object[] { request.getUuid() };
     }
 

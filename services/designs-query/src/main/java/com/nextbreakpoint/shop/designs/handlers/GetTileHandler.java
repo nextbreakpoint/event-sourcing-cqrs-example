@@ -46,7 +46,7 @@ public class GetTileHandler implements Handler<RoutingContext> {
     private void getTileAsync(RoutingContext routingContext, Store store, Future<byte[]> future) {
         fromCallable(() -> makeTileParams(routingContext))
                 .flatMap(params -> store.loadDesign(new LoadDesignRequest(params.getUuid()))
-                        .map(response -> response.getDesign().orElseThrow(() -> Failure.notFound()))
+                        .map(response -> response.getDesignDocument().orElseThrow(() -> Failure.notFound()))
                         .map(design -> new JsonObject(design.getJson()))
                         .flatMap(object -> fromCallable(() -> convertToBundle(object)))
                         .doOnEach(bundle -> routingContext.response().closeHandler(x -> Thread.currentThread().interrupt()))

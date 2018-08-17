@@ -1,5 +1,6 @@
 package com.nextbreakpoint.shop.common;
 
+@FunctionalInterface
 public interface MessageHandler {
-    void onMessage(Message message);
+    void onNext(Message message);
 }

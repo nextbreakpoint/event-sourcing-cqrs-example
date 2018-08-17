@@ -1,7 +1,7 @@
 package com.nextbreakpoint.shop.designs.handlers;
 
 import com.nextbreakpoint.shop.common.Mapper;
-import com.nextbreakpoint.shop.designs.model.InsertDesignEvent;
+import com.nextbreakpoint.shop.common.InsertDesignEvent;
 import io.vertx.core.json.JsonObject;
 import io.vertx.rxjava.ext.web.RoutingContext;
 

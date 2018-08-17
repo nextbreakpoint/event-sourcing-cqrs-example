@@ -3,8 +3,8 @@ package com.nextbreakpoint.shop.designs.handlers;
 import com.nextbreakpoint.shop.common.Controller;
 import com.nextbreakpoint.shop.common.Mapper;
 import com.nextbreakpoint.shop.common.Message;
-import com.nextbreakpoint.shop.designs.model.DeleteDesignsEvent;
-import com.nextbreakpoint.shop.designs.model.DeleteDesignsResponse;
+import com.nextbreakpoint.shop.common.DeleteDesignsEvent;
+import com.nextbreakpoint.shop.designs.model.DeleteDesignsResult;
 import io.vertx.core.json.Json;
 import io.vertx.rxjava.kafka.client.producer.KafkaProducer;
 import io.vertx.rxjava.kafka.client.producer.KafkaProducerRecord;
@@ -12,7 +12,7 @@ import rx.Single;
 
 import java.util.Objects;
 
-public class DeleteDesignsController implements Controller<DeleteDesignsEvent, DeleteDesignsResponse> {
+public class DeleteDesignsController implements Controller<DeleteDesignsEvent, DeleteDesignsResult> {
     private final String topic;
     private final KafkaProducer<String, String> producer;
     private final Mapper<DeleteDesignsEvent, Message> messageMapper;
@@ -24,11 +24,11 @@ public class DeleteDesignsController implements Controller<DeleteDesignsEvent, D
     }
 
     @Override
-    public Single<DeleteDesignsResponse> onNext(DeleteDesignsEvent event) {
+    public Single<DeleteDesignsResult> onNext(DeleteDesignsEvent event) {
         return createRecord(event)
                 .flatMap(record -> producer.rxWrite(record))
-                .map(record -> new DeleteDesignsResponse(1))
-                .onErrorReturn(record -> new DeleteDesignsResponse(0));
+                .map(record -> new DeleteDesignsResult(1))
+                .onErrorReturn(record -> new DeleteDesignsResult(0));
     }
 
     protected Single<KafkaProducerRecord<String, String>> createRecord(DeleteDesignsEvent request) {

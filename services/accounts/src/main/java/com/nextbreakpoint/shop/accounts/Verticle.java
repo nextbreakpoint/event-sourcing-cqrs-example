@@ -30,9 +30,10 @@ import com.nextbreakpoint.shop.accounts.load.LoadAccountResponseMapper;
 import com.nextbreakpoint.shop.accounts.load.LoadSelfAccountRequestMapper;
 import com.nextbreakpoint.shop.common.AccessHandler;
 import com.nextbreakpoint.shop.common.CassandraClusterFactory;
+import com.nextbreakpoint.shop.common.Content;
 import com.nextbreakpoint.shop.common.ContentHandler;
-import com.nextbreakpoint.shop.common.RESTContentHandler;
-import com.nextbreakpoint.shop.common.FailedRequestHandler;
+import com.nextbreakpoint.shop.common.DefaultHandler;
+import com.nextbreakpoint.shop.common.RequestFailedHandler;
 import com.nextbreakpoint.shop.common.Failure;
 import com.nextbreakpoint.shop.common.GraphiteManager;
 import com.nextbreakpoint.shop.common.JWTProviderFactory;
@@ -183,63 +184,63 @@ public class Verticle extends AbstractVerticle {
         return null;
     }
 
-    private RESTContentHandler<DeleteAccountRequest, DeleteAccountResponse> createDeleteAccountHandler(Store store) {
-        return RESTContentHandler.<DeleteAccountRequest, DeleteAccountResponse>builder()
+    private DefaultHandler<RoutingContext, DeleteAccountRequest, DeleteAccountResponse, Content> createDeleteAccountHandler(Store store) {
+        return DefaultHandler.<RoutingContext, DeleteAccountRequest, DeleteAccountResponse, Content>builder()
                 .withInputMapper(new DeleteAccountRequestMapper())
                 .withOutputMapper(new DeleteAccountResponseMapper())
                 .withController(new DeleteAccountController(store))
                 .onSuccess(new ContentHandler(200))
-                .onFailure(new FailedRequestHandler())
+                .onFailure(new RequestFailedHandler())
                 .build();
     }
 
-    private RESTContentHandler<DeleteAccountsRequest, DeleteAccountsResponse> createDeleteAccountsHandler(Store store) {
-        return RESTContentHandler.<DeleteAccountsRequest, DeleteAccountsResponse>builder()
+    private DefaultHandler<RoutingContext, DeleteAccountsRequest, DeleteAccountsResponse, Content> createDeleteAccountsHandler(Store store) {
+        return DefaultHandler.<RoutingContext, DeleteAccountsRequest, DeleteAccountsResponse, Content>builder()
                 .withInputMapper(new DeleteAccountsRequestMapper())
                 .withOutputMapper(new DeleteAccountsResponseMapper())
                 .withController(new DeleteAccountsController(store))
                 .onSuccess(new NoContentHandler(204))
-                .onFailure(new FailedRequestHandler())
+                .onFailure(new RequestFailedHandler())
                 .build();
     }
 
-    private RESTContentHandler<InsertAccountRequest, InsertAccountResponse> createInsertAccountHandler(Store store) {
-        return RESTContentHandler.<InsertAccountRequest, InsertAccountResponse>builder()
+    private DefaultHandler<RoutingContext, InsertAccountRequest, InsertAccountResponse, Content> createInsertAccountHandler(Store store) {
+        return DefaultHandler.<RoutingContext, InsertAccountRequest, InsertAccountResponse, Content>builder()
                 .withInputMapper(new InsertAccountRequestMapper())
                 .withOutputMapper(new InsertAccountResponseMapper())
                 .withController(new InsertAccountController(store))
                 .onSuccess(new ContentHandler(201))
-                .onFailure(new FailedRequestHandler())
+                .onFailure(new RequestFailedHandler())
                 .build();
     }
 
-    private RESTContentHandler<ListAccountsRequest, ListAccountsResponse> createListAccountsHandler(Store store) {
-        return RESTContentHandler.<ListAccountsRequest, ListAccountsResponse>builder()
+    private DefaultHandler<RoutingContext, ListAccountsRequest, ListAccountsResponse, Content> createListAccountsHandler(Store store) {
+        return DefaultHandler.<RoutingContext, ListAccountsRequest, ListAccountsResponse, Content>builder()
                 .withInputMapper(new ListAccountsRequestMapper())
                 .withOutputMapper(new ListAccountsResponseMapper())
                 .withController(new ListAccountsController(store))
                 .onSuccess(new ContentHandler(200))
-                .onFailure(new FailedRequestHandler())
+                .onFailure(new RequestFailedHandler())
                 .build();
     }
 
-    private RESTContentHandler<LoadAccountRequest, LoadAccountResponse> createLoadAccountHandler(Store store) {
-        return RESTContentHandler.<LoadAccountRequest, LoadAccountResponse>builder()
+    private DefaultHandler<RoutingContext, LoadAccountRequest, LoadAccountResponse, Content> createLoadAccountHandler(Store store) {
+        return DefaultHandler.<RoutingContext, LoadAccountRequest, LoadAccountResponse, Content>builder()
                 .withInputMapper(new LoadAccountRequestMapper())
                 .withOutputMapper(new LoadAccountResponseMapper())
                 .withController(new LoadAccountController(store))
                 .onSuccess(new ContentHandler(200, 404))
-                .onFailure(new FailedRequestHandler())
+                .onFailure(new RequestFailedHandler())
                 .build();
     }
 
-    private RESTContentHandler<LoadAccountRequest, LoadAccountResponse> createLoadSelfAccountHandler(Store store) {
-        return RESTContentHandler.<LoadAccountRequest, LoadAccountResponse>builder()
+    private DefaultHandler<RoutingContext, LoadAccountRequest, LoadAccountResponse, Content> createLoadSelfAccountHandler(Store store) {
+        return DefaultHandler.<RoutingContext, LoadAccountRequest, LoadAccountResponse, Content>builder()
                 .withInputMapper(new LoadSelfAccountRequestMapper())
                 .withOutputMapper(new LoadAccountResponseMapper())
                 .withController(new LoadAccountController(store))
                 .onSuccess(new ContentHandler(200, 404))
-                .onFailure(new FailedRequestHandler())
+                .onFailure(new RequestFailedHandler())
                 .build();
     }
 }

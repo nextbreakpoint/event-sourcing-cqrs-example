@@ -1,7 +1,7 @@
 package com.nextbreakpoint.shop.designs.handlers;
 
 import com.nextbreakpoint.shop.common.Mapper;
-import com.nextbreakpoint.shop.designs.model.DeleteDesignEvent;
+import com.nextbreakpoint.shop.common.DeleteDesignEvent;
 import io.vertx.rxjava.ext.web.RoutingContext;
 
 import java.util.UUID;

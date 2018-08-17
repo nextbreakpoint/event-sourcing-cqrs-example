@@ -3,8 +3,8 @@ package com.nextbreakpoint.shop.designs.handlers;
 import com.nextbreakpoint.shop.common.Controller;
 import com.nextbreakpoint.shop.common.Mapper;
 import com.nextbreakpoint.shop.common.Message;
-import com.nextbreakpoint.shop.designs.model.DeleteDesignEvent;
-import com.nextbreakpoint.shop.designs.model.DeleteDesignResponse;
+import com.nextbreakpoint.shop.common.DeleteDesignEvent;
+import com.nextbreakpoint.shop.designs.model.DeleteDesignResult;
 import io.vertx.core.json.Json;
 import io.vertx.rxjava.kafka.client.producer.KafkaProducer;
 import io.vertx.rxjava.kafka.client.producer.KafkaProducerRecord;
@@ -12,7 +12,7 @@ import rx.Single;
 
 import java.util.Objects;
 
-public class DeleteDesignController implements Controller<DeleteDesignEvent, DeleteDesignResponse> {
+public class DeleteDesignController implements Controller<DeleteDesignEvent, DeleteDesignResult> {
     private final String topic;
     private final KafkaProducer<String, String> producer;
     private final Mapper<DeleteDesignEvent, Message> messageMapper;
@@ -24,11 +24,11 @@ public class DeleteDesignController implements Controller<DeleteDesignEvent, Del
     }
 
     @Override
-    public Single<DeleteDesignResponse> onNext(DeleteDesignEvent event) {
+    public Single<DeleteDesignResult> onNext(DeleteDesignEvent event) {
         return createRecord(event)
                 .flatMap(record -> producer.rxWrite(record))
-                .map(record -> new DeleteDesignResponse(event.getUuid(), 1))
-                .onErrorReturn(err -> new DeleteDesignResponse(event.getUuid(), 0));
+                .map(record -> new DeleteDesignResult(event.getUuid(), 1))
+                .onErrorReturn(err -> new DeleteDesignResult(event.getUuid(), 0));
     }
 
     protected Single<KafkaProducerRecord<String, String>> createRecord(DeleteDesignEvent request) {

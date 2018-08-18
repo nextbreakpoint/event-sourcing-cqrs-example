@@ -14,7 +14,7 @@
   "graphite_host": "localhost",
   "graphite_port": 2003,
 
-  "kafka_bootstrap_servers": "kafka-designs:9092",
+  "kafka_bootstrap_servers": "kafka-designs-command:9092",
 
   "events_topic": "designs-events",
 

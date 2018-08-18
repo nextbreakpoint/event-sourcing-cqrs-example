@@ -144,7 +144,7 @@
                                             <alias>cassandra-designs</alias>
                                         </network>
                                         <wait>
-                                            <log>Created default superuser role 'cassandra'</log>
+                                            <log>Initializing designs.designs</log>
                                             <time>90000</time>
                                         </wait>
                                     </run>

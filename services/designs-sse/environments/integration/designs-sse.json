@@ -14,7 +14,7 @@
   "graphite_host": "localhost",
   "graphite_port": 2003,
 
-  "kafka_bootstrap_servers": "kafka-sse:9092",
+  "kafka_bootstrap_servers": "kafka-designs-sse:9092",
   "kafka_group_id": "designs-sse",
 
   "max_execution_time_in_millis": 30000

@@ -123,7 +123,7 @@
                             <images>
                                 <image>
                                     <name>nextbreakpoint/cassandra:3.11</name>
-                                    <alias>cassandra-designs</alias>
+                                    <alias>cassandra-designs-processor</alias>
                                     <run>
                                         <ports>
                                             <port>9042:9042</port>
@@ -141,17 +141,63 @@
                                         <network>
                                             <mode>custom</mode>
                                             <name>shop-test</name>
-                                            <alias>cassandra-designs</alias>
+                                            <alias>cassandra-designs-processor</alias>
                                         </network>
                                         <wait>
-                                            <log>Created default superuser role 'cassandra'</log>
+                                            <log>Initializing designs.designs</log>
                                             <time>90000</time>
                                         </wait>
                                     </run>
                                 </image>
                                 <image>
+                                    <name>nextbreakpoint/zookeeper:3.4.12-1</name>
+                                    <alias>zookeeper-designs-processor</alias>
+                                    <run>
+                                        <ports>
+                                            <port>2181:2181</port>
+                                        </ports>
+                                        <env>
+                                            <ZOO_MY_ID>1</ZOO_MY_ID>
+                                        </env>
+                                        <network>
+                                            <mode>custom</mode>
+                                            <name>shop-test</name>
+                                            <alias>zookeeper-designs-processor</alias>
+                                        </network>
+                                        <wait>
+                                            <log>binding to port 0.0.0.0/0.0.0.0:2181</log>
+                                            <time>60000</time>
+                                        </wait>
+                                    </run>
+                                </image>
+                                <image>
+                                    <name>nextbreakpoint/kafka:1.1.0-1</name>
+                                    <alias>kafka-designs-processor</alias>
+                                    <run>
+                                        <ports>
+                                            <port>9092:9092</port>
+                                        </ports>
+                                        <env>
+                                            <ZK_CONNECT>zookeeper-design-processor:2181</ZK_CONNECT>
+                                            <BROKER_ID>1</BROKER_ID>
+                                        </env>
+                                        <network>
+                                            <mode>custom</mode>
+                                            <name>shop-test</name>
+                                            <alias>kafka-designs-processor</alias>
+                                        </network>
+                                        <wait>
+                                            <log>started \(kafka.server.KafkaServer\)</log>
+                                            <time>60000</time>
+                                        </wait>
+                                        <dependsOn>
+                                            <container>zookeeper-designs-processor</container>
+                                        </dependsOn>
+                                    </run>
+                                </image>
+                                <image>
                                     <name>${environment}-${colour}-shop/designs:${project.version}</name>
-                                    <alias>service-design-processor</alias>
+                                    <alias>service-designs-processor</alias>
                                     <build>
                                         <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
                                         <filter>${*}</filter>
@@ -172,14 +218,16 @@
                                         <network>
                                             <mode>custom</mode>
                                             <name>shop-test</name>
-                                            <alias>service-design-processor</alias>
+                                            <alias>service-designs-processor</alias>
                                         </network>
                                         <wait>
                                             <log>Succeeded in deploying verticle</log>
-                                            <time>60000</time>
+                                            <time>240000</time>
                                         </wait>
                                         <dependsOn>
-                                            <container>cassandra-designs</container>
+                                            <container>zookeeper-designs-processor</container>
+                                            <container>kafka-designs-processor</container>
+                                            <container>cassandra-designs-processor</container>
                                         </dependsOn>
                                     </run>
                                 </image>
@@ -200,7 +248,15 @@
                                 </image>
                                 <image>
                                     <name>nextbreakpoint/cassandra:3.11</name>
-                                    <alias>cassandra-designs</alias>
+                                    <alias>cassandra-designs-processor</alias>
+                                </image>
+                                <image>
+                                    <name>nextbreakpoint/kafka:1.1.0-1</name>
+                                    <alias>kafka-designs-processor</alias>
+                                </image>
+                                <image>
+                                    <name>nextbreakpoint/zookeeper:3.4.12-1</name>
+                                    <alias>zookeeper-designs-processor</alias>
                                 </image>
                             </images>
                         </configuration>

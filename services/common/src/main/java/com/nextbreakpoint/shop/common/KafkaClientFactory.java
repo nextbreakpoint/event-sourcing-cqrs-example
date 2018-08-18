@@ -20,10 +20,10 @@ public class KafkaClientFactory {
         final String acks = config.getString("kafka_acks", "1");
 
         final Map<String, String> producerConfig = new HashMap<>();
-        config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        config.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, keySerializer);
-        config.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, valSerializer);
-        config.put(ProducerConfig.ACKS_CONFIG, acks);
+        producerConfig.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        producerConfig.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, keySerializer);
+        producerConfig.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, valSerializer);
+        producerConfig.put(ProducerConfig.ACKS_CONFIG, acks);
 
         return KafkaProducer.create(vertx, producerConfig);
     }
@@ -37,12 +37,12 @@ public class KafkaClientFactory {
         final String enableAutoCommit = config.getString("kafka_enable_auto_commit", "false");
 
         final Map<String, String> consumerConfig = new HashMap<>();
-        config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, keyDeserializer);
-        config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, valDeserializer);
-        config.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
-        config.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, autoOffsetReset);
-        config.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, enableAutoCommit);
+        consumerConfig.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        consumerConfig.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, keyDeserializer);
+        consumerConfig.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, valDeserializer);
+        consumerConfig.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
+        consumerConfig.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, autoOffsetReset);
+        consumerConfig.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, enableAutoCommit);
 
         return KafkaConsumer.create(vertx, consumerConfig);
     }

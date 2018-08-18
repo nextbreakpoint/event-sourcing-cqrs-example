@@ -122,6 +122,52 @@
                             <autoCreateCustomNetworks>true</autoCreateCustomNetworks>
                             <images>
                                 <image>
+                                    <name>nextbreakpoint/zookeeper:3.4.12-1</name>
+                                    <alias>zookeeper-designs-command</alias>
+                                    <run>
+                                        <ports>
+                                            <port>2181:2181</port>
+                                        </ports>
+                                        <env>
+                                            <ZOO_MY_ID>1</ZOO_MY_ID>
+                                        </env>
+                                        <network>
+                                            <mode>custom</mode>
+                                            <name>shop-test</name>
+                                            <alias>zookeeper-designs-command</alias>
+                                        </network>
+                                        <wait>
+                                            <log>binding to port 0.0.0.0/0.0.0.0:2181</log>
+                                            <time>60000</time>
+                                        </wait>
+                                    </run>
+                                </image>
+                                <image>
+                                    <name>nextbreakpoint/kafka:1.1.0-1</name>
+                                    <alias>kafka-designs-command</alias>
+                                    <run>
+                                        <ports>
+                                            <port>9092:9092</port>
+                                        </ports>
+                                        <env>
+                                            <ZK_CONNECT>zookeeper-designs-command:2181</ZK_CONNECT>
+                                            <BROKER_ID>1</BROKER_ID>
+                                        </env>
+                                        <network>
+                                            <mode>custom</mode>
+                                            <name>shop-test</name>
+                                            <alias>kafka-designs-command</alias>
+                                        </network>
+                                        <wait>
+                                            <log>started \(kafka.server.KafkaServer\)</log>
+                                            <time>60000</time>
+                                        </wait>
+                                        <dependsOn>
+                                            <container>zookeeper-designs-command</container>
+                                        </dependsOn>
+                                    </run>
+                                </image>
+                                <image>
                                     <name>${environment}-${colour}-shop/designs:${project.version}</name>
                                     <alias>service-designs-command</alias>
                                     <build>
@@ -148,8 +194,12 @@
                                         </network>
                                         <wait>
                                             <log>Succeeded in deploying verticle</log>
-                                            <time>60000</time>
+                                            <time>240000</time>
                                         </wait>
+                                        <dependsOn>
+                                            <container>zookeeper-designs-command</container>
+                                            <container>kafka-designs-command</container>
+                                        </dependsOn>
                                     </run>
                                 </image>
                             </images>
@@ -166,6 +216,14 @@
                                 <image>
                                     <name>${environment}-${colour}-shop/designs:${project.version}</name>
                                     <alias>service-designs-command</alias>
+                                </image>
+                                <image>
+                                    <name>nextbreakpoint/kafka:1.1.0-1</name>
+                                    <alias>kafka-designs-command</alias>
+                                </image>
+                                <image>
+                                    <name>nextbreakpoint/zookeeper:3.4.12-1</name>
+                                    <alias>zookeeper-designs-command</alias>
                                 </image>
                             </images>
                         </configuration>

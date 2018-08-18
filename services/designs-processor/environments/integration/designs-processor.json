@@ -18,10 +18,10 @@
   "cassandra_keyspace": "designs",
   "cassandra_username": "admin",
   "cassandra_password": "password",
-  "cassandra_contactPoint": "cassandra-designs",
+  "cassandra_contactPoint": "cassandra-designs-processor",
   "cassandra_port": 9042,
 
-  "kafka_bootstrap_servers": "kafka-designs:9092",
+  "kafka_bootstrap_servers": "kafka-designs-processor:9092",
   "kafka_group_id": "designs-processor",
 
   "events_topic": "designs-events",

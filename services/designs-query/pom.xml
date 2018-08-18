@@ -123,7 +123,7 @@
                             <images>
                                 <image>
                                     <name>nextbreakpoint/cassandra:3.11</name>
-                                    <alias>cassandra-designs</alias>
+                                    <alias>cassandra-designs-query</alias>
                                     <run>
                                         <ports>
                                             <port>9042:9042</port>
@@ -141,10 +141,10 @@
                                         <network>
                                             <mode>custom</mode>
                                             <name>shop-test</name>
-                                            <alias>cassandra-designs</alias>
+                                            <alias>cassandra-designs-query</alias>
                                         </network>
                                         <wait>
-                                            <log>Created default superuser role 'cassandra'</log>
+                                            <log>Initializing designs.designs</log>
                                             <time>90000</time>
                                         </wait>
                                     </run>
@@ -179,7 +179,7 @@
                                             <time>60000</time>
                                         </wait>
                                         <dependsOn>
-                                            <container>cassandra-designs</container>
+                                            <container>cassandra-designs-query</container>
                                         </dependsOn>
                                     </run>
                                 </image>
@@ -200,7 +200,7 @@
                                 </image>
                                 <image>
                                     <name>nextbreakpoint/cassandra:3.11</name>
-                                    <alias>cassandra-designs</alias>
+                                    <alias>cassandra-designs-query</alias>
                                 </image>
                             </images>
                         </configuration>

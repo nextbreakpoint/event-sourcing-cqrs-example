@@ -94,7 +94,7 @@ public class Verticle extends AbstractVerticle {
 
         final JWTAuth jwtProvider = JWTProviderFactory.create(vertx, config);
 
-        final KafkaProducer<String, String> producer = null;//KafkaClientFactory.createProducer(vertx, config);
+        final KafkaProducer<String, String> producer = KafkaClientFactory.createProducer(vertx, config);
 
         final Router mainRouter = Router.router(vertx);
 

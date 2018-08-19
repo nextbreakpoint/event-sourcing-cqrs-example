@@ -36,6 +36,7 @@
                                         </ports>
                                         <env>
                                           <ZK_CONNECT>zookeeper:2181</ZK_CONNECT>
+                                          <ADVERTISED_HOST>localhost</ADVERTISED_HOST>
                                           <BROKER_ID>1</BROKER_ID>
                                         </env>
                                         <network>

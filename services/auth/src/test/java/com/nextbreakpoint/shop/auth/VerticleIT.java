@@ -6,7 +6,6 @@ import com.jayway.restassured.config.RedirectConfig;
 import com.jayway.restassured.config.RestAssuredConfig;
 import com.jayway.restassured.config.SSLConfig;
 import com.xebialabs.restito.server.StubServer;
-import org.apache.http.annotation.NotThreadSafe;
 import org.glassfish.grizzly.http.util.HttpStatus;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -38,7 +37,6 @@ import static org.hamcrest.CoreMatchers.startsWith;
 @RunWith(JUnitPlatform.class)
 @Tag("slow")
 @DisplayName("Auth service")
-@NotThreadSafe
 public class VerticleIT {
   private static final String OAUTH_TOKEN_PATH = "/login/oauth/access_token";
   private static final String OAUTH_USER_PATH = "/user";

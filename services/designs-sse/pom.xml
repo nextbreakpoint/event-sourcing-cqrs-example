@@ -98,7 +98,7 @@
                         <configuration>
                             <images>
                                 <image>
-                                    <name>${environment}-${colour}-shop/design-sse:${project.version}</name>
+                                    <name>${environment}-${colour}-shop/designs-sse:${project.version}</name>
                                     <alias>service-designs-sse</alias>
                                     <build>
                                         <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
@@ -133,7 +133,7 @@
                                         </env>
                                         <network>
                                             <mode>custom</mode>
-                                            <name>shop-test</name>
+                                            <name>shop-designs-sse</name>
                                             <alias>zookeeper-designs-sse</alias>
                                         </network>
                                         <wait>
@@ -150,12 +150,13 @@
                                             <port>9092:9092</port>
                                         </ports>
                                         <env>
-                                            <ZK_CONNECT>zookeeper-design-sse:2181</ZK_CONNECT>
+                                            <ZK_CONNECT>zookeeper-designs-sse:2181</ZK_CONNECT>
+                                            <ADVERTISED_HOST>kafka-designs-sse</ADVERTISED_HOST>
                                             <BROKER_ID>1</BROKER_ID>
                                         </env>
                                         <network>
                                             <mode>custom</mode>
-                                            <name>shop-test</name>
+                                            <name>shop-designs-sse</name>
                                             <alias>kafka-designs-sse</alias>
                                         </network>
                                         <wait>
@@ -168,7 +169,7 @@
                                     </run>
                                 </image>
                                 <image>
-                                    <name>${environment}-${colour}-shop/design-sse:${project.version}</name>
+                                    <name>${environment}-${colour}-shop/designs-sse:${project.version}</name>
                                     <alias>service-designs-sse</alias>
                                     <build>
                                         <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
@@ -189,7 +190,7 @@
                                         </volumes>
                                         <network>
                                             <mode>custom</mode>
-                                            <name>shop-test</name>
+                                            <name>shop-designs-sse</name>
                                             <alias>service-designs-sse</alias>
                                         </network>
                                         <wait>
@@ -214,7 +215,7 @@
                         <configuration>
                             <images>
                                 <image>
-                                    <name>${environment}-${colour}-shop/design-sse:${project.version}</name>
+                                    <name>${environment}-${colour}-shop/designs-sse:${project.version}</name>
                                     <alias>service-designs-sse</alias>
                                 </image>
                                 <image>
@@ -237,7 +238,7 @@
                         <configuration>
                             <images>
                                 <image>
-                                    <name>${environment}-${colour}-shop/design-sse:${project.version}</name>
+                                    <name>${environment}-${colour}-shop/designs-sse:${project.version}</name>
                                     <alias>service-designs-sse</alias>
                                     <build>
                                         <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
@@ -259,7 +260,7 @@
                         <configuration>
                             <images>
                                 <image>
-                                    <name>${environment}-${colour}-shop/design-sse:${project.version}</name>
+                                    <name>${environment}-${colour}-shop/designs-sse:${project.version}</name>
                                     <alias>service-designs-sse</alias>
                                 </image>
                             </images>
@@ -275,7 +276,7 @@
                             <showLogs>true</showLogs>
                             <images>
                                 <image>
-                                    <name>${environment}-${colour}-shop/design-sse:${project.version}</name>
+                                    <name>${environment}-${colour}-shop/designs-sse:${project.version}</name>
                                     <alias>service-designs-sse</alias>
                                     <build>
                                         <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
@@ -313,7 +314,7 @@
                         <configuration>
                             <images>
                                 <image>
-                                    <name>${environment}-${colour}-shop/design-sse:${project.version}</name>
+                                    <name>${environment}-${colour}-shop/designs-sse:${project.version}</name>
                                     <alias>service-designs-sse</alias>
                                 </image>
                             </images>

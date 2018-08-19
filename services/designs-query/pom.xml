@@ -98,7 +98,7 @@
                         <configuration>
                             <images>
                                 <image>
-                                    <name>${environment}-${colour}-shop/design-query:${project.version}</name>
+                                    <name>${environment}-${colour}-shop/designs-query:${project.version}</name>
                                     <alias>service-designs-query</alias>
                                     <build>
                                         <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
@@ -140,7 +140,7 @@
                                         </volumes>
                                         <network>
                                             <mode>custom</mode>
-                                            <name>shop-test</name>
+                                            <name>shop-designs-query</name>
                                             <alias>cassandra-designs-query</alias>
                                         </network>
                                         <wait>
@@ -150,7 +150,7 @@
                                     </run>
                                 </image>
                                 <image>
-                                    <name>${environment}-${colour}-shop/design-query:${project.version}</name>
+                                    <name>${environment}-${colour}-shop/designs-query:${project.version}</name>
                                     <alias>service-designs-query</alias>
                                     <build>
                                         <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
@@ -171,7 +171,7 @@
                                         </volumes>
                                         <network>
                                             <mode>custom</mode>
-                                            <name>shop-test</name>
+                                            <name>shop-designs-query</name>
                                             <alias>service-designs-query</alias>
                                         </network>
                                         <wait>
@@ -195,7 +195,7 @@
                         <configuration>
                             <images>
                                 <image>
-                                    <name>${environment}-${colour}-shop/design-query:${project.version}</name>
+                                    <name>${environment}-${colour}-shop/designs-query:${project.version}</name>
                                     <alias>service-designs-query</alias>
                                 </image>
                                 <image>
@@ -214,7 +214,7 @@
                         <configuration>
                             <images>
                                 <image>
-                                    <name>${environment}-${colour}-shop/design-query:${project.version}</name>
+                                    <name>${environment}-${colour}-shop/designs-query:${project.version}</name>
                                     <alias>service-designs-query</alias>
                                     <build>
                                         <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
@@ -236,7 +236,7 @@
                         <configuration>
                             <images>
                                 <image>
-                                    <name>${environment}-${colour}-shop/design-query:${project.version}</name>
+                                    <name>${environment}-${colour}-shop/designs-query:${project.version}</name>
                                     <alias>service-designs-query</alias>
                                 </image>
                             </images>
@@ -252,7 +252,7 @@
                             <showLogs>true</showLogs>
                             <images>
                                 <image>
-                                    <name>${environment}-${colour}-shop/design-query:${project.version}</name>
+                                    <name>${environment}-${colour}-shop/designs-query:${project.version}</name>
                                     <alias>service-designs-query</alias>
                                     <build>
                                         <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
@@ -290,7 +290,7 @@
                         <configuration>
                             <images>
                                 <image>
-                                    <name>${environment}-${colour}-shop/design-query:${project.version}</name>
+                                    <name>${environment}-${colour}-shop/designs-query:${project.version}</name>
                                     <alias>service-designs-query</alias>
                                 </image>
                             </images>

@@ -9,7 +9,6 @@ import com.jayway.restassured.http.ContentType;
 import com.jayway.restassured.path.json.JsonPath;
 import com.nextbreakpoint.shop.common.Authority;
 import com.nextbreakpoint.shop.common.TestHelper;
-import org.apache.http.annotation.NotThreadSafe;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -34,7 +33,6 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 @RunWith(JUnitPlatform.class)
 @Tag("slow")
 @DisplayName("Accounts service")
-@NotThreadSafe
 public class VerticleIT {
   private static RestAssuredConfig restAssuredConfig;
   private static AtomicInteger counter = new AtomicInteger(1);

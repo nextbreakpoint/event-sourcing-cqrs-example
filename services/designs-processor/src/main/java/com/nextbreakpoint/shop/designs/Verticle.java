@@ -105,9 +105,9 @@ public class Verticle extends AbstractVerticle {
 
         final Session session = cluster.connect(keyspace);
 
-        final KafkaProducer<String, String> producer = null;//KafkaClientFactory.createProducer(vertx, config);
+        final KafkaProducer<String, String> producer = KafkaClientFactory.createProducer(vertx, config);
 
-        final KafkaConsumer<String, String> consumer = null;//KafkaClientFactory.createConsumer(vertx, config);
+        final KafkaConsumer<String, String> consumer = KafkaClientFactory.createConsumer(vertx, config);
 
         final Store store = new CassandraStore(session);
 

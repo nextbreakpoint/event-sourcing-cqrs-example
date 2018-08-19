@@ -13,7 +13,7 @@
         <module>designs</module>
         <module>designs-query</module>
         <module>designs-command</module>
-        <!--<module>designs-processor</module>-->
+        <module>designs-processor</module>
         <module>designs-sse</module>
         <module>accounts</module>
         <module>auth</module>
@@ -62,13 +62,14 @@
         <maven-failsafe-plugin.version>2.20.1</maven-failsafe-plugin.version>
         <maven-toolchains-plugin.version>1.1</maven-toolchains-plugin.version>
         <build-helper-maven-plugin.version>1.9.1</build-helper-maven-plugin.version>
-        <docker-maven-plugin.version>0.23.0</docker-maven-plugin.version>
+        <docker-maven-plugin.version>0.26.1</docker-maven-plugin.version>
         <java.version>9</java.version>
         <maven.source.release>1.9</maven.source.release>
         <maven.target.release>1.9</maven.target.release>
         <maven.compiler.source>1.9</maven.compiler.source>
         <maven.compiler.target>1.9</maven.compiler.target>
         <logstash-gelf.version>1.11.2</logstash-gelf.version>
+        <stub.host>localhost</stub.host>
     </properties>
     <build>
         <plugins>
@@ -393,4 +394,15 @@
             <artifactId>logstash-gelf</artifactId>
         </dependency>
     </dependencies>
+    <profiles>
+        <profile>
+            <id>Mac</id>
+            <activation>
+                <os><family>mac</family></os>
+            </activation>
+            <properties>
+                <stub.host>host.docker.internal</stub.host>
+            </properties>
+        </profile>
+    </profiles>
 </project>

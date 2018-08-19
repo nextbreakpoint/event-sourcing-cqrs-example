@@ -140,6 +140,11 @@
                                                 <volume>${project.basedir}/../secrets:/secrets</volume>
                                             </bind>
                                         </volumes>
+                                        <network>
+                                            <mode>custom</mode>
+                                            <name>shop-test</name>
+                                            <alias>shop-web</alias>
+                                        </network>
                                         <wait>
                                             <log>Succeeded in deploying verticle</log>
                                             <time>30000</time>

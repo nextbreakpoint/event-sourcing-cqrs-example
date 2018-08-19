@@ -122,34 +122,6 @@
                             <autoCreateCustomNetworks>true</autoCreateCustomNetworks>
                             <images>
                                 <image>
-                                    <name>nextbreakpoint/cassandra:3.11</name>
-                                    <alias>cassandra-designs-processor</alias>
-                                    <run>
-                                        <ports>
-                                            <port>9042:9042</port>
-                                        </ports>
-                                        <env>
-                                            <CASSANDRA_RACK>rack1</CASSANDRA_RACK>
-                                            <CASSANDRA_DC>datacenter1</CASSANDRA_DC>
-                                            <JVM_OPTS>-Xms2G -Xmx2G</JVM_OPTS>
-                                        </env>
-                                        <volumes>
-                                            <bind>
-                                                <volume>${project.basedir}/scripts:/docker-entrypoint-initdb.d</volume>
-                                            </bind>
-                                        </volumes>
-                                        <network>
-                                            <mode>custom</mode>
-                                            <name>shop-designs-processor</name>
-                                            <alias>cassandra-designs-processor</alias>
-                                        </network>
-                                        <wait>
-                                            <log>Initializing designs.designs</log>
-                                            <time>90000</time>
-                                        </wait>
-                                    </run>
-                                </image>
-                                <image>
                                     <name>nextbreakpoint/zookeeper:3.4.12-1</name>
                                     <alias>zookeeper-designs-processor</alias>
                                     <run>
@@ -161,7 +133,7 @@
                                         </env>
                                         <network>
                                             <mode>custom</mode>
-                                            <name>shop-designs-processor</name>
+                                            <name>shop-test</name>
                                             <alias>zookeeper-designs-processor</alias>
                                         </network>
                                         <wait>
@@ -184,7 +156,7 @@
                                         </env>
                                         <network>
                                             <mode>custom</mode>
-                                            <name>shop-designs-processor</name>
+                                            <name>shop-test</name>
                                             <alias>kafka-designs-processor</alias>
                                         </network>
                                         <wait>
@@ -194,6 +166,34 @@
                                         <dependsOn>
                                             <container>zookeeper-designs-processor</container>
                                         </dependsOn>
+                                    </run>
+                                </image>
+                                <image>
+                                    <name>nextbreakpoint/cassandra:3.11</name>
+                                    <alias>cassandra-designs-processor</alias>
+                                    <run>
+                                        <ports>
+                                            <port>9042:9042</port>
+                                        </ports>
+                                        <env>
+                                            <CASSANDRA_RACK>rack1</CASSANDRA_RACK>
+                                            <CASSANDRA_DC>datacenter1</CASSANDRA_DC>
+                                            <JVM_OPTS>-Xms1G -Xmx1G</JVM_OPTS>
+                                        </env>
+                                        <volumes>
+                                            <bind>
+                                                <volume>${project.basedir}/scripts:/docker-entrypoint-initdb.d</volume>
+                                            </bind>
+                                        </volumes>
+                                        <network>
+                                            <mode>custom</mode>
+                                            <name>shop-test</name>
+                                            <alias>cassandra-designs-processor</alias>
+                                        </network>
+                                        <wait>
+                                            <log>Initializing designs.designs</log>
+                                            <time>90000</time>
+                                        </wait>
                                     </run>
                                 </image>
                                 <image>
@@ -218,12 +218,12 @@
                                         </volumes>
                                         <network>
                                             <mode>custom</mode>
-                                            <name>shop-designs-processor</name>
+                                            <name>shop-test</name>
                                             <alias>service-designs-processor</alias>
                                         </network>
                                         <wait>
                                             <log>Succeeded in deploying verticle</log>
-                                            <time>240000</time>
+                                            <time>180000</time>
                                         </wait>
                                         <dependsOn>
                                             <container>zookeeper-designs-processor</container>
@@ -248,16 +248,16 @@
                                     <alias>service-designs-processor</alias>
                                 </image>
                                 <image>
-                                    <name>nextbreakpoint/cassandra:3.11</name>
-                                    <alias>cassandra-designs-processor</alias>
-                                </image>
-                                <image>
                                     <name>nextbreakpoint/kafka:1.1.0-1</name>
                                     <alias>kafka-designs-processor</alias>
                                 </image>
                                 <image>
                                     <name>nextbreakpoint/zookeeper:3.4.12-1</name>
                                     <alias>zookeeper-designs-processor</alias>
+                                </image>
+                                <image>
+                                    <name>nextbreakpoint/cassandra:3.11</name>
+                                    <alias>cassandra-designs-processor</alias>
                                 </image>
                             </images>
                         </configuration>

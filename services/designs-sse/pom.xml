@@ -133,7 +133,7 @@
                                         </env>
                                         <network>
                                             <mode>custom</mode>
-                                            <name>shop-designs-sse</name>
+                                            <name>shop-test</name>
                                             <alias>zookeeper-designs-sse</alias>
                                         </network>
                                         <wait>
@@ -156,7 +156,7 @@
                                         </env>
                                         <network>
                                             <mode>custom</mode>
-                                            <name>shop-designs-sse</name>
+                                            <name>shop-test</name>
                                             <alias>kafka-designs-sse</alias>
                                         </network>
                                         <wait>
@@ -190,12 +190,12 @@
                                         </volumes>
                                         <network>
                                             <mode>custom</mode>
-                                            <name>shop-designs-sse</name>
+                                            <name>shop-test</name>
                                             <alias>service-designs-sse</alias>
                                         </network>
                                         <wait>
                                             <log>Succeeded in deploying verticle</log>
-                                            <time>240000</time>
+                                            <time>180000</time>
                                         </wait>
                                         <dependsOn>
                                             <container>zookeeper-designs-sse</container>

@@ -2,60 +2,61 @@ package com.nextbreakpoint.shop.designs;
 
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Session;
-import com.nextbreakpoint.shop.common.AccessHandler;
-import com.nextbreakpoint.shop.common.CassandraClusterFactory;
-import com.nextbreakpoint.shop.common.Content;
-import com.nextbreakpoint.shop.common.DefaultHandler;
-import com.nextbreakpoint.shop.common.Failure;
-import com.nextbreakpoint.shop.common.GraphiteManager;
-import com.nextbreakpoint.shop.common.JWTProviderFactory;
-import com.nextbreakpoint.shop.common.ResponseHelper;
-import com.nextbreakpoint.shop.common.CORSHandlerFactory;
-import com.nextbreakpoint.shop.common.ServerUtil;
-import com.nextbreakpoint.shop.common.RequestFailedHandler;
-import com.nextbreakpoint.shop.common.ContentHandler;
-import com.nextbreakpoint.shop.designs.delete.DeleteDesignRequest;
-import com.nextbreakpoint.shop.designs.delete.DeleteDesignController;
-import com.nextbreakpoint.shop.designs.delete.DeleteDesignRequestMapper;
-import com.nextbreakpoint.shop.designs.delete.DeleteDesignResponse;
-import com.nextbreakpoint.shop.designs.delete.DeleteDesignResponseMapper;
-import com.nextbreakpoint.shop.common.NoContentHandler;
-import com.nextbreakpoint.shop.designs.delete.DeleteDesignsRequest;
-import com.nextbreakpoint.shop.designs.delete.DeleteDesignsController;
-import com.nextbreakpoint.shop.designs.delete.DeleteDesignsRequestMapper;
-import com.nextbreakpoint.shop.designs.delete.DeleteDesignsResponse;
-import com.nextbreakpoint.shop.designs.delete.DeleteDesignsResponseMapper;
-import com.nextbreakpoint.shop.designs.get.GetTileHandler;
-import com.nextbreakpoint.shop.designs.insert.InsertDesignRequest;
-import com.nextbreakpoint.shop.designs.insert.InsertDesignController;
-import com.nextbreakpoint.shop.designs.insert.InsertDesignRequestMapper;
-import com.nextbreakpoint.shop.designs.insert.InsertDesignResponse;
-import com.nextbreakpoint.shop.designs.insert.InsertDesignResponseMapper;
-import com.nextbreakpoint.shop.designs.list.ListDesignsRequest;
-import com.nextbreakpoint.shop.designs.list.ListDesignsController;
-import com.nextbreakpoint.shop.designs.list.ListDesignsRequestMapper;
-import com.nextbreakpoint.shop.designs.list.ListDesignsResponse;
-import com.nextbreakpoint.shop.designs.list.ListDesignsResponseMapper;
-import com.nextbreakpoint.shop.designs.load.LoadDesignRequest;
-import com.nextbreakpoint.shop.designs.load.LoadDesignController;
-import com.nextbreakpoint.shop.designs.load.LoadDesignRequestMapper;
-import com.nextbreakpoint.shop.designs.load.LoadDesignResponse;
-import com.nextbreakpoint.shop.designs.load.LoadDesignResponseMapper;
-import com.nextbreakpoint.shop.designs.get.GetStatusRequest;
-import com.nextbreakpoint.shop.designs.get.GetStatusController;
-import com.nextbreakpoint.shop.designs.get.GetStatusRequestMapper;
-import com.nextbreakpoint.shop.designs.get.GetStatusResponse;
-import com.nextbreakpoint.shop.designs.get.GetStatusResponseMapper;
-import com.nextbreakpoint.shop.designs.list.ListStatusRequest;
-import com.nextbreakpoint.shop.designs.list.ListStatusController;
-import com.nextbreakpoint.shop.designs.list.ListStatusRequestMapper;
-import com.nextbreakpoint.shop.designs.list.ListStatusResponse;
-import com.nextbreakpoint.shop.designs.list.ListStatusResponseMapper;
-import com.nextbreakpoint.shop.designs.update.UpdateDesignRequest;
-import com.nextbreakpoint.shop.designs.update.UpdateDesignController;
-import com.nextbreakpoint.shop.designs.update.UpdateDesignRequestMapper;
-import com.nextbreakpoint.shop.designs.update.UpdateDesignResponse;
-import com.nextbreakpoint.shop.designs.update.UpdateDesignResponseMapper;
+import com.nextbreakpoint.shop.common.vertx.AccessHandler;
+import com.nextbreakpoint.shop.common.cassandra.CassandraClusterFactory;
+import com.nextbreakpoint.shop.common.model.Content;
+import com.nextbreakpoint.shop.common.handlers.DefaultHandler;
+import com.nextbreakpoint.shop.common.model.Failure;
+import com.nextbreakpoint.shop.common.graphite.GraphiteManager;
+import com.nextbreakpoint.shop.common.vertx.JWTProviderFactory;
+import com.nextbreakpoint.shop.common.vertx.ResponseHelper;
+import com.nextbreakpoint.shop.common.vertx.CORSHandlerFactory;
+import com.nextbreakpoint.shop.common.vertx.ServerUtil;
+import com.nextbreakpoint.shop.common.handlers.FailedRequestConsumer;
+import com.nextbreakpoint.shop.common.handlers.ContentConsumer;
+import com.nextbreakpoint.shop.designs.model.DeleteDesignRequest;
+import com.nextbreakpoint.shop.designs.controllers.delete.DeleteDesignController;
+import com.nextbreakpoint.shop.designs.controllers.delete.DeleteDesignRequestMapper;
+import com.nextbreakpoint.shop.designs.model.DeleteDesignResponse;
+import com.nextbreakpoint.shop.designs.controllers.delete.DeleteDesignResponseMapper;
+import com.nextbreakpoint.shop.common.handlers.NoContentConsumer;
+import com.nextbreakpoint.shop.designs.model.DeleteDesignsRequest;
+import com.nextbreakpoint.shop.designs.controllers.delete.DeleteDesignsController;
+import com.nextbreakpoint.shop.designs.controllers.delete.DeleteDesignsRequestMapper;
+import com.nextbreakpoint.shop.designs.model.DeleteDesignsResponse;
+import com.nextbreakpoint.shop.designs.controllers.delete.DeleteDesignsResponseMapper;
+import com.nextbreakpoint.shop.designs.controllers.tile.GetTileHandler;
+import com.nextbreakpoint.shop.designs.model.InsertDesignRequest;
+import com.nextbreakpoint.shop.designs.controllers.insert.InsertDesignController;
+import com.nextbreakpoint.shop.designs.controllers.insert.InsertDesignRequestMapper;
+import com.nextbreakpoint.shop.designs.model.InsertDesignResponse;
+import com.nextbreakpoint.shop.designs.controllers.insert.InsertDesignResponseMapper;
+import com.nextbreakpoint.shop.designs.model.ListDesignsRequest;
+import com.nextbreakpoint.shop.designs.controllers.list.ListDesignsController;
+import com.nextbreakpoint.shop.designs.controllers.list.ListDesignsRequestMapper;
+import com.nextbreakpoint.shop.designs.model.ListDesignsResponse;
+import com.nextbreakpoint.shop.designs.controllers.list.ListDesignsResponseMapper;
+import com.nextbreakpoint.shop.designs.model.LoadDesignRequest;
+import com.nextbreakpoint.shop.designs.controllers.load.LoadDesignController;
+import com.nextbreakpoint.shop.designs.controllers.load.LoadDesignRequestMapper;
+import com.nextbreakpoint.shop.designs.model.LoadDesignResponse;
+import com.nextbreakpoint.shop.designs.controllers.load.LoadDesignResponseMapper;
+import com.nextbreakpoint.shop.designs.model.GetStatusRequest;
+import com.nextbreakpoint.shop.designs.controllers.get.GetStatusController;
+import com.nextbreakpoint.shop.designs.controllers.get.GetStatusRequestMapper;
+import com.nextbreakpoint.shop.designs.model.GetStatusResponse;
+import com.nextbreakpoint.shop.designs.controllers.get.GetStatusResponseMapper;
+import com.nextbreakpoint.shop.designs.model.ListStatusRequest;
+import com.nextbreakpoint.shop.designs.controllers.list.ListStatusController;
+import com.nextbreakpoint.shop.designs.controllers.list.ListStatusRequestMapper;
+import com.nextbreakpoint.shop.designs.model.ListStatusResponse;
+import com.nextbreakpoint.shop.designs.controllers.list.ListStatusResponseMapper;
+import com.nextbreakpoint.shop.designs.model.UpdateDesignRequest;
+import com.nextbreakpoint.shop.designs.controllers.update.UpdateDesignController;
+import com.nextbreakpoint.shop.designs.controllers.update.UpdateDesignRequestMapper;
+import com.nextbreakpoint.shop.designs.model.UpdateDesignResponse;
+import com.nextbreakpoint.shop.designs.controllers.update.UpdateDesignResponseMapper;
+import com.nextbreakpoint.shop.designs.persistence.CassandraStore;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Launcher;
@@ -74,17 +75,17 @@ import io.vertx.rxjava.ext.web.handler.LoggerHandler;
 import io.vertx.rxjava.ext.web.handler.TimeoutHandler;
 import rx.Single;
 
-import static com.nextbreakpoint.shop.common.Authority.ADMIN;
-import static com.nextbreakpoint.shop.common.Authority.ANONYMOUS;
-import static com.nextbreakpoint.shop.common.Authority.GUEST;
-import static com.nextbreakpoint.shop.common.ContentType.APPLICATION_JSON;
-import static com.nextbreakpoint.shop.common.ContentType.IMAGE_PNG;
-import static com.nextbreakpoint.shop.common.Headers.ACCEPT;
-import static com.nextbreakpoint.shop.common.Headers.AUTHORIZATION;
-import static com.nextbreakpoint.shop.common.Headers.CONTENT_TYPE;
-import static com.nextbreakpoint.shop.common.Headers.X_MODIFIED;
-import static com.nextbreakpoint.shop.common.Headers.X_XSRF_TOKEN;
-import static com.nextbreakpoint.shop.common.ServerUtil.UUID_REGEXP;
+import static com.nextbreakpoint.shop.common.model.Authority.ADMIN;
+import static com.nextbreakpoint.shop.common.model.Authority.ANONYMOUS;
+import static com.nextbreakpoint.shop.common.model.Authority.GUEST;
+import static com.nextbreakpoint.shop.common.model.ContentType.APPLICATION_JSON;
+import static com.nextbreakpoint.shop.common.model.ContentType.IMAGE_PNG;
+import static com.nextbreakpoint.shop.common.model.Headers.ACCEPT;
+import static com.nextbreakpoint.shop.common.model.Headers.AUTHORIZATION;
+import static com.nextbreakpoint.shop.common.model.Headers.CONTENT_TYPE;
+import static com.nextbreakpoint.shop.common.model.Headers.X_MODIFIED;
+import static com.nextbreakpoint.shop.common.model.Headers.X_XSRF_TOKEN;
+import static com.nextbreakpoint.shop.common.vertx.ServerUtil.UUID_REGEXP;
 import static java.util.Arrays.asList;
 
 public class Verticle extends AbstractVerticle {
@@ -93,8 +94,8 @@ public class Verticle extends AbstractVerticle {
     private HttpServer server;
 
     public static void main(String[] args) {
-        System.setProperty("vertx.metrics.options.enabled", "true");
-        System.setProperty("vertx.metrics.options.registryName", "exported");
+        System.setProperty("vertx.graphite.options.enabled", "true");
+        System.setProperty("vertx.graphite.options.registryName", "exported");
 
         Launcher.main(new String[] { "run", Verticle.class.getCanonicalName(), "-conf", args.length > 0 ? args[0] : "config/default.json" });
     }
@@ -243,8 +244,8 @@ public class Verticle extends AbstractVerticle {
                 .withInputMapper(new DeleteDesignRequestMapper())
                 .withOutputMapper(new DeleteDesignResponseMapper())
                 .withController(new DeleteDesignController(store))
-                .onSuccess(new ContentHandler(200))
-                .onFailure(new RequestFailedHandler())
+                .onSuccess(new ContentConsumer(200))
+                .onFailure(new FailedRequestConsumer())
                 .build();
     }
 
@@ -253,8 +254,8 @@ public class Verticle extends AbstractVerticle {
                 .withInputMapper(new DeleteDesignsRequestMapper())
                 .withOutputMapper(new DeleteDesignsResponseMapper())
                 .withController(new DeleteDesignsController(store))
-                .onSuccess(new NoContentHandler(204))
-                .onFailure(new RequestFailedHandler())
+                .onSuccess(new NoContentConsumer(204))
+                .onFailure(new FailedRequestConsumer())
                 .build();
     }
 
@@ -263,8 +264,8 @@ public class Verticle extends AbstractVerticle {
                 .withInputMapper(new InsertDesignRequestMapper())
                 .withOutputMapper(new InsertDesignResponseMapper())
                 .withController(new InsertDesignController(store))
-                .onSuccess(new ContentHandler(201))
-                .onFailure(new RequestFailedHandler())
+                .onSuccess(new ContentConsumer(201))
+                .onFailure(new FailedRequestConsumer())
                 .build();
     }
 
@@ -273,8 +274,8 @@ public class Verticle extends AbstractVerticle {
                 .withInputMapper(new UpdateDesignRequestMapper())
                 .withOutputMapper(new UpdateDesignResponseMapper())
                 .withController(new UpdateDesignController(store))
-                .onSuccess(new ContentHandler(200))
-                .onFailure(new RequestFailedHandler())
+                .onSuccess(new ContentConsumer(200))
+                .onFailure(new FailedRequestConsumer())
                 .build();
     }
 
@@ -283,8 +284,8 @@ public class Verticle extends AbstractVerticle {
                 .withInputMapper(new ListDesignsRequestMapper())
                 .withOutputMapper(new ListDesignsResponseMapper())
                 .withController(new ListDesignsController(store))
-                .onSuccess(new ContentHandler(200))
-                .onFailure(new RequestFailedHandler())
+                .onSuccess(new ContentConsumer(200))
+                .onFailure(new FailedRequestConsumer())
                 .build();
     }
 
@@ -293,8 +294,8 @@ public class Verticle extends AbstractVerticle {
                 .withInputMapper(new LoadDesignRequestMapper())
                 .withOutputMapper(new LoadDesignResponseMapper())
                 .withController(new LoadDesignController(store))
-                .onSuccess(new ContentHandler(200, 404))
-                .onFailure(new RequestFailedHandler())
+                .onSuccess(new ContentConsumer(200, 404))
+                .onFailure(new FailedRequestConsumer())
                 .build();
     }
 
@@ -303,8 +304,8 @@ public class Verticle extends AbstractVerticle {
                 .withInputMapper(new GetStatusRequestMapper())
                 .withOutputMapper(new GetStatusResponseMapper())
                 .withController(new GetStatusController(store))
-                .onSuccess(new ContentHandler(200))
-                .onFailure(new RequestFailedHandler())
+                .onSuccess(new ContentConsumer(200))
+                .onFailure(new FailedRequestConsumer())
                 .build();
     }
 
@@ -313,8 +314,8 @@ public class Verticle extends AbstractVerticle {
                 .withInputMapper(new ListStatusRequestMapper())
                 .withOutputMapper(new ListStatusResponseMapper())
                 .withController(new ListStatusController(store))
-                .onSuccess(new ContentHandler(200))
-                .onFailure(new RequestFailedHandler())
+                .onSuccess(new ContentConsumer(200))
+                .onFailure(new FailedRequestConsumer())
                 .build();
     }
 }

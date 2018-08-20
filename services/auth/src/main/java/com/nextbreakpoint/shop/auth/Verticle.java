@@ -1,9 +1,11 @@
 package com.nextbreakpoint.shop.auth;
 
-import com.nextbreakpoint.shop.common.GraphiteManager;
-import com.nextbreakpoint.shop.common.ResponseHelper;
-import com.nextbreakpoint.shop.common.CORSHandlerFactory;
-import com.nextbreakpoint.shop.common.ServerUtil;
+import com.nextbreakpoint.shop.auth.handlers.GitHubSigninHandler;
+import com.nextbreakpoint.shop.auth.handlers.GitHubSignoutHandler;
+import com.nextbreakpoint.shop.common.graphite.GraphiteManager;
+import com.nextbreakpoint.shop.common.vertx.ResponseHelper;
+import com.nextbreakpoint.shop.common.vertx.CORSHandlerFactory;
+import com.nextbreakpoint.shop.common.vertx.ServerUtil;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Launcher;
@@ -21,17 +23,17 @@ import rx.Single;
 
 import java.net.MalformedURLException;
 
-import static com.nextbreakpoint.shop.common.Headers.ACCEPT;
-import static com.nextbreakpoint.shop.common.Headers.AUTHORIZATION;
-import static com.nextbreakpoint.shop.common.Headers.CONTENT_TYPE;
+import static com.nextbreakpoint.shop.common.model.Headers.ACCEPT;
+import static com.nextbreakpoint.shop.common.model.Headers.AUTHORIZATION;
+import static com.nextbreakpoint.shop.common.model.Headers.CONTENT_TYPE;
 import static java.util.Arrays.asList;
 
 public class Verticle extends AbstractVerticle {
     private HttpServer server;
 
     public static void main(String[] args) {
-        System.setProperty("vertx.metrics.options.enabled", "true");
-        System.setProperty("vertx.metrics.options.registryName", "exported");
+        System.setProperty("vertx.graphite.options.enabled", "true");
+        System.setProperty("vertx.graphite.options.registryName", "exported");
 
         Launcher.main(new String[] { "run", Verticle.class.getCanonicalName(), "-conf", args.length > 0 ? args[0] : "config/default.json" });
     }

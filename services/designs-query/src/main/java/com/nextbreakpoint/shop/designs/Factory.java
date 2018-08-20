@@ -1,15 +1,15 @@
 package com.nextbreakpoint.shop.designs;
 
-import com.nextbreakpoint.shop.common.Content;
-import com.nextbreakpoint.shop.common.ContentHandler;
-import com.nextbreakpoint.shop.common.DefaultHandler;
-import com.nextbreakpoint.shop.common.RequestFailedHandler;
-import com.nextbreakpoint.shop.designs.handlers.ListDesignsController;
-import com.nextbreakpoint.shop.designs.handlers.ListDesignsInputMapper;
-import com.nextbreakpoint.shop.designs.handlers.ListDesignsOutputMapper;
-import com.nextbreakpoint.shop.designs.handlers.LoadDesignController;
-import com.nextbreakpoint.shop.designs.handlers.LoadDesignInputMapper;
-import com.nextbreakpoint.shop.designs.handlers.LoadDesignOutputMapper;
+import com.nextbreakpoint.shop.common.model.Content;
+import com.nextbreakpoint.shop.common.handlers.ContentConsumer;
+import com.nextbreakpoint.shop.common.handlers.DefaultHandler;
+import com.nextbreakpoint.shop.common.handlers.FailedRequestConsumer;
+import com.nextbreakpoint.shop.designs.controllers.list.ListDesignsController;
+import com.nextbreakpoint.shop.designs.controllers.list.ListDesignsInputMapper;
+import com.nextbreakpoint.shop.designs.controllers.list.ListDesignsOutputMapper;
+import com.nextbreakpoint.shop.designs.controllers.load.LoadDesignController;
+import com.nextbreakpoint.shop.designs.controllers.load.LoadDesignInputMapper;
+import com.nextbreakpoint.shop.designs.controllers.load.LoadDesignOutputMapper;
 import com.nextbreakpoint.shop.designs.model.ListDesignsRequest;
 import com.nextbreakpoint.shop.designs.model.ListDesignsResponse;
 import com.nextbreakpoint.shop.designs.model.LoadDesignRequest;
@@ -24,8 +24,8 @@ public class Factory {
                 .withInputMapper(new ListDesignsInputMapper())
                 .withOutputMapper(new ListDesignsOutputMapper())
                 .withController(new ListDesignsController(store))
-                .onSuccess(new ContentHandler(200))
-                .onFailure(new RequestFailedHandler())
+                .onSuccess(new ContentConsumer(200))
+                .onFailure(new FailedRequestConsumer())
                 .build();
     }
 
@@ -34,8 +34,8 @@ public class Factory {
                 .withInputMapper(new LoadDesignInputMapper())
                 .withOutputMapper(new LoadDesignOutputMapper())
                 .withController(new LoadDesignController(store))
-                .onSuccess(new ContentHandler(200, 404))
-                .onFailure(new RequestFailedHandler())
+                .onSuccess(new ContentConsumer(200, 404))
+                .onFailure(new FailedRequestConsumer())
                 .build();
     }
 }

@@ -23,7 +23,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static com.nextbreakpoint.shop.common.TimeUtil.TIMESTAMP_PATTERN;
+import static com.nextbreakpoint.shop.common.vertx.TimeUtil.TIMESTAMP_PATTERN;
 
 public class CassandraStore implements Store {
     private final Logger logger = LoggerFactory.getLogger(CassandraStore.class.getName());

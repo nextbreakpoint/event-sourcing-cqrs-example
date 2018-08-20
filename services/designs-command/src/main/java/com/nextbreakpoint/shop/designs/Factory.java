@@ -1,32 +1,32 @@
 package com.nextbreakpoint.shop.designs;
 
-import com.nextbreakpoint.shop.common.Content;
-import com.nextbreakpoint.shop.common.ContentHandler;
-import com.nextbreakpoint.shop.common.DefaultHandler;
-import com.nextbreakpoint.shop.common.RequestFailedHandler;
-import com.nextbreakpoint.shop.designs.handlers.DeleteDesignController;
-import com.nextbreakpoint.shop.designs.handlers.DeleteDesignInputMapper;
-import com.nextbreakpoint.shop.designs.handlers.DeleteDesignMessageMapper;
-import com.nextbreakpoint.shop.designs.handlers.DeleteDesignOutputMapper;
-import com.nextbreakpoint.shop.designs.handlers.DeleteDesignsController;
-import com.nextbreakpoint.shop.designs.handlers.DeleteDesignsInputMapper;
-import com.nextbreakpoint.shop.designs.handlers.DeleteDesignsMessageMapper;
-import com.nextbreakpoint.shop.designs.handlers.DeleteDesignsOutputMapper;
-import com.nextbreakpoint.shop.designs.handlers.InsertDesignController;
-import com.nextbreakpoint.shop.designs.handlers.InsertDesignInputMapper;
-import com.nextbreakpoint.shop.designs.handlers.InsertDesignMessageMapper;
-import com.nextbreakpoint.shop.designs.handlers.InsertDesignOutputMapper;
-import com.nextbreakpoint.shop.designs.handlers.UpdateDesignController;
-import com.nextbreakpoint.shop.designs.handlers.UpdateDesignInputMapper;
-import com.nextbreakpoint.shop.designs.handlers.UpdateDesignMessageMapper;
-import com.nextbreakpoint.shop.designs.handlers.UpdateDesignOutputMapper;
-import com.nextbreakpoint.shop.common.DeleteDesignEvent;
+import com.nextbreakpoint.shop.common.model.Content;
+import com.nextbreakpoint.shop.common.handlers.ContentConsumer;
+import com.nextbreakpoint.shop.common.handlers.DefaultHandler;
+import com.nextbreakpoint.shop.common.handlers.FailedRequestConsumer;
+import com.nextbreakpoint.shop.designs.controllers.delete.DeleteDesignController;
+import com.nextbreakpoint.shop.designs.controllers.delete.DeleteDesignInputMapper;
+import com.nextbreakpoint.shop.designs.controllers.delete.DeleteDesignMessageMapper;
+import com.nextbreakpoint.shop.designs.controllers.delete.DeleteDesignOutputMapper;
+import com.nextbreakpoint.shop.designs.controllers.delete.DeleteDesignsController;
+import com.nextbreakpoint.shop.designs.controllers.delete.DeleteDesignsInputMapper;
+import com.nextbreakpoint.shop.designs.controllers.delete.DeleteDesignsMessageMapper;
+import com.nextbreakpoint.shop.designs.controllers.delete.DeleteDesignsOutputMapper;
+import com.nextbreakpoint.shop.designs.controllers.insert.InsertDesignController;
+import com.nextbreakpoint.shop.designs.controllers.insert.InsertDesignInputMapper;
+import com.nextbreakpoint.shop.designs.controllers.insert.InsertDesignMessageMapper;
+import com.nextbreakpoint.shop.designs.controllers.insert.InsertDesignOutputMapper;
+import com.nextbreakpoint.shop.designs.controllers.update.UpdateDesignController;
+import com.nextbreakpoint.shop.designs.controllers.update.UpdateDesignInputMapper;
+import com.nextbreakpoint.shop.designs.controllers.update.UpdateDesignMessageMapper;
+import com.nextbreakpoint.shop.designs.controllers.update.UpdateDesignOutputMapper;
+import com.nextbreakpoint.shop.common.model.events.DeleteDesignEvent;
 import com.nextbreakpoint.shop.designs.model.DeleteDesignResult;
-import com.nextbreakpoint.shop.common.DeleteDesignsEvent;
+import com.nextbreakpoint.shop.common.model.events.DeleteDesignsEvent;
 import com.nextbreakpoint.shop.designs.model.DeleteDesignsResult;
-import com.nextbreakpoint.shop.common.InsertDesignEvent;
+import com.nextbreakpoint.shop.common.model.events.InsertDesignEvent;
 import com.nextbreakpoint.shop.designs.model.InsertDesignResult;
-import com.nextbreakpoint.shop.common.UpdateDesignEvent;
+import com.nextbreakpoint.shop.common.model.events.UpdateDesignEvent;
 import com.nextbreakpoint.shop.designs.model.UpdateDesignResult;
 import io.vertx.rxjava.ext.web.RoutingContext;
 import io.vertx.rxjava.kafka.client.producer.KafkaProducer;
@@ -39,8 +39,8 @@ public class Factory {
                 .withInputMapper(new InsertDesignInputMapper())
                 .withOutputMapper(new InsertDesignOutputMapper())
                 .withController(new InsertDesignController(topic, producer, new InsertDesignMessageMapper(messageSource)))
-                .onSuccess(new ContentHandler(202))
-                .onFailure(new RequestFailedHandler())
+                .onSuccess(new ContentConsumer(202))
+                .onFailure(new FailedRequestConsumer())
                 .build();
     }
 
@@ -49,8 +49,8 @@ public class Factory {
                 .withInputMapper(new UpdateDesignInputMapper())
                 .withOutputMapper(new UpdateDesignOutputMapper())
                 .withController(new UpdateDesignController(topic, producer, new UpdateDesignMessageMapper(messageSource)))
-                .onSuccess(new ContentHandler(202))
-                .onFailure(new RequestFailedHandler())
+                .onSuccess(new ContentConsumer(202))
+                .onFailure(new FailedRequestConsumer())
                 .build();
     }
 
@@ -59,8 +59,8 @@ public class Factory {
                 .withInputMapper(new DeleteDesignInputMapper())
                 .withOutputMapper(new DeleteDesignOutputMapper())
                 .withController(new DeleteDesignController(topic, producer, new DeleteDesignMessageMapper(messageSource)))
-                .onSuccess(new ContentHandler(202))
-                .onFailure(new RequestFailedHandler())
+                .onSuccess(new ContentConsumer(202))
+                .onFailure(new FailedRequestConsumer())
                 .build();
     }
 
@@ -69,8 +69,8 @@ public class Factory {
                 .withInputMapper(new DeleteDesignsInputMapper())
                 .withOutputMapper(new DeleteDesignsOutputMapper())
                 .withController(new DeleteDesignsController(topic, producer, new DeleteDesignsMessageMapper(messageSource)))
-                .onSuccess(new ContentHandler(202))
-                .onFailure(new RequestFailedHandler())
+                .onSuccess(new ContentConsumer(202))
+                .onFailure(new FailedRequestConsumer())
                 .build();
     }
 }

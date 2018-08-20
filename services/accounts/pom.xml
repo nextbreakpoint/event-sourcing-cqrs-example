@@ -144,7 +144,7 @@
                                             <alias>cassandra-accounts</alias>
                                         </network>
                                         <wait>
-                                            <log>Created default superuser role 'cassandra'</log>
+                                            <log>Initializing accounts.accounts</log>
                                             <time>60000</time>
                                         </wait>
                                     </run>

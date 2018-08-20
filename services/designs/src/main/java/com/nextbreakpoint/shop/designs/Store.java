@@ -1,21 +1,21 @@
 package com.nextbreakpoint.shop.designs;
 
-import com.nextbreakpoint.shop.designs.delete.DeleteDesignRequest;
-import com.nextbreakpoint.shop.designs.delete.DeleteDesignResponse;
-import com.nextbreakpoint.shop.designs.delete.DeleteDesignsRequest;
-import com.nextbreakpoint.shop.designs.delete.DeleteDesignsResponse;
-import com.nextbreakpoint.shop.designs.get.GetStatusRequest;
-import com.nextbreakpoint.shop.designs.get.GetStatusResponse;
-import com.nextbreakpoint.shop.designs.insert.InsertDesignRequest;
-import com.nextbreakpoint.shop.designs.insert.InsertDesignResponse;
-import com.nextbreakpoint.shop.designs.list.ListDesignsRequest;
-import com.nextbreakpoint.shop.designs.list.ListDesignsResponse;
-import com.nextbreakpoint.shop.designs.list.ListStatusRequest;
-import com.nextbreakpoint.shop.designs.list.ListStatusResponse;
-import com.nextbreakpoint.shop.designs.load.LoadDesignRequest;
-import com.nextbreakpoint.shop.designs.load.LoadDesignResponse;
-import com.nextbreakpoint.shop.designs.update.UpdateDesignRequest;
-import com.nextbreakpoint.shop.designs.update.UpdateDesignResponse;
+import com.nextbreakpoint.shop.designs.model.DeleteDesignRequest;
+import com.nextbreakpoint.shop.designs.model.DeleteDesignResponse;
+import com.nextbreakpoint.shop.designs.model.DeleteDesignsRequest;
+import com.nextbreakpoint.shop.designs.model.DeleteDesignsResponse;
+import com.nextbreakpoint.shop.designs.model.GetStatusRequest;
+import com.nextbreakpoint.shop.designs.model.GetStatusResponse;
+import com.nextbreakpoint.shop.designs.model.InsertDesignRequest;
+import com.nextbreakpoint.shop.designs.model.InsertDesignResponse;
+import com.nextbreakpoint.shop.designs.model.ListDesignsRequest;
+import com.nextbreakpoint.shop.designs.model.ListDesignsResponse;
+import com.nextbreakpoint.shop.designs.model.ListStatusRequest;
+import com.nextbreakpoint.shop.designs.model.ListStatusResponse;
+import com.nextbreakpoint.shop.designs.model.LoadDesignRequest;
+import com.nextbreakpoint.shop.designs.model.LoadDesignResponse;
+import com.nextbreakpoint.shop.designs.model.UpdateDesignRequest;
+import com.nextbreakpoint.shop.designs.model.UpdateDesignResponse;
 import rx.Single;
 
 public interface Store {

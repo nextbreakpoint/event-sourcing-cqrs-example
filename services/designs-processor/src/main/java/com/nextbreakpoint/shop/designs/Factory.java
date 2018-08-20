@@ -1,22 +1,22 @@
 package com.nextbreakpoint.shop.designs;
 
-import com.nextbreakpoint.shop.common.DefaultHandler;
-import com.nextbreakpoint.shop.common.DeleteDesignEvent;
-import com.nextbreakpoint.shop.common.DeleteDesignsEvent;
-import com.nextbreakpoint.shop.common.InsertDesignEvent;
-import com.nextbreakpoint.shop.common.Message;
-import com.nextbreakpoint.shop.common.MessageFailedHandler;
-import com.nextbreakpoint.shop.common.MessageSentHandler;
-import com.nextbreakpoint.shop.common.UpdateDesignEvent;
-import com.nextbreakpoint.shop.designs.handlers.DeleteDesignController;
-import com.nextbreakpoint.shop.designs.handlers.DeleteDesignInputMapper;
-import com.nextbreakpoint.shop.designs.handlers.DeleteDesignsController;
-import com.nextbreakpoint.shop.designs.handlers.DeleteDesignsInputMapper;
-import com.nextbreakpoint.shop.designs.handlers.InsertDesignController;
-import com.nextbreakpoint.shop.designs.handlers.InsertDesignInputMapper;
-import com.nextbreakpoint.shop.common.MessageReceipt;
-import com.nextbreakpoint.shop.designs.handlers.UpdateDesignController;
-import com.nextbreakpoint.shop.designs.handlers.UpdateDesignInputMapper;
+import com.nextbreakpoint.shop.common.handlers.DefaultHandler;
+import com.nextbreakpoint.shop.common.model.events.DeleteDesignEvent;
+import com.nextbreakpoint.shop.common.model.events.DeleteDesignsEvent;
+import com.nextbreakpoint.shop.common.model.events.InsertDesignEvent;
+import com.nextbreakpoint.shop.common.model.Message;
+import com.nextbreakpoint.shop.common.handlers.FailedMessageConsumer;
+import com.nextbreakpoint.shop.common.handlers.MessageReceiptConsumer;
+import com.nextbreakpoint.shop.common.model.events.UpdateDesignEvent;
+import com.nextbreakpoint.shop.designs.controllers.delete.DeleteDesignController;
+import com.nextbreakpoint.shop.designs.controllers.delete.DeleteDesignInputMapper;
+import com.nextbreakpoint.shop.designs.controllers.delete.DeleteDesignsController;
+import com.nextbreakpoint.shop.designs.controllers.delete.DeleteDesignsInputMapper;
+import com.nextbreakpoint.shop.designs.controllers.insert.InsertDesignController;
+import com.nextbreakpoint.shop.designs.controllers.insert.InsertDesignInputMapper;
+import com.nextbreakpoint.shop.common.model.MessageReceipt;
+import com.nextbreakpoint.shop.designs.controllers.update.UpdateDesignController;
+import com.nextbreakpoint.shop.designs.controllers.update.UpdateDesignInputMapper;
 import io.vertx.core.Handler;
 import io.vertx.rxjava.kafka.client.producer.KafkaProducer;
 
@@ -28,8 +28,8 @@ public class Factory {
                 .withInputMapper(new InsertDesignInputMapper())
                 .withOutputMapper(receipt -> receipt)
                 .withController(new InsertDesignController(store, producer))
-                .onSuccess(new MessageSentHandler())
-                .onFailure(new MessageFailedHandler())
+                .onSuccess(new MessageReceiptConsumer())
+                .onFailure(new FailedMessageConsumer())
                 .build();
     }
 
@@ -38,8 +38,8 @@ public class Factory {
                 .withInputMapper(new UpdateDesignInputMapper())
                 .withOutputMapper(receipt -> receipt)
                 .withController(new UpdateDesignController(store, producer))
-                .onSuccess(new MessageSentHandler())
-                .onFailure(new MessageFailedHandler())
+                .onSuccess(new MessageReceiptConsumer())
+                .onFailure(new FailedMessageConsumer())
                 .build();
     }
 
@@ -48,8 +48,8 @@ public class Factory {
                 .withInputMapper(new DeleteDesignInputMapper())
                 .withOutputMapper(receipt -> receipt)
                 .withController(new DeleteDesignController(store, producer))
-                .onSuccess(new MessageSentHandler())
-                .onFailure(new MessageFailedHandler())
+                .onSuccess(new MessageReceiptConsumer())
+                .onFailure(new FailedMessageConsumer())
                 .build();
     }
 
@@ -58,8 +58,8 @@ public class Factory {
                 .withInputMapper(new DeleteDesignsInputMapper())
                 .withOutputMapper(receipt -> receipt)
                 .withController(new DeleteDesignsController(store, producer))
-                .onSuccess(new MessageSentHandler())
-                .onFailure(new MessageFailedHandler())
+                .onSuccess(new MessageReceiptConsumer())
+                .onFailure(new FailedMessageConsumer())
                 .build();
     }
 }

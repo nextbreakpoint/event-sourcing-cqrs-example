@@ -1,11 +1,17 @@
 package com.nextbreakpoint.shop.web;
 
-import com.nextbreakpoint.shop.common.GraphiteManager;
-import com.nextbreakpoint.shop.common.JWTProviderFactory;
-import com.nextbreakpoint.shop.common.ResponseHelper;
-import com.nextbreakpoint.shop.common.ServerUtil;
-import com.nextbreakpoint.shop.common.SimpleTemplateHandler;
-import com.nextbreakpoint.shop.common.WebClientFactory;
+import com.nextbreakpoint.shop.common.graphite.GraphiteManager;
+import com.nextbreakpoint.shop.common.vertx.JWTProviderFactory;
+import com.nextbreakpoint.shop.common.vertx.ResponseHelper;
+import com.nextbreakpoint.shop.common.vertx.ServerUtil;
+import com.nextbreakpoint.shop.common.vertx.SimpleTemplateHandler;
+import com.nextbreakpoint.shop.common.vertx.WebClientFactory;
+import com.nextbreakpoint.shop.web.handlers.ConfigHandler;
+import com.nextbreakpoint.shop.web.handlers.DesignDataHandler;
+import com.nextbreakpoint.shop.web.handlers.DesignWatchHandler;
+import com.nextbreakpoint.shop.web.handlers.DesignsDataHandler;
+import com.nextbreakpoint.shop.web.handlers.DesignsWatchHandler;
+import com.nextbreakpoint.shop.web.handlers.UserHandler;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Launcher;
@@ -30,8 +36,8 @@ import rx.Single;
 
 import java.net.MalformedURLException;
 
-import static com.nextbreakpoint.shop.common.ContentType.TEXT_HTML;
-import static com.nextbreakpoint.shop.common.ServerUtil.UUID_REGEXP;
+import static com.nextbreakpoint.shop.common.model.ContentType.TEXT_HTML;
+import static com.nextbreakpoint.shop.common.vertx.ServerUtil.UUID_REGEXP;
 
 public class Verticle extends AbstractVerticle {
     private static final String TEMPLATES = "templates";
@@ -39,8 +45,8 @@ public class Verticle extends AbstractVerticle {
     private HttpServer server;
 
     public static void main(String[] args) {
-        System.setProperty("vertx.metrics.options.enabled", "true");
-        System.setProperty("vertx.metrics.options.registryName", "exported");
+        System.setProperty("vertx.graphite.options.enabled", "true");
+        System.setProperty("vertx.graphite.options.registryName", "exported");
 
         Launcher.main(new String[] { "run", Verticle.class.getCanonicalName(), "-conf", args.length > 0 ? args[0] : "config/default.json" });
     }

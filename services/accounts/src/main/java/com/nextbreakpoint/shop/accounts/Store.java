@@ -1,15 +1,15 @@
 package com.nextbreakpoint.shop.accounts;
 
-import com.nextbreakpoint.shop.accounts.delete.DeleteAccountRequest;
-import com.nextbreakpoint.shop.accounts.delete.DeleteAccountResponse;
-import com.nextbreakpoint.shop.accounts.delete.DeleteAccountsRequest;
-import com.nextbreakpoint.shop.accounts.delete.DeleteAccountsResponse;
-import com.nextbreakpoint.shop.accounts.insert.InsertAccountResponse;
-import com.nextbreakpoint.shop.accounts.list.ListAccountsResponse;
-import com.nextbreakpoint.shop.accounts.list.ListAccountsRequest;
-import com.nextbreakpoint.shop.accounts.insert.InsertAccountRequest;
-import com.nextbreakpoint.shop.accounts.load.LoadAccountRequest;
-import com.nextbreakpoint.shop.accounts.load.LoadAccountResponse;
+import com.nextbreakpoint.shop.accounts.model.DeleteAccountRequest;
+import com.nextbreakpoint.shop.accounts.model.DeleteAccountResponse;
+import com.nextbreakpoint.shop.accounts.model.DeleteAccountsRequest;
+import com.nextbreakpoint.shop.accounts.model.DeleteAccountsResponse;
+import com.nextbreakpoint.shop.accounts.model.InsertAccountResponse;
+import com.nextbreakpoint.shop.accounts.model.ListAccountsResponse;
+import com.nextbreakpoint.shop.accounts.model.ListAccountsRequest;
+import com.nextbreakpoint.shop.accounts.model.InsertAccountRequest;
+import com.nextbreakpoint.shop.accounts.model.LoadAccountRequest;
+import com.nextbreakpoint.shop.accounts.model.LoadAccountResponse;
 import rx.Single;
 
 public interface Store {

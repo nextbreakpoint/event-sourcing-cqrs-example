@@ -1,6 +1,7 @@
 package com.nextbreakpoint.shop.auth;
 
-import com.nextbreakpoint.shop.common.Failure;
+import com.nextbreakpoint.shop.auth.handlers.GitHubSigninHandler;
+import com.nextbreakpoint.shop.common.model.Failure;
 import io.vertx.core.Launcher;
 import io.vertx.core.json.JsonObject;
 import io.vertx.rxjava.ext.web.Router;

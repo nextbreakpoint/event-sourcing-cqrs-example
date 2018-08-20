@@ -2,45 +2,46 @@ package com.nextbreakpoint.shop.accounts;
 
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Session;
-import com.nextbreakpoint.shop.accounts.delete.DeleteAccountController;
-import com.nextbreakpoint.shop.accounts.delete.DeleteAccountRequest;
-import com.nextbreakpoint.shop.accounts.delete.DeleteAccountRequestMapper;
-import com.nextbreakpoint.shop.accounts.delete.DeleteAccountResponse;
-import com.nextbreakpoint.shop.accounts.delete.DeleteAccountResponseMapper;
-import com.nextbreakpoint.shop.accounts.delete.DeleteAccountsController;
-import com.nextbreakpoint.shop.accounts.delete.DeleteAccountsRequest;
-import com.nextbreakpoint.shop.accounts.delete.DeleteAccountsRequestMapper;
-import com.nextbreakpoint.shop.accounts.delete.DeleteAccountsResponse;
-import com.nextbreakpoint.shop.accounts.delete.DeleteAccountsResponseMapper;
-import com.nextbreakpoint.shop.accounts.insert.InsertAccountController;
-import com.nextbreakpoint.shop.accounts.insert.InsertAccountRequest;
-import com.nextbreakpoint.shop.accounts.insert.InsertAccountRequestMapper;
-import com.nextbreakpoint.shop.accounts.insert.InsertAccountResponse;
-import com.nextbreakpoint.shop.accounts.insert.InsertAccountResponseMapper;
-import com.nextbreakpoint.shop.accounts.list.ListAccountsController;
-import com.nextbreakpoint.shop.accounts.list.ListAccountsRequest;
-import com.nextbreakpoint.shop.accounts.list.ListAccountsRequestMapper;
-import com.nextbreakpoint.shop.accounts.list.ListAccountsResponse;
-import com.nextbreakpoint.shop.accounts.list.ListAccountsResponseMapper;
-import com.nextbreakpoint.shop.accounts.load.LoadAccountController;
-import com.nextbreakpoint.shop.accounts.load.LoadAccountRequest;
-import com.nextbreakpoint.shop.accounts.load.LoadAccountRequestMapper;
-import com.nextbreakpoint.shop.accounts.load.LoadAccountResponse;
-import com.nextbreakpoint.shop.accounts.load.LoadAccountResponseMapper;
-import com.nextbreakpoint.shop.accounts.load.LoadSelfAccountRequestMapper;
-import com.nextbreakpoint.shop.common.AccessHandler;
-import com.nextbreakpoint.shop.common.CassandraClusterFactory;
-import com.nextbreakpoint.shop.common.Content;
-import com.nextbreakpoint.shop.common.ContentHandler;
-import com.nextbreakpoint.shop.common.DefaultHandler;
-import com.nextbreakpoint.shop.common.RequestFailedHandler;
-import com.nextbreakpoint.shop.common.Failure;
-import com.nextbreakpoint.shop.common.GraphiteManager;
-import com.nextbreakpoint.shop.common.JWTProviderFactory;
-import com.nextbreakpoint.shop.common.NoContentHandler;
-import com.nextbreakpoint.shop.common.ResponseHelper;
-import com.nextbreakpoint.shop.common.CORSHandlerFactory;
-import com.nextbreakpoint.shop.common.ServerUtil;
+import com.nextbreakpoint.shop.accounts.controllers.delete.DeleteAccountController;
+import com.nextbreakpoint.shop.accounts.model.DeleteAccountRequest;
+import com.nextbreakpoint.shop.accounts.controllers.delete.DeleteAccountRequestMapper;
+import com.nextbreakpoint.shop.accounts.model.DeleteAccountResponse;
+import com.nextbreakpoint.shop.accounts.controllers.delete.DeleteAccountResponseMapper;
+import com.nextbreakpoint.shop.accounts.controllers.delete.DeleteAccountsController;
+import com.nextbreakpoint.shop.accounts.model.DeleteAccountsRequest;
+import com.nextbreakpoint.shop.accounts.controllers.delete.DeleteAccountsRequestMapper;
+import com.nextbreakpoint.shop.accounts.model.DeleteAccountsResponse;
+import com.nextbreakpoint.shop.accounts.controllers.delete.DeleteAccountsResponseMapper;
+import com.nextbreakpoint.shop.accounts.controllers.insert.InsertAccountController;
+import com.nextbreakpoint.shop.accounts.model.InsertAccountRequest;
+import com.nextbreakpoint.shop.accounts.controllers.insert.InsertAccountRequestMapper;
+import com.nextbreakpoint.shop.accounts.model.InsertAccountResponse;
+import com.nextbreakpoint.shop.accounts.controllers.insert.InsertAccountResponseMapper;
+import com.nextbreakpoint.shop.accounts.controllers.list.ListAccountsController;
+import com.nextbreakpoint.shop.accounts.model.ListAccountsRequest;
+import com.nextbreakpoint.shop.accounts.controllers.list.ListAccountsRequestMapper;
+import com.nextbreakpoint.shop.accounts.model.ListAccountsResponse;
+import com.nextbreakpoint.shop.accounts.controllers.list.ListAccountsResponseMapper;
+import com.nextbreakpoint.shop.accounts.controllers.load.LoadAccountController;
+import com.nextbreakpoint.shop.accounts.model.LoadAccountRequest;
+import com.nextbreakpoint.shop.accounts.controllers.load.LoadAccountRequestMapper;
+import com.nextbreakpoint.shop.accounts.model.LoadAccountResponse;
+import com.nextbreakpoint.shop.accounts.controllers.load.LoadAccountResponseMapper;
+import com.nextbreakpoint.shop.accounts.controllers.load.LoadSelfAccountRequestMapper;
+import com.nextbreakpoint.shop.accounts.persistence.CassandraStore;
+import com.nextbreakpoint.shop.common.vertx.AccessHandler;
+import com.nextbreakpoint.shop.common.cassandra.CassandraClusterFactory;
+import com.nextbreakpoint.shop.common.model.Content;
+import com.nextbreakpoint.shop.common.handlers.ContentConsumer;
+import com.nextbreakpoint.shop.common.handlers.DefaultHandler;
+import com.nextbreakpoint.shop.common.handlers.FailedRequestConsumer;
+import com.nextbreakpoint.shop.common.model.Failure;
+import com.nextbreakpoint.shop.common.graphite.GraphiteManager;
+import com.nextbreakpoint.shop.common.vertx.JWTProviderFactory;
+import com.nextbreakpoint.shop.common.handlers.NoContentConsumer;
+import com.nextbreakpoint.shop.common.vertx.ResponseHelper;
+import com.nextbreakpoint.shop.common.vertx.CORSHandlerFactory;
+import com.nextbreakpoint.shop.common.vertx.ServerUtil;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Launcher;
@@ -58,23 +59,23 @@ import io.vertx.rxjava.ext.web.handler.LoggerHandler;
 import io.vertx.rxjava.ext.web.handler.TimeoutHandler;
 import rx.Single;
 
-import static com.nextbreakpoint.shop.common.Authority.ADMIN;
-import static com.nextbreakpoint.shop.common.Authority.GUEST;
-import static com.nextbreakpoint.shop.common.Authority.PLATFORM;
-import static com.nextbreakpoint.shop.common.ContentType.APPLICATION_JSON;
-import static com.nextbreakpoint.shop.common.Headers.ACCEPT;
-import static com.nextbreakpoint.shop.common.Headers.AUTHORIZATION;
-import static com.nextbreakpoint.shop.common.Headers.CONTENT_TYPE;
-import static com.nextbreakpoint.shop.common.Headers.X_XSRF_TOKEN;
-import static com.nextbreakpoint.shop.common.ServerUtil.UUID_REGEXP;
+import static com.nextbreakpoint.shop.common.model.Authority.ADMIN;
+import static com.nextbreakpoint.shop.common.model.Authority.GUEST;
+import static com.nextbreakpoint.shop.common.model.Authority.PLATFORM;
+import static com.nextbreakpoint.shop.common.model.ContentType.APPLICATION_JSON;
+import static com.nextbreakpoint.shop.common.model.Headers.ACCEPT;
+import static com.nextbreakpoint.shop.common.model.Headers.AUTHORIZATION;
+import static com.nextbreakpoint.shop.common.model.Headers.CONTENT_TYPE;
+import static com.nextbreakpoint.shop.common.model.Headers.X_XSRF_TOKEN;
+import static com.nextbreakpoint.shop.common.vertx.ServerUtil.UUID_REGEXP;
 import static java.util.Arrays.asList;
 
 public class Verticle extends AbstractVerticle {
     private HttpServer server;
 
     public static void main(String[] args) {
-        System.setProperty("vertx.metrics.options.enabled", "true");
-        System.setProperty("vertx.metrics.options.registryName", "exported");
+        System.setProperty("vertx.graphite.options.enabled", "true");
+        System.setProperty("vertx.graphite.options.registryName", "exported");
 
         Launcher.main(new String[] { "run", Verticle.class.getCanonicalName(), "-conf", args.length > 0 ? args[0] : "config/default.json" });
     }
@@ -189,8 +190,8 @@ public class Verticle extends AbstractVerticle {
                 .withInputMapper(new DeleteAccountRequestMapper())
                 .withOutputMapper(new DeleteAccountResponseMapper())
                 .withController(new DeleteAccountController(store))
-                .onSuccess(new ContentHandler(200))
-                .onFailure(new RequestFailedHandler())
+                .onSuccess(new ContentConsumer(200))
+                .onFailure(new FailedRequestConsumer())
                 .build();
     }
 
@@ -199,8 +200,8 @@ public class Verticle extends AbstractVerticle {
                 .withInputMapper(new DeleteAccountsRequestMapper())
                 .withOutputMapper(new DeleteAccountsResponseMapper())
                 .withController(new DeleteAccountsController(store))
-                .onSuccess(new NoContentHandler(204))
-                .onFailure(new RequestFailedHandler())
+                .onSuccess(new NoContentConsumer(204))
+                .onFailure(new FailedRequestConsumer())
                 .build();
     }
 
@@ -209,8 +210,8 @@ public class Verticle extends AbstractVerticle {
                 .withInputMapper(new InsertAccountRequestMapper())
                 .withOutputMapper(new InsertAccountResponseMapper())
                 .withController(new InsertAccountController(store))
-                .onSuccess(new ContentHandler(201))
-                .onFailure(new RequestFailedHandler())
+                .onSuccess(new ContentConsumer(201))
+                .onFailure(new FailedRequestConsumer())
                 .build();
     }
 
@@ -219,8 +220,8 @@ public class Verticle extends AbstractVerticle {
                 .withInputMapper(new ListAccountsRequestMapper())
                 .withOutputMapper(new ListAccountsResponseMapper())
                 .withController(new ListAccountsController(store))
-                .onSuccess(new ContentHandler(200))
-                .onFailure(new RequestFailedHandler())
+                .onSuccess(new ContentConsumer(200))
+                .onFailure(new FailedRequestConsumer())
                 .build();
     }
 
@@ -229,8 +230,8 @@ public class Verticle extends AbstractVerticle {
                 .withInputMapper(new LoadAccountRequestMapper())
                 .withOutputMapper(new LoadAccountResponseMapper())
                 .withController(new LoadAccountController(store))
-                .onSuccess(new ContentHandler(200, 404))
-                .onFailure(new RequestFailedHandler())
+                .onSuccess(new ContentConsumer(200, 404))
+                .onFailure(new FailedRequestConsumer())
                 .build();
     }
 
@@ -239,8 +240,8 @@ public class Verticle extends AbstractVerticle {
                 .withInputMapper(new LoadSelfAccountRequestMapper())
                 .withOutputMapper(new LoadAccountResponseMapper())
                 .withController(new LoadAccountController(store))
-                .onSuccess(new ContentHandler(200, 404))
-                .onFailure(new RequestFailedHandler())
+                .onSuccess(new ContentConsumer(200, 404))
+                .onFailure(new FailedRequestConsumer())
                 .build();
     }
 }

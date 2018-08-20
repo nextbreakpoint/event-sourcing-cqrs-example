@@ -1,9 +1,9 @@
 package com.nextbreakpoint.shop.designs;
 
-import com.nextbreakpoint.shop.common.DeleteDesignEvent;
-import com.nextbreakpoint.shop.common.DeleteDesignsEvent;
-import com.nextbreakpoint.shop.common.InsertDesignEvent;
-import com.nextbreakpoint.shop.common.UpdateDesignEvent;
+import com.nextbreakpoint.shop.common.model.events.DeleteDesignEvent;
+import com.nextbreakpoint.shop.common.model.events.DeleteDesignsEvent;
+import com.nextbreakpoint.shop.common.model.events.InsertDesignEvent;
+import com.nextbreakpoint.shop.common.model.events.UpdateDesignEvent;
 import com.nextbreakpoint.shop.designs.model.DeleteDesignResult;
 import com.nextbreakpoint.shop.designs.model.DeleteDesignsResult;
 import com.nextbreakpoint.shop.designs.model.InsertDesignResult;

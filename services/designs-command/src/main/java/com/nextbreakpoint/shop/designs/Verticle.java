@@ -1,13 +1,13 @@
 package com.nextbreakpoint.shop.designs;
 
-import com.nextbreakpoint.shop.common.AccessHandler;
-import com.nextbreakpoint.shop.common.CORSHandlerFactory;
-import com.nextbreakpoint.shop.common.Failure;
-import com.nextbreakpoint.shop.common.GraphiteManager;
-import com.nextbreakpoint.shop.common.JWTProviderFactory;
-import com.nextbreakpoint.shop.common.KafkaClientFactory;
-import com.nextbreakpoint.shop.common.ResponseHelper;
-import com.nextbreakpoint.shop.common.ServerUtil;
+import com.nextbreakpoint.shop.common.vertx.AccessHandler;
+import com.nextbreakpoint.shop.common.vertx.CORSHandlerFactory;
+import com.nextbreakpoint.shop.common.model.Failure;
+import com.nextbreakpoint.shop.common.graphite.GraphiteManager;
+import com.nextbreakpoint.shop.common.vertx.JWTProviderFactory;
+import com.nextbreakpoint.shop.common.vertx.KafkaClientFactory;
+import com.nextbreakpoint.shop.common.vertx.ResponseHelper;
+import com.nextbreakpoint.shop.common.vertx.ServerUtil;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Launcher;
@@ -27,14 +27,14 @@ import io.vertx.rxjava.ext.web.handler.TimeoutHandler;
 import io.vertx.rxjava.kafka.client.producer.KafkaProducer;
 import rx.Single;
 
-import static com.nextbreakpoint.shop.common.Authority.ADMIN;
-import static com.nextbreakpoint.shop.common.ContentType.APPLICATION_JSON;
-import static com.nextbreakpoint.shop.common.Headers.ACCEPT;
-import static com.nextbreakpoint.shop.common.Headers.AUTHORIZATION;
-import static com.nextbreakpoint.shop.common.Headers.CONTENT_TYPE;
-import static com.nextbreakpoint.shop.common.Headers.X_MODIFIED;
-import static com.nextbreakpoint.shop.common.Headers.X_XSRF_TOKEN;
-import static com.nextbreakpoint.shop.common.ServerUtil.UUID_REGEXP;
+import static com.nextbreakpoint.shop.common.model.Authority.ADMIN;
+import static com.nextbreakpoint.shop.common.model.ContentType.APPLICATION_JSON;
+import static com.nextbreakpoint.shop.common.model.Headers.ACCEPT;
+import static com.nextbreakpoint.shop.common.model.Headers.AUTHORIZATION;
+import static com.nextbreakpoint.shop.common.model.Headers.CONTENT_TYPE;
+import static com.nextbreakpoint.shop.common.model.Headers.X_MODIFIED;
+import static com.nextbreakpoint.shop.common.model.Headers.X_XSRF_TOKEN;
+import static com.nextbreakpoint.shop.common.vertx.ServerUtil.UUID_REGEXP;
 import static com.nextbreakpoint.shop.designs.Factory.createDeleteDesignHandler;
 import static com.nextbreakpoint.shop.designs.Factory.createDeleteDesignsHandler;
 import static com.nextbreakpoint.shop.designs.Factory.createInsertDesignHandler;
@@ -48,8 +48,8 @@ public class Verticle extends AbstractVerticle {
 
     public static void main(String[] args) {
         System.setProperty("crypto.policy", "unlimited");
-        System.setProperty("vertx.metrics.options.enabled", "true");
-        System.setProperty("vertx.metrics.options.registryName", "exported");
+        System.setProperty("vertx.graphite.options.enabled", "true");
+        System.setProperty("vertx.graphite.options.registryName", "exported");
 
         Launcher.main(new String[] { "run", Verticle.class.getCanonicalName(), "-conf", args.length > 0 ? args[0] : "config/default.json" });
     }

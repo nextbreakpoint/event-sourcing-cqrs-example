@@ -1,5 +1,7 @@
 package com.nextbreakpoint.shop.designs.model;
 
+import com.nextbreakpoint.shop.designs.model.DesignDocument;
+
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;

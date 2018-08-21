@@ -6,7 +6,7 @@ import com.datastax.driver.core.ResultSetFuture;
 import com.datastax.driver.core.Session;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.nextbreakpoint.shop.designs.Store;
-import com.nextbreakpoint.shop.designs.model.DesignDocument;
+import com.nextbreakpoint.shop.common.model.DesignDocument;
 import com.nextbreakpoint.shop.designs.model.ListDesignsRequest;
 import com.nextbreakpoint.shop.designs.model.ListDesignsResponse;
 import com.nextbreakpoint.shop.designs.model.LoadDesignRequest;

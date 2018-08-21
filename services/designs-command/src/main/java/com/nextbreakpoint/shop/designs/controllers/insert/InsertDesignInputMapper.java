@@ -30,6 +30,6 @@ public class InsertDesignInputMapper implements Mapper<RoutingContext, InsertDes
                 .put("script", script)
                 .encode();
 
-        return new InsertDesignEvent(UUID.randomUUID(), json);
+        return new InsertDesignEvent(UUID.randomUUID(), json, System.currentTimeMillis());
     }
 }

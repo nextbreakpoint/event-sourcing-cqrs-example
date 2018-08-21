@@ -1,5 +1,8 @@
 package com.nextbreakpoint.shop.common.model;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.Objects;
 
 public class Message {
@@ -10,7 +13,13 @@ public class Message {
     private String partitionKey;
     private Long timestamp;
 
-    public Message(String messageId, String messageType, String messageBody, String messageSource, String partitionKey, Long timestamp) {
+    @JsonCreator
+    public Message(@JsonProperty("messageId") String messageId,
+                   @JsonProperty("messageType") String messageType,
+                   @JsonProperty("messageBody") String messageBody,
+                   @JsonProperty("messageSource") String messageSource,
+                   @JsonProperty("partitionKey") String partitionKey,
+                   @JsonProperty("timestamp") Long timestamp) {
         this.messageId = Objects.requireNonNull(messageId);
         this.messageType = Objects.requireNonNull(messageType);
         this.messageBody = Objects.requireNonNull(messageBody);

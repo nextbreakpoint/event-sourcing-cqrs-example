@@ -1,39 +1,20 @@
 package com.nextbreakpoint.shop.common.model;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Design {
-    private final String uuid;
-    private final String location;
-    private final String imageSrc;
-    private final String created;
-    private final String modified;
     private final String manifest;
     private final String metadata;
     private final String script;
 
     @JsonCreator
-    public Design(String uuid, String location, String imageSrc, String created, String modified, String manifest, String metadata, String script) {
-        this.uuid = uuid;
-        this.location = location;
-        this.imageSrc = imageSrc;
-        this.created = created;
-        this.modified = modified;
+    public Design(@JsonProperty("manifest") String manifest,
+                  @JsonProperty("metadata") String metadata,
+                  @JsonProperty("script") String script) {
         this.manifest = manifest;
         this.metadata = metadata;
         this.script = script;
-    }
-
-    public String getUuid() {
-        return uuid;
-    }
-
-    public String getLocation() {
-        return location;
-    }
-
-    public String getImageSrc() {
-        return imageSrc;
     }
 
     public String getManifest() {
@@ -46,13 +27,5 @@ public class Design {
 
     public String getScript() {
         return script;
-    }
-
-    public String getCreated() {
-        return created;
-    }
-
-    public String getModified() {
-        return modified;
     }
 }

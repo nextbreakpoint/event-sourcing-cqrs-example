@@ -1,9 +1,13 @@
 package com.nextbreakpoint.shop.designs;
 
-import com.nextbreakpoint.shop.common.model.Content;
 import com.nextbreakpoint.shop.common.handlers.ContentConsumer;
 import com.nextbreakpoint.shop.common.handlers.DefaultHandler;
 import com.nextbreakpoint.shop.common.handlers.FailedRequestConsumer;
+import com.nextbreakpoint.shop.common.model.Content;
+import com.nextbreakpoint.shop.common.model.events.DeleteDesignEvent;
+import com.nextbreakpoint.shop.common.model.events.DeleteDesignsEvent;
+import com.nextbreakpoint.shop.common.model.events.InsertDesignEvent;
+import com.nextbreakpoint.shop.common.model.events.UpdateDesignEvent;
 import com.nextbreakpoint.shop.designs.controllers.delete.DeleteDesignController;
 import com.nextbreakpoint.shop.designs.controllers.delete.DeleteDesignInputMapper;
 import com.nextbreakpoint.shop.designs.controllers.delete.DeleteDesignMessageMapper;
@@ -20,13 +24,9 @@ import com.nextbreakpoint.shop.designs.controllers.update.UpdateDesignController
 import com.nextbreakpoint.shop.designs.controllers.update.UpdateDesignInputMapper;
 import com.nextbreakpoint.shop.designs.controllers.update.UpdateDesignMessageMapper;
 import com.nextbreakpoint.shop.designs.controllers.update.UpdateDesignOutputMapper;
-import com.nextbreakpoint.shop.common.model.events.DeleteDesignEvent;
 import com.nextbreakpoint.shop.designs.model.DeleteDesignResult;
-import com.nextbreakpoint.shop.common.model.events.DeleteDesignsEvent;
 import com.nextbreakpoint.shop.designs.model.DeleteDesignsResult;
-import com.nextbreakpoint.shop.common.model.events.InsertDesignEvent;
 import com.nextbreakpoint.shop.designs.model.InsertDesignResult;
-import com.nextbreakpoint.shop.common.model.events.UpdateDesignEvent;
 import com.nextbreakpoint.shop.designs.model.UpdateDesignResult;
 import io.vertx.rxjava.ext.web.RoutingContext;
 import io.vertx.rxjava.kafka.client.producer.KafkaProducer;

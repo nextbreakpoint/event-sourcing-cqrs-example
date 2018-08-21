@@ -1,7 +1,7 @@
 package com.nextbreakpoint.shop.web.handlers;
 
 import com.nextbreakpoint.shop.common.vertx.Authentication;
-import com.nextbreakpoint.shop.common.model.Design;
+import com.nextbreakpoint.shop.common.model.DesignResource;
 import com.nextbreakpoint.shop.common.model.Failure;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
@@ -49,7 +49,7 @@ public class DesignsDataHandler implements Handler<RoutingContext> {
 
     private void handleDesigns(RoutingContext routingContext, HttpResponse<Buffer> response) {
         try {
-            final List<Design> objects = (List<Design>) response.bodyAsJson(List.class).stream().map(uuid -> makeDesign((String)uuid)).collect(Collectors.toList());
+            final List<DesignResource> objects = (List<DesignResource>) response.bodyAsJson(List.class).stream().map(uuid -> makeDesign((String)uuid)).collect(Collectors.toList());
 
             final String modified = response.getHeader(X_MODIFIED);
 
@@ -63,8 +63,8 @@ public class DesignsDataHandler implements Handler<RoutingContext> {
         }
     }
 
-    private Design makeDesign(String uuid) {
-        return new Design(uuid, webUrl + "/content/designs/" + uuid, designsUrl + "/api/designs/" + uuid + "/0/0/0/256.png", "", "", "", "", "");
+    private DesignResource makeDesign(String uuid) {
+        return new DesignResource(uuid, webUrl + "/content/designs/" + uuid, designsUrl + "/api/designs/" + uuid + "/0/0/0/256.png", "", "", "", "", "");
     }
 
     public static DesignsDataHandler create(WebClient client, JsonObject config) {

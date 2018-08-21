@@ -37,7 +37,7 @@
                                         <env>
                                             <CASSANDRA_RACK>rack1</CASSANDRA_RACK>
                                             <CASSANDRA_DC>datacenter1</CASSANDRA_DC>
-                                            <JVM_OPTS>-Xms2G -Xmx2G</JVM_OPTS>
+                                            <JVM_OPTS>-Xms1G -Xmx1G</JVM_OPTS>
                                         </env>
                                         <volumes>
                                             <bind>

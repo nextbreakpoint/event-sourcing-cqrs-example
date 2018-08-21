@@ -1,4 +1,7 @@
-package com.nextbreakpoint.shop.designs.model;
+package com.nextbreakpoint.shop.common.model;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class DesignDocument {
     private String uuid;
@@ -7,7 +10,12 @@ public class DesignDocument {
     private String updated;
     private Long modified;
 
-    public DesignDocument(String uuid, String json, String created, String updated, Long modified) {
+    @JsonCreator
+    public DesignDocument(@JsonProperty("uuid") String uuid,
+                          @JsonProperty("json") String json,
+                          @JsonProperty("created") String created,
+                          @JsonProperty("updated") String updated,
+                          @JsonProperty("modified") Long modified) {
         this.uuid = uuid;
         this.json = json;
         this.created = created;

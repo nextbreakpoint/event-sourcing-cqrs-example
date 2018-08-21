@@ -6,6 +6,8 @@ import com.nextbreakpoint.shop.common.model.Message;
 import com.nextbreakpoint.shop.common.model.events.InsertDesignEvent;
 import com.nextbreakpoint.shop.designs.model.InsertDesignResult;
 import io.vertx.core.json.Json;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import io.vertx.rxjava.kafka.client.producer.KafkaProducer;
 import io.vertx.rxjava.kafka.client.producer.KafkaProducerRecord;
 import rx.Single;
@@ -13,6 +15,8 @@ import rx.Single;
 import java.util.Objects;
 
 public class InsertDesignController implements Controller<InsertDesignEvent, InsertDesignResult> {
+    private Logger LOG = LoggerFactory.getLogger(InsertDesignController.class);
+
     private final String topic;
     private final KafkaProducer<String, String> producer;
     private final Mapper<InsertDesignEvent, Message> messageMapper;
@@ -28,6 +32,7 @@ public class InsertDesignController implements Controller<InsertDesignEvent, Ins
         return createRecord(event)
                 .flatMap(record -> producer.rxWrite(record))
                 .map(record -> new InsertDesignResult(event.getUuid(), 1))
+                .doOnError(err -> LOG.error("Failed to write record into Kafka", err))
                 .onErrorReturn(err -> new InsertDesignResult(event.getUuid(), 0));
     }
 

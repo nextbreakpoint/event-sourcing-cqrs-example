@@ -1,7 +1,7 @@
 package com.nextbreakpoint.shop.web.handlers;
 
 import com.nextbreakpoint.shop.common.vertx.Authentication;
-import com.nextbreakpoint.shop.common.model.Design;
+import com.nextbreakpoint.shop.common.model.DesignResource;
 import com.nextbreakpoint.shop.common.model.Failure;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
@@ -60,7 +60,7 @@ public class DesignDataHandler implements Handler<RoutingContext> {
             final String metadata = design.getString("metadata");
             final String script = design.getString("script");
 
-            final Design object = makeDesign(uuid, created, updated, manifest, metadata, script);
+            final DesignResource object = makeDesign(uuid, created, updated, manifest, metadata, script);
 
             final String modified = response.getHeader(X_MODIFIED);
 
@@ -74,8 +74,8 @@ public class DesignDataHandler implements Handler<RoutingContext> {
         }
     }
 
-    private Design makeDesign(String uuid, String created, String modified, String manifest, String metadata, String script) {
-        return new Design(uuid, webUrl + "/content/designs/" + uuid, designsUrl + "/api/designs/" + uuid + "/0/0/0/512.png", created, modified, manifest, metadata, script);
+    private DesignResource makeDesign(String uuid, String created, String modified, String manifest, String metadata, String script) {
+        return new DesignResource(uuid, webUrl + "/content/designs/" + uuid, designsUrl + "/api/designs/" + uuid + "/0/0/0/512.png", created, modified, manifest, metadata, script);
     }
 
     public static DesignDataHandler create(WebClient client, JsonObject config) {

@@ -1,9 +1,9 @@
 package com.nextbreakpoint.shop.designs;
 
+import com.nextbreakpoint.shop.common.graphite.GraphiteManager;
+import com.nextbreakpoint.shop.common.model.Failure;
 import com.nextbreakpoint.shop.common.vertx.AccessHandler;
 import com.nextbreakpoint.shop.common.vertx.CORSHandlerFactory;
-import com.nextbreakpoint.shop.common.model.Failure;
-import com.nextbreakpoint.shop.common.graphite.GraphiteManager;
 import com.nextbreakpoint.shop.common.vertx.JWTProviderFactory;
 import com.nextbreakpoint.shop.common.vertx.KafkaClientFactory;
 import com.nextbreakpoint.shop.common.vertx.ResponseHelper;
@@ -136,8 +136,8 @@ public class Verticle extends AbstractVerticle {
         apiRouter.delete("/designs")
                 .handler(deleteDesignsHandler);
 
-        apiRouter.options("/designs/*")
-                .handler(ResponseHelper::sendNoContent);
+//        apiRouter.options("/designs/*")
+//                .handler(ResponseHelper::sendNoContent);
 
         apiRouter.options("/designs")
                 .handler(ResponseHelper::sendNoContent);

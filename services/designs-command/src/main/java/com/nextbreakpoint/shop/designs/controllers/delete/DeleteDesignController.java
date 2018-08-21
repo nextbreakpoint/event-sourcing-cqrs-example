@@ -6,6 +6,8 @@ import com.nextbreakpoint.shop.common.model.Message;
 import com.nextbreakpoint.shop.common.model.events.DeleteDesignEvent;
 import com.nextbreakpoint.shop.designs.model.DeleteDesignResult;
 import io.vertx.core.json.Json;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import io.vertx.rxjava.kafka.client.producer.KafkaProducer;
 import io.vertx.rxjava.kafka.client.producer.KafkaProducerRecord;
 import rx.Single;
@@ -13,6 +15,8 @@ import rx.Single;
 import java.util.Objects;
 
 public class DeleteDesignController implements Controller<DeleteDesignEvent, DeleteDesignResult> {
+    private Logger LOG = LoggerFactory.getLogger(DeleteDesignController.class);
+
     private final String topic;
     private final KafkaProducer<String, String> producer;
     private final Mapper<DeleteDesignEvent, Message> messageMapper;
@@ -28,6 +32,7 @@ public class DeleteDesignController implements Controller<DeleteDesignEvent, Del
         return createRecord(event)
                 .flatMap(record -> producer.rxWrite(record))
                 .map(record -> new DeleteDesignResult(event.getUuid(), 1))
+                .doOnError(err -> LOG.error("Failed to write record into Kafka", err))
                 .onErrorReturn(err -> new DeleteDesignResult(event.getUuid(), 0));
     }
 

@@ -17,7 +17,7 @@ public class InsertDesignMessageMapper implements Mapper<InsertDesignEvent, Mess
     }
 
     @Override
-    public Message transform(InsertDesignEvent request) {
-        return new Message(UUID.randomUUID().toString(), MessageType.DESIGN_INSERT, Json.encode(request), messageSource, request.getUuid().toString(), System.currentTimeMillis());
+    public Message transform(InsertDesignEvent event) {
+        return new Message(UUID.randomUUID().toString(), MessageType.DESIGN_INSERT, Json.encode(event), messageSource, event.getUuid().toString(), System.currentTimeMillis());
     }
 }

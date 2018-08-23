@@ -17,7 +17,7 @@ public class DeleteDesignsMessageMapper implements Mapper<DeleteDesignsEvent, Me
     }
 
     @Override
-    public Message transform(DeleteDesignsEvent request) {
-        return new Message(UUID.randomUUID().toString(), MessageType.DESIGNS_DELETE, Json.encode(request), messageSource, new UUID(0,0).toString(), System.currentTimeMillis());
+    public Message transform(DeleteDesignsEvent event) {
+        return new Message(UUID.randomUUID().toString(), MessageType.DESIGNS_DELETE, Json.encode(event), messageSource, new UUID(0,0).toString(), System.currentTimeMillis());
     }
 }

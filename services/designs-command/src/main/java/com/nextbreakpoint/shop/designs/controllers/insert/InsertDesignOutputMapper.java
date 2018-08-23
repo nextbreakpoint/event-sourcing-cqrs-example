@@ -7,7 +7,7 @@ import io.vertx.core.json.Json;
 
 public class InsertDesignOutputMapper implements Mapper<InsertDesignResult, Content> {
     @Override
-    public Content transform(InsertDesignResult response) {
-        return new Content(Json.encode(response));
+    public Content transform(InsertDesignResult result) {
+        return new Content(Json.encode(result));
     }
 }

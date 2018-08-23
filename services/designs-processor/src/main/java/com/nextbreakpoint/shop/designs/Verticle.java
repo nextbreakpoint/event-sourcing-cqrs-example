@@ -20,6 +20,8 @@ import io.vertx.core.Launcher;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import io.vertx.rxjava.core.AbstractVerticle;
 import io.vertx.rxjava.core.WorkerExecutor;
 import io.vertx.rxjava.core.http.HttpServer;
@@ -52,6 +54,8 @@ import static com.nextbreakpoint.shop.designs.Factory.createUpdateDesignHandler;
 import static java.util.Arrays.asList;
 
 public class Verticle extends AbstractVerticle {
+    private final Logger logger = LoggerFactory.getLogger(Verticle.class.getName());
+
     private WorkerExecutor executor;
 
     private HttpServer server;
@@ -98,6 +102,8 @@ public class Verticle extends AbstractVerticle {
         final String webUrl = config.getString("client_web_url");
 
         final String keyspace = config.getString("cassandra_keyspace");
+
+        final String eventsTopic = config.getString("events_topic");
 
         final JWTAuth jwtProvider = JWTProviderFactory.create(vertx, config);
 
@@ -147,8 +153,8 @@ public class Verticle extends AbstractVerticle {
         handlers.put(MessageType.DESIGN_DELETE, createDeleteDesignHandler(store, producer));
         handlers.put(MessageType.DESIGNS_DELETE, createDeleteDesignsHandler(store, producer));
 
-        consumer.toObservable()
-                .doOnNext(record -> processRecord(handlers, record))
+        consumer.handler(record -> processRecord(handlers, record))
+                .rxSubscribe(eventsTopic)
                 .doOnError(this::handleError)
                 .subscribe();
 
@@ -160,6 +166,7 @@ public class Verticle extends AbstractVerticle {
     }
 
     private void handleError(Throwable err) {
+        logger.error("Cannot process message", err);
     }
 
     private void processRecord(Map<String, Handler<Message>> handlers, KafkaConsumerRecord<String, String> record) {

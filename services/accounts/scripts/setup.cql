@@ -4,7 +4,7 @@ CREATE ROLE IF NOT EXISTS admin WITH PASSWORD = 'password' AND LOGIN = true;
 
 CREATE ROLE IF NOT EXISTS accounts_admin;
 
-GRANT ALL PERMISSIONS on KEYSPACE accounts TO accounts_admin;
+GRANT ALL PERMISSIONS ON KEYSPACE accounts TO accounts_admin;
 
 GRANT accounts_admin TO admin;
 

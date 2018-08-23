@@ -126,19 +126,19 @@ public class Verticle extends AbstractVerticle {
                 .produces(IMAGE_PNG)
                 .handler(getTileHandler);
 
-        apiRouter.get("/designs")
-                .produces(APPLICATION_JSON)
-                .handler(listDesignsHandler);
-
         apiRouter.getWithRegex("/designs/" + UUID_REGEXP)
                 .produces(APPLICATION_JSON)
                 .handler(loadDesignHandler);
 
+        apiRouter.get("/designs")
+                .produces(APPLICATION_JSON)
+                .handler(listDesignsHandler);
+
         apiRouter.options("/designs/*")
                 .handler(ResponseHelper::sendNoContent);
 
-        apiRouter.options("/designs")
-                .handler(ResponseHelper::sendNoContent);
+//        apiRouter.options("/designs")
+//                .handler(ResponseHelper::sendNoContent);
 
         mainRouter.route().failureHandler(ResponseHelper::sendFailure);
 

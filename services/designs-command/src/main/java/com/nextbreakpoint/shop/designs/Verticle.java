@@ -136,11 +136,11 @@ public class Verticle extends AbstractVerticle {
         apiRouter.delete("/designs")
                 .handler(deleteDesignsHandler);
 
-//        apiRouter.options("/designs/*")
-//                .handler(ResponseHelper::sendNoContent);
-
-        apiRouter.options("/designs")
+        apiRouter.options("/designs/*")
                 .handler(ResponseHelper::sendNoContent);
+
+//        apiRouter.options("/designs")
+//                .handler(ResponseHelper::sendNoContent);
 
         mainRouter.route().failureHandler(ResponseHelper::sendFailure);
 

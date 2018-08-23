@@ -17,7 +17,7 @@ public class UpdateDesignMessageMapper implements Mapper<UpdateDesignEvent, Mess
     }
 
     @Override
-    public Message transform(UpdateDesignEvent request) {
-        return new Message(UUID.randomUUID().toString(), MessageType.DESIGN_UPDATE, Json.encode(request), messageSource, request.getUuid().toString(), System.currentTimeMillis());
+    public Message transform(UpdateDesignEvent event) {
+        return new Message(UUID.randomUUID().toString(), MessageType.DESIGN_UPDATE, Json.encode(event), messageSource, event.getUuid().toString(), System.currentTimeMillis());
     }
 }

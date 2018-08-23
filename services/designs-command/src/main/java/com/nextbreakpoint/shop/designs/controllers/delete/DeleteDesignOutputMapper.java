@@ -7,7 +7,7 @@ import io.vertx.core.json.Json;
 
 public class DeleteDesignOutputMapper implements Mapper<DeleteDesignResult, Content> {
     @Override
-    public Content transform(DeleteDesignResult response) {
-        return new Content(Json.encode(response));
+    public Content transform(DeleteDesignResult result) {
+        return new Content(Json.encode(result));
     }
 }

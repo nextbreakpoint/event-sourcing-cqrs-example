@@ -67,12 +67,12 @@ public class VerticleIT {
     }
 
     @BeforeEach
-    public void createKafkaConsumer() {
+    public void createVertx() {
         vertx = new Vertx(io.vertx.core.Vertx.vertx());
     }
 
     @AfterEach
-    public void destroyKafkaConsumer() {
+    public void destroyVertx() {
         vertx.close();
     }
 
@@ -181,7 +181,9 @@ public class VerticleIT {
                         assertThat(decodedDesign.getScript()).isEqualTo(SCRIPT);
                     });
         } finally {
-            consumer.close();
+            if (consumer != null) {
+                consumer.close();
+            }
         }
     }
 
@@ -228,7 +230,9 @@ public class VerticleIT {
                         assertThat(decodedDesign.getScript()).isEqualTo(SCRIPT);
                     });
         } finally {
-            consumer.close();
+            if (consumer != null) {
+                consumer.close();
+            }
         }
     }
 
@@ -271,7 +275,9 @@ public class VerticleIT {
                         assertThat(decodedEvent.getUuid().toString()).isEqualTo(uuid);
                     });
         } finally {
-            consumer.close();
+            if (consumer != null) {
+                consumer.close();
+            }
         }
     }
 
@@ -312,7 +318,9 @@ public class VerticleIT {
                         DeleteDesignsEvent decodedEvent = Json.decodeValue(decodedMessage.getMessageBody(), DeleteDesignsEvent.class);
                     });
         } finally {
-            consumer.close();
+            if (consumer != null) {
+                consumer.close();
+            }
         }
     }
 

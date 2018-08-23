@@ -20,6 +20,7 @@ public class DeleteDesignController implements Controller<DeleteDesignEvent, Mes
 
     @Override
     public Single<MessageReceipt> onNext(DeleteDesignEvent event) {
-        return null;
+        return store.deleteDesign(event)
+                .map(result -> new MessageReceipt());
     }
 }

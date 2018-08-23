@@ -20,6 +20,7 @@ public class UpdateDesignController implements Controller<UpdateDesignEvent, Mes
 
     @Override
     public Single<MessageReceipt> onNext(UpdateDesignEvent event) {
-        return null;
+        return store.updateDesign(event)
+                .map(result -> new MessageReceipt());
     }
 }

@@ -20,6 +20,7 @@ public class InsertDesignController implements Controller<InsertDesignEvent, Mes
 
     @Override
     public Single<MessageReceipt> onNext(InsertDesignEvent event) {
-        return null;
+        return store.insertDesign(event)
+                .map(result -> new MessageReceipt());
     }
 }

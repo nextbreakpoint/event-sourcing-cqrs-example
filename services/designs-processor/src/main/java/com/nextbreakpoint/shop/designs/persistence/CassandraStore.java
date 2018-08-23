@@ -52,30 +52,30 @@ public class CassandraStore implements Store {
     }
 
     @Override
-    public Single<InsertDesignResult> insertDesign(InsertDesignEvent request) {
+    public Single<InsertDesignResult> insertDesign(InsertDesignEvent event) {
         return withSession()
-                .flatMap(session -> doInsertDesign(session, request))
+                .flatMap(session -> doInsertDesign(session, event))
                 .doOnError(err -> handleError(ERROR_INSERT_DESIGN, err));
     }
 
     @Override
-    public Single<UpdateDesignResult> updateDesign(UpdateDesignEvent request) {
+    public Single<UpdateDesignResult> updateDesign(UpdateDesignEvent event) {
         return withSession()
-                .flatMap(conn -> doUpdateDesign(session, request))
+                .flatMap(conn -> doUpdateDesign(session, event))
                 .doOnError(err -> handleError(ERROR_UPDATE_DESIGN, err));
     }
 
     @Override
-    public Single<DeleteDesignResult> deleteDesign(DeleteDesignEvent request) {
+    public Single<DeleteDesignResult> deleteDesign(DeleteDesignEvent event) {
         return withSession()
-                .flatMap(session -> doDeleteDesign(session, request))
+                .flatMap(session -> doDeleteDesign(session, event))
                 .doOnError(err -> handleError(ERROR_DELETE_DESIGN, err));
     }
 
     @Override
-    public Single<DeleteDesignsResult> deleteDesigns(DeleteDesignsEvent request) {
+    public Single<DeleteDesignsResult> deleteDesigns(DeleteDesignsEvent event) {
         return withSession()
-                .flatMap(session -> doDeleteDesigns(session, request))
+                .flatMap(session -> doDeleteDesigns(session, event))
                 .doOnError(err -> handleError(ERROR_DELETE_DESIGNS, err));
     }
 

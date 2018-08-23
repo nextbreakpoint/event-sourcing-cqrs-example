@@ -11,11 +11,11 @@ import com.nextbreakpoint.shop.designs.model.UpdateDesignResult;
 import rx.Single;
 
 public interface Store {
-    Single<InsertDesignResult> insertDesign(InsertDesignEvent request);
+    Single<InsertDesignResult> insertDesign(InsertDesignEvent event);
 
-    Single<UpdateDesignResult> updateDesign(UpdateDesignEvent request);
+    Single<UpdateDesignResult> updateDesign(UpdateDesignEvent event);
 
-    Single<DeleteDesignResult> deleteDesign(DeleteDesignEvent request);
+    Single<DeleteDesignResult> deleteDesign(DeleteDesignEvent event);
 
-    Single<DeleteDesignsResult> deleteDesigns(DeleteDesignsEvent request);
+    Single<DeleteDesignsResult> deleteDesigns(DeleteDesignsEvent event);
 }

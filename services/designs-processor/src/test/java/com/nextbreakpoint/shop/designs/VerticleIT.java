@@ -14,6 +14,7 @@ import com.nextbreakpoint.shop.common.model.Message;
 import com.nextbreakpoint.shop.common.model.MessageType;
 import com.nextbreakpoint.shop.common.model.events.DeleteDesignEvent;
 import com.nextbreakpoint.shop.common.model.events.DeleteDesignsEvent;
+import com.nextbreakpoint.shop.common.model.events.DesignChangedEvent;
 import com.nextbreakpoint.shop.common.model.events.InsertDesignEvent;
 import com.nextbreakpoint.shop.common.model.events.UpdateDesignEvent;
 import com.nextbreakpoint.shop.common.vertx.KafkaClientFactory;
@@ -36,7 +37,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.UUID;
 
-import static com.jayway.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS;
@@ -92,7 +92,7 @@ public class VerticleIT {
             String[] message = new String[]{null};
 
             consumer.handler(record -> message[0] = record.value())
-                    .rxSubscribe("designs-events")
+                    .rxSubscribe("designs-sse")
                     .subscribe();
 
             long eventTimestamp = System.currentTimeMillis();
@@ -108,22 +108,6 @@ public class VerticleIT {
 
             producer.rxWrite(createKafkaRecord(insertDesignMessage)).subscribe();
 
-//            await().atMost(TWO_SECONDS)
-//                    .pollInterval(ONE_HUNDRED_MILLISECONDS)
-//                    .untilAsserted(() -> {
-//                        assertThat(message[0]).isNotNull();
-//                        Message actualMessage = Json.decodeValue(message[0], Message.class);
-//                        assertThat(actualMessage.getTimestamp()).isEqualTo(messageTimestamp);
-//                        assertThat(actualMessage.getMessageSource()).isEqualTo("test");
-//                        assertThat(actualMessage.getPartitionKey()).isEqualTo(designId.toString());
-//                        assertThat(actualMessage.getMessageId()).isEqualTo(messageId.toString());
-//                        assertThat(actualMessage.getMessageType()).isEqualTo("design-insert");
-//                        InsertDesignEvent actualEvent = Json.decodeValue(actualMessage.getMessageBody(), InsertDesignEvent.class);
-//                        assertThat(actualEvent.getUuid()).isEqualTo(designId);
-//                        assertThat(actualEvent.getJson()).isEqualTo(JSON_1);
-//                        assertThat(actualEvent.getTimestamp()).isEqualTo(eventTimestamp);
-//                    });
-
             await().atMost(TWO_SECONDS)
                     .pollInterval(ONE_HUNDRED_MILLISECONDS)
                     .untilAsserted(() -> {
@@ -133,6 +117,22 @@ public class VerticleIT {
                             String actualJson = row.get("JSON", String.class);
                             assertThat(actualJson).isEqualTo(JSON_1);
                         }
+                    });
+
+            await().atMost(TWO_SECONDS)
+                    .pollInterval(ONE_HUNDRED_MILLISECONDS)
+                    .untilAsserted(() -> {
+                        assertThat(message[0]).isNotNull();
+                        Message actualMessage = Json.decodeValue(message[0], Message.class);
+                        assertThat(actualMessage.getTimestamp()).isNotNull();
+                        assertThat(actualMessage.getMessageSource()).isEqualTo("service-designs");
+                        assertThat(actualMessage.getPartitionKey()).isEqualTo(designId.toString());
+                        assertThat(actualMessage.getMessageId()).isNotNull();
+                        assertThat(actualMessage.getMessageType()).isEqualTo("design-changed");
+                        DesignChangedEvent actualEvent = Json.decodeValue(actualMessage.getMessageBody(), DesignChangedEvent.class);
+                        assertThat(actualEvent.getUuid()).isEqualTo(designId);
+                        assertThat(actualEvent.getTimestamp()).isNotNull();
+                        assertThat(actualEvent.getTimestamp()).isGreaterThan(eventTimestamp);
                     });
         } finally {
             if (consumer != null) {
@@ -161,7 +161,7 @@ public class VerticleIT {
             String[] message = new String[]{null};
 
             consumer.handler(record -> message[0] = record.value())
-                    .rxSubscribe("designs-events")
+                    .rxSubscribe("designs-sse")
                     .subscribe();
 
             long eventTimestamp = System.currentTimeMillis();
@@ -194,22 +194,6 @@ public class VerticleIT {
 
             producer.rxWrite(createKafkaRecord(updateDesignMessage)).subscribe();
 
-//            await().atMost(TWO_SECONDS)
-//                    .pollInterval(ONE_HUNDRED_MILLISECONDS)
-//                    .untilAsserted(() -> {
-//                        assertThat(message[0]).isNotNull();
-//                        Message actualMessage = Json.decodeValue(message[0], Message.class);
-//                        assertThat(actualMessage.getTimestamp()).isEqualTo(messageTimestamp);
-//                        assertThat(actualMessage.getMessageSource()).isEqualTo("test");
-//                        assertThat(actualMessage.getPartitionKey()).isEqualTo(designId.toString());
-//                        assertThat(actualMessage.getMessageId()).isEqualTo(messageId.toString());
-//                        assertThat(actualMessage.getMessageType()).isEqualTo("design-update");
-//                        UpdateDesignEvent actualEvent = Json.decodeValue(actualMessage.getMessageBody(), UpdateDesignEvent.class);
-//                        assertThat(actualEvent.getUuid()).isEqualTo(designId);
-//                        assertThat(actualEvent.getJson()).isEqualTo(JSON_2);
-//                        assertThat(actualEvent.getTimestamp()).isEqualTo(eventTimestamp);
-//                    });
-
             await().atMost(TWO_SECONDS)
                     .pollInterval(ONE_HUNDRED_MILLISECONDS)
                     .untilAsserted(() -> {
@@ -219,6 +203,22 @@ public class VerticleIT {
                             String actualJson = row.get("JSON", String.class);
                             assertThat(actualJson).isEqualTo(JSON_2);
                         }
+                    });
+
+            await().atMost(TWO_SECONDS)
+                    .pollInterval(ONE_HUNDRED_MILLISECONDS)
+                    .untilAsserted(() -> {
+                        assertThat(message[0]).isNotNull();
+                        Message actualMessage = Json.decodeValue(message[0], Message.class);
+                        assertThat(actualMessage.getTimestamp()).isNotNull();
+                        assertThat(actualMessage.getMessageSource()).isEqualTo("service-designs");
+                        assertThat(actualMessage.getPartitionKey()).isEqualTo(designId.toString());
+                        assertThat(actualMessage.getMessageId()).isNotNull();
+                        assertThat(actualMessage.getMessageType()).isEqualTo("design-changed");
+                        DesignChangedEvent actualEvent = Json.decodeValue(actualMessage.getMessageBody(), DesignChangedEvent.class);
+                        assertThat(actualEvent.getUuid()).isEqualTo(designId);
+                        assertThat(actualEvent.getTimestamp()).isNotNull();
+                        assertThat(actualEvent.getTimestamp()).isGreaterThan(eventTimestamp);
                     });
         } finally {
             if (consumer != null) {
@@ -247,7 +247,7 @@ public class VerticleIT {
             String[] message = new String[]{null};
 
             consumer.handler(record -> message[0] = record.value())
-                    .rxSubscribe("designs-events")
+                    .rxSubscribe("designs-sse")
                     .subscribe();
 
             long eventTimestamp = System.currentTimeMillis();
@@ -280,21 +280,6 @@ public class VerticleIT {
 
             producer.rxWrite(createKafkaRecord(deleteDesignMessage)).subscribe();
 
-//            await().atMost(TWO_SECONDS)
-//                    .pollInterval(ONE_HUNDRED_MILLISECONDS)
-//                    .untilAsserted(() -> {
-//                        assertThat(message[0]).isNotNull();
-//                        Message actualMessage = Json.decodeValue(message[0], Message.class);
-//                        assertThat(actualMessage.getTimestamp()).isEqualTo(messageTimestamp);
-//                        assertThat(actualMessage.getMessageSource()).isEqualTo("test");
-//                        assertThat(actualMessage.getPartitionKey()).isEqualTo(designId.toString());
-//                        assertThat(actualMessage.getMessageId()).isEqualTo(messageId.toString());
-//                        assertThat(actualMessage.getMessageType()).isEqualTo("design-delete");
-//                        DeleteDesignEvent actualEvent = Json.decodeValue(actualMessage.getMessageBody(), DeleteDesignEvent.class);
-//                        assertThat(actualEvent.getUuid()).isEqualTo(designId);
-//                        assertThat(actualEvent.getTimestamp()).isEqualTo(eventTimestamp);
-//                    });
-
             await().atMost(TWO_SECONDS)
                     .pollInterval(ONE_HUNDRED_MILLISECONDS)
                     .untilAsserted(() -> {
@@ -302,6 +287,22 @@ public class VerticleIT {
                             final PreparedStatement statement = session.prepare("SELECT * FROM DESIGNS WHERE UUID = ?");
                             assertThat(session.execute(statement.bind(designId)).all()).isEmpty();
                         }
+                    });
+
+            await().atMost(TWO_SECONDS)
+                    .pollInterval(ONE_HUNDRED_MILLISECONDS)
+                    .untilAsserted(() -> {
+                        assertThat(message[0]).isNotNull();
+                        Message actualMessage = Json.decodeValue(message[0], Message.class);
+                        assertThat(actualMessage.getTimestamp()).isNotNull();
+                        assertThat(actualMessage.getMessageSource()).isEqualTo("service-designs");
+                        assertThat(actualMessage.getPartitionKey()).isEqualTo(designId.toString());
+                        assertThat(actualMessage.getMessageId()).isNotNull();
+                        assertThat(actualMessage.getMessageType()).isEqualTo("design-changed");
+                        DesignChangedEvent actualEvent = Json.decodeValue(actualMessage.getMessageBody(), DesignChangedEvent.class);
+                        assertThat(actualEvent.getUuid()).isEqualTo(designId);
+                        assertThat(actualEvent.getTimestamp()).isNotNull();
+                        assertThat(actualEvent.getTimestamp()).isGreaterThan(eventTimestamp);
                     });
         } finally {
             if (consumer != null) {
@@ -330,7 +331,7 @@ public class VerticleIT {
             String[] message = new String[]{null};
 
             consumer.handler(record -> message[0] = record.value())
-                    .rxSubscribe("designs-events")
+                    .rxSubscribe("designs-sse")
                     .subscribe();
 
             long eventTimestamp = System.currentTimeMillis();
@@ -381,20 +382,6 @@ public class VerticleIT {
 
             producer.rxWrite(createKafkaRecord(deleteDesignsMessage)).subscribe();
 
-//            await().atMost(TWO_SECONDS)
-//                    .pollInterval(ONE_HUNDRED_MILLISECONDS)
-//                    .untilAsserted(() -> {
-//                        assertThat(message[0]).isNotNull();
-//                        Message actualMessage = Json.decodeValue(message[0], Message.class);
-//                        assertThat(actualMessage.getTimestamp()).isEqualTo(messageTimestamp);
-//                        assertThat(actualMessage.getMessageSource()).isEqualTo("test");
-//                        assertThat(actualMessage.getPartitionKey()).isEqualTo(designId1.toString());
-//                        assertThat(actualMessage.getMessageId()).isEqualTo(messageId.toString());
-//                        assertThat(actualMessage.getMessageType()).isEqualTo("designs-delete");
-//                        DeleteDesignsEvent actualEvent = Json.decodeValue(actualMessage.getMessageBody(), DeleteDesignsEvent.class);
-//                        assertThat(actualEvent.getTimestamp()).isEqualTo(eventTimestamp);
-//                    });
-
             await().atMost(TWO_SECONDS)
                     .pollInterval(ONE_HUNDRED_MILLISECONDS)
                     .untilAsserted(() -> {
@@ -402,6 +389,22 @@ public class VerticleIT {
                             final PreparedStatement statement = session.prepare("SELECT * FROM DESIGNS");
                             assertThat(session.execute(statement.bind()).all()).isEmpty();
                         }
+                    });
+
+            await().atMost(TWO_SECONDS)
+                    .pollInterval(ONE_HUNDRED_MILLISECONDS)
+                    .untilAsserted(() -> {
+                        assertThat(message[0]).isNotNull();
+                        Message actualMessage = Json.decodeValue(message[0], Message.class);
+                        assertThat(actualMessage.getTimestamp()).isNotNull();
+                        assertThat(actualMessage.getMessageSource()).isEqualTo("service-designs");
+                        assertThat(actualMessage.getPartitionKey()).isEqualTo(new UUID(0, 0).toString());
+                        assertThat(actualMessage.getMessageId()).isNotNull();
+                        assertThat(actualMessage.getMessageType()).isEqualTo("design-changed");
+                        DesignChangedEvent actualEvent = Json.decodeValue(actualMessage.getMessageBody(), DesignChangedEvent.class);
+                        assertThat(actualEvent.getUuid()).isEqualTo(new UUID(0, 0));
+                        assertThat(actualEvent.getTimestamp()).isNotNull();
+                        assertThat(actualEvent.getTimestamp()).isGreaterThan(eventTimestamp);
                     });
         } finally {
             if (consumer != null) {

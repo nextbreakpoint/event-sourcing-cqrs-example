@@ -2,15 +2,15 @@ package com.nextbreakpoint.shop.designs;
 
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Session;
-import com.nextbreakpoint.shop.common.vertx.AccessHandler;
-import com.nextbreakpoint.shop.common.vertx.CORSHandlerFactory;
 import com.nextbreakpoint.shop.common.cassandra.CassandraClusterFactory;
-import com.nextbreakpoint.shop.common.model.Failure;
 import com.nextbreakpoint.shop.common.graphite.GraphiteManager;
-import com.nextbreakpoint.shop.common.vertx.JWTProviderFactory;
-import com.nextbreakpoint.shop.common.vertx.KafkaClientFactory;
+import com.nextbreakpoint.shop.common.model.Failure;
 import com.nextbreakpoint.shop.common.model.Message;
 import com.nextbreakpoint.shop.common.model.MessageType;
+import com.nextbreakpoint.shop.common.vertx.AccessHandler;
+import com.nextbreakpoint.shop.common.vertx.CORSHandlerFactory;
+import com.nextbreakpoint.shop.common.vertx.JWTProviderFactory;
+import com.nextbreakpoint.shop.common.vertx.KafkaClientFactory;
 import com.nextbreakpoint.shop.common.vertx.ResponseHelper;
 import com.nextbreakpoint.shop.common.vertx.ServerUtil;
 import com.nextbreakpoint.shop.designs.persistence.CassandraStore;
@@ -105,6 +105,10 @@ public class Verticle extends AbstractVerticle {
 
         final String eventsTopic = config.getString("events_topic");
 
+        final String sseTopic = config.getString("sse_topic");
+
+        final String messageSource = config.getString("message_source");
+
         final JWTAuth jwtProvider = JWTProviderFactory.create(vertx, config);
 
         final Cluster cluster = CassandraClusterFactory.create(config);
@@ -148,10 +152,10 @@ public class Verticle extends AbstractVerticle {
 
         final HttpServerOptions options = ServerUtil.makeServerOptions(config);
 
-        handlers.put(MessageType.DESIGN_INSERT, createInsertDesignHandler(store, producer));
-        handlers.put(MessageType.DESIGN_UPDATE, createUpdateDesignHandler(store, producer));
-        handlers.put(MessageType.DESIGN_DELETE, createDeleteDesignHandler(store, producer));
-        handlers.put(MessageType.DESIGNS_DELETE, createDeleteDesignsHandler(store, producer));
+        handlers.put(MessageType.DESIGN_INSERT, createInsertDesignHandler(store, sseTopic, messageSource, producer));
+        handlers.put(MessageType.DESIGN_UPDATE, createUpdateDesignHandler(store, sseTopic, messageSource, producer));
+        handlers.put(MessageType.DESIGN_DELETE, createDeleteDesignHandler(store, sseTopic, messageSource, producer));
+        handlers.put(MessageType.DESIGNS_DELETE, createDeleteDesignsHandler(store, sseTopic, messageSource, producer));
 
         consumer.handler(record -> processRecord(handlers, record))
                 .rxSubscribe(eventsTopic)

@@ -1,9 +1,9 @@
 package com.nextbreakpoint.shop.designs.controllers.insert;
 
-import com.nextbreakpoint.shop.common.model.events.InsertDesignEvent;
 import com.nextbreakpoint.shop.common.model.Mapper;
 import com.nextbreakpoint.shop.common.model.Message;
 import com.nextbreakpoint.shop.common.model.MessageType;
+import com.nextbreakpoint.shop.common.model.events.InsertDesignEvent;
 import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.Json;
 

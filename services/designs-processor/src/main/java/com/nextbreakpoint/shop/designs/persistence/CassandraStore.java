@@ -83,35 +83,35 @@ public class CassandraStore implements Store {
         return Single.just(session);
     }
 
-    private Single<ResultSet> getResultSet(ResultSetFuture rsf) {
-        return Single.fromCallable(() -> rsf.getUninterruptibly(EXECUTE_TIMEOUT, TimeUnit.SECONDS));
+    private Single<ResultSet> getResultSet(ResultSetFuture future) {
+        return Single.fromCallable(() -> future.getUninterruptibly(EXECUTE_TIMEOUT, TimeUnit.SECONDS));
     }
 
-    private Single<InsertDesignResult> doInsertDesign(Session session, InsertDesignEvent request) {
+    private Single<InsertDesignResult> doInsertDesign(Session session, InsertDesignEvent event) {
         return Single.from(insertDesign)
-                .map(pst -> pst.bind(makeInsertParams(request)))
+                .map(pst -> pst.bind(makeInsertParams(event)))
                 .map(bst -> session.executeAsync(bst))
                 .flatMap(rsf -> getResultSet(rsf))
-                .map(rs -> new InsertDesignResult(request.getUuid(), rs.wasApplied() ? 1 : 0));
+                .map(rs -> new InsertDesignResult(event.getUuid(), rs.wasApplied() ? 1 : 0));
     }
 
-    private Single<UpdateDesignResult> doUpdateDesign(Session session, UpdateDesignEvent request) {
+    private Single<UpdateDesignResult> doUpdateDesign(Session session, UpdateDesignEvent event) {
         return Single.from(updateDesign)
-                .map(pst -> pst.bind(makeUpdateParams(request)))
+                .map(pst -> pst.bind(makeUpdateParams(event)))
                 .map(bst -> session.executeAsync(bst))
                 .flatMap(rsf -> getResultSet(rsf))
-                .map(rs -> new UpdateDesignResult(request.getUuid(), rs.wasApplied() ? 1 : 0));
+                .map(rs -> new UpdateDesignResult(event.getUuid(), rs.wasApplied() ? 1 : 0));
     }
 
-    private Single<DeleteDesignResult> doDeleteDesign(Session session, DeleteDesignEvent request) {
+    private Single<DeleteDesignResult> doDeleteDesign(Session session, DeleteDesignEvent event) {
         return Single.from(deleteDesign)
-                .map(pst -> pst.bind(makeDeleteParams(request)))
+                .map(pst -> pst.bind(makeDeleteParams(event)))
                 .map(bst -> session.executeAsync(bst))
                 .flatMap(rsf -> getResultSet(rsf))
-                .map(rs -> new DeleteDesignResult(request.getUuid(), rs.wasApplied() ? 1 : 0));
+                .map(rs -> new DeleteDesignResult(event.getUuid(), rs.wasApplied() ? 1 : 0));
     }
 
-    private Single<DeleteDesignsResult> doDeleteDesigns(Session session, DeleteDesignsEvent request) {
+    private Single<DeleteDesignsResult> doDeleteDesigns(Session session, DeleteDesignsEvent event) {
         return Single.from(deleteDesigns)
                 .map(pst -> pst.bind())
                 .map(bst -> session.executeAsync(bst))
@@ -119,16 +119,16 @@ public class CassandraStore implements Store {
                 .map(rs -> new DeleteDesignsResult(rs.wasApplied() ? 1 : 0));
     }
 
-    private Object[] makeInsertParams(InsertDesignEvent request) {
-        return new Object[] { request.getUuid(), request.getJson() };
+    private Object[] makeInsertParams(InsertDesignEvent event) {
+        return new Object[] { event.getUuid(), event.getJson() };
     }
 
-    private Object[] makeUpdateParams(UpdateDesignEvent request) {
-        return new Object[] { request.getJson(), request.getUuid() };
+    private Object[] makeUpdateParams(UpdateDesignEvent event) {
+        return new Object[] { event.getJson(), event.getUuid() };
     }
 
-    private Object[] makeDeleteParams(DeleteDesignEvent request) {
-        return new Object[] { request.getUuid() };
+    private Object[] makeDeleteParams(DeleteDesignEvent event) {
+        return new Object[] { event.getUuid() };
     }
 
     private void handleError(String message, Throwable err) {

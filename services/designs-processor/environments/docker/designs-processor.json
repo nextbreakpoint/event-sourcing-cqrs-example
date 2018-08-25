@@ -21,10 +21,13 @@
   "cassandra_contactPoint": "cassandra",
   "cassandra_port": 9042,
 
+  "message_source": "service-designs",
+
   "kafka_bootstrap_servers": "kafka:9092",
   "kafka_group_id": "designs-processor",
 
   "events_topic": "designs-events",
+  "sse_topic": "designs-sse",
 
   "max_execution_time_in_millis": 30000
 }

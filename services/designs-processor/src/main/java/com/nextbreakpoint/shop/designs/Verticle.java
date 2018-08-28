@@ -150,8 +150,6 @@ public class Verticle extends AbstractVerticle {
 
         final Map<String, Handler<Message>> handlers = new HashMap<>();
 
-        final HttpServerOptions options = ServerUtil.makeServerOptions(config);
-
         handlers.put(MessageType.DESIGN_INSERT, createInsertDesignHandler(store, sseTopic, messageSource, producer));
         handlers.put(MessageType.DESIGN_UPDATE, createUpdateDesignHandler(store, sseTopic, messageSource, producer));
         handlers.put(MessageType.DESIGN_DELETE, createDeleteDesignHandler(store, sseTopic, messageSource, producer));
@@ -161,6 +159,8 @@ public class Verticle extends AbstractVerticle {
                 .rxSubscribe(eventsTopic)
                 .doOnError(this::handleError)
                 .subscribe();
+
+        final HttpServerOptions options = ServerUtil.makeServerOptions(config);
 
         server = vertx.createHttpServer(options)
                 .requestHandler(mainRouter::accept)

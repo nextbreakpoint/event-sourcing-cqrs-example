@@ -17,5 +17,7 @@
   "kafka_bootstrap_servers": "kafka-designs-sse:9092",
   "kafka_group_id": "designs-sse",
 
+  "sse_topic": "designs-sse",
+
   "max_execution_time_in_millis": 30000
 }

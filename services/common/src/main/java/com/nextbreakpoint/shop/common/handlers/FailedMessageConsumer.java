@@ -11,6 +11,6 @@ public class FailedMessageConsumer implements BiConsumer<Message, Throwable> {
 
     @Override
     public void accept(Message message, Throwable throwable) {
-        logger.error("Failed to send message: id=" + message.getMessageId(), throwable);
+        logger.error("Failed to process message: id=" + message.getMessageId(), throwable);
     }
 }

@@ -5,11 +5,10 @@ import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.ResultSetFuture;
 import com.datastax.driver.core.Session;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.nextbreakpoint.shop.common.model.DesignDocument;
 import com.nextbreakpoint.shop.designs.Store;
 import com.nextbreakpoint.shop.designs.model.DeleteDesignRequest;
 import com.nextbreakpoint.shop.designs.model.DeleteDesignResponse;
-import com.nextbreakpoint.shop.designs.model.DeleteDesignsRequest;
-import com.nextbreakpoint.shop.designs.model.DeleteDesignsResponse;
 import com.nextbreakpoint.shop.designs.model.GetStatusRequest;
 import com.nextbreakpoint.shop.designs.model.GetStatusResponse;
 import com.nextbreakpoint.shop.designs.model.InsertDesignRequest;
@@ -20,7 +19,6 @@ import com.nextbreakpoint.shop.designs.model.ListStatusRequest;
 import com.nextbreakpoint.shop.designs.model.ListStatusResponse;
 import com.nextbreakpoint.shop.designs.model.LoadDesignRequest;
 import com.nextbreakpoint.shop.designs.model.LoadDesignResponse;
-import com.nextbreakpoint.shop.designs.model.Design;
 import com.nextbreakpoint.shop.designs.model.Status;
 import com.nextbreakpoint.shop.designs.model.UpdateDesignRequest;
 import com.nextbreakpoint.shop.designs.model.UpdateDesignResponse;
@@ -49,7 +47,6 @@ public class CassandraStore implements Store {
     private static final String ERROR_UPDATE_DESIGN = "An error occurred while updating a design";
     private static final String ERROR_LOAD_DESIGN = "An error occurred while loading a design";
     private static final String ERROR_DELETE_DESIGN = "An error occurred while deleting a design";
-    private static final String ERROR_DELETE_DESIGNS = "An error occurred while deleting all designs";
     private static final String ERROR_LIST_DESIGNS = "An error occurred while loading designs";
     private static final String ERROR_GET_DESIGNS_STATUS = "An error occurred while loading designs status";
     private static final String ERROR_GET_DESIGN_STATUS = "An error occurred while loading design status";
@@ -58,7 +55,6 @@ public class CassandraStore implements Store {
     private static final String UPDATE_DESIGN = "UPDATE DESIGNS SET JSON=?, UPDATED=toTimeStamp(now()) WHERE UUID=?";
     private static final String SELECT_DESIGN = "SELECT * FROM DESIGNS WHERE UUID = ?";
     private static final String DELETE_DESIGN = "DELETE FROM DESIGNS WHERE UUID = ?";
-    private static final String DELETE_DESIGNS = "TRUNCATE DESIGNS";
     private static final String SELECT_DESIGNS = "SELECT * FROM DESIGNS";
     private static final String SELECT_STATUS = "SELECT NAME,MODIFIED FROM STATE WHERE NAME = 'designs'";
     private static final String UPDATE_STATUS = "UPDATE STATE SET MODIFIED = toTimeStamp(now()) WHERE NAME = 'designs'";
@@ -73,7 +69,6 @@ public class CassandraStore implements Store {
     private final ListenableFuture<PreparedStatement> updateDesign;
     private final ListenableFuture<PreparedStatement> selectDesign;
     private final ListenableFuture<PreparedStatement> deleteDesign;
-    private final ListenableFuture<PreparedStatement> deleteDesigns;
     private final ListenableFuture<PreparedStatement> selectDesigns;
     private final ListenableFuture<PreparedStatement> selectStatus;
     private final Map<Integer, ListenableFuture<PreparedStatement>> selectDesignsByUUIDS = new HashMap<>();
@@ -85,7 +80,6 @@ public class CassandraStore implements Store {
         updateDesign = session.prepareAsync(UPDATE_DESIGN);
         selectDesign = session.prepareAsync(SELECT_DESIGN);
         deleteDesign = session.prepareAsync(DELETE_DESIGN);
-        deleteDesigns = session.prepareAsync(DELETE_DESIGNS);
         selectDesigns = session.prepareAsync(SELECT_DESIGNS);
         selectStatus = session.prepareAsync(SELECT_STATUS);
     }
@@ -116,13 +110,6 @@ public class CassandraStore implements Store {
         return withSession()
                 .flatMap(session -> doDeleteDesign(session, request))
                 .doOnError(err -> handleError(ERROR_DELETE_DESIGN, err));
-    }
-
-    @Override
-    public Single<DeleteDesignsResponse> deleteDesigns(DeleteDesignsRequest request) {
-        return withSession()
-                .flatMap(session -> doDeleteDesigns(session, request))
-                .doOnError(err -> handleError(ERROR_DELETE_DESIGNS, err));
     }
 
     @Override
@@ -189,7 +176,7 @@ public class CassandraStore implements Store {
                     final String json = row.getString("JSON");
                     final long created = row.getTimestamp("CREATED").getTime();
                     final long updated = row.getTimestamp("UPDATED").getTime();
-                    final Design design = new Design(uuid, json, formatDate(new Date(created)), formatDate(new Date(updated)), updated);
+                    final DesignDocument design = new DesignDocument(uuid, json, formatDate(new Date(created)), formatDate(new Date(updated)), updated);
                     return new LoadDesignResponse(request.getUuid(), design);
                 }).orElseGet(() -> new LoadDesignResponse(request.getUuid(), null)));
     }
@@ -204,18 +191,6 @@ public class CassandraStore implements Store {
                 .map(bst -> session.executeAsync(bst))
                 .flatMap(rsf -> getResultSet(rsf))
                 .map(rs -> new DeleteDesignResponse(request.getUuid(), rs.wasApplied() ? 1 : 0));
-    }
-
-    private Single<DeleteDesignsResponse> doDeleteDesigns(Session session, DeleteDesignsRequest request) {
-        return Single.from(updateStatus)
-                .map(pst -> pst.bind())
-                .map(bst -> session.executeAsync(bst))
-                .flatMap(rsf -> getResultSet(rsf))
-                .flatMap(x -> Single.from(deleteDesigns))
-                .map(pst -> pst.bind())
-                .map(bst -> session.executeAsync(bst))
-                .flatMap(rsf -> getResultSet(rsf))
-                .map(rs -> new DeleteDesignsResponse(rs.wasApplied() ? 1 : 0));
     }
 
     private Single<ListDesignsResponse> doListDesigns(Session session, ListDesignsRequest request) {

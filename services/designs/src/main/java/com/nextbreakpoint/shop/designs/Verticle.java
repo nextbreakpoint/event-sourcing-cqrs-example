@@ -2,60 +2,15 @@ package com.nextbreakpoint.shop.designs;
 
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Session;
-import com.nextbreakpoint.shop.common.vertx.AccessHandler;
 import com.nextbreakpoint.shop.common.cassandra.CassandraClusterFactory;
-import com.nextbreakpoint.shop.common.model.Content;
-import com.nextbreakpoint.shop.common.handlers.DefaultHandler;
-import com.nextbreakpoint.shop.common.model.Failure;
 import com.nextbreakpoint.shop.common.graphite.GraphiteManager;
+import com.nextbreakpoint.shop.common.model.Failure;
+import com.nextbreakpoint.shop.common.vertx.AccessHandler;
+import com.nextbreakpoint.shop.common.vertx.CORSHandlerFactory;
 import com.nextbreakpoint.shop.common.vertx.JWTProviderFactory;
 import com.nextbreakpoint.shop.common.vertx.ResponseHelper;
-import com.nextbreakpoint.shop.common.vertx.CORSHandlerFactory;
 import com.nextbreakpoint.shop.common.vertx.ServerUtil;
-import com.nextbreakpoint.shop.common.handlers.FailedRequestConsumer;
-import com.nextbreakpoint.shop.designs.common.ContentConsumer;
-import com.nextbreakpoint.shop.designs.model.DeleteDesignRequest;
-import com.nextbreakpoint.shop.designs.controllers.delete.DeleteDesignController;
-import com.nextbreakpoint.shop.designs.controllers.delete.DeleteDesignRequestMapper;
-import com.nextbreakpoint.shop.designs.model.DeleteDesignResponse;
-import com.nextbreakpoint.shop.designs.controllers.delete.DeleteDesignResponseMapper;
-import com.nextbreakpoint.shop.designs.common.NoContentConsumer;
-import com.nextbreakpoint.shop.designs.model.DeleteDesignsRequest;
-import com.nextbreakpoint.shop.designs.controllers.delete.DeleteDesignsController;
-import com.nextbreakpoint.shop.designs.controllers.delete.DeleteDesignsRequestMapper;
-import com.nextbreakpoint.shop.designs.model.DeleteDesignsResponse;
-import com.nextbreakpoint.shop.designs.controllers.delete.DeleteDesignsResponseMapper;
-import com.nextbreakpoint.shop.designs.controllers.tile.GetTileHandler;
-import com.nextbreakpoint.shop.designs.model.InsertDesignRequest;
-import com.nextbreakpoint.shop.designs.controllers.insert.InsertDesignController;
-import com.nextbreakpoint.shop.designs.controllers.insert.InsertDesignRequestMapper;
-import com.nextbreakpoint.shop.designs.model.InsertDesignResponse;
-import com.nextbreakpoint.shop.designs.controllers.insert.InsertDesignResponseMapper;
-import com.nextbreakpoint.shop.designs.model.ListDesignsRequest;
-import com.nextbreakpoint.shop.designs.controllers.list.ListDesignsController;
-import com.nextbreakpoint.shop.designs.controllers.list.ListDesignsRequestMapper;
-import com.nextbreakpoint.shop.designs.model.ListDesignsResponse;
-import com.nextbreakpoint.shop.designs.controllers.list.ListDesignsResponseMapper;
-import com.nextbreakpoint.shop.designs.model.LoadDesignRequest;
-import com.nextbreakpoint.shop.designs.controllers.load.LoadDesignController;
-import com.nextbreakpoint.shop.designs.controllers.load.LoadDesignRequestMapper;
-import com.nextbreakpoint.shop.designs.model.LoadDesignResponse;
-import com.nextbreakpoint.shop.designs.controllers.load.LoadDesignResponseMapper;
-import com.nextbreakpoint.shop.designs.model.GetStatusRequest;
-import com.nextbreakpoint.shop.designs.controllers.get.GetStatusController;
-import com.nextbreakpoint.shop.designs.controllers.get.GetStatusRequestMapper;
-import com.nextbreakpoint.shop.designs.model.GetStatusResponse;
-import com.nextbreakpoint.shop.designs.controllers.get.GetStatusResponseMapper;
-import com.nextbreakpoint.shop.designs.model.ListStatusRequest;
-import com.nextbreakpoint.shop.designs.controllers.list.ListStatusController;
-import com.nextbreakpoint.shop.designs.controllers.list.ListStatusRequestMapper;
-import com.nextbreakpoint.shop.designs.model.ListStatusResponse;
-import com.nextbreakpoint.shop.designs.controllers.list.ListStatusResponseMapper;
-import com.nextbreakpoint.shop.designs.model.UpdateDesignRequest;
-import com.nextbreakpoint.shop.designs.controllers.update.UpdateDesignController;
-import com.nextbreakpoint.shop.designs.controllers.update.UpdateDesignRequestMapper;
-import com.nextbreakpoint.shop.designs.model.UpdateDesignResponse;
-import com.nextbreakpoint.shop.designs.controllers.update.UpdateDesignResponseMapper;
+import com.nextbreakpoint.shop.designs.handlers.TileHandler;
 import com.nextbreakpoint.shop.designs.persistence.CassandraStore;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -159,23 +114,21 @@ public class Verticle extends AbstractVerticle {
 
         final Handler<RoutingContext> onAccessDenied = rc -> rc.fail(Failure.accessDenied("Authorisation failed"));
 
-        final Handler getTileHandler = new AccessHandler(jwtProvider, new GetTileHandler(store, executor), onAccessDenied, asList(ADMIN, GUEST, ANONYMOUS));
+        final Handler getTileHandler = new AccessHandler(jwtProvider, new TileHandler(store, executor), onAccessDenied, asList(ADMIN, GUEST, ANONYMOUS));
 
-        final Handler listDesignsHandler = new AccessHandler(jwtProvider, createListDesignsHandler(store), onAccessDenied, asList(ADMIN, GUEST, ANONYMOUS));
+        final Handler listDesignsHandler = new AccessHandler(jwtProvider, Factory.createListDesignsHandler(store), onAccessDenied, asList(ADMIN, GUEST, ANONYMOUS));
 
-        final Handler loadDesignHandler = new AccessHandler(jwtProvider, createLoadDesignHandler(store), onAccessDenied, asList(ADMIN, GUEST, ANONYMOUS));
+        final Handler loadDesignHandler = new AccessHandler(jwtProvider, Factory.createLoadDesignHandler(store), onAccessDenied, asList(ADMIN, GUEST, ANONYMOUS));
 
-        final Handler insertDesignHandler = new AccessHandler(jwtProvider, createInsertDesignHandler(store), onAccessDenied, asList(ADMIN));
+        final Handler insertDesignHandler = new AccessHandler(jwtProvider, Factory.createInsertDesignHandler(store), onAccessDenied, asList(ADMIN));
 
-        final Handler updateDesignHandler = new AccessHandler(jwtProvider, createUpdateDesignHandler(store), onAccessDenied, asList(ADMIN));
+        final Handler updateDesignHandler = new AccessHandler(jwtProvider, Factory.createUpdateDesignHandler(store), onAccessDenied, asList(ADMIN));
 
-        final Handler deleteDesignHandler = new AccessHandler(jwtProvider, createDeleteDesignHandler(store), onAccessDenied, asList(ADMIN));
+        final Handler deleteDesignHandler = new AccessHandler(jwtProvider, Factory.createDeleteDesignHandler(store), onAccessDenied, asList(ADMIN));
 
-        final Handler deleteDesignsHandler = new AccessHandler(jwtProvider, createDeleteDesignsHandler(store), onAccessDenied, asList(ADMIN));
+        final Handler getStatusHandler = new AccessHandler(jwtProvider, Factory.createGetStatusHandler(store), onAccessDenied, asList(ADMIN, GUEST, ANONYMOUS));
 
-        final Handler getStatusHandler = new AccessHandler(jwtProvider, createGetStatusHandler(store), onAccessDenied, asList(ADMIN, GUEST, ANONYMOUS));
-
-        final Handler getStatusListHandler = new AccessHandler(jwtProvider, createListStatusHandler(store), onAccessDenied, asList(ADMIN, GUEST, ANONYMOUS));
+        final Handler getStatusListHandler = new AccessHandler(jwtProvider, Factory.createListStatusHandler(store), onAccessDenied, asList(ADMIN, GUEST, ANONYMOUS));
 
         apiRouter.get("/designs/:uuid/:zoom/:x/:y/:size.png")
                 .produces(IMAGE_PNG)
@@ -203,13 +156,7 @@ public class Verticle extends AbstractVerticle {
                 .produces(APPLICATION_JSON)
                 .handler(deleteDesignHandler);
 
-        apiRouter.delete("/designs")
-                .handler(deleteDesignsHandler);
-
         apiRouter.options("/designs/*")
-                .handler(ResponseHelper::sendNoContent);
-
-        apiRouter.options("/designs")
                 .handler(ResponseHelper::sendNoContent);
 
         apiRouter.get("/designs/status")
@@ -237,85 +184,5 @@ public class Verticle extends AbstractVerticle {
         final int poolSize = Runtime.getRuntime().availableProcessors();
         final long maxExecuteTime = config.getInteger("max_execution_time_in_millis", 2000) * 1000000L;
         return vertx.createSharedWorkerExecutor("worker", poolSize, maxExecuteTime);
-    }
-
-    private DefaultHandler<RoutingContext, DeleteDesignRequest, DeleteDesignResponse, Content> createDeleteDesignHandler(Store store) {
-        return DefaultHandler.<RoutingContext, DeleteDesignRequest, DeleteDesignResponse, Content>builder()
-                .withInputMapper(new DeleteDesignRequestMapper())
-                .withOutputMapper(new DeleteDesignResponseMapper())
-                .withController(new DeleteDesignController(store))
-                .onSuccess(new ContentConsumer(200))
-                .onFailure(new FailedRequestConsumer())
-                .build();
-    }
-
-    private DefaultHandler<RoutingContext, DeleteDesignsRequest, DeleteDesignsResponse, Content> createDeleteDesignsHandler(Store store) {
-        return DefaultHandler.<RoutingContext, DeleteDesignsRequest, DeleteDesignsResponse, Content>builder()
-                .withInputMapper(new DeleteDesignsRequestMapper())
-                .withOutputMapper(new DeleteDesignsResponseMapper())
-                .withController(new DeleteDesignsController(store))
-                .onSuccess(new NoContentConsumer(204))
-                .onFailure(new FailedRequestConsumer())
-                .build();
-    }
-
-    private DefaultHandler<RoutingContext, InsertDesignRequest, InsertDesignResponse, Content> createInsertDesignHandler(Store store) {
-        return DefaultHandler.<RoutingContext, InsertDesignRequest, InsertDesignResponse, Content>builder()
-                .withInputMapper(new InsertDesignRequestMapper())
-                .withOutputMapper(new InsertDesignResponseMapper())
-                .withController(new InsertDesignController(store))
-                .onSuccess(new ContentConsumer(201))
-                .onFailure(new FailedRequestConsumer())
-                .build();
-    }
-
-    private DefaultHandler<RoutingContext, UpdateDesignRequest, UpdateDesignResponse, Content> createUpdateDesignHandler(Store store) {
-        return DefaultHandler.<RoutingContext, UpdateDesignRequest, UpdateDesignResponse, Content>builder()
-                .withInputMapper(new UpdateDesignRequestMapper())
-                .withOutputMapper(new UpdateDesignResponseMapper())
-                .withController(new UpdateDesignController(store))
-                .onSuccess(new ContentConsumer(200))
-                .onFailure(new FailedRequestConsumer())
-                .build();
-    }
-
-    private DefaultHandler<RoutingContext, ListDesignsRequest, ListDesignsResponse, Content> createListDesignsHandler(Store store) {
-        return DefaultHandler.<RoutingContext, ListDesignsRequest, ListDesignsResponse, Content>builder()
-                .withInputMapper(new ListDesignsRequestMapper())
-                .withOutputMapper(new ListDesignsResponseMapper())
-                .withController(new ListDesignsController(store))
-                .onSuccess(new ContentConsumer(200))
-                .onFailure(new FailedRequestConsumer())
-                .build();
-    }
-
-    private DefaultHandler<RoutingContext, LoadDesignRequest, LoadDesignResponse, Content> createLoadDesignHandler(Store store) {
-        return DefaultHandler.<RoutingContext, LoadDesignRequest, LoadDesignResponse, Content>builder()
-                .withInputMapper(new LoadDesignRequestMapper())
-                .withOutputMapper(new LoadDesignResponseMapper())
-                .withController(new LoadDesignController(store))
-                .onSuccess(new ContentConsumer(200, 404))
-                .onFailure(new FailedRequestConsumer())
-                .build();
-    }
-
-    private DefaultHandler<RoutingContext, GetStatusRequest, GetStatusResponse, Content> createGetStatusHandler(Store store) {
-        return DefaultHandler.<RoutingContext, GetStatusRequest, GetStatusResponse, Content>builder()
-                .withInputMapper(new GetStatusRequestMapper())
-                .withOutputMapper(new GetStatusResponseMapper())
-                .withController(new GetStatusController(store))
-                .onSuccess(new ContentConsumer(200))
-                .onFailure(new FailedRequestConsumer())
-                .build();
-    }
-
-    private DefaultHandler<RoutingContext, ListStatusRequest, ListStatusResponse, Content> createListStatusHandler(Store store) {
-        return DefaultHandler.<RoutingContext, ListStatusRequest, ListStatusResponse, Content>builder()
-                .withInputMapper(new ListStatusRequestMapper())
-                .withOutputMapper(new ListStatusResponseMapper())
-                .withController(new ListStatusController(store))
-                .onSuccess(new ContentConsumer(200))
-                .onFailure(new FailedRequestConsumer())
-                .build();
     }
 }

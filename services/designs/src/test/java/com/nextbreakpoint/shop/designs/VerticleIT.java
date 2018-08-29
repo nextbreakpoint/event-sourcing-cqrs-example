@@ -168,8 +168,6 @@ public class VerticleIT {
 
     pause();
 
-    deleteDesigns(authorization);
-
     final String uuid1 = createDesign(authorization, createPostData());
 
     final JsonPath json1 = getDesign(authorization, uuid1);
@@ -182,7 +180,7 @@ public class VerticleIT {
 
     assertThat(json2.getString("uuid")).isEqualTo(uuid2);
 
-    assertThat(getDesigns(authorization)).containsExactlyInAnyOrder(uuid1, uuid2);
+    assertThat(getDesigns(authorization)).contains(uuid1, uuid2);
 
     final byte[] bytes = getTile(authorization, uuid1);
 
@@ -192,11 +190,12 @@ public class VerticleIT {
 
     deleteDesign(authorization, uuid1);
 
-    assertThat(getDesigns(authorization)).containsExactlyInAnyOrder(uuid2);
+    assertThat(getDesigns(authorization)).contains(uuid2);
+    assertThat(getDesigns(authorization)).doesNotContain(uuid1);
 
     deleteDesign(authorization, uuid2);
 
-    assertThat(getDesigns(authorization)).isEmpty();
+    assertThat(getDesigns(authorization)).doesNotContain(uuid1, uuid2);
   }
 
   private void pause() {
@@ -242,14 +241,6 @@ public class VerticleIT {
             .and().accept(ContentType.JSON)
             .when().get(makeBaseURL("/api/designs/" + uuid))
             .then().assertThat().statusCode(200).extract().jsonPath();
-  }
-
-  private void deleteDesigns(String authorization) throws MalformedURLException {
-    given().config(restAssuredConfig)
-            .and().header(AUTHORIZATION, authorization)
-            .and().accept(ContentType.JSON)
-            .when().delete(makeBaseURL("/api/designs"))
-            .then().assertThat().statusCode(204);
   }
 
   private String createDesign(String authorization, Map<String, String> design) throws MalformedURLException {

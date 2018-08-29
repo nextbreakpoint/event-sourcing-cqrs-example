@@ -1,4 +1,4 @@
-package com.nextbreakpoint.shop.designs.controllers.get;
+package com.nextbreakpoint.shop.designs.handlers;
 
 import com.nextbreakpoint.nextfractal.core.Bundle;
 import com.nextbreakpoint.nextfractal.core.TileGenerator;
@@ -25,14 +25,14 @@ import static com.nextbreakpoint.shop.common.model.ContentType.IMAGE_PNG;
 import static com.nextbreakpoint.shop.common.model.Headers.CONTENT_TYPE;
 import static rx.Single.fromCallable;
 
-public class GetTileHandler implements Handler<RoutingContext> {
+public class TileHandler implements Handler<RoutingContext> {
     private static final int EXPIRY_TIME_IN_SECONDS = 86400;
 
     private final WorkerExecutor executor;
 
     private final Store store;
 
-    public GetTileHandler(Store store, WorkerExecutor executor) {
+    public TileHandler(Store store, WorkerExecutor executor) {
         this.store = Objects.requireNonNull(store);
         this.executor = Objects.requireNonNull(executor);
     }

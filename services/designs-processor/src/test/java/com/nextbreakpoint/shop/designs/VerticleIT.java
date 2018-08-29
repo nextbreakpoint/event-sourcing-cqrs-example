@@ -12,11 +12,10 @@ import com.jayway.restassured.config.SSLConfig;
 import com.nextbreakpoint.shop.common.cassandra.CassandraClusterFactory;
 import com.nextbreakpoint.shop.common.model.Message;
 import com.nextbreakpoint.shop.common.model.MessageType;
-import com.nextbreakpoint.shop.common.model.events.DeleteDesignEvent;
-import com.nextbreakpoint.shop.common.model.events.DeleteDesignsEvent;
+import com.nextbreakpoint.shop.common.model.commands.DeleteDesignCommand;
+import com.nextbreakpoint.shop.common.model.commands.InsertDesignCommand;
+import com.nextbreakpoint.shop.common.model.commands.UpdateDesignCommand;
 import com.nextbreakpoint.shop.common.model.events.DesignChangedEvent;
-import com.nextbreakpoint.shop.common.model.events.InsertDesignEvent;
-import com.nextbreakpoint.shop.common.model.events.UpdateDesignEvent;
 import com.nextbreakpoint.shop.common.vertx.KafkaClientFactory;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
@@ -43,7 +42,7 @@ import static org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS;
 import static org.awaitility.Duration.TWO_SECONDS;
 
 @Tag("slow")
-@DisplayName("Designs Processor Service")
+@DisplayName("Verify contract of service Designs Processor")
 public class VerticleIT {
     private static final String JSON_1 = "{\"metadata\":\"{\\\"translation\\\":{\\\"x\\\":0.0,\\\"y\\\":0.0,\\\"z\\\":1.0,\\\"w\\\":0.0},\\\"rotation\\\":{\\\"x\\\":0.0,\\\"y\\\":0.0,\\\"z\\\":0.0,\\\"w\\\":0.0},\\\"scale\\\":{\\\"x\\\":1.0,\\\"y\\\":1.0,\\\"z\\\":1.0,\\\"w\\\":1.0},\\\"point\\\":{\\\"x\\\":0.0,\\\"y\\\":0.0},\\\"julia\\\":false,\\\"options\\\":{\\\"showPreview\\\":false,\\\"showTraps\\\":false,\\\"showOrbit\\\":false,\\\"showPoint\\\":false,\\\"previewOrigin\\\":{\\\"x\\\":0.0,\\\"y\\\":0.0},\\\"previewSize\\\":{\\\"x\\\":0.25,\\\"y\\\":0.25}}}\",\"manifest\":\"{\\\"pluginId\\\":\\\"Mandelbrot\\\"}\",\"script\":\"fractal {\\norbit [-2.0 - 2.0i,+2.0 + 2.0i] [x,n] {\\nloop [0, 200] (mod2(x) > 40) {\\nx = x * x + w;\\n}\\n}\\ncolor [#FF000000] {\\npalette gradient {\\n[#FFFFFFFF > #FF000000, 100];\\n[#FF000000 > #FFFFFFFF, 100];\\n}\\ninit {\\nm = 100 * (1 + sin(mod(x) * 0.2 / pi));\\n}\\nrule (n > 0) [1] {\\ngradient[m - 1]\\n}\\n}\\n}\\n\"}";
     private static final String JSON_2 = "{\"metadata\":\"{\\\"translation\\\":{\\\"x\\\":0.0,\\\"y\\\":0.0,\\\"z\\\":1.0,\\\"w\\\":0.0},\\\"rotation\\\":{\\\"x\\\":0.0,\\\"y\\\":0.0,\\\"z\\\":0.0,\\\"w\\\":0.0},\\\"scale\\\":{\\\"x\\\":1.0,\\\"y\\\":1.0,\\\"z\\\":1.0,\\\"w\\\":1.0},\\\"point\\\":{\\\"x\\\":0.0,\\\"y\\\":0.0},\\\"julia\\\":false,\\\"options\\\":{\\\"showPreview\\\":false,\\\"showTraps\\\":false,\\\"showOrbit\\\":false,\\\"showPoint\\\":false,\\\"previewOrigin\\\":{\\\"x\\\":0.0,\\\"y\\\":0.0},\\\"previewSize\\\":{\\\"x\\\":0.25,\\\"y\\\":0.25}}}\",\"manifest\":\"{\\\"pluginId\\\":\\\"Mandelbrot\\\"}\",\"script\":\"fractal {\\norbit [-2.0 - 2.0i,+2.0 + 2.0i] [x,n] {\\nloop [0, 100] (mod2(x) > 40) {\\nx = x * x + w;\\n}\\n}\\ncolor [#FF000000] {\\npalette gradient {\\n[#FFFFFFFF > #FF000000, 100];\\n[#FF000000 > #FFFFFFFF, 100];\\n}\\ninit {\\nm = 100 * (1 + sin(mod(x) * 0.2 / pi));\\n}\\nrule (n > 0) [1] {\\ngradient[m - 1]\\n}\\n}\\n}\\n\"}";
@@ -100,11 +99,11 @@ public class VerticleIT {
             final UUID messageId = UUID.randomUUID();
             final UUID designId = UUID.randomUUID();
 
-            final InsertDesignEvent insertDesignEvent = new InsertDesignEvent(designId, JSON_1, eventTimestamp);
+            final InsertDesignCommand insertDesignCommand = new InsertDesignCommand(designId, JSON_1, eventTimestamp);
 
             final long messageTimestamp = System.currentTimeMillis();
 
-            final Message insertDesignMessage = createInsertDesignMessage(messageId, designId, messageTimestamp, insertDesignEvent);
+            final Message insertDesignMessage = createInsertDesignMessage(messageId, designId, messageTimestamp, insertDesignCommand);
 
             producer.rxWrite(createKafkaRecord(insertDesignMessage)).subscribe();
 
@@ -169,15 +168,15 @@ public class VerticleIT {
             final UUID messageId = UUID.randomUUID();
             final UUID designId = UUID.randomUUID();
 
-            final InsertDesignEvent insertDesignEvent = new InsertDesignEvent(designId, JSON_1, eventTimestamp);
+            final InsertDesignCommand insertDesignCommand = new InsertDesignCommand(designId, JSON_1, eventTimestamp);
 
-            final UpdateDesignEvent updateDesignEvent = new UpdateDesignEvent(designId, JSON_2, eventTimestamp);
+            final UpdateDesignCommand updateDesignCommand = new UpdateDesignCommand(designId, JSON_2, eventTimestamp);
 
             final long messageTimestamp = System.currentTimeMillis();
 
-            final Message insertDesignMessage = createInsertDesignMessage(UUID.randomUUID(), designId, messageTimestamp, insertDesignEvent);
+            final Message insertDesignMessage = createInsertDesignMessage(UUID.randomUUID(), designId, messageTimestamp, insertDesignCommand);
 
-            final Message updateDesignMessage = createUpdateDesignMessage(messageId, designId, messageTimestamp, updateDesignEvent);
+            final Message updateDesignMessage = createUpdateDesignMessage(messageId, designId, messageTimestamp, updateDesignCommand);
 
             producer.rxWrite(createKafkaRecord(insertDesignMessage)).subscribe();
 
@@ -255,15 +254,15 @@ public class VerticleIT {
             final UUID messageId = UUID.randomUUID();
             final UUID designId = UUID.randomUUID();
 
-            final InsertDesignEvent insertDesignEvent = new InsertDesignEvent(designId, JSON_1, eventTimestamp);
+            final InsertDesignCommand insertDesignCommand = new InsertDesignCommand(designId, JSON_1, eventTimestamp);
 
-            final DeleteDesignEvent deleteDesignEvent = new DeleteDesignEvent(designId, eventTimestamp);
+            final DeleteDesignCommand deleteDesignCommand = new DeleteDesignCommand(designId, eventTimestamp);
 
             final long messageTimestamp = System.currentTimeMillis();
 
-            final Message insertDesignMessage = createInsertDesignMessage(UUID.randomUUID(), designId, messageTimestamp, insertDesignEvent);
+            final Message insertDesignMessage = createInsertDesignMessage(UUID.randomUUID(), designId, messageTimestamp, insertDesignCommand);
 
-            final Message deleteDesignMessage = createDeleteDesignMessage(messageId, designId, messageTimestamp, deleteDesignEvent);
+            final Message deleteDesignMessage = createDeleteDesignMessage(messageId, designId, messageTimestamp, deleteDesignCommand);
 
             producer.rxWrite(createKafkaRecord(insertDesignMessage)).subscribe();
 
@@ -314,108 +313,6 @@ public class VerticleIT {
         }
     }
 
-    @Test
-    @DisplayName("Should delete all designs after receiving a DesignsDelete event")
-    public void shouldDeleteDesignsWhenRecevingAMessage() throws IOException {
-        KafkaConsumer<String, String> consumer = null;
-
-        KafkaProducer<String, String> producer = null;
-
-        try {
-            final Cluster cluster = CassandraClusterFactory.create(createCassandraConfig());
-
-            producer = KafkaClientFactory.createProducer(vertx, createProducerConfig());
-
-            consumer = KafkaClientFactory.createConsumer(vertx, createConsumerConfig("delete-designs"));
-
-            String[] message = new String[]{null};
-
-            consumer.handler(record -> message[0] = record.value())
-                    .rxSubscribe("designs-sse")
-                    .subscribe();
-
-            long eventTimestamp = System.currentTimeMillis();
-
-            final UUID messageId = UUID.randomUUID();
-            final UUID designId1 = UUID.randomUUID();
-            final UUID designId2 = UUID.randomUUID();
-
-            final InsertDesignEvent insertDesignEvent1 = new InsertDesignEvent(designId1, JSON_1, eventTimestamp);
-
-            final InsertDesignEvent insertDesignEvent2 = new InsertDesignEvent(designId2, JSON_2, eventTimestamp);
-
-            final DeleteDesignsEvent deleteDesignsEvent = new DeleteDesignsEvent(eventTimestamp);
-
-            final long messageTimestamp = System.currentTimeMillis();
-
-            final Message insertDesignMessage1 = createInsertDesignMessage(UUID.randomUUID(), designId1, messageTimestamp, insertDesignEvent1);
-
-            final Message insertDesignMessage2 = createInsertDesignMessage(UUID.randomUUID(), designId2, messageTimestamp, insertDesignEvent2);
-
-            final Message deleteDesignsMessage = createDeleteDesignsMessage(messageId, designId1, messageTimestamp, deleteDesignsEvent);
-
-            producer.rxWrite(createKafkaRecord(insertDesignMessage1)).subscribe();
-
-            producer.rxWrite(createKafkaRecord(insertDesignMessage2)).subscribe();
-
-            await().atMost(TWO_SECONDS)
-                    .pollInterval(ONE_HUNDRED_MILLISECONDS)
-                    .untilAsserted(() -> {
-                        try (Session session = cluster.connect("designs")) {
-                            final PreparedStatement statement = session.prepare("SELECT * FROM DESIGNS WHERE UUID = ?");
-                            final Row row = session.execute(statement.bind(designId1)).one();
-                            String actualJson = row.get("JSON", String.class);
-                            assertThat(actualJson).isEqualTo(JSON_1);
-                        }
-                    });
-
-            await().atMost(TWO_SECONDS)
-                    .pollInterval(ONE_HUNDRED_MILLISECONDS)
-                    .untilAsserted(() -> {
-                        try (Session session = cluster.connect("designs")) {
-                            final PreparedStatement statement = session.prepare("SELECT * FROM DESIGNS WHERE UUID = ?");
-                            final Row row = session.execute(statement.bind(designId2)).one();
-                            String actualJson = row.get("JSON", String.class);
-                            assertThat(actualJson).isEqualTo(JSON_2);
-                        }
-                    });
-
-            producer.rxWrite(createKafkaRecord(deleteDesignsMessage)).subscribe();
-
-            await().atMost(TWO_SECONDS)
-                    .pollInterval(ONE_HUNDRED_MILLISECONDS)
-                    .untilAsserted(() -> {
-                        try (Session session = cluster.connect("designs")) {
-                            final PreparedStatement statement = session.prepare("SELECT * FROM DESIGNS");
-                            assertThat(session.execute(statement.bind()).all()).isEmpty();
-                        }
-                    });
-
-            await().atMost(TWO_SECONDS)
-                    .pollInterval(ONE_HUNDRED_MILLISECONDS)
-                    .untilAsserted(() -> {
-                        assertThat(message[0]).isNotNull();
-                        Message actualMessage = Json.decodeValue(message[0], Message.class);
-                        assertThat(actualMessage.getTimestamp()).isNotNull();
-                        assertThat(actualMessage.getMessageSource()).isEqualTo("service-designs");
-                        assertThat(actualMessage.getPartitionKey()).isEqualTo(new UUID(0, 0).toString());
-                        assertThat(actualMessage.getMessageId()).isNotNull();
-                        assertThat(actualMessage.getMessageType()).isEqualTo("design-changed");
-                        DesignChangedEvent actualEvent = Json.decodeValue(actualMessage.getMessageBody(), DesignChangedEvent.class);
-                        assertThat(actualEvent.getUuid()).isEqualTo(new UUID(0, 0));
-                        assertThat(actualEvent.getTimestamp()).isNotNull();
-                        assertThat(actualEvent.getTimestamp()).isGreaterThan(eventTimestamp);
-                    });
-        } finally {
-            if (consumer != null) {
-                consumer.close();
-            }
-            if (producer != null) {
-                producer.close();
-            }
-        }
-    }
-
     private void pause() {
         try {
             Thread.sleep(100);
@@ -450,20 +347,16 @@ public class VerticleIT {
         return KafkaProducerRecord.create("designs-events", message.getPartitionKey(), Json.encode(message));
     }
 
-    private Message createInsertDesignMessage(UUID messageId, UUID partitionKey, long timestamp, InsertDesignEvent event) {
+    private Message createInsertDesignMessage(UUID messageId, UUID partitionKey, long timestamp, InsertDesignCommand event) {
         return new Message(messageId.toString(), MessageType.DESIGN_INSERT, Json.encode(event), "test", partitionKey.toString(), timestamp);
     }
 
-    private Message createUpdateDesignMessage(UUID messageId, UUID partitionKey, long timestamp, UpdateDesignEvent event) {
+    private Message createUpdateDesignMessage(UUID messageId, UUID partitionKey, long timestamp, UpdateDesignCommand event) {
         return new Message(messageId.toString(), MessageType.DESIGN_UPDATE, Json.encode(event), "test", partitionKey.toString(), timestamp);
     }
 
-    private Message createDeleteDesignMessage(UUID messageId, UUID partitionKey, long timestamp, DeleteDesignEvent event) {
+    private Message createDeleteDesignMessage(UUID messageId, UUID partitionKey, long timestamp, DeleteDesignCommand event) {
         return new Message(messageId.toString(), MessageType.DESIGN_DELETE, Json.encode(event), "test", partitionKey.toString(), timestamp);
-    }
-
-    private Message createDeleteDesignsMessage(UUID messageId, UUID partitionKey, long timestamp, DeleteDesignsEvent event) {
-        return new Message(messageId.toString(), MessageType.DESIGNS_DELETE, Json.encode(event), "test", partitionKey.toString(), timestamp);
     }
 
     private URL makeBaseURL(String path) throws MalformedURLException {

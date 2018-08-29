@@ -18,7 +18,5 @@
 
   "events_topic": "designs-events",
 
-  "message_source": "service-designs",
-
-  "max_execution_time_in_millis": 30000
+  "message_source": "service-designs"
 }

@@ -27,7 +27,5 @@
   "kafka_group_id": "designs-processor",
 
   "events_topic": "designs-events",
-  "sse_topic": "designs-sse",
-
-  "max_execution_time_in_millis": 30000
+  "sse_topic": "designs-sse"
 }

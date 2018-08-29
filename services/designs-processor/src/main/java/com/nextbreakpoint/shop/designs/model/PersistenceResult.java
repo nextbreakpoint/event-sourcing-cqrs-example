@@ -3,20 +3,20 @@ package com.nextbreakpoint.shop.designs.model;
 import java.util.Objects;
 import java.util.UUID;
 
-public class UpdateDesignResult {
+public class PersistenceResult {
     private final UUID uuid;
-    private final Integer result;
+    private final Integer records;
 
-    public UpdateDesignResult(UUID uuid, Integer result) {
+    public PersistenceResult(UUID uuid, Integer records) {
         this.uuid = Objects.requireNonNull(uuid);
-        this.result = Objects.requireNonNull(result);
+        this.records = Objects.requireNonNull(records);
     }
 
     public UUID getUuid() {
         return uuid;
     }
 
-    public Integer getResult() {
-        return result;
+    public Integer getRecords() {
+        return records;
     }
 }

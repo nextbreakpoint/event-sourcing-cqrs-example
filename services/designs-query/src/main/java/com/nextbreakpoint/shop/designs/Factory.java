@@ -1,9 +1,9 @@
 package com.nextbreakpoint.shop.designs;
 
-import com.nextbreakpoint.shop.common.model.Content;
-import com.nextbreakpoint.shop.common.handlers.ContentConsumer;
 import com.nextbreakpoint.shop.common.handlers.DefaultHandler;
 import com.nextbreakpoint.shop.common.handlers.FailedRequestConsumer;
+import com.nextbreakpoint.shop.common.model.Content;
+import com.nextbreakpoint.shop.designs.common.ContentConsumer;
 import com.nextbreakpoint.shop.designs.controllers.list.ListDesignsController;
 import com.nextbreakpoint.shop.designs.controllers.list.ListDesignsInputMapper;
 import com.nextbreakpoint.shop.designs.controllers.list.ListDesignsOutputMapper;

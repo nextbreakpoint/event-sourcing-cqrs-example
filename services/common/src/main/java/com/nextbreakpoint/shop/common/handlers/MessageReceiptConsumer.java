@@ -12,6 +12,6 @@ public class MessageReceiptConsumer implements BiConsumer<Message, MessageReceip
 
     @Override
     public void accept(Message message, MessageReceipt messageReceipt) {
-        logger.info("Message sent: id=" + message.getMessageId());
+        logger.info("Message sent: id=" + message.getMessageId() + ", timestamp=" + messageReceipt.getTimestamp());
     }
 }

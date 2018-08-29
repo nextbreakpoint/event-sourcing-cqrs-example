@@ -3,19 +3,24 @@ package com.nextbreakpoint.shop.designs.controllers.insert;
 import com.nextbreakpoint.shop.common.model.Mapper;
 import com.nextbreakpoint.shop.common.model.Message;
 import com.nextbreakpoint.shop.common.model.MessageType;
-import com.nextbreakpoint.shop.common.model.events.InsertDesignEvent;
+import com.nextbreakpoint.shop.common.model.commands.InsertDesignCommand;
 import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.Json;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
-public class InsertDesignInputMapper implements Mapper<Message, InsertDesignEvent> {
+public class InsertDesignInputMapper implements Mapper<Message, InsertDesignCommand> {
+    private final Logger logger = LoggerFactory.getLogger(InsertDesignInputMapper.class.getName());
+
     @Override
-    public InsertDesignEvent transform(Message message) {
+    public InsertDesignCommand transform(Message message) {
         if (!message.getMessageType().equals(MessageType.DESIGN_INSERT)) {
             throw new IllegalArgumentException("message type must be " + MessageType.DESIGN_INSERT);
         }
         try {
-            return Json.decodeValue(message.getMessageBody(), InsertDesignEvent.class);
+            return Json.decodeValue(message.getMessageBody(), InsertDesignCommand.class);
         } catch (DecodeException e) {
+            logger.warn("Cannot decode message body: " + message.getMessageBody(), e);
             throw new IllegalArgumentException("message body cannot be decoded");
         }
     }

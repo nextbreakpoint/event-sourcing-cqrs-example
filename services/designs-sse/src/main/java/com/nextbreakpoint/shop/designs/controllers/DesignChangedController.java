@@ -1,4 +1,4 @@
-package com.nextbreakpoint.shop.designs.controllers.changed;
+package com.nextbreakpoint.shop.designs.controllers;
 
 import com.nextbreakpoint.shop.common.model.Controller;
 import com.nextbreakpoint.shop.common.model.events.DesignChangedEvent;

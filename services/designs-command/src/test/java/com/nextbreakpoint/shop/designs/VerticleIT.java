@@ -9,10 +9,9 @@ import com.jayway.restassured.http.ContentType;
 import com.nextbreakpoint.shop.common.model.Authority;
 import com.nextbreakpoint.shop.common.model.Design;
 import com.nextbreakpoint.shop.common.model.Message;
-import com.nextbreakpoint.shop.common.model.events.DeleteDesignEvent;
-import com.nextbreakpoint.shop.common.model.events.DeleteDesignsEvent;
-import com.nextbreakpoint.shop.common.model.events.InsertDesignEvent;
-import com.nextbreakpoint.shop.common.model.events.UpdateDesignEvent;
+import com.nextbreakpoint.shop.common.model.commands.DeleteDesignCommand;
+import com.nextbreakpoint.shop.common.model.commands.InsertDesignCommand;
+import com.nextbreakpoint.shop.common.model.commands.UpdateDesignCommand;
 import com.nextbreakpoint.shop.common.vertx.KafkaClientFactory;
 import com.nextbreakpoint.shop.common.vertx.TestHelper;
 import io.vertx.core.json.Json;
@@ -43,7 +42,7 @@ import static org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS;
 import static org.awaitility.Duration.TWO_SECONDS;
 
 @Tag("slow")
-@DisplayName("Designs Command Service")
+@DisplayName("Verify contract of service Designs Command")
 public class VerticleIT {
     private static final String SCRIPT = "fractal {\norbit [-2.0 - 2.0i,+2.0 + 2.0i] [x,n] {\nloop [0, 200] (mod2(x) > 40) {\nx = x * x + w;\n}\n}\ncolor [#FF000000] {\npalette gradient {\n[#FFFFFFFF > #FF000000, 100];\n[#FF000000 > #FFFFFFFF, 100];\n}\ninit {\nm = 100 * (1 + sin(mod(x) * 0.2 / pi));\n}\nrule (n > 0) [1] {\ngradient[m - 1]\n}\n}\n}\n";
     private static final String METADATA = "{\"translation\":{\"x\":0.0,\"y\":0.0,\"z\":1.0,\"w\":0.0},\"rotation\":{\"x\":0.0,\"y\":0.0,\"z\":0.0,\"w\":0.0},\"scale\":{\"x\":1.0,\"y\":1.0,\"z\":1.0,\"w\":1.0},\"point\":{\"x\":0.0,\"y\":0.0},\"julia\":false,\"options\":{\"showPreview\":false,\"showTraps\":false,\"showOrbit\":false,\"showPoint\":false,\"previewOrigin\":{\"x\":0.0,\"y\":0.0},\"previewSize\":{\"x\":0.25,\"y\":0.25}}}";
@@ -132,15 +131,6 @@ public class VerticleIT {
     }
 
     @Test
-    @DisplayName("Should forbid DELETE on /designs without access token")
-    public void shouldForbidDeleteOnDesignsWithoutAccessToken() throws MalformedURLException {
-        given().config(restAssuredConfig)
-                .and().accept(ContentType.JSON)
-                .when().delete(makeBaseURL("/api/designs"))
-                .then().assertThat().statusCode(403);
-    }
-
-    @Test
     @DisplayName("Should send a message after accepting POST on /designs")
     public void shouldAcceptPostOnDesigns() throws IOException {
         final String authorization = TestHelper.makeAuthorization("test", Arrays.asList(Authority.ADMIN));
@@ -172,7 +162,7 @@ public class VerticleIT {
                         assertThat(decodedMessage.getPartitionKey()).isNotNull();
                         assertThat(decodedMessage.getMessageSource()).isNotNull();
                         assertThat(decodedMessage.getTimestamp()).isGreaterThan(timestamp);
-                        InsertDesignEvent decodedEvent = Json.decodeValue(decodedMessage.getMessageBody(), InsertDesignEvent.class);
+                        InsertDesignCommand decodedEvent = Json.decodeValue(decodedMessage.getMessageBody(), InsertDesignCommand.class);
                         assertThat(decodedEvent.getUuid()).isNotNull();
                         assertThat(decodedMessage.getPartitionKey()).isEqualTo(decodedEvent.getUuid().toString());
                         Design decodedDesign = Json.decodeValue(decodedEvent.getJson(), Design.class);
@@ -221,7 +211,7 @@ public class VerticleIT {
                         assertThat(decodedMessage.getPartitionKey()).isEqualTo(uuid);
                         assertThat(decodedMessage.getMessageSource()).isNotNull();
                         assertThat(decodedMessage.getTimestamp()).isGreaterThan(timestamp);
-                        UpdateDesignEvent decodedEvent = Json.decodeValue(decodedMessage.getMessageBody(), UpdateDesignEvent.class);
+                        UpdateDesignCommand decodedEvent = Json.decodeValue(decodedMessage.getMessageBody(), UpdateDesignCommand.class);
                         assertThat(decodedEvent.getUuid()).isNotNull();
                         assertThat(decodedEvent.getUuid().toString()).isEqualTo(uuid);
                         Design decodedDesign = Json.decodeValue(decodedEvent.getJson(), Design.class);
@@ -270,52 +260,9 @@ public class VerticleIT {
                         assertThat(decodedMessage.getPartitionKey()).isEqualTo(uuid);
                         assertThat(decodedMessage.getMessageSource()).isNotNull();
                         assertThat(decodedMessage.getTimestamp()).isGreaterThan(timestamp);
-                        DeleteDesignEvent decodedEvent = Json.decodeValue(decodedMessage.getMessageBody(), DeleteDesignEvent.class);
+                        DeleteDesignCommand decodedEvent = Json.decodeValue(decodedMessage.getMessageBody(), DeleteDesignCommand.class);
                         assertThat(decodedEvent.getUuid()).isNotNull();
                         assertThat(decodedEvent.getUuid().toString()).isEqualTo(uuid);
-                    });
-        } finally {
-            if (consumer != null) {
-                consumer.close();
-            }
-        }
-    }
-
-    @Test
-    @DisplayName("Should send a message after accepting DELETE on /designs")
-    public void shouldAcceptDeleteOnDesigns() throws IOException {
-        final String authorization = TestHelper.makeAuthorization("test", Arrays.asList(Authority.ADMIN));
-
-        pause();
-
-        KafkaConsumer<String, String> consumer = null;
-
-        try {
-            consumer = KafkaClientFactory.createConsumer(vertx, createConsumerConfig("delete-designs"));
-
-            String[] message = new String[]{null};
-
-            consumer.handler(record -> message[0] = record.value())
-                    .rxSubscribe("designs-events")
-                    .subscribe();
-
-            final String uuid = new UUID(0, 0).toString();
-
-            long timestamp = System.currentTimeMillis();
-
-            deleteDesigns(authorization);
-
-            await().atMost(TWO_SECONDS)
-                    .pollInterval(ONE_HUNDRED_MILLISECONDS)
-                    .untilAsserted(() -> {
-                        assertThat(message[0]).isNotNull();
-                        Message decodedMessage = Json.decodeValue(message[0], Message.class);
-                        assertThat(decodedMessage.getMessageType()).isEqualTo("designs-delete");
-                        assertThat(decodedMessage.getMessageId()).isNotNull();
-                        assertThat(decodedMessage.getPartitionKey()).isEqualTo(uuid);
-                        assertThat(decodedMessage.getMessageSource()).isNotNull();
-                        assertThat(decodedMessage.getTimestamp()).isGreaterThan(timestamp);
-                        DeleteDesignsEvent decodedEvent = Json.decodeValue(decodedMessage.getMessageBody(), DeleteDesignsEvent.class);
                     });
         } finally {
             if (consumer != null) {

@@ -14,7 +14,6 @@ import io.vertx.core.Launcher;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.json.JsonObject;
 import io.vertx.rxjava.core.AbstractVerticle;
-import io.vertx.rxjava.core.WorkerExecutor;
 import io.vertx.rxjava.core.http.HttpServer;
 import io.vertx.rxjava.ext.auth.jwt.JWTAuth;
 import io.vertx.rxjava.ext.web.Router;
@@ -36,14 +35,11 @@ import static com.nextbreakpoint.shop.common.model.Headers.X_MODIFIED;
 import static com.nextbreakpoint.shop.common.model.Headers.X_XSRF_TOKEN;
 import static com.nextbreakpoint.shop.common.vertx.ServerUtil.UUID_REGEXP;
 import static com.nextbreakpoint.shop.designs.Factory.createDeleteDesignHandler;
-import static com.nextbreakpoint.shop.designs.Factory.createDeleteDesignsHandler;
 import static com.nextbreakpoint.shop.designs.Factory.createInsertDesignHandler;
 import static com.nextbreakpoint.shop.designs.Factory.createUpdateDesignHandler;
 import static java.util.Arrays.asList;
 
 public class Verticle extends AbstractVerticle {
-    private WorkerExecutor executor;
-
     private HttpServer server;
 
     public static void main(String[] args) {
@@ -58,18 +54,12 @@ public class Verticle extends AbstractVerticle {
     public void start(Future<Void> startFuture) {
         final JsonObject config = vertx.getOrCreateContext().config();
 
-        executor = createWorkerExecutor(config);
-
         vertx.<Void>rxExecuteBlocking(future -> initServer(config, future))
                 .subscribe(x -> startFuture.complete(), err -> startFuture.fail(err));
     }
 
     @Override
     public void stop(Future<Void> stopFuture) {
-        if (executor != null) {
-            executor.close();
-        }
-
         if (server != null) {
             server.rxClose().subscribe(x -> stopFuture.complete(), err -> stopFuture.fail(err));
         } else {
@@ -117,8 +107,6 @@ public class Verticle extends AbstractVerticle {
 
         final Handler deleteDesignHandler = new AccessHandler(jwtProvider, createDeleteDesignHandler(producer, topic, messageSource), onAccessDenied, asList(ADMIN));
 
-        final Handler deleteDesignsHandler = new AccessHandler(jwtProvider, createDeleteDesignsHandler(producer, topic, messageSource), onAccessDenied, asList(ADMIN));
-
         apiRouter.post("/designs")
                 .produces(APPLICATION_JSON)
                 .consumes(APPLICATION_JSON)
@@ -133,14 +121,8 @@ public class Verticle extends AbstractVerticle {
                 .produces(APPLICATION_JSON)
                 .handler(deleteDesignHandler);
 
-        apiRouter.delete("/designs")
-                .handler(deleteDesignsHandler);
-
         apiRouter.options("/designs/*")
                 .handler(ResponseHelper::sendNoContent);
-
-//        apiRouter.options("/designs")
-//                .handler(ResponseHelper::sendNoContent);
 
         mainRouter.route().failureHandler(ResponseHelper::sendFailure);
 
@@ -153,11 +135,5 @@ public class Verticle extends AbstractVerticle {
                 .listen(port);
 
         return null;
-    }
-
-    private WorkerExecutor createWorkerExecutor(JsonObject config) {
-        final int poolSize = Runtime.getRuntime().availableProcessors();
-        final long maxExecuteTime = config.getInteger("max_execution_time_in_millis", 2000) * 1000000L;
-        return vertx.createSharedWorkerExecutor("worker", poolSize, maxExecuteTime);
     }
 }

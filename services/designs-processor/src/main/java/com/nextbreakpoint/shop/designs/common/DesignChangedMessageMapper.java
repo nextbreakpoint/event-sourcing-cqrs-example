@@ -1,4 +1,4 @@
-package com.nextbreakpoint.shop.designs;
+package com.nextbreakpoint.shop.designs.common;
 
 import com.nextbreakpoint.shop.common.model.Mapper;
 import com.nextbreakpoint.shop.common.model.Message;

@@ -1,16 +1,16 @@
 package com.nextbreakpoint.shop.designs;
 
+import com.nextbreakpoint.shop.common.graphite.GraphiteManager;
+import com.nextbreakpoint.shop.common.model.Failure;
 import com.nextbreakpoint.shop.common.model.Message;
 import com.nextbreakpoint.shop.common.model.MessageType;
 import com.nextbreakpoint.shop.common.vertx.AccessHandler;
 import com.nextbreakpoint.shop.common.vertx.CORSHandlerFactory;
-import com.nextbreakpoint.shop.common.model.Failure;
-import com.nextbreakpoint.shop.common.graphite.GraphiteManager;
 import com.nextbreakpoint.shop.common.vertx.JWTProviderFactory;
 import com.nextbreakpoint.shop.common.vertx.KafkaClientFactory;
 import com.nextbreakpoint.shop.common.vertx.ResponseHelper;
 import com.nextbreakpoint.shop.common.vertx.ServerUtil;
-import com.nextbreakpoint.shop.designs.handlers.watch.WatchHandler;
+import com.nextbreakpoint.shop.designs.handlers.WatchHandler;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Launcher;
@@ -20,7 +20,6 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.rxjava.core.AbstractVerticle;
-import io.vertx.rxjava.core.WorkerExecutor;
 import io.vertx.rxjava.core.http.HttpServer;
 import io.vertx.rxjava.ext.auth.jwt.JWTAuth;
 import io.vertx.rxjava.ext.web.Router;
@@ -50,8 +49,6 @@ import static java.util.Arrays.asList;
 public class Verticle extends AbstractVerticle {
     private final Logger logger = LoggerFactory.getLogger(Verticle.class.getName());
 
-    private WorkerExecutor executor;
-
     private HttpServer server;
 
     public static void main(String[] args) {
@@ -66,18 +63,12 @@ public class Verticle extends AbstractVerticle {
     public void start(Future<Void> startFuture) {
         final JsonObject config = vertx.getOrCreateContext().config();
 
-        executor = createWorkerExecutor(config);
-
         vertx.<Void>rxExecuteBlocking(future -> initServer(config, future))
                 .subscribe(x -> startFuture.complete(), err -> startFuture.fail(err));
     }
 
     @Override
     public void stop(Future<Void> stopFuture) {
-        if (executor != null) {
-            executor.close();
-        }
-
         if (server != null) {
             server.rxClose().subscribe(x -> stopFuture.complete(), err -> stopFuture.fail(err));
         } else {
@@ -151,12 +142,6 @@ public class Verticle extends AbstractVerticle {
                 .listen(port);
 
         return null;
-    }
-
-    private WorkerExecutor createWorkerExecutor(JsonObject config) {
-        final int poolSize = Runtime.getRuntime().availableProcessors();
-        final long maxExecuteTime = config.getInteger("max_execution_time_in_millis", 2000) * 1000000L;
-        return vertx.createSharedWorkerExecutor("worker", poolSize, maxExecuteTime);
     }
 
     private void handleError(Throwable err) {

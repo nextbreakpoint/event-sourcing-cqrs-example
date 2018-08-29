@@ -1,16 +1,10 @@
 package com.nextbreakpoint.shop.common.model;
 
 public class MessageReceipt {
-    private final int status;
     private final long timestamp;
 
-    public MessageReceipt(int status, long timestamp) {
-        this.status = status;
+    public MessageReceipt(long timestamp) {
         this.timestamp = timestamp;
-    }
-
-    public int getStatus() {
-        return status;
     }
 
     public long getTimestamp() {

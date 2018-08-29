@@ -1,15 +1,15 @@
 package com.nextbreakpoint.shop.designs.controllers.update;
 
 import com.nextbreakpoint.shop.common.model.Mapper;
-import com.nextbreakpoint.shop.common.model.events.UpdateDesignEvent;
+import com.nextbreakpoint.shop.common.model.commands.UpdateDesignCommand;
 import io.vertx.core.json.JsonObject;
 import io.vertx.rxjava.ext.web.RoutingContext;
 
 import java.util.UUID;
 
-public class UpdateDesignInputMapper implements Mapper<RoutingContext, UpdateDesignEvent> {
+public class UpdateDesignInputMapper implements Mapper<RoutingContext, UpdateDesignCommand> {
     @Override
-    public UpdateDesignEvent transform(RoutingContext context) {
+    public UpdateDesignCommand transform(RoutingContext context) {
         final String uuid = context.request().getParam("param0");
 
         if (uuid == null) {
@@ -36,6 +36,6 @@ public class UpdateDesignInputMapper implements Mapper<RoutingContext, UpdateDes
                 .put("script", script)
                 .encode();
 
-        return new UpdateDesignEvent(UUID.fromString(uuid), json, System.currentTimeMillis());
+        return new UpdateDesignCommand(UUID.fromString(uuid), json, System.currentTimeMillis());
     }
 }

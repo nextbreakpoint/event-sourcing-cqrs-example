@@ -2,15 +2,15 @@ package com.nextbreakpoint.shop.designs;
 
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Session;
+import com.nextbreakpoint.shop.common.cassandra.CassandraClusterFactory;
+import com.nextbreakpoint.shop.common.graphite.GraphiteManager;
+import com.nextbreakpoint.shop.common.model.Failure;
 import com.nextbreakpoint.shop.common.vertx.AccessHandler;
 import com.nextbreakpoint.shop.common.vertx.CORSHandlerFactory;
-import com.nextbreakpoint.shop.common.cassandra.CassandraClusterFactory;
-import com.nextbreakpoint.shop.common.model.Failure;
-import com.nextbreakpoint.shop.common.graphite.GraphiteManager;
 import com.nextbreakpoint.shop.common.vertx.JWTProviderFactory;
 import com.nextbreakpoint.shop.common.vertx.ResponseHelper;
 import com.nextbreakpoint.shop.common.vertx.ServerUtil;
-import com.nextbreakpoint.shop.designs.controllers.get.GetTileHandler;
+import com.nextbreakpoint.shop.designs.handlers.TileHandler;
 import com.nextbreakpoint.shop.designs.persistence.CassandraStore;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -116,7 +116,7 @@ public class Verticle extends AbstractVerticle {
 
         final Handler<RoutingContext> onAccessDenied = rc -> rc.fail(Failure.accessDenied("Authorisation failed"));
 
-        final Handler getTileHandler = new AccessHandler(jwtProvider, new GetTileHandler(store, executor), onAccessDenied, asList(ADMIN, GUEST, ANONYMOUS));
+        final Handler getTileHandler = new AccessHandler(jwtProvider, new TileHandler(store, executor), onAccessDenied, asList(ADMIN, GUEST, ANONYMOUS));
 
         final Handler listDesignsHandler = new AccessHandler(jwtProvider, createListDesignsHandler(store), onAccessDenied, asList(ADMIN, GUEST, ANONYMOUS));
 
@@ -136,9 +136,6 @@ public class Verticle extends AbstractVerticle {
 
         apiRouter.options("/designs/*")
                 .handler(ResponseHelper::sendNoContent);
-
-//        apiRouter.options("/designs")
-//                .handler(ResponseHelper::sendNoContent);
 
         mainRouter.route().failureHandler(ResponseHelper::sendFailure);
 

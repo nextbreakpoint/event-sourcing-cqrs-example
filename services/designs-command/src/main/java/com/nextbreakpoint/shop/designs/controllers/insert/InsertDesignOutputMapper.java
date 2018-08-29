@@ -1,13 +1,12 @@
 package com.nextbreakpoint.shop.designs.controllers.insert;
 
-import com.nextbreakpoint.shop.common.model.Content;
 import com.nextbreakpoint.shop.common.model.Mapper;
-import com.nextbreakpoint.shop.designs.model.InsertDesignResult;
+import com.nextbreakpoint.shop.designs.model.CommandResult;
 import io.vertx.core.json.Json;
 
-public class InsertDesignOutputMapper implements Mapper<InsertDesignResult, Content> {
+public class InsertDesignOutputMapper implements Mapper<CommandResult, String> {
     @Override
-    public Content transform(InsertDesignResult result) {
-        return new Content(Json.encode(result));
+    public String transform(CommandResult result) {
+        return Json.encode(result);
     }
 }

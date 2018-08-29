@@ -1,15 +1,15 @@
 package com.nextbreakpoint.shop.designs.controllers.insert;
 
 import com.nextbreakpoint.shop.common.model.Mapper;
-import com.nextbreakpoint.shop.common.model.events.InsertDesignEvent;
+import com.nextbreakpoint.shop.common.model.commands.InsertDesignCommand;
 import io.vertx.core.json.JsonObject;
 import io.vertx.rxjava.ext.web.RoutingContext;
 
 import java.util.UUID;
 
-public class InsertDesignInputMapper implements Mapper<RoutingContext, InsertDesignEvent> {
+public class InsertDesignInputMapper implements Mapper<RoutingContext, InsertDesignCommand> {
     @Override
-    public InsertDesignEvent transform(RoutingContext context) {
+    public InsertDesignCommand transform(RoutingContext context) {
         final JsonObject bodyAsJson = context.getBodyAsJson();
 
         if (bodyAsJson == null) {
@@ -30,6 +30,6 @@ public class InsertDesignInputMapper implements Mapper<RoutingContext, InsertDes
                 .put("script", script)
                 .encode();
 
-        return new InsertDesignEvent(UUID.randomUUID(), json, System.currentTimeMillis());
+        return new InsertDesignCommand(UUID.randomUUID(), json, System.currentTimeMillis());
     }
 }

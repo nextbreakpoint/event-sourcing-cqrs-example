@@ -10,7 +10,7 @@ public class FailedMessageConsumer implements BiConsumer<Message, Throwable> {
     private final Logger logger = LoggerFactory.getLogger(FailedMessageConsumer.class.getName());
 
     @Override
-    public void accept(Message message, Throwable throwable) {
-        logger.error("Failed to process message: id=" + message.getMessageId(), throwable);
+    public void accept(Message message, Throwable error) {
+        logger.error("Failed to process message: id=" + message.getMessageId(), error);
     }
 }

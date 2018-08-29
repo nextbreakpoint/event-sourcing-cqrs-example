@@ -1,4 +1,4 @@
-package com.nextbreakpoint.shop.common.handlers;
+package com.nextbreakpoint.shop.designs.common;
 
 import com.nextbreakpoint.shop.common.model.Content;
 import io.vertx.rxjava.core.http.HttpServerResponse;

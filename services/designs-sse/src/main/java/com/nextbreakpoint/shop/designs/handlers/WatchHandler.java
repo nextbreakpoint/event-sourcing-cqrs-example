@@ -1,4 +1,4 @@
-package com.nextbreakpoint.shop.designs.handlers.watch;
+package com.nextbreakpoint.shop.designs.handlers;
 
 import com.nextbreakpoint.shop.common.model.Failure;
 import io.vertx.core.Handler;

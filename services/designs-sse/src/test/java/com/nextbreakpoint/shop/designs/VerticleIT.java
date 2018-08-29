@@ -30,14 +30,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import static com.jayway.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS;
 import static org.awaitility.Duration.TEN_SECONDS;
 
 @Tag("slow")
-@DisplayName("Designs Processor Service")
+@DisplayName("Verify contract of service Designs SSE")
 public class VerticleIT {
     private static RestAssuredConfig restAssuredConfig;
 

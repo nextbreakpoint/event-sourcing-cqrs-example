@@ -17,7 +17,5 @@
   "kafka_bootstrap_servers": "localhost:9092",
   "kafka_group_id": "designs-sse",
 
-  "sse_topic": "designs-sse",
-
-  "max_execution_time_in_millis": 30000
+  "sse_topic": "designs-sse"
 }

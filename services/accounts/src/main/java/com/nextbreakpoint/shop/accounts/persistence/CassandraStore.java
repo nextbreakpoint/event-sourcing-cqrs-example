@@ -8,8 +8,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.nextbreakpoint.shop.accounts.Store;
 import com.nextbreakpoint.shop.accounts.model.DeleteAccountRequest;
 import com.nextbreakpoint.shop.accounts.model.DeleteAccountResponse;
-import com.nextbreakpoint.shop.accounts.model.DeleteAccountsRequest;
-import com.nextbreakpoint.shop.accounts.model.DeleteAccountsResponse;
 import com.nextbreakpoint.shop.accounts.model.InsertAccountRequest;
 import com.nextbreakpoint.shop.accounts.model.InsertAccountResponse;
 import com.nextbreakpoint.shop.accounts.model.ListAccountsRequest;
@@ -33,13 +31,11 @@ public class CassandraStore implements Store {
     private static final String ERROR_INSERT_ACCOUNT = "An error occurred while inserting an account";
     private static final String ERROR_LOAD_ACCOUNT = "An error occurred while loading an account";
     private static final String ERROR_DELETE_ACCOUNT = "An error occurred while deleting an account";
-    private static final String ERROR_DELETE_ACCOUNTS = "An error occurred while deleting all accounts";
     private static final String ERROR_FIND_ACCOUNTS = "An error occurred while loading accounts";
 
     private static final String INSERT_ACCOUNT = "INSERT INTO ACCOUNTS (UUID, NAME, EMAIL, ROLE, CREATED) VALUES (?, ?, ?, ?, toTimeStamp(now()))";
     private static final String SELECT_ACCOUNT = "SELECT * FROM ACCOUNTS WHERE UUID = ?";
     private static final String DELETE_ACCOUNT = "DELETE FROM ACCOUNTS WHERE UUID = ?";
-    private static final String DELETE_ACCOUNTS = "TRUNCATE ACCOUNTS";
     private static final String SELECT_ACCOUNTS = "SELECT * FROM ACCOUNTS";
     private static final String SELECT_ACCOUNTS_BY_EMAIL = "SELECT * FROM ACCOUNTS WHERE EMAIL = ?";
 
@@ -50,7 +46,6 @@ public class CassandraStore implements Store {
     private final ListenableFuture<PreparedStatement> insertAccount;
     private final ListenableFuture<PreparedStatement> selectAccount;
     private final ListenableFuture<PreparedStatement> deleteAccount;
-    private final ListenableFuture<PreparedStatement> deleteAccounts;
     private final ListenableFuture<PreparedStatement> selectAccountByEmail;
     private final ListenableFuture<PreparedStatement> selectAccounts;
 
@@ -59,7 +54,6 @@ public class CassandraStore implements Store {
         insertAccount = session.prepareAsync(INSERT_ACCOUNT);
         selectAccount = session.prepareAsync(SELECT_ACCOUNT);
         deleteAccount = session.prepareAsync(DELETE_ACCOUNT);
-        deleteAccounts = session.prepareAsync(DELETE_ACCOUNTS);
         selectAccountByEmail = session.prepareAsync(SELECT_ACCOUNTS_BY_EMAIL);
         selectAccounts = session.prepareAsync(SELECT_ACCOUNTS);
     }
@@ -83,13 +77,6 @@ public class CassandraStore implements Store {
         return withSession()
                 .flatMap(session -> doDeleteAccount(session, request))
                 .doOnError(err -> handleError(ERROR_DELETE_ACCOUNT, err));
-    }
-
-    @Override
-    public Single<DeleteAccountsResponse> deleteAccounts(DeleteAccountsRequest request) {
-        return withSession()
-                .flatMap(session -> doDeleteAccounts(session, request))
-                .doOnError(err -> handleError(ERROR_DELETE_ACCOUNTS, err));
     }
 
     @Override
@@ -136,14 +123,6 @@ public class CassandraStore implements Store {
                 .map(bst -> session.executeAsync(bst))
                 .flatMap(rsf -> getResultSet(rsf))
                 .map(rs -> new DeleteAccountResponse(request.getUuid(), rs.wasApplied() ? 1 : 0));
-    }
-
-    private Single<DeleteAccountsResponse> doDeleteAccounts(Session session, DeleteAccountsRequest request) {
-        return Single.from(deleteAccounts)
-                .map(pst -> pst.bind())
-                .map(bst -> session.executeAsync(bst))
-                .flatMap(rsf -> getResultSet(rsf))
-                .map(rs -> new DeleteAccountsResponse(rs.wasApplied() ? 1 : 0));
     }
 
     private Single<ListAccountsResponse> doListAccounts(Session session, ListAccountsRequest request) {

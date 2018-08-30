@@ -2,8 +2,6 @@ package com.nextbreakpoint.shop.accounts;
 
 import com.nextbreakpoint.shop.accounts.model.DeleteAccountRequest;
 import com.nextbreakpoint.shop.accounts.model.DeleteAccountResponse;
-import com.nextbreakpoint.shop.accounts.model.DeleteAccountsRequest;
-import com.nextbreakpoint.shop.accounts.model.DeleteAccountsResponse;
 import com.nextbreakpoint.shop.accounts.model.InsertAccountResponse;
 import com.nextbreakpoint.shop.accounts.model.ListAccountsResponse;
 import com.nextbreakpoint.shop.accounts.model.ListAccountsRequest;
@@ -18,8 +16,6 @@ public interface Store {
     Single<LoadAccountResponse> loadAccount(LoadAccountRequest request);
 
     Single<DeleteAccountResponse> deleteAccount(DeleteAccountRequest request);
-
-    Single<DeleteAccountsResponse> deleteAccounts(DeleteAccountsRequest request);
 
     Single<ListAccountsResponse> listAccounts(ListAccountsRequest request);
 }

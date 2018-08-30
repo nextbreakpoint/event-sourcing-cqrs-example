@@ -35,7 +35,7 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 @DisplayName("Accounts service")
 public class VerticleIT {
   private static RestAssuredConfig restAssuredConfig;
-  private static AtomicInteger counter = new AtomicInteger(1);
+  private static AtomicInteger counter = new AtomicInteger(10);
 
   private URL makeBaseURL(String path) throws MalformedURLException {
     final Integer port = Integer.getInteger("http.port", 3002);
@@ -195,8 +195,6 @@ public class VerticleIT {
 
     pause();
 
-    deleteAccounts(authorization);
-
     final String email1 = "user1@localhost";
     final String email2 = "user2@localhost";
 
@@ -217,19 +215,20 @@ public class VerticleIT {
     assertThat(json2.getString("uuid")).isEqualTo(uuid2);
     assertThat(json2.getString("role")).isEqualTo("guest");
 
-    assertThat(getAccounts(authorization)).containsExactlyInAnyOrder(uuid1, uuid2);
+    assertThat(getAccounts(authorization)).contains(uuid1, uuid2);
 
-    assertThat(findAccount(authorization, email1)).containsExactlyInAnyOrder(uuid1);
+    assertThat(findAccount(authorization, email1)).contains(uuid1);
 
-    assertThat(findAccount(authorization, email2)).containsExactlyInAnyOrder(uuid2);
+    assertThat(findAccount(authorization, email2)).contains(uuid2);
 
     deleteAccount(authorization, uuid1);
 
-    assertThat(getAccounts(authorization)).containsExactlyInAnyOrder(uuid2);
+    assertThat(getAccounts(authorization)).contains(uuid2);
+    assertThat(getAccounts(authorization)).doesNotContain(uuid1);
 
     deleteAccount(authorization, uuid2);
 
-    assertThat(getAccounts(authorization)).isEmpty();
+    assertThat(getAccounts(authorization)).doesNotContain(uuid1, uuid2);
   }
 
   private void pause() {
@@ -277,14 +276,6 @@ public class VerticleIT {
             .when().get(makeBaseURL("/api/accounts/" + uuid))
             .then().assertThat().statusCode(200)
             .and().extract().jsonPath();
-  }
-
-  private void deleteAccounts(String authorization) throws MalformedURLException {
-    given().config(restAssuredConfig)
-            .and().header(AUTHORIZATION, authorization)
-            .and().accept(ContentType.JSON)
-            .when().delete(makeBaseURL("/api/accounts"))
-            .then().assertThat().statusCode(204);
   }
 
   private String createAccount(String authorization, Map<String, String> account) throws MalformedURLException {

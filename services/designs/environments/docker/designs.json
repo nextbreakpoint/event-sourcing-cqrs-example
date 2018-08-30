@@ -14,12 +14,12 @@
   "graphite_host": "localhost",
   "graphite_port": 2003,
 
-  "cassandra_cluster": "test",
-  "cassandra_keyspace": "designs",
-  "cassandra_username": "admin",
-  "cassandra_password": "password",
-  "cassandra_contactPoint": "cassandra",
-  "cassandra_port": 9042,
+  "jdbc_url": "jdbc:mysql://mysql:3306/designs?useSSL=false&nullNamePatternMatchesAll=true",
+  "jdbc_driver": "com.mysql.cj.jdbc.Driver",
+  "jdbc_username": "verticle",
+  "jdbc_password": "password",
+  "jdbc_max_pool_size": 200,
+  "jdbc_min_pool_size": 20,
 
   "max_execution_time_in_millis": 30000
 }

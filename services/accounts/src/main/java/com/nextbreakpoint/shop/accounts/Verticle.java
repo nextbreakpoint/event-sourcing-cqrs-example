@@ -1,15 +1,13 @@
 package com.nextbreakpoint.shop.accounts;
 
-import com.datastax.driver.core.Cluster;
-import com.datastax.driver.core.Session;
-import com.nextbreakpoint.shop.accounts.persistence.CassandraStore;
-import com.nextbreakpoint.shop.common.vertx.AccessHandler;
-import com.nextbreakpoint.shop.common.cassandra.CassandraClusterFactory;
-import com.nextbreakpoint.shop.common.model.Failure;
+import com.nextbreakpoint.shop.accounts.persistence.MySQLStore;
 import com.nextbreakpoint.shop.common.graphite.GraphiteManager;
+import com.nextbreakpoint.shop.common.model.Failure;
+import com.nextbreakpoint.shop.common.vertx.AccessHandler;
+import com.nextbreakpoint.shop.common.vertx.CORSHandlerFactory;
+import com.nextbreakpoint.shop.common.vertx.JDBCClientFactory;
 import com.nextbreakpoint.shop.common.vertx.JWTProviderFactory;
 import com.nextbreakpoint.shop.common.vertx.ResponseHelper;
-import com.nextbreakpoint.shop.common.vertx.CORSHandlerFactory;
 import com.nextbreakpoint.shop.common.vertx.ServerUtil;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -19,6 +17,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.rxjava.core.AbstractVerticle;
 import io.vertx.rxjava.core.http.HttpServer;
 import io.vertx.rxjava.ext.auth.jwt.JWTAuth;
+import io.vertx.rxjava.ext.jdbc.JDBCClient;
 import io.vertx.rxjava.ext.web.Router;
 import io.vertx.rxjava.ext.web.RoutingContext;
 import io.vertx.rxjava.ext.web.handler.BodyHandler;
@@ -82,15 +81,11 @@ public class Verticle extends AbstractVerticle {
 
         final String webUrl = config.getString("client_web_url");
 
-        final String keyspace = config.getString("cassandra_keyspace");
-
         final JWTAuth jwtProvider = JWTProviderFactory.create(vertx, config);
 
-        final Cluster cluster = CassandraClusterFactory.create(config);
+        final JDBCClient jdbcClient = JDBCClientFactory.create(vertx, config);
 
-        final Session session = cluster.connect(keyspace);
-
-        final Store store = new CassandraStore(session);
+        final Store store = new MySQLStore(jdbcClient);
 
         final Router mainRouter = Router.router(vertx);
 

@@ -90,11 +90,9 @@ public class VerticleIT {
   public void shouldReturnHTMLWhenRequestingDesignsContentPageWithoutToken() throws MalformedURLException {
     final UUID uuid = UUID.randomUUID();
 
-    final Date date = new Date();
-
     whenHttp(stubServer)
             .match(get("/api/designs"), withHeader("accept", "application/json"))
-            .then(status(HttpStatus.OK_200), header("X-Modified", "" + date.getTime()), contentType("application/json"), stringContent("[\"" + uuid + "\"]"));
+            .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("[\"" + uuid + "\"]"));
 
     given().config(restAssuredConfig)
             .when().get(makeBaseURL("/content/designs"))
@@ -126,7 +124,7 @@ public class VerticleIT {
 
     whenHttp(stubServer)
             .match(get("/api/designs/" + designUuid), withHeader("accept", "application/json"))
-            .then(status(HttpStatus.OK_200), header("X-Modified", "" + date.getTime()), contentType("application/json"), stringContent(content));
+            .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent(content));
 
     given().config(restAssuredConfig)
             .when().get(makeBaseURL("/content/designs/" + designUuid))
@@ -140,11 +138,9 @@ public class VerticleIT {
     final UUID designUuid = UUID.randomUUID();
     final UUID accountUuid = UUID.randomUUID();
 
-    final Date date = new Date();
-
     whenHttp(stubServer)
             .match(get("/api/designs"), withHeader("accept", "application/json"))
-            .then(status(HttpStatus.OK_200), header("X-Modified", "" + date.getTime()), contentType("application/json"), stringContent("[\"" + designUuid + "\"]"));
+            .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("[\"" + designUuid + "\"]"));
 
     whenHttp(stubServer)
             .match(get("/api/accounts/" + accountUuid), withHeader("accept", "application/json"))
@@ -184,7 +180,7 @@ public class VerticleIT {
 
     whenHttp(stubServer)
             .match(get("/api/designs/" + designUuid), withHeader("accept", "application/json"))
-            .then(status(HttpStatus.OK_200), header("X-Modified", "" + date.getTime()), contentType("application/json"), stringContent(content));
+            .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent(content));
 
     whenHttp(stubServer)
             .match(get("/api/accounts/" + accountUuid), withHeader("accept", "application/json"))

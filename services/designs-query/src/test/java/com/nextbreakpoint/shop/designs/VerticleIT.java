@@ -128,7 +128,7 @@ public class VerticleIT {
 
     String[] results = listDesigns(authorization);
 
-    assertThat(results).containsExactlyInAnyOrder(UUID_1, UUID_2, UUID_3, UUID_4);
+    assertThat(results).contains(UUID_1, UUID_2, UUID_3, UUID_4);
   }
 
   @Test
@@ -170,7 +170,7 @@ public class VerticleIT {
 
     String[] results = listDesigns(authorization);
 
-    assertThat(results).containsExactlyInAnyOrder(UUID_1, UUID_2, UUID_3, UUID_4);
+    assertThat(results).contains(UUID_1, UUID_2, UUID_3, UUID_4);
   }
 
   @Test
@@ -212,7 +212,7 @@ public class VerticleIT {
 
     String[] results = listDesigns(authorization);
 
-    assertThat(results).containsExactlyInAnyOrder(UUID_1, UUID_2, UUID_3, UUID_4);
+    assertThat(results).contains(UUID_1, UUID_2, UUID_3, UUID_4);
   }
 
   @Test

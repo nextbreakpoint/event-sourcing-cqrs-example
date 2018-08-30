@@ -1,17 +1,15 @@
 package com.nextbreakpoint.shop.designs;
 
-import com.datastax.driver.core.Cluster;
-import com.datastax.driver.core.Session;
-import com.nextbreakpoint.shop.common.cassandra.CassandraClusterFactory;
 import com.nextbreakpoint.shop.common.graphite.GraphiteManager;
 import com.nextbreakpoint.shop.common.model.Failure;
 import com.nextbreakpoint.shop.common.vertx.AccessHandler;
 import com.nextbreakpoint.shop.common.vertx.CORSHandlerFactory;
+import com.nextbreakpoint.shop.common.vertx.JDBCClientFactory;
 import com.nextbreakpoint.shop.common.vertx.JWTProviderFactory;
 import com.nextbreakpoint.shop.common.vertx.ResponseHelper;
 import com.nextbreakpoint.shop.common.vertx.ServerUtil;
 import com.nextbreakpoint.shop.designs.handlers.TileHandler;
-import com.nextbreakpoint.shop.designs.persistence.CassandraStore;
+import com.nextbreakpoint.shop.designs.persistence.MySQLStore;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Launcher;
@@ -21,6 +19,7 @@ import io.vertx.rxjava.core.AbstractVerticle;
 import io.vertx.rxjava.core.WorkerExecutor;
 import io.vertx.rxjava.core.http.HttpServer;
 import io.vertx.rxjava.ext.auth.jwt.JWTAuth;
+import io.vertx.rxjava.ext.jdbc.JDBCClient;
 import io.vertx.rxjava.ext.web.Router;
 import io.vertx.rxjava.ext.web.RoutingContext;
 import io.vertx.rxjava.ext.web.handler.BodyHandler;
@@ -89,15 +88,11 @@ public class Verticle extends AbstractVerticle {
 
         final String webUrl = config.getString("client_web_url");
 
-        final String keyspace = config.getString("cassandra_keyspace");
-
         final JWTAuth jwtProvider = JWTProviderFactory.create(vertx, config);
 
-        final Cluster cluster = CassandraClusterFactory.create(config);
+        final JDBCClient jdbcClient = JDBCClientFactory.create(vertx, config);
 
-        final Session session = cluster.connect(keyspace);
-
-        final Store store = new CassandraStore(session);
+        final Store store = new MySQLStore(jdbcClient);
 
         final Router mainRouter = Router.router(vertx);
 
@@ -125,10 +120,6 @@ public class Verticle extends AbstractVerticle {
         final Handler updateDesignHandler = new AccessHandler(jwtProvider, Factory.createUpdateDesignHandler(store), onAccessDenied, asList(ADMIN));
 
         final Handler deleteDesignHandler = new AccessHandler(jwtProvider, Factory.createDeleteDesignHandler(store), onAccessDenied, asList(ADMIN));
-
-        final Handler getStatusHandler = new AccessHandler(jwtProvider, Factory.createGetStatusHandler(store), onAccessDenied, asList(ADMIN, GUEST, ANONYMOUS));
-
-        final Handler getStatusListHandler = new AccessHandler(jwtProvider, Factory.createListStatusHandler(store), onAccessDenied, asList(ADMIN, GUEST, ANONYMOUS));
 
         apiRouter.get("/designs/:uuid/:zoom/:x/:y/:size.png")
                 .produces(IMAGE_PNG)
@@ -158,14 +149,6 @@ public class Verticle extends AbstractVerticle {
 
         apiRouter.options("/designs/*")
                 .handler(ResponseHelper::sendNoContent);
-
-        apiRouter.get("/designs/status")
-                .produces(APPLICATION_JSON)
-                .handler(getStatusHandler);
-
-        apiRouter.get("/designs/statusList")
-                .produces(APPLICATION_JSON)
-                .handler(getStatusListHandler);
 
         mainRouter.route().failureHandler(ResponseHelper::sendFailure);
 

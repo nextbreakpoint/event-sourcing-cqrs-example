@@ -8,6 +8,7 @@
         <module>cassandra</module>
         <module>zookeeper</module>
         <module>kafka</module>
+        <module>mysql</module>
         <module>nginx</module>
         <module>common</module>
         <module>designs</module>
@@ -50,6 +51,7 @@
         <awaitility.version>3.0.0</awaitility.version>
         <dropwizard.version>3.1.0</dropwizard.version>
         <log4j2.version>2.11.1</log4j2.version>
+        <mysql-connector.version>8.0.12</mysql-connector.version>
         <cassandra-driver-core.version>3.5.1</cassandra-driver-core.version>
         <cassandra-migration.version>2.2.0</cassandra-migration.version>
         <liquibase.version>3.5.3</liquibase.version>
@@ -221,6 +223,11 @@
                 <groupId>org.apache.logging.log4j</groupId>
                 <artifactId>log4j-jul</artifactId>
                 <version>${log4j2.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>mysql</groupId>
+                <artifactId>mysql-connector-java</artifactId>
+                <version>${mysql-connector.version}</version>
             </dependency>
             <dependency>
                 <groupId>biz.paluch.logging</groupId>

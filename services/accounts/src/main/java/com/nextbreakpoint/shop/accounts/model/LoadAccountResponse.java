@@ -1,7 +1,5 @@
 package com.nextbreakpoint.shop.accounts.model;
 
-import com.nextbreakpoint.shop.accounts.model.Account;
-
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;

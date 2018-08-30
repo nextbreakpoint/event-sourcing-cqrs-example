@@ -122,16 +122,14 @@
                             <autoCreateCustomNetworks>true</autoCreateCustomNetworks>
                             <images>
                                 <image>
-                                    <name>nextbreakpoint/cassandra:3.11</name>
-                                    <alias>cassandra-designs</alias>
+                                    <name>mysql:8.0.2</name>
+                                    <alias>mysql-designs</alias>
                                     <run>
                                         <ports>
-                                            <port>9042:9042</port>
+                                            <port>3306:3306</port>
                                         </ports>
                                         <env>
-                                            <CASSANDRA_RACK>rack1</CASSANDRA_RACK>
-                                            <CASSANDRA_DC>datacenter1</CASSANDRA_DC>
-                                            <JVM_OPTS>-Xms1G -Xmx1G</JVM_OPTS>
+                                            <MYSQL_ROOT_PASSWORD>password</MYSQL_ROOT_PASSWORD>
                                         </env>
                                         <volumes>
                                             <bind>
@@ -141,11 +139,11 @@
                                         <network>
                                             <mode>custom</mode>
                                             <name>shop-test</name>
-                                            <alias>cassandra-designs</alias>
+                                            <alias>mysql-designs</alias>
                                         </network>
                                         <wait>
-                                            <log>Initializing designs.designs</log>
-                                            <time>90000</time>
+                                            <log>/usr/sbin/mysqld: ready for connections. Version: '8.0.2-dmr'  socket: '/var/run/mysqld/mysqld.sock'  port: 3306</log>
+                                            <time>60000</time>
                                         </wait>
                                     </run>
                                 </image>
@@ -179,7 +177,7 @@
                                             <time>60000</time>
                                         </wait>
                                         <dependsOn>
-                                            <container>cassandra-designs</container>
+                                            <container>mysql-designs</container>
                                         </dependsOn>
                                     </run>
                                 </image>
@@ -199,8 +197,8 @@
                                     <alias>service-designs</alias>
                                 </image>
                                 <image>
-                                    <name>nextbreakpoint/cassandra:3.11</name>
-                                    <alias>cassandra-designs</alias>
+                                    <name>mysql:8.0.2</name>
+                                    <alias>mysql-designs</alias>
                                 </image>
                             </images>
                         </configuration>
@@ -328,6 +326,10 @@
         </dependency>
         <dependency>
             <groupId>io.vertx</groupId>
+            <artifactId>vertx-jdbc-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.vertx</groupId>
             <artifactId>vertx-rx-java</artifactId>
         </dependency>
         <dependency>
@@ -335,12 +337,12 @@
             <artifactId>vertx-dropwizard-metrics</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.datastax.cassandra</groupId>
-            <artifactId>cassandra-driver-core</artifactId>
-        </dependency>
-        <dependency>
             <groupId>io.dropwizard.metrics</groupId>
             <artifactId>metrics-graphite</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
         </dependency>
         <dependency>
             <groupId>io.vertx</groupId>

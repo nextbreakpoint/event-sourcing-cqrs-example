@@ -1,7 +1,6 @@
 package com.nextbreakpoint.shop.common.vertx.handlers;
 
 import io.vertx.rxjava.ext.web.RoutingContext;
-import kafka.utils.Json;
 
 import java.util.function.BiConsumer;
 
@@ -20,6 +19,6 @@ public class SimpleJsonConsumer implements BiConsumer<RoutingContext, String> {
         context.response()
                 .putHeader(CONTENT_TYPE, APPLICATION_JSON)
                 .setStatusCode(statusCode)
-                .end(Json.encode(json));
+                .end(json);
     }
 }

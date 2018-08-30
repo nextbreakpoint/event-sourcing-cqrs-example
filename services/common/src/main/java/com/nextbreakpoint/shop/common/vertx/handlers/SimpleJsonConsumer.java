@@ -1,4 +1,4 @@
-package com.nextbreakpoint.shop.common.handlers;
+package com.nextbreakpoint.shop.common.vertx.handlers;
 
 import io.vertx.rxjava.ext.web.RoutingContext;
 import kafka.utils.Json;

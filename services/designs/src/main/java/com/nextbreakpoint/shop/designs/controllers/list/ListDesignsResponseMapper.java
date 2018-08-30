@@ -1,8 +1,8 @@
 package com.nextbreakpoint.shop.designs.controllers.list;
 
-import com.nextbreakpoint.shop.common.model.Metadata;
-import com.nextbreakpoint.shop.common.model.Mapper;
 import com.nextbreakpoint.shop.common.model.Content;
+import com.nextbreakpoint.shop.common.model.Mapper;
+import com.nextbreakpoint.shop.common.model.Metadata;
 import com.nextbreakpoint.shop.designs.model.ListDesignsResponse;
 import io.vertx.core.json.JsonArray;
 

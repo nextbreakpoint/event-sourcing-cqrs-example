@@ -1,7 +1,5 @@
 package com.nextbreakpoint.shop.designs.model;
 
-import com.nextbreakpoint.shop.designs.model.Status;
-
 import java.util.Objects;
 
 public class GetStatusResponse {

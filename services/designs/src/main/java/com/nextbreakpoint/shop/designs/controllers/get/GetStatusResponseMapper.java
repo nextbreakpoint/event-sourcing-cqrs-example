@@ -1,7 +1,7 @@
 package com.nextbreakpoint.shop.designs.controllers.get;
 
-import com.nextbreakpoint.shop.common.model.Mapper;
 import com.nextbreakpoint.shop.common.model.Content;
+import com.nextbreakpoint.shop.common.model.Mapper;
 import com.nextbreakpoint.shop.designs.model.GetStatusResponse;
 import com.nextbreakpoint.shop.designs.model.Status;
 import io.vertx.core.json.JsonArray;

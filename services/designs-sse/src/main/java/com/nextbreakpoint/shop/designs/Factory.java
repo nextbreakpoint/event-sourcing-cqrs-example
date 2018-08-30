@@ -1,8 +1,8 @@
 package com.nextbreakpoint.shop.designs;
 
-import com.nextbreakpoint.shop.common.handlers.DefaultHandler;
-import com.nextbreakpoint.shop.common.handlers.EventBusConsumer;
-import com.nextbreakpoint.shop.common.handlers.FailedMessageConsumer;
+import com.nextbreakpoint.shop.common.vertx.handlers.DefaultHandler;
+import com.nextbreakpoint.shop.common.vertx.handlers.EventBusConsumer;
+import com.nextbreakpoint.shop.common.vertx.handlers.FailedMessageConsumer;
 import com.nextbreakpoint.shop.common.model.Message;
 import com.nextbreakpoint.shop.common.model.events.DesignChangedEvent;
 import com.nextbreakpoint.shop.designs.controllers.DesignChangedController;

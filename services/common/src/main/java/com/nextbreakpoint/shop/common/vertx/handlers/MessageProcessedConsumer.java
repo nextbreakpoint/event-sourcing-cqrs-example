@@ -1,4 +1,4 @@
-package com.nextbreakpoint.shop.common.handlers;
+package com.nextbreakpoint.shop.common.vertx.handlers;
 
 import com.nextbreakpoint.shop.common.model.Message;
 import io.vertx.core.logging.Logger;

@@ -1,8 +1,8 @@
 package com.nextbreakpoint.shop.designs;
 
-import com.nextbreakpoint.shop.common.handlers.DefaultHandler;
-import com.nextbreakpoint.shop.common.handlers.FailedRequestConsumer;
-import com.nextbreakpoint.shop.common.handlers.SimpleJsonConsumer;
+import com.nextbreakpoint.shop.common.vertx.handlers.DefaultHandler;
+import com.nextbreakpoint.shop.common.vertx.handlers.FailedRequestConsumer;
+import com.nextbreakpoint.shop.common.vertx.handlers.SimpleJsonConsumer;
 import com.nextbreakpoint.shop.common.model.commands.DeleteDesignCommand;
 import com.nextbreakpoint.shop.common.model.commands.InsertDesignCommand;
 import com.nextbreakpoint.shop.common.model.commands.UpdateDesignCommand;

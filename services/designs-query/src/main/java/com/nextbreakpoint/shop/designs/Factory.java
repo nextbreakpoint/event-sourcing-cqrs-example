@@ -1,7 +1,7 @@
 package com.nextbreakpoint.shop.designs;
 
-import com.nextbreakpoint.shop.common.handlers.DefaultHandler;
-import com.nextbreakpoint.shop.common.handlers.FailedRequestConsumer;
+import com.nextbreakpoint.shop.common.vertx.handlers.DefaultHandler;
+import com.nextbreakpoint.shop.common.vertx.handlers.FailedRequestConsumer;
 import com.nextbreakpoint.shop.common.model.Content;
 import com.nextbreakpoint.shop.designs.common.ContentConsumer;
 import com.nextbreakpoint.shop.designs.controllers.list.ListDesignsController;

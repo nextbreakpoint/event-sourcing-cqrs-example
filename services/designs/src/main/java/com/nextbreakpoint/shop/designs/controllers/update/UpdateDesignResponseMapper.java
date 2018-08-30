@@ -1,7 +1,7 @@
 package com.nextbreakpoint.shop.designs.controllers.update;
 
-import com.nextbreakpoint.shop.common.model.Mapper;
 import com.nextbreakpoint.shop.common.model.Content;
+import com.nextbreakpoint.shop.common.model.Mapper;
 import com.nextbreakpoint.shop.designs.model.UpdateDesignResponse;
 import io.vertx.core.json.JsonObject;
 

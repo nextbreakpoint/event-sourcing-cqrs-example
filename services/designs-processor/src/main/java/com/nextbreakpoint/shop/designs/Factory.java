@@ -1,7 +1,7 @@
 package com.nextbreakpoint.shop.designs;
 
-import com.nextbreakpoint.shop.common.handlers.DefaultHandler;
-import com.nextbreakpoint.shop.common.handlers.FailedMessageConsumer;
+import com.nextbreakpoint.shop.common.vertx.handlers.DefaultHandler;
+import com.nextbreakpoint.shop.common.vertx.handlers.FailedMessageConsumer;
 import com.nextbreakpoint.shop.common.model.Message;
 import com.nextbreakpoint.shop.common.model.commands.DeleteDesignCommand;
 import com.nextbreakpoint.shop.common.model.commands.InsertDesignCommand;

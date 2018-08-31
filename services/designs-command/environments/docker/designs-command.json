@@ -1,5 +1,5 @@
 {
-  "host_port": 3001,
+  "host_port": 3031,
 
   "server_keystore_path": "../secrets/keystore-server.jks",
   "server_keystore_secret": "secret",

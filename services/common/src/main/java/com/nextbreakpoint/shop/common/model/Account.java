@@ -1,4 +1,4 @@
-package com.nextbreakpoint.shop.accounts.model;
+package com.nextbreakpoint.shop.common.model;
 
 import java.util.Objects;
 

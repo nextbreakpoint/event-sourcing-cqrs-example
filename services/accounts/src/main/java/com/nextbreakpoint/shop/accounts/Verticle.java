@@ -62,7 +62,7 @@ public class Verticle extends AbstractVerticle {
     }
 
     @Override
-    public void stop(Future<Void> stopFuture) throws Exception {
+    public void stop(Future<Void> stopFuture) {
         if (server != null) {
             server.rxClose().subscribe(x -> stopFuture.complete(), err -> stopFuture.fail(err));
         } else {
@@ -74,7 +74,7 @@ public class Verticle extends AbstractVerticle {
         Single.fromCallable(() -> createServer(config)).subscribe(x -> future.complete(), err -> future.fail(err));
     }
 
-    private Void createServer(JsonObject config) throws Exception {
+    private Void createServer(JsonObject config) {
         GraphiteManager.configureMetrics(config);
 
         final Integer port = config.getInteger("host_port");

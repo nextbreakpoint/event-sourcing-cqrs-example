@@ -1,0 +1,33 @@
+{
+  "host_port": 8080,
+
+  "server_keystore_path": "../secrets/keystore-server.jks",
+  "server_keystore_secret": "secret",
+
+  "client_keystore_path": "../secrets/keystore-client.jks",
+  "client_keystore_secret": "secret",
+
+  "client_truststore_path": "../secrets/truststore-client.jks",
+  "client_truststore_secret": "secret",
+
+  "client_verify_host": false,
+
+  "jwt_keystore_path": "../secrets/keystore-auth.jceks",
+  "jwt_keystore_type": "jceks",
+  "jwt_keystore_secret": "secret",
+
+  "client_web_url": "https://localhost:8080",
+  "client_auth_url": "http://localhost:9090",
+  "client_designs_url": "http://localhost:9090",
+  "client_accounts_url": "http://localhost:9090",
+
+  "server_auth_url": "http://localhost:9090",
+  "server_designs_url": "http://localhost:9090",
+  "server_accounts_url": "http://localhost:9090",
+
+  "csrf_secret": "tshirts",
+
+  "graphite_reporter_enabled": false,
+  "graphite_host": "localhost",
+  "graphite_port": 2003
+}

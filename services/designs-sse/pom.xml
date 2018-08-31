@@ -10,7 +10,7 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>com.nextbreakpoint.shop.designs-sse</artifactId>
     <properties>
-        <container.port>3001</container.port>
+        <container.port>3041</container.port>
         <service.jar>${project.build.finalName}.${project.packaging}</service.jar>
         <config.name>designs-sse.json</config.name>
     </properties>
@@ -180,7 +180,7 @@
                                     </build>
                                     <run>
                                         <ports>
-                                            <port>${http.port}:3001</port>
+                                            <port>${http.port}:${container.port}</port>
                                         </ports>
                                         <volumes>
                                             <bind>
@@ -287,7 +287,7 @@
                                     </build>
                                     <run>
                                         <ports>
-                                            <port>3001:3001</port>
+                                            <port>${container.port}:${container.port}</port>
                                         </ports>
                                         <volumes>
                                             <bind>

@@ -1,7 +1,7 @@
 package com.nextbreakpoint.shop.accounts.persistence;
 
 import com.nextbreakpoint.shop.accounts.Store;
-import com.nextbreakpoint.shop.accounts.model.Account;
+import com.nextbreakpoint.shop.common.model.Account;
 import com.nextbreakpoint.shop.accounts.model.DeleteAccountRequest;
 import com.nextbreakpoint.shop.accounts.model.DeleteAccountResponse;
 import com.nextbreakpoint.shop.accounts.model.InsertAccountRequest;

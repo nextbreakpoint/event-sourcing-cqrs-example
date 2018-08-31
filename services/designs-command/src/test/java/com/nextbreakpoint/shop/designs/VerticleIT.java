@@ -336,7 +336,7 @@ public class VerticleIT {
     }
 
     private URL makeBaseURL(String path) throws MalformedURLException {
-        final Integer port = Integer.getInteger("http.port", 3001);
+        final Integer port = Integer.getInteger("http.port", 3031);
         final String normPath = path.startsWith("/") ? path.substring(1) : path;
         return new URL("https://localhost:" + port + "/" + normPath);
     }

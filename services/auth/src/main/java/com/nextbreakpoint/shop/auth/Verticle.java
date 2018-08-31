@@ -47,7 +47,7 @@ public class Verticle extends AbstractVerticle {
     }
 
     @Override
-    public void stop(Future<Void> stopFuture) throws Exception {
+    public void stop(Future<Void> stopFuture) {
         if (server != null) {
             server.rxClose().subscribe(x -> stopFuture.complete(), err -> stopFuture.fail(err));
         } else {

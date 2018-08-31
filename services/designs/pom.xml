@@ -159,7 +159,7 @@
                                     </build>
                                     <run>
                                         <ports>
-                                            <port>${http.port}:3001</port>
+                                            <port>${http.port}:${container.port}</port>
                                         </ports>
                                         <volumes>
                                             <bind>
@@ -261,7 +261,7 @@
                                     </build>
                                     <run>
                                         <ports>
-                                            <port>3001:3001</port>
+                                            <port>${container.port}:${container.port}</port>
                                         </ports>
                                         <volumes>
                                             <bind>

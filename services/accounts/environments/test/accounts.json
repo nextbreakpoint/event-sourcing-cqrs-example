@@ -1,5 +1,5 @@
 {
-  "host_port": 3021,
+  "host_port": 3002,
 
   "server_keystore_path": "../secrets/keystore-server.jks",
   "server_keystore_secret": "secret",
@@ -14,12 +14,10 @@
   "graphite_host": "localhost",
   "graphite_port": 2003,
 
-  "cassandra_cluster": "test",
-  "cassandra_keyspace": "designs",
-  "cassandra_username": "admin",
-  "cassandra_password": "password",
-  "cassandra_contactPoint": "localhost",
-  "cassandra_port": 9042,
-
-  "max_execution_time_in_millis": 30000
+  "jdbc_url": "jdbc:mysql://localhost:3306/accounts?useSSL=false&nullNamePatternMatchesAll=true",
+  "jdbc_driver": "com.mysql.cj.jdbc.Driver",
+  "jdbc_username": "verticle",
+  "jdbc_password": "password",
+  "jdbc_max_pool_size": 200,
+  "jdbc_min_pool_size": 20
 }

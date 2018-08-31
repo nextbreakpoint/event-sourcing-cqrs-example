@@ -132,7 +132,7 @@
                                     </build>
                                     <run>
                                         <ports>
-                                            <port>${http.port}:8080</port>
+                                            <port>${http.port}:${container.port}</port>
                                         </ports>
                                         <volumes>
                                             <bind>
@@ -227,7 +227,7 @@
                                     </build>
                                     <run>
                                         <ports>
-                                            <port>8080:8080</port>
+                                            <port>${container.port}:${container.port}</port>
                                         </ports>
                                         <volumes>
                                             <bind>

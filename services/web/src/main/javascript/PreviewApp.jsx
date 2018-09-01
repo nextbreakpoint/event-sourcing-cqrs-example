@@ -32,7 +32,7 @@ class App extends React.Component {
     constructor(props) {
         super(props)
 
-        this.state = {role: 'anonymous', design: '', modified: 0}
+        this.state = {role: 'anonymous', design: '', timestamp: 0}
 
         this.loadAccount = this.loadAccount.bind(this)
         this.loadDesign = this.loadDesign.bind(this)
@@ -106,7 +106,7 @@ class App extends React.Component {
 
                    console.log(event)
 
-                   if (offset > component.state.modified) {
+                   if (offset > component.state.timestamp) {
                       console.log("Reload design")
 
                       component.reloadDesign()
@@ -181,13 +181,13 @@ class App extends React.Component {
             .then(function (content) {
                 console.log(content.data)
 
-                let modified = content.metadata['x-modified']
+                let timestamp = Date.now();
 
                 let design = JSON.parse(content.data.json)
 
-                component.setState(Object.assign(component.state, {design: design, modified: modified}))
+                component.setState(Object.assign(component.state, {design: design, timestamp: timestamp}))
 
-                component.installWatcher(modified, uuid)
+                //component.installWatcher(timestamp, uuid)
             })
             .catch(function (error) {
                 console.log(error)
@@ -208,13 +208,13 @@ class App extends React.Component {
             .then(function (content) {
                 let envelop = content.data
 
-                let modified = content.metadata['x-modified']
+                let timestamp = Date.now();
 
                 console.log(envelop)
 
                 let design = JSON.parse(envelop.json)
 
-                component.setState(Object.assign(component.state, {design: design, modified: modified}))
+                component.setState(Object.assign(component.state, {design: design, timestamp: timestamp}))
             })
             .catch(function (error) {
                 console.log(error)
@@ -225,7 +225,7 @@ class App extends React.Component {
 
     render() {
         if (this.state.config) {
-            const url = this.state.config.designs_url + '/api/designs/' + uuid + '/{z}/{x}/{y}/256.png?t=' + this.state.modified
+            const url = this.state.config.designs_url + '/api/designs/' + uuid + '/{z}/{x}/{y}/256.png?t=' + this.state.timestamp
 
             const parent = { label: 'Designs', link: base_url + '/admin/designs' }
 

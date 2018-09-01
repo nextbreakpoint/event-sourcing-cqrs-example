@@ -21,5 +21,12 @@
   "jdbc_max_pool_size": 200,
   "jdbc_min_pool_size": 20,
 
+  "message_source": "service-designs",
+
+  "kafka_bootstrap_servers": "localhost:9092",
+  "kafka_group_id": "designs",
+
+  "sse_topic": "designs-sse",
+
   "max_execution_time_in_millis": 30000
 }

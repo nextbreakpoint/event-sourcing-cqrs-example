@@ -17,13 +17,13 @@ const cookies = new Cookies()
 
 const base_url = 'https://' + window.location.host
 
-var modified = 0;
+var timestamp = 0;
 
 class App extends React.Component {
     constructor(props) {
         super(props)
 
-        this.state = {role: 'anonymous', designs: [], modified: 0}
+        this.state = {role: 'anonymous', designs: [], timestamp: 0}
 
         this.loadAccount = this.loadAccount.bind(this)
         this.loadDesigns = this.loadDesigns.bind(this)
@@ -136,7 +136,7 @@ class App extends React.Component {
 
                    console.log(event)
 
-                   if (offset > component.state.modified) {
+                   if (offset > component.state.timestamp) {
                       console.log("Reload designs")
 
                       component.reloadDesigns()
@@ -211,11 +211,11 @@ class App extends React.Component {
             .then(function (content) {
                 let designs = content.data.map((uuid) => { return { uuid: uuid, selected: false }})
 
-                let modified = content.metadata['x-modified']
+                let timestamp = Date.now();
 
-                component.setState(Object.assign(component.state, {designs: designs, modified: modified}))
+                component.setState(Object.assign(component.state, {designs: designs, timestamp: timestamp}))
 
-                component.installWatcher(modified)
+                //component.installWatcher(timestamp)
             })
             .catch(function (error) {
                 console.log(error)
@@ -236,9 +236,9 @@ class App extends React.Component {
             .then(function (content) {
                 let designs = content.data.map((uuid) => { return { uuid: uuid, selected: false }})
 
-                let modified = content.metadata['x-modified']
+                let timestamp = Date.now();
 
-                component.setState(Object.assign(component.state, {designs: designs, modified: modified}))
+                component.setState(Object.assign(component.state, {designs: designs, timestamp: timestamp}))
             })
             .catch(function (error) {
                 console.log(error)
@@ -258,7 +258,7 @@ class App extends React.Component {
                     </Row>
                     <Row>
                         <Col s={12}>
-                            <Designs config={this.state.config} role={this.state.role} designs={this.state.designs} modified={this.state.modified} onDelete={this.handleDelete} onSelect={this.handleSelect}/>
+                            <Designs config={this.state.config} role={this.state.role} designs={this.state.designs} timestamp={this.state.timestamp} onDelete={this.handleDelete} onSelect={this.handleSelect}/>
                         </Col>
                     </Row>
                     <Row>
@@ -281,7 +281,7 @@ class App extends React.Component {
                     </Row>
                     <Row>
                         <Col s={12}>
-                            <Designs config={this.state.config} role={this.state.role} designs={this.state.designs} modified={this.state.modified} onDelete={this.handleDelete} onSelect={this.handleSelect}/>
+                            <Designs config={this.state.config} role={this.state.role} designs={this.state.designs} timestamp={this.state.timestamp} onDelete={this.handleDelete} onSelect={this.handleSelect}/>
                         </Col>
                     </Row>
                     <Row>

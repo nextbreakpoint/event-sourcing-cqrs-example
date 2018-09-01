@@ -1,4 +1,4 @@
-package com.nextbreakpoint.shop.designs.common;
+package com.nextbreakpoint.shop.common.vertx;
 
 import com.nextbreakpoint.shop.common.model.Mapper;
 import com.nextbreakpoint.shop.common.model.Message;
@@ -9,10 +9,10 @@ import io.vertx.core.json.Json;
 import java.util.Objects;
 import java.util.UUID;
 
-public class DesignChangedMessageMapper implements Mapper<DesignChangedEvent, Message> {
+public class DesignChangedMapper implements Mapper<DesignChangedEvent, Message> {
     private final String messageSource;
 
-    public DesignChangedMessageMapper(String messageSource) {
+    public DesignChangedMapper(String messageSource) {
         this.messageSource = Objects.requireNonNull(messageSource);
     }
 

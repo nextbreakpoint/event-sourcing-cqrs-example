@@ -1,4 +1,4 @@
-package com.nextbreakpoint.shop.common.vertx.handlers;
+package com.nextbreakpoint.shop.common.vertx.consumers;
 
 import com.nextbreakpoint.shop.common.model.Message;
 import io.vertx.core.json.JsonObject;

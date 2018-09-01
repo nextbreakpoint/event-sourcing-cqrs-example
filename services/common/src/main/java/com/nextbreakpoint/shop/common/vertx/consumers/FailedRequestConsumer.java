@@ -1,4 +1,4 @@
-package com.nextbreakpoint.shop.common.vertx.handlers;
+package com.nextbreakpoint.shop.common.vertx.consumers;
 
 import com.nextbreakpoint.shop.common.model.Failure;
 import io.vertx.rxjava.ext.web.RoutingContext;

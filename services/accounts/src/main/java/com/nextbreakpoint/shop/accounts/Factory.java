@@ -21,10 +21,11 @@ import com.nextbreakpoint.shop.accounts.model.ListAccountsRequest;
 import com.nextbreakpoint.shop.accounts.model.ListAccountsResponse;
 import com.nextbreakpoint.shop.accounts.model.LoadAccountRequest;
 import com.nextbreakpoint.shop.accounts.model.LoadAccountResponse;
-import com.nextbreakpoint.shop.common.vertx.handlers.DefaultHandler;
-import com.nextbreakpoint.shop.common.vertx.handlers.FailedRequestConsumer;
-import com.nextbreakpoint.shop.common.vertx.handlers.OptionalConsumer;
-import com.nextbreakpoint.shop.common.vertx.handlers.SimpleJsonConsumer;
+import com.nextbreakpoint.shop.common.vertx.TemplateHandler;
+import com.nextbreakpoint.shop.common.vertx.consumers.FailedRequestConsumer;
+import com.nextbreakpoint.shop.common.vertx.consumers.OptionalConsumer;
+import com.nextbreakpoint.shop.common.vertx.consumers.SimpleJsonConsumer;
+import io.vertx.core.Handler;
 import io.vertx.rxjava.ext.web.RoutingContext;
 
 import java.util.Optional;
@@ -32,8 +33,8 @@ import java.util.Optional;
 public class Factory {
     private Factory() {}
 
-    public static DefaultHandler<RoutingContext, DeleteAccountRequest, DeleteAccountResponse, String> createDeleteAccountHandler(Store store) {
-        return DefaultHandler.<RoutingContext, DeleteAccountRequest, DeleteAccountResponse, String>builder()
+    public static Handler<RoutingContext> createDeleteAccountHandler(Store store) {
+        return TemplateHandler.<RoutingContext, DeleteAccountRequest, DeleteAccountResponse, String>builder()
                 .withInputMapper(new DeleteAccountRequestMapper())
                 .withOutputMapper(new DeleteAccountResponseMapper())
                 .withController(new DeleteAccountController(store))
@@ -42,8 +43,8 @@ public class Factory {
                 .build();
     }
 
-    public static DefaultHandler<RoutingContext, InsertAccountRequest, InsertAccountResponse, String> createInsertAccountHandler(Store store) {
-        return DefaultHandler.<RoutingContext, InsertAccountRequest, InsertAccountResponse, String>builder()
+    public static Handler<RoutingContext> createInsertAccountHandler(Store store) {
+        return TemplateHandler.<RoutingContext, InsertAccountRequest, InsertAccountResponse, String>builder()
                 .withInputMapper(new InsertAccountRequestMapper())
                 .withOutputMapper(new InsertAccountResponseMapper())
                 .withController(new InsertAccountController(store))
@@ -52,8 +53,8 @@ public class Factory {
                 .build();
     }
 
-    public static DefaultHandler<RoutingContext, ListAccountsRequest, ListAccountsResponse, String> createListAccountsHandler(Store store) {
-        return DefaultHandler.<RoutingContext, ListAccountsRequest, ListAccountsResponse, String>builder()
+    public static Handler<RoutingContext> createListAccountsHandler(Store store) {
+        return TemplateHandler.<RoutingContext, ListAccountsRequest, ListAccountsResponse, String>builder()
                 .withInputMapper(new ListAccountsRequestMapper())
                 .withOutputMapper(new ListAccountsResponseMapper())
                 .withController(new ListAccountsController(store))
@@ -62,8 +63,8 @@ public class Factory {
                 .build();
     }
 
-    public static DefaultHandler<RoutingContext, LoadAccountRequest, LoadAccountResponse, Optional<String>> createLoadAccountHandler(Store store) {
-        return DefaultHandler.<RoutingContext, LoadAccountRequest, LoadAccountResponse, Optional<String>>builder()
+    public static Handler<RoutingContext> createLoadAccountHandler(Store store) {
+        return TemplateHandler.<RoutingContext, LoadAccountRequest, LoadAccountResponse, Optional<String>>builder()
                 .withInputMapper(new LoadAccountRequestMapper())
                 .withOutputMapper(new LoadAccountResponseMapper())
                 .withController(new LoadAccountController(store))
@@ -72,8 +73,8 @@ public class Factory {
                 .build();
     }
 
-    public static DefaultHandler<RoutingContext, LoadAccountRequest, LoadAccountResponse, Optional<String>> createLoadSelfAccountHandler(Store store) {
-        return DefaultHandler.<RoutingContext, LoadAccountRequest, LoadAccountResponse,  Optional<String>>builder()
+    public static Handler<RoutingContext> createLoadSelfAccountHandler(Store store) {
+        return TemplateHandler.<RoutingContext, LoadAccountRequest, LoadAccountResponse,  Optional<String>>builder()
                 .withInputMapper(new LoadSelfAccountRequestMapper())
                 .withOutputMapper(new LoadAccountResponseMapper())
                 .withController(new LoadAccountController(store))

@@ -1,8 +1,8 @@
 package com.nextbreakpoint.shop.designs;
 
-import com.nextbreakpoint.shop.common.vertx.handlers.DefaultHandler;
-import com.nextbreakpoint.shop.common.vertx.handlers.FailedRequestConsumer;
-import com.nextbreakpoint.shop.common.vertx.handlers.SimpleJsonConsumer;
+import com.nextbreakpoint.shop.common.vertx.TemplateHandler;
+import com.nextbreakpoint.shop.common.vertx.consumers.FailedRequestConsumer;
+import com.nextbreakpoint.shop.common.vertx.consumers.SimpleJsonConsumer;
 import com.nextbreakpoint.shop.common.model.commands.DeleteDesignCommand;
 import com.nextbreakpoint.shop.common.model.commands.InsertDesignCommand;
 import com.nextbreakpoint.shop.common.model.commands.UpdateDesignCommand;
@@ -19,14 +19,15 @@ import com.nextbreakpoint.shop.designs.controllers.update.UpdateDesignInputMappe
 import com.nextbreakpoint.shop.designs.controllers.update.UpdateDesignMessageMapper;
 import com.nextbreakpoint.shop.designs.controllers.update.UpdateDesignOutputMapper;
 import com.nextbreakpoint.shop.designs.model.CommandResult;
+import io.vertx.core.Handler;
 import io.vertx.rxjava.ext.web.RoutingContext;
 import io.vertx.rxjava.kafka.client.producer.KafkaProducer;
 
 public class Factory {
     private Factory() {}
 
-    public static DefaultHandler<RoutingContext, InsertDesignCommand, CommandResult, String> createInsertDesignHandler(KafkaProducer<String, String> producer, String topic, String messageSource) {
-        return DefaultHandler.<RoutingContext, InsertDesignCommand, CommandResult, String>builder()
+    public static Handler<RoutingContext> createInsertDesignHandler(KafkaProducer<String, String> producer, String topic, String messageSource) {
+        return TemplateHandler.<RoutingContext, InsertDesignCommand, CommandResult, String>builder()
                 .withInputMapper(new InsertDesignInputMapper())
                 .withOutputMapper(new InsertDesignOutputMapper())
                 .withController(new InsertDesignController(topic, producer, new InsertDesignMessageMapper(messageSource)))
@@ -35,8 +36,8 @@ public class Factory {
                 .build();
     }
 
-    public static DefaultHandler<RoutingContext, UpdateDesignCommand, CommandResult, String> createUpdateDesignHandler(KafkaProducer<String, String> producer, String topic, String messageSource) {
-        return DefaultHandler.<RoutingContext, UpdateDesignCommand, CommandResult, String>builder()
+    public static Handler<RoutingContext> createUpdateDesignHandler(KafkaProducer<String, String> producer, String topic, String messageSource) {
+        return TemplateHandler.<RoutingContext, UpdateDesignCommand, CommandResult, String>builder()
                 .withInputMapper(new UpdateDesignInputMapper())
                 .withOutputMapper(new UpdateDesignOutputMapper())
                 .withController(new UpdateDesignController(topic, producer, new UpdateDesignMessageMapper(messageSource)))
@@ -45,8 +46,8 @@ public class Factory {
                 .build();
     }
 
-    public static DefaultHandler<RoutingContext, DeleteDesignCommand, CommandResult, String> createDeleteDesignHandler(KafkaProducer<String, String> producer, String topic, String messageSource) {
-        return DefaultHandler.<RoutingContext, DeleteDesignCommand, CommandResult, String>builder()
+    public static Handler<RoutingContext> createDeleteDesignHandler(KafkaProducer<String, String> producer, String topic, String messageSource) {
+        return TemplateHandler.<RoutingContext, DeleteDesignCommand, CommandResult, String>builder()
                 .withInputMapper(new DeleteDesignInputMapper())
                 .withOutputMapper(new DeleteDesignOutputMapper())
                 .withController(new DeleteDesignController(topic, producer, new DeleteDesignMessageMapper(messageSource)))

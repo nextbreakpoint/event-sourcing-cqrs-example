@@ -6,6 +6,7 @@ import com.nextbreakpoint.shop.common.vertx.AccessHandler;
 import com.nextbreakpoint.shop.common.vertx.CORSHandlerFactory;
 import com.nextbreakpoint.shop.common.vertx.JDBCClientFactory;
 import com.nextbreakpoint.shop.common.vertx.JWTProviderFactory;
+import com.nextbreakpoint.shop.common.vertx.KafkaClientFactory;
 import com.nextbreakpoint.shop.common.vertx.ResponseHelper;
 import com.nextbreakpoint.shop.common.vertx.ServerUtil;
 import com.nextbreakpoint.shop.designs.handlers.TileHandler;
@@ -27,6 +28,7 @@ import io.vertx.rxjava.ext.web.handler.CookieHandler;
 import io.vertx.rxjava.ext.web.handler.CorsHandler;
 import io.vertx.rxjava.ext.web.handler.LoggerHandler;
 import io.vertx.rxjava.ext.web.handler.TimeoutHandler;
+import io.vertx.rxjava.kafka.client.producer.KafkaProducer;
 import rx.Single;
 
 import static com.nextbreakpoint.shop.common.model.Authority.ADMIN;
@@ -40,6 +42,11 @@ import static com.nextbreakpoint.shop.common.model.Headers.CONTENT_TYPE;
 import static com.nextbreakpoint.shop.common.model.Headers.X_MODIFIED;
 import static com.nextbreakpoint.shop.common.model.Headers.X_XSRF_TOKEN;
 import static com.nextbreakpoint.shop.common.vertx.ServerUtil.UUID_REGEXP;
+import static com.nextbreakpoint.shop.designs.Factory.createDeleteDesignHandler;
+import static com.nextbreakpoint.shop.designs.Factory.createInsertDesignHandler;
+import static com.nextbreakpoint.shop.designs.Factory.createListDesignsHandler;
+import static com.nextbreakpoint.shop.designs.Factory.createLoadDesignHandler;
+import static com.nextbreakpoint.shop.designs.Factory.createUpdateDesignHandler;
 import static java.util.Arrays.asList;
 
 public class Verticle extends AbstractVerticle {
@@ -48,6 +55,7 @@ public class Verticle extends AbstractVerticle {
     private HttpServer server;
 
     public static void main(String[] args) {
+        System.setProperty("crypto.policy", "unlimited");
         System.setProperty("vertx.graphite.options.enabled", "true");
         System.setProperty("vertx.graphite.options.registryName", "exported");
 
@@ -88,7 +96,13 @@ public class Verticle extends AbstractVerticle {
 
         final String webUrl = config.getString("client_web_url");
 
+        final String sseTopic = config.getString("sse_topic");
+
+        final String messageSource = config.getString("message_source");
+
         final JWTAuth jwtProvider = JWTProviderFactory.create(vertx, config);
+
+        final KafkaProducer<String, String> producer = KafkaClientFactory.createProducer(vertx, config);
 
         final JDBCClient jdbcClient = JDBCClientFactory.create(vertx, config);
 
@@ -101,7 +115,7 @@ public class Verticle extends AbstractVerticle {
         mainRouter.route().handler(LoggerHandler.create());
         mainRouter.route().handler(BodyHandler.create());
         mainRouter.route().handler(CookieHandler.create());
-        mainRouter.route().handler(TimeoutHandler.create(30000));
+        mainRouter.route().handler(TimeoutHandler.create(90000));
 
         final CorsHandler corsHandler = CORSHandlerFactory.createWithAll(webUrl, asList(AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN, X_MODIFIED), asList(CONTENT_TYPE, X_XSRF_TOKEN, X_MODIFIED));
 
@@ -111,15 +125,15 @@ public class Verticle extends AbstractVerticle {
 
         final Handler getTileHandler = new AccessHandler(jwtProvider, new TileHandler(store, executor), onAccessDenied, asList(ADMIN, GUEST, ANONYMOUS));
 
-        final Handler listDesignsHandler = new AccessHandler(jwtProvider, Factory.createListDesignsHandler(store), onAccessDenied, asList(ADMIN, GUEST, ANONYMOUS));
+        final Handler listDesignsHandler = new AccessHandler(jwtProvider, createListDesignsHandler(store), onAccessDenied, asList(ADMIN, GUEST, ANONYMOUS));
 
-        final Handler loadDesignHandler = new AccessHandler(jwtProvider, Factory.createLoadDesignHandler(store), onAccessDenied, asList(ADMIN, GUEST, ANONYMOUS));
+        final Handler loadDesignHandler = new AccessHandler(jwtProvider, createLoadDesignHandler(store), onAccessDenied, asList(ADMIN, GUEST, ANONYMOUS));
 
-        final Handler insertDesignHandler = new AccessHandler(jwtProvider, Factory.createInsertDesignHandler(store), onAccessDenied, asList(ADMIN));
+        final Handler insertDesignHandler = new AccessHandler(jwtProvider, createInsertDesignHandler(store, sseTopic, messageSource, producer), onAccessDenied, asList(ADMIN));
 
-        final Handler updateDesignHandler = new AccessHandler(jwtProvider, Factory.createUpdateDesignHandler(store), onAccessDenied, asList(ADMIN));
+        final Handler updateDesignHandler = new AccessHandler(jwtProvider, createUpdateDesignHandler(store, sseTopic, messageSource, producer), onAccessDenied, asList(ADMIN));
 
-        final Handler deleteDesignHandler = new AccessHandler(jwtProvider, Factory.createDeleteDesignHandler(store), onAccessDenied, asList(ADMIN));
+        final Handler deleteDesignHandler = new AccessHandler(jwtProvider, createDeleteDesignHandler(store, sseTopic, messageSource, producer), onAccessDenied, asList(ADMIN));
 
         apiRouter.get("/designs/:uuid/:zoom/:x/:y/:size.png")
                 .produces(IMAGE_PNG)

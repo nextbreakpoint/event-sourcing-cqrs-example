@@ -8,9 +8,7 @@ import com.nextbreakpoint.shop.common.vertx.SimpleTemplateHandler;
 import com.nextbreakpoint.shop.common.vertx.WebClientFactory;
 import com.nextbreakpoint.shop.web.handlers.ConfigHandler;
 import com.nextbreakpoint.shop.web.handlers.DesignDataHandler;
-import com.nextbreakpoint.shop.web.handlers.DesignWatchHandler;
 import com.nextbreakpoint.shop.web.handlers.DesignsDataHandler;
-import com.nextbreakpoint.shop.web.handlers.DesignsWatchHandler;
 import com.nextbreakpoint.shop.web.handlers.UserHandler;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -139,12 +137,6 @@ public class Verticle extends AbstractVerticle {
 
         mainRouter.get("/content/designs")
                 .handler(createPageHandler(engine, "content/designs"));
-
-        mainRouter.getWithRegex("/watch/([0-9]+)/designs/" + UUID_REGEXP)
-                .handler(DesignWatchHandler.create(vertx, jwtProvider, designsClient, config));
-
-        mainRouter.getWithRegex("/watch/([0-9]+)/designs")
-                .handler(DesignsWatchHandler.create(vertx, jwtProvider, designsClient, config));
 
         mainRouter.get("/error/*").handler(createErrorHandler(engine));
 

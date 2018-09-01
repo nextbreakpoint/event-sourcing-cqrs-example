@@ -1,4 +1,4 @@
-package com.nextbreakpoint.shop.common.vertx.handlers;
+package com.nextbreakpoint.shop.common.vertx;
 
 import com.nextbreakpoint.shop.common.model.Controller;
 import com.nextbreakpoint.shop.common.model.Mapper;
@@ -8,14 +8,14 @@ import rx.Single;
 import java.util.Objects;
 import java.util.function.BiConsumer;
 
-public class DefaultHandler<T, I, O, R> implements Handler<T> {
+public class TemplateHandler<T, I, O, R> implements Handler<T> {
     private final Mapper<T, I> inputMapper;
     private final Mapper<O, R> outputMapper;
     private final Controller<I, O> controller;
     private final BiConsumer<T, R> successHandler;
     private final BiConsumer<T, Throwable> failureHandler;
 
-    protected DefaultHandler(Mapper<T, I> inputMapper, Mapper<O, R> outputMapper, Controller<I, O> controller, BiConsumer<T, R> successHandler, BiConsumer<T, Throwable> failureHandler) {
+    protected TemplateHandler(Mapper<T, I> inputMapper, Mapper<O, R> outputMapper, Controller<I, O> controller, BiConsumer<T, R> successHandler, BiConsumer<T, Throwable> failureHandler) {
         this.inputMapper = Objects.requireNonNull(inputMapper);
         this.outputMapper = Objects.requireNonNull(outputMapper);
         this.controller = Objects.requireNonNull(controller);
@@ -70,8 +70,8 @@ public class DefaultHandler<T, I, O, R> implements Handler<T> {
             return this;
         }
 
-        public DefaultHandler<T, I, O, R> build() {
-            return new DefaultHandler<>(inputMapper, outputMapper, controller, successHandler, failureHandler);
+        public TemplateHandler<T, I, O, R> build() {
+            return new TemplateHandler<>(inputMapper, outputMapper, controller, successHandler, failureHandler);
         }
     }
 }

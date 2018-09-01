@@ -1,8 +1,8 @@
 package com.nextbreakpoint.shop.designs;
 
-import com.nextbreakpoint.shop.common.vertx.handlers.DefaultHandler;
-import com.nextbreakpoint.shop.common.vertx.handlers.EventBusConsumer;
-import com.nextbreakpoint.shop.common.vertx.handlers.FailedMessageConsumer;
+import com.nextbreakpoint.shop.common.vertx.TemplateHandler;
+import com.nextbreakpoint.shop.common.vertx.consumers.EventBusConsumer;
+import com.nextbreakpoint.shop.common.vertx.consumers.FailedMessageConsumer;
 import com.nextbreakpoint.shop.common.model.Message;
 import com.nextbreakpoint.shop.common.model.events.DesignChangedEvent;
 import com.nextbreakpoint.shop.designs.controllers.DesignChangedController;
@@ -17,7 +17,7 @@ public class Factory {
     private Factory() {}
 
     public static Handler<Message> createDesignChangedHandler(Vertx vertx, String address) {
-        return DefaultHandler.<Message, DesignChangedEvent, DesignChangedEvent, JsonObject>builder()
+        return TemplateHandler.<Message, DesignChangedEvent, DesignChangedEvent, JsonObject>builder()
                 .withInputMapper(new DesignChangedInputMapper())
                 .withOutputMapper(new DesignChangedOutputMapper())
                 .withController(new DesignChangedController())

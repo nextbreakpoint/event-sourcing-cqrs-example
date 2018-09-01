@@ -13,12 +13,12 @@ let Designs = class Designs extends React.Component {
         this.renderItem = this.renderItem.bind(this)
     }
 
-    renderItem(config, role, modified, design) {
-        return <DesignItem config={config} role={role} key={design.uuid} design={design} modified={modified} onSelect={this.props.onSelect}/>
+    renderItem(config, role, timestamp, design) {
+        return <DesignItem config={config} role={role} key={design.uuid} design={design} timestamp={timestamp} onSelect={this.props.onSelect}/>
     }
 
     renderList() {
-        return this.props.designs.map(design => this.renderItem(this.props.config, this.props.role, this.props.modified, design))
+        return this.props.designs.map(design => this.renderItem(this.props.config, this.props.role, this.props.timestamp, design))
     }
 
     render() {
@@ -58,7 +58,7 @@ let Designs = class Designs extends React.Component {
 Designs.propTypes = {
   config: PropTypes.object,
   designs: PropTypes.object,
-  modified: PropTypes.string,
+  timestamp: PropTypes.string,
   role: PropTypes.string,
   onDelete: PropTypes.func,
   onSelect: PropTypes.func

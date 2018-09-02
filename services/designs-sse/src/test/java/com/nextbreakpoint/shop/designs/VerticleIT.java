@@ -200,7 +200,7 @@ public class VerticleIT {
 
     private JsonObject createProducerConfig() {
         final JsonObject config = new JsonObject();
-        config.put("kafka_bootstrapServers", System.getProperty("stub.host", "localhost") + ":9092");
+        config.put("kafka_bootstrapServers", System.getProperty("kafka.host", "localhost") + ":9092");
         return config;
     }
 

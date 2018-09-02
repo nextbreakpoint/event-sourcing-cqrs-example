@@ -322,7 +322,7 @@ public class VerticleIT {
 
     private JsonObject createCassandraConfig() {
         final JsonObject config = new JsonObject();
-        config.put("cassandra_contactPoint", System.getProperty("stub.host", "localhost"));
+        config.put("cassandra_contactPoint", System.getProperty("cassandra.host", "localhost"));
         config.put("cassandra_port", 9042);
         config.put("cassandra_cluster", "cassandra");
         config.put("cassandra_username", "admin");
@@ -332,13 +332,13 @@ public class VerticleIT {
 
     private JsonObject createProducerConfig() {
         final JsonObject config = new JsonObject();
-        config.put("kafka_bootstrapServers", System.getProperty("stub.host", "localhost") + ":9092");
+        config.put("kafka_bootstrapServers", System.getProperty("kafka.host", "localhost") + ":9092");
         return config;
     }
 
     private JsonObject createConsumerConfig(String group) {
         final JsonObject config = new JsonObject();
-        config.put("kafka_bootstrapServers", System.getProperty("stub.host", "localhost") + ":9092");
+        config.put("kafka_bootstrapServers", System.getProperty("kafka.host", "localhost") + ":9092");
         config.put("kafka_group_id", group);
         return config;
     }

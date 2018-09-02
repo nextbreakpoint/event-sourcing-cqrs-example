@@ -24,7 +24,6 @@
   "message_source": "service-designs",
 
   "kafka_bootstrap_servers": "localhost:9092",
-  "kafka_group_id": "designs",
 
   "sse_topic": "designs-sse",
 

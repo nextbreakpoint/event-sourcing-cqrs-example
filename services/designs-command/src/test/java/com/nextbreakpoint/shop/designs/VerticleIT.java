@@ -322,7 +322,7 @@ public class VerticleIT {
 
     private JsonObject createConsumerConfig(String group) {
         final JsonObject config = new JsonObject();
-        config.put("kafka_bootstrapServers", System.getProperty("stub.host", "localhost") + ":9092");
+        config.put("kafka_bootstrapServers", System.getProperty("kafka.host", "localhost") + ":9092");
         config.put("kafka_group_id", group);
         return config;
     }

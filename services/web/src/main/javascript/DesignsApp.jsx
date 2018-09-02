@@ -26,8 +26,8 @@ class App extends React.Component {
         this.state = {role: 'anonymous', designs: [], timestamp: 0}
 
         this.loadAccount = this.loadAccount.bind(this)
+        this.setupDesigns = this.setupDesigns.bind(this)
         this.loadDesigns = this.loadDesigns.bind(this)
-        this.reloadDesigns = this.reloadDesigns.bind(this)
         this.handleCreate = this.handleCreate.bind(this)
         this.handleDelete = this.handleDelete.bind(this)
         this.handleSelect = this.handleSelect.bind(this)
@@ -117,35 +117,37 @@ class App extends React.Component {
 
         this.setState(Object.assign(this.state, {role: 'anonymous', name: 'Stranger'}))
 
-        this.loadDesigns();
+        this.setupDesigns();
 
         //window.location = this.state.config.auth_url + "/auth/signout/admin/designs"
     }
 
-    installWatcher(offset) {
+    installWatcher(timestamp) {
         let component = this
 
         try {
             if (typeof(EventSource) !== "undefined") {
-                var source = new EventSource("/watch/" + offset + "/designs", { withCredentials: true })
-
-                source.addEventListener("message",  function(event) {
-                   let json = JSON.parse(event.data)
-
-                   let offset = json.offset
-
-                   console.log(event)
-
-                   if (offset > component.state.timestamp) {
-                      console.log("Reload designs")
-
-                      component.reloadDesigns()
-                   }
-                }, false)
+                var source = new EventSource(component.state.config.designs_sse_url + "/api/designs/events/" + timestamp, { withCredentials: true })
 
                 source.onerror = function(error) {
                    console.log(error)
                 }
+
+                source.onopen = function() {
+                  component.loadDesigns(timestamp)
+                }
+
+                source.addEventListener("update",  function(event) {
+                   let timestamp = Number(event.lastEventId)
+
+                   console.log(event)
+
+                   if (component.state.timestamp == undefined || timestamp > component.state.timestamp) {
+                      console.log("Reload designs")
+
+                      component.loadDesigns(timestamp)
+                   }
+                }, false)
             } else {
                 console.log("EventSource not available")
             }
@@ -188,18 +190,31 @@ class App extends React.Component {
 
                 component.setState(Object.assign(component.state, {role: role, name: name}))
 
-                component.loadDesigns()
+                component.setupDesigns()
             })
             .catch(function (error) {
                 cookies.remove('token', {domain: window.location.hostname})
 
                 component.setState(Object.assign(component.state, {role: 'anonymous', name: 'Stranger'}))
 
-                component.loadDesigns()
+                component.setupDesigns()
             })
     }
 
-    loadDesigns() {
+    setupDesigns() {
+        let component = this
+
+        let config = {
+            timeout: 10000,
+            withCredentials: true
+        }
+
+        let timestamp = Date.now();
+
+        component.installWatcher(timestamp)
+    }
+
+    loadDesigns(timestamp) {
         let component = this
 
         let config = {
@@ -210,33 +225,6 @@ class App extends React.Component {
         axios.get(component.state.config.designs_url + '/api/designs', config)
             .then(function (content) {
                 let designs = content.data.map((uuid) => { return { uuid: uuid, selected: false }})
-
-                let timestamp = Date.now();
-
-                component.setState(Object.assign(component.state, {designs: designs, timestamp: timestamp}))
-
-                //component.installWatcher(timestamp)
-            })
-            .catch(function (error) {
-                console.log(error)
-
-                component.setState(Object.assign(component.state, {designs: []}))
-            })
-    }
-
-    reloadDesigns() {
-        let component = this
-
-        let config = {
-            timeout: 10000,
-            withCredentials: true
-        }
-
-        axios.get(component.state.config.designs_url + '/api/designs', config)
-            .then(function (content) {
-                let designs = content.data.map((uuid) => { return { uuid: uuid, selected: false }})
-
-                let timestamp = Date.now();
 
                 component.setState(Object.assign(component.state, {designs: designs, timestamp: timestamp}))
             })

@@ -17,7 +17,6 @@ import java.util.stream.Collectors;
 import static com.nextbreakpoint.shop.common.model.ContentType.APPLICATION_JSON;
 import static com.nextbreakpoint.shop.common.model.Headers.ACCEPT;
 import static com.nextbreakpoint.shop.common.model.Headers.AUTHORIZATION;
-import static com.nextbreakpoint.shop.common.model.Headers.X_MODIFIED;
 
 public class DesignsDataHandler implements Handler<RoutingContext> {
     private final WebClient client;
@@ -51,10 +50,6 @@ public class DesignsDataHandler implements Handler<RoutingContext> {
         try {
             final List<DesignResource> objects = (List<DesignResource>) response.bodyAsJson(List.class).stream().map(uuid -> makeDesign((String)uuid)).collect(Collectors.toList());
 
-            final String modified = response.getHeader(X_MODIFIED);
-
-            routingContext.put("modified", modified);
-            routingContext.put("offset", modified);
             routingContext.put("designs", objects);
 
             routingContext.next();

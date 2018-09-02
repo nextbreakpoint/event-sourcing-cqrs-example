@@ -32,8 +32,8 @@ public class InsertDesignController implements Controller<InsertDesignCommand, C
     public Single<CommandResult> onNext(InsertDesignCommand command) {
         return createRecord(command)
                 .flatMap(record -> producer.rxWrite(record))
-                .map(record -> new CommandResult(command.getUuid(), CommandStatus.SUCCESS))
                 .doOnError(err -> LOG.error("Failed to write record into Kafka", err))
+                .map(record -> new CommandResult(command.getUuid(), CommandStatus.SUCCESS))
                 .onErrorReturn(err -> new CommandResult(command.getUuid(), CommandStatus.FAILURE));
     }
 

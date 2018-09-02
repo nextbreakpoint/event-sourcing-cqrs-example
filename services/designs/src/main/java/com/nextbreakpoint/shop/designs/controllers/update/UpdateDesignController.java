@@ -43,7 +43,7 @@ public class UpdateDesignController implements Controller<UpdateDesignRequest, U
                 .onErrorReturn(err -> response);
     }
 
-    private Single<KafkaProducerRecord<String, String>> createRecord(UpdateDesignResponse response) {
+    protected Single<KafkaProducerRecord<String, String>> createRecord(UpdateDesignResponse response) {
         return Single.fromCallable(() -> KafkaProducerRecord.create(topic, response.getUuid().toString(), Json.encode(mapper.transform(new DesignChangedEvent(response.getUuid(), System.currentTimeMillis())))));
     }
 }

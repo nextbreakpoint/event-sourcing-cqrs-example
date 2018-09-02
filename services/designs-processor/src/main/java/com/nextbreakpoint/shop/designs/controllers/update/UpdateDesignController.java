@@ -36,11 +36,16 @@ public class UpdateDesignController implements Controller<UpdateDesignCommand, C
     public Single<CommandResult> onNext(UpdateDesignCommand command) {
         return store.updateDesign(command)
                 .map(result -> new DesignChangedEvent(result.getUuid(), System.currentTimeMillis()))
-                .flatMap(this::createRecord)
-                .flatMap(record -> producer.rxWrite(record))
+                .flatMap(this::sendMessage)
                 .map(metadata -> new CommandResult(command.getUuid(), CommandStatus.SUCCESS))
-                .doOnError(err -> logger.error("Failed to write record into Kafka", err))
                 .onErrorReturn(err -> new CommandResult(command.getUuid(), CommandStatus.FAILURE));
+    }
+
+    protected Single<DesignChangedEvent> sendMessage(DesignChangedEvent event) {
+        return createRecord(event)
+                .flatMap(record -> producer.rxWrite(record).map(metadata -> event))
+                .doOnError(err -> logger.error("Failed to write record into Kafka", err))
+                .onErrorReturn(err -> event);
     }
 
     protected Single<KafkaProducerRecord<String, String>> createRecord(DesignChangedEvent event) {

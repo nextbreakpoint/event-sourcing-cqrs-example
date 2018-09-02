@@ -112,9 +112,9 @@ public class Verticle extends AbstractVerticle {
 
         final CorsHandler corsHandler = CORSHandlerFactory.createWithAll(webUrl, asList(AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN, X_MODIFIED), asList(CONTENT_TYPE, X_XSRF_TOKEN, X_MODIFIED));
 
-        apiRouter.route("/designs/*").handler(corsHandler);
+        apiRouter.route("/designs/q/*").handler(corsHandler);
 
-        final Handler<RoutingContext> onAccessDenied = rc -> rc.fail(Failure.accessDenied("Authorisation failed"));
+        final Handler<RoutingContext> onAccessDenied = routingContext -> routingContext.fail(Failure.accessDenied("Authorisation failed"));
 
         final Handler getTileHandler = new AccessHandler(jwtProvider, new TileHandler(store, executor), onAccessDenied, asList(ADMIN, GUEST, ANONYMOUS));
 
@@ -122,19 +122,19 @@ public class Verticle extends AbstractVerticle {
 
         final Handler loadDesignHandler = new AccessHandler(jwtProvider, createLoadDesignHandler(store), onAccessDenied, asList(ADMIN, GUEST, ANONYMOUS));
 
-        apiRouter.get("/designs/:uuid/:zoom/:x/:y/:size.png")
+        apiRouter.get("/designs/q/:uuid/:zoom/:x/:y/:size.png")
                 .produces(IMAGE_PNG)
                 .handler(getTileHandler);
 
-        apiRouter.getWithRegex("/designs/" + UUID_REGEXP)
+        apiRouter.getWithRegex("/designs/q/" + UUID_REGEXP)
                 .produces(APPLICATION_JSON)
                 .handler(loadDesignHandler);
 
-        apiRouter.get("/designs")
+        apiRouter.get("/designs/q")
                 .produces(APPLICATION_JSON)
                 .handler(listDesignsHandler);
 
-        apiRouter.options("/designs/*")
+        apiRouter.options("/designs/q/*")
                 .handler(ResponseHelper::sendNoContent);
 
         mainRouter.route().failureHandler(ResponseHelper::sendFailure);

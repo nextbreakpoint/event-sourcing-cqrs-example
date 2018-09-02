@@ -29,14 +29,14 @@ public class AccessHandler implements Handler<RoutingContext> {
         Authentication.isUserAuthorized(jwtProvider, routingContext, authorities)
                 .doOnSuccess(user -> logger.debug("User is authenticated and authorized"))
                 .doOnError(err -> logger.debug("Authorization failed", err))
-                .subscribe(user -> processUser(routingContext, user), err -> processError(routingContext));
+                .subscribe(user -> onUserAuthorized(routingContext, user), err -> onAuthenticationError(routingContext));
     }
 
-    private void processError(RoutingContext routingContext) {
+    private void onAuthenticationError(RoutingContext routingContext) {
         onAccessDenied.handle(routingContext);
     }
 
-    private void processUser(RoutingContext routingContext, User user) {
+    private void onUserAuthorized(RoutingContext routingContext, User user) {
         routingContext.setUser(user);
         onAccessGranted.handle(routingContext);
     }

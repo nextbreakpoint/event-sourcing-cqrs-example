@@ -14,7 +14,6 @@ import io.vertx.rxjava.ext.web.client.WebClient;
 import static com.nextbreakpoint.shop.common.model.ContentType.APPLICATION_JSON;
 import static com.nextbreakpoint.shop.common.model.Headers.ACCEPT;
 import static com.nextbreakpoint.shop.common.model.Headers.AUTHORIZATION;
-import static com.nextbreakpoint.shop.common.model.Headers.X_MODIFIED;
 
 public class DesignDataHandler implements Handler<RoutingContext> {
     private final WebClient client;
@@ -62,10 +61,6 @@ public class DesignDataHandler implements Handler<RoutingContext> {
 
             final DesignResource object = makeDesign(uuid, created, updated, manifest, metadata, script);
 
-            final String modified = response.getHeader(X_MODIFIED);
-
-            routingContext.put("modified", modified);
-            routingContext.put("offset", modified);
             routingContext.put("design", object);
 
             routingContext.next();

@@ -122,6 +122,53 @@
                             <autoCreateCustomNetworks>true</autoCreateCustomNetworks>
                             <images>
                                 <image>
+                                    <name>nextbreakpoint/zookeeper:3.4.12-1</name>
+                                    <alias>zookeeper-designs</alias>
+                                    <run>
+                                        <ports>
+                                            <port>2181:2181</port>
+                                        </ports>
+                                        <env>
+                                            <ZOO_MY_ID>1</ZOO_MY_ID>
+                                        </env>
+                                        <network>
+                                            <mode>custom</mode>
+                                            <name>shop-test</name>
+                                            <alias>zookeeper-designs</alias>
+                                        </network>
+                                        <wait>
+                                            <log>binding to port 0.0.0.0/0.0.0.0:2181</log>
+                                            <time>60000</time>
+                                        </wait>
+                                    </run>
+                                </image>
+                                <image>
+                                    <name>nextbreakpoint/kafka:1.1.0-1</name>
+                                    <alias>kafka-designs</alias>
+                                    <run>
+                                        <ports>
+                                            <port>9092:9092</port>
+                                        </ports>
+                                        <env>
+                                            <ZK_CONNECT>zookeeper-designs:2181</ZK_CONNECT>
+                                            <ADVERTISED_HOST>kafka-designs</ADVERTISED_HOST>
+                                            <BROKER_ID>1</BROKER_ID>
+                                        </env>
+                                        <network>
+                                            <mode>custom</mode>
+                                            <name>shop-test</name>
+                                            <alias>kafka-designs</alias>
+                                        </network>
+                                        <wait>
+                                            <log>started \(kafka.server.KafkaServer\)</log>
+                                            <time>60000</time>
+                                        </wait>
+                                        <dependsOn>
+                                            <container>zookeeper-designs</container>
+                                        </dependsOn>
+                                    </run>
+                                </image>
+                                <image>
                                     <name>mysql:8.0.2</name>
                                     <alias>mysql-designs</alias>
                                     <run>
@@ -174,9 +221,11 @@
                                         </network>
                                         <wait>
                                             <log>Succeeded in deploying verticle</log>
-                                            <time>60000</time>
+                                            <time>180000</time>
                                         </wait>
                                         <dependsOn>
+                                            <container>zookeeper-designs</container>
+                                            <container>kafka-designs</container>
                                             <container>mysql-designs</container>
                                         </dependsOn>
                                     </run>
@@ -199,6 +248,14 @@
                                 <image>
                                     <name>mysql:8.0.2</name>
                                     <alias>mysql-designs</alias>
+                                </image>
+                                <image>
+                                    <name>nextbreakpoint/kafka:1.1.0-1</name>
+                                    <alias>kafka-designs</alias>
+                                </image>
+                                <image>
+                                    <name>nextbreakpoint/zookeeper:3.4.12-1</name>
+                                    <alias>zookeeper-designs</alias>
                                 </image>
                             </images>
                         </configuration>

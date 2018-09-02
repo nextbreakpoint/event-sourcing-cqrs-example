@@ -15,21 +15,21 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-public class WatchHandler implements Handler<RoutingContext> {
-    private final Logger logger = LoggerFactory.getLogger(WatchHandler.class.getName());
+public class EventsHandler implements Handler<RoutingContext> {
+    private final Logger logger = LoggerFactory.getLogger(EventsHandler.class.getName());
 
     private Map<String, Set<Watcher>> watcherMap = new HashMap<>();
 
     private final Vertx vertx;
 
-    protected WatchHandler(Vertx vertx) {
+    protected EventsHandler(Vertx vertx) {
         this.vertx = vertx;
 
-        vertx.eventBus().consumer("watch.input", message -> processMessage((JsonObject) message.body()));
+        vertx.eventBus().consumer("events.handler.input", message -> processMessage((JsonObject) message.body()));
     }
 
-    public static WatchHandler create(Vertx vertx) {
-        return new WatchHandler(vertx);
+    public static EventsHandler create(Vertx vertx) {
+        return new EventsHandler(vertx);
     }
 
     public void handle(RoutingContext routingContext) {
@@ -73,7 +73,7 @@ public class WatchHandler implements Handler<RoutingContext> {
 
         routingContext.response().write(makeEvent("open", 0L, "{\"session\":\"" + sessionId + "\"}"));
 
-        final MessageConsumer consumer = vertx.eventBus().consumer("watch.output." + sessionId, msg -> {
+        final MessageConsumer consumer = vertx.eventBus().consumer("events.handler.output." + sessionId, msg -> {
             try {
                 final JsonObject message = (JsonObject) msg.body();
 
@@ -121,7 +121,7 @@ public class WatchHandler implements Handler<RoutingContext> {
 
         final JsonObject message = makeMessageData(timestamp);
 
-        vertx.eventBus().publish("watch.output." + watcher.getSessionId(), message);
+        vertx.eventBus().publish("events.handler.output." + watcher.getSessionId(), message);
     }
 
     private JsonObject makeMessageData(Long timestamp) {

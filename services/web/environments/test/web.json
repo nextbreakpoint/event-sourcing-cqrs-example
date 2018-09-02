@@ -20,10 +20,15 @@
   "client_auth_url": "http://localhost:9090",
   "client_designs_url": "http://localhost:9090",
   "client_accounts_url": "http://localhost:9090",
+  "designs_processor_url": "http://localhost:9090",
+  "designs_command_url": "http://localhost:9090",
+  "designs_query_url": "http://localhost:9090",
+  "designs_sse_url": "http://localhost:9090",
 
   "server_auth_url": "http://localhost:9090",
   "server_designs_url": "http://localhost:9090",
   "server_accounts_url": "http://localhost:9090",
+  "server_designs_query_url": "http://localhost:9090",
 
   "csrf_secret": "tshirts",
 

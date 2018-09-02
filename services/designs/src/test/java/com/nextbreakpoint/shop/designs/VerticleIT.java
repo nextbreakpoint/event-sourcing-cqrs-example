@@ -41,6 +41,7 @@ import static com.jayway.restassured.RestAssured.given;
 import static com.nextbreakpoint.shop.common.model.Headers.AUTHORIZATION;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
+import static org.awaitility.Duration.FIVE_SECONDS;
 import static org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS;
 import static org.awaitility.Duration.TWO_SECONDS;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -208,7 +209,7 @@ public class VerticleIT {
 
       final String uuid1 = createDesign(authorization, createPostData(SCRIPT1));
 
-      await().atMost(TWO_SECONDS)
+      await().atMost(FIVE_SECONDS)
               .pollInterval(ONE_HUNDRED_MILLISECONDS)
               .untilAsserted(() -> {
                 assertThat(message[0]).isNotNull();
@@ -239,7 +240,7 @@ public class VerticleIT {
 
       updateDesign(authorization, uuid1, createPostData(SCRIPT2));
 
-      await().atMost(TWO_SECONDS)
+      await().atMost(FIVE_SECONDS)
               .pollInterval(ONE_HUNDRED_MILLISECONDS)
               .untilAsserted(() -> {
                 assertThat(message[0]).isNotNull();
@@ -280,7 +281,7 @@ public class VerticleIT {
 
       deleteDesign(authorization, uuid1);
 
-      await().atMost(TWO_SECONDS)
+      await().atMost(FIVE_SECONDS)
               .pollInterval(ONE_HUNDRED_MILLISECONDS)
               .untilAsserted(() -> {
                 assertThat(message[0]).isNotNull();

@@ -33,7 +33,6 @@ public class DeleteDesignController implements Controller<DeleteDesignRequest, D
     @Override
     public Single<DeleteDesignResponse> onNext(DeleteDesignRequest request) {
         return store.deleteDesign(request).flatMap(this::sendMessage);
-
     }
 
     protected Single<DeleteDesignResponse> sendMessage(DeleteDesignResponse response) {
@@ -43,7 +42,7 @@ public class DeleteDesignController implements Controller<DeleteDesignRequest, D
                 .onErrorReturn(err -> response);
     }
 
-    private Single<KafkaProducerRecord<String, String>> createRecord(DeleteDesignResponse response) {
+    protected Single<KafkaProducerRecord<String, String>> createRecord(DeleteDesignResponse response) {
         return Single.fromCallable(() -> KafkaProducerRecord.create(topic, response.getUuid().toString(), Json.encode(mapper.transform(new DesignChangedEvent(response.getUuid(), System.currentTimeMillis())))));
     }
 }

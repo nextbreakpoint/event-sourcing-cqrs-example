@@ -76,62 +76,62 @@ public class VerticleIT {
     }
 
     @Test
-    @DisplayName("Should allow OPTIONS on /designs without access token")
+    @DisplayName("Should allow OPTIONS on /designs/c without access token")
     public void shouldAllowOptionsOnDesignsWithoutAccessToken() throws MalformedURLException {
         given().config(restAssuredConfig)
                 .with().header("Origin", "https://localhost:8080")
-                .when().options(makeBaseURL("/api/designs"))
+                .when().options(makeBaseURL("/api/designs/c"))
                 .then().assertThat().statusCode(204)
                 .and().header("Access-Control-Allow-Origin", "https://localhost:8080")
                 .and().header("Access-Control-Allow-Credentials", "true");
     }
 
     @Test
-    @DisplayName("Should allow OPTIONS on /designs/id without access token")
+    @DisplayName("Should allow OPTIONS on /designs/c/id without access token")
     public void shouldAllowOptionsOnDesignsSlashIdWithoutAccessToken() throws MalformedURLException {
         given().config(restAssuredConfig)
                 .with().header("Origin", "https://localhost:8080")
-                .when().options(makeBaseURL("/api/designs/" + UUID.randomUUID().toString()))
+                .when().options(makeBaseURL("/api/designs/c/" + UUID.randomUUID().toString()))
                 .then().assertThat().statusCode(204)
                 .and().header("Access-Control-Allow-Origin", "https://localhost:8080")
                 .and().header("Access-Control-Allow-Credentials", "true");
     }
 
     @Test
-    @DisplayName("Should forbid POST on /designs without access token")
+    @DisplayName("Should forbid POST on /designs/c without access token")
     public void shouldForbidPostOnDesignsWithoutAccessToken() throws MalformedURLException {
         given().config(restAssuredConfig)
                 .and().contentType(ContentType.JSON)
                 .and().accept(ContentType.JSON)
                 .and().body(createPostData())
-                .when().post(makeBaseURL("/api/designs"))
+                .when().post(makeBaseURL("/api/designs/c"))
                 .then().assertThat().statusCode(403);
     }
 
     @Test
-    @DisplayName("Should forbid PUT on /designs/id without access token")
+    @DisplayName("Should forbid PUT on /designs/c/id without access token")
     public void shouldForbidPutOnDesignsSlashIdWithoutAccessToken() throws MalformedURLException {
         given().config(restAssuredConfig)
                 .and().contentType(ContentType.JSON)
                 .and().accept(ContentType.JSON)
                 .and().body(createPostData())
-                .when().put(makeBaseURL("/api/designs/" + UUID.randomUUID().toString()))
+                .when().put(makeBaseURL("/api/designs/c/" + UUID.randomUUID().toString()))
                 .then().assertThat().statusCode(403);
     }
 
     @Test
-    @DisplayName("Should forbid DELETE on /designs/id without access token")
+    @DisplayName("Should forbid DELETE on /designs/c/id without access token")
     public void shouldForbidDeleteOnDesignsSlashIdWithoutAccessToken() throws MalformedURLException {
         final String uuid = UUID.randomUUID().toString();
 
         given().config(restAssuredConfig)
                 .and().accept(ContentType.JSON)
-                .when().delete(makeBaseURL("/api/designs/" + uuid))
+                .when().delete(makeBaseURL("/api/designs/c/" + uuid))
                 .then().assertThat().statusCode(403);
     }
 
     @Test
-    @DisplayName("Should send a message after accepting POST on /designs")
+    @DisplayName("Should send a message after accepting POST on /designs/c")
     public void shouldAcceptPostOnDesigns() throws IOException {
         final String authorization = TestHelper.makeAuthorization("test", Arrays.asList(Authority.ADMIN));
 
@@ -178,7 +178,7 @@ public class VerticleIT {
     }
 
     @Test
-    @DisplayName("Should send a message after accepting PUT on /designs/id")
+    @DisplayName("Should send a message after accepting PUT on /designs/c/id")
     public void shouldAcceptPutOnDesignsSlashId() throws IOException {
         final String authorization = TestHelper.makeAuthorization("test", Arrays.asList(Authority.ADMIN));
 
@@ -227,7 +227,7 @@ public class VerticleIT {
     }
 
     @Test
-    @DisplayName("Should send a message after accepting DELETE on /designs/id")
+    @DisplayName("Should send a message after accepting DELETE on /designs/c/id")
     public void shouldAcceptDeleteOnDesignsSlashId() throws IOException {
         final String authorization = TestHelper.makeAuthorization("test", Arrays.asList(Authority.ADMIN));
 
@@ -282,7 +282,7 @@ public class VerticleIT {
         given().config(restAssuredConfig)
                 .and().header(AUTHORIZATION, authorization)
                 .and().accept(ContentType.JSON)
-                .when().delete(makeBaseURL("/api/designs/" + uuid))
+                .when().delete(makeBaseURL("/api/designs/c/" + uuid))
                 .then().assertThat().statusCode(202)
                 .and().contentType(ContentType.JSON);
     }
@@ -291,7 +291,7 @@ public class VerticleIT {
         given().config(restAssuredConfig)
                 .and().header(AUTHORIZATION, authorization)
                 .and().accept(ContentType.JSON)
-                .when().delete(makeBaseURL("/api/designs"))
+                .when().delete(makeBaseURL("/api/designs/c"))
                 .then().assertThat().statusCode(202)
                 .and().contentType(ContentType.JSON);
     }
@@ -302,7 +302,7 @@ public class VerticleIT {
                 .and().contentType(ContentType.JSON)
                 .and().accept(ContentType.JSON)
                 .and().body(design)
-                .when().post(makeBaseURL("/api/designs"))
+                .when().post(makeBaseURL("/api/designs/c"))
                 .then().assertThat().statusCode(202)
                 .and().contentType(ContentType.JSON);
 //            .and().body("messageId", notNullValue())
@@ -315,7 +315,7 @@ public class VerticleIT {
                 .and().contentType(ContentType.JSON)
                 .and().accept(ContentType.JSON)
                 .and().body(design)
-                .when().put(makeBaseURL("/api/designs/" + uuid))
+                .when().put(makeBaseURL("/api/designs/c/" + uuid))
                 .then().assertThat().statusCode(202)
                 .and().contentType(ContentType.JSON);
     }

@@ -77,7 +77,7 @@ public class VerticleIT {
         config.put("client_keystore_secret", "secret");
         config.put("client_truststore_path", "../secrets/truststore-client.jks");
         config.put("client_truststore_secret", "secret");
-        final Integer port = Integer.getInteger("http.port", 3001);
+        final Integer port = Integer.getInteger("http.port", 3041);
         eventSource = new EventSource(vertx, "https://localhost:" + port, config);
     }
 
@@ -118,7 +118,7 @@ public class VerticleIT {
         final String[] open = new String[]{null};
         final String[] update = new String[]{null};
 
-        eventSource.connect("/api/events/0", null, result -> {
+        eventSource.connect("/api/designs/events/0", null, result -> {
             connected[0] = result.succeeded();
             producer.rxWrite(createKafkaRecord(designChangedMessage)).subscribe();
         }).onMessage(sseMessage -> {
@@ -167,7 +167,7 @@ public class VerticleIT {
         final String[] open = new String[]{null};
         final String[] update = new String[]{null};
 
-        eventSource.connect("/api/events/0/" + designId, null, result -> {
+        eventSource.connect("/api/designs/events/0/" + designId, null, result -> {
             connected[0] = result.succeeded();
             producer.rxWrite(createKafkaRecord(designChangedMessage)).subscribe();
         }).onMessage(sseMessage -> {

@@ -32,8 +32,8 @@ public class UpdateDesignController implements Controller<UpdateDesignCommand, C
     public Single<CommandResult> onNext(UpdateDesignCommand command) {
         return createRecord(command)
                 .flatMap(record -> producer.rxWrite(record))
-                .map(record -> new CommandResult(command.getUuid(), CommandStatus.SUCCESS))
                 .doOnError(err -> LOG.error("Failed to write record into Kafka", err))
+                .map(record -> new CommandResult(command.getUuid(), CommandStatus.SUCCESS))
                 .onErrorReturn(err -> new CommandResult(command.getUuid(), CommandStatus.FAILURE));
     }
 

@@ -56,29 +56,29 @@ public class VerticleIT {
   }
 
   @Test
-  @DisplayName("Should allow OPTIONS on /designs without access token")
+  @DisplayName("Should allow OPTIONS on /designs/q without access token")
   public void shouldAllowOptionsOnDesignsWithoutAccessToken() throws MalformedURLException {
     given().config(restAssuredConfig)
             .with().header("Origin", "https://localhost:8080")
-            .when().options(makeBaseURL("/api/designs"))
+            .when().options(makeBaseURL("/api/designs/q"))
             .then().assertThat().statusCode(204)
             .and().header("Access-Control-Allow-Origin", "https://localhost:8080")
             .and().header("Access-Control-Allow-Credentials", "true");
   }
 
   @Test
-  @DisplayName("Should allow OPTIONS on /designs/id without access token")
+  @DisplayName("Should allow OPTIONS on /designs/q/id without access token")
   public void shouldAllowOptionsOnDesignsSlashIdWithoutAccessToken() throws MalformedURLException {
     given().config(restAssuredConfig)
             .with().header("Origin", "https://localhost:8080")
-            .when().options(makeBaseURL("/api/designs/" + UUID.randomUUID().toString()))
+            .when().options(makeBaseURL("/api/designs/q/" + UUID.randomUUID().toString()))
             .then().assertThat().statusCode(204)
             .and().header("Access-Control-Allow-Origin", "https://localhost:8080")
             .and().header("Access-Control-Allow-Credentials", "true");
   }
 
   @Test
-  @DisplayName("Should forbid GET on /designs when user has unknown authority")
+  @DisplayName("Should forbid GET on /designs/q when user has unknown authority")
   public void shouldForbidGetOnDesignsWhenUserHasUnknownAuthority() throws MalformedURLException {
     final String otherAuthorization = TestHelper.makeAuthorization("test", Arrays.asList("other"));
 
@@ -87,12 +87,12 @@ public class VerticleIT {
     given().config(restAssuredConfig)
             .with().header(AUTHORIZATION, otherAuthorization)
             .and().accept(ContentType.JSON)
-            .when().get(makeBaseURL("/api/designs"))
+            .when().get(makeBaseURL("/api/designs/q"))
             .then().assertThat().statusCode(403);
   }
 
   @Test
-  @DisplayName("Should forbid GET on /designs/id when user has unknown authority")
+  @DisplayName("Should forbid GET on /designs/q/id when user has unknown authority")
   public void shouldForbidGetOnDesignsSlashIdWhenUserHasUnknownAuthority() throws MalformedURLException {
     final String otherAuthorization = TestHelper.makeAuthorization("test", Arrays.asList("other"));
 
@@ -101,12 +101,12 @@ public class VerticleIT {
     given().config(restAssuredConfig)
             .with().header(AUTHORIZATION, otherAuthorization)
             .and().accept(ContentType.JSON)
-            .when().get(makeBaseURL("/api/designs/" + UUID_1))
+            .when().get(makeBaseURL("/api/designs/q/" + UUID_1))
             .then().assertThat().statusCode(403);
   }
 
   @Test
-  @DisplayName("Should forbid GET on /designs/id/zoom/x/y/256.png when user has unknown authority")
+  @DisplayName("Should forbid GET on /designs/q/id/zoom/x/y/256.png when user has unknown authority")
   public void shouldForbidGetOnDesignsSlashIdSlashLocationSlashSizeWhenUserHasUnknownAuthority() throws MalformedURLException {
     final String otherAuthorization = TestHelper.makeAuthorization("test", Arrays.asList("other"));
 
@@ -115,12 +115,12 @@ public class VerticleIT {
     given().config(restAssuredConfig)
             .with().header(AUTHORIZATION, otherAuthorization)
             .and().accept("image/png")
-            .when().get(makeBaseURL("/api/designs/" + UUID_2 + "/0/0/0/256.png"))
+            .when().get(makeBaseURL("/api/designs/q/" + UUID_2 + "/0/0/0/256.png"))
             .then().assertThat().statusCode(403);
   }
 
   @Test
-  @DisplayName("Should allow GET on /designs when user is anonymous")
+  @DisplayName("Should allow GET on /designs/q when user is anonymous")
   public void shouldAllowGetOnDesignsWhenUserIsAnonymous() throws MalformedURLException {
     final String authorization = TestHelper.makeAuthorization("test", Arrays.asList(Authority.ANONYMOUS));
 
@@ -132,7 +132,7 @@ public class VerticleIT {
   }
 
   @Test
-  @DisplayName("Should allow GET on /designs/id when user is anonymous")
+  @DisplayName("Should allow GET on /designs/q/id when user is anonymous")
   public void shouldAllowGetOnDesignsSlashIdWhenUserIsAnonymous() throws MalformedURLException {
     final String authorization = TestHelper.makeAuthorization("test", Arrays.asList(Authority.ANONYMOUS));
 
@@ -148,7 +148,7 @@ public class VerticleIT {
   }
 
   @Test
-  @DisplayName("Should allow GET on /designs/id/zoom/x/y/256.png when user is anonymous")
+  @DisplayName("Should allow GET on /designs/q/id/zoom/x/y/256.png when user is anonymous")
   public void shouldAllowGetOnDesignsSlashIdSlashLocationSlashSizeWhenUserIsAnonymous() throws IOException {
     final String authorization = TestHelper.makeAuthorization("test", Arrays.asList(Authority.ANONYMOUS));
 
@@ -162,7 +162,7 @@ public class VerticleIT {
   }
 
   @Test
-  @DisplayName("Should allow GET on /designs when user is admin")
+  @DisplayName("Should allow GET on /designs/q when user is admin")
   public void shouldAllowGetOnDesignsWhenUserIsAdmin() throws MalformedURLException {
     final String authorization = TestHelper.makeAuthorization("test", Arrays.asList(Authority.ADMIN));
 
@@ -174,7 +174,7 @@ public class VerticleIT {
   }
 
   @Test
-  @DisplayName("Should allow GET on /designs/id when user is admin")
+  @DisplayName("Should allow GET on /designs/q/id when user is admin")
   public void shouldAllowGetOnDesignsSlashIdWhenUserIsAdmin() throws MalformedURLException {
     final String authorization = TestHelper.makeAuthorization("test", Arrays.asList(Authority.ADMIN));
 
@@ -190,7 +190,7 @@ public class VerticleIT {
   }
 
   @Test
-  @DisplayName("Should allow GET on /designs/id/zoom/x/y/256.png when user is admin")
+  @DisplayName("Should allow GET on /designs/q/id/zoom/x/y/256.png when user is admin")
   public void shouldAllowGetOnDesignsSlashIdSlashLocationSlashSizeWhenUserIsAdmin() throws IOException {
     final String authorization = TestHelper.makeAuthorization("test", Arrays.asList(Authority.ADMIN));
 
@@ -204,7 +204,7 @@ public class VerticleIT {
   }
 
   @Test
-  @DisplayName("Should allow GET on /designs when user is guest")
+  @DisplayName("Should allow GET on /designs/q when user is guest")
   public void shouldAllowGetOnDesignsWhenUserIsGuest() throws MalformedURLException {
     final String authorization = TestHelper.makeAuthorization("test", Arrays.asList(Authority.GUEST));
 
@@ -216,7 +216,7 @@ public class VerticleIT {
   }
 
   @Test
-  @DisplayName("Should allow GET on /designs/id when user is guest")
+  @DisplayName("Should allow GET on /designs/q/id when user is guest")
   public void shouldAllowGetOnDesignsSlashIdWhenUserIsGuest() throws MalformedURLException {
     final String authorization = TestHelper.makeAuthorization("test", Arrays.asList(Authority.GUEST));
 
@@ -232,7 +232,7 @@ public class VerticleIT {
   }
 
   @Test
-  @DisplayName("Should allow GET on /designs/id/zoom/x/y/256.png when user is guest")
+  @DisplayName("Should allow GET on /designs/q/id/zoom/x/y/256.png when user is guest")
   public void shouldAllowGetOnDesignsSlashIdSlashLocationSlashSizeWhenUserIsGuest() throws IOException {
     final String authorization = TestHelper.makeAuthorization("test", Arrays.asList(Authority.GUEST));
 
@@ -246,7 +246,7 @@ public class VerticleIT {
   }
 
   @Test
-  @DisplayName("Should return NOT_FOUND when /designs/id does not exist")
+  @DisplayName("Should return NOT_FOUND when /designs/q/id does not exist")
   public void shouldReturnNotFoundWhenDeisgnDoesNotExist() throws MalformedURLException {
     final String authorization = TestHelper.makeAuthorization("test", Arrays.asList(Authority.ANONYMOUS));
 
@@ -255,12 +255,12 @@ public class VerticleIT {
     given().config(restAssuredConfig)
             .with().header(AUTHORIZATION, authorization)
             .and().accept(ContentType.JSON)
-            .when().get(makeBaseURL("/api/designs/" + NON_EXISTANT_UUID.toString()))
+            .when().get(makeBaseURL("/api/designs/q/" + NON_EXISTANT_UUID.toString()))
             .then().assertThat().statusCode(404);
   }
 
   @Test
-  @DisplayName("Should return NOT_FOUND when /designs/id/zoom/x/y/256.png does not exist")
+  @DisplayName("Should return NOT_FOUND when /designs/q/id/zoom/x/y/256.png does not exist")
   public void shouldReturnNotFoundWhenDesignSlashLocationSlashSizeDoesNotExist() throws MalformedURLException {
     final String authorization = TestHelper.makeAuthorization("test", Arrays.asList(Authority.ANONYMOUS));
 
@@ -269,7 +269,7 @@ public class VerticleIT {
     given().config(restAssuredConfig)
             .with().header(AUTHORIZATION, authorization)
             .and().accept("image/png")
-            .when().get(makeBaseURL("/api/designs/" + NON_EXISTANT_UUID.toString() + "/0/0/0/256.png"))
+            .when().get(makeBaseURL("/api/designs/q/" + NON_EXISTANT_UUID.toString() + "/0/0/0/256.png"))
             .then().assertThat().statusCode(404);
   }
 
@@ -284,7 +284,7 @@ public class VerticleIT {
     return given().config(restAssuredConfig)
             .with().header(AUTHORIZATION, authorization)
             .and().accept(ContentType.JSON)
-            .when().get(makeBaseURL("/api/designs"))
+            .when().get(makeBaseURL("/api/designs/q"))
             .then().assertThat().statusCode(200)
             .extract().body().as(String[].class);
   }
@@ -293,7 +293,7 @@ public class VerticleIT {
     return given().config(restAssuredConfig)
             .with().header(AUTHORIZATION, authorization)
             .and().accept(ContentType.JSON)
-            .when().get(makeBaseURL("/api/designs/" + uuid))
+            .when().get(makeBaseURL("/api/designs/q/" + uuid))
             .then().assertThat().statusCode(200)
             .extract().body().jsonPath();
   }
@@ -302,7 +302,7 @@ public class VerticleIT {
     return given().config(restAssuredConfig)
             .with().header(AUTHORIZATION, authorization)
             .and().accept("image/png")
-            .when().get(makeBaseURL("/api/designs/" + uuid + "/0/0/0/256.png"))
+            .when().get(makeBaseURL("/api/designs/q/" + uuid + "/0/0/0/256.png"))
             .then().assertThat().statusCode(200)
             .and().assertThat().contentType("image/png")
             .extract().response().asByteArray();

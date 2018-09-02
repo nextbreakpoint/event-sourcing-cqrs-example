@@ -10,7 +10,8 @@ import com.nextbreakpoint.shop.common.vertx.JWTProviderFactory;
 import com.nextbreakpoint.shop.common.vertx.KafkaClientFactory;
 import com.nextbreakpoint.shop.common.vertx.ResponseHelper;
 import com.nextbreakpoint.shop.common.vertx.ServerUtil;
-import com.nextbreakpoint.shop.designs.handlers.WatchHandler;
+import com.nextbreakpoint.shop.common.vertx.consumers.EventBusConsumer;
+import com.nextbreakpoint.shop.designs.handlers.EventsHandler;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Launcher;
@@ -35,8 +36,11 @@ import rx.Single;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.BiConsumer;
 
 import static com.nextbreakpoint.shop.common.model.Authority.ADMIN;
+import static com.nextbreakpoint.shop.common.model.Authority.ANONYMOUS;
+import static com.nextbreakpoint.shop.common.model.Authority.GUEST;
 import static com.nextbreakpoint.shop.common.model.Headers.ACCEPT;
 import static com.nextbreakpoint.shop.common.model.Headers.AUTHORIZATION;
 import static com.nextbreakpoint.shop.common.model.Headers.CONTENT_TYPE;
@@ -106,29 +110,25 @@ public class Verticle extends AbstractVerticle {
 
         apiRouter.route("/designs/*").handler(corsHandler);
 
-        final Handler<RoutingContext> onAccessDenied = rc -> rc.fail(Failure.accessDenied("Authorisation failed"));
-
-        final Handler consumerHandler = new AccessHandler(jwtProvider, createConsumerHandler(consumer), onAccessDenied, asList(ADMIN));
+        final Handler<RoutingContext> onAccessDenied = routingContext -> routingContext.fail(Failure.accessDenied("Authorisation failed"));
 
         mainRouter.route().failureHandler(ResponseHelper::sendFailure);
 
-        apiRouter.post("/consumer")
-                .handler(consumerHandler);
+        final Handler eventHandler = new AccessHandler(jwtProvider, EventsHandler.create(vertx), onAccessDenied, asList(ANONYMOUS, ADMIN, GUEST));
 
-        apiRouter.options("/consumer/*")
-                .handler(ResponseHelper::sendNoContent);
+        apiRouter.getWithRegex("/designs/events/([0-9]+)/" + UUID_REGEXP)
+                .handler(eventHandler);
 
-        apiRouter.getWithRegex("/events/([0-9]+)/" + UUID_REGEXP)
-                .handler(WatchHandler.create(vertx));
-
-        apiRouter.getWithRegex("/events/([0-9]+)")
-                .handler(WatchHandler.create(vertx));
+        apiRouter.getWithRegex("/designs/events/([0-9]+)")
+                .handler(eventHandler);
 
         mainRouter.mountSubRouter("/api", apiRouter);
 
         final Map<String, Handler<Message>> handlers = new HashMap<>();
 
-        handlers.put(MessageType.DESIGN_CHANGED, createDesignChangedHandler(vertx, "watch.input"));
+        final BiConsumer<Message, JsonObject> eventConsumer = new EventBusConsumer(vertx, "events.handler.input");
+
+        handlers.put(MessageType.DESIGN_CHANGED, createDesignChangedHandler(eventConsumer));
 
         consumer.handler(record -> processRecord(handlers, record))
                 .rxSubscribe(sseTopic)
@@ -154,22 +154,5 @@ public class Verticle extends AbstractVerticle {
         if (handler != null) {
             handler.handle(message);
         }
-    }
-
-    private Handler<RoutingContext> createConsumerHandler(KafkaConsumer<String, String> consumer) {
-        return routingContent -> {
-            try {
-                final JsonObject body = routingContent.getBodyAsJson();
-                final String command = body.getString("command");
-                switch (command) {
-                    case "pause": consumer.pause(); break;
-                    case "resume": consumer.resume(); break;
-                    default: break;
-                }
-                routingContent.response().setStatusCode(206).end();
-            } catch (Exception e) {
-                routingContent.fail(e);
-            }
-        };
     }
 }

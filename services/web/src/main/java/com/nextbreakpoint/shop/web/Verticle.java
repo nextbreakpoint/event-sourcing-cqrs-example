@@ -159,6 +159,10 @@ public class Verticle extends AbstractVerticle {
         routingContext.put("auth_url", webConfig.getString("auth_url"));
         routingContext.put("designs_url", webConfig.getString("designs_url"));
         routingContext.put("accounts_url", webConfig.getString("accounts_url"));
+        routingContext.put("designs_processor_url", webConfig.getString("designs_processor_url"));
+        routingContext.put("designs_command_url", webConfig.getString("designs_command_url"));
+        routingContext.put("designs_query_url", webConfig.getString("designs_query_url"));
+        routingContext.put("designs_sse_url", webConfig.getString("designs_sse_url"));
         routingContext.next();
     }
 

@@ -7,7 +7,6 @@ import com.nextbreakpoint.shop.common.graphite.GraphiteManager;
 import com.nextbreakpoint.shop.common.model.Failure;
 import com.nextbreakpoint.shop.common.model.Message;
 import com.nextbreakpoint.shop.common.model.MessageType;
-import com.nextbreakpoint.shop.common.vertx.AccessHandler;
 import com.nextbreakpoint.shop.common.vertx.CORSHandlerFactory;
 import com.nextbreakpoint.shop.common.vertx.JWTProviderFactory;
 import com.nextbreakpoint.shop.common.vertx.KafkaClientFactory;
@@ -40,7 +39,6 @@ import rx.Single;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.nextbreakpoint.shop.common.model.Authority.ADMIN;
 import static com.nextbreakpoint.shop.common.model.Headers.ACCEPT;
 import static com.nextbreakpoint.shop.common.model.Headers.AUTHORIZATION;
 import static com.nextbreakpoint.shop.common.model.Headers.CONTENT_TYPE;
@@ -118,23 +116,15 @@ public class Verticle extends AbstractVerticle {
         mainRouter.route().handler(LoggerHandler.create());
         mainRouter.route().handler(BodyHandler.create());
         mainRouter.route().handler(CookieHandler.create());
-        mainRouter.route().handler(TimeoutHandler.create(30000));
+        mainRouter.route().handler(TimeoutHandler.create(90000));
 
         final CorsHandler corsHandler = CORSHandlerFactory.createWithAll(webUrl, asList(AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN, X_MODIFIED), asList(CONTENT_TYPE, X_XSRF_TOKEN, X_MODIFIED));
 
-        apiRouter.route("/designs/*").handler(corsHandler);
+        apiRouter.route("/designs/p/*").handler(corsHandler);
 
-        final Handler<RoutingContext> onAccessDenied = rc -> rc.fail(Failure.accessDenied("Authorisation failed"));
-
-        final Handler consumerHandler = new AccessHandler(jwtProvider, createConsumerHandler(consumer), onAccessDenied, asList(ADMIN));
+        final Handler<RoutingContext> onAccessDenied = routingContext -> routingContext.fail(Failure.accessDenied("Authorisation failed"));
 
         mainRouter.route().failureHandler(ResponseHelper::sendFailure);
-
-        apiRouter.post("/consumer")
-                .handler(consumerHandler);
-
-        apiRouter.options("/consumer/*")
-                .handler(ResponseHelper::sendNoContent);
 
         mainRouter.mountSubRouter("/api", apiRouter);
 
@@ -168,22 +158,5 @@ public class Verticle extends AbstractVerticle {
         if (handler != null) {
             handler.handle(message);
         }
-    }
-
-    private Handler<RoutingContext> createConsumerHandler(KafkaConsumer<String, String> consumer) {
-        return routingContent -> {
-            try {
-                final JsonObject body = routingContent.getBodyAsJson();
-                final String command = body.getString("command");
-                switch (command) {
-                    case "pause": consumer.pause(); break;
-                    case "resume": consumer.resume(); break;
-                    default: break;
-                }
-                routingContent.response().setStatusCode(206).end();
-            } catch (Exception e) {
-                routingContent.fail(e);
-            }
-        };
     }
 }

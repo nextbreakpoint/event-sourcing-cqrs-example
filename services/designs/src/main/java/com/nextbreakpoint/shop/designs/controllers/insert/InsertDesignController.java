@@ -43,7 +43,7 @@ public class InsertDesignController implements Controller<InsertDesignRequest, I
                 .onErrorReturn(err -> response);
     }
 
-    private Single<KafkaProducerRecord<String, String>> createRecord(InsertDesignResponse response) {
+    protected Single<KafkaProducerRecord<String, String>> createRecord(InsertDesignResponse response) {
         return Single.fromCallable(() -> KafkaProducerRecord.create(topic, response.getUuid().toString(), Json.encode(mapper.transform(new DesignChangedEvent(response.getUuid(), System.currentTimeMillis())))));
     }
 }

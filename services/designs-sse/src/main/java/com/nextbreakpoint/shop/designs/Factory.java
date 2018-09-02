@@ -10,18 +10,18 @@ import com.nextbreakpoint.shop.designs.controllers.DesignChangedInputMapper;
 import com.nextbreakpoint.shop.designs.controllers.DesignChangedOutputMapper;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
-import io.vertx.rxjava.core.Vertx;
 
+import java.util.function.BiConsumer;
 
 public class Factory {
     private Factory() {}
 
-    public static Handler<Message> createDesignChangedHandler(Vertx vertx, String address) {
+    public static Handler<Message> createDesignChangedHandler(BiConsumer<Message, JsonObject> consumer) {
         return TemplateHandler.<Message, DesignChangedEvent, DesignChangedEvent, JsonObject>builder()
                 .withInputMapper(new DesignChangedInputMapper())
                 .withOutputMapper(new DesignChangedOutputMapper())
                 .withController(new DesignChangedController())
-                .onSuccess(new EventBusConsumer(vertx, address))
+                .onSuccess(consumer)
                 .onFailure(new FailedMessageConsumer())
                 .build();
     }

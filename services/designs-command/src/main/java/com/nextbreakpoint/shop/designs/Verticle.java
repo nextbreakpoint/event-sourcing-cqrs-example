@@ -93,13 +93,13 @@ public class Verticle extends AbstractVerticle {
         mainRouter.route().handler(LoggerHandler.create());
         mainRouter.route().handler(BodyHandler.create());
         mainRouter.route().handler(CookieHandler.create());
-        mainRouter.route().handler(TimeoutHandler.create(30000));
+        mainRouter.route().handler(TimeoutHandler.create(90000));
 
         final CorsHandler corsHandler = CORSHandlerFactory.createWithAll(webUrl, asList(AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN, X_MODIFIED), asList(CONTENT_TYPE, X_XSRF_TOKEN, X_MODIFIED));
 
-        apiRouter.route("/designs/*").handler(corsHandler);
+        apiRouter.route("/designs/c/*").handler(corsHandler);
 
-        final Handler<RoutingContext> onAccessDenied = rc -> rc.fail(Failure.accessDenied("Authorisation failed"));
+        final Handler<RoutingContext> onAccessDenied = routingContext -> routingContext.fail(Failure.accessDenied("Authorisation failed"));
 
         final Handler insertDesignHandler = new AccessHandler(jwtProvider, createInsertDesignHandler(producer, topic, messageSource), onAccessDenied, asList(ADMIN));
 
@@ -107,21 +107,21 @@ public class Verticle extends AbstractVerticle {
 
         final Handler deleteDesignHandler = new AccessHandler(jwtProvider, createDeleteDesignHandler(producer, topic, messageSource), onAccessDenied, asList(ADMIN));
 
-        apiRouter.post("/designs")
+        apiRouter.post("/designs/c")
                 .produces(APPLICATION_JSON)
                 .consumes(APPLICATION_JSON)
                 .handler(insertDesignHandler);
 
-        apiRouter.putWithRegex("/designs/" + UUID_REGEXP)
+        apiRouter.putWithRegex("/designs/c/" + UUID_REGEXP)
                 .produces(APPLICATION_JSON)
                 .consumes(APPLICATION_JSON)
                 .handler(updateDesignHandler);
 
-        apiRouter.deleteWithRegex("/designs/" + UUID_REGEXP)
+        apiRouter.deleteWithRegex("/designs/c/" + UUID_REGEXP)
                 .produces(APPLICATION_JSON)
                 .handler(deleteDesignHandler);
 
-        apiRouter.options("/designs/*")
+        apiRouter.options("/designs/c/*")
                 .handler(ResponseHelper::sendNoContent);
 
         mainRouter.route().failureHandler(ResponseHelper::sendFailure);

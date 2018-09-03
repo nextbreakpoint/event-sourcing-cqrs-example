@@ -40,7 +40,7 @@
                 if (typeof(EventSource) !== "undefined") {
                     var timestamp = $('#timestamp').val();
 
-                    var source = new EventSource("{{context.get('designs_sse_url')}}/api/designs/events/" + timestamp, { withCredentials: true });
+                    var source = new EventSource("{{context.get('web_url')}}/designs/events/" + timestamp, { withCredentials: true });
 
                     source.addEventListener("update", function(event) {
                        console.log(event);

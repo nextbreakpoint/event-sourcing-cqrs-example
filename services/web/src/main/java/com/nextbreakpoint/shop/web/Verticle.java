@@ -142,9 +142,20 @@ public class Verticle extends AbstractVerticle {
         mainRouter.get("/content/designs")
                 .handler(createPageHandler(engine, "content/designs"));
 
+        mainRouter.getWithRegex("/designs/events/([0-9]+)/" + UUID_REGEXP)
+                .handler(routingContext -> ResponseHelper.redirectToURL(routingContext, () -> webConfig.getString("designs_sse_url") + "/api" + routingContext.request().uri()));
+
+        mainRouter.getWithRegex("/designs/events/([0-9]+)")
+                .handler(routingContext -> ResponseHelper.redirectToURL(routingContext, () -> webConfig.getString("designs_sse_url") + "/api" + routingContext.request().uri()));
+
+        mainRouter.get("/")
+                .handler(routingContext -> ResponseHelper.redirectToURL(routingContext, () -> webConfig.getString("web_url") + "/content/designs"));
+
         mainRouter.get("/error/*").handler(createErrorHandler(engine));
 
-        mainRouter.route().failureHandler(ResponseHelper::sendFailure);
+        mainRouter.route().failureHandler(routingContext -> ResponseHelper.redirectToError(routingContext, (status) -> "/error/" + status));
+
+        mainRouter.route().handler(routingContext -> ResponseHelper.redirectToURL(routingContext, () -> "/error/404"));
 
         final HttpServerOptions options = ServerUtil.makeServerOptions(config);
 

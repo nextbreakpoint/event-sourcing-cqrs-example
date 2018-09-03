@@ -10,6 +10,7 @@ import io.vertx.rxjava.ext.web.RoutingContext;
 
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class ResponseHelper {
     private static final Logger logger = LoggerFactory.getLogger(ResponseHelper.class.getName());
@@ -42,12 +43,19 @@ public class ResponseHelper {
 
         final int statusCode = throwable.filter(x -> x instanceof Failure)
                 .map(x -> ((Failure) x).getStatusCode())
-                .orElseGet(() -> routingContext.statusCode() > 0 ? routingContext.statusCode() : 500);
+                .orElseGet(() -> routingContext.statusCode() > 0 ? routingContext.statusCode() : 404);
 
         logger.warn(message);
 
         routingContext.response()
                 .putHeader("Location", getErrorRedirectURL.apply(statusCode))
+                .setStatusCode(303)
+                .end();
+    }
+
+    public static void redirectToURL(RoutingContext routingContext, Supplier<String> getRedirectURL) {
+        routingContext.response()
+                .putHeader("Location", getRedirectURL.get())
                 .setStatusCode(303)
                 .end();
     }

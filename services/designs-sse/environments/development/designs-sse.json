@@ -8,6 +8,8 @@
   "jwt_keystore_type": "jceks",
   "jwt_keystore_secret": "secret",
 
+  "client_allow_origin_pattern": "https://localhost.*",
+
   "client_web_url": "https://localhost:8080",
 
   "graphite_reporter_enabled": false,

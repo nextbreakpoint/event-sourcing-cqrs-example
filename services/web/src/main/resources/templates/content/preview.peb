@@ -57,7 +57,7 @@
 
                     var source = new EventSource("{{context.get('designs_sse_url')}}/api/designs/events/" + timestamp + "/" + uuid, { withCredentials: true });
 
-                    source.addEventListener("update",  function(event) {
+                    source.addEventListener("update", function(event) {
                        console.log(event);
 
                        let eventTimestamp = Number(event.lastEventId);
@@ -65,14 +65,24 @@
                        let timestamp = $('#timestamp').val();
 
                        if (eventTimestamp > timestamp) {
-                           $('#timestamp').val(eventTimestamp);
+                            $('#timestamp').val(eventTimestamp);
 
-                            $.get("{{context.get('designs_url')}}/api/designs/" + uuid, function(data) {
-                                console.log(data);
-                            }).done(function(data) {
+                            $.get("{{context.get('designs_url')}}/api/designs/" + uuid).done(function(data) {
                                 var design = JSON.parse(data.json)
 
-                                updateDesign(eventTimestamp, design);
+                                var manifest = $('#manifest').val();
+                                var metadata = $('#metadata').val();
+                                var script = $('#script').val();
+
+                                if (manifest !== design.manifest || metadata !== design.metadata || script !== design.script) {
+                                    updateDesign(eventTimestamp, design);
+
+                                    $('#manifest').val(manifest);
+                                    $('#metadata').val(metadata);
+                                    $('#script').val(script);
+                                } else {
+                                    console.log("No changes detected");
+                                }
                             }).fail(function(e) {
                                 console.log(e);
                             });
@@ -83,7 +93,30 @@
                        console.log(error);
                     };
 
-                    source.onmessage = function(message) {
+                    source.onopen = function() {
+                        let timestamp = Number(Date.now());
+
+                        $('#timestamp').val(timestamp);
+
+                        $.get("{{context.get('designs_url')}}/api/designs/" + uuid).done(function(data) {
+                            var design = JSON.parse(data.json)
+
+                            var manifest = $('#manifest').val();
+                            var metadata = $('#metadata').val();
+                            var script = $('#script').val();
+
+                            if (manifest !== design.manifest || metadata !== design.metadata || script !== design.script) {
+                                updateDesign(timestamp, design);
+
+                                $('#manifest').val(manifest);
+                                $('#metadata').val(metadata);
+                                $('#script').val(script);
+                            } else {
+                                console.log("No changes detected");
+                            }
+                        }).fail(function(e) {
+                            console.log(e);
+                        });
                     };
                 } else {
                     console.log("EventSource not available");
@@ -93,6 +126,9 @@
     </head>
     <body>
         <input type="hidden" id="timestamp" value="{{context.get('timestamp')}}"/>
+        <input type="hidden" id="manifest" value="{{design.manifest}}"/>
+        <input type="hidden" id="metadata" value="{{design.metadata}}"/>
+        <input type="hidden" id="script" value="{{design.script}}"/>
         <div class="container s12">
             <div class="row">
                 <div class="col s12">

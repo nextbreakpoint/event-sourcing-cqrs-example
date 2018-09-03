@@ -42,7 +42,7 @@
 
                     var source = new EventSource("{{context.get('designs_sse_url')}}/api/designs/events/" + timestamp, { withCredentials: true });
 
-                    source.addEventListener("update",  function(event) {
+                    source.addEventListener("update", function(event) {
                        console.log(event);
 
                        let eventTimestamp = Number(event.lastEventId);
@@ -52,9 +52,7 @@
                        if (eventTimestamp > timestamp) {
                            $('#timestamp').val(eventTimestamp);
 
-                           $.get("{{context.get('designs_url')}}/api/designs", function(data) {
-                                console.log(data);
-                           }).done(function(data) {
+                           $.get("{{context.get('designs_url')}}/api/designs").done(function(data) {
                                 updateDesigns(eventTimestamp, data);
                            }).fail(function(e) {
                                 console.log(e);
@@ -66,7 +64,18 @@
                        console.log(error);
                     };
 
-                    source.onmessage = function(message) {
+                    source.onopen = function() {
+                       console.log("open");
+
+                       let timestamp = Number(Date.now());
+
+                       $('#timestamp').val(timestamp);
+
+                       $.get("{{context.get('designs_url')}}/api/designs").done(function(data) {
+                            updateDesigns(timestamp, data);
+                       }).fail(function(e) {
+                            console.log(e);
+                       });
                     };
                 } else {
                     console.log("EventSource not available");

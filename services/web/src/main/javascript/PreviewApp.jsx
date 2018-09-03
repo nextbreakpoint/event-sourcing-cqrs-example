@@ -32,7 +32,7 @@ class App extends React.Component {
     constructor(props) {
         super(props)
 
-        this.state = {role: 'anonymous', design: '', timestamp: 0}
+        this.state = {role: 'anonymous', design: '', oldDesign: '', timestamp: 0}
 
         this.loadAccount = this.loadAccount.bind(this)
         this.setupDesign = this.setupDesign.bind(this)
@@ -83,13 +83,13 @@ class App extends React.Component {
     handleScriptChanged(e) {
         e.preventDefault()
         let source = e.target
-        this.setState(Object.assign(this.state, {design: {script: source.value, metadata: this.state.design.metadata, manifest: this.state.design.manifest} }))
+        this.setState(Object.assign(this.state, {design: {script: source.value, metadata: this.state.design.metadata, manifest: this.state.design.manifest}}))
     }
 
     handleMetadataChanged(e) {
         e.preventDefault()
         let source = e.target
-        this.setState(Object.assign(this.state, {design: {script: this.state.design.script, metadata: source.value, manifest: this.state.design.manifest} }))
+        this.setState(Object.assign(this.state, {design: {script: this.state.design.script, metadata: source.value, manifest: this.state.design.manifest}}))
     }
 
     installWatcher(timestamp, uuid) {
@@ -200,7 +200,15 @@ class App extends React.Component {
 
                 let design = JSON.parse(envelop.json)
 
-                component.setState(Object.assign(component.state, {design: design, timestamp: timestamp}))
+                let previousDesign = component.state.oldDesign;
+
+                let currentDesign = component.state.design;
+
+                if (previousDesign === '' || previousDesign.manifest !== currentDesign.manifest || previousDesign.metadata !== currentDesign.metadata || previousDesign.script !== currentDesign.script) {
+                    component.setState(Object.assign(component.state, {oldDesign: design, design: design, timestamp: timestamp}))
+                } else {
+                    console.log("No changes detected");
+                }
             })
             .catch(function (error) {
                 console.log(error)
@@ -210,7 +218,7 @@ class App extends React.Component {
     }
 
     render() {
-        if (this.state.config) {
+        if (this.state.config && this.state.timestamp > 0) {
             const url = this.state.config.designs_url + '/api/designs/' + uuid + '/{z}/{x}/{y}/256.png?t=' + this.state.timestamp
 
             const parent = { label: 'Designs', link: base_url + '/admin/designs' }

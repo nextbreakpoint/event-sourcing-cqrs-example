@@ -12,11 +12,11 @@
         <script type="text/javascript" src="/js/materialize.min.js"></script>
         <script>
             $(function() {
-                function makeDesign(design, modified) {
+                function makeDesign(design, timestamp) {
                     var image = $('<img></img>')
                         .attr('class', 'design-image')
                         .attr('id', design.uuid)
-                        .attr('src', '{{context.get('designs_url')}}/api/designs/' + uuid + '/0/0/0/512.png?t=' + modified)
+                        .attr('src', '{{context.get('designs_url')}}/api/designs/' + uuid + '/0/0/0/512.png?t=' + timestamp)
                         .attr('alt', '{{context.get('web_url')}}/content/designs/' + uuid);
 
                     var script = $('<pre></pre>')
@@ -42,34 +42,37 @@
                         .append(rightColumn)
                 }
 
-                function updateDesign(modified, design) {
+                function updateDesign(timestamp, design) {
                     console.log("update design");
 
                     $('#design').empty();
 
-                    $('#design').append(makeDesign(design, modified));
+                    $('#design').append(makeDesign(design, timestamp));
                 }
 
                 if (typeof(EventSource) !== "undefined") {
-                    var offset = {{context.get('offset')}};
+                    var timestamp = $('#timestamp').val();
+
                     var uuid = "{{design.uuid}}";
 
-                    var source = new EventSource("/watch/" + offset + "/designs/" + uuid, { withCredentials: true });
+                    var source = new EventSource("{{context.get('designs_sse_url')}}/api/designs/events/" + timestamp + "/" + uuid, { withCredentials: true });
 
-                    source.addEventListener("message",  function(event) {
-                       var json = JSON.parse(event.data);
-
+                    source.addEventListener("update",  function(event) {
                        console.log(event);
 
-                       if (json.offset > offset) {
-                            offset = json.offset;
+                       let eventTimestamp = Number(event.lastEventId);
+
+                       let timestamp = $('#timestamp').val();
+
+                       if (eventTimestamp > timestamp) {
+                           $('#timestamp').val(eventTimestamp);
 
                             $.get("{{context.get('designs_url')}}/api/designs/" + uuid, function(data) {
                                 console.log(data);
                             }).done(function(data) {
                                 var design = JSON.parse(data.json)
 
-                                updateDesign(offset, design);
+                                updateDesign(eventTimestamp, design);
                             }).fail(function(e) {
                                 console.log(e);
                             });
@@ -89,8 +92,7 @@
         </script>
     </head>
     <body>
-        <input type="hidden" id="modified" value="{{context.get('modified')}}"/>
-        <input type="hidden" id="offset" value="{{context.get('offset')}}"/>
+        <input type="hidden" id="timestamp" value="{{context.get('timestamp')}}"/>
         <div class="container s12">
             <div class="row">
                 <div class="col s12">
@@ -111,7 +113,7 @@
                     <section id="design" class="design-container anchor-left anchor-right">
                         <div class="row">
                             <div class="col s8">
-                                <img class="design-image" id="{{design.uuid}}" src="{{design.imageSrc}}?t={{context.get('modified')}}" alt="{{design.location}}"/>
+                                <img class="design-image" id="{{design.uuid}}" src="{{design.imageSrc}}?t={{context.get('timestamp')}}" alt="{{design.location}}"/>
                             </div>
                             <div class="col s4">
                                 <pre class="design-script">{{design.script}}</pre>

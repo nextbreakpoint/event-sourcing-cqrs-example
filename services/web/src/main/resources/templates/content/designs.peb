@@ -11,11 +11,11 @@
         <script type="text/javascript" src="/js/materialize.min.js"></script>
         <script>
             $(function() {
-                function makeDesign(uuid, modified) {
+                function makeDesign(uuid, timestamp) {
                     var image = $('<img></img>')
                         .attr('class', 'designs-grid-element-image')
                         .attr('id', uuid)
-                        .attr('src', '{{context.get('designs_url')}}/api/designs/' + uuid + '/0/0/0/256.png?t=' + modified)
+                        .attr('src', '{{context.get('designs_url')}}/api/designs/' + uuid + '/0/0/0/256.png?t=' + timestamp)
                         .attr('alt', '{{context.get('web_url')}}/content/designs/' + uuid);
 
                     var anchor = $('<a></a>')
@@ -27,36 +27,38 @@
                         .append(anchor)
                 }
 
-                function updateDesigns(modified, designs) {
+                function updateDesigns(timestamp, designs) {
                     console.log("update designs");
 
                     $('#designs').empty();
 
                     $(designs).each(function(index, uuid) {
-                        $('#designs').append(makeDesign(uuid, modified));
+                        $('#designs').append(makeDesign(uuid, timestamp));
                     })
                 }
 
                 if (typeof(EventSource) !== "undefined") {
-                    var offset = {{context.get('offset')}};
+                    var timestamp = $('#timestamp').val();
 
-                    var source = new EventSource("/watch/" + offset + "/designs", { withCredentials: true });
+                    var source = new EventSource("{{context.get('designs_sse_url')}}/api/designs/events/" + timestamp, { withCredentials: true });
 
-                    source.addEventListener("message",  function(event) {
-                       var json = JSON.parse(event.data);
-
+                    source.addEventListener("update",  function(event) {
                        console.log(event);
 
-                       if (json.offset > offset) {
-                            offset = json.offset;
+                       let eventTimestamp = Number(event.lastEventId);
 
-                            $.get("{{context.get('designs_url')}}/api/designs", function(data) {
+                       let timestamp = $('#timestamp').val();
+
+                       if (eventTimestamp > timestamp) {
+                           $('#timestamp').val(eventTimestamp);
+
+                           $.get("{{context.get('designs_url')}}/api/designs", function(data) {
                                 console.log(data);
-                            }).done(function(data) {
-                                updateDesigns(offset, data);
-                            }).fail(function(e) {
+                           }).done(function(data) {
+                                updateDesigns(eventTimestamp, data);
+                           }).fail(function(e) {
                                 console.log(e);
-                            });
+                           });
                        }
                     }, false);
 
@@ -73,8 +75,7 @@
         </script>
     </head>
     <body>
-        <input type="hidden" id="modified" value="{{context.get('modified')}}"/>
-        <input type="hidden" id="offset" value="{{context.get('offset')}}"/>
+        <input type="hidden" id="timestamp" value="{{context.get('timestamp')}}"/>
         <div class="container s12">
             <div class="row">
                 <div class="col s12">
@@ -95,7 +96,7 @@
                     <section id="designs" class="designs-grid-container anchor-left anchor-right">
                     {% for design in context.get('designs') %}
                         <div class="designs-grid-element">
-                            <a href="{{design.location}}"><img class="designs-grid-element-image" id="{{design.uuid}}" src="{{design.imageSrc}}?t={{context.get('modified')}}" alt="{{design.location}}"/></a>
+                            <a href="{{design.location}}"><img class="designs-grid-element-image" id="{{design.uuid}}" src="{{design.imageSrc}}?t={{context.get('timestamp')}}" alt="{{design.location}}"/></a>
                         </div>
                     {% endfor %}
                     </section>

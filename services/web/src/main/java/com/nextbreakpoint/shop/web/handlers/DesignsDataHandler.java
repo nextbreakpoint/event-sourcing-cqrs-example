@@ -51,6 +51,7 @@ public class DesignsDataHandler implements Handler<RoutingContext> {
             final List<DesignResource> objects = (List<DesignResource>) response.bodyAsJson(List.class).stream().map(uuid -> makeDesign((String)uuid)).collect(Collectors.toList());
 
             routingContext.put("designs", objects);
+            routingContext.put("timestamp", System.currentTimeMillis());
 
             routingContext.next();
         } catch (Exception e) {

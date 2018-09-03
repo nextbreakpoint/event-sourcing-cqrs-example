@@ -114,7 +114,11 @@ public class Verticle extends AbstractVerticle {
                 .put("web_url", config.getString("client_web_url"))
                 .put("auth_url", config.getString("client_auth_url"))
                 .put("designs_url", config.getString("client_designs_url"))
-                .put("accounts_url", config.getString("client_accounts_url"));
+                .put("accounts_url", config.getString("client_accounts_url"))
+                .put("designs_processor_url", config.getString("client_designs_processor_url"))
+                .put("designs_command_url", config.getString("client_designs_command_url"))
+                .put("designs_query_url", config.getString("client_designs_query_url"))
+                .put("designs_sse_url", config.getString("client_designs_sse_url"));
 
         mainRouter.get("/*").handler(routingContext -> injectConfig(routingContext, webConfig));
 

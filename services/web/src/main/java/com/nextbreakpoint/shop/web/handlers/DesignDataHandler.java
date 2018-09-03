@@ -62,6 +62,7 @@ public class DesignDataHandler implements Handler<RoutingContext> {
             final DesignResource object = makeDesign(uuid, created, updated, manifest, metadata, script);
 
             routingContext.put("design", object);
+            routingContext.put("timestamp", System.currentTimeMillis());
 
             routingContext.next();
         } catch (Exception e) {

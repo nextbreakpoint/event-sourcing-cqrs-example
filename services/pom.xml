@@ -53,16 +53,13 @@
         <log4j2.version>2.11.1</log4j2.version>
         <mysql-connector.version>8.0.12</mysql-connector.version>
         <cassandra-driver-core.version>3.5.1</cassandra-driver-core.version>
-        <cassandra-migration.version>2.2.0</cassandra-migration.version>
-        <liquibase.version>3.5.3</liquibase.version>
-        <liquibase-slf4j.version>2.0.0</liquibase-slf4j.version>
         <nf.version>2.0.3</nf.version>
         <maven-jar-plugin.version>3.0.2</maven-jar-plugin.version>
-        <maven-compiler-plugin.version>3.7.0</maven-compiler-plugin.version>
+        <maven-compiler-plugin.version>3.8.0</maven-compiler-plugin.version>
         <maven-source-plugin.version>3.0.1</maven-source-plugin.version>
         <maven-javadoc-plugin.version>2.10.4</maven-javadoc-plugin.version>
-        <maven-surefire-plugin.version>2.20.1</maven-surefire-plugin.version>
-        <maven-failsafe-plugin.version>2.20.1</maven-failsafe-plugin.version>
+        <maven-surefire-plugin.version>2.22.0</maven-surefire-plugin.version>
+        <maven-failsafe-plugin.version>2.22.0</maven-failsafe-plugin.version>
         <maven-toolchains-plugin.version>1.1</maven-toolchains-plugin.version>
         <build-helper-maven-plugin.version>1.9.1</build-helper-maven-plugin.version>
         <docker-maven-plugin.version>0.26.1</docker-maven-plugin.version>
@@ -171,7 +168,6 @@
                     <includes>
                         <include>**/*IT.java</include>
                     </includes>
-                    <testFailureIgnore>false</testFailureIgnore>
                 </configuration>
             </plugin>
             <plugin>
@@ -301,11 +297,6 @@
                 <version>${vertx.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.cognitor.cassandra</groupId>
-                <artifactId>cassandra-migration</artifactId>
-                <version>${cassandra-migration.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>com.datastax.cassandra</groupId>
                 <artifactId>cassandra-driver-core</artifactId>
                 <version>${cassandra-driver-core.version}</version>
@@ -315,16 +306,6 @@
                         <artifactId>netty-codec</artifactId>
                     </exclusion>
                 </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>org.liquibase</groupId>
-                <artifactId>liquibase-core</artifactId>
-                <version>${liquibase.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.mattbertolini</groupId>
-                <artifactId>liquibase-slf4j</artifactId>
-                <version>${liquibase-slf4j.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.dropwizard.metrics</groupId>

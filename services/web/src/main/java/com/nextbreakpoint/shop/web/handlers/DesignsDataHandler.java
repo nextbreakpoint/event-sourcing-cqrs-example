@@ -1,5 +1,6 @@
 package com.nextbreakpoint.shop.web.handlers;
 
+import com.nextbreakpoint.shop.common.model.DesignDocument;
 import com.nextbreakpoint.shop.common.vertx.Authentication;
 import com.nextbreakpoint.shop.common.model.DesignResource;
 import com.nextbreakpoint.shop.common.model.Failure;
@@ -13,6 +14,7 @@ import io.vertx.rxjava.ext.web.client.WebClient;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.nextbreakpoint.shop.common.model.ContentType.APPLICATION_JSON;
 import static com.nextbreakpoint.shop.common.model.Headers.ACCEPT;
@@ -48,9 +50,9 @@ public class DesignsDataHandler implements Handler<RoutingContext> {
 
     private void handleDesigns(RoutingContext routingContext, HttpResponse<Buffer> response) {
         try {
-            final List<DesignResource> objects = (List<DesignResource>) response.bodyAsJson(List.class).stream().map(uuid -> makeDesign((String)uuid)).collect(Collectors.toList());
+            final List<DesignResource> resources = Stream.of(response.bodyAsJson(DesignDocument[].class)).map(this::makeDesign).collect(Collectors.toList());
 
-            routingContext.put("designs", objects);
+            routingContext.put("designs", resources);
             routingContext.put("timestamp", System.currentTimeMillis());
 
             routingContext.next();
@@ -59,8 +61,8 @@ public class DesignsDataHandler implements Handler<RoutingContext> {
         }
     }
 
-    private DesignResource makeDesign(String uuid) {
-        return new DesignResource(uuid, webUrl + "/content/designs/" + uuid, designsUrl + "/api/designs/" + uuid + "/0/0/0/256.png", "", "", "", "", "");
+    private DesignResource makeDesign(DesignDocument document) {
+        return new DesignResource(document.getUuid(), document.getChecksum(), webUrl + "/content/designs/" + document.getUuid(), designsUrl + "/api/designs/" + document.getUuid() + "/0/0/0/256.png", "", "", "", "");
     }
 
     public static DesignsDataHandler create(WebClient client, JsonObject config) {

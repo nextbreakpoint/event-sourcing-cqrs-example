@@ -30,6 +30,8 @@ import io.vertx.rxjava.ext.web.handler.LoggerHandler;
 import io.vertx.rxjava.ext.web.handler.TimeoutHandler;
 import rx.Single;
 
+import java.util.function.Supplier;
+
 import static com.nextbreakpoint.shop.common.model.Authority.ADMIN;
 import static com.nextbreakpoint.shop.common.model.Authority.ANONYMOUS;
 import static com.nextbreakpoint.shop.common.model.Authority.GUEST;
@@ -95,11 +97,9 @@ public class Verticle extends AbstractVerticle {
 
         final JWTAuth jwtProvider = JWTProviderFactory.create(vertx, config);
 
-        final Cluster cluster = CassandraClusterFactory.create(config);
+        final Supplier<Session> supplier = () -> CassandraClusterFactory.create(config).connect(keyspace);
 
-        final Session session = cluster.connect(keyspace);
-
-        final Store store = new CassandraStore(session);
+        final Store store = new CassandraStore(supplier);
 
         final Router mainRouter = Router.router(vertx);
 

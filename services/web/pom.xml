@@ -60,8 +60,6 @@
                             <goal>verify</goal>
                         </goals>
                         <configuration>
-                            <parallel>both</parallel>
-                            <threadCount>5</threadCount>
                             <systemProperties>
                                 <http.port>${http.port}</http.port>
                                 <stub.port>${stub.port}</stub.port>

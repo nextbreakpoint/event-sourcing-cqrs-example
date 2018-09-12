@@ -22,15 +22,14 @@ import io.vertx.rxjava.ext.jdbc.JDBCClient;
 import io.vertx.rxjava.ext.sql.SQLConnection;
 import rx.Single;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.security.MessageDigest;
+import java.time.Instant;
+import java.time.format.DateTimeFormatter;
+import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static com.nextbreakpoint.shop.common.vertx.TimeUtil.TIMESTAMP_EXT_PATTERN;
-import static com.nextbreakpoint.shop.common.vertx.TimeUtil.TIMESTAMP_PATTERN;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 public class MySQLStore implements Store {
@@ -43,8 +42,8 @@ public class MySQLStore implements Store {
     private static final String ERROR_DELETE_DESIGN = "An error occurred while deleting a design";
     private static final String ERROR_LIST_DESIGNS = "An error occurred while loading designs";
 
-    private static final String INSERT_DESIGN = "INSERT INTO DESIGNS (UUID, JSON, CREATED, UPDATED) VALUES (?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
-    private static final String UPDATE_DESIGN = "UPDATE DESIGNS SET JSON=?, UPDATED=CURRENT_TIMESTAMP WHERE UUID=?";
+    private static final String INSERT_DESIGN = "INSERT INTO DESIGNS (UUID, JSON, CREATED, UPDATED, CHECKSUM) VALUES (?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, ?)";
+    private static final String UPDATE_DESIGN = "UPDATE DESIGNS SET JSON=?, CHECKSUM=?, UPDATED=CURRENT_TIMESTAMP WHERE UUID=?";
     private static final String SELECT_DESIGN = "SELECT * FROM DESIGNS WHERE UUID = ?";
     private static final String SELECT_DESIGNS = "SELECT * FROM DESIGNS";
     private static final String DELETE_DESIGN = "DELETE FROM DESIGNS WHERE UUID = ?";
@@ -124,11 +123,12 @@ public class MySQLStore implements Store {
                 .map(result -> result.map(row -> {
                     final String uuid = row.getString("UUID");
                     final String json = row.getString("JSON");
-                    final String created = row.getString("CREATED");
                     final String updated = row.getString("UPDATED");
-                    final DesignDocument design = new DesignDocument(uuid, json, formatDate(parseDate(created)), formatDate(parseDate(updated)), parseDate(updated).getTime());
-                    return new LoadDesignResponse(request.getUuid(), design);
-                }).orElseGet(() -> new LoadDesignResponse(request.getUuid(), null)))
+                    final String checksum = row.getString("CHECKSUM");
+                    return new DesignDocument(uuid, json, "UPDATED", checksum, formatDate(convertStringToInstant(updated)));
+                })
+                .map(document -> new LoadDesignResponse(request.getUuid(), document))
+                .orElseGet(() -> new LoadDesignResponse(request.getUuid(), null)))
                 .doAfterTerminate(() -> conn.rxClose().subscribe());
     }
 
@@ -146,13 +146,14 @@ public class MySQLStore implements Store {
         return conn.rxQuery(SELECT_DESIGNS)
                 .timeout(EXECUTE_TIMEOUT, SECONDS)
                 .map(ResultSet::getRows)
-                .map(result -> {
-                    final List<String> uuids = result
-                            .stream()
-                            .map(x -> x.getString("UUID"))
-                            .collect(Collectors.toList());
-                    return new ListDesignsResponse(uuids);
-                })
+                .map(result -> result.stream()
+                        .map(row -> {
+                            final String uuid = row.getString("UUID");
+                            final String checksum = row.getString("CHECKSUM");
+                            return new DesignDocument(uuid, null, null, checksum, null);
+                        })
+                        .collect(Collectors.toList()))
+                .map(documents -> new ListDesignsResponse(documents))
                 .doAfterTerminate(() -> conn.rxClose().subscribe());
     }
 
@@ -165,29 +166,32 @@ public class MySQLStore implements Store {
     }
 
     private JsonArray makeInsertParams(InsertDesignRequest request) {
-        return new JsonArray().add(request.getUuid().toString()).add(request.getJson());
+        return new JsonArray().add(request.getUuid().toString()).add(request.getJson()).add(computeChecksum(request.getJson()));
     }
 
     private JsonArray makeUpdateParams(UpdateDesignRequest request) {
-        return new JsonArray().add(request.getJson()).add(request.getUuid().toString());
+        return new JsonArray().add(request.getJson()).add(computeChecksum(request.getJson())).add(request.getUuid().toString());
     }
 
     private JsonArray makeDeleteParams(DeleteDesignRequest request) {
         return new JsonArray().add(request.getUuid().toString());
     }
 
-    private Date parseDate(String value) {
+    private String computeChecksum(String json) {
         try {
-            final SimpleDateFormat df = new SimpleDateFormat(value.length() > 20 ? TIMESTAMP_EXT_PATTERN : TIMESTAMP_PATTERN);
-            return df.parse(value);
-        } catch (ParseException e) {
-            logger.error("An error occurred while parsing date", e);
-            return new Date(0);
+            final byte[] bytes = json.getBytes("UTF-8");
+            final MessageDigest md = MessageDigest.getInstance("MD5");
+            return Base64.getEncoder().encodeToString(md.digest(bytes));
+        } catch (Exception e) {
+            throw new RuntimeException("Cannot compute checksum", e);
         }
     }
 
-    private String formatDate(Date value) {
-        final SimpleDateFormat df = new SimpleDateFormat(TIMESTAMP_PATTERN);
-        return df.format(value);
+    private Instant convertStringToInstant(String date) {
+        return Instant.from(DateTimeFormatter.ISO_DATE_TIME.parse(date));
+    }
+
+    private String formatDate(Instant instant) {
+        return DateTimeFormatter.ISO_INSTANT.format(instant);
     }
 }

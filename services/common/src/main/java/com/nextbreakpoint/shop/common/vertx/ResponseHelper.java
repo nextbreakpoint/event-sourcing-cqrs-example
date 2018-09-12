@@ -27,7 +27,11 @@ public class ResponseHelper {
                 .map(x -> ((Failure) x).getStatusCode())
                 .orElseGet(() -> routingContext.statusCode() > 0 ? routingContext.statusCode() : 500);
 
-        logger.warn(message);
+        if (throwable.isPresent()) {
+            logger.warn(message, throwable.get());
+        } else {
+            logger.warn(message);
+        }
 
         routingContext.response()
                 .putHeader(Headers.CONTENT_TYPE, ContentType.APPLICATION_JSON)
@@ -43,9 +47,13 @@ public class ResponseHelper {
 
         final int statusCode = throwable.filter(x -> x instanceof Failure)
                 .map(x -> ((Failure) x).getStatusCode())
-                .orElseGet(() -> routingContext.statusCode() > 0 ? routingContext.statusCode() : 404);
+                .orElseGet(() -> routingContext.statusCode() > 0 ? routingContext.statusCode() : 500);
 
-        logger.warn(message);
+        if (throwable.isPresent()) {
+            logger.warn(message, throwable.get());
+        } else {
+            logger.warn(message);
+        }
 
         routingContext.response()
                 .putHeader("Location", getErrorRedirectURL.apply(statusCode))

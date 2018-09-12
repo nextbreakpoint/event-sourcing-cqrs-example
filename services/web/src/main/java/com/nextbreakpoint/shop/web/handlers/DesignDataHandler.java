@@ -52,6 +52,7 @@ public class DesignDataHandler implements Handler<RoutingContext> {
             final String uuid = jsonObject.getString("uuid");
             final String updated = jsonObject.getString("updated");
             final String created = jsonObject.getString("created");
+            final String checksum = jsonObject.getString("checksum");
 
             final JsonObject design = new JsonObject(jsonObject.getString("json"));
 
@@ -59,9 +60,9 @@ public class DesignDataHandler implements Handler<RoutingContext> {
             final String metadata = design.getString("metadata");
             final String script = design.getString("script");
 
-            final DesignResource object = makeDesign(uuid, created, updated, manifest, metadata, script);
+            final DesignResource resource = makeDesign(uuid, checksum, created, updated, manifest, metadata, script);
 
-            routingContext.put("design", object);
+            routingContext.put("design", resource);
             routingContext.put("timestamp", System.currentTimeMillis());
 
             routingContext.next();
@@ -70,8 +71,8 @@ public class DesignDataHandler implements Handler<RoutingContext> {
         }
     }
 
-    private DesignResource makeDesign(String uuid, String created, String modified, String manifest, String metadata, String script) {
-        return new DesignResource(uuid, webUrl + "/content/designs/" + uuid, designsUrl + "/api/designs/" + uuid + "/0/0/0/512.png", created, modified, manifest, metadata, script);
+    private DesignResource makeDesign(String uuid, String checksum, String created, String modified, String manifest, String metadata, String script) {
+        return new DesignResource(uuid, checksum, webUrl + "/content/designs/" + uuid, designsUrl + "/api/designs/" + uuid + "/0/0/0/512.png", modified, manifest, metadata, script);
     }
 
     public static DesignDataHandler create(WebClient client, JsonObject config) {

@@ -43,7 +43,6 @@
                         <configuration>
                             <portNames>
                                 <portName>http.port</portName>
-                                <portName>database.port</portName>
                             </portNames>
                         </configuration>
                     </execution>
@@ -60,11 +59,8 @@
                             <goal>verify</goal>
                         </goals>
                         <configuration>
-                            <parallel>both</parallel>
-                            <threadCount>5</threadCount>
                             <systemProperties>
                                 <http.port>${http.port}</http.port>
-                                <database.port>${database.port}</database.port>
                             </systemProperties>
                         </configuration>
                     </execution>

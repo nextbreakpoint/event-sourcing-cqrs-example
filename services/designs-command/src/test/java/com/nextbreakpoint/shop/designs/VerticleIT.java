@@ -38,6 +38,7 @@ import static com.jayway.restassured.RestAssured.given;
 import static com.nextbreakpoint.shop.common.model.Headers.AUTHORIZATION;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
+import static org.awaitility.Duration.FIVE_SECONDS;
 import static org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS;
 import static org.awaitility.Duration.TWO_SECONDS;
 
@@ -152,7 +153,7 @@ public class VerticleIT {
 
             createDesign(authorization, createPostData());
 
-            await().atMost(TWO_SECONDS)
+            await().atMost(FIVE_SECONDS)
                     .pollInterval(ONE_HUNDRED_MILLISECONDS)
                     .untilAsserted(() -> {
                         assertThat(message[0]).isNotNull();
@@ -201,7 +202,7 @@ public class VerticleIT {
 
             updateDesign(authorization, createPostData(), uuid);
 
-            await().atMost(TWO_SECONDS)
+            await().atMost(FIVE_SECONDS)
                     .pollInterval(ONE_HUNDRED_MILLISECONDS)
                     .untilAsserted(() -> {
                         assertThat(message[0]).isNotNull();
@@ -250,7 +251,7 @@ public class VerticleIT {
 
             deleteDesign(authorization, uuid);
 
-            await().atMost(TWO_SECONDS)
+            await().atMost(FIVE_SECONDS)
                     .pollInterval(ONE_HUNDRED_MILLISECONDS)
                     .untilAsserted(() -> {
                         assertThat(message[0]).isNotNull();
@@ -283,15 +284,6 @@ public class VerticleIT {
                 .and().header(AUTHORIZATION, authorization)
                 .and().accept(ContentType.JSON)
                 .when().delete(makeBaseURL("/api/designs/c/" + uuid))
-                .then().assertThat().statusCode(202)
-                .and().contentType(ContentType.JSON);
-    }
-
-    private void deleteDesigns(String authorization) throws MalformedURLException {
-        given().config(restAssuredConfig)
-                .and().header(AUTHORIZATION, authorization)
-                .and().accept(ContentType.JSON)
-                .when().delete(makeBaseURL("/api/designs/c"))
                 .then().assertThat().statusCode(202)
                 .and().contentType(ContentType.JSON);
     }
@@ -338,6 +330,7 @@ public class VerticleIT {
     private URL makeBaseURL(String path) throws MalformedURLException {
         final Integer port = Integer.getInteger("http.port", 3031);
         final String normPath = path.startsWith("/") ? path.substring(1) : path;
-        return new URL("https://localhost:" + port + "/" + normPath);
+        final String host = System.getProperty("http.host", "localhost");
+        return new URL("https://" + host + ":" + port + "/" + normPath);
     }
 }

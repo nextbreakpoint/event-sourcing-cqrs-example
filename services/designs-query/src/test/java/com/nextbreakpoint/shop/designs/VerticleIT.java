@@ -8,6 +8,7 @@ import com.jayway.restassured.config.SSLConfig;
 import com.jayway.restassured.http.ContentType;
 import com.jayway.restassured.path.json.JsonPath;
 import com.nextbreakpoint.shop.common.model.Authority;
+import com.nextbreakpoint.shop.common.model.DesignDocument;
 import com.nextbreakpoint.shop.common.vertx.TestHelper;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -126,9 +127,13 @@ public class VerticleIT {
 
     pause();
 
-    String[] results = listDesigns(authorization);
+    DesignDocument[] results = listDesigns(authorization);
 
-    assertThat(results).contains(UUID_1, UUID_2, UUID_3, UUID_4);
+    DesignDocument document1 = new DesignDocument(UUID_1, null, null, "0", null);
+    DesignDocument document3 = new DesignDocument(UUID_3, null, null, "2", null);
+    DesignDocument document4 = new DesignDocument(UUID_4, null, null, "3", null);
+
+    assertThat(results).contains(document1, document3, document4);
   }
 
   @Test
@@ -142,9 +147,8 @@ public class VerticleIT {
 
     assertThat(result.getString("uuid")).isEqualTo(UUID_1);
     assertThat(result.getString("json")).isEqualTo(JSON_1);
-    assertThat(result.getString("created")).isNotNull();
-    assertThat(result.getString("updated")).isNotNull();
     assertThat(result.getString("modified")).isNotNull();
+    assertThat(result.getString("checksum")).isNotNull();
   }
 
   @Test
@@ -168,9 +172,13 @@ public class VerticleIT {
 
     pause();
 
-    String[] results = listDesigns(authorization);
+    DesignDocument[] results = listDesigns(authorization);
 
-    assertThat(results).contains(UUID_1, UUID_2, UUID_3, UUID_4);
+    DesignDocument document1 = new DesignDocument(UUID_1, null, null, "0", null);
+    DesignDocument document3 = new DesignDocument(UUID_3, null, null, "2", null);
+    DesignDocument document4 = new DesignDocument(UUID_4, null, null, "3", null);
+
+    assertThat(results).contains(document1, document3, document4);
   }
 
   @Test
@@ -184,9 +192,8 @@ public class VerticleIT {
 
     assertThat(result.getString("uuid")).isEqualTo(UUID_1);
     assertThat(result.getString("json")).isEqualTo(JSON_1);
-    assertThat(result.getString("created")).isNotNull();
-    assertThat(result.getString("updated")).isNotNull();
     assertThat(result.getString("modified")).isNotNull();
+    assertThat(result.getString("checksum")).isNotNull();
   }
 
   @Test
@@ -210,9 +217,13 @@ public class VerticleIT {
 
     pause();
 
-    String[] results = listDesigns(authorization);
+    DesignDocument[] results = listDesigns(authorization);
 
-    assertThat(results).contains(UUID_1, UUID_2, UUID_3, UUID_4);
+    DesignDocument document1 = new DesignDocument(UUID_1, null, null, "0", null);
+    DesignDocument document3 = new DesignDocument(UUID_3, null, null, "2", null);
+    DesignDocument document4 = new DesignDocument(UUID_4, null, null, "3", null);
+
+    assertThat(results).contains(document1, document3, document4);
   }
 
   @Test
@@ -226,9 +237,8 @@ public class VerticleIT {
 
     assertThat(result.getString("uuid")).isEqualTo(UUID_1);
     assertThat(result.getString("json")).isEqualTo(JSON_1);
-    assertThat(result.getString("created")).isNotNull();
-    assertThat(result.getString("updated")).isNotNull();
     assertThat(result.getString("modified")).isNotNull();
+    assertThat(result.getString("checksum")).isNotNull();
   }
 
   @Test
@@ -280,13 +290,13 @@ public class VerticleIT {
     }
   }
 
-  protected String[] listDesigns(String authorization) throws MalformedURLException {
+  protected DesignDocument[] listDesigns(String authorization) throws MalformedURLException {
     return given().config(restAssuredConfig)
             .with().header(AUTHORIZATION, authorization)
             .and().accept(ContentType.JSON)
             .when().get(makeBaseURL("/api/designs/q"))
             .then().assertThat().statusCode(200)
-            .extract().body().as(String[].class);
+            .extract().body().as(DesignDocument[].class);
   }
 
   protected JsonPath loadDesign(String authorization, String uuid) throws MalformedURLException {
@@ -311,6 +321,7 @@ public class VerticleIT {
   private URL makeBaseURL(String path) throws MalformedURLException {
     final Integer port = Integer.getInteger("http.port", 3021);
     final String normPath = path.startsWith("/") ? path.substring(1) : path;
-    return new URL("https://localhost:" + port + "/" + normPath);
+      final String host = System.getProperty("http.host", "localhost");
+      return new URL("https://" + host + ":" + port + "/" + normPath);
   }
 }

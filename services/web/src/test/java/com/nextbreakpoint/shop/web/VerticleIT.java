@@ -23,16 +23,14 @@ import org.junit.runner.RunWith;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.UUID;
 
 import static com.jayway.restassured.RestAssured.given;
-import static com.nextbreakpoint.shop.common.vertx.TimeUtil.TIMESTAMP_PATTERN;
 import static com.xebialabs.restito.builder.stub.StubHttp.whenHttp;
 import static com.xebialabs.restito.semantics.Action.contentType;
-import static com.xebialabs.restito.semantics.Action.header;
 import static com.xebialabs.restito.semantics.Action.status;
 import static com.xebialabs.restito.semantics.Action.stringContent;
 import static com.xebialabs.restito.semantics.Condition.get;
@@ -92,7 +90,7 @@ public class VerticleIT {
 
     whenHttp(stubServer)
             .match(get("/api/designs"), withHeader("accept", "application/json"))
-            .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("[\"" + uuid + "\"]"));
+            .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("[{\"uuid\":\"" + uuid + "\",\"checksum\":\"1\"}]"));
 
     given().config(restAssuredConfig)
             .when().get(makeBaseURL("/content/designs"))
@@ -105,8 +103,6 @@ public class VerticleIT {
   public void shouldReturnHTMLWhenRequestingPreviewContentPageWithoutToken() throws MalformedURLException {
     final UUID designUuid = UUID.randomUUID();
 
-    final SimpleDateFormat df = new SimpleDateFormat(TIMESTAMP_PATTERN);
-
     final Date date = new Date();
 
     final String json = new JsonObject()
@@ -118,8 +114,8 @@ public class VerticleIT {
     final String content = new JsonObject()
             .put("uuid", designUuid.toString())
             .put("json", json)
-            .put("created", df.format(date))
-            .put("updated", df.format(date))
+            .put("checksum", "1")
+            .put("modified", DateTimeFormatter.ISO_INSTANT.format(date.toInstant()))
             .encode();
 
     whenHttp(stubServer)
@@ -133,14 +129,14 @@ public class VerticleIT {
   }
 
   @Test
-  @DisplayName("should return HTML when requesting designs content page onSuccess token")
+  @DisplayName("should return HTML when requesting designs content page with token")
   public void shouldReturnHTMLWhenRequestingDesignsContentPageWithToken() throws MalformedURLException {
     final UUID designUuid = UUID.randomUUID();
     final UUID accountUuid = UUID.randomUUID();
 
     whenHttp(stubServer)
             .match(get("/api/designs"), withHeader("accept", "application/json"))
-            .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("[\"" + designUuid + "\"]"));
+            .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("[{\"uuid\":\"" + designUuid + "\",\"checksum\":\"1\"}]"));
 
     whenHttp(stubServer)
             .match(get("/api/accounts/" + accountUuid), withHeader("accept", "application/json"))
@@ -156,12 +152,10 @@ public class VerticleIT {
   }
 
   @Test
-  @DisplayName("should return HTML when requesting preview content page onSuccess token")
+  @DisplayName("should return HTML when requesting preview content page with token")
   public void shouldReturnHTMLWhenRequestingPreviewContentPageWithToken() throws MalformedURLException {
     final UUID designUuid = UUID.randomUUID();
     final UUID accountUuid = UUID.randomUUID();
-
-    final SimpleDateFormat df = new SimpleDateFormat(TIMESTAMP_PATTERN);
 
     final Date date = new Date();
 
@@ -174,8 +168,8 @@ public class VerticleIT {
     final String content = new JsonObject()
             .put("uuid", designUuid.toString())
             .put("json", json)
-            .put("created", df.format(date))
-            .put("updated", df.format(date))
+            .put("checksum", "1")
+            .put("modified", DateTimeFormatter.ISO_INSTANT.format(date.toInstant()))
             .encode();
 
     whenHttp(stubServer)
@@ -218,7 +212,7 @@ public class VerticleIT {
   }
 
   @Test
-  @DisplayName("should return HTML when requesting designs admin page onSuccess token")
+  @DisplayName("should return HTML when requesting designs admin page with token")
   public void shouldReturnHTMLWhenRequestingDesignsAdminPageWithToken() throws MalformedURLException {
     final Cookie cookie = TestHelper.makeCookie("test", Arrays.asList(Authority.GUEST), "localhost");
 
@@ -235,7 +229,7 @@ public class VerticleIT {
   }
 
   @Test
-  @DisplayName("should return HTML when requesting preview admin page onSuccess token")
+  @DisplayName("should return HTML when requesting preview admin page with token")
   public void shouldReturnHTMLWhenRequestingPreviewAdminPageWithToken() throws MalformedURLException {
     final UUID uuid = UUID.randomUUID();
 

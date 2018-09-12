@@ -8,6 +8,7 @@ import com.jayway.restassured.config.SSLConfig;
 import com.jayway.restassured.http.ContentType;
 import com.jayway.restassured.path.json.JsonPath;
 import com.nextbreakpoint.shop.common.model.Authority;
+import com.nextbreakpoint.shop.common.model.DesignDocument;
 import com.nextbreakpoint.shop.common.model.Message;
 import com.nextbreakpoint.shop.common.model.events.DesignChangedEvent;
 import com.nextbreakpoint.shop.common.vertx.KafkaClientFactory;
@@ -199,13 +200,13 @@ public class VerticleIT {
     KafkaConsumer<String, String> consumer = null;
 
     try {
-      consumer = KafkaClientFactory.createConsumer(vertx, createConsumerConfig("designs-test"));
+//      consumer = KafkaClientFactory.createConsumer(vertx, createConsumerConfig("designs-test"));
 
       String[] message = new String[]{null};
 
-      consumer.handler(record -> message[0] = record.value())
-              .rxSubscribe("designs-sse")
-              .subscribe();
+//      consumer.handler(record -> message[0] = record.value())
+//              .rxSubscribe("designs-sse")
+//              .subscribe();
 
       long eventTimestamp0 = System.currentTimeMillis();
 
@@ -231,8 +232,12 @@ public class VerticleIT {
 
         assertThat(jsonPath0.getString("uuid")).isEqualTo(uuid1);
         assertThat(jsonPath0.getString("json")).isNotNull();
+        assertThat(jsonPath0.getString("modified")).isNotNull();
+        assertThat(jsonPath0.getString("checksum")).isNotNull();
 
         final String json0 = jsonPath0.getString("json");
+        System.out.println(json0);
+
         final Map<String, Object> object0 = Json.decodeValue(json0, HashMap.class);
         assertThat(object0.get("script")).isEqualTo(SCRIPT1);
         assertThat(object0.get("metadata")).isEqualTo(METADATA);
@@ -262,8 +267,12 @@ public class VerticleIT {
 
       assertThat(jsonPath1.getString("uuid")).isEqualTo(uuid1);
       assertThat(jsonPath1.getString("json")).isNotNull();
+      assertThat(jsonPath1.getString("modified")).isNotNull();
+      assertThat(jsonPath1.getString("checksum")).isNotNull();
 
       final String json1 = jsonPath1.getString("json");
+      System.out.println(json1);
+
       final Map<String, Object> object1 = Json.decodeValue(json1, HashMap.class);
       assertThat(object1.get("script")).isEqualTo(SCRIPT2);
       assertThat(object1.get("metadata")).isEqualTo(METADATA);
@@ -271,7 +280,25 @@ public class VerticleIT {
 
       final String uuid2 = createDesign(authorization, createPostData(SCRIPT1));
 
-      assertThat(getDesigns(authorization)).contains(uuid1, uuid2);
+      final JsonPath jsonPath2 = getDesign(authorization, uuid2);
+
+      assertThat(jsonPath2.getString("uuid")).isEqualTo(uuid2);
+      assertThat(jsonPath2.getString("json")).isNotNull();
+      assertThat(jsonPath2.getString("modified")).isNotNull();
+      assertThat(jsonPath2.getString("checksum")).isNotNull();
+
+      final String json2 = jsonPath2.getString("json");
+      System.out.println(json2);
+
+      final Map<String, Object> object2 = Json.decodeValue(json2, HashMap.class);
+      assertThat(object2.get("script")).isEqualTo(SCRIPT1);
+      assertThat(object2.get("metadata")).isEqualTo(METADATA);
+      assertThat(object2.get("manifest")).isEqualTo(MANIFEST);
+
+      final DesignDocument document1 = new DesignDocument(uuid1, null, null, jsonPath1.getString("checksum"), null);
+      final DesignDocument document2 = new DesignDocument(uuid2, null, null, jsonPath2.getString("checksum"), null);
+
+      assertThat(getDesigns(authorization)).contains(document1, document2);
 
       final byte[] bytes = getTile(authorization, uuid1);
 
@@ -299,12 +326,12 @@ public class VerticleIT {
 //                assertThat(actualEvent.getTimestamp()).isGreaterThan(eventTimestamp3);
 //              });
 
-      assertThat(getDesigns(authorization)).contains(uuid2);
-      assertThat(getDesigns(authorization)).doesNotContain(uuid1);
+      assertThat(getDesigns(authorization)).contains(document2);
+      assertThat(getDesigns(authorization)).doesNotContain(document1);
 
       deleteDesign(authorization, uuid2);
 
-      assertThat(getDesigns(authorization)).doesNotContain(uuid1, uuid2);
+      assertThat(getDesigns(authorization)).doesNotContain(document1, document2);
     } finally {
       if (consumer != null) {
         consumer.close();
@@ -319,11 +346,12 @@ public class VerticleIT {
     }
   }
 
-  private void deleteDesign(String authorization, String uuid1) throws MalformedURLException {
+  private void deleteDesign(String authorization, String uuid) throws MalformedURLException {
+    System.out.println("delete design " + uuid);
     given().config(restAssuredConfig)
             .and().header(AUTHORIZATION, authorization)
             .and().accept(ContentType.JSON)
-            .when().delete(makeBaseURL("/api/designs/" + uuid1))
+            .when().delete(makeBaseURL("/api/designs/" + uuid))
             .then().assertThat().statusCode(200)
             .and().contentType(ContentType.JSON)
             .and().body("uuid", notNullValue());
@@ -339,17 +367,19 @@ public class VerticleIT {
             .and().extract().asByteArray();
   }
 
-  private String[] getDesigns(String authorization) throws MalformedURLException {
+  private DesignDocument[] getDesigns(String authorization) throws MalformedURLException {
+    System.out.println("get designs");
     return given().config(restAssuredConfig)
             .and().header(AUTHORIZATION, authorization)
             .and().accept(ContentType.JSON)
             .when().get(makeBaseURL("/api/designs"))
             .then().assertThat().statusCode(200)
             .and().contentType(ContentType.JSON)
-            .and().extract().body().as(String[].class);
+            .and().extract().body().as(DesignDocument[].class);
   }
 
   private JsonPath getDesign(String authorization, String uuid) throws MalformedURLException {
+    System.out.println("get design " + uuid);
     return given().config(restAssuredConfig)
             .with().header(AUTHORIZATION, authorization)
             .and().accept(ContentType.JSON)
@@ -358,6 +388,7 @@ public class VerticleIT {
   }
 
   private String createDesign(String authorization, Map<String, String> design) throws MalformedURLException {
+    System.out.println("create design");
     return given().config(restAssuredConfig)
             .and().header(AUTHORIZATION, authorization)
             .and().contentType(ContentType.JSON)
@@ -371,6 +402,7 @@ public class VerticleIT {
   }
 
   private String updateDesign(String authorization, String uuid, Map<String, String> design) throws MalformedURLException {
+    System.out.println("update design " + uuid);
     return given().config(restAssuredConfig)
             .and().header(AUTHORIZATION, authorization)
             .and().contentType(ContentType.JSON)

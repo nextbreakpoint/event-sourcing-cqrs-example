@@ -33,7 +33,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS;
-import static org.awaitility.Duration.TEN_SECONDS;
+import static org.awaitility.Duration.TWO_SECONDS;
 
 @Tag("slow")
 @DisplayName("Verify contract of service Designs SSE")
@@ -130,7 +130,7 @@ public class VerticleIT {
             System.out.println(sseEvent);
         }).onClose(nothing -> {});
 
-        await().atMost(TEN_SECONDS)
+        await().atMost(TWO_SECONDS)
                 .pollInterval(ONE_HUNDRED_MILLISECONDS)
                 .untilAsserted(() -> {
                     assertThat(connected[0]).isNotNull();
@@ -179,7 +179,7 @@ public class VerticleIT {
             System.out.println(sseEvent);
         }).onClose(nothing -> {});
 
-        await().atMost(TEN_SECONDS)
+        await().atMost(TWO_SECONDS)
                 .pollInterval(ONE_HUNDRED_MILLISECONDS)
                 .untilAsserted(() -> {
                     assertThat(connected[0]).isNotNull();
@@ -215,6 +215,7 @@ public class VerticleIT {
     private URL makeBaseURL(String path) throws MalformedURLException {
         final Integer port = Integer.getInteger("http.port", 3041);
         final String normPath = path.startsWith("/") ? path.substring(1) : path;
-        return new URL("https://localhost:" + port + "/" + normPath);
+        final String host = System.getProperty("http.host", "localhost");
+        return new URL("https://" + host + ":" + port + "/" + normPath);
     }
 }

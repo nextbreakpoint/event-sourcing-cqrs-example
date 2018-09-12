@@ -5,9 +5,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class DesignResource {
     private final String uuid;
+    private final String checksum;
     private final String location;
     private final String imageSrc;
-    private final String created;
     private final String modified;
     private final String manifest;
     private final String metadata;
@@ -15,17 +15,17 @@ public class DesignResource {
 
     @JsonCreator
     public DesignResource(@JsonProperty("uuid") String uuid,
+                          @JsonProperty("checksum") String checksum,
                           @JsonProperty("location") String location,
                           @JsonProperty("imageSrc") String imageSrc,
-                          @JsonProperty("created") String created,
                           @JsonProperty("modified") String modified,
                           @JsonProperty("manifest") String manifest,
                           @JsonProperty("metadata") String metadata,
                           @JsonProperty("script") String script) {
         this.uuid = uuid;
+        this.checksum = checksum;
         this.location = location;
         this.imageSrc = imageSrc;
-        this.created = created;
         this.modified = modified;
         this.manifest = manifest;
         this.metadata = metadata;
@@ -34,6 +34,10 @@ public class DesignResource {
 
     public String getUuid() {
         return uuid;
+    }
+
+    public String getChecksum() {
+        return checksum;
     }
 
     public String getLocation() {
@@ -54,10 +58,6 @@ public class DesignResource {
 
     public String getScript() {
         return script;
-    }
-
-    public String getCreated() {
-        return created;
     }
 
     public String getModified() {

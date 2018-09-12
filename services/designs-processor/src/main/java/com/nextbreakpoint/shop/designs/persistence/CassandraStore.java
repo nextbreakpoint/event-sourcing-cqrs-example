@@ -14,6 +14,9 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import rx.Single;
 
+import java.security.MessageDigest;
+import java.util.Base64;
+import java.util.Date;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -24,23 +27,17 @@ public class CassandraStore implements Store {
     private static final String ERROR_UPDATE_DESIGN = "An error occurred while updating a design";
     private static final String ERROR_DELETE_DESIGN = "An error occurred while deleting a design";
 
-    private static final String INSERT_DESIGN = "INSERT INTO DESIGNS (UUID, JSON, CREATED, UPDATED) VALUES (?, ?, toTimeStamp(now()), toTimeStamp(now()))";
-    private static final String UPDATE_DESIGN = "UPDATE DESIGNS SET JSON=?, UPDATED=toTimeStamp(now()) WHERE UUID=?";
-    private static final String DELETE_DESIGN = "DELETE FROM DESIGNS WHERE UUID = ?";
+    private static final String INSERT_DESIGN = "INSERT INTO DESIGNS (UUID, JSON, STATUS, CHECKSUM, EVENTTIME) VALUES (?, ?, ?, ?, ?)";
 
     private static final int EXECUTE_TIMEOUT = 10;
 
     private final Session session;
 
     private final ListenableFuture<PreparedStatement> insertDesign;
-    private final ListenableFuture<PreparedStatement> updateDesign;
-    private final ListenableFuture<PreparedStatement> deleteDesign;
 
     public CassandraStore(Session session) {
         this.session = Objects.requireNonNull(session);
         insertDesign = session.prepareAsync(INSERT_DESIGN);
-        updateDesign = session.prepareAsync(UPDATE_DESIGN);
-        deleteDesign = session.prepareAsync(DELETE_DESIGN);
     }
 
     @Override
@@ -81,7 +78,7 @@ public class CassandraStore implements Store {
     }
 
     private Single<PersistenceResult> doUpdateDesign(Session session, UpdateDesignCommand command) {
-        return Single.from(updateDesign)
+        return Single.from(insertDesign)
                 .map(pst -> pst.bind(makeUpdateParams(command)))
                 .map(bst -> session.executeAsync(bst))
                 .flatMap(rsf -> getResultSet(rsf))
@@ -89,7 +86,7 @@ public class CassandraStore implements Store {
     }
 
     private Single<PersistenceResult> doDeleteDesign(Session session, DeleteDesignCommand command) {
-        return Single.from(deleteDesign)
+        return Single.from(insertDesign)
                 .map(pst -> pst.bind(makeDeleteParams(command)))
                 .map(bst -> session.executeAsync(bst))
                 .flatMap(rsf -> getResultSet(rsf))
@@ -97,15 +94,25 @@ public class CassandraStore implements Store {
     }
 
     private Object[] makeInsertParams(InsertDesignCommand event) {
-        return new Object[] { event.getUuid(), event.getJson() };
+        return new Object[] { event.getUuid(), event.getJson(), "CREATED", computeChecksum(event.getJson()), new Date(event.getTimestamp())};
     }
 
     private Object[] makeUpdateParams(UpdateDesignCommand event) {
-        return new Object[] { event.getJson(), event.getUuid() };
+        return new Object[] { event.getUuid(), event.getJson(), "UPDATED", computeChecksum(event.getJson()), new Date(event.getTimestamp())};
     }
 
     private Object[] makeDeleteParams(DeleteDesignCommand event) {
-        return new Object[] { event.getUuid() };
+        return new Object[] { event.getUuid(), null, "DELETED", null, new Date(event.getTimestamp())};
+    }
+
+    private String computeChecksum(String json) {
+        try {
+            final byte[] bytes = json.getBytes("UTF-8");
+            final MessageDigest md = MessageDigest.getInstance("MD5");
+            return Base64.getEncoder().encodeToString(md.digest(bytes));
+        } catch (Exception e) {
+            throw new RuntimeException("Cannot compute checksum", e);
+        }
     }
 
     private void handleError(String message, Throwable err) {

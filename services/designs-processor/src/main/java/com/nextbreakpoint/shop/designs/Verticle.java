@@ -1,6 +1,5 @@
 package com.nextbreakpoint.shop.designs;
 
-import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Session;
 import com.nextbreakpoint.shop.common.cassandra.CassandraClusterFactory;
 import com.nextbreakpoint.shop.common.graphite.GraphiteManager;
@@ -38,6 +37,7 @@ import rx.Single;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import static com.nextbreakpoint.shop.common.model.Headers.ACCEPT;
 import static com.nextbreakpoint.shop.common.model.Headers.AUTHORIZATION;
@@ -99,15 +99,13 @@ public class Verticle extends AbstractVerticle {
 
         final JWTAuth jwtProvider = JWTProviderFactory.create(vertx, config);
 
-        final Cluster cluster = CassandraClusterFactory.create(config);
-
-        final Session session = cluster.connect(keyspace);
-
         final KafkaProducer<String, String> producer = KafkaClientFactory.createProducer(vertx, config);
 
         final KafkaConsumer<String, String> consumer = KafkaClientFactory.createConsumer(vertx, config);
 
-        final Store store = new CassandraStore(session);
+        final Supplier<Session> supplier = () -> CassandraClusterFactory.create(config).connect(keyspace);
+
+        final Store store = new CassandraStore(supplier);
 
         final Router mainRouter = Router.router(vertx);
 

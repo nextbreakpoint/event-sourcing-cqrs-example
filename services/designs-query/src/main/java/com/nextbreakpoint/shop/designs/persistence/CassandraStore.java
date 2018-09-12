@@ -35,6 +35,7 @@ public class CassandraStore implements Store {
     private static final String SELECT_DESIGNS = "SELECT * FROM DESIGNS";
 
     private static final int EXECUTE_TIMEOUT = 10;
+
     private final Supplier<Session> supplier;
 
     private Session session;

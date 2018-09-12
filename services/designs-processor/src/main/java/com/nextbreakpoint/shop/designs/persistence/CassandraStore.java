@@ -19,6 +19,7 @@ import java.util.Base64;
 import java.util.Date;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 public class CassandraStore implements Store {
     private final Logger logger = LoggerFactory.getLogger(CassandraStore.class.getName());
@@ -31,13 +32,14 @@ public class CassandraStore implements Store {
 
     private static final int EXECUTE_TIMEOUT = 10;
 
-    private final Session session;
+    private final Supplier<Session> supplier;
 
-    private final ListenableFuture<PreparedStatement> insertDesign;
+    private Session session;
 
-    public CassandraStore(Session session) {
-        this.session = Objects.requireNonNull(session);
-        insertDesign = session.prepareAsync(INSERT_DESIGN);
+    private ListenableFuture<PreparedStatement> insertDesign;
+
+    public CassandraStore(Supplier<Session> supplier) {
+        this.supplier = Objects.requireNonNull(supplier);
     }
 
     @Override
@@ -62,6 +64,13 @@ public class CassandraStore implements Store {
     }
 
     private Single<Session> withSession() {
+        if (session == null) {
+            session = supplier.get();
+            if (session == null) {
+                return Single.error(new RuntimeException("Cannot create session"));
+            }
+            insertDesign = session.prepareAsync(INSERT_DESIGN);
+        }
         return Single.just(session);
     }
 

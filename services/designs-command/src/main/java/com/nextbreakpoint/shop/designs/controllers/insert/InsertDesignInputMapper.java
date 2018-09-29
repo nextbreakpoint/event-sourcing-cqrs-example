@@ -1,5 +1,6 @@
 package com.nextbreakpoint.shop.designs.controllers.insert;
 
+import com.datastax.driver.core.utils.UUIDs;
 import com.nextbreakpoint.shop.common.model.Mapper;
 import com.nextbreakpoint.shop.common.model.commands.InsertDesignCommand;
 import io.vertx.core.json.JsonObject;
@@ -30,6 +31,6 @@ public class InsertDesignInputMapper implements Mapper<RoutingContext, InsertDes
                 .put("script", script)
                 .encode();
 
-        return new InsertDesignCommand(UUID.randomUUID(), json, System.currentTimeMillis());
+        return new InsertDesignCommand(UUID.randomUUID(), json, UUIDs.timeBased());
     }
 }

@@ -1,22 +1,24 @@
 package com.nextbreakpoint.shop.designs.model;
 
+import com.nextbreakpoint.shop.common.model.events.DesignChangedEvent;
+
 import java.util.Objects;
 import java.util.UUID;
 
 public class CommandResult {
     private final UUID uuid;
-    private final CommandStatus status;
+    private final DesignChangedEvent event;
 
-    public CommandResult(UUID uuid, CommandStatus status) {
+    public CommandResult(UUID uuid, DesignChangedEvent event) {
         this.uuid = Objects.requireNonNull(uuid);
-        this.status = Objects.requireNonNull(status);
+        this.event = Objects.requireNonNull(event);
     }
 
     public UUID getUuid() {
         return uuid;
     }
 
-    public CommandStatus getStatus() {
-        return status;
+    public DesignChangedEvent getEvent() {
+        return event;
     }
 }

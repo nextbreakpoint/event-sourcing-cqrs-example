@@ -7,7 +7,6 @@ import com.nextbreakpoint.shop.common.model.commands.InsertDesignCommand;
 import com.nextbreakpoint.shop.common.model.events.DesignChangedEvent;
 import com.nextbreakpoint.shop.designs.Store;
 import com.nextbreakpoint.shop.designs.model.CommandResult;
-import com.nextbreakpoint.shop.designs.model.CommandStatus;
 import io.vertx.core.json.Json;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -35,10 +34,10 @@ public class InsertDesignController implements Controller<InsertDesignCommand, C
     @Override
     public Single<CommandResult> onNext(InsertDesignCommand command) {
         return store.insertDesign(command)
+                .flatMap(result -> store.insertDesignView(command))
                 .map(result -> new DesignChangedEvent(result.getUuid(), System.currentTimeMillis()))
                 .flatMap(this::sendMessage)
-                .map(metadata -> new CommandResult(command.getUuid(), CommandStatus.SUCCESS))
-                .onErrorReturn(err -> new CommandResult(command.getUuid(), CommandStatus.FAILURE));
+                .map(event -> new CommandResult(command.getUuid(), event));
     }
 
     protected Single<DesignChangedEvent> sendMessage(DesignChangedEvent event) {

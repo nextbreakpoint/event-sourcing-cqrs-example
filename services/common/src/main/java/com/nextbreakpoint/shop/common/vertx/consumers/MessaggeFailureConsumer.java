@@ -6,11 +6,11 @@ import io.vertx.core.logging.LoggerFactory;
 
 import java.util.function.BiConsumer;
 
-public class FailedMessageConsumer implements BiConsumer<Message, Throwable> {
-    private final Logger logger = LoggerFactory.getLogger(FailedMessageConsumer.class.getName());
+public class MessaggeFailureConsumer implements BiConsumer<Message, Throwable> {
+    private final Logger logger = LoggerFactory.getLogger(MessaggeFailureConsumer.class.getName());
 
     @Override
     public void accept(Message message, Throwable error) {
-        logger.error("Failed to process message: id=" + message.getMessageId(), error);
+        logger.info("Message failed: id=" + message.getMessageId());
     }
 }

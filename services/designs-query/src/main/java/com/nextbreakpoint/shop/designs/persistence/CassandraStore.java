@@ -1,29 +1,29 @@
 package com.nextbreakpoint.shop.designs.persistence;
 
-import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.ResultSetFuture;
+import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.nextbreakpoint.shop.common.cassandra.CassandraClusterFactory;
 import com.nextbreakpoint.shop.common.model.DesignDocument;
 import com.nextbreakpoint.shop.designs.Store;
 import com.nextbreakpoint.shop.designs.model.ListDesignsRequest;
 import com.nextbreakpoint.shop.designs.model.ListDesignsResponse;
 import com.nextbreakpoint.shop.designs.model.LoadDesignRequest;
 import com.nextbreakpoint.shop.designs.model.LoadDesignResponse;
-import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import rx.Single;
 
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 public class CassandraStore implements Store {
     private final Logger logger = LoggerFactory.getLogger(CassandraStore.class.getName());
@@ -31,8 +31,8 @@ public class CassandraStore implements Store {
     private static final String ERROR_LOAD_DESIGN = "An error occurred while loading a design";
     private static final String ERROR_LIST_DESIGNS = "An error occurred while loading designs";
 
-    private static final String SELECT_DESIGN = "SELECT * FROM DESIGNS WHERE UUID = ?";
-    private static final String SELECT_DESIGNS = "SELECT * FROM DESIGNS";
+    private static final String SELECT_DESIGN = "SELECT * FROM DESIGNS_VIEW WHERE DESIGN_UUID = ?";
+    private static final String SELECT_DESIGNS = "SELECT DESIGN_UUID, DESIGN_CHECKSUM FROM DESIGNS_VIEW";
 
     private static final int EXECUTE_TIMEOUT = 10;
 
@@ -82,27 +82,28 @@ public class CassandraStore implements Store {
                 .map(pst -> pst.bind(makeLoadParams(request)))
                 .map(bst -> session.executeAsync(bst))
                 .flatMap(rsf -> getResultSet(rsf))
-                .map(rs -> rs.all())
-                .map(result -> result.stream()
-                        .map(row -> {
-                            final String uuid = row.getUUID("UUID").toString();
-                            final String json = row.getString("JSON");
-                            final String status = row.getString("STATUS");
-                            final String checksum = row.getString("CHECKSUM");
-                            final Instant timestamp = row.getTimestamp("EVENTTIME").toInstant();
-                            return new DesignDocument(uuid, json, status, checksum, formatDate(timestamp));
-                        })
-                        .reduce(this::reduceEvents)
-                )
+                .map(rs -> {
+                    final List<DesignDocument> documents = new ArrayList<>();
+                    final Iterator<Row> iter = rs.iterator();
+                    if (iter.hasNext()) {
+                        if (rs.getAvailableWithoutFetching() >= 100 && !rs.isFullyFetched()) {
+                            rs.fetchMoreResults();
+                        }
+                        final Row row = iter.next();
+                        documents.add(getDesignDocument(row));
+                    }
+                    return documents;
+                })
+                .map(documents -> documents.stream().findFirst())
                 .map(document -> new LoadDesignResponse(request.getUuid(), document.orElse(null)));
     }
 
-    private DesignDocument reduceEvents(DesignDocument designDocument1, DesignDocument designDocument2) {
-        if (designDocument2.getStatus().equalsIgnoreCase("deleted")) {
-            return new DesignDocument(designDocument1.getUuid(), designDocument1.getJson(), designDocument2.getStatus(), designDocument2.getModified(), designDocument1.getChecksum());
-        } else {
-            return new DesignDocument(designDocument1.getUuid(), designDocument2.getJson(), designDocument2.getStatus(), designDocument2.getModified(), designDocument2.getChecksum());
-        }
+    private DesignDocument getDesignDocument(Row row) {
+        final String uuid = row.getUUID("DESIGN_UUID").toString();
+        final String json = row.getString("DESIGN_JSON");
+        final String checksum = row.getString("DESIGN_CHECKSUM");
+        final Instant timestamp = row.getTimestamp("DESIGN_TIMESTAMP").toInstant();
+        return new DesignDocument(uuid, json, checksum, formatDate(timestamp));
     }
 
     private Single<ListDesignsResponse> doListDesigns(Session session, ListDesignsRequest request) {
@@ -110,15 +111,25 @@ public class CassandraStore implements Store {
                 .map(pst -> pst.bind())
                 .map(bst -> session.executeAsync(bst))
                 .flatMap(rsf -> getResultSet(rsf))
-                .map(rs -> rs.all())
-                .map(result -> result.stream()
-                        .map(row -> {
-                            final String uuid = row.getUUID("UUID").toString();
-                            final String checksum = row.getString("CHECKSUM");
-                            return new DesignDocument(uuid, null, null, checksum, null);
-                        })
-                        .collect(Collectors.toList()))
+                .map(rs -> {
+                    final List<DesignDocument> documents = new ArrayList<>();
+                    final Iterator<Row> iter = rs.iterator();
+                    while (iter.hasNext()) {
+                        if (rs.getAvailableWithoutFetching() >= 100 && !rs.isFullyFetched()) {
+                            rs.fetchMoreResults();
+                        }
+                        final Row row = iter.next();
+                        documents.add(getMinimalDesignDocument(row));
+                    }
+                    return documents;
+                })
                 .map(documents -> new ListDesignsResponse(documents));
+    }
+
+    private DesignDocument getMinimalDesignDocument(Row row) {
+        final String uuid = row.getUUID("DESIGN_UUID").toString();
+        final String checksum = row.getString("DESIGN_CHECKSUM");
+        return new DesignDocument(uuid, null, checksum, null);
     }
 
     private Object[] makeLoadParams(LoadDesignRequest request) {

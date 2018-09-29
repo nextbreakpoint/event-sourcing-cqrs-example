@@ -1,5 +1,6 @@
 package com.nextbreakpoint.shop.designs.controllers.delete;
 
+import com.datastax.driver.core.utils.UUIDs;
 import com.nextbreakpoint.shop.common.model.Mapper;
 import com.nextbreakpoint.shop.common.model.commands.DeleteDesignCommand;
 import io.vertx.rxjava.ext.web.RoutingContext;
@@ -15,6 +16,6 @@ public class DeleteDesignInputMapper implements Mapper<RoutingContext, DeleteDes
             throw new IllegalStateException("parameter uuid (param0) missing from routing context");
         }
 
-        return new DeleteDesignCommand(UUID.fromString(uuid), System.currentTimeMillis());
+        return new DeleteDesignCommand(UUID.fromString(uuid), UUIDs.timeBased());
     }
 }

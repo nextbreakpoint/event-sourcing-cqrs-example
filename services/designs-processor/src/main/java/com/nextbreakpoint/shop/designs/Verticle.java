@@ -11,6 +11,9 @@ import com.nextbreakpoint.shop.common.vertx.JWTProviderFactory;
 import com.nextbreakpoint.shop.common.vertx.KafkaClientFactory;
 import com.nextbreakpoint.shop.common.vertx.ResponseHelper;
 import com.nextbreakpoint.shop.common.vertx.ServerUtil;
+import com.nextbreakpoint.shop.designs.common.CommandFailureConsumer;
+import com.nextbreakpoint.shop.designs.common.CommandSuccessConsumer;
+import com.nextbreakpoint.shop.designs.model.CommandRequest;
 import com.nextbreakpoint.shop.designs.persistence.CassandraStore;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -126,11 +129,11 @@ public class Verticle extends AbstractVerticle {
 
         mainRouter.mountSubRouter("/api", apiRouter);
 
-        final Map<String, Handler<Message>> handlers = new HashMap<>();
+        final Map<String, Handler<CommandRequest>> handlers = new HashMap<>();
 
-        handlers.put(MessageType.DESIGN_INSERT, createInsertDesignHandler(store, sseTopic, messageSource, producer));
-        handlers.put(MessageType.DESIGN_UPDATE, createUpdateDesignHandler(store, sseTopic, messageSource, producer));
-        handlers.put(MessageType.DESIGN_DELETE, createDeleteDesignHandler(store, sseTopic, messageSource, producer));
+        handlers.put(MessageType.DESIGN_INSERT, createInsertDesignHandler(store, sseTopic, messageSource, producer, new CommandSuccessConsumer(consumer), new CommandFailureConsumer(consumer)));
+        handlers.put(MessageType.DESIGN_UPDATE, createUpdateDesignHandler(store, sseTopic, messageSource, producer, new CommandSuccessConsumer(consumer), new CommandFailureConsumer(consumer)));
+        handlers.put(MessageType.DESIGN_DELETE, createDeleteDesignHandler(store, sseTopic, messageSource, producer, new CommandSuccessConsumer(consumer), new CommandFailureConsumer(consumer)));
 
         consumer.handler(record -> processRecord(handlers, record))
                 .rxSubscribe(eventsTopic)
@@ -150,11 +153,11 @@ public class Verticle extends AbstractVerticle {
         logger.error("Cannot process message", err);
     }
 
-    private void processRecord(Map<String, Handler<Message>> handlers, KafkaConsumerRecord<String, String> record) {
+    private void processRecord(Map<String, Handler<CommandRequest>> handlers, KafkaConsumerRecord<String, String> record) {
         final Message message = Json.decodeValue(record.value(), Message.class);
-        final Handler<Message> handler = handlers.get(message.getMessageType());
+        final Handler<CommandRequest> handler = handlers.get(message.getMessageType());
         if (handler != null) {
-            handler.handle(message);
+            handler.handle(new CommandRequest(record, message));
         }
     }
 }

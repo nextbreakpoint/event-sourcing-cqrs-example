@@ -4,6 +4,7 @@ import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
+import com.datastax.driver.core.utils.UUIDs;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.config.LogConfig;
 import com.jayway.restassured.config.RedirectConfig;
@@ -43,8 +44,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.awaitility.Duration.FIVE_SECONDS;
 import static org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS;
-import static org.awaitility.Duration.TEN_SECONDS;
-import static org.awaitility.Duration.TWO_SECONDS;
 
 @Tag("slow")
 @DisplayName("Verify contract of service Designs Processor")
@@ -99,11 +98,11 @@ public class VerticleIT {
                     .rxSubscribe("designs-sse")
                     .subscribe();
 
-            long eventTimestamp = System.currentTimeMillis();
+            final UUID eventTimestamp1 = UUIDs.timeBased();
 
             final UUID designId = UUID.randomUUID();
 
-            final InsertDesignCommand insertDesignCommand = new InsertDesignCommand(designId, JSON_1, eventTimestamp);
+            final InsertDesignCommand insertDesignCommand = new InsertDesignCommand(designId, JSON_1, eventTimestamp1);
 
             final long messageTimestamp = System.currentTimeMillis();
 
@@ -115,15 +114,31 @@ public class VerticleIT {
                     .pollInterval(ONE_HUNDRED_MILLISECONDS)
                     .untilAsserted(() -> {
                         try (Session session = cluster.connect("designs")) {
-                            final PreparedStatement statement = session.prepare("SELECT * FROM DESIGNS WHERE UUID = ?");
+                            final PreparedStatement statement = session.prepare("SELECT * FROM DESIGNS WHERE DESIGN_UUID = ?");
                             final List<Row> rows = session.execute(statement.bind(designId)).all();
                             assertThat(rows).hasSize(1);
                             rows.forEach(row -> {
-                                String actualJson = row.get("JSON", String.class);
-                                String actualStatus = row.get("STATUS", String.class);
-                                String actualChecksum = row.get("CHECKSUM", String.class);
+                                String actualJson = row.get("DESIGN_JSON", String.class);
+                                String actualStatus = row.get("DESIGN_STATUS", String.class);
+                                String actualChecksum = row.get("DESIGN_CHECKSUM", String.class);
                                 assertThat(actualJson).isEqualTo(JSON_1);
                                 assertThat(actualStatus).isEqualTo("CREATED");
+                                assertThat(actualChecksum).isNotNull();
+                            });
+                        }
+                    });
+
+            await().atMost(FIVE_SECONDS)
+                    .pollInterval(ONE_HUNDRED_MILLISECONDS)
+                    .untilAsserted(() -> {
+                        try (Session session = cluster.connect("designs")) {
+                            final PreparedStatement statement = session.prepare("SELECT * FROM DESIGNS_VIEW WHERE DESIGN_UUID = ?");
+                            final List<Row> rows = session.execute(statement.bind(designId)).all();
+                            assertThat(rows).hasSize(1);
+                            rows.forEach(row -> {
+                                String actualJson = row.get("DESIGN_JSON", String.class);
+                                String actualChecksum = row.get("DESIGN_CHECKSUM", String.class);
+                                assertThat(actualJson).isEqualTo(JSON_1);
                                 assertThat(actualChecksum).isNotNull();
                             });
                         }
@@ -142,7 +157,7 @@ public class VerticleIT {
                         DesignChangedEvent actualEvent = Json.decodeValue(actualMessage.getMessageBody(), DesignChangedEvent.class);
                         assertThat(actualEvent.getUuid()).isEqualTo(designId);
                         assertThat(actualEvent.getTimestamp()).isNotNull();
-                        assertThat(actualEvent.getTimestamp()).isGreaterThan(eventTimestamp);
+                        assertThat(actualEvent.getTimestamp()).isGreaterThan(UUIDs.unixTimestamp(eventTimestamp1));
                     });
         } finally {
             if (consumer != null) {
@@ -174,13 +189,15 @@ public class VerticleIT {
                     .rxSubscribe("designs-sse")
                     .subscribe();
 
-            long eventTimestamp = System.currentTimeMillis();
+            final UUID eventTimestamp1 = UUIDs.timeBased();
+
+            final UUID eventTimestamp2 = UUIDs.timeBased();
 
             final UUID designId = UUID.randomUUID();
 
-            final InsertDesignCommand insertDesignCommand = new InsertDesignCommand(designId, JSON_1, eventTimestamp - 2);
+            final InsertDesignCommand insertDesignCommand = new InsertDesignCommand(designId, JSON_1, eventTimestamp1);
 
-            final UpdateDesignCommand updateDesignCommand = new UpdateDesignCommand(designId, JSON_2, eventTimestamp - 1);
+            final UpdateDesignCommand updateDesignCommand = new UpdateDesignCommand(designId, JSON_2, eventTimestamp2);
 
             final long messageTimestamp = System.currentTimeMillis();
 
@@ -196,21 +213,37 @@ public class VerticleIT {
                     .pollInterval(ONE_HUNDRED_MILLISECONDS)
                     .untilAsserted(() -> {
                         try (Session session = cluster.connect("designs")) {
-                            final PreparedStatement statement = session.prepare("SELECT * FROM DESIGNS WHERE UUID = ?");
+                            final PreparedStatement statement = session.prepare("SELECT * FROM DESIGNS WHERE DESIGN_UUID = ?");
                             final List<Row> rows = session.execute(statement.bind(designId)).all();
                             assertThat(rows).hasSize(2);
                             final Set<UUID> uuids = rows.stream()
-                                    .map(row -> row.getUUID("UUID"))
+                                    .map(row -> row.getUUID("DESIGN_UUID"))
                                     .collect(Collectors.toSet());
                             assertThat(uuids).contains(designId);
-                            String actualJson1 = rows.get(0).get("JSON", String.class);
-                            String actualStatus1 = rows.get(0).get("STATUS", String.class);
+                            String actualJson1 = rows.get(0).get("DESIGN_JSON", String.class);
+                            String actualStatus1 = rows.get(0).get("DESIGN_STATUS", String.class);
                             assertThat(actualJson1).isEqualTo(JSON_1);
                             assertThat(actualStatus1).isEqualTo("CREATED");
-                            String actualJson2 = rows.get(1).get("JSON", String.class);
-                            String actualStatus2 = rows.get(1).get("STATUS", String.class);
+                            String actualJson2 = rows.get(1).get("DESIGN_JSON", String.class);
+                            String actualStatus2 = rows.get(1).get("DESIGN_STATUS", String.class);
                             assertThat(actualJson2).isEqualTo(JSON_2);
                             assertThat(actualStatus2).isEqualTo("UPDATED");
+                        }
+                    });
+
+            await().atMost(FIVE_SECONDS)
+                    .pollInterval(ONE_HUNDRED_MILLISECONDS)
+                    .untilAsserted(() -> {
+                        try (Session session = cluster.connect("designs")) {
+                            final PreparedStatement statement = session.prepare("SELECT * FROM DESIGNS_VIEW WHERE DESIGN_UUID = ?");
+                            final List<Row> rows = session.execute(statement.bind(designId)).all();
+                            assertThat(rows).hasSize(1);
+                            rows.forEach(row -> {
+                                String actualJson = row.get("DESIGN_JSON", String.class);
+                                String actualChecksum = row.get("DESIGN_CHECKSUM", String.class);
+                                assertThat(actualJson).isEqualTo(JSON_2);
+                                assertThat(actualChecksum).isNotNull();
+                            });
                         }
                     });
 
@@ -227,7 +260,7 @@ public class VerticleIT {
                         DesignChangedEvent actualEvent = Json.decodeValue(actualMessage.getMessageBody(), DesignChangedEvent.class);
                         assertThat(actualEvent.getUuid()).isEqualTo(designId);
                         assertThat(actualEvent.getTimestamp()).isNotNull();
-                        assertThat(actualEvent.getTimestamp()).isGreaterThan(eventTimestamp);
+                        assertThat(actualEvent.getTimestamp()).isGreaterThan(UUIDs.unixTimestamp(eventTimestamp1));
                     });
         } finally {
             if (consumer != null) {
@@ -259,13 +292,15 @@ public class VerticleIT {
                     .rxSubscribe("designs-sse")
                     .subscribe();
 
-            long eventTimestamp = System.currentTimeMillis();
+            final UUID eventTimestamp1 = UUIDs.timeBased();
+
+            final UUID eventTimestamp2 = UUIDs.timeBased();
 
             final UUID designId = UUID.randomUUID();
 
-            final InsertDesignCommand insertDesignCommand = new InsertDesignCommand(designId, JSON_1, eventTimestamp - 2);
+            final InsertDesignCommand insertDesignCommand = new InsertDesignCommand(designId, JSON_1, eventTimestamp1);
 
-            final DeleteDesignCommand deleteDesignCommand = new DeleteDesignCommand(designId, eventTimestamp - 1);
+            final DeleteDesignCommand deleteDesignCommand = new DeleteDesignCommand(designId, eventTimestamp2);
 
             final long messageTimestamp = System.currentTimeMillis();
 
@@ -281,21 +316,31 @@ public class VerticleIT {
                     .pollInterval(ONE_HUNDRED_MILLISECONDS)
                     .untilAsserted(() -> {
                         try (Session session = cluster.connect("designs")) {
-                            final PreparedStatement statement = session.prepare("SELECT * FROM DESIGNS WHERE UUID = ?");
+                            final PreparedStatement statement = session.prepare("SELECT * FROM DESIGNS WHERE DESIGN_UUID = ?");
                             final List<Row> rows = session.execute(statement.bind(designId)).all();
                             assertThat(rows).hasSize(2);
                             final Set<UUID> uuids = rows.stream()
-                                    .map(row -> row.getUUID("UUID"))
+                                    .map(row -> row.getUUID("DESIGN_UUID"))
                                     .collect(Collectors.toSet());
                             assertThat(uuids).contains(designId);
-                            String actualJson1 = rows.get(0).get("JSON", String.class);
-                            String actualStatus1 = rows.get(0).get("STATUS", String.class);
+                            String actualJson1 = rows.get(0).get("DESIGN_JSON", String.class);
+                            String actualStatus1 = rows.get(0).get("DESIGN_STATUS", String.class);
                             assertThat(actualJson1).isEqualTo(JSON_1);
                             assertThat(actualStatus1).isEqualTo("CREATED");
-                            String actualJson2 = rows.get(1).get("JSON", String.class);
-                            String actualStatus2 = rows.get(1).get("STATUS", String.class);
+                            String actualJson2 = rows.get(1).get("DESIGN_JSON", String.class);
+                            String actualStatus2 = rows.get(1).get("DESIGN_STATUS", String.class);
                             assertThat(actualJson2).isNull();
                             assertThat(actualStatus2).isEqualTo("DELETED");
+                        }
+                    });
+
+            await().atMost(FIVE_SECONDS)
+                    .pollInterval(ONE_HUNDRED_MILLISECONDS)
+                    .untilAsserted(() -> {
+                        try (Session session = cluster.connect("designs")) {
+                            final PreparedStatement statement = session.prepare("SELECT * FROM DESIGNS_VIEW WHERE DESIGN_UUID = ?");
+                            final List<Row> rows = session.execute(statement.bind(designId)).all();
+                            assertThat(rows).hasSize(0);
                         }
                     });
 
@@ -312,7 +357,7 @@ public class VerticleIT {
                         DesignChangedEvent actualEvent = Json.decodeValue(actualMessage.getMessageBody(), DesignChangedEvent.class);
                         assertThat(actualEvent.getUuid()).isEqualTo(designId);
                         assertThat(actualEvent.getTimestamp()).isNotNull();
-                        assertThat(actualEvent.getTimestamp()).isGreaterThan(eventTimestamp);
+                        assertThat(actualEvent.getTimestamp()).isGreaterThan(UUIDs.unixTimestamp(eventTimestamp1));
                     });
         } finally {
             if (consumer != null) {

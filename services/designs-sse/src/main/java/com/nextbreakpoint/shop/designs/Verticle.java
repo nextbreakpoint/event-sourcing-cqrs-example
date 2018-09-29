@@ -10,7 +10,7 @@ import com.nextbreakpoint.shop.common.vertx.JWTProviderFactory;
 import com.nextbreakpoint.shop.common.vertx.KafkaClientFactory;
 import com.nextbreakpoint.shop.common.vertx.ResponseHelper;
 import com.nextbreakpoint.shop.common.vertx.ServerUtil;
-import com.nextbreakpoint.shop.common.vertx.consumers.EventBusConsumer;
+import com.nextbreakpoint.shop.designs.controllers.DesignChangedController;
 import com.nextbreakpoint.shop.designs.handlers.EventsHandler;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -29,14 +29,12 @@ import io.vertx.rxjava.ext.web.handler.BodyHandler;
 import io.vertx.rxjava.ext.web.handler.CookieHandler;
 import io.vertx.rxjava.ext.web.handler.CorsHandler;
 import io.vertx.rxjava.ext.web.handler.LoggerHandler;
-import io.vertx.rxjava.ext.web.handler.TimeoutHandler;
 import io.vertx.rxjava.kafka.client.consumer.KafkaConsumer;
 import io.vertx.rxjava.kafka.client.consumer.KafkaConsumerRecord;
 import rx.Single;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.BiConsumer;
 
 import static com.nextbreakpoint.shop.common.model.Authority.ADMIN;
 import static com.nextbreakpoint.shop.common.model.Authority.ANONYMOUS;
@@ -126,9 +124,7 @@ public class Verticle extends AbstractVerticle {
 
         final Map<String, Handler<Message>> handlers = new HashMap<>();
 
-        final BiConsumer<Message, JsonObject> eventConsumer = new EventBusConsumer(vertx, "events.handler.input");
-
-        handlers.put(MessageType.DESIGN_CHANGED, createDesignChangedHandler(eventConsumer));
+        handlers.put(MessageType.DESIGN_CHANGED, createDesignChangedHandler(new DesignChangedController(vertx, "events.handler.input")));
 
         consumer.handler(record -> processRecord(handlers, record))
                 .rxSubscribe(sseTopic)

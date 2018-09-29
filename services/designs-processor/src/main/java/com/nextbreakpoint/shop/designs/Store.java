@@ -12,4 +12,10 @@ public interface Store {
     Single<PersistenceResult> updateDesign(UpdateDesignCommand event);
 
     Single<PersistenceResult> deleteDesign(DeleteDesignCommand event);
+
+    Single<PersistenceResult> insertDesignView(InsertDesignCommand event);
+
+    Single<PersistenceResult> updateDesignView(UpdateDesignCommand event);
+
+    Single<PersistenceResult> deleteDesignView(DeleteDesignCommand event);
 }

@@ -37,7 +37,6 @@ public class VerticleIT {
   private static final String UUID_1 = "48f6563e-e095-4d91-b473-4d8afc758c43";
   private static final String UUID_2 = "afb0f952-b26a-46de-8e65-40d5e98dc243";
   private static final String UUID_3 = "51a0ce28-10a7-4a2e-ac6b-b80f682c0bb7";
-  private static final String UUID_4 = "2fe33eed-58f7-425b-b10c-2e490c0f248e";
 
   private static final UUID NON_EXISTANT_UUID = new UUID(0, 0);
 
@@ -129,11 +128,11 @@ public class VerticleIT {
 
     DesignDocument[] results = listDesigns(authorization);
 
-    DesignDocument document1 = new DesignDocument(UUID_1, null, null, "0", null);
-    DesignDocument document3 = new DesignDocument(UUID_3, null, null, "2", null);
-    DesignDocument document4 = new DesignDocument(UUID_4, null, null, "3", null);
+    DesignDocument document1 = new DesignDocument(UUID_1, null, "0", null);
+    DesignDocument document2 = new DesignDocument(UUID_2, null, "1", null);
+    DesignDocument document3 = new DesignDocument(UUID_3, null, "2", null);
 
-    assertThat(results).contains(document1, document3, document4);
+    assertThat(results).contains(document1, document2, document3);
   }
 
   @Test
@@ -174,11 +173,11 @@ public class VerticleIT {
 
     DesignDocument[] results = listDesigns(authorization);
 
-    DesignDocument document1 = new DesignDocument(UUID_1, null, null, "0", null);
-    DesignDocument document3 = new DesignDocument(UUID_3, null, null, "2", null);
-    DesignDocument document4 = new DesignDocument(UUID_4, null, null, "3", null);
+    DesignDocument document1 = new DesignDocument(UUID_1, null, "0", null);
+    DesignDocument document2 = new DesignDocument(UUID_2, null, "1", null);
+    DesignDocument document3 = new DesignDocument(UUID_3, null, "2", null);
 
-    assertThat(results).contains(document1, document3, document4);
+    assertThat(results).contains(document1, document2, document3);
   }
 
   @Test
@@ -219,11 +218,11 @@ public class VerticleIT {
 
     DesignDocument[] results = listDesigns(authorization);
 
-    DesignDocument document1 = new DesignDocument(UUID_1, null, null, "0", null);
-    DesignDocument document3 = new DesignDocument(UUID_3, null, null, "2", null);
-    DesignDocument document4 = new DesignDocument(UUID_4, null, null, "3", null);
+    DesignDocument document1 = new DesignDocument(UUID_1, null, "0", null);
+    DesignDocument document2 = new DesignDocument(UUID_2, null, "1", null);
+    DesignDocument document3 = new DesignDocument(UUID_3, null, "2", null);
 
-    assertThat(results).contains(document1, document3, document4);
+    assertThat(results).contains(document1, document2, document3);
   }
 
   @Test

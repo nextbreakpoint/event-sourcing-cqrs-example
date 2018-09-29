@@ -1,5 +1,6 @@
 package com.nextbreakpoint.shop.designs.controllers.update;
 
+import com.datastax.driver.core.utils.UUIDs;
 import com.nextbreakpoint.shop.common.model.Mapper;
 import com.nextbreakpoint.shop.common.model.commands.UpdateDesignCommand;
 import io.vertx.core.json.JsonObject;
@@ -36,6 +37,6 @@ public class UpdateDesignInputMapper implements Mapper<RoutingContext, UpdateDes
                 .put("script", script)
                 .encode();
 
-        return new UpdateDesignCommand(UUID.fromString(uuid), json, System.currentTimeMillis());
+        return new UpdateDesignCommand(UUID.fromString(uuid), json, UUIDs.timeBased());
     }
 }

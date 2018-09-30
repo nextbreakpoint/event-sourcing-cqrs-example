@@ -16,8 +16,8 @@
                     var image = $('<img></img>')
                         .attr('class', 'design-image')
                         .attr('id', design.uuid)
-                        .attr('src', '{{context.get('designs_url')}}/api/designs/' + uuid + '/0/0/0/512.png?t=' + timestamp)
-                        .attr('alt', '{{context.get('web_url')}}/content/designs/' + uuid);
+                        .attr('src', '{{context.get('designs_url')}}/api/designs/' + design.uuid + '/0/0/0/512.png?t=' + timestamp)
+                        .attr('alt', '{{context.get('web_url')}}/content/designs/' + design.uuid);
 
                     var script = $('<pre></pre>')
                          .attr('class', 'design-script')

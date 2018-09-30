@@ -2,11 +2,7 @@ CREATE KEYSPACE IF NOT EXISTS designs WITH REPLICATION = { 'class' : 'SimpleStra
 
 CREATE ROLE IF NOT EXISTS admin WITH PASSWORD = 'password' AND LOGIN = true;
 
-CREATE ROLE IF NOT EXISTS designs_admin;
-
-GRANT ALL PERMISSIONS ON KEYSPACE designs TO designs_admin;
-
-GRANT designs_admin TO admin;
+GRANT ALL PERMISSIONS ON KEYSPACE designs TO admin;
 
 USE designs;
 

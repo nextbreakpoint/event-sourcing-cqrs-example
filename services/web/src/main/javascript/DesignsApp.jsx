@@ -224,7 +224,7 @@ class App extends React.Component {
 
         axios.get(component.state.config.designs_url + '/api/designs', config)
             .then(function (content) {
-                let designs = content.data.map((uuid) => { return { uuid: uuid, selected: false }})
+                let designs = content.data.map((design) => { return { uuid: design.uuid, checksum: design.checksum, selected: false }})
 
                 component.setState(Object.assign(component.state, {designs: designs, timestamp: timestamp}))
             })

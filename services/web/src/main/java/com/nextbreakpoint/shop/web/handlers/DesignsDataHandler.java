@@ -12,6 +12,7 @@ import io.vertx.rxjava.ext.web.client.HttpRequest;
 import io.vertx.rxjava.ext.web.client.HttpResponse;
 import io.vertx.rxjava.ext.web.client.WebClient;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -50,12 +51,20 @@ public class DesignsDataHandler implements Handler<RoutingContext> {
 
     private void handleDesigns(RoutingContext routingContext, HttpResponse<Buffer> response) {
         try {
-            final List<DesignResource> resources = Stream.of(response.bodyAsJson(DesignDocument[].class)).map(this::makeDesign).collect(Collectors.toList());
+            if (response.statusCode() == 200) {
+                final List<DesignResource> resources = Stream.of(response.bodyAsJson(DesignDocument[].class))
+                        .map(this::makeDesign).collect(Collectors.toList());
 
-            routingContext.put("designs", resources);
-            routingContext.put("timestamp", System.currentTimeMillis());
+                routingContext.put("designs", resources);
+                routingContext.put("timestamp", System.currentTimeMillis());
 
-            routingContext.next();
+                routingContext.next();
+            } else {
+                routingContext.put("designs", Collections.EMPTY_LIST);
+                routingContext.put("timestamp", System.currentTimeMillis());
+
+                routingContext.next();
+            }
         } catch (Exception e) {
             routingContext.fail(Failure.requestFailed(e));
         }

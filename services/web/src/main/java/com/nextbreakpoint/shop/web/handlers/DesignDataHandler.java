@@ -47,31 +47,34 @@ public class DesignDataHandler implements Handler<RoutingContext> {
 
     private void handleDesign(RoutingContext routingContext, HttpResponse<Buffer> response) {
         try {
-            final JsonObject jsonObject = response.bodyAsJsonObject();
+            if (response.statusCode() == 200) {
+                final JsonObject jsonObject = response.bodyAsJsonObject();
 
-            final String uuid = jsonObject.getString("uuid");
-            final String updated = jsonObject.getString("updated");
-            final String created = jsonObject.getString("created");
-            final String checksum = jsonObject.getString("checksum");
+                final String uuid = jsonObject.getString("uuid");
+                final String updated = jsonObject.getString("updated");
+                final String checksum = jsonObject.getString("checksum");
 
-            final JsonObject design = new JsonObject(jsonObject.getString("json"));
+                final JsonObject design = new JsonObject(jsonObject.getString("json"));
 
-            final String manifest = design.getString("manifest");
-            final String metadata = design.getString("metadata");
-            final String script = design.getString("script");
+                final String manifest = design.getString("manifest");
+                final String metadata = design.getString("metadata");
+                final String script = design.getString("script");
 
-            final DesignResource resource = makeDesign(uuid, checksum, created, updated, manifest, metadata, script);
+                final DesignResource resource = makeDesign(uuid, checksum, updated, manifest, metadata, script);
 
-            routingContext.put("design", resource);
-            routingContext.put("timestamp", System.currentTimeMillis());
+                routingContext.put("design", resource);
+                routingContext.put("timestamp", System.currentTimeMillis());
 
-            routingContext.next();
+                routingContext.next();
+            } else {
+                routingContext.fail(Failure.notFound());
+            }
         } catch (Exception e) {
             routingContext.fail(Failure.requestFailed(e));
         }
     }
 
-    private DesignResource makeDesign(String uuid, String checksum, String created, String modified, String manifest, String metadata, String script) {
+    private DesignResource makeDesign(String uuid, String checksum, String modified, String manifest, String metadata, String script) {
         return new DesignResource(uuid, checksum, webUrl + "/content/designs/" + uuid, designsUrl + "/api/designs/" + uuid + "/0/0/0/512.png", modified, manifest, metadata, script);
     }
 

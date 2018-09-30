@@ -11,15 +11,15 @@
         <script type="text/javascript" src="/js/materialize.min.js"></script>
         <script>
             $(function() {
-                function makeDesign(uuid, timestamp) {
+                function makeDesign(design, timestamp) {
                     var image = $('<img></img>')
                         .attr('class', 'designs-grid-element-image')
-                        .attr('id', uuid)
-                        .attr('src', '{{context.get('designs_url')}}/api/designs/' + uuid + '/0/0/0/256.png?t=' + timestamp)
-                        .attr('alt', '{{context.get('web_url')}}/content/designs/' + uuid);
+                        .attr('id', design.uuid)
+                        .attr('src', '{{context.get('designs_url')}}/api/designs/' + design.uuid + '/0/0/0/256.png?t=' + timestamp)
+                        .attr('alt', '{{context.get('web_url')}}/content/designs/' + design.uuid);
 
                     var anchor = $('<a></a>')
-                         .attr('href', '{{context.get('web_url')}}/content/designs/' + uuid)
+                         .attr('href', '{{context.get('web_url')}}/content/designs/' + design.uuid)
                          .append(image);
 
                     return $('<div></div>')
@@ -32,8 +32,8 @@
 
                     $('#designs').empty();
 
-                    $(designs).each(function(index, uuid) {
-                        $('#designs').append(makeDesign(uuid, timestamp));
+                    $(designs).each(function(index, design) {
+                        $('#designs').append(makeDesign(design, timestamp));
                     })
                 }
 

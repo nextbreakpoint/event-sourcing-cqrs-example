@@ -11,6 +11,6 @@ public class MessaggeFailureConsumer implements BiConsumer<Message, Throwable> {
 
     @Override
     public void accept(Message message, Throwable error) {
-        logger.info("Message failed: id=" + message.getMessageId());
+        logger.info("Message failed: id=" + message.getMessageId(), error);
     }
 }

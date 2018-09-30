@@ -2,6 +2,7 @@ package com.nextbreakpoint.shop.designs.controllers;
 
 import com.nextbreakpoint.shop.common.model.Controller;
 import com.nextbreakpoint.shop.common.model.events.DesignChangedEvent;
+import io.vertx.core.json.Json;
 import io.vertx.rxjava.core.Vertx;
 import rx.Single;
 
@@ -18,7 +19,7 @@ public class DesignChangedController implements Controller<DesignChangedEvent, D
 
     @Override
     public Single<DesignChangedEvent> onNext(DesignChangedEvent event) {
-        vertx.eventBus().publish(address, event);
+        vertx.eventBus().publish(address, Json.encode(event));
         return Single.just(event);
     }
 }

@@ -1,7 +1,9 @@
 package com.nextbreakpoint.shop.designs.handlers;
 
 import com.nextbreakpoint.shop.common.model.Failure;
+import com.nextbreakpoint.shop.common.model.events.DesignChangedEvent;
 import io.vertx.core.Handler;
+import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -25,7 +27,7 @@ public class EventsHandler implements Handler<RoutingContext> {
     protected EventsHandler(Vertx vertx) {
         this.vertx = vertx;
 
-        vertx.eventBus().consumer("events.handler.input", message -> processMessage((JsonObject) message.body()));
+        vertx.eventBus().consumer("events.handler.input", message -> processMessage(Json.decodeValue((String) message.body(), DesignChangedEvent.class)));
     }
 
     public static EventsHandler create(Vertx vertx) {
@@ -145,9 +147,9 @@ public class EventsHandler implements Handler<RoutingContext> {
         return Long.parseLong(routingContext.pathParam("param0"));
     }
 
-    private void processMessage(JsonObject object) {
-        final String watchKey = object.getString("uuid");
-        final Long timestamp = object.getLong("timestamp");
+    private void processMessage(DesignChangedEvent event) {
+        final String watchKey = event.getUuid().toString();
+        final Long timestamp = event.getTimestamp();
 
         final Set<Watcher> watchers = watcherMap.get(watchKey);
 

@@ -1,4 +1,4 @@
-FROM openjdk:9-jdk-slim
+FROM openjdk:11-jdk-slim
 
 RUN apt-get update -y && apt-get install -y openssl python bash wget
 

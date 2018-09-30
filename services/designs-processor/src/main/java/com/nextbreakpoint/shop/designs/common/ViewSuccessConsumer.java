@@ -1,7 +1,7 @@
 package com.nextbreakpoint.shop.designs.common;
 
+import com.nextbreakpoint.shop.common.model.events.DesignChangedEvent;
 import com.nextbreakpoint.shop.designs.model.RecordAndMessage;
-import com.nextbreakpoint.shop.designs.model.CommandOutput;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.rxjava.kafka.client.consumer.KafkaConsumer;
@@ -9,18 +9,18 @@ import io.vertx.rxjava.kafka.client.consumer.KafkaConsumer;
 import java.util.Objects;
 import java.util.function.BiConsumer;
 
-public class CommandSuccessConsumer implements BiConsumer<RecordAndMessage, CommandOutput> {
-    private final Logger logger = LoggerFactory.getLogger(CommandSuccessConsumer.class.getName());
+public class ViewSuccessConsumer implements BiConsumer<RecordAndMessage, DesignChangedEvent> {
+    private final Logger logger = LoggerFactory.getLogger(ViewSuccessConsumer.class.getName());
 
     private final KafkaConsumer<String, String> consumer;
 
-    public CommandSuccessConsumer(KafkaConsumer<String, String> consumer) {
+    public ViewSuccessConsumer(KafkaConsumer<String, String> consumer) {
         this.consumer = Objects.requireNonNull(consumer);
     }
 
     @Override
-    public void accept(RecordAndMessage input, CommandOutput output) {
+    public void accept(RecordAndMessage input, DesignChangedEvent event) {
         consumer.commit();
-        logger.info("Design changed: id=" + output.getEvent().getUuid());
+        logger.info("Design changed: id=" + event.getUuid());
     }
 }

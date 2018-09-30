@@ -13,7 +13,9 @@ import com.nextbreakpoint.shop.common.vertx.ResponseHelper;
 import com.nextbreakpoint.shop.common.vertx.ServerUtil;
 import com.nextbreakpoint.shop.designs.common.CommandFailureConsumer;
 import com.nextbreakpoint.shop.designs.common.CommandSuccessConsumer;
-import com.nextbreakpoint.shop.designs.model.CommandRequest;
+import com.nextbreakpoint.shop.designs.common.ViewFailureConsumer;
+import com.nextbreakpoint.shop.designs.common.ViewSuccessConsumer;
+import com.nextbreakpoint.shop.designs.model.RecordAndMessage;
 import com.nextbreakpoint.shop.designs.persistence.CassandraStore;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -49,6 +51,7 @@ import static com.nextbreakpoint.shop.common.model.Headers.X_MODIFIED;
 import static com.nextbreakpoint.shop.common.model.Headers.X_XSRF_TOKEN;
 import static com.nextbreakpoint.shop.designs.Factory.createDeleteDesignHandler;
 import static com.nextbreakpoint.shop.designs.Factory.createInsertDesignHandler;
+import static com.nextbreakpoint.shop.designs.Factory.createDesignChangedHandler;
 import static com.nextbreakpoint.shop.designs.Factory.createUpdateDesignHandler;
 import static java.util.Arrays.asList;
 
@@ -98,13 +101,17 @@ public class Verticle extends AbstractVerticle {
 
         final String sseTopic = config.getString("sse_topic");
 
+        final String viewTopic = config.getString("view_topic");
+
         final String messageSource = config.getString("message_source");
 
         final JWTAuth jwtProvider = JWTProviderFactory.create(vertx, config);
 
         final KafkaProducer<String, String> producer = KafkaClientFactory.createProducer(vertx, config);
 
-        final KafkaConsumer<String, String> consumer = KafkaClientFactory.createConsumer(vertx, config);
+        final KafkaConsumer<String, String> commandConsumer = KafkaClientFactory.createConsumer(vertx, config);
+
+        final KafkaConsumer<String, String> viewConsumer = KafkaClientFactory.createConsumer(vertx, config);
 
         final Supplier<Session> supplier = () -> CassandraClusterFactory.create(config).connect(keyspace);
 
@@ -129,14 +136,23 @@ public class Verticle extends AbstractVerticle {
 
         mainRouter.mountSubRouter("/api", apiRouter);
 
-        final Map<String, Handler<CommandRequest>> handlers = new HashMap<>();
+        final Map<String, Handler<RecordAndMessage>> commandHandlers = new HashMap<>();
 
-        handlers.put(MessageType.DESIGN_INSERT, createInsertDesignHandler(store, sseTopic, messageSource, producer, new CommandSuccessConsumer(consumer), new CommandFailureConsumer(consumer)));
-        handlers.put(MessageType.DESIGN_UPDATE, createUpdateDesignHandler(store, sseTopic, messageSource, producer, new CommandSuccessConsumer(consumer), new CommandFailureConsumer(consumer)));
-        handlers.put(MessageType.DESIGN_DELETE, createDeleteDesignHandler(store, sseTopic, messageSource, producer, new CommandSuccessConsumer(consumer), new CommandFailureConsumer(consumer)));
+        commandHandlers.put(MessageType.DESIGN_INSERT, createInsertDesignHandler(store, viewTopic, producer, messageSource, new CommandSuccessConsumer(commandConsumer), new CommandFailureConsumer(commandConsumer)));
+        commandHandlers.put(MessageType.DESIGN_UPDATE, createUpdateDesignHandler(store, viewTopic, producer, messageSource, new CommandSuccessConsumer(commandConsumer), new CommandFailureConsumer(commandConsumer)));
+        commandHandlers.put(MessageType.DESIGN_DELETE, createDeleteDesignHandler(store, viewTopic, producer, messageSource, new CommandSuccessConsumer(commandConsumer), new CommandFailureConsumer(commandConsumer)));
 
-        consumer.handler(record -> processRecord(handlers, record))
+        final Map<String, Handler<RecordAndMessage>> viewHandlers = new HashMap<>();
+
+        viewHandlers.put(MessageType.DESIGN_CHANGED, createDesignChangedHandler(store, sseTopic, producer, messageSource, new ViewSuccessConsumer(viewConsumer), new ViewFailureConsumer(viewConsumer)));
+
+        commandConsumer.handler(record -> processRecord(commandHandlers, record))
                 .rxSubscribe(eventsTopic)
+                .doOnError(this::handleError)
+                .subscribe();
+
+        viewConsumer.handler(record -> processRecord(viewHandlers, record))
+                .rxSubscribe(viewTopic)
                 .doOnError(this::handleError)
                 .subscribe();
 
@@ -153,11 +169,11 @@ public class Verticle extends AbstractVerticle {
         logger.error("Cannot process message", err);
     }
 
-    private void processRecord(Map<String, Handler<CommandRequest>> handlers, KafkaConsumerRecord<String, String> record) {
+    private void processRecord(Map<String, Handler<RecordAndMessage>> handlers, KafkaConsumerRecord<String, String> record) {
         final Message message = Json.decodeValue(record.value(), Message.class);
-        final Handler<CommandRequest> handler = handlers.get(message.getMessageType());
+        final Handler<RecordAndMessage> handler = handlers.get(message.getMessageType());
         if (handler != null) {
-            handler.handle(new CommandRequest(record, message));
+            handler.handle(new RecordAndMessage(record, message));
         }
     }
 }

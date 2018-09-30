@@ -3,12 +3,15 @@ package com.nextbreakpoint.shop.designs.persistence;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.ResultSetFuture;
+import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.utils.UUIDs;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.nextbreakpoint.shop.common.model.DesignChange;
 import com.nextbreakpoint.shop.common.model.commands.DeleteDesignCommand;
 import com.nextbreakpoint.shop.common.model.commands.InsertDesignCommand;
 import com.nextbreakpoint.shop.common.model.commands.UpdateDesignCommand;
+import com.nextbreakpoint.shop.common.model.events.DesignChangedEvent;
 import com.nextbreakpoint.shop.designs.Store;
 import com.nextbreakpoint.shop.designs.model.PersistenceResult;
 import io.vertx.core.logging.Logger;
@@ -16,9 +19,13 @@ import io.vertx.core.logging.LoggerFactory;
 import rx.Single;
 
 import java.security.MessageDigest;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
@@ -30,6 +37,7 @@ public class CassandraStore implements Store {
     private static final String ERROR_DELETE_DESIGN = "An error occurred while deleting a design";
 
     private static final String INSERT_DESIGN = "INSERT INTO DESIGNS (DESIGN_UUID, DESIGN_JSON, DESIGN_STATUS, DESIGN_CHECKSUM, EVENT_TIMESTAMP) VALUES (?, ?, ?, ?, ?)";
+    private static final String SELECT_DESIGN = "SELECT * FROM DESIGNS WHERE DESIGN_UUID = ?";
     private static final String INSERT_DESIGN_VIEW = "INSERT INTO DESIGNS_VIEW (DESIGN_UUID, DESIGN_JSON, DESIGN_CHECKSUM, DESIGN_TIMESTAMP) VALUES (?, ?, ?, ?)";
     private static final String UPDATE_DESIGN_VIEW = "UPDATE DESIGNS_VIEW SET DESIGN_JSON=?, DESIGN_CHECKSUM=?, DESIGN_TIMESTAMP=? WHERE DESIGN_UUID=?";
     private static final String DELETE_DESIGN_VIEW = "DELETE FROM DESIGNS_VIEW WHERE DESIGN_UUID=?";
@@ -41,6 +49,7 @@ public class CassandraStore implements Store {
     private Session session;
 
     private ListenableFuture<PreparedStatement> insertDesign;
+    private ListenableFuture<PreparedStatement> selectDesign;
     private ListenableFuture<PreparedStatement> insertDesignView;
     private ListenableFuture<PreparedStatement> updateDesignView;
     private ListenableFuture<PreparedStatement> deleteDesignView;
@@ -52,43 +61,28 @@ public class CassandraStore implements Store {
     @Override
     public Single<PersistenceResult> insertDesign(InsertDesignCommand command) {
         return withSession()
-                .flatMap(session -> doInsertDesign(session, command))
+                .flatMap(session -> appendDesignEvent(session, command.getUuid(), makeInsertParams(command)))
                 .doOnError(err -> handleError(ERROR_INSERT_DESIGN, err));
     }
 
     @Override
     public Single<PersistenceResult> updateDesign(UpdateDesignCommand command) {
         return withSession()
-                .flatMap(conn -> doUpdateDesign(session, command))
+                .flatMap(session -> appendDesignEvent(session, command.getUuid(), makeUpdateParams(command)))
                 .doOnError(err -> handleError(ERROR_UPDATE_DESIGN, err));
     }
 
     @Override
     public Single<PersistenceResult> deleteDesign(DeleteDesignCommand command) {
         return withSession()
-                .flatMap(session -> doDeleteDesign(session, command))
+                .flatMap(session -> appendDesignEvent(session, command.getUuid(), makeDeleteParams(command)))
                 .doOnError(err -> handleError(ERROR_DELETE_DESIGN, err));
     }
 
-    @Override
-    public Single<PersistenceResult> insertDesignView(InsertDesignCommand command) {
+    public Single<PersistenceResult> updateDesign(DesignChangedEvent event) {
         return withSession()
-                .flatMap(session -> doInsertDesignView(session, command))
+                .flatMap(session -> updateDesignView(session, event.getUuid()))
                 .doOnError(err -> handleError(ERROR_INSERT_DESIGN, err));
-    }
-
-    @Override
-    public Single<PersistenceResult> updateDesignView(UpdateDesignCommand command) {
-        return withSession()
-                .flatMap(conn -> doUpdateDesignView(session, command))
-                .doOnError(err -> handleError(ERROR_UPDATE_DESIGN, err));
-    }
-
-    @Override
-    public Single<PersistenceResult> deleteDesignView(DeleteDesignCommand command) {
-        return withSession()
-                .flatMap(session -> doDeleteDesignView(session, command))
-                .doOnError(err -> handleError(ERROR_DELETE_DESIGN, err));
     }
 
     private Single<Session> withSession() {
@@ -98,6 +92,7 @@ public class CassandraStore implements Store {
                 return Single.error(new RuntimeException("Cannot create session"));
             }
             insertDesign = session.prepareAsync(INSERT_DESIGN);
+            selectDesign = session.prepareAsync(SELECT_DESIGN);
             insertDesignView = session.prepareAsync(INSERT_DESIGN_VIEW);
             updateDesignView = session.prepareAsync(UPDATE_DESIGN_VIEW);
             deleteDesignView = session.prepareAsync(DELETE_DESIGN_VIEW);
@@ -109,106 +104,101 @@ public class CassandraStore implements Store {
         return Single.fromCallable(() -> future.getUninterruptibly(EXECUTE_TIMEOUT, TimeUnit.SECONDS));
     }
 
-    private Single<PersistenceResult> doInsertDesign(Session session, InsertDesignCommand command) {
+    private Single<PersistenceResult> appendDesignEvent(Session session, UUID uuid, Object[] values) {
         return Single.from(insertDesign)
-                .map(pst -> pst.bind(makeInsertParams(command)))
+                .map(pst -> pst.bind(values))
+                .map(bst -> session.executeAsync(bst))
+                .flatMap(rsf -> getResultSet(rsf))
+                .map(rs -> new PersistenceResult(uuid));
+    }
+
+    private Single<PersistenceResult> updateDesignView(Session session, UUID uuid) {
+        return Single.from(selectDesign)
+                .map(pst -> pst.bind(new Object[] { uuid }))
                 .map(bst -> session.executeAsync(bst))
                 .flatMap(rsf -> getResultSet(rsf))
                 .map(rs -> {
-                    if (!rs.wasApplied()) {
-                        throw new RuntimeException("Cannot insert a design");
+                    final List<DesignChange> changes = new ArrayList<>();
+                    final Iterator<Row> iter = rs.iterator();
+                    while (iter.hasNext()) {
+                        if (rs.getAvailableWithoutFetching() >= 100 && !rs.isFullyFetched()) {
+                            rs.fetchMoreResults();
+                        }
+                        final Row row = iter.next();
+                        changes.add(getDesignChange(row));
                     }
-                    return new PersistenceResult(command.getUuid(), 1);
-                });
+                    return changes;
+                })
+                .map(changes -> changes.stream().reduce(this::mergeChanges))
+                .flatMap(maybeChange -> maybeChange.map(change -> updateDesignView(session, change)).orElseGet(() -> Single.just(new PersistenceResult(uuid))));
     }
 
-    private Single<PersistenceResult> doUpdateDesign(Session session, UpdateDesignCommand command) {
-        return Single.from(insertDesign)
-                .map(pst -> pst.bind(makeUpdateParams(command)))
-                .map(bst -> session.executeAsync(bst))
-                .flatMap(rsf -> getResultSet(rsf))
-                .map(rs -> {
-                    if (!rs.wasApplied()) {
-                        throw new RuntimeException("Cannot update a design");
-                    }
-                    return new PersistenceResult(command.getUuid(), 1);
-                });
+    private Single<PersistenceResult> updateDesignView(Session session, DesignChange change) {
+        switch (change.getStatus().toLowerCase()) {
+            case "created": {
+                return Single.from(insertDesignView)
+                        .map(pst -> pst.bind(makeInsertViewParams(change)))
+                        .map(bst -> session.executeAsync(bst))
+                        .flatMap(rsf -> getResultSet(rsf))
+                        .map(rs -> new PersistenceResult(change.getUuid()));
+            }
+            case "updated": {
+                return Single.from(updateDesignView)
+                        .map(pst -> pst.bind(makeUpdateViewParams(change)))
+                        .map(bst -> session.executeAsync(bst))
+                        .flatMap(rsf -> getResultSet(rsf))
+                        .map(rs -> new PersistenceResult(change.getUuid()));
+            }
+            case "deleted": {
+                return Single.from(deleteDesignView)
+                        .map(pst -> pst.bind(makeDeleteViewParams(change)))
+                        .map(bst -> session.executeAsync(bst))
+                        .flatMap(rsf -> getResultSet(rsf))
+                        .map(rs -> new PersistenceResult(change.getUuid()));
+            }
+        }
+        throw new IllegalStateException("Unknown status: " + change.getStatus());
     }
 
-    private Single<PersistenceResult> doDeleteDesign(Session session, DeleteDesignCommand command) {
-        return Single.from(insertDesign)
-                .map(pst -> pst.bind(makeDeleteParams(command)))
-                .map(bst -> session.executeAsync(bst))
-                .flatMap(rsf -> getResultSet(rsf))
-                .map(rs -> {
-                    if (!rs.wasApplied()) {
-                        throw new RuntimeException("Cannot delete a design");
-                    }
-                    return new PersistenceResult(command.getUuid(), 1);
-                });
+    private DesignChange mergeChanges(DesignChange designDocument1, DesignChange designDocument2) {
+        if (designDocument2.getStatus().equalsIgnoreCase("deleted")) {
+            return new DesignChange(designDocument1.getUuid(), designDocument1.getJson(), designDocument2.getStatus(), designDocument1.getChecksum(), designDocument2.getModified());
+        } else {
+            return new DesignChange(designDocument1.getUuid(), designDocument2.getJson(), designDocument2.getStatus(), designDocument2.getChecksum(), designDocument2.getModified());
+        }
     }
 
-    private Single<PersistenceResult> doInsertDesignView(Session session, InsertDesignCommand command) {
-        return Single.from(insertDesignView)
-                .map(pst -> pst.bind(makeInsertViewParams(command)))
-                .map(bst -> session.executeAsync(bst))
-                .flatMap(rsf -> getResultSet(rsf))
-                .map(rs -> {
-                    if (!rs.wasApplied()) {
-                        throw new RuntimeException("Cannot insert a design");
-                    }
-                    return new PersistenceResult(command.getUuid(), 1);
-                });
+    private DesignChange getDesignChange(Row row) {
+        final UUID uuid = row.getUUID("DESIGN_UUID");
+        final String json = row.getString("DESIGN_JSON");
+        final String status = row.getString("DESIGN_STATUS");
+        final String checksum = row.getString("DESIGN_CHECKSUM");
+        final Date modified = new Date(UUIDs.unixTimestamp(row.getUUID("EVENT_TIMESTAMP")));
+        return new DesignChange(uuid, json, status, checksum, modified);
     }
 
-    private Single<PersistenceResult> doUpdateDesignView(Session session, UpdateDesignCommand command) {
-        return Single.from(updateDesignView)
-                .map(pst -> pst.bind(makeUpdateViewParams(command)))
-                .map(bst -> session.executeAsync(bst))
-                .flatMap(rsf -> getResultSet(rsf))
-                .map(rs -> {
-                    if (!rs.wasApplied()) {
-                        throw new RuntimeException("Cannot update a design");
-                    }
-                    return new PersistenceResult(command.getUuid(), 1);
-                });
+    private Object[] makeInsertParams(InsertDesignCommand command) {
+        return new Object[] { command.getUuid(), command.getJson(), "CREATED", computeChecksum(command.getJson()), command.getTimestamp() };
     }
 
-    private Single<PersistenceResult> doDeleteDesignView(Session session, DeleteDesignCommand command) {
-        return Single.from(deleteDesignView)
-                .map(pst -> pst.bind(makeDeleteViewParams(command)))
-                .map(bst -> session.executeAsync(bst))
-                .flatMap(rsf -> getResultSet(rsf))
-                .map(rs -> {
-                    if (!rs.wasApplied()) {
-                        throw new RuntimeException("Cannot delete a design");
-                    }
-                    return new PersistenceResult(command.getUuid(), 1);
-                });
+    private Object[] makeUpdateParams(UpdateDesignCommand command) {
+        return new Object[] { command.getUuid(), command.getJson(), "UPDATED", computeChecksum(command.getJson()), command.getTimestamp() };
     }
 
-    private Object[] makeInsertParams(InsertDesignCommand event) {
-        return new Object[] { event.getUuid(), event.getJson(), "CREATED", computeChecksum(event.getJson()), event.getTimestamp() };
+    private Object[] makeDeleteParams(DeleteDesignCommand command) {
+        return new Object[] { command.getUuid(), null, "DELETED", null, command.getTimestamp() };
     }
 
-    private Object[] makeUpdateParams(UpdateDesignCommand event) {
-        return new Object[] { event.getUuid(), event.getJson(), "UPDATED", computeChecksum(event.getJson()), event.getTimestamp() };
+    private Object[] makeInsertViewParams(DesignChange change) {
+        return new Object[] { change.getUuid(), change.getJson(), computeChecksum(change.getJson()), change.getModified() };
     }
 
-    private Object[] makeDeleteParams(DeleteDesignCommand event) {
-        return new Object[] { event.getUuid(), null, "DELETED", null, event.getTimestamp() };
+    private Object[] makeUpdateViewParams(DesignChange change) {
+        return new Object[] { change.getJson(), computeChecksum(change.getJson()), change.getModified(), change.getUuid() };
     }
 
-    private Object[] makeInsertViewParams(InsertDesignCommand event) {
-        return new Object[] { event.getUuid(), event.getJson(), computeChecksum(event.getJson()), new Date(UUIDs.unixTimestamp(event.getTimestamp())) };
-    }
-
-    private Object[] makeUpdateViewParams(UpdateDesignCommand event) {
-        return new Object[] { event.getJson(), computeChecksum(event.getJson()), new Date(UUIDs.unixTimestamp(event.getTimestamp())), event.getUuid() };
-    }
-
-    private Object[] makeDeleteViewParams(DeleteDesignCommand event) {
-        return new Object[] { event.getUuid() };
+    private Object[] makeDeleteViewParams(DesignChange change) {
+        return new Object[] { change.getUuid() };
     }
 
     private String computeChecksum(String json) {

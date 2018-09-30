@@ -27,5 +27,6 @@
   "kafka_group_id": "designs-processor",
 
   "events_topic": "designs-events",
+  "view_topic": "designs-view",
   "sse_topic": "designs-sse"
 }

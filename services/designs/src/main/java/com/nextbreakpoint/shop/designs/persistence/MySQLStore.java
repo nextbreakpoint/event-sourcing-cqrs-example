@@ -125,7 +125,7 @@ public class MySQLStore implements Store {
                     final String json = row.getString("JSON");
                     final String updated = row.getString("UPDATED");
                     final String checksum = row.getString("CHECKSUM");
-                    return new DesignDocument(uuid, json, "UPDATED", checksum, formatDate(convertStringToInstant(updated)));
+                    return new DesignDocument(uuid, json, checksum, formatDate(convertStringToInstant(updated)));
                 })
                 .map(document -> new LoadDesignResponse(request.getUuid(), document))
                 .orElseGet(() -> new LoadDesignResponse(request.getUuid(), null)))
@@ -150,7 +150,7 @@ public class MySQLStore implements Store {
                         .map(row -> {
                             final String uuid = row.getString("UUID");
                             final String checksum = row.getString("CHECKSUM");
-                            return new DesignDocument(uuid, null, null, checksum, null);
+                            return new DesignDocument(uuid, null, checksum, null);
                         })
                         .collect(Collectors.toList()))
                 .map(documents -> new ListDesignsResponse(documents))

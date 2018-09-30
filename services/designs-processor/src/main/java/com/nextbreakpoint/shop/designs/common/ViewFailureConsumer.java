@@ -10,12 +10,12 @@ import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 
-public class CommandFailureConsumer implements BiConsumer<RecordAndMessage, Throwable> {
-    private final Logger logger = LoggerFactory.getLogger(CommandFailureConsumer.class.getName());
+public class ViewFailureConsumer implements BiConsumer<RecordAndMessage, Throwable> {
+    private final Logger logger = LoggerFactory.getLogger(ViewFailureConsumer.class.getName());
 
     private final KafkaConsumer<String, String> consumer;
 
-    public CommandFailureConsumer(KafkaConsumer<String, String> consumer) {
+    public ViewFailureConsumer(KafkaConsumer<String, String> consumer) {
         this.consumer = Objects.requireNonNull(consumer);
     }
 

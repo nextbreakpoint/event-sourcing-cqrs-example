@@ -6,19 +6,14 @@ import com.nextbreakpoint.shop.common.model.Message;
 import com.nextbreakpoint.shop.common.model.commands.UpdateDesignCommand;
 import com.nextbreakpoint.shop.common.model.events.DesignChangedEvent;
 import com.nextbreakpoint.shop.designs.Store;
-import com.nextbreakpoint.shop.designs.model.CommandResult;
 import io.vertx.core.json.Json;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import io.vertx.rxjava.kafka.client.producer.KafkaProducer;
 import io.vertx.rxjava.kafka.client.producer.KafkaProducerRecord;
 import rx.Single;
 
 import java.util.Objects;
 
-public class UpdateDesignController implements Controller<UpdateDesignCommand, CommandResult> {
-    private Logger logger = LoggerFactory.getLogger(UpdateDesignController.class);
-
+public class UpdateDesignController implements Controller<UpdateDesignCommand, DesignChangedEvent> {
     private final Store store;
     private final String topic;
     private final KafkaProducer<String, String> producer;
@@ -32,19 +27,14 @@ public class UpdateDesignController implements Controller<UpdateDesignCommand, C
     }
 
     @Override
-    public Single<CommandResult> onNext(UpdateDesignCommand command) {
+    public Single<DesignChangedEvent> onNext(UpdateDesignCommand command) {
         return store.updateDesign(command)
-                .flatMap(result -> store.updateDesignView(command))
                 .map(result -> new DesignChangedEvent(result.getUuid(), System.currentTimeMillis()))
-                .flatMap(this::sendMessage)
-                .map(event -> new CommandResult(command.getUuid(), event));
+                .flatMap(this::sendMessageOrFail);
     }
 
-    protected Single<DesignChangedEvent> sendMessage(DesignChangedEvent event) {
-        return createRecord(event)
-                .flatMap(record -> producer.rxWrite(record).map(metadata -> event))
-                .doOnError(err -> logger.error("Failed to write record into Kafka", err))
-                .onErrorReturn(err -> event);
+    protected Single<DesignChangedEvent> sendMessageOrFail(DesignChangedEvent event) {
+        return createRecord(event).flatMap(record -> producer.rxWrite(record).map(metadata -> event));
     }
 
     protected Single<KafkaProducerRecord<String, String>> createRecord(DesignChangedEvent event) {

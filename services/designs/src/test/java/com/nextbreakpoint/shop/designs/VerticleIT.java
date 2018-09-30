@@ -295,8 +295,8 @@ public class VerticleIT {
       assertThat(object2.get("metadata")).isEqualTo(METADATA);
       assertThat(object2.get("manifest")).isEqualTo(MANIFEST);
 
-      final DesignDocument document1 = new DesignDocument(uuid1, null, null, jsonPath1.getString("checksum"), null);
-      final DesignDocument document2 = new DesignDocument(uuid2, null, null, jsonPath2.getString("checksum"), null);
+      final DesignDocument document1 = new DesignDocument(uuid1, null, jsonPath1.getString("checksum"), null);
+      final DesignDocument document2 = new DesignDocument(uuid2, null, jsonPath2.getString("checksum"), null);
 
       assertThat(getDesigns(authorization)).contains(document1, document2);
 

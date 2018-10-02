@@ -1,7 +1,6 @@
 package com.nextbreakpoint.shop.accounts.persistence;
 
 import com.nextbreakpoint.shop.accounts.Store;
-import com.nextbreakpoint.shop.common.model.Account;
 import com.nextbreakpoint.shop.accounts.model.DeleteAccountRequest;
 import com.nextbreakpoint.shop.accounts.model.DeleteAccountResponse;
 import com.nextbreakpoint.shop.accounts.model.InsertAccountRequest;
@@ -10,6 +9,7 @@ import com.nextbreakpoint.shop.accounts.model.ListAccountsRequest;
 import com.nextbreakpoint.shop.accounts.model.ListAccountsResponse;
 import com.nextbreakpoint.shop.accounts.model.LoadAccountRequest;
 import com.nextbreakpoint.shop.accounts.model.LoadAccountResponse;
+import com.nextbreakpoint.shop.common.model.Account;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;

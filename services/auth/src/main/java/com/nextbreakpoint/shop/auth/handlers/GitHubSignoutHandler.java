@@ -1,7 +1,7 @@
 package com.nextbreakpoint.shop.auth.handlers;
 
-import com.nextbreakpoint.shop.common.vertx.Authentication;
 import com.nextbreakpoint.shop.common.model.Failure;
+import com.nextbreakpoint.shop.common.vertx.Authentication;
 import com.nextbreakpoint.shop.common.vertx.WebClientFactory;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;

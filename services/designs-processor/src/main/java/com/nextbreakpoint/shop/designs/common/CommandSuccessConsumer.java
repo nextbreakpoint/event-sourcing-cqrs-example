@@ -1,7 +1,7 @@
 package com.nextbreakpoint.shop.designs.common;
 
-import com.nextbreakpoint.shop.designs.model.RecordAndMessage;
 import com.nextbreakpoint.shop.designs.model.CommandOutput;
+import com.nextbreakpoint.shop.designs.model.RecordAndMessage;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.rxjava.kafka.client.consumer.KafkaConsumer;

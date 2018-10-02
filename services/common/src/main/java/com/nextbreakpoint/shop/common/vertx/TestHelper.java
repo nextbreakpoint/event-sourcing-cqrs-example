@@ -1,6 +1,5 @@
 package com.nextbreakpoint.shop.common.vertx;
 
-import com.nextbreakpoint.shop.common.vertx.Authentication;
 import io.vertx.ext.auth.KeyStoreOptions;
 import io.vertx.ext.auth.jwt.JWTAuthOptions;
 import io.vertx.rxjava.core.Vertx;

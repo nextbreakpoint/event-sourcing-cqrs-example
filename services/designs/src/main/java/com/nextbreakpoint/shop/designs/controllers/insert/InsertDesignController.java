@@ -4,7 +4,6 @@ import com.nextbreakpoint.shop.common.model.Controller;
 import com.nextbreakpoint.shop.common.model.events.DesignChangedEvent;
 import com.nextbreakpoint.shop.common.vertx.DesignChangedMapper;
 import com.nextbreakpoint.shop.designs.Store;
-import com.nextbreakpoint.shop.designs.model.DeleteDesignResponse;
 import com.nextbreakpoint.shop.designs.model.InsertDesignRequest;
 import com.nextbreakpoint.shop.designs.model.InsertDesignResponse;
 import io.vertx.core.json.Json;

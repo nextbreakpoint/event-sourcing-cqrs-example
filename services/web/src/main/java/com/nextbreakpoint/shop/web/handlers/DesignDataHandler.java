@@ -1,8 +1,8 @@
 package com.nextbreakpoint.shop.web.handlers;
 
-import com.nextbreakpoint.shop.common.vertx.Authentication;
 import com.nextbreakpoint.shop.common.model.DesignResource;
 import com.nextbreakpoint.shop.common.model.Failure;
+import com.nextbreakpoint.shop.common.vertx.Authentication;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
 import io.vertx.rxjava.core.buffer.Buffer;

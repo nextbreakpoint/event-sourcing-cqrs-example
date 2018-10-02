@@ -9,9 +9,6 @@ import com.jayway.restassured.http.ContentType;
 import com.jayway.restassured.path.json.JsonPath;
 import com.nextbreakpoint.shop.common.model.Authority;
 import com.nextbreakpoint.shop.common.model.DesignDocument;
-import com.nextbreakpoint.shop.common.model.Message;
-import com.nextbreakpoint.shop.common.model.events.DesignChangedEvent;
-import com.nextbreakpoint.shop.common.vertx.KafkaClientFactory;
 import com.nextbreakpoint.shop.common.vertx.TestHelper;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
@@ -41,12 +38,6 @@ import java.util.UUID;
 import static com.jayway.restassured.RestAssured.given;
 import static com.nextbreakpoint.shop.common.model.Headers.AUTHORIZATION;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
-import static org.awaitility.Duration.FIVE_SECONDS;
-import static org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS;
-import static org.awaitility.Duration.ONE_MINUTE;
-import static org.awaitility.Duration.TEN_SECONDS;
-import static org.awaitility.Duration.TWO_SECONDS;
 import static org.hamcrest.CoreMatchers.notNullValue;
 
 @RunWith(JUnitPlatform.class)

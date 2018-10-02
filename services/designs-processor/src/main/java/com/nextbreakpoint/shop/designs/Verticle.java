@@ -50,8 +50,8 @@ import static com.nextbreakpoint.shop.common.model.Headers.CONTENT_TYPE;
 import static com.nextbreakpoint.shop.common.model.Headers.X_MODIFIED;
 import static com.nextbreakpoint.shop.common.model.Headers.X_XSRF_TOKEN;
 import static com.nextbreakpoint.shop.designs.Factory.createDeleteDesignHandler;
-import static com.nextbreakpoint.shop.designs.Factory.createInsertDesignHandler;
 import static com.nextbreakpoint.shop.designs.Factory.createDesignChangedHandler;
+import static com.nextbreakpoint.shop.designs.Factory.createInsertDesignHandler;
 import static com.nextbreakpoint.shop.designs.Factory.createUpdateDesignHandler;
 import static java.util.Arrays.asList;
 

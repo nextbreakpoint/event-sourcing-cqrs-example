@@ -1,8 +1,8 @@
 package com.nextbreakpoint.shop.auth.handlers;
 
-import com.nextbreakpoint.shop.common.vertx.Authentication;
 import com.nextbreakpoint.shop.common.model.Authority;
 import com.nextbreakpoint.shop.common.model.Failure;
+import com.nextbreakpoint.shop.common.vertx.Authentication;
 import com.nextbreakpoint.shop.common.vertx.JWTProviderFactory;
 import com.nextbreakpoint.shop.common.vertx.WebClientFactory;
 import io.vertx.core.Handler;
@@ -26,11 +26,11 @@ import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.nextbreakpoint.shop.common.vertx.Authentication.NULL_USER_UUID;
 import static com.nextbreakpoint.shop.common.model.ContentType.APPLICATION_JSON;
 import static com.nextbreakpoint.shop.common.model.Headers.ACCEPT;
 import static com.nextbreakpoint.shop.common.model.Headers.AUTHORIZATION;
 import static com.nextbreakpoint.shop.common.model.Headers.CONTENT_TYPE;
+import static com.nextbreakpoint.shop.common.vertx.Authentication.NULL_USER_UUID;
 
 public class GitHubSigninHandler implements Handler<RoutingContext> {
     public static final String CALLBACK_PATH = "/a/auth/callback";

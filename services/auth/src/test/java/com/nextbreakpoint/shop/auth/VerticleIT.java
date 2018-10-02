@@ -41,7 +41,7 @@ public class VerticleIT {
   private static final String OAUTH_TOKEN_PATH = "/login/oauth/access_token";
   private static final String OAUTH_USER_PATH = "/user";
   private static final String OAUTH_USER_EMAILS_PATH = "/user/emails";
-  private static final String ACCOUNTS_PATH = "/api/accounts";
+  private static final String ACCOUNTS_PATH = "/a/accounts";
   private static final String SOME_UUID = new UUID(0, 1).toString();
 
   private static RestAssuredConfig restAssuredConfig;
@@ -86,7 +86,7 @@ public class VerticleIT {
   @DisplayName("signin should redirect to login when user is not authenticated")
   public void signinShouldRedirectToLoginWhenUserIsNotAuthenticated() throws MalformedURLException {
     given().config(restAssuredConfig)
-            .when().get(makeBaseURL("/auth/signin"))
+            .when().get(makeBaseURL("/a/auth/signin"))
             .then().assertThat().statusCode(302)
             .and().header("Location", containsString("/login/oauth/authorize?"));
   }
@@ -116,8 +116,8 @@ public class VerticleIT {
 
     given().config(restAssuredConfig)
             .with().param("code", "xxx")
-            .and().param("state", "/auth/signin/content/designs")
-            .when().get(makeBaseURL("/auth/callback"))
+            .and().param("state", "/a/auth/signin/content/designs")
+            .when().get(makeBaseURL("/a/auth/callback"))
             .then().assertThat().statusCode(303)
             .and().header("Location", startsWith("https://localhost:8080/content/designs"));
 
@@ -148,8 +148,8 @@ public class VerticleIT {
 
     given().config(restAssuredConfig)
             .with().param("code", "xxx")
-            .and().param("state", "/auth/signin/content/designs")
-            .when().get(makeBaseURL("/auth/callback"))
+            .and().param("state", "/a/auth/signin/content/designs")
+            .when().get(makeBaseURL("/a/auth/callback"))
             .then().assertThat().statusCode(303)
             .and().header("Location", startsWith("https://localhost:8080/content/designs"));
 
@@ -169,8 +169,8 @@ public class VerticleIT {
 
     given().config(restAssuredConfig)
             .with().param("code", "xxx")
-            .and().param("state", "/auth/signin/content/designs")
-            .when().get(makeBaseURL("/auth/callback"))
+            .and().param("state", "/a/auth/signin/content/designs")
+            .when().get(makeBaseURL("/a/auth/callback"))
             .then().assertThat().statusCode(303)
             .and().header("Location", startsWith("https://localhost:8080/error/500"));
 
@@ -191,8 +191,8 @@ public class VerticleIT {
 
     given().config(restAssuredConfig)
             .with().param("code", "xxx")
-            .and().param("state", "/auth/signin/content/designs")
-            .when().get(makeBaseURL("/auth/callback"))
+            .and().param("state", "/a/auth/signin/content/designs")
+            .when().get(makeBaseURL("/a/auth/callback"))
             .then().assertThat().statusCode(303)
             .and().header("Location", startsWith("https://localhost:8080/error/403"));
 
@@ -219,8 +219,8 @@ public class VerticleIT {
 
     given().config(restAssuredConfig)
             .with().param("code", "xxx")
-            .and().param("state", "/auth/signin/content/designs")
-            .when().get(makeBaseURL("/auth/callback"))
+            .and().param("state", "/a/auth/signin/content/designs")
+            .when().get(makeBaseURL("/a/auth/callback"))
             .then().assertThat().statusCode(303)
             .and().header("Location", startsWith("https://localhost:8080/error/403"));
 
@@ -248,8 +248,8 @@ public class VerticleIT {
 
     given().config(restAssuredConfig)
             .with().param("code", "xxx")
-            .and().param("state", "/auth/signin/content/designs")
-            .when().get(makeBaseURL("/auth/callback"))
+            .and().param("state", "/a/auth/signin/content/designs")
+            .when().get(makeBaseURL("/a/auth/callback"))
             .then().assertThat().statusCode(303)
             .and().header("Location", startsWith("https://localhost:8080/error/500"));
 
@@ -285,8 +285,8 @@ public class VerticleIT {
 
     given().config(restAssuredConfig)
             .with().param("code", "xxx")
-            .and().param("state", "/auth/signin/content/designs")
-            .when().get(makeBaseURL("/auth/callback"))
+            .and().param("state", "/a/auth/signin/content/designs")
+            .when().get(makeBaseURL("/a/auth/callback"))
             .then().assertThat().statusCode(303)
             .and().header("Location", startsWith("https://localhost:8080/error/403"));
 
@@ -321,8 +321,8 @@ public class VerticleIT {
 
     given().config(restAssuredConfig)
             .with().param("code", "xxx")
-            .and().param("state", "/auth/signin/content/designs")
-            .when().get(makeBaseURL("/auth/callback"))
+            .and().param("state", "/a/auth/signin/content/designs")
+            .when().get(makeBaseURL("/a/auth/callback"))
             .then().assertThat().statusCode(303)
             .and().header("Location", startsWith("https://localhost:8080/error/403"));
 
@@ -354,8 +354,8 @@ public class VerticleIT {
 
     given().config(restAssuredConfig)
             .with().param("code", "xxx")
-            .and().param("state", "/auth/signin/content/designs")
-            .when().get(makeBaseURL("/auth/callback"))
+            .and().param("state", "/a/auth/signin/content/designs")
+            .when().get(makeBaseURL("/a/auth/callback"))
             .then().assertThat().statusCode(303)
             .and().header("Location", startsWith("https://localhost:8080/error/403"));
 
@@ -365,8 +365,8 @@ public class VerticleIT {
 
     given().config(restAssuredConfig)
             .with().param("code", "xxx")
-            .and().param("state", "/auth/signin/content/designs")
-            .when().get(makeBaseURL("/auth/callback"))
+            .and().param("state", "/a/auth/signin/content/designs")
+            .when().get(makeBaseURL("/a/auth/callback"))
             .then().assertThat().statusCode(303)
             .and().header("Location", startsWith("https://localhost:8080/error/403"));
 
@@ -398,8 +398,8 @@ public class VerticleIT {
 
     given().config(restAssuredConfig)
             .with().param("code", "xxx")
-            .and().param("state", "/auth/signin/content/designs")
-            .when().get(makeBaseURL("/auth/callback"))
+            .and().param("state", "/a/auth/signin/content/designs")
+            .when().get(makeBaseURL("/a/auth/callback"))
             .then().assertThat().statusCode(303)
             .and().header("Location", startsWith("https://localhost:8080/error/500"));
 
@@ -423,8 +423,8 @@ public class VerticleIT {
 
     given().config(restAssuredConfig)
             .with().param("code", "xxx")
-            .and().param("state", "/auth/signin/content/designs")
-            .when().get(makeBaseURL("/auth/callback"))
+            .and().param("state", "/a/auth/signin/content/designs")
+            .when().get(makeBaseURL("/a/auth/callback"))
             .then().assertThat().statusCode(303)
             .and().header("Location", startsWith("https://localhost:8080/error/500"));
 
@@ -443,8 +443,8 @@ public class VerticleIT {
 
     given().config(restAssuredConfig)
             .with().param("code", "xxx")
-            .and().param("state", "/auth/signin/content/designs")
-            .when().get(makeBaseURL("/auth/callback"))
+            .and().param("state", "/a/auth/signin/content/designs")
+            .when().get(makeBaseURL("/a/auth/callback"))
             .then().assertThat().statusCode(303)
             .and().header("Location", startsWith("https://localhost:8080/error/403"));
 

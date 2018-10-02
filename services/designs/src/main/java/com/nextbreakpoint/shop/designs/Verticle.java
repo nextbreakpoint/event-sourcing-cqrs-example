@@ -166,7 +166,7 @@ public class Verticle extends AbstractVerticle {
 
         mainRouter.route().failureHandler(ResponseHelper::sendFailure);
 
-        mainRouter.mountSubRouter("/api", apiRouter);
+        mainRouter.mountSubRouter("/a", apiRouter);
 
         final HttpServerOptions options = ServerUtil.makeServerOptions(config);
 

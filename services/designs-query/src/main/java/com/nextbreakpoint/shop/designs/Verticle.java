@@ -1,6 +1,5 @@
 package com.nextbreakpoint.shop.designs;
 
-import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Session;
 import com.nextbreakpoint.shop.common.cassandra.CassandraClusterFactory;
 import com.nextbreakpoint.shop.common.graphite.GraphiteManager;
@@ -112,7 +111,7 @@ public class Verticle extends AbstractVerticle {
 
         final CorsHandler corsHandler = CORSHandlerFactory.createWithAll(webUrl, asList(AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN, X_MODIFIED), asList(CONTENT_TYPE, X_XSRF_TOKEN, X_MODIFIED));
 
-        apiRouter.route("/designs/q/*").handler(corsHandler);
+        apiRouter.route("/designs/*").handler(corsHandler);
 
         final Handler<RoutingContext> onAccessDenied = routingContext -> routingContext.fail(Failure.accessDenied("Authorisation failed"));
 
@@ -122,24 +121,24 @@ public class Verticle extends AbstractVerticle {
 
         final Handler loadDesignHandler = new AccessHandler(jwtProvider, createLoadDesignHandler(store), onAccessDenied, asList(ADMIN, GUEST, ANONYMOUS));
 
-        apiRouter.get("/designs/q/:uuid/:zoom/:x/:y/:size.png")
+        apiRouter.get("/designs/:uuid/:zoom/:x/:y/:size.png")
                 .produces(IMAGE_PNG)
                 .handler(getTileHandler);
 
-        apiRouter.getWithRegex("/designs/q/" + UUID_REGEXP)
+        apiRouter.getWithRegex("/designs/" + UUID_REGEXP)
                 .produces(APPLICATION_JSON)
                 .handler(loadDesignHandler);
 
-        apiRouter.get("/designs/q")
+        apiRouter.get("/designs")
                 .produces(APPLICATION_JSON)
                 .handler(listDesignsHandler);
 
-        apiRouter.options("/designs/q/*")
+        apiRouter.options("/designs/*")
                 .handler(ResponseHelper::sendNoContent);
 
         mainRouter.route().failureHandler(ResponseHelper::sendFailure);
 
-        mainRouter.mountSubRouter("/api", apiRouter);
+        mainRouter.mountSubRouter("/q", apiRouter);
 
         final HttpServerOptions options = ServerUtil.makeServerOptions(config);
 

@@ -81,7 +81,7 @@ public class Verticle extends AbstractVerticle {
 
         final JWTAuth jwtProvider = JWTProviderFactory.create(vertx, config);
 
-        final WebClient designsClient = WebClientFactory.create(vertx, config.getString("server_designs_url"), config);
+        final WebClient designsClient = WebClientFactory.create(vertx, config.getString("server_designs_query_url"), config);
         final WebClient accountsClient = WebClientFactory.create(vertx, config.getString("server_accounts_url"), config);
 
         final Router mainRouter = Router.router(vertx);
@@ -142,11 +142,11 @@ public class Verticle extends AbstractVerticle {
         mainRouter.get("/content/designs")
                 .handler(createPageHandler(engine, "content/designs"));
 
-        mainRouter.getWithRegex("/designs/events/([0-9]+)/" + UUID_REGEXP)
-                .handler(routingContext -> ResponseHelper.redirectToURL(routingContext, () -> webConfig.getString("designs_sse_url") + "/api" + routingContext.request().uri()));
+        mainRouter.getWithRegex("/designs/([0-9]+)/" + UUID_REGEXP)
+                .handler(routingContext -> ResponseHelper.redirectToURL(routingContext, () -> webConfig.getString("designs_sse_url") + "/" + routingContext.request().getParam("pram0") + "/" + routingContext.request().getParam("pram1")));
 
-        mainRouter.getWithRegex("/designs/events/([0-9]+)")
-                .handler(routingContext -> ResponseHelper.redirectToURL(routingContext, () -> webConfig.getString("designs_sse_url") + "/api" + routingContext.request().uri()));
+        mainRouter.getWithRegex("/designs/([0-9]+)")
+                .handler(routingContext -> ResponseHelper.redirectToURL(routingContext, () -> webConfig.getString("designs_sse_url") + "/" + routingContext.request().getParam("pram0")));
 
         mainRouter.get("/")
                 .handler(routingContext -> ResponseHelper.redirectToURL(routingContext, () -> webConfig.getString("web_url") + "/content/designs"));
@@ -168,11 +168,10 @@ public class Verticle extends AbstractVerticle {
 
     private void injectConfig(RoutingContext routingContext, JsonObject webConfig) {
         routingContext.put("admin_url", webConfig.getString("web_url") + "/admin/designs");
-        routingContext.put("login_url", webConfig.getString("auth_url") + "/auth/signin/content/designs");
-        routingContext.put("logout_url", webConfig.getString("auth_url") + "/auth/signout/content/designs");
+        routingContext.put("login_url", webConfig.getString("auth_url") + "/signin/content/designs");
+        routingContext.put("logout_url", webConfig.getString("auth_url") + "/signout/content/designs");
         routingContext.put("web_url", webConfig.getString("web_url"));
         routingContext.put("auth_url", webConfig.getString("auth_url"));
-        routingContext.put("designs_url", webConfig.getString("designs_url"));
         routingContext.put("accounts_url", webConfig.getString("accounts_url"));
         routingContext.put("designs_processor_url", webConfig.getString("designs_processor_url"));
         routingContext.put("designs_command_url", webConfig.getString("designs_command_url"));

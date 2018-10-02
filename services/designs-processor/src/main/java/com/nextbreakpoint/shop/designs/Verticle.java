@@ -128,13 +128,13 @@ public class Verticle extends AbstractVerticle {
 
         final CorsHandler corsHandler = CORSHandlerFactory.createWithAll(webUrl, asList(AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN, X_MODIFIED), asList(CONTENT_TYPE, X_XSRF_TOKEN, X_MODIFIED));
 
-        apiRouter.route("/designs/p/*").handler(corsHandler);
+        apiRouter.route("/p/designs/*").handler(corsHandler);
 
         final Handler<RoutingContext> onAccessDenied = routingContext -> routingContext.fail(Failure.accessDenied("Authorisation failed"));
 
         mainRouter.route().failureHandler(ResponseHelper::sendFailure);
 
-        mainRouter.mountSubRouter("/api", apiRouter);
+        mainRouter.mountSubRouter("/p", apiRouter);
 
         final Map<String, Handler<RecordAndMessage>> commandHandlers = new HashMap<>();
 

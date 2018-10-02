@@ -58,7 +58,7 @@ public class UserHandler implements Handler<RoutingContext> {
 
         final String token = Authentication.generateToken(jwtProvider, Authentication.NULL_USER_UUID, Arrays.asList(PLATFORM));
 
-        accountsClient.get("/api/accounts/" + userUuid)
+        accountsClient.get("/a/accounts/" + userUuid)
                 .putHeader(AUTHORIZATION, Authentication.makeAuthorization(token))
                 .putHeader(ACCEPT, APPLICATION_JSON)
                 .rxSend().subscribe(response -> handleAccount(routingContext, user, response), err -> routingContext.next());

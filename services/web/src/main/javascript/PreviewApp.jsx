@@ -47,7 +47,7 @@ class App extends React.Component {
     }
 
     handleLogin() {
-        window.location = this.state.config.auth_url + "/auth/signin/admin/designs/" + uuid
+        window.location = this.state.config.auth_url + "/signin/admin/designs/" + uuid
     }
 
     handleLogout() {
@@ -55,7 +55,7 @@ class App extends React.Component {
 
         this.setState(Object.assign(this.state, {role: 'anonymous', name: 'Stranger'}))
 
-        //window.location = this.state.config.auth_url + "/auth/signout/admin/designs/" + uuid
+        //window.location = this.state.config.auth_url + "/signout/admin/designs/" + uuid
     }
 
     handleUpdateDesign(e) {
@@ -69,7 +69,7 @@ class App extends React.Component {
             withCredentials: true
         }
 
-        axios.put(component.state.config.designs_url + '/api/designs/' + uuid, this.state.design, config)
+        axios.put(component.state.config.designs_command_url + '/' + uuid, this.state.design, config)
             .then(function (content) {
                 if (content.status != 200) {
                     console.log("Can't update design")
@@ -97,7 +97,7 @@ class App extends React.Component {
 
         try {
             if (typeof(EventSource) !== "undefined") {
-                var source = new EventSource(component.state.config.web_url + "/designs/events/" + timestamp + "/" + uuid, { withCredentials: true })
+                var source = new EventSource(component.state.config.web_url + "/designs/" + timestamp + "/" + uuid, { withCredentials: true })
 
                 source.onerror = function(error) {
                    console.log(error)
@@ -153,7 +153,7 @@ class App extends React.Component {
             withCredentials: true
         }
 
-        axios.get(component.state.config.accounts_url + '/api/accounts/me', config)
+        axios.get(component.state.config.accounts_url + '/me', config)
             .then(function (content) {
                 let role = content.data.role
                 let name = content.data.name
@@ -192,7 +192,7 @@ class App extends React.Component {
             withCredentials: true
         }
 
-        axios.get(component.state.config.designs_url + '/api/designs/' + uuid, config)
+        axios.get(component.state.config.designs_query_url + '/' + uuid, config)
             .then(function (content) {
                 let envelop = content.data
 
@@ -219,7 +219,7 @@ class App extends React.Component {
 
     render() {
         if (this.state.config && this.state.timestamp > 0) {
-            const url = this.state.config.designs_url + '/api/designs/' + uuid + '/{z}/{x}/{y}/256.png?t=' + this.state.timestamp
+            const url = this.state.config.designs_query_url + '/' + uuid + '/{z}/{x}/{y}/256.png?t=' + this.state.timestamp
 
             const parent = { label: 'Designs', link: base_url + '/admin/designs' }
 

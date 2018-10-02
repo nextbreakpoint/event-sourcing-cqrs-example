@@ -16,7 +16,7 @@
                     var image = $('<img></img>')
                         .attr('class', 'design-image')
                         .attr('id', design.uuid)
-                        .attr('src', '{{context.get('designs_url')}}/api/designs/' + design.uuid + '/0/0/0/512.png?t=' + timestamp)
+                        .attr('src', '{{context.get('designs_query_url')}}/' + design.uuid + '/0/0/0/512.png?t=' + timestamp)
                         .attr('alt', '{{context.get('web_url')}}/content/designs/' + design.uuid);
 
                     var script = $('<pre></pre>')
@@ -55,7 +55,7 @@
 
                     var uuid = "{{design.uuid}}";
 
-                    var source = new EventSource("{{context.get('web_url')}}/designs/events/" + timestamp + "/" + uuid, { withCredentials: true });
+                    var source = new EventSource("{{context.get('web_url')}}/designs/" + timestamp + "/" + uuid, { withCredentials: true });
 
                     source.addEventListener("update", function(event) {
                        console.log(event);
@@ -67,7 +67,7 @@
                        if (eventTimestamp > timestamp) {
                             $('#timestamp').val(eventTimestamp);
 
-                            $.get("{{context.get('designs_url')}}/api/designs/" + uuid).done(function(data) {
+                            $.get("{{context.get('designs_query_url')}}/" + uuid).done(function(data) {
                                 var design = JSON.parse(data.json)
 
                                 var manifest = $('#manifest').val();
@@ -98,7 +98,7 @@
 
                         $('#timestamp').val(timestamp);
 
-                        $.get("{{context.get('designs_url')}}/api/designs/" + uuid).done(function(data) {
+                        $.get("{{context.get('designs_query_url')}}/" + uuid).done(function(data) {
                             var design = JSON.parse(data.json)
 
                             var manifest = $('#manifest').val();

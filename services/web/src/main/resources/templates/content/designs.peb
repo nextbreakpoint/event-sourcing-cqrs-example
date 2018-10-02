@@ -15,7 +15,7 @@
                     var image = $('<img></img>')
                         .attr('class', 'designs-grid-element-image')
                         .attr('id', design.uuid)
-                        .attr('src', '{{context.get('designs_url')}}/api/designs/' + design.uuid + '/0/0/0/256.png?t=' + timestamp)
+                        .attr('src', '{{context.get('designs_query_url')}}/' + design.uuid + '/0/0/0/256.png?t=' + timestamp)
                         .attr('alt', '{{context.get('web_url')}}/content/designs/' + design.uuid);
 
                     var anchor = $('<a></a>')
@@ -40,7 +40,7 @@
                 if (typeof(EventSource) !== "undefined") {
                     var timestamp = $('#timestamp').val();
 
-                    var source = new EventSource("{{context.get('web_url')}}/designs/events/" + timestamp, { withCredentials: true });
+                    var source = new EventSource("{{context.get('web_url')}}/designs/" + timestamp, { withCredentials: true });
 
                     source.addEventListener("update", function(event) {
                        console.log(event);
@@ -52,7 +52,7 @@
                        if (eventTimestamp > timestamp) {
                            $('#timestamp').val(eventTimestamp);
 
-                           $.get("{{context.get('designs_url')}}/api/designs").done(function(data) {
+                           $.get("{{context.get('designs_query_url')}}").done(function(data) {
                                 updateDesigns(eventTimestamp, data);
                            }).fail(function(e) {
                                 console.log(e);
@@ -71,7 +71,7 @@
 
                        $('#timestamp').val(timestamp);
 
-                       $.get("{{context.get('designs_url')}}/api/designs").done(function(data) {
+                       $.get("{{context.get('designs_query_url')}}").done(function(data) {
                             updateDesigns(timestamp, data);
                        }).fail(function(e) {
                             console.log(e);

@@ -13,12 +13,12 @@ let DesignItem = class DesignItem extends React.Component {
 
         if (this.props.role == 'admin') {
             if (design.selected) {
-                return <tr><td><Input label=" " defaultChecked="checked" className="filled-in" name="uuid" id={"uuid-" + design.uuid} type="checkbox" onClick={(e) => this.props.onSelect(design.uuid, false)}/></td><td><img className="z-depth-3" width={128} height={128} src={this.props.config.designs_url + "/api/designs/" + design.uuid + "/0/0/0/256.png?t=" + this.props.timestamp}/></td><td><a href={"/admin/designs/" + design.uuid}>{design.uuid}</a></td></tr>
+                return <tr><td><Input label=" " defaultChecked="checked" className="filled-in" name="uuid" id={"uuid-" + design.uuid} type="checkbox" onClick={(e) => this.props.onSelect(design.uuid, false)}/></td><td><img className="z-depth-3" width={128} height={128} src={this.props.config.designs_query_url + "/" + design.uuid + "/0/0/0/256.png?t=" + this.props.timestamp}/></td><td><a href={"/admin/designs/" + design.uuid}>{design.uuid}</a></td></tr>
             } else {
-                return <tr><td><Input label=" "                          className="filled-in" name="uuid" id={"uuid-" + design.uuid} type="checkbox" onClick={(e) => this.props.onSelect(design.uuid, true )}/></td><td><img className="z-depth-3" width={128} height={128} src={this.props.config.designs_url + "/api/designs/" + design.uuid + "/0/0/0/256.png?t=" + this.props.timestamp}/></td><td><a href={"/admin/designs/" + design.uuid}>{design.uuid}</a></td></tr>
+                return <tr><td><Input label=" "                          className="filled-in" name="uuid" id={"uuid-" + design.uuid} type="checkbox" onClick={(e) => this.props.onSelect(design.uuid, true )}/></td><td><img className="z-depth-3" width={128} height={128} src={this.props.config.designs_query_url + "/" + design.uuid + "/0/0/0/256.png?t=" + this.props.timestamp}/></td><td><a href={"/admin/designs/" + design.uuid}>{design.uuid}</a></td></tr>
             }
         } else {
-            return <tr><td></td><td><img className="z-depth-3" width={128} height={128} src={this.props.config.designs_url + "/api/designs/" + design.uuid + "/0/0/0/256.png?t=" + this.props.timestamp}/></td><td><a href={"/admin/designs/" + design.uuid}>{design.uuid}</a></td></tr>
+            return <tr><td></td><td><img className="z-depth-3" width={128} height={128} src={this.props.config.designs_query_url + "/" + design.uuid + "/0/0/0/256.png?t=" + this.props.timestamp}/></td><td><a href={"/admin/designs/" + design.uuid}>{design.uuid}</a></td></tr>
         }
     }
 }

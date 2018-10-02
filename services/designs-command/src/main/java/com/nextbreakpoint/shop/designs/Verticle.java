@@ -97,7 +97,7 @@ public class Verticle extends AbstractVerticle {
 
         final CorsHandler corsHandler = CORSHandlerFactory.createWithAll(webUrl, asList(AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN, X_MODIFIED), asList(CONTENT_TYPE, X_XSRF_TOKEN, X_MODIFIED));
 
-        apiRouter.route("/designs/c/*").handler(corsHandler);
+        apiRouter.route("/designs/*").handler(corsHandler);
 
         final Handler<RoutingContext> onAccessDenied = routingContext -> routingContext.fail(Failure.accessDenied("Authorisation failed"));
 
@@ -107,26 +107,26 @@ public class Verticle extends AbstractVerticle {
 
         final Handler deleteDesignHandler = new AccessHandler(jwtProvider, createDeleteDesignHandler(producer, topic, messageSource), onAccessDenied, asList(ADMIN));
 
-        apiRouter.post("/designs/c")
+        apiRouter.post("/designs")
                 .produces(APPLICATION_JSON)
                 .consumes(APPLICATION_JSON)
                 .handler(insertDesignHandler);
 
-        apiRouter.putWithRegex("/designs/c/" + UUID_REGEXP)
+        apiRouter.putWithRegex("/designs/" + UUID_REGEXP)
                 .produces(APPLICATION_JSON)
                 .consumes(APPLICATION_JSON)
                 .handler(updateDesignHandler);
 
-        apiRouter.deleteWithRegex("/designs/c/" + UUID_REGEXP)
+        apiRouter.deleteWithRegex("/designs/" + UUID_REGEXP)
                 .produces(APPLICATION_JSON)
                 .handler(deleteDesignHandler);
 
-        apiRouter.options("/designs/c/*")
+        apiRouter.options("/designs/*")
                 .handler(ResponseHelper::sendNoContent);
 
         mainRouter.route().failureHandler(ResponseHelper::sendFailure);
 
-        mainRouter.mountSubRouter("/api", apiRouter);
+        mainRouter.mountSubRouter("/c", apiRouter);
 
         final HttpServerOptions options = ServerUtil.makeServerOptions(config);
 

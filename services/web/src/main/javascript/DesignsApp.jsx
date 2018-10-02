@@ -46,7 +46,7 @@ class App extends React.Component {
             withCredentials: true
         }
 
-        axios.post(component.state.config.designs_url + '/api/designs', data, config)
+        axios.post(component.state.config.designs_command_url, data, config)
             .then(function (content) {
                 if (content.status == 201) {
                     var designs = component.state.designs.slice()
@@ -73,7 +73,7 @@ class App extends React.Component {
             .filter((design) => {
                 return design.selected
             }).map((design) => {
-                return axios.delete(component.state.config.designs_url + '/api/designs/' + design.uuid, config)
+                return axios.delete(component.state.config.designs_command_url + '/' + design.uuid, config)
             })
 
         axios.all(promises)
@@ -109,7 +109,7 @@ class App extends React.Component {
     }
 
     handleLogin() {
-        window.location = this.state.config.auth_url + "/auth/signin/admin/designs"
+        window.location = this.state.config.auth_url + "/signin/admin/designs"
     }
 
     handleLogout() {
@@ -119,7 +119,7 @@ class App extends React.Component {
 
         this.setupDesigns();
 
-        //window.location = this.state.config.auth_url + "/auth/signout/admin/designs"
+        //window.location = this.state.config.auth_url + "/signout/admin/designs"
     }
 
     installWatcher(timestamp) {
@@ -127,7 +127,7 @@ class App extends React.Component {
 
         try {
             if (typeof(EventSource) !== "undefined") {
-                var source = new EventSource(component.state.config.web_url + "/designs/events/" + timestamp, { withCredentials: true })
+                var source = new EventSource(component.state.config.web_url + "/designs/" + timestamp, { withCredentials: true })
 
                 source.onerror = function(error) {
                    console.log(error)
@@ -183,7 +183,7 @@ class App extends React.Component {
             withCredentials: true
         }
 
-        axios.get(component.state.config.accounts_url + '/api/accounts/me', config)
+        axios.get(component.state.config.accounts_url + '/me', config)
             .then(function (content) {
                 let role = content.data.role
                 let name = content.data.name
@@ -222,7 +222,7 @@ class App extends React.Component {
             withCredentials: true
         }
 
-        axios.get(component.state.config.designs_url + '/api/designs', config)
+        axios.get(component.state.config.designs_query_url, config)
             .then(function (content) {
                 let designs = content.data.map((design) => { return { uuid: design.uuid, checksum: design.checksum, selected: false }})
 

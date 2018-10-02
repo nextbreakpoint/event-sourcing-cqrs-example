@@ -114,13 +114,13 @@ public class Verticle extends AbstractVerticle {
 
         final Handler eventHandler = new AccessHandler(jwtProvider, EventsHandler.create(vertx), onAccessDenied, asList(ANONYMOUS, ADMIN, GUEST));
 
-        apiRouter.getWithRegex("/designs/events/([0-9]+)/" + UUID_REGEXP)
+        apiRouter.getWithRegex("/designs/([0-9]+)/" + UUID_REGEXP)
                 .handler(eventHandler);
 
-        apiRouter.getWithRegex("/designs/events/([0-9]+)")
+        apiRouter.getWithRegex("/designs/([0-9]+)")
                 .handler(eventHandler);
 
-        mainRouter.mountSubRouter("/api", apiRouter);
+        mainRouter.mountSubRouter("/e", apiRouter);
 
         final Map<String, Handler<Message>> handlers = new HashMap<>();
 

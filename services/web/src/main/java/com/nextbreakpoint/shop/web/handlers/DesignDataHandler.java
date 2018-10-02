@@ -32,7 +32,7 @@ public class DesignDataHandler implements Handler<RoutingContext> {
 
             final String uuid = routingContext.pathParam("param0");
 
-            final HttpRequest<Buffer> request = client.get("/api/designs/" + uuid);
+            final HttpRequest<Buffer> request = client.get("/a/designs/" + uuid);
 
             if (token != null) {
                 request.putHeader(AUTHORIZATION, token);
@@ -75,7 +75,7 @@ public class DesignDataHandler implements Handler<RoutingContext> {
     }
 
     private DesignResource makeDesign(String uuid, String checksum, String modified, String manifest, String metadata, String script) {
-        return new DesignResource(uuid, checksum, webUrl + "/content/designs/" + uuid, designsUrl + "/api/designs/" + uuid + "/0/0/0/512.png", modified, manifest, metadata, script);
+        return new DesignResource(uuid, checksum, webUrl + "/content/designs/" + uuid, designsUrl + "/" + uuid + "/0/0/0/512.png", modified, manifest, metadata, script);
     }
 
     public static DesignDataHandler create(WebClient client, JsonObject config) {

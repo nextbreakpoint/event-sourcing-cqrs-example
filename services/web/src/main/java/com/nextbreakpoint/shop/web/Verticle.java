@@ -113,7 +113,6 @@ public class Verticle extends AbstractVerticle {
         final JsonObject webConfig = new JsonObject()
                 .put("web_url", config.getString("client_web_url"))
                 .put("auth_url", config.getString("client_auth_url"))
-                .put("designs_url", config.getString("client_designs_url"))
                 .put("accounts_url", config.getString("client_accounts_url"))
                 .put("designs_processor_url", config.getString("client_designs_processor_url"))
                 .put("designs_command_url", config.getString("client_designs_command_url"))
@@ -142,11 +141,11 @@ public class Verticle extends AbstractVerticle {
         mainRouter.get("/content/designs")
                 .handler(createPageHandler(engine, "content/designs"));
 
-        mainRouter.getWithRegex("/designs/([0-9]+)/" + UUID_REGEXP)
-                .handler(routingContext -> ResponseHelper.redirectToURL(routingContext, () -> webConfig.getString("designs_sse_url") + "/" + routingContext.request().getParam("pram0") + "/" + routingContext.request().getParam("pram1")));
+        mainRouter.getWithRegex("/watch/designs/([0-9]+)/" + UUID_REGEXP)
+                .handler(routingContext -> ResponseHelper.redirectToURL(routingContext, () -> webConfig.getString("designs_sse_url") + "/" + routingContext.request().getParam("param0") + "/" + routingContext.request().getParam("param1")));
 
-        mainRouter.getWithRegex("/designs/([0-9]+)")
-                .handler(routingContext -> ResponseHelper.redirectToURL(routingContext, () -> webConfig.getString("designs_sse_url") + "/" + routingContext.request().getParam("pram0")));
+        mainRouter.getWithRegex("/watch/designs/([0-9]+)")
+                .handler(routingContext -> ResponseHelper.redirectToURL(routingContext, () -> webConfig.getString("designs_sse_url") + "/" + routingContext.request().getParam("param0")));
 
         mainRouter.get("/")
                 .handler(routingContext -> ResponseHelper.redirectToURL(routingContext, () -> webConfig.getString("web_url") + "/content/designs"));

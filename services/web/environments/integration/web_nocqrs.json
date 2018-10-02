@@ -20,13 +20,13 @@
   "client_auth_url": "http://${stub.host}:${stub.port}/a/auth",
   "client_accounts_url": "http://${stub.host}:${stub.port}/a/accounts",
   "client_designs_processor_url": "http://${stub.host}:${stub.port}/p/designs",
-  "client_designs_command_url": "http://${stub.host}:${stub.port}/c/designs",
-  "client_designs_query_url": "http://${stub.host}:${stub.port}/q/designs",
+  "client_designs_command_url": "http://${stub.host}:${stub.port}/a/designs",
+  "client_designs_query_url": "http://${stub.host}:${stub.port}/a/designs",
   "client_designs_sse_url": "http://${stub.host}:${stub.port}/e/designs",
 
   "server_auth_url": "http://${stub.host}:${stub.port}/a/auth",
   "server_accounts_url": "http://${stub.host}:${stub.port}/a/accounts",
-  "server_designs_query_url": "http://${stub.host}:${stub.port}/q/designs",
+  "server_designs_query_url": "http://${stub.host}:${stub.port}/a/designs",
 
   "csrf_secret": "tshirts",
 

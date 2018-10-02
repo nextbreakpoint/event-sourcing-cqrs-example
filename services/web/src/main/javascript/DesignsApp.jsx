@@ -127,7 +127,7 @@ class App extends React.Component {
 
         try {
             if (typeof(EventSource) !== "undefined") {
-                var source = new EventSource(component.state.config.web_url + "/designs/" + timestamp, { withCredentials: true })
+                var source = new EventSource(component.state.config.web_url + "/watch/designs/" + timestamp, { withCredentials: true })
 
                 source.onerror = function(error) {
                    console.log(error)

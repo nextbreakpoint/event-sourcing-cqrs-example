@@ -20,13 +20,13 @@
   "client_auth_url": "https://localhost:3000/a/auth",
   "client_accounts_url": "https://localhost:3002/a/accounts",
   "client_designs_processor_url": "https://localhost:3011/p/designs",
-  "client_designs_command_url": "https://localhost:3031/c/designs",
-  "client_designs_query_url": "https://localhost:3021/q/designs",
+  "client_designs_command_url": "https://localhost:3001/a/designs",
+  "client_designs_query_url": "https://localhost:3001/a/designs",
   "client_designs_sse_url": "https://localhost:3041/e/designs",
 
   "server_auth_url": "https://localhost:3000/a/auth",
   "server_accounts_url": "https://localhost:3002/a/accounts",
-  "server_designs_query_url": "https://localhost:3021/q/designs",
+  "server_designs_query_url": "https://localhost:3001/a/designs",
 
   "csrf_secret": "tshirts",
 

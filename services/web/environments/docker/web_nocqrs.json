@@ -16,17 +16,17 @@
   "jwt_keystore_type": "jceks",
   "jwt_keystore_secret": "secret",
 
-  "client_web_url": "https://localhost:8080",
-  "client_auth_url": "http://localhost:9090/a/auth",
-  "client_accounts_url": "http://localhost:9090/a/accounts",
-  "client_designs_processor_url": "http://localhost:9090/p/designs",
-  "client_designs_command_url": "http://localhost:9090/c/designs",
-  "client_designs_query_url": "http://localhost:9090/q/designs",
-  "client_designs_sse_url": "http://localhost:9090/e/designs",
+  "client_web_url": "https://localhost",
+  "client_auth_url": "https://localhost/a/auth",
+  "client_accounts_url": "https://localhost/a/accounts",
+  "client_designs_processor_url": "https://localhost/p/designs",
+  "client_designs_command_url": "https://localhost/a/designs",
+  "client_designs_query_url": "https://localhost/a/designs",
+  "client_designs_sse_url": "https://localhost/e/designs",
 
-  "server_auth_url": "http://localhost:9090/a/auth",
-  "server_accounts_url": "http://localhost:9090/a/accounts",
-  "server_designs_query_url": "http://localhost:9090/q/designs",
+  "server_auth_url": "https://service-auth:3000/a/auth",
+  "server_accounts_url": "https://service-accounts:3002/a/accounts",
+  "server_designs_query_url": "https://service-designs:3001/a/designs",
 
   "csrf_secret": "tshirts",
 

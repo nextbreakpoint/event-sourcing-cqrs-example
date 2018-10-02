@@ -55,7 +55,7 @@
 
                     var uuid = "{{design.uuid}}";
 
-                    var source = new EventSource("{{context.get('web_url')}}/designs/" + timestamp + "/" + uuid, { withCredentials: true });
+                    var source = new EventSource("{{context.get('web_url')}}/watch/designs/" + timestamp + "/" + uuid, { withCredentials: true });
 
                     source.addEventListener("update", function(event) {
                        console.log(event);

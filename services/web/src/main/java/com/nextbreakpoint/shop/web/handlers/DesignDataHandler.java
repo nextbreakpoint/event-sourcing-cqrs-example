@@ -23,7 +23,7 @@ public class DesignDataHandler implements Handler<RoutingContext> {
     public DesignDataHandler(WebClient client, JsonObject config) {
         this.client = client;
         this.webUrl = config.getString("client_web_url");
-        this.designsUrl = config.getString("client_designs_url");
+        this.designsUrl = config.getString("client_designs_query_url");
     }
 
     public void handle(RoutingContext routingContext) {
@@ -32,7 +32,7 @@ public class DesignDataHandler implements Handler<RoutingContext> {
 
             final String uuid = routingContext.pathParam("param0");
 
-            final HttpRequest<Buffer> request = client.get("/a/designs/" + uuid);
+            final HttpRequest<Buffer> request = client.get(designsUrl + "/" + uuid);
 
             if (token != null) {
                 request.putHeader(AUTHORIZATION, token);

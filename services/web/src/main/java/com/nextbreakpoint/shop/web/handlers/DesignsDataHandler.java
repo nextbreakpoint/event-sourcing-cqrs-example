@@ -29,14 +29,14 @@ public class DesignsDataHandler implements Handler<RoutingContext> {
     public DesignsDataHandler(WebClient client, JsonObject config) {
         this.client = client;
         this.webUrl = config.getString("client_web_url");
-        this.designsUrl = config.getString("client_designs_url");
+        this.designsUrl = config.getString("client_designs_query_url");
     }
 
     public void handle(RoutingContext routingContext) {
         try {
             final String token = Authentication.getToken(routingContext);
 
-            final HttpRequest<Buffer> request = client.get("/a/designs");
+            final HttpRequest<Buffer> request = client.get(designsUrl);
 
             if (token != null) {
                 request.putHeader(AUTHORIZATION, token);

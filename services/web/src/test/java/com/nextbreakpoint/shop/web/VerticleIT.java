@@ -92,6 +92,10 @@ public class VerticleIT {
             .match(get("/a/designs"), withHeader("accept", "application/json"))
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("[{\"uuid\":\"" + uuid + "\",\"checksum\":\"1\"}]"));
 
+    whenHttp(stubServer)
+            .match(get("/q/designs"), withHeader("accept", "application/json"))
+            .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("[{\"uuid\":\"" + uuid + "\",\"checksum\":\"1\"}]"));
+
     given().config(restAssuredConfig)
             .when().get(makeBaseURL("/content/designs"))
             .then().assertThat().statusCode(200)
@@ -122,6 +126,10 @@ public class VerticleIT {
             .match(get("/a/designs/" + designUuid), withHeader("accept", "application/json"))
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent(content));
 
+    whenHttp(stubServer)
+            .match(get("/q/designs/" + designUuid), withHeader("accept", "application/json"))
+            .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent(content));
+
     given().config(restAssuredConfig)
             .when().get(makeBaseURL("/content/designs/" + designUuid))
             .then().assertThat().statusCode(200)
@@ -136,6 +144,10 @@ public class VerticleIT {
 
     whenHttp(stubServer)
             .match(get("/a/designs"), withHeader("accept", "application/json"))
+            .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("[{\"uuid\":\"" + designUuid + "\",\"checksum\":\"1\"}]"));
+
+    whenHttp(stubServer)
+            .match(get("/q/designs"), withHeader("accept", "application/json"))
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("[{\"uuid\":\"" + designUuid + "\",\"checksum\":\"1\"}]"));
 
     whenHttp(stubServer)
@@ -174,6 +186,10 @@ public class VerticleIT {
 
     whenHttp(stubServer)
             .match(get("/a/designs/" + designUuid), withHeader("accept", "application/json"))
+            .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent(content));
+
+    whenHttp(stubServer)
+            .match(get("/q/designs/" + designUuid), withHeader("accept", "application/json"))
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent(content));
 
     whenHttp(stubServer)

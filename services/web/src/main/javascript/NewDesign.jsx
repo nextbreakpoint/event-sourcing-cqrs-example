@@ -1,14 +1,17 @@
-const React = require('react')
-const PropTypes = require('prop-types')
+import React from 'react'
+import PropTypes from 'prop-types'
 
-const { Card, Button, Icon } = require('react-materialize')
+import Button from '@material-ui/core/Button'
+import Card from '@material-ui/core/Card'
+import CardHeader from '@material-ui/core/CardHeader'
+import CardContent from '@material-ui/core/CardContent'
 
 let NewDesign = class NewDesign extends React.Component {
     constructor(props) {
         super(props)
 
-        let script = "fractal {\norbit [-2.0 - 2.0i,+2.0 + 2.0i] [x,n] {\nloop [0, 200] (mod2(x) > 40) {\nx = x * x + w;\n}\n}\ncolor [#FF000000] {\npalette gradient {\n[#FFFFFFFF > #FF000000, 100];\n[#FF000000 > #FFFFFFFF, 100];\n}\ninit {\nm = 100 * (1 + sin(mod(x) * 0.2 / pi));\n}\nrule (n > 0) [1] {\ngradient[m - 1]\n}\n}\n}\n"
-        let metadata = "{\"translation\":{\"x\":0.0,\"y\":0.0,\"z\":1.0,\"w\":0.0},\"rotation\":{\"x\":0.0,\"y\":0.0,\"z\":0.0,\"w\":0.0},\"scale\":{\"x\":1.0,\"y\":1.0,\"z\":1.0,\"w\":1.0},\"point\":{\"x\":0.0,\"y\":0.0},\"julia\":false,\"options\":{\"showPreview\":false,\"showTraps\":false,\"showOrbit\":false,\"showPoint\":false,\"previewOrigin\":{\"x\":0.0,\"y\":0.0},\"previewSize\":{\"x\":0.25,\"y\":0.25}}}"
+        let script = "fractal {\n\torbit [-2.0 - 2.0i,+2.0 + 2.0i] [x,n] {\n\t\tloop [0, 200] (mod2(x) > 40) {\n\t\t\tx = x * x + w;\n\t\t}\n\t}\n\tcolor [#FF000000] {\n\t\tpalette gradient {\n\t\t\t[#FFFFFFFF > #FF000000, 100];\n\t\t\t[#FF000000 > #FFFFFFFF, 100];\n\t\t}\n\t\tinit {\n\t\t\tm = 100 * (1 + sin(mod(x) * 0.2 / pi));\n\t\t}\n\t\trule (n > 0) [1] {\n\t\t\tgradient[m - 1]\n\t\t}\n\t}\n}\n"
+        let metadata = "{\n\t\"translation\":\n\t{\n\t\t\"x\":0.0,\n\t\t\"y\":0.0,\n\t\t\"z\":1.0,\n\t\t\"w\":0.0\n\t},\n\t\"rotation\":\n\t{\n\t\t\"x\":0.0,\n\t\t\"y\":0.0,\n\t\t\"z\":0.0,\n\t\t\"w\":0.0\n\t},\n\t\"scale\":\n\t{\n\t\t\"x\":1.0,\n\t\t\"y\":1.0,\n\t\t\"z\":1.0,\n\t\t\"w\":1.0\n\t},\n\t\"point\":\n\t{\n\t\t\"x\":0.0,\n\t\t\"y\":0.0\n\t},\n\t\"julia\":false,\n\t\"options\":\n\t{\n\t\t\"showPreview\":false,\n\t\t\"showTraps\":false,\n\t\t\"showOrbit\":false,\n\t\t\"showPoint\":false,\n\t\t\"previewOrigin\":\n\t\t{\n\t\t\t\"x\":0.0,\n\t\t\t\"y\":0.0\n\t\t},\n\t\t\"previewSize\":\n\t\t{\n\t\t\t\"x\":0.25,\n\t\t\t\"y\":0.25\n\t\t}\n\t}\n}"
         let manifest = "{\"pluginId\":\"Mandelbrot\"}"
 
         this.state = {script: script, metadata: metadata, manifest: manifest}
@@ -36,19 +39,24 @@ let NewDesign = class NewDesign extends React.Component {
     }
 
     render() {
-        return <Card title="Create new design" className="hoverable">
-            <form>
-                <div className="input-field">
-                    <label htmlFor="script"><Icon left>mode_edit</Icon>Script</label>
-                    <textarea className="materialize-textarea" rows="20" cols="80" id="script" name="script" value={this.state.script} onChange={(e) => this.handleScriptChanged(e)}></textarea>
-                </div>
-                <div className="input-field">
-                    <label htmlFor="metadata"><Icon left>mode_edit</Icon>Metadata</label>
-                    <textarea className="materialize-textarea" rows="20" cols="80" id="metadata" name="metadata" value={this.state.metadata} onChange={(e) => this.handleMetadataChanged(e)}></textarea>
-                </div>
-                <Button waves='light' onClick={(e) => this.handleCreateDesign(e)}>Create</Button>
-            </form>
-        </Card>
+        return (
+            <Card>
+                <CardHeader title="Create new design"></CardHeader>
+                <CardContent>
+                    <form>
+                        <div>
+                            <label htmlFor="script">Script</label>
+                            <textarea rows="20" id="script" name="script" value={this.state.script} onChange={(e) => this.handleScriptChanged(e)}></textarea>
+                        </div>
+                        <div>
+                            <label htmlFor="metadata">Metadata</label>
+                            <textarea rows="20" id="metadata" name="metadata" value={this.state.metadata} onChange={(e) => this.handleMetadataChanged(e)}></textarea>
+                        </div>
+                        <Button onClick={(e) => this.handleCreateDesign(e)}>Create</Button>
+                    </form>
+                </CardContent>
+            </Card>
+        )
     }
 }
 

@@ -3,16 +3,14 @@
     <head>
         <title>Preview of selected design</title>
         <meta charset="UTF-8"/>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <meta name="viewport" content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no"/>
         <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons"/>
-        <link rel="stylesheet" href="/css/materialize.min.css" media="screen,projection"/>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500">
         <link rel="stylesheet" href="/css/leaflet.css" media="screen,projection"/>
-        <link rel="stylesheet" href="/css/main.css" media="screen,projection"/>
-        <script type="text/javascript" src="/js/jquery-3.1.1.min.js"></script>
-        <script type="text/javascript" src="/js/materialize.min.js"></script>
+        <link rel="stylesheet" href="{{context.get('web_url')}}/css/main.css"/>
     </head>
     <body>
-        <div id="app-preview"></div>
-        <script type="text/javascript" src="/js/preview.js"></script>
+        <div id="app"></div>
+        <script type="text/javascript" src="{{context.get('web_url')}}/js/preview.js"></script>
     </body>
 </html>

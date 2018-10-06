@@ -1,5 +1,5 @@
 body {
-    font-size: 12pt;
+    font-size: 14pt;
     color: #080808;
 }
 
@@ -87,6 +87,18 @@ footer {
 
 .anchor-bottom {
     bottom: 0;
+}
+
+.left-align {
+    text-align: left;
+}
+
+.center-align {
+    text-align: center;
+}
+
+.right-align {
+    text-align: right;
 }
 
 a, a:active, a:hover, a:visited {

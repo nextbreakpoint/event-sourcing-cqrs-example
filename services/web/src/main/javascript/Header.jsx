@@ -1,7 +1,7 @@
-const React = require('react')
-const PropTypes = require('prop-types')
+import React from 'react'
+import PropTypes from 'prop-types'
 
-const { Row, Col } = require('react-materialize')
+import Grid from '@material-ui/core/Grid'
 
 class Header extends React.Component {
     constructor(props) {
@@ -9,31 +9,20 @@ class Header extends React.Component {
     }
 
     render() {
-        if (this.props.role == 'anonymous') {
-            return <header>
-                <Row>
-                    <Col s={6}>
+        return (
+            <header>
+                <Grid container justify="space-between" alignItems="center">
+                    <Grid item xs={6}>
                         <span>Welcome {this.props.name}</span>
-                    </Col>
-                    <Col s={6} className="right-align">
+                    </Grid>
+                    <Grid item xs={6} className="right-align">
                         {this.props.parent && <span><a href={this.props.parent.link}>{this.props.parent.label}</a> | </span>}
-                        <span onClick={(e) => this.props.onLogin()}>Login</span>
-                    </Col>
-                </Row>
+                        {this.props.role == 'anonymous' && <span onClick={(e) => this.props.onLogin()}>Login</span>}
+                        {this.props.role != 'anonymous' && <span onClick={(e) => this.props.onLogout()}>Logout</span>}
+                    </Grid>
+                </Grid>
             </header>
-        } else {
-            return <header>
-                <Row>
-                    <Col s={6}>
-                        <span>Welcome {this.props.name}</span>
-                    </Col>
-                    <Col s={6} className="right-align">
-                        {this.props.parent && <span><a href={this.props.parent.link}>{this.props.parent.label}</a> | </span>}
-                        <span onClick={(e) => this.props.onLogout()}>Logout</span>
-                    </Col>
-                </Row>
-            </header>
-        }
+        )
     }
 }
 

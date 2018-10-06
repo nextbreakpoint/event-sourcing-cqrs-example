@@ -1,17 +1,20 @@
-const React = require('react')
-const ReactDOM = require('react-dom')
+import React from 'react'
+import ReactDOM from 'react-dom'
+import PropTypes from 'prop-types'
 
-const Header = require('./Header')
-const Footer = require('./Footer')
-const Account = require('./Account')
+import Header from './Header'
+import Footer from './Footer'
+import Account from './Account'
 
-const { Map, TileLayer } = require('react-leaflet')
+import { Map, TileLayer } from 'react-leaflet'
 
-const { Row, Col, Icon, Button } = require('react-materialize')
+import CssBaseline from '@material-ui/core/CssBaseline'
+import Button from '@material-ui/core/Button'
+import Grid from '@material-ui/core/Grid'
 
-const axios = require('axios')
+import axios from 'axios'
 
-const Cookies = require('universal-cookie')
+import Cookies from 'universal-cookie'
 
 const cookies = new Cookies()
 
@@ -43,6 +46,8 @@ class App extends React.Component {
         this.handleScriptChanged = this.handleScriptChanged.bind(this)
         this.handleMetadataChanged = this.handleMetadataChanged.bind(this)
         this.installWatcher = this.installWatcher.bind(this)
+        this.renderTextarea = this.renderTextarea.bind(this)
+        this.renderMapLayer = this.renderMapLayer.bind(this)
         this.componentDidMount = this.componentDidMount.bind(this)
     }
 
@@ -198,14 +203,12 @@ class App extends React.Component {
 
                 console.log(envelop)
 
-                let design = JSON.parse(envelop.json)
+                let currentDesign = JSON.parse(envelop.json)
 
                 let previousDesign = component.state.oldDesign;
 
-                let currentDesign = component.state.design;
-
-                if (previousDesign === '' || previousDesign.manifest !== currentDesign.manifest || previousDesign.metadata !== currentDesign.metadata || previousDesign.script !== currentDesign.script) {
-                    component.setState(Object.assign(component.state, {oldDesign: design, design: design, timestamp: timestamp}))
+                if (previousDesign == '' || previousDesign.manifest != currentDesign.manifest || previousDesign.metadata != currentDesign.metadata || previousDesign.script != currentDesign.script) {
+                    component.setState(Object.assign(component.state, {oldDesign: currentDesign, design: currentDesign, timestamp: timestamp}))
                 } else {
                     console.log("No changes detected");
                 }
@@ -217,86 +220,72 @@ class App extends React.Component {
             })
     }
 
+    renderMapLayer(url) {
+        return <TileLayer url={url} attribution='&copy; Andrea Medeghini' minZoom={2} maxZoom={6} tileSize={256} updateWhenIdle={true} updateWhenZooming={false} updateInterval={500} keepBuffer={1}/>
+    }
+
+    renderTextarea(id, value, callback) {
+        if (this.state.role == 'admin') {
+            return <textarea          rows="20" id="{id}" name="{id}" value={value} onChange={callback}></textarea>
+        } else {
+            return <textarea readonly rows="20" id="{id}" name="{id}" value={value} onChange={callback}></textarea>
+        }
+    }
+
     render() {
-        if (this.state.config && this.state.timestamp > 0) {
+        if (this.state.config) {
             const url = this.state.config.designs_query_url + '/' + uuid + '/{z}/{x}/{y}/256.png?t=' + this.state.timestamp
 
             const parent = { label: 'Designs', link: base_url + '/admin/designs' }
 
-            if (this.state.role == 'admin') {
-                return <div className="container s12">
-                    <Row>
-                        <Col s={12}>
+            const scriptTextarea = this.renderTextarea('script', this.state.design.script, (e) => this.handleScriptChanged(e))
+
+            const metadataTextarea = this.renderTextarea('metadata', this.state.design.metadata, (e) => this.handleMetadataChanged(e))
+
+            return (
+                <React.Fragment>
+                    <CssBaseline />
+                    <Grid container justify="space-between" alignItems="center">
+                        <Grid item xs={12}>
                             <Header role={this.state.role} name={this.state.name} onLogin={this.handleLogin} onLogout={this.handleLogout} parent={parent}/>
-                        </Col>
-                    </Row>
-                    <Row>
-                        <Col s={8} className="center-align">
-                            <div className="design-preview-container">
-                                <Map center={position} zoom={2} className="design-preview z-depth-3">
-                                    <TileLayer url={url} attribution='&copy; Andrea Medeghini' minZoom={2} maxZoom={6} tileSize={256} updateWhenIdle={true} updateWhenZooming={false} updateInterval={500} keepBuffer={1}/>
-                                </Map>
-                            </div>
-                        </Col>
-                        <Col s={4} className="left-align">
-                            <form className="design-script">
-                                <div className="input-field">
-                                    <label htmlFor="script"><Icon left>mode_edit</Icon>Script</label>
-                                    <textarea className="materialize-textarea" rows="20" cols="80" id="script" name="script" value={this.state.design.script} onChange={(e) => this.handleScriptChanged(e)}></textarea>
+                        </Grid>
+                        <Grid item xs={12}>
+                            <Grid item xs={8} className="center-align">
+                                <div className="design-preview-container">
+                                    <Map center={position} zoom={2} className="design-preview z-depth-3">
+                                        {this.renderMapLayer(url)}
+                                    </Map>
                                 </div>
-                                <div className="input-field">
-                                    <label htmlFor="metadata"><Icon left>mode_edit</Icon>Metadata</label>
-                                    <textarea className="materialize-textarea" rows="20" cols="80" id="metadata" name="metadata" value={this.state.design.metadata} onChange={(e) => this.handleMetadataChanged(e)}></textarea>
-                                </div>
-                                <Button waves='light' onClick={(e) => this.handleUpdateDesign(e)}>Update</Button>
-                            </form>
-                        </Col>
-                    </Row>
-                    <Row>
-                        <Col s={12}>
+                            </Grid>
+                            <Grid item xs={4} className="left-align">
+                                <form className="design-script">
+                                    <div className="input-field">
+                                        <label htmlFor="script">Script</label>
+                                        {scriptTextarea}
+                                    </div>
+                                    <div className="input-field">
+                                        <label htmlFor="metadata">Metadata</label>
+                                        {metadataTextarea}
+                                    </div>
+                                    {this.state.role == 'admin' && <Button onClick={(e) => this.handleUpdateDesign(e)}>Update</Button>}
+                                </form>
+                            </Grid>
+                        </Grid>
+                        <Grid item xs={12}>
                             <Footer role={this.state.role} name={this.state.name}/>
-                        </Col>
-                    </Row>
-                </div>
-            } else {
-                return <div className="container s12">
-                    <Row>
-                        <Col s={12}>
-                            <Header role={this.state.role} name={this.state.name} onLogin={this.handleLogin} onLogout={this.handleLogout} parent={parent}/>
-                        </Col>
-                    </Row>
-                    <Row>
-                        <Col s={8} className="center-align">
-                            <div className="design-preview-container">
-                                <Map center={position} zoom={2} className="design-preview z-depth-3">
-                                    <TileLayer url={url} attribution='&copy; Andrea Medeghini' minZoom={2} maxZoom={6} tileSize={256} updateWhenIdle={true} updateWhenZooming={false} updateInterval={500} keepBuffer={1}/>
-                                </Map>
-                            </div>
-                        </Col>
-                        <Col s={4} className="left-align">
-                            <form className="design-script">
-                                <div className="input-field">
-                                    <label htmlFor="script"><Icon left>mode_edit</Icon>Script</label>
-                                    <textarea readonly className="materialize-textarea" rows="20" cols="80" id="script" name="script" value={this.state.design.script} onChange={(e) => this.handleScriptChanged(e)}></textarea>
-                                </div>
-                                <div className="input-field">
-                                    <label htmlFor="metadata"><Icon left>mode_edit</Icon>Metadata</label>
-                                    <textarea readonly className="materialize-textarea" rows="20" cols="80" id="metadata" name="metadata" value={this.state.design.metadata} onChange={(e) => this.handleMetadataChanged(e)}></textarea>
-                                </div>
-                            </form>
-                        </Col>
-                    </Row>
-                    <Row>
-                        <Col s={12}>
-                            <Footer role={this.state.role} name={this.state.name}/>
-                        </Col>
-                    </Row>
-                </div>
-            }
+                        </Grid>
+                    </Grid>
+                </React.Fragment>
+            )
         } else {
-            return <div className="container s12"></div>
+            return (
+                <React.Fragment>
+                    <CssBaseline />
+                    <Grid container justify="space-between" alignItems="center"></Grid>
+                </React.Fragment>
+            )
         }
     }
 }
 
-ReactDOM.render(<App />, document.getElementById('app-preview'))
+ReactDOM.render(<App />, document.querySelector('#app'))

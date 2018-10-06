@@ -1,9 +1,18 @@
-const React = require('react')
-const PropTypes = require('prop-types')
+import React from 'react'
+import PropTypes from 'prop-types'
 
-const { Card, Button, Table, Input } = require('react-materialize')
+import Button from '@material-ui/core/Button'
+import Card from '@material-ui/core/Card'
+import CardHeader from '@material-ui/core/CardHeader'
+import CardContent from '@material-ui/core/CardContent'
+import CardActions from '@material-ui/core/CardActions'
+import Table from '@material-ui/core/Table'
+import TableHead from '@material-ui/core/TableHead'
+import TableBody from '@material-ui/core/TableBody'
+import TableRow from '@material-ui/core/TableRow'
+import TableCell from '@material-ui/core/TableCell'
 
-const DesignItem = require('./DesignItem')
+import DesignItem from './DesignItem'
 
 let Designs = class Designs extends React.Component {
     constructor(props) {
@@ -22,36 +31,24 @@ let Designs = class Designs extends React.Component {
     }
 
     render() {
-        if (this.props.role == 'admin') {
-            return <Card title="List of designs" className="hoverable">
-                <div className="card-content">
+        return (
+            <Card>
+                <CardHeader title="List of designs"></CardHeader>
+                <CardContent>
                     <Table>
-                        <thead>
-                            <tr><th></th><th>Preview</th><th>UUID</th></tr>
-                        </thead>
-                        <tbody>
+                        <TableHead>
+                            <TableRow><TableCell></TableCell><TableCell>Preview</TableCell><TableCell>UUID</TableCell></TableRow>
+                        </TableHead>
+                        <TableBody>
                             {this.renderList()}
-                        </tbody>
+                        </TableBody>
                     </Table>
-                </div>
-                <div class="card-action">
-                    <Button waves='light' onClick={this.props.onDelete}>Delete</Button>
-                </div>
+                </CardContent>
+                <CardActions>
+                    {this.props.role == 'admin' && <Button onClick={this.props.onDelete}>Delete</Button>}
+                </CardActions>
             </Card>
-        } else {
-            return <Card title="List of designs" className="hoverable">
-                <div className="card-content">
-                    <Table>
-                        <thead>
-                            <tr><th></th><th>Preview</th><th>UUID</th></tr>
-                        </thead>
-                        <tbody>
-                            {this.renderList()}
-                        </tbody>
-                    </Table>
-                </div>
-            </Card>
-        }
+        )
     }
 }
 

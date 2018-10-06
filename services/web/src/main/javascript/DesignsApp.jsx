@@ -1,17 +1,19 @@
-const React = require('react')
-const ReactDOM = require('react-dom')
+import React from 'react'
+import ReactDOM from 'react-dom'
+import PropTypes from 'prop-types'
 
-const Header = require('./Header')
-const Footer = require('./Footer')
-const Account = require('./Account')
-const Designs = require('./Designs')
-const NewDesign = require('./NewDesign')
+import Header from './Header'
+import Footer from './Footer'
+import Account from './Account'
+import Designs from './Designs'
+import NewDesign from './NewDesign'
 
-const { Row, Col } = require('react-materialize')
+import CssBaseline from '@material-ui/core/CssBaseline'
+import Grid from '@material-ui/core/Grid'
 
-const axios = require('axios')
+import axios from 'axios'
 
-const Cookies = require('universal-cookie')
+import Cookies from 'universal-cookie'
 
 const cookies = new Cookies()
 
@@ -237,52 +239,32 @@ class App extends React.Component {
 
     render() {
         if (this.state.config) {
-            if (this.state.role == 'admin') {
-                return <div className="container s12">
-                    <Row>
-                        <Col s={12}>
+            return (
+                <React.Fragment>
+                    <CssBaseline />
+                    <Grid container justify="space-between" alignItems="center">
+                        <Grid item xs={12}>
                             <Header role={this.state.role} name={this.state.name} onLogin={this.handleLogin} onLogout={this.handleLogout}/>
-                        </Col>
-                    </Row>
-                    <Row>
-                        <Col s={12}>
+                        </Grid>
+                        <Grid item xs={12}>
                             <Designs config={this.state.config} role={this.state.role} designs={this.state.designs} timestamp={this.state.timestamp} onDelete={this.handleDelete} onSelect={this.handleSelect}/>
-                        </Col>
-                    </Row>
-                    <Row>
-                        <Col s={12}>
-                            <NewDesign onCreate={this.handleCreate}/>
-                        </Col>
-                    </Row>
-                    <Row>
-                        <Col s={12}>
+                        </Grid>
+                        {this.state.role == 'admin' && <Grid item xs={12}><NewDesign onCreate={this.handleCreate}/></Grid>}
+                        <Grid item xs={12}>
                             <Footer role={this.state.role} name={this.state.name}/>
-                        </Col>
-                    </Row>
-                </div>
-            } else {
-                return <div className="container s12">
-                    <Row>
-                        <Col s={12}>
-                            <Header role={this.state.role} name={this.state.name} onLogin={this.handleLogin} onLogout={this.handleLogout}/>
-                        </Col>
-                    </Row>
-                    <Row>
-                        <Col s={12}>
-                            <Designs config={this.state.config} role={this.state.role} designs={this.state.designs} timestamp={this.state.timestamp} onDelete={this.handleDelete} onSelect={this.handleSelect}/>
-                        </Col>
-                    </Row>
-                    <Row>
-                        <Col s={12}>
-                            <Footer role={this.state.role} name={this.state.name}/>
-                        </Col>
-                    </Row>
-                </div>
-            }
+                        </Grid>
+                    </Grid>
+                </React.Fragment>
+            )
         } else {
-            return <div className="container s12"></div>
+            return (
+                <React.Fragment>
+                    <CssBaseline />
+                    <Grid container justify="space-between" alignItems="center"></Grid>
+                </React.Fragment>
+            )
         }
     }
 }
 
-ReactDOM.render(<App />, document.getElementById('app-designs'))
+ReactDOM.render(<App />, document.querySelector('#app'))

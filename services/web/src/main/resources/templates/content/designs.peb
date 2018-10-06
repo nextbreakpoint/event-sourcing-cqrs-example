@@ -3,12 +3,13 @@
     <head>
         <title>List of published designs</title>
         <meta charset="UTF-8"/>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <meta name="viewport" content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no"/>
         <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons"/>
-        <link rel="stylesheet" href="/css/materialize.min.css" media="screen,projection"/>
-        <link rel="stylesheet" href="/css/main.css" media="screen,projection"/>
-        <script type="text/javascript" src="/js/jquery-3.1.1.min.js"></script>
-        <script type="text/javascript" src="/js/materialize.min.js"></script>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500">
+        <link rel="stylesheet" href="{{context.get('web_url')}}/css/bootstrap.min.css"/>
+        <link rel="stylesheet" href="{{context.get('web_url')}}/css/main.css"/>
+        <script src="{{context.get('web_url')}}/js/jquery-3.3.1.min.js"></script>
+        {#<script src="{{context.get('web_url')}}/js/material-ui.production.min.js"></script>#}
         <script>
             $(function() {
                 function makeDesign(design, timestamp) {
@@ -85,15 +86,15 @@
     </head>
     <body>
         <input type="hidden" id="timestamp" value="{{context.get('timestamp')}}"/>
-        <div class="container s12">
+        <div class="container">
             <div class="row">
-                <div class="col s12">
+                <div class="col-sm-12">
                     <header>
                         <div class="row">
-                            <div class="col s6">
+                            <div class="col-sm-6">
                                 <span class="float-left">Welcome {{context.get('username')}}</span>
                             </div>
-                            <div class="col s6 right-align">
+                            <div class="col-sm-6">
                                 <span class="float-right">{% if context.get('role') == 'admin' %}<a href="{{context.get('admin_url')}}">Admin</a> | {% endif %}{% if context.get('logged') %}<a href="{{context.get('logout_url')}}">Logout</a>{% else %}<a href="{{context.get('login_url')}}">Login</a>{% endif %}</span>
                             </div>
                         </div>
@@ -101,7 +102,7 @@
                 </div>
             </div>
             <div class="row">
-                <div class="col s12">
+                <div class="col-sm-12">
                     <section id="designs" class="designs-grid-container anchor-left anchor-right">
                     {% for design in context.get('designs') %}
                         <div class="designs-grid-element">
@@ -112,7 +113,7 @@
                 </div>
             </div>
             <div class="row">
-                <div class="col s12">
+                <div class="col-sm-12">
                     <footer>
                         <span>Powered by NextBreakpoint</span>
                     </footer>

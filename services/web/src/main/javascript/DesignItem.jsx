@@ -1,25 +1,36 @@
-const React = require('react')
-const PropTypes = require('prop-types')
+import React from 'react'
+import PropTypes from 'prop-types'
 
-const { Input } = require('react-materialize')
+import Checkbox from '@material-ui/core/Checkbox'
 
 let DesignItem = class DesignItem extends React.Component {
     constructor(props) {
         super(props)
+        this.renderImage = this.renderImage.bind(this)
+        this.renderAnchor = this.renderAnchor.bind(this)
+        this.renderCheckbox = this.renderCheckbox.bind(this)
+    }
+
+    renderImage(design) {
+        return <img width={128} height={128} src={this.props.config.designs_query_url + "/" + design.uuid + "/0/0/0/256.png?t=" + this.props.timestamp}/>
+    }
+
+    renderAnchor(design) {
+        return <a href={"/admin/designs/" + design.uuid}>{design.uuid}</a>
+    }
+
+    renderCheckbox(design) {
+        return this.props.role == 'admin' && <Checkbox checked={design.selected} value="uuid" id={"uuid-" + design.uuid} onChange={(e) => this.props.onSelect(design.uuid, e.currentTarget.checked)}/>
     }
 
     render() {
         let design = this.props.design
 
-        if (this.props.role == 'admin') {
-            if (design.selected) {
-                return <tr><td><Input label=" " defaultChecked="checked" className="filled-in" name="uuid" id={"uuid-" + design.uuid} type="checkbox" onClick={(e) => this.props.onSelect(design.uuid, false)}/></td><td><img className="z-depth-3" width={128} height={128} src={this.props.config.designs_query_url + "/" + design.uuid + "/0/0/0/256.png?t=" + this.props.timestamp}/></td><td><a href={"/admin/designs/" + design.uuid}>{design.uuid}</a></td></tr>
-            } else {
-                return <tr><td><Input label=" "                          className="filled-in" name="uuid" id={"uuid-" + design.uuid} type="checkbox" onClick={(e) => this.props.onSelect(design.uuid, true )}/></td><td><img className="z-depth-3" width={128} height={128} src={this.props.config.designs_query_url + "/" + design.uuid + "/0/0/0/256.png?t=" + this.props.timestamp}/></td><td><a href={"/admin/designs/" + design.uuid}>{design.uuid}</a></td></tr>
-            }
-        } else {
-            return <tr><td></td><td><img className="z-depth-3" width={128} height={128} src={this.props.config.designs_query_url + "/" + design.uuid + "/0/0/0/256.png?t=" + this.props.timestamp}/></td><td><a href={"/admin/designs/" + design.uuid}>{design.uuid}</a></td></tr>
-        }
+        let image = this.renderImage(design)
+        let anchor = this.renderAnchor(design)
+        let checkbox = this.renderCheckbox(design)
+
+        return <tr><td>{checkbox}</td><td>{image}</td><td>{anchor}</td></tr>
     }
 }
 

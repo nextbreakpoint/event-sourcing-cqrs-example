@@ -12,18 +12,27 @@ module.exports = {
     },
 
     resolve: {
-        extensions: ['.js', '.jsx', '.json']
-    },
-
-    node: {
-        fs: "empty"
+        extensions: ['.js', '.jsx', '.json', '.html']
     },
 
     module: {
         rules: [
-            {
-                test: /\.jsx?$/, exclude: /node_modules/, loaders: ["babel-loader"]
+          {
+            test: /\.jsx?$/,
+            exclude: /node_modules/,
+            use: {
+              loader: "babel-loader"
             }
+          },
+          {
+            test: /\.html$/,
+            use: [
+              {
+                loader: "html-loader"
+              }
+            ]
+          }
         ]
     }
 };
+

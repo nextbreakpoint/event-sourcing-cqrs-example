@@ -8,7 +8,7 @@
   "jwt_keystore_type": "jceks",
   "jwt_keystore_secret": "secret",
 
-  "client_web_url": "https://localhost:8080",
+  "origin_pattern": "https?://localhost:.*",
 
   "client_allow_origin_pattern": "https://localhost.*",
 

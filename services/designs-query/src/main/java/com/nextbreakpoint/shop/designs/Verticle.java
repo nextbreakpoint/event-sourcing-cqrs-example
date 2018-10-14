@@ -90,7 +90,7 @@ public class Verticle extends AbstractVerticle {
 
         final Integer port = config.getInteger("host_port");
 
-        final String webUrl = config.getString("client_web_url");
+        final String originPattern = config.getString("origin_pattern");
 
         final String keyspace = config.getString("cassandra_keyspace");
 
@@ -109,7 +109,7 @@ public class Verticle extends AbstractVerticle {
         mainRouter.route().handler(CookieHandler.create());
         mainRouter.route().handler(TimeoutHandler.create(30000));
 
-        final CorsHandler corsHandler = CORSHandlerFactory.createWithAll(webUrl, asList(AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN, X_MODIFIED), asList(CONTENT_TYPE, X_XSRF_TOKEN, X_MODIFIED));
+        final CorsHandler corsHandler = CORSHandlerFactory.createWithAll(originPattern, asList(AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN, X_MODIFIED), asList(CONTENT_TYPE, X_XSRF_TOKEN, X_MODIFIED));
 
         apiRouter.route("/designs/*").handler(corsHandler);
 

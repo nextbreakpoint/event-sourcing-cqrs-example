@@ -34,4 +34,4 @@ Header.propTypes = {
   onLogout: PropTypes.func
 }
 
-module.exports = Header
+export default Header

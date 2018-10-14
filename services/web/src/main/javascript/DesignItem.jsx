@@ -42,4 +42,4 @@ DesignItem.propTypes = {
   onSelect: PropTypes.func
 }
 
-module.exports = DesignItem
+export default DesignItem

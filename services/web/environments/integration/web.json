@@ -16,6 +16,8 @@
   "jwt_keystore_type": "jceks",
   "jwt_keystore_secret": "secret",
 
+  "origin_pattern": "http?://localhost:.*",
+
   "client_web_url": "https://localhost:8080",
   "client_auth_url": "http://${stub.host}:${stub.port}/a/auth",
   "client_accounts_url": "http://${stub.host}:${stub.port}/a/accounts",

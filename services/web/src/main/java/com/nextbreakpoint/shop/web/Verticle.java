@@ -1,6 +1,7 @@
 package com.nextbreakpoint.shop.web;
 
 import com.nextbreakpoint.shop.common.graphite.GraphiteManager;
+import com.nextbreakpoint.shop.common.vertx.CORSHandlerFactory;
 import com.nextbreakpoint.shop.common.vertx.JWTProviderFactory;
 import com.nextbreakpoint.shop.common.vertx.ResponseHelper;
 import com.nextbreakpoint.shop.common.vertx.ServerUtil;
@@ -24,6 +25,7 @@ import io.vertx.rxjava.ext.web.client.WebClient;
 import io.vertx.rxjava.ext.web.handler.BodyHandler;
 import io.vertx.rxjava.ext.web.handler.CSRFHandler;
 import io.vertx.rxjava.ext.web.handler.CookieHandler;
+import io.vertx.rxjava.ext.web.handler.CorsHandler;
 import io.vertx.rxjava.ext.web.handler.LoggerHandler;
 import io.vertx.rxjava.ext.web.handler.StaticHandler;
 import io.vertx.rxjava.ext.web.handler.TemplateHandler;
@@ -35,7 +37,13 @@ import rx.Single;
 import java.net.MalformedURLException;
 
 import static com.nextbreakpoint.shop.common.model.ContentType.TEXT_HTML;
+import static com.nextbreakpoint.shop.common.model.Headers.ACCEPT;
+import static com.nextbreakpoint.shop.common.model.Headers.AUTHORIZATION;
+import static com.nextbreakpoint.shop.common.model.Headers.CONTENT_TYPE;
+import static com.nextbreakpoint.shop.common.model.Headers.X_MODIFIED;
+import static com.nextbreakpoint.shop.common.model.Headers.X_XSRF_TOKEN;
 import static com.nextbreakpoint.shop.common.vertx.ServerUtil.UUID_REGEXP;
+import static java.util.Arrays.asList;
 
 public class Verticle extends AbstractVerticle {
     private static final String TEMPLATES = "templates";
@@ -77,6 +85,8 @@ public class Verticle extends AbstractVerticle {
 
         final String secret = config.getString("csrf_secret");
 
+        final String originPattern = config.getString("origin_pattern");
+
         final TemplateEngine engine = PebbleTemplateEngine.create(vertx);
 
         final JWTAuth jwtProvider = JWTProviderFactory.create(vertx, config);
@@ -91,6 +101,10 @@ public class Verticle extends AbstractVerticle {
         mainRouter.route().handler(LoggerHandler.create());
         mainRouter.route().handler(CookieHandler.create());
         mainRouter.route().handler(BodyHandler.create());
+
+        final CorsHandler corsHandler = CORSHandlerFactory.createWithAll(originPattern, asList(AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN, X_MODIFIED), asList(CONTENT_TYPE, X_XSRF_TOKEN, X_MODIFIED));
+
+        mainRouter.route("/*").handler(corsHandler);
 
         mainRouter.route("/js/*").handler(timeoutHandler);
         mainRouter.route("/css/*").handler(timeoutHandler);

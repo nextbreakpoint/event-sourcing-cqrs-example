@@ -66,13 +66,15 @@ public class Verticle extends AbstractVerticle {
 
         final String webUrl = config.getString("client_web_url");
 
+        final String originPattern = config.getString("origin_pattern");
+
         final Router mainRouter = Router.router(vertx);
 
         mainRouter.route().handler(LoggerHandler.create());
         mainRouter.route().handler(CookieHandler.create());
         mainRouter.route().handler(BodyHandler.create());
 
-        final CorsHandler corsHandler = CORSHandlerFactory.createWithGetOnly(webUrl, asList(AUTHORIZATION, CONTENT_TYPE, ACCEPT));
+        final CorsHandler corsHandler = CORSHandlerFactory.createWithGetOnly(originPattern, asList(AUTHORIZATION, CONTENT_TYPE, ACCEPT));
 
         final Handler<RoutingContext> signinHandler = createSigninHandler(config, mainRouter);
 

@@ -16,6 +16,8 @@
   "jwt_keystore_type": "jceks",
   "jwt_keystore_secret": "secret",
 
+  "origin_pattern": "http?://localhost:.*",
+
   "client_web_url": "https://localhost",
   "client_auth_url": "https://localhost/a/auth",
   "client_accounts_url": "https://localhost/a/accounts",

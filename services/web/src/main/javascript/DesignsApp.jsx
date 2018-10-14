@@ -2,14 +2,25 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import PropTypes from 'prop-types'
 
+import { Provider } from 'react-redux'
+import { createStore } from 'redux'
+
+import reducers from './reducers'
+
 import Header from './Header'
 import Footer from './Footer'
+import Config from './Config'
 import Account from './Account'
 import Designs from './Designs'
-import NewDesign from './NewDesign'
+
+import { withStyles } from '@material-ui/core/styles'
 
 import CssBaseline from '@material-ui/core/CssBaseline'
 import Grid from '@material-ui/core/Grid'
+
+import { connect } from 'react-redux'
+
+import { setAccount } from './actions/designs'
 
 import axios from 'axios'
 
@@ -17,254 +28,64 @@ import Cookies from 'universal-cookie'
 
 const cookies = new Cookies()
 
-const base_url = 'https://' + window.location.host
+const base_url = 'https://localhost:8080'
 
-var timestamp = 0;
+const store = createStore(reducers)
+
+const styles = theme => ({
+  button: {
+    position: 'absolute',
+    bottom: theme.spacing.unit * 2,
+    right: theme.spacing.unit * 2
+  }
+})
 
 class App extends React.Component {
-    constructor(props) {
-        super(props)
-
-        this.state = {role: 'anonymous', designs: [], timestamp: 0}
-
-        this.loadAccount = this.loadAccount.bind(this)
-        this.setupDesigns = this.setupDesigns.bind(this)
-        this.loadDesigns = this.loadDesigns.bind(this)
-        this.handleCreate = this.handleCreate.bind(this)
-        this.handleDelete = this.handleDelete.bind(this)
-        this.handleSelect = this.handleSelect.bind(this)
-        this.handleLogin = this.handleLogin.bind(this)
-        this.handleLogout = this.handleLogout.bind(this)
-        this.installWatcher = this.installWatcher.bind(this)
-        this.componentDidMount = this.componentDidMount.bind(this)
+    handleLogin = () => {
+        window.location = this.props.config.auth_url + "/signin/admin/designs"
     }
 
-    handleCreate(data) {
-        let component = this
-
-        let config = {
-            timeout: 10000,
-            metadata: {'content-type': 'application/json'},
-            withCredentials: true
-        }
-
-        axios.post(component.state.config.designs_command_url, data, config)
-            .then(function (content) {
-                if (content.status == 201) {
-                    var designs = component.state.designs.slice()
-
-                    designs.push({uuid:content.data.uuid, selected: false})
-
-                    component.setState(Object.assign(component.state, {designs: designs}))
-                }
-            })
-            .catch(function (error) {
-                console.log(error)
-            })
-    }
-
-    handleDelete() {
-        let component = this
-
-        let config = {
-            timeout: 10000,
-            withCredentials: true
-        }
-
-        let promises = this.state.designs
-            .filter((design) => {
-                return design.selected
-            }).map((design) => {
-                return axios.delete(component.state.config.designs_command_url + '/' + design.uuid, config)
-            })
-
-        axios.all(promises)
-            .then(function (responses) {
-                let deletedUuids = responses
-                    .filter((res) => {
-                        return res.status == 200
-                    })
-                    .map((res) => {
-                        return res.config.url.substring(res.config.url.lastIndexOf("/") + 1)
-                    })
-
-                let designs = component.state.designs
-                    .filter((design) => {
-                        return !deletedUuids.includes(design.uuid)
-                    })
-                    .map((design) => {
-                        return { uuid: design.uuid, selected: design.selected }
-                    })
-
-                component.setState(Object.assign(component.state, {designs: designs}))
-            })
-            .catch(function (error) {
-                console.log(error)
-            })
-    }
-
-    handleSelect(uuid, selected) {
-        let designs = this.state.designs
-            .map((design) => { return { uuid: design.uuid, selected: (design.uuid == uuid ? selected : design.selected) }})
-
-        this.setState(Object.assign(this.state, {designs: designs}))
-    }
-
-    handleLogin() {
-        window.location = this.state.config.auth_url + "/signin/admin/designs"
-    }
-
-    handleLogout() {
+    handleLogout = () => {
         cookies.remove('token', {domain: window.location.hostname, path: '/'})
 
-        this.setState(Object.assign(this.state, {role: 'anonymous', name: 'Stranger'}))
-
-        this.setupDesigns();
-
-        //window.location = this.state.config.auth_url + "/signout/admin/designs"
-    }
-
-    installWatcher(timestamp) {
-        let component = this
-
-        try {
-            if (typeof(EventSource) !== "undefined") {
-                var source = new EventSource(component.state.config.web_url + "/watch/designs/" + timestamp, { withCredentials: true })
-
-                source.onerror = function(error) {
-                   console.log(error)
-                }
-
-                source.onopen = function() {
-                  component.loadDesigns(timestamp)
-                }
-
-                source.addEventListener("update",  function(event) {
-                   let timestamp = Number(event.lastEventId)
-
-                   console.log(event)
-
-                   if (component.state.timestamp == undefined || timestamp > component.state.timestamp) {
-                      console.log("Reload designs")
-
-                      component.loadDesigns(timestamp)
-                   }
-                }, false)
-            } else {
-                console.log("EventSource not available")
-            }
-        } catch (e) {
-           console.log(e)
-        }
-    }
-
-    componentDidMount() {
-        let component = this
-
-        let config = {
-            timeout: 5000,
-            withCredentials: true
-        }
-
-        axios.get(base_url + '/config', config)
-            .then(function (content) {
-                component.setState(Object.assign(component.state, {config: content.data}))
-
-                component.loadAccount()
-            })
-            .catch(function (error) {
-                console.log("Can't load config " + error)
-            })
-    }
-
-    loadAccount() {
-        let component = this
-
-        let config = {
-            timeout: 5000,
-            withCredentials: true
-        }
-
-        axios.get(component.state.config.accounts_url + '/me', config)
-            .then(function (content) {
-                let role = content.data.role
-                let name = content.data.name
-
-                component.setState(Object.assign(component.state, {role: role, name: name}))
-
-                component.setupDesigns()
-            })
-            .catch(function (error) {
-                cookies.remove('token', {domain: window.location.hostname})
-
-                component.setState(Object.assign(component.state, {role: 'anonymous', name: 'Stranger'}))
-
-                component.setupDesigns()
-            })
-    }
-
-    setupDesigns() {
-        let component = this
-
-        let config = {
-            timeout: 10000,
-            withCredentials: true
-        }
-
-        let timestamp = Date.now();
-
-        component.installWatcher(timestamp)
-    }
-
-    loadDesigns(timestamp) {
-        let component = this
-
-        let config = {
-            timeout: 10000,
-            withCredentials: true
-        }
-
-        axios.get(component.state.config.designs_query_url, config)
-            .then(function (content) {
-                let designs = content.data.map((design) => { return { uuid: design.uuid, checksum: design.checksum, selected: false }})
-
-                component.setState(Object.assign(component.state, {designs: designs, timestamp: timestamp}))
-            })
-            .catch(function (error) {
-                console.log(error)
-
-                component.setState(Object.assign(component.state, {designs: []}))
-            })
+        this.props.handleAccountLoaded({ role: 'anonymous', name: 'Stranger' })
     }
 
     render() {
-        if (this.state.config) {
-            return (
-                <React.Fragment>
-                    <CssBaseline />
-                    <Grid container justify="space-between" alignItems="center">
-                        <Grid item xs={12}>
-                            <Header role={this.state.role} name={this.state.name} onLogin={this.handleLogin} onLogout={this.handleLogout}/>
-                        </Grid>
-                        <Grid item xs={12}>
-                            <Designs config={this.state.config} role={this.state.role} designs={this.state.designs} timestamp={this.state.timestamp} onDelete={this.handleDelete} onSelect={this.handleSelect}/>
-                        </Grid>
-                        {this.state.role == 'admin' && <Grid item xs={12}><NewDesign onCreate={this.handleCreate}/></Grid>}
-                        <Grid item xs={12}>
-                            <Footer role={this.state.role} name={this.state.name}/>
-                        </Grid>
+        return (
+            <React.Fragment>
+                <CssBaseline />
+                <Grid container justify="space-between" alignItems="center">
+                    <Grid item xs={12}>
+                        <Header role={this.props.account.role} name={this.props.account.name} onLogin={this.handleLogin} onLogout={this.handleLogout}/>
                     </Grid>
-                </React.Fragment>
-            )
-        } else {
-            return (
-                <React.Fragment>
-                    <CssBaseline />
-                    <Grid container justify="space-between" alignItems="center"></Grid>
-                </React.Fragment>
-            )
-        }
+                    <Grid item xs={12}>
+                        <Designs/>
+                    </Grid>
+                    <Grid item xs={12}>
+                        <Footer role={this.props.account.role} name={this.props.account.name}/>
+                    </Grid>
+                </Grid>
+            </React.Fragment>
+        )
     }
 }
 
-ReactDOM.render(<App />, document.querySelector('#app'))
+const mapStateToProps = state => {
+    console.log(JSON.stringify(state))
+
+    return {
+        config: state.designs.config,
+        account: state.designs.account
+    }
+}
+
+const mapDispatchToProps = dispatch => ({
+    handleAccountLoaded: (account) => {
+        dispatch(setAccount(account))
+    }
+})
+
+const DesignsApp = withStyles(styles, { withTheme: true })(connect(mapStateToProps, mapDispatchToProps)(App))
+
+ReactDOM.render(<Provider store={store}><Config><Account><DesignsApp /></Account></Config></Provider>, document.querySelector('#app'))

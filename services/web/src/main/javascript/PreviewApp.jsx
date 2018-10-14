@@ -12,6 +12,9 @@ import CssBaseline from '@material-ui/core/CssBaseline'
 import Button from '@material-ui/core/Button'
 import Grid from '@material-ui/core/Grid'
 
+import ScriptEditor from './ScriptEditor'
+import MetadataEditor from './MetadataEditor'
+
 import axios from 'axios'
 
 import Cookies from 'universal-cookie'
@@ -29,7 +32,7 @@ if (match != null && match.length == 2) {
     uuid = match[1]
 }
 
-const base_url = 'https://' + window.location.host
+const base_url = 'https://localhost:8080'
 
 class App extends React.Component {
     constructor(props) {
@@ -46,7 +49,6 @@ class App extends React.Component {
         this.handleScriptChanged = this.handleScriptChanged.bind(this)
         this.handleMetadataChanged = this.handleMetadataChanged.bind(this)
         this.installWatcher = this.installWatcher.bind(this)
-        this.renderTextarea = this.renderTextarea.bind(this)
         this.renderMapLayer = this.renderMapLayer.bind(this)
         this.componentDidMount = this.componentDidMount.bind(this)
     }
@@ -85,16 +87,12 @@ class App extends React.Component {
             })
     }
 
-    handleScriptChanged(e) {
-        e.preventDefault()
-        let source = e.target
-        this.setState(Object.assign(this.state, {design: {script: source.value, metadata: this.state.design.metadata, manifest: this.state.design.manifest}}))
+    handleScriptChanged(value) {
+        this.setState(Object.assign(this.state, {design: {script: value, metadata: this.state.design.metadata, manifest: this.state.design.manifest}}))
     }
 
-    handleMetadataChanged(e) {
-        e.preventDefault()
-        let source = e.target
-        this.setState(Object.assign(this.state, {design: {script: this.state.design.script, metadata: source.value, manifest: this.state.design.manifest}}))
+    handleMetadataChanged(value) {
+        this.setState(Object.assign(this.state, {design: {script: this.state.design.script, metadata: value, manifest: this.state.design.manifest}}))
     }
 
     installWatcher(timestamp, uuid) {
@@ -207,11 +205,11 @@ class App extends React.Component {
 
                 let previousDesign = component.state.oldDesign;
 
-                if (previousDesign == '' || previousDesign.manifest != currentDesign.manifest || previousDesign.metadata != currentDesign.metadata || previousDesign.script != currentDesign.script) {
+                //if (previousDesign == '' || previousDesign.manifest != currentDesign.manifest || previousDesign.metadata != currentDesign.metadata || previousDesign.script != currentDesign.script) {
                     component.setState(Object.assign(component.state, {oldDesign: currentDesign, design: currentDesign, timestamp: timestamp}))
-                } else {
-                    console.log("No changes detected");
-                }
+                //} else {
+                //    console.log("No changes detected");
+                //}
             })
             .catch(function (error) {
                 console.log(error)
@@ -224,30 +222,25 @@ class App extends React.Component {
         return <TileLayer url={url} attribution='&copy; Andrea Medeghini' minZoom={2} maxZoom={6} tileSize={256} updateWhenIdle={true} updateWhenZooming={false} updateInterval={500} keepBuffer={1}/>
     }
 
-    renderTextarea(id, value, callback) {
-        if (this.state.role == 'admin') {
-            return <textarea          rows="20" id="{id}" name="{id}" value={value} onChange={callback}></textarea>
-        } else {
-            return <textarea readonly rows="20" id="{id}" name="{id}" value={value} onChange={callback}></textarea>
-        }
-    }
-
     render() {
         if (this.state.config) {
             const url = this.state.config.designs_query_url + '/' + uuid + '/{z}/{x}/{y}/256.png?t=' + this.state.timestamp
 
             const parent = { label: 'Designs', link: base_url + '/admin/designs' }
 
-            const scriptTextarea = this.renderTextarea('script', this.state.design.script, (e) => this.handleScriptChanged(e))
+            console.log(">> " + JSON.stringify(this.state.design))
 
-            const metadataTextarea = this.renderTextarea('metadata', this.state.design.metadata, (e) => this.handleMetadataChanged(e))
+            const design = this.state.design
+
+            const role = this.state.role
+            const name = this.state.name
 
             return (
                 <React.Fragment>
                     <CssBaseline />
                     <Grid container justify="space-between" alignItems="center">
                         <Grid item xs={12}>
-                            <Header role={this.state.role} name={this.state.name} onLogin={this.handleLogin} onLogout={this.handleLogout} parent={parent}/>
+                            <Header role={role} name={name} onLogin={this.handleLogin} onLogout={this.handleLogout} parent={parent}/>
                         </Grid>
                         <Grid item xs={12}>
                             <Grid item xs={8} className="center-align">
@@ -258,21 +251,19 @@ class App extends React.Component {
                                 </div>
                             </Grid>
                             <Grid item xs={4} className="left-align">
-                                <form className="design-script">
-                                    <div className="input-field">
-                                        <label htmlFor="script">Script</label>
-                                        {scriptTextarea}
-                                    </div>
-                                    <div className="input-field">
-                                        <label htmlFor="metadata">Metadata</label>
-                                        {metadataTextarea}
-                                    </div>
-                                    {this.state.role == 'admin' && <Button onClick={(e) => this.handleUpdateDesign(e)}>Update</Button>}
-                                </form>
+                                <div className="input-field">
+                                    <p>Script</p>
+                                    {design.script && <ScriptEditor initialValue={design.script} readOnly={role != 'admin'} onContentChanged={(value) => this.handleScriptChanged(value)}/>}
+                                </div>
+                                <div className="input-field">
+                                    <p>Metadata</p>
+                                    {design.metadata && <MetadataEditor initialValue={design.metadata} readOnly={role != 'admin'} onContentChanged={(value) => this.handleMetadataChanged(value)}/>}
+                                </div>
+                                {role == 'admin' && <Button onClick={(e) => this.handleUpdateDesign(e)}>Update</Button>}
                             </Grid>
                         </Grid>
                         <Grid item xs={12}>
-                            <Footer role={this.state.role} name={this.state.name}/>
+                            <Footer role={role} name={name}/>
                         </Grid>
                     </Grid>
                 </React.Fragment>

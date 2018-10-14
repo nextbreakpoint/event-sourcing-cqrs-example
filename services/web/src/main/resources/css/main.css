@@ -6,15 +6,13 @@ body {
 header {
     position: relative;
     padding: 4%;
-    border-bottom: 1pt solid #e0e0e0;
-    margin-bottom: 4%;
+    border-bottom: 0pt solid #e0e0e0;
 }
 
 footer {
     position: relative;
     padding: 4%;
-    border-top: 1pt solid #e0e0e0;
-    margin-top: 4%;
+    border-top: 0pt solid #e0e0e0;
     text-align: center;
 }
 

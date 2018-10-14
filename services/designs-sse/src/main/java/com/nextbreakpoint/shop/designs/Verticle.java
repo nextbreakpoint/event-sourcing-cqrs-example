@@ -87,7 +87,7 @@ public class Verticle extends AbstractVerticle {
 
         final Integer port = config.getInteger("host_port");
 
-        final String originPattern = config.getString("client_allow_origin_pattern");
+        final String originPattern = config.getString("origin_pattern");
 
         final String sseTopic = config.getString("sse_topic");
 

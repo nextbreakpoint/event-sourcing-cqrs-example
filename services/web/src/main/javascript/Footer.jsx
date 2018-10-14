@@ -16,4 +16,4 @@ Footer.propTypes = {
   name: PropTypes.string
 }
 
-module.exports = Footer
+export default Footer

@@ -2,6 +2,8 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import PropTypes from 'prop-types'
 
+import Grid from '@material-ui/core/Grid'
+
 import reducers from './reducers'
 
 import { connect } from 'react-redux'
@@ -45,17 +47,13 @@ class Account extends React.Component {
     }
 
     render() {
-        let children = this.props.children
-
-        if (this.props.account) {
-            return (
-                <div>{children}</div>
-            )
-        } else {
-            return (
-                <div><p>Loading account...</p></div>
-            )
-        }
+        return (
+            <Grid container justify="space-between" alignItems="center">
+                <Grid item xs={12}>
+                    {this.props.account ? (this.props.children) : (<p>Loading account...</p>)}
+                </Grid>
+            </Grid>
+        )
     }
 }
 

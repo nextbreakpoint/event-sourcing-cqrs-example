@@ -20,7 +20,7 @@ function findWithRegex(regex, contentBlock, callback) {
 }
 
 const KeywordSpan = (props) => {
-  return <span {...props} style={styles.keyword}>{props.children}</span>
+  return <span style={styles.keyword}>{props.children}</span>
 }
 
 const compositeDecorator = new CompositeDecorator([
@@ -31,39 +31,34 @@ const compositeDecorator = new CompositeDecorator([
 ])
 
 let DesignEditor = class DesignEditor extends React.Component {
-  constructor(props) {
-    super(props)
+    state = {
+        editorState: EditorState.createWithContent(ContentState.createFromText(this.props.initialValue), compositeDecorator)
+    }
 
-    this.state = { editorState: EditorState.createWithContent(ContentState.createFromText(props.initialValue), compositeDecorator) }
-
-    this.onChange = (editorState) => {
+    onChange = (editorState) => {
         this.setState({ editorState })
-        if (props.onContentChanged) {
-            props.onContentChanged(editorState.getCurrentContent().getPlainText())
+        if (this.props.onContentChanged) {
+            this.props.onContentChanged(editorState.getCurrentContent().getPlainText())
         }
     }
 
-    this.setEditor = (editor) => {
+    setEditor = (editor) => {
       this.editor = editor
     }
 
-    this.focusEditor = () => {
+    focusEditor = () => {
       if (this.editor) {
         this.editor.focus()
       }
     }
-  }
 
-  componentDidMount() {
-  }
-
-  render() {
-    return (
-      <div style={styles.editor} onClick={this.focusEditor}>
-        <Editor ref={this.setEditor} readOnly={this.props.readOnly} editorState={this.state.editorState} onChange={this.onChange}/>
-      </div>
-    )
-  }
+    render() {
+        return (
+          <div style={styles.editor} onClick={this.focusEditor}>
+            <Editor ref={this.setEditor} readOnly={this.props.readOnly} editorState={this.state.editorState} onChange={this.onChange}/>
+          </div>
+        )
+    }
 }
 
 const styles = {
@@ -78,7 +73,7 @@ const styles = {
 
 DesignEditor.propTypes = {
   initialValue: PropTypes.string,
-  readOnly: PropTypes.boolean,
+  readOnly: PropTypes.bool,
   onContentChanged: PropTypes.func
 }
 

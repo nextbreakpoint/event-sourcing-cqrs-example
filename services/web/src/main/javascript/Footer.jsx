@@ -1,19 +1,17 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 
-class Footer extends React.Component {
-    constructor(props) {
-        super(props)
-    }
+import { withStyles } from '@material-ui/core/styles'
 
+const styles = theme => ({
+})
+
+class Footer extends React.Component {
     render() {
         return <footer><span>Powered by NextBreakpoint</span></footer>
     }
 }
 
-Footer.propTypes = {
-  role: PropTypes.string,
-  name: PropTypes.string
-}
+Footer.propTypes = {}
 
-export default Footer
+export default withStyles(styles, { withTheme: true })(Footer)

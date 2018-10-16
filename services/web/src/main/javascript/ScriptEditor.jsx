@@ -45,27 +45,27 @@ function findWithRegex(regex, contentBlock, callback) {
 }
 
 const KeywordSpan = (props) => {
-  return <span {...props} style={styles.keyword}>{props.children}</span>
+  return <span style={styles.keyword}>{props.children}</span>
 }
 
 const FunctionSpan = (props) => {
-  return <span {...props} style={styles.function}>{props.children}</span>
+  return <span style={styles.function}>{props.children}</span>
 }
 
 const PathopSpan = (props) => {
-  return <span {...props} style={styles.pathop}>{props.children}</span>
+  return <span style={styles.pathop}>{props.children}</span>
 }
 
 const ParentSpan = (props) => {
-  return <span {...props} style={styles.parent}>{props.children}</span>
+  return <span style={styles.parent}>{props.children}</span>
 }
 
 const BraceSpan = (props) => {
-  return <span {...props} style={styles.brace}>{props.children}</span>
+  return <span style={styles.brace}>{props.children}</span>
 }
 
 const OperatorSpan = (props) => {
-  return <span {...props} style={styles.operator}>{props.children}</span>
+  return <span style={styles.operator}>{props.children}</span>
 }
 
 const compositeDecorator = new CompositeDecorator([
@@ -96,38 +96,33 @@ const compositeDecorator = new CompositeDecorator([
 ])
 
 let ScriptEditor = class ScriptEditor extends React.Component {
-  constructor(props) {
-    super(props)
+    state = {
+        editorState: EditorState.createWithContent(ContentState.createFromText(this.props.initialValue), compositeDecorator)
+    }
 
-    this.state = { editorState: EditorState.createWithContent(ContentState.createFromText(props.initialValue), compositeDecorator) }
-
-    this.onChange = (editorState) => {
+    onChange = (editorState) => {
         this.setState({ editorState })
-        if (props.onContentChanged) {
-            props.onContentChanged(editorState.getCurrentContent().getPlainText())
+        if (this.props.onContentChanged) {
+            this.props.onContentChanged(editorState.getCurrentContent().getPlainText())
         }
     }
 
-    this.setEditor = (editor) => {
+    setEditor = (editor) => {
       this.editor = editor
     }
 
-    this.focusEditor = () => {
+    focusEditor = () => {
       if (this.editor) {
         this.editor.focus()
       }
     }
-  }
 
-  componentDidMount() {
-  }
-
-  render() {
-    return (
-      <div style={styles.editor} onClick={this.focusEditor}>
-        <Editor ref={this.setEditor} readOnly={this.props.readOnly} editorState={this.state.editorState} onChange={this.onChange}/>
-      </div>
-    )
+    render() {
+        return (
+          <div style={styles.editor} onClick={this.focusEditor}>
+            <Editor ref={this.setEditor} readOnly={this.props.readOnly} editorState={this.state.editorState} onChange={this.onChange}/>
+          </div>
+        )
   }
 }
 
@@ -158,7 +153,7 @@ const styles = {
 
 ScriptEditor.propTypes = {
   initialValue: PropTypes.string,
-  readOnly: PropTypes.boolean,
+  readOnly: PropTypes.bool,
   onContentChanged: PropTypes.func
 }
 

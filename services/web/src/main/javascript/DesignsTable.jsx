@@ -20,12 +20,17 @@ import IconButton from '@material-ui/core/IconButton'
 import ButtonBase from '@material-ui/core/ButtonBase'
 import Tooltip from '@material-ui/core/Tooltip'
 
+import AddIcon from '@material-ui/icons/Add'
 import EditIcon from '@material-ui/icons/Edit'
 import DeleteIcon from '@material-ui/icons/Delete'
 
 import { connect } from 'react-redux'
 
-import { changePage, changeRowsPerPage, setPage, setRowsPerPage } from './actions/designs'
+import { changePage, changeRowsPerPage, showCreateDesign, showDeleteDesigns, setPage, setRowsPerPage, setOrder, setSelected } from './actions/designs'
+
+import axios from 'axios'
+
+const base_url = 'https://localhost:8080'
 
 function createData(uuid) {
   return { uuid: uuid }
@@ -153,7 +158,7 @@ const toolbarStyles = theme => ({
 })
 
 let EnhancedTableToolbar = props => {
-  const { numSelected, classes } = props
+  const { role, numSelected, classes, onCreate, onDelete, onModify } = props
 
   return (
     <Toolbar
@@ -173,22 +178,29 @@ let EnhancedTableToolbar = props => {
         )}
       </div>
       <div className={classes.spacer} />
-      <div className={classes.actions}>
-        {numSelected > 0 && (
-          <Tooltip title="Delete">
-            <IconButton aria-label="Delete">
-              <DeleteIcon />
-            </IconButton>
-          </Tooltip>
-        )}
-        {numSelected == 1 && (
-          <Tooltip title="Modify">
-            <IconButton aria-label="Modify">
-              <EditIcon />
-            </IconButton>
-          </Tooltip>
-        )}
-      </div>
+      {role == 'admin' && (
+          <div className={classes.actions}>
+            <Tooltip title="Create">
+              <IconButton aria-label="Create" onClick={onCreate}>
+                <AddIcon />
+              </IconButton>
+            </Tooltip>
+            {numSelected > 0 && (
+              <Tooltip title="Delete">
+                <IconButton aria-label="Delete" onClick={onDelete}>
+                  <DeleteIcon />
+                </IconButton>
+              </Tooltip>
+            )}
+            {numSelected == 1 && (
+              <Tooltip title="Modify">
+                <IconButton aria-label="Modify" onClick={onModify}>
+                  <EditIcon />
+                </IconButton>
+              </Tooltip>
+            )}
+          </div>
+      )}
     </Toolbar>
   )
 }
@@ -196,6 +208,9 @@ let EnhancedTableToolbar = props => {
 EnhancedTableToolbar.propTypes = {
   classes: PropTypes.object.isRequired,
   numSelected: PropTypes.number.isRequired,
+  onDelete: PropTypes.func,
+  onModify: PropTypes.func,
+  role: PropTypes.string
 }
 
 EnhancedTableToolbar = withStyles(toolbarStyles)(EnhancedTableToolbar)
@@ -221,15 +236,15 @@ class EnhancedTable extends React.Component {
       order = 'asc'
     }
 
-    this.setState({ order, orderBy })
+    this.props.handleChangeOrder({ order, orderBy })
   }
 
   handleSelectAllClick = event => {
     if (event.target.checked) {
-      this.setState(state => ({ selected: this.props.designs.map(n => n.uuid) }))
-      return
+        this.props.handleChangeSelected(this.props.designs.map(n => n.uuid))
+        return
     }
-    this.setState({ selected: [] })
+    this.props.handleChangeSelected([])
   }
 
   handleClick = (event, id) => {
@@ -250,7 +265,13 @@ class EnhancedTable extends React.Component {
       )
     }
 
-    this.setState({ selected: newSelected })
+    this.props.handleChangeSelected(newSelected)
+  }
+
+  handleModify = () => {
+      if (this.props.selected[0]) {
+          window.location = base_url + "/admin/designs/" + this.props.selected[0]
+      }
   }
 
   isSelected = id => this.props.selected.indexOf(id) !== -1
@@ -261,7 +282,7 @@ class EnhancedTable extends React.Component {
 
     return (
       <Paper className={classes.root} square={true}>
-        <EnhancedTableToolbar numSelected={selected.length} />
+        <EnhancedTableToolbar role={role} numSelected={selected.length} onCreate={this.props.handleShowCreateDialog} onDelete={this.props.handleShowDeleteDialog} onModify={this.handleModify}/>
           <Table className={classes.table} aria-labelledby="tableTitle">
             <EnhancedTableHead
               numSelected={selected.length}
@@ -368,11 +389,23 @@ const mapStateToProps = state => {
 }
 
 const mapDispatchToProps = dispatch => ({
+    handleShowDeleteDialog: () => {
+        dispatch(showDeleteDesigns())
+    },
+    handleShowCreateDialog: () => {
+        dispatch(showCreateDesign())
+    },
     handleChangePage: (event, page) => {
         dispatch(setPage(page))
     },
     handleChangeRowsPerPage: (event) => {
         dispatch(setRowsPerPage(event.target.value))
+    },
+    handleChangeOrder: (order, orderBy) => {
+        dispatch(setOrder(order, orderBy))
+    },
+    handleChangeSelected: (selected) => {
+        dispatch(setSelected(selected))
     }
 })
 

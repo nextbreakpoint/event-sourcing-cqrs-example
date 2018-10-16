@@ -18,6 +18,7 @@ import DialogActions from '@material-ui/core/DialogActions'
 import DialogContent from '@material-ui/core/DialogContent'
 import DialogTitle from '@material-ui/core/DialogTitle'
 import Slide from '@material-ui/core/Slide'
+import Fade from '@material-ui/core/Fade'
 
 import AddIcon from '@material-ui/icons/Add'
 import EditIcon from '@material-ui/icons/Edit'
@@ -25,19 +26,22 @@ import DeleteIcon from '@material-ui/icons/Delete'
 import CloseIcon from '@material-ui/icons/Close'
 
 import DesignsTable from './DesignsTable'
-import DesignItem from './DesignItem'
 import NewDesign from './NewDesign'
 
 import { connect } from 'react-redux'
 
-import { showCreateDesign, hideCreateDesign, setDesigns } from './actions/designs'
+import { showDeleteDesigns, hideDeleteDesigns, showCreateDesign, hideCreateDesign, setDesigns, setSelected } from './actions/designs'
 
 import axios from 'axios'
 
 const base_url = 'https://localhost:8080'
 
-function Transition(props) {
+function SlideTransition(props) {
   return <Slide direction="up" {...props} />
+}
+
+function FadeTransition(props) {
+  return <Fade in="true" {...props} />
 }
 
 let script = "fractal {\n\torbit [-2.0 - 2.0i,+2.0 + 2.0i] [x,n] {\n\t\tloop [0, 200] (mod2(x) > 40) {\n\t\t\tx = x * x + w;\n\t\t}\n\t}\n\tcolor [#FF000000] {\n\t\tpalette gradient {\n\t\t\t[#FFFFFFFF > #FF000000, 100];\n\t\t\t[#FF000000 > #FFFFFFFF, 100];\n\t\t}\n\t\tinit {\n\t\t\tm = 100 * (1 + sin(mod(x) * 0.2 / pi));\n\t\t}\n\t\trule (n > 0) [1] {\n\t\t\tgradient[m - 1]\n\t\t}\n\t}\n}\n"
@@ -73,7 +77,7 @@ let Designs = class Designs extends React.Component {
 
                    console.log(event)
 
-                   if (component.state.timestamp == undefined || timestamp > component.state.timestamp) {
+                   if (component.props.timestamp == undefined || timestamp > component.props.timestamp) {
                       console.log("Reload designs")
 
                       component.loadDesigns(timestamp)
@@ -122,12 +126,12 @@ let Designs = class Designs extends React.Component {
         let manifest = "{\"pluginId\":\"Mandelbrot\"}"
         let design = { "manifest": manifest, "script": this.state.script, "metadata": this.state.metadata }
 
-        component.props.handleHideEditor()
+        component.props.handleHideCreateDialog()
 
         axios.post(component.props.config.designs_command_url, design, config)
             .then(function (content) {
                 if (content.status == 201) {
-                    var designs = component.state.designs.slice()
+                    var designs = component.props.designs.slice()
 
                     designs.push({uuid:content.data.uuid, selected: false})
 
@@ -149,12 +153,12 @@ let Designs = class Designs extends React.Component {
             withCredentials: true
         }
 
-        let promises = this.state.designs
-            .filter((design) => {
-                return design.selected
-            }).map((design) => {
-                return axios.delete(component.props.config.designs_command_url + '/' + design.uuid, config)
+        let promises = this.props.selected
+            .map((uuid) => {
+                return axios.delete(component.props.config.designs_command_url + '/' + uuid, config)
             })
+
+        component.props.handleHideConfirmDelete()
 
         axios.all(promises)
             .then(function (responses) {
@@ -166,7 +170,7 @@ let Designs = class Designs extends React.Component {
                         return res.config.url.substring(res.config.url.lastIndexOf("/") + 1)
                     })
 
-                let designs = component.state.designs
+                let designs = component.props.designs
                     .filter((design) => {
                         return !deletedUuids.includes(design.uuid)
                     })
@@ -174,6 +178,7 @@ let Designs = class Designs extends React.Component {
                         return { uuid: design.uuid, selected: design.selected }
                     })
 
+                component.props.handleChangeSelected([])
                 component.props.handleDesignsLoaded(designs, this.props.timestamp)
             })
             .catch(function (error) {
@@ -182,7 +187,9 @@ let Designs = class Designs extends React.Component {
     }
 
     handleModify = () => {
-        console.log("modify")
+        if (this.props.selected[0]) {
+            window.location = base_url + "/admin/designs/" + this.props.selected[0]
+        }
     }
 
     handleScriptChanged = (value) => {
@@ -197,31 +204,51 @@ let Designs = class Designs extends React.Component {
         return (
             <div>
                 <DesignsTable/>
-                {this.props.role == 'admin' && <div className={this.props.classes.fabcontainer}>
-                    <Button variant="fab" className={this.props.classes.fab} color="primary" onClick={this.props.handleShowEditor}>
-                        <AddIcon />
-                    </Button>
-                    <Button variant="fab" className={this.props.classes.fab} color="secondary" onClick={this.handleModify} disabled={true}>
-                        <EditIcon />
-                    </Button>
-                    <Button variant="fab" className={this.props.classes.fab} color="inherit" onClick={this.handleDelete} disabled={true}>
-                        <DeleteIcon />
-                    </Button>
-                </div>}
-                {this.props.role == 'admin' && <Dialog fullScreen={false} className={this.props.classes.dialog} open={this.props.open} onClose={this.props.handleHideEditor} scroll={"paper"} TransitionComponent={Transition}>
-                    <DialogTitle>Create New Design</DialogTitle>
-                    <DialogContent>
-                        <NewDesign script={this.state.script} metadata={this.state.metadata} onScriptChanged={this.handleScriptChanged} onMetadataChanged={this.handleMetadataChanged}/>
-                    </DialogContent>
-                    <DialogActions>
-                        <Button onClick={this.props.handleHideEditor} color="primary">
-                          Cancel
+                {this.props.role == 'admin' && (
+                    <div className={this.props.classes.fabcontainer}>
+                        <Button variant="fab" className={this.props.classes.fab} color="primary" onClick={this.props.handleShowCreateDialog}>
+                            <AddIcon />
                         </Button>
-                        <Button onClick={this.handleCreate} color="primary">
-                          Create
+                        <Button variant="fab" className={this.props.classes.fab} color="secondary" onClick={this.handleModify} disabled={this.props.selected.length != 1}>
+                            <EditIcon />
                         </Button>
-                    </DialogActions>
-                </Dialog>}
+                        <Button variant="fab" className={this.props.classes.fab} color="inherit" onClick={this.props.handleShowConfirmDelete} disabled={this.props.selected.length == 0}>
+                            <DeleteIcon />
+                        </Button>
+                    </div>
+                )}
+                {this.props.role == 'admin' && (
+                    <Dialog className={this.props.classes.dialog} open={this.props.show_create_design} onClose={this.props.handleHideCreateDialog} scroll={"paper"} TransitionComponent={SlideTransition}>
+                        <DialogTitle>Create New Design</DialogTitle>
+                        <DialogContent>
+                            <NewDesign script={this.state.script} metadata={this.state.metadata} onScriptChanged={this.handleScriptChanged} onMetadataChanged={this.handleMetadataChanged}/>
+                        </DialogContent>
+                        <DialogActions>
+                            <Button variant="outlined" color="primary" onClick={this.props.handleHideCreateDialog} color="primary">
+                              Cancel
+                            </Button>
+                            <Button variant="outlined" color="primary" onClick={this.handleCreate} color="primary" autoFocus>
+                              Create
+                            </Button>
+                        </DialogActions>
+                    </Dialog>
+                )}
+                {this.props.role == 'admin' && (
+                    <Dialog className={this.props.classes.dialog} open={this.props.show_delete_designs} onClose={this.props.handleHideConfirmDelete} scroll={"paper"} TransitionComponent={FadeTransition}>
+                        <DialogTitle>Delete Designs</DialogTitle>
+                        <DialogContent>
+                            {this.props.selected.length == 1 ? (<p>Do you want to delete {this.props.selected.length} item?</p>) : (<p>Do you want to delete {this.props.selected.length} items?</p>)}
+                        </DialogContent>
+                        <DialogActions>
+                            <Button variant="outlined" color="primary" onClick={this.props.handleHideConfirmDelete} color="primary">
+                              Cancel
+                            </Button>
+                            <Button variant="outlined" color="primary" onClick={this.handleDelete} color="primary" autoFocus>
+                              Delete
+                            </Button>
+                        </DialogActions>
+                    </Dialog>
+                )}
             </div>
         )
     }
@@ -229,10 +256,10 @@ let Designs = class Designs extends React.Component {
 
 Designs.propTypes = {
   config: PropTypes.object.isRequired,
-  designs: PropTypes.array.isRequired,
   timestamp: PropTypes.number.isRequired,
   role: PropTypes.string.isRequired,
-  open: PropTypes.bool.isRequired,
+  show_create_design: PropTypes.bool.isRequired,
+  show_delete_designs: PropTypes.bool.isRequired,
   classes: PropTypes.object.isRequired,
   theme: PropTypes.object.isRequired
 }
@@ -258,20 +285,31 @@ const mapStateToProps = state => {
         config: state.designs.config,
         role: state.designs.account.role,
         designs: state.designs.designs,
+        selected: state.designs.selected,
         timestamp: state.designs.timestamp,
-        open: state.designs.show_create_design
+        show_create_design: state.designs.show_create_design,
+        show_delete_designs: state.designs.show_delete_designs
     }
 }
 
 const mapDispatchToProps = dispatch => ({
-    handleShowEditor: () => {
+    handleShowConfirmDelete: () => {
+        dispatch(showDeleteDesigns())
+    },
+    handleHideConfirmDelete: () => {
+        dispatch(hideDeleteDesigns())
+    },
+    handleShowCreateDialog: () => {
         dispatch(showCreateDesign())
     },
-    handleHideEditor: () => {
+    handleHideCreateDialog: () => {
         dispatch(hideCreateDesign())
     },
     handleDesignsLoaded: (designs, timestamp) => {
         dispatch(setDesigns(designs, timestamp))
+    },
+    handleChangeSelected: (selected) => {
+        dispatch(setSelected(selected))
     }
 })
 

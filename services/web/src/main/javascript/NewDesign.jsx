@@ -11,9 +11,6 @@ let NewDesign = class NewDesign extends React.Component {
     constructor(props) {
         super(props)
 
-        this.scriptEditor = React.createRef()
-        this.metadataEditor = React.createRef()
-
         this.state = { script: props.script, metadata: props.metadata }
 
         this.handleScriptChanged = this.handleScriptChanged.bind(this)
@@ -35,11 +32,11 @@ let NewDesign = class NewDesign extends React.Component {
             <Grid container justify="space-between" alignItems="stretch" alignContent="space-between">
                 <Grid item xs={6}>
                     <p>Script</p>
-                    <ScriptEditor ref={this.scriptEditor} initialValue={this.state.script} readOnly={false} onContentChanged={(value) => this.handleScriptChanged(value)}/>
+                    <ScriptEditor initialValue={this.state.script} readOnly={false} onContentChanged={(value) => this.handleScriptChanged(value)}/>
                 </Grid>
                 <Grid item xs={5}>
                     <p>Metadata</p>
-                    <MetadataEditor ref={this.metadataEditor} initialValue={this.state.metadata} readOnly={false} onContentChanged={(value) => this.handleScriptChanged(value)}/>
+                    <MetadataEditor initialValue={this.state.metadata} readOnly={false} onContentChanged={(value) => this.handleScriptChanged(value)}/>
                 </Grid>
             </Grid>
         )

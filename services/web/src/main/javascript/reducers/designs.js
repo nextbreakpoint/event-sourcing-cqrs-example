@@ -1,4 +1,4 @@
-import { SET_CONFIG, SET_ACCOUNT, SET_DESIGNS, SET_PAGE, SET_ROWS_PER_PAGE, SHOW_CREATE_DESIGN, HIDE_CREATE_DESIGN } from '../constants/ActionTypes'
+import { SET_CONFIG, SET_ACCOUNT, SET_DESIGNS, SET_ORDER, SET_PAGE, SET_ROWS_PER_PAGE, SET_SELECTED, SHOW_CREATE_DESIGN, HIDE_CREATE_DESIGN, SHOW_DELETE_DESIGNS, HIDE_DELETE_DESIGNS } from '../constants/ActionTypes'
 
 const initialState = {
     config: undefined,
@@ -8,6 +8,7 @@ const initialState = {
     designs: [],
     timestamp: 0,
     show_create_design: false,
+    show_delete_designs: false,
     order: 'asc',
     orderBy: 'uuid',
     selected: [],
@@ -26,6 +27,16 @@ function designsReducer (state = initialState, action) {
       return {
         ...state,
         show_create_design: false
+      }
+    case SHOW_DELETE_DESIGNS:
+      return {
+        ...state,
+        show_delete_designs: true
+      }
+    case HIDE_DELETE_DESIGNS:
+      return {
+        ...state,
+        show_delete_designs: false
       }
     case SET_CONFIG:
       return {
@@ -54,6 +65,17 @@ function designsReducer (state = initialState, action) {
       return {
         ...state,
         rowsPerPage: action.rowsPerPage
+      }
+    case SET_SELECTED:
+      return {
+        ...state,
+        selected: action.selected
+      }
+    case SET_ORDER:
+      return {
+        ...state,
+        order: action.order,
+        orderBy: action.orderBy
       }
     default:
       return state

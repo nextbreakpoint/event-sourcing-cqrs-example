@@ -26,7 +26,7 @@ import DeleteIcon from '@material-ui/icons/Delete'
 import CloseIcon from '@material-ui/icons/Close'
 
 import DesignsTable from './DesignsTable'
-import NewDesign from './NewDesign'
+import DesignForm from './DesignForm'
 
 import { connect } from 'react-redux'
 
@@ -130,7 +130,7 @@ let Designs = class Designs extends React.Component {
 
         axios.post(component.props.config.designs_command_url, design, config)
             .then(function (content) {
-                if (content.status == 201) {
+                if (content.status == 202) {
                     var designs = component.props.designs.slice()
 
                     designs.push({uuid:content.data.uuid, selected: false})
@@ -164,7 +164,7 @@ let Designs = class Designs extends React.Component {
             .then(function (responses) {
                 let deletedUuids = responses
                     .filter((res) => {
-                        return res.status == 200
+                        return res.status == 202
                     })
                     .map((res) => {
                         return res.config.url.substring(res.config.url.lastIndexOf("/") + 1)
@@ -193,11 +193,11 @@ let Designs = class Designs extends React.Component {
     }
 
     handleScriptChanged = (value) => {
-        //this.setState(Object.assign(this.state, {script: value}))
+        this.setState({script: value})
     }
 
     handleMetadataChanged = (value) => {
-        //this.setState(Object.assign(this.state, {metadata: value}))
+        this.setState({metadata: value})
     }
 
     render() {
@@ -221,7 +221,7 @@ let Designs = class Designs extends React.Component {
                     <Dialog className={this.props.classes.dialog} open={this.props.show_create_design} onClose={this.props.handleHideCreateDialog} scroll={"paper"} TransitionComponent={SlideTransition}>
                         <DialogTitle>Create New Design</DialogTitle>
                         <DialogContent>
-                            <NewDesign script={this.state.script} metadata={this.state.metadata} onScriptChanged={this.handleScriptChanged} onMetadataChanged={this.handleMetadataChanged}/>
+                            <DesignForm script={this.state.script} metadata={this.state.metadata} onScriptChanged={this.handleScriptChanged} onMetadataChanged={this.handleMetadataChanged}/>
                         </DialogContent>
                         <DialogActions>
                             <Button variant="outlined" color="primary" onClick={this.props.handleHideCreateDialog} color="primary">
@@ -266,13 +266,14 @@ Designs.propTypes = {
 
 const styles = theme => ({
   fabcontainer: {
-    'position': 'fixed',
-    'z-index': 1000,
-    'bottom': theme.spacing.unit * 2,
-    'right': theme.spacing.unit * 2
+    position: 'fixed',
+    zIndex: 1000,
+    bottom: theme.spacing.unit * 2,
+    width: '100%',
+    textAlign: 'center'
   },
   fab: {
-    'margin': theme.spacing.unit
+    margin: theme.spacing.unit
   },
   dialog: {
   }

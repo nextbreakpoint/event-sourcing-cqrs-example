@@ -27,6 +27,8 @@ class Config extends React.Component {
 
         axios.get(base_url + '/config', config)
             .then(function (content) {
+                console.log("Config loaded")
+
                 let config = content.data
 
                 component.props.handleConfigLoaded(config)

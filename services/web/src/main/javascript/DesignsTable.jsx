@@ -61,8 +61,8 @@ function getSorting(order, orderBy) {
 }
 
 const cells = [
-  { id: 'uuid', numeric: false, disablePadding: true, label: 'UUID', enableSort: true },
-  { id: 'image', numeric: false, disablePadding: true, label: 'Preview', enableSort: false }
+  { id: 'uuid', numeric: false, disablePadding: true, label: 'UUID', enableSort: true, className: '' },
+  { id: 'image', numeric: false, disablePadding: true, label: '', enableSort: false, className: 'list-image' }
 ]
 
 class EnhancedTableHead extends React.Component {
@@ -71,17 +71,17 @@ class EnhancedTableHead extends React.Component {
   }
 
   render() {
-    const { onSelectAllClick, order, orderBy, numSelected, rowCount } = this.props
+    const { onSelectAllClick, order, orderBy, numSelected, rowCount, role } = this.props
 
     return (
       <TableHead>
         <TableRow>
           <TableCell padding="checkbox">
-            <Checkbox
+            {role == 'admin' && <Checkbox
               indeterminate={numSelected > 0 && numSelected < rowCount}
               checked={numSelected === rowCount}
               onChange={onSelectAllClick}
-            />
+            />}
           </TableCell>
           {cells.map(cell => {
             return (
@@ -91,6 +91,7 @@ class EnhancedTableHead extends React.Component {
                 numeric={cell.numeric}
                 padding={cell.disablePadding ? 'none' : 'default'}
                 sortDirection={orderBy === cell.id ? order : false}
+                className={cell.className}
               >
                 <Tooltip
                   title="Sort"
@@ -111,6 +112,7 @@ class EnhancedTableHead extends React.Component {
                 key={cell.id}
                 numeric={cell.numeric}
                 padding={cell.disablePadding ? 'none' : 'default'}
+                className={cell.className}
               >
                 {cell.label}
               </TableCell>
@@ -130,6 +132,7 @@ EnhancedTableHead.propTypes = {
   order: PropTypes.string.isRequired,
   orderBy: PropTypes.string.isRequired,
   rowCount: PropTypes.number.isRequired,
+  role: PropTypes.string.isRequired
 }
 
 const toolbarStyles = theme => ({
@@ -163,11 +166,11 @@ let EnhancedTableToolbar = props => {
   return (
     <Toolbar
       className={classNames(classes.root, {
-        [classes.highlight]: numSelected > 0,
+        [classes.highlight]: role == 'admin' && numSelected > 0,
       })}
     >
       <div className={classes.title}>
-        {numSelected > 0 ? (
+        {role == 'admin' && numSelected > 0 ? (
           <Typography color="inherit" variant="subheading">
             {numSelected} selected
           </Typography>
@@ -236,7 +239,7 @@ class EnhancedTable extends React.Component {
       order = 'asc'
     }
 
-    this.props.handleChangeOrder({ order, orderBy })
+    this.props.handleChangeOrder(order, orderBy)
   }
 
   handleSelectAllClick = event => {
@@ -265,7 +268,9 @@ class EnhancedTable extends React.Component {
       )
     }
 
-    this.props.handleChangeSelected(newSelected)
+    if (this.props.role == 'admin') {
+        this.props.handleChangeSelected(newSelected)
+    }
   }
 
   handleModify = () => {
@@ -291,6 +296,7 @@ class EnhancedTable extends React.Component {
               onSelectAllClick={this.handleSelectAllClick}
               onRequestSort={this.handleRequestSort}
               rowCount={designs.length}
+              role={role}
             />
             <TableBody>
               {stableSort(designs, getSorting(order, orderBy))
@@ -308,12 +314,12 @@ class EnhancedTable extends React.Component {
                       selected={isSelected}
                     >
                       <TableCell padding="checkbox">
-                        <Checkbox checked={isSelected} />
+                        {role == 'admin' && <Checkbox checked={isSelected} />}
                       </TableCell>
                       <TableCell scope="row" padding="none">
                         <a href={"/admin/designs/" + n.uuid}><pre>{n.uuid}</pre></a>
                       </TableCell>
-                      <TableCell scope="row" padding="none">
+                      <TableCell scope="row" padding="none" className="list-image">
                         <ButtonBase
                                 focusRipple
                                 key={n.uuid}

@@ -5,8 +5,6 @@ import reducers from './reducers'
 
 import Header from './Header'
 import Footer from './Footer'
-import Config from './Config'
-import Account from './Account'
 import Designs from './Designs'
 
 import { withStyles } from '@material-ui/core/styles'
@@ -31,7 +29,7 @@ class DesignsPage extends React.Component {
                 <CssBaseline />
                 <Grid container justify="space-between" alignItems="center">
                     <Grid item xs={12}>
-                        <Header/>
+                        <Header landing={'/admin/designs'}/>
                     </Grid>
                     <Grid item xs={12}>
                         <Designs/>
@@ -48,9 +46,7 @@ class DesignsPage extends React.Component {
 const mapStateToProps = state => {
     //console.log(JSON.stringify(state))
 
-    return {
-        account: state.designs.account
-    }
+    return {}
 }
 
 const mapDispatchToProps = dispatch => ({})

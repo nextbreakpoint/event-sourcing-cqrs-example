@@ -63,8 +63,9 @@ let DesignEditor = class DesignEditor extends React.Component {
 
 const styles = {
   editor: {
-    border: '1px solid gray',
-    minHeight: '20em'
+    border: '2px solid #f0f0f0',
+    minHeight: '40em',
+    borderRadius: '0.5em'
   },
   keyword: {
     color: 'blue'

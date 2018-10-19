@@ -1,4 +1,4 @@
-import { SET_DESIGN } from '../constants/ActionTypes'
+import { SET_DESIGN, SHOW_UPDATE_DESIGN, HIDE_UPDATE_DESIGN } from '../constants/ActionTypes'
 
 export const setConfig = (config) => ({
   type: SET_CONFIG,
@@ -12,8 +12,16 @@ export const setAccount = (role, name) => ({
 })
 
 export const setDesign = (design, timestamp) => ({
-  type: SET_DESIGNS,
+  type: SET_DESIGN,
   design: design,
   timestamp: timestamp
+})
+
+export const showUpdateDesign = () => ({
+  type: SHOW_UPDATE_DESIGN
+})
+
+export const hideUpdateDesign = () => ({
+  type: HIDE_UPDATE_DESIGN
 })
 

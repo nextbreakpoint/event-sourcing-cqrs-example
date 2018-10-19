@@ -20,7 +20,7 @@ const styles = theme => ({
 
 class Header extends React.Component {
     handleLogin = () => {
-        window.location = this.props.config.auth_url + "/signin/admin/designs"
+        window.location = this.props.config.auth_url + "/signin" + this.props.landing
     }
 
     handleLogout = () => {
@@ -48,6 +48,7 @@ class Header extends React.Component {
 }
 
 Header.propTypes = {
+  landing: PropTypes.string.isRequired,
   parent: PropTypes.object
 }
 

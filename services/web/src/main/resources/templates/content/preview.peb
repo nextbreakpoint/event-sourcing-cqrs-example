@@ -2,169 +2,34 @@
 {% set design = context.get('design') %}
 <html>
     <head>
-        <title>Preview of selected design</title>
+        <title>Designs | {{design.uuid}}</title>
         <meta charset="UTF-8"/>
         <meta name="viewport" content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no"/>
         <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons"/>
         <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500">
         <link rel="stylesheet" href="{{context.get('web_url')}}/css/bootstrap.min.css"/>
         <link rel="stylesheet" href="{{context.get('web_url')}}/css/leaflet.css"/>
-        <link rel="stylesheet" href="{{context.get('web_url')}}/css/main.css"/>
-        <script src="{{context.get('web_url')}}/js/jquery-3.3.1.min.js"></script>
-        {#<script src="{{context.get('web_url')}}/js/material-ui.production.min.js"></script>#}
-        <script>
-            $(function() {
-                function makeDesign(design, timestamp) {
-                    var image = $('<img></img>')
-                        .attr('class', 'design-image')
-                        .attr('id', design.uuid)
-                        .attr('src', '{{context.get('designs_query_url')}}/' + design.uuid + '/0/0/0/512.png?t=' + timestamp)
-                        .attr('alt', '{{context.get('web_url')}}/content/designs/' + design.uuid);
-
-                    var script = $('<pre></pre>')
-                         .attr('class', 'design-script')
-                         .append(design.script);
-
-                    var metadata = $('<pre></pre>')
-                         .attr('class', 'design-script')
-                         .append(design.metadata);
-
-                    var leftColumn = $('<div></div>')
-                         .attr('class', 'col s8')
-                         .append(image);
-
-                    var rightColumn = $('<div></div>')
-                         .attr('class', 'col s4')
-                         .append(script)
-                         .append(metadata);
-
-                    return $('<div></div>')
-                        .attr('class', 'row')
-                        .append(leftColumn)
-                        .append(rightColumn)
-                }
-
-                function updateDesign(timestamp, design) {
-                    console.log("update design");
-
-                    $('#design').empty();
-
-                    $('#design').append(makeDesign(design, timestamp));
-                }
-
-                if (typeof(EventSource) !== "undefined") {
-                    var timestamp = $('#timestamp').val();
-
-                    var uuid = "{{design.uuid}}";
-
-                    var source = new EventSource("{{context.get('web_url')}}/watch/designs/" + timestamp + "/" + uuid, { withCredentials: true });
-
-                    source.addEventListener("update", function(event) {
-                       console.log(event);
-
-                       let eventTimestamp = Number(event.lastEventId);
-
-                       let timestamp = $('#timestamp').val();
-
-                       if (eventTimestamp > timestamp) {
-                            $('#timestamp').val(eventTimestamp);
-
-                            $.get("{{context.get('designs_query_url')}}/" + uuid).done(function(data) {
-                                var design = JSON.parse(data.json)
-
-                                var manifest = $('#manifest').val();
-                                var metadata = $('#metadata').val();
-                                var script = $('#script').val();
-
-                                if (manifest !== design.manifest || metadata !== design.metadata || script !== design.script) {
-                                    updateDesign(eventTimestamp, design);
-
-                                    $('#manifest').val(manifest);
-                                    $('#metadata').val(metadata);
-                                    $('#script').val(script);
-                                } else {
-                                    console.log("No changes detected");
-                                }
-                            }).fail(function(e) {
-                                console.log(e);
-                            });
-                       }
-                    }, false);
-
-                    source.onerror = function(error) {
-                       console.log(error);
-                    };
-
-                    source.onopen = function() {
-                        let timestamp = Number(Date.now());
-
-                        $('#timestamp').val(timestamp);
-
-                        $.get("{{context.get('designs_query_url')}}/" + uuid).done(function(data) {
-                            var design = JSON.parse(data.json)
-
-                            var manifest = $('#manifest').val();
-                            var metadata = $('#metadata').val();
-                            var script = $('#script').val();
-
-                            if (manifest !== design.manifest || metadata !== design.metadata || script !== design.script) {
-                                updateDesign(timestamp, design);
-
-                                $('#manifest').val(manifest);
-                                $('#metadata').val(metadata);
-                                $('#script').val(script);
-                            } else {
-                                console.log("No changes detected");
-                            }
-                        }).fail(function(e) {
-                            console.log(e);
-                        });
-                    };
-                } else {
-                    console.log("EventSource not available");
-                }
-            })
-        </script>
+        <link rel="stylesheet" href="{{context.get('web_url')}}/css/content.css"/>
     </head>
     <body>
-        <input type="hidden" id="timestamp" value="{{context.get('timestamp')}}"/>
-        <input type="hidden" id="manifest" value="{{design.manifest}}"/>
-        <input type="hidden" id="metadata" value="{{design.metadata}}"/>
-        <input type="hidden" id="script" value="{{design.script}}"/>
         <div class="container">
             <div class="row">
                 <div class="col-sm-12">
                     <header>
-                        <div class="row">
-                            <div class="col-sm-6">
-                                <span class="float-left">Welcome {{context.get('username')}}</span>
-                            </div>
-                            <div class="col-sm-6">
-                                <span class="float-right">{% if context.get('role') == 'admin' %}<a href="{{context.get('admin_url')}}">Admin</a> | {% endif %}<a href="/content/designs">Designs</a> | {% if context.get('logged') %}<a href="{{context.get('logout_url') + "/" + design.uuid}}">Logout</a>{% else %}<a href="{{context.get('login_url') + "/" + design.uuid}}">Login</a>{% endif %}</span>
-                            </div>
-                        </div>
                     </header>
                 </div>
             </div>
             <div class="row">
                 <div class="col-sm-12">
-                    <section id="design" class="design-container anchor-left anchor-right">
-                        <div class="row">
-                            <div class="col-sm-8">
-                                <img class="design-image" id="{{design.uuid}}" src="{{design.imageSrc}}?t={{context.get('timestamp')}}" alt="{{design.location}}"/>
-                            </div>
-                            <div class="col-sm-4">
-                                <pre class="design-script">{{design.script}}</pre>
-                                <pre class="design-script">{{design.metadata}}</pre>
-                            </div>
-                        </div>
+                    <section class="design-container anchor-left anchor-right">
+                        <img class="design-image" id="{{design.uuid}}" src="{{design.imageSrc}}?t={{context.get('timestamp')}}" alt="{{design.location}}"/>
                     </section>
                 </div>
             </div>
             <div class="row">
                 <div class="col-sm-12">
                     <footer>
-                        <span>Powered by NextBreakpoint</span>
+                        <p>Powered by NextBreakpoint</p>
                     </footer>
                 </div>
             </div>

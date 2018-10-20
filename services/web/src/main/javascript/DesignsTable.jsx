@@ -170,13 +170,9 @@ let EnhancedTableToolbar = props => {
       })}
     >
       <div className={classes.title}>
-        {role == 'admin' && numSelected > 0 ? (
+        {role == 'admin' && numSelected > 0 && (
           <Typography color="inherit" variant="subheading">
             {numSelected} selected
-          </Typography>
-        ) : (
-          <Typography variant="title" id="tableTitle">
-            List of Designs
           </Typography>
         )}
       </div>

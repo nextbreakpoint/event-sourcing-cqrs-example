@@ -1,9 +1,16 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 
-import Grid from '@material-ui/core/Grid'
-
 import { withStyles } from '@material-ui/core/styles'
+
+import AppBar from '@material-ui/core/AppBar';
+import Toolbar from '@material-ui/core/Toolbar';
+import Typography from '@material-ui/core/Typography';
+import Button from '@material-ui/core/Button';
+import IconButton from '@material-ui/core/IconButton';
+import Menu from '@material-ui/core/Menu';
+import MenuItem from '@material-ui/core/MenuItem';
+import MenuIcon from '@material-ui/icons/Menu';
 
 import { connect } from 'react-redux'
 
@@ -15,10 +22,45 @@ import Cookies from 'universal-cookie'
 
 const cookies = new Cookies()
 
+var uuid = undefined
+
+const regexp = /https?:\/\/.*\/admin\/designs\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/g
+const match = regexp.exec(window.location.href)
+
+if (match != null && match.length == 2) {
+    uuid = match[1]
+}
+
+const base_url = 'https://localhost:8080'
+
 const styles = theme => ({
+  root: {
+    flexGrow: 1
+  },
+  grow: {
+    flexGrow: 1
+  },
+  button: {
+    padding: 0
+  },
+  menuButton: {
+    marginRight: 2 * theme.spacing.unit
+  }
 })
 
 class Header extends React.Component {
+    state = {
+        anchorEl: null
+    }
+
+    handleNavigateContentDesigns = () => {
+        window.location = base_url + "/content/designs"
+    }
+
+    handleNavigateAdminDesigns = () => {
+        window.location = base_url + "/admin/designs"
+    }
+
     handleLogin = () => {
         window.location = this.props.config.auth_url + "/signin" + this.props.landing
     }
@@ -29,20 +71,49 @@ class Header extends React.Component {
         this.props.handleAccountLoaded({ role: 'anonymous', name: 'Stranger' })
     }
 
+    handleMenu = event => {
+        this.setState({ anchorEl: event.currentTarget })
+    }
+
+    handleClose = () => {
+        this.setState({ anchorEl: null })
+    }
+
     render() {
+        const { classes } = this.props
+        const { anchorEl } = this.state
+        const open = Boolean(anchorEl)
+
         return (
-            <header>
-                <Grid container justify="space-between" alignItems="center">
-                    <Grid item xs={6}>
-                        <span>Welcome {this.props.account.name}</span>
-                    </Grid>
-                    <Grid item xs={6} className="right-align">
-                        {this.props.parent && <span><a href={this.props.parent.link}>{this.props.parent.label}</a> | </span>}
-                        {this.props.account.role == 'anonymous' && <span onClick={this.handleLogin}>Login</span>}
-                        {this.props.account.role != 'anonymous' && <span onClick={this.handleLogout}>Logout</span>}
-                    </Grid>
-                </Grid>
-            </header>
+            <AppBar position="static">
+                <Toolbar>
+                  <IconButton className={classes.menuButton} color="inherit" aria-label="Menu">
+                    <MenuIcon onClick={this.handleMenu}/>
+                  </IconButton>
+                  <Menu
+                    id="menu-appbar"
+                    anchorEl={anchorEl}
+                    anchorOrigin={{
+                      vertical: 'top',
+                      horizontal: 'right',
+                    }}
+                    transformOrigin={{
+                      vertical: 'top',
+                      horizontal: 'right',
+                    }}
+                    open={open}
+                    onClose={this.handleClose}
+                  >
+                    <MenuItem onClick={this.handleNavigateContentDesigns}>Browse</MenuItem>
+                    <MenuItem onClick={this.handleNavigateAdminDesigns}>Admin</MenuItem>
+                  </Menu>
+                  <Typography variant="title" color="inherit" className={classes.grow}>
+                    Designs {uuid && (<span>| {uuid}</span>)}
+                  </Typography>
+                  {this.props.account.role == 'anonymous' && <Button color="inherit" onClick={this.handleLogin}>Login</Button>}
+                  {this.props.account.role != 'anonymous' && <Button color="inherit" onClick={this.handleLogout}>Logout</Button>}
+                </Toolbar>
+            </AppBar>
         )
     }
 }

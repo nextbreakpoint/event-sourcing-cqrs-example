@@ -10,10 +10,10 @@
         <link rel="stylesheet" href="{{context.get('web_url')}}/css/main.css"/>
     </head>
     <body>
-        <div>
-            <div class="container s12">
-                Oops something is wrong...
+        <div class="container">
+            <div class="row">
+                <div class="col-sm-12">Sorry, your request can't be processed. Please retry later!</div>
             </div>
-        <div>
+        </div>
     </body>
 </html>

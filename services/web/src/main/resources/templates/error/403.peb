@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Error</title>
+        <title>Access denied</title>
         <meta charset="UTF-8"/>
         <meta name="viewport" content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no"/>
         <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons"/>
@@ -10,9 +10,9 @@
         <link rel="stylesheet" href="{{context.get('web_url')}}/css/main.css"/>
     </head>
     <body>
-        <div>
-            <div class="container s12">
-                Access denied
+        <div class="container">
+            <div class="row">
+                <div class="col-sm-12">Your are not authorized</div>
             </div>
         </div>
     </body>

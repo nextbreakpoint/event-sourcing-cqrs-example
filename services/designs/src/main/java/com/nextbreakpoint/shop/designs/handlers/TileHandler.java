@@ -70,11 +70,11 @@ public class TileHandler implements Handler<RoutingContext> {
         final int size = Integer.parseInt(request.getParam("size"));
 
         if (zoom < 0 || zoom > 10) {
-            throw new Failure(400, "Invalid zoom level");
+            throw new Failure(400, "Invalid zoom level: " + zoom);
         }
 
         if (size < 128 || size > 512) {
-            throw new Failure(400, "Invalid image size");
+            throw new Failure(400, "Invalid image size: " + size);
         }
 
         return new TileParams(uuid, zoom, x, y, size);

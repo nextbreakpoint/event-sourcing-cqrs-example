@@ -7,7 +7,7 @@
         <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons"/>
         <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500">
         <link rel="stylesheet" href="/css/leaflet.css" media="screen,projection"/>
-        <link rel="stylesheet" href="{{context.get('web_url')}}/css/main.css"/>
+        <link rel="stylesheet" href="{{context.get('web_url')}}/css/admin.css"/>
     </head>
     <body>
         <div id="app"></div>

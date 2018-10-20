@@ -1,121 +1,39 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>List of published designs</title>
+        <title>Designs</title>
         <meta charset="UTF-8"/>
         <meta name="viewport" content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no"/>
         <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons"/>
         <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500">
         <link rel="stylesheet" href="{{context.get('web_url')}}/css/bootstrap.min.css"/>
-        <link rel="stylesheet" href="{{context.get('web_url')}}/css/main.css"/>
-        <script src="{{context.get('web_url')}}/js/jquery-3.3.1.min.js"></script>
-        {#<script src="{{context.get('web_url')}}/js/material-ui.production.min.js"></script>#}
-        <script>
-            $(function() {
-                function makeDesign(design, timestamp) {
-                    var image = $('<img></img>')
-                        .attr('class', 'designs-grid-element-image')
-                        .attr('id', design.uuid)
-                        .attr('src', '{{context.get('designs_query_url')}}/' + design.uuid + '/0/0/0/256.png?t=' + timestamp)
-                        .attr('alt', '{{context.get('web_url')}}/content/designs/' + design.uuid);
-
-                    var anchor = $('<a></a>')
-                         .attr('href', '{{context.get('web_url')}}/content/designs/' + design.uuid)
-                         .append(image);
-
-                    return $('<div></div>')
-                        .attr('class', 'designs-grid-element')
-                        .append(anchor)
-                }
-
-                function updateDesigns(timestamp, designs) {
-                    console.log("update designs");
-
-                    $('#designs').empty();
-
-                    $(designs).each(function(index, design) {
-                        $('#designs').append(makeDesign(design, timestamp));
-                    })
-                }
-
-                if (typeof(EventSource) !== "undefined") {
-                    var timestamp = $('#timestamp').val();
-
-                    var source = new EventSource("{{context.get('web_url')}}/watch/designs/" + timestamp, { withCredentials: true });
-
-                    source.addEventListener("update", function(event) {
-                       console.log(event);
-
-                       let eventTimestamp = Number(event.lastEventId);
-
-                       let timestamp = $('#timestamp').val();
-
-                       if (eventTimestamp > timestamp) {
-                           $('#timestamp').val(eventTimestamp);
-
-                           $.get("{{context.get('designs_query_url')}}").done(function(data) {
-                                updateDesigns(eventTimestamp, data);
-                           }).fail(function(e) {
-                                console.log(e);
-                           });
-                       }
-                    }, false);
-
-                    source.onerror = function(error) {
-                       console.log(error);
-                    };
-
-                    source.onopen = function() {
-                       console.log("open");
-
-                       let timestamp = Number(Date.now());
-
-                       $('#timestamp').val(timestamp);
-
-                       $.get("{{context.get('designs_query_url')}}").done(function(data) {
-                            updateDesigns(timestamp, data);
-                       }).fail(function(e) {
-                            console.log(e);
-                       });
-                    };
-                } else {
-                    console.log("EventSource not available");
-                }
-            })
-        </script>
+        <link rel="stylesheet" href="{{context.get('web_url')}}/css/content.css"/>
     </head>
     <body>
-        <input type="hidden" id="timestamp" value="{{context.get('timestamp')}}"/>
         <div class="container">
             <div class="row">
                 <div class="col-sm-12">
                     <header>
-                        <div class="row">
-                            <div class="col-sm-6">
-                                <span class="float-left">Welcome {{context.get('username')}}</span>
-                            </div>
-                            <div class="col-sm-6">
-                                <span class="float-right">{% if context.get('role') == 'admin' %}<a href="{{context.get('admin_url')}}">Admin</a> | {% endif %}{% if context.get('logged') %}<a href="{{context.get('logout_url')}}">Logout</a>{% else %}<a href="{{context.get('login_url')}}">Login</a>{% endif %}</span>
-                            </div>
-                        </div>
                     </header>
                 </div>
             </div>
             <div class="row">
                 <div class="col-sm-12">
-                    <section id="designs" class="designs-grid-container anchor-left anchor-right">
+                    <section class="designs-grid-container anchor-left anchor-right">
+                    <div class="designs-grid-elements">
                     {% for design in context.get('designs') %}
                         <div class="designs-grid-element">
-                            <a href="{{design.location}}"><img class="designs-grid-element-image" id="{{design.uuid}}" src="{{design.imageSrc}}?t={{context.get('timestamp')}}" alt="{{design.location}}"/></a>
+                            <a href="{{design.location}}"><img class="designs-grid-element-image" id="{{design.uuid}}" src="{{design.imageSrc}}?t={{context.get('timestamp')}}" alt="{{design.location}}"/></a><a href="{{design.location}}"><span class="designs-grid-element-label">{{design.uuid}}</span></a>
                         </div>
                     {% endfor %}
+                    <div>
                     </section>
                 </div>
             </div>
             <div class="row">
                 <div class="col-sm-12">
                     <footer>
-                        <span>Powered by NextBreakpoint</span>
+                        <p>Powered by NextBreakpoint</p>
                     </footer>
                 </div>
             </div>

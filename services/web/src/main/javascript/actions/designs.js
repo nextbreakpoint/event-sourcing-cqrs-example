@@ -1,6 +1,7 @@
 import * as Types from '../constants/ActionTypes'
 
-import * as designs from '../reducers/designs'
+import * as content from '../reducers/designs/content'
+import * as dialog from '../reducers/designs/dialog'
 import * as sorting from '../reducers/designs/sorting'
 import * as selection from '../reducers/designs/selection'
 import * as pagination from '../reducers/designs/pagination'
@@ -46,23 +47,23 @@ export const setDesignsPagination = (page, rowsPerPage) => ({
 })
 
 export const getDesigns = (state) => {
-    return designs.getDesigns(state)
+    return content.getDesigns(state)
 }
 
 export const getDesignsStatus = (state) => {
-    return designs.getDesignsStatus(state)
+    return content.getDesignsStatus(state)
 }
 
 export const getTimestamp = (state) => {
-    return designs.getTimestamp(state)
+    return content.getTimestamp(state)
 }
 
 export const getShowCreateDesign = (state) => {
-    return designs.getShowCreateDesign(state)
+    return dialog.getShowCreateDesign(state)
 }
 
 export const getShowDeleteDesigns = (state) => {
-    return designs.getShowDeleteDesigns(state)
+    return dialog.getShowDeleteDesigns(state)
 }
 
 export const getSelected = (state) => {

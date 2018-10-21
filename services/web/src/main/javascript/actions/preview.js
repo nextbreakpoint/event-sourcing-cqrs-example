@@ -1,6 +1,7 @@
 import * as Types from '../constants/ActionTypes'
 
-import * as preview from '../reducers/preview'
+import * as content from '../reducers/preview/content'
+import * as dialog from '../reducers/preview/dialog'
 
 export const loadDesign = () => ({
   type: Types.DESIGN_LOAD
@@ -23,17 +24,17 @@ export const hideUpdateDesign = () => ({
 })
 
 export const getDesign = (state) => {
-    return preview.getDesign(state)
+    return content.getDesign(state)
 }
 
 export const getDesignStatus = (state) => {
-    return preview.getDesignStatus(state)
+    return content.getDesignStatus(state)
 }
 
 export const getTimestamp = (state) => {
-    return preview.getTimestamp(state)
+    return content.getTimestamp(state)
 }
 
 export const getShowUpdateDesign = (state) => {
-    return preview.getShowUpdateDesign(state)
+    return dialog.getShowUpdateDesign(state)
 }

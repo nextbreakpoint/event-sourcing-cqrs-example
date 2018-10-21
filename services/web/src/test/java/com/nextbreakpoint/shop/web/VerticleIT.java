@@ -212,7 +212,7 @@ public class VerticleIT {
             .when().get(makeBaseURL("/admin/designs"))
             .then().assertThat().statusCode(200)
             .and().contentType(ContentType.HTML)
-            .and().body("html.body.div.@id", equalTo("app-designs"));
+            .and().body("html.body.div.@id", equalTo("app"));
   }
 
   @Test
@@ -224,7 +224,7 @@ public class VerticleIT {
             .when().get(makeBaseURL("/admin/designs/" + uuid))
             .then().assertThat().statusCode(200)
             .and().contentType(ContentType.HTML)
-            .and().body("html.body.div.@id", equalTo("app-preview"));
+            .and().body("html.body.div.@id", equalTo("app"));
   }
 
   @Test
@@ -241,7 +241,7 @@ public class VerticleIT {
             .when().get(makeBaseURL("/admin/designs"))
             .then().assertThat().statusCode(200)
             .and().contentType(ContentType.HTML)
-            .and().body("html.body.div.@id", equalTo("app-designs"));
+            .and().body("html.body.div.@id", equalTo("app"));
   }
 
   @Test
@@ -260,6 +260,6 @@ public class VerticleIT {
             .when().get(makeBaseURL("/admin/designs/" + uuid))
             .then().assertThat().statusCode(200)
             .and().contentType(ContentType.HTML)
-            .and().body("html.body.div.@id", equalTo("app-preview"));
+            .and().body("html.body.div.@id", equalTo("app"));
   }
 }

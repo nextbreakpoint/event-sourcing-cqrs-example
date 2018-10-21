@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Preview of selected design</title>
+        <title>Design | {{context.get('uuid')}}</title>
         <meta charset="UTF-8"/>
         <meta name="viewport" content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no"/>
         <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons"/>
@@ -11,6 +11,7 @@
     </head>
     <body>
         <div id="app"></div>
+        <input type="hidden" id="uuid" value="{{context.get('uuid')}}"/>
         <script type="text/javascript" src="{{context.get('web_url')}}/js/preview.js"></script>
     </body>
 </html>

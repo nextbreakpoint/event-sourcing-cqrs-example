@@ -1,53 +1,20 @@
 import * as Types from '../constants/ActionTypes'
 
-import * as config from '../reducers/config'
-import * as account from '../reducers/account'
 import * as designs from '../reducers/designs'
 import * as sorting from '../reducers/designs/sorting'
 import * as selection from '../reducers/designs/selection'
 import * as pagination from '../reducers/designs/pagination'
-
-export const loadConfig = () => ({
-  type: Types.CONFIG_LOAD
-})
-
-export const loadConfigSuccess = (config) => ({
-  type: Types.CONFIG_LOAD_SUCCESS,
-  config
-})
-
-export const loadConfigFailure = (error) => ({
-  type: Types.CONFIG_LOAD_FAILURE,
-  error
-})
-
-export const loadAccount = () => ({
-  type: Types.ACCOUNT_LOAD
-})
-
-export const loadAccountSuccess = (account) => ({
-  type: Types.ACCOUNT_LOAD_SUCCESS,
-  account
-})
-
-export const loadAccountFailure = (error) => ({
-  type: Types.ACCOUNT_LOAD_FAILURE,
-  error
-})
 
 export const loadDesigns = () => ({
   type: Types.DESIGNS_LOAD
 })
 
 export const loadDesignsSuccess = (designs, timestamp) => ({
-  type: Types.DESIGNS_LOAD_SUCCESS,
-  designs,
-  timestamp
+  type: Types.DESIGNS_LOAD_SUCCESS, designs, timestamp
 })
 
 export const loadDesignsFailure = (error) => ({
-  type: Types.DESIGNS_LOAD_FAILURE,
-  error
+  type: Types.DESIGNS_LOAD_FAILURE, error
 })
 
 export const showCreateDesign = () => ({
@@ -67,37 +34,16 @@ export const hideDeleteDesigns = () => ({
 })
 
 export const setDesignsSorting = (order, orderBy) => ({
-  type: Types.DESIGNS_SORTING_UPDATE,
-  order,
-  orderBy
+  type: Types.DESIGNS_SORTING_UPDATE, order, orderBy
 })
 
 export const setDesignsSelection = (selected) => ({
-  type: Types.DESIGNS_SELECTION_UPDATE,
-  selected
+  type: Types.DESIGNS_SELECTION_UPDATE, selected
 })
 
 export const setDesignsPagination = (page, rowsPerPage) => ({
-  type: Types.DESIGNS_PAGINATION_UPDATE,
-  page,
-  rowsPerPage
+  type: Types.DESIGNS_PAGINATION_UPDATE, page, rowsPerPage
 })
-
-export const getConfig = (state) => {
-    return config.getConfig(state)
-}
-
-export const getConfigStatus = (state) => {
-    return config.getConfigStatus(state)
-}
-
-export const getAccount = (state) => {
-    return account.getAccount(state)
-}
-
-export const getAccountStatus = (state) => {
-    return account.getAccountStatus(state)
-}
 
 export const getDesigns = (state) => {
     return designs.getDesigns(state)

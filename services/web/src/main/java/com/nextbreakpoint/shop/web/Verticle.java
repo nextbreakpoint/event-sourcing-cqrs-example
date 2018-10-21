@@ -8,8 +8,9 @@ import com.nextbreakpoint.shop.common.vertx.ServerUtil;
 import com.nextbreakpoint.shop.common.vertx.SimpleTemplateHandler;
 import com.nextbreakpoint.shop.common.vertx.WebClientFactory;
 import com.nextbreakpoint.shop.web.handlers.ConfigHandler;
-import com.nextbreakpoint.shop.web.handlers.DesignDataHandler;
-import com.nextbreakpoint.shop.web.handlers.DesignsDataHandler;
+import com.nextbreakpoint.shop.web.handlers.DesignLoadHandler;
+import com.nextbreakpoint.shop.web.handlers.DesignsLoadHandler;
+import com.nextbreakpoint.shop.web.handlers.UUIDInjectHandler;
 import com.nextbreakpoint.shop.web.handlers.UserHandler;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -139,19 +140,22 @@ public class Verticle extends AbstractVerticle {
                 .failureHandler(routingContext -> routingContext.fail(404));
 
         mainRouter.getWithRegex("/admin/designs/" + UUID_REGEXP)
+                .handler(UUIDInjectHandler.create());
+
+        mainRouter.getWithRegex("/admin/designs/" + UUID_REGEXP)
                 .handler(createPageHandler(engine, "admin/preview"));
 
         mainRouter.get("/admin/designs")
                 .handler(createPageHandler(engine, "admin/designs"));
 
         mainRouter.getWithRegex("/content/designs/" + UUID_REGEXP)
-                .handler(DesignDataHandler.create(designsClient, config));
+                .handler(DesignLoadHandler.create(designsClient, config));
 
         mainRouter.getWithRegex("/content/designs/" + UUID_REGEXP)
                 .handler(createPageHandler(engine, "content/preview"));
 
         mainRouter.get("/content/designs")
-                .handler(DesignsDataHandler.create(designsClient, config));
+                .handler(DesignsLoadHandler.create(designsClient, config));
 
         mainRouter.get("/content/designs")
                 .handler(createPageHandler(engine, "content/designs"));

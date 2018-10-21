@@ -17,6 +17,8 @@ import DialogContent from '@material-ui/core/DialogContent'
 import DialogTitle from '@material-ui/core/DialogTitle'
 import Slide from '@material-ui/core/Slide'
 import Fade from '@material-ui/core/Fade'
+import Snackbar from '@material-ui/core/Snackbar'
+import IconButton from '@material-ui/core/IconButton'
 
 import AddIcon from '@material-ui/icons/Add'
 import EditIcon from '@material-ui/icons/Edit'
@@ -44,7 +46,11 @@ import {
     showCreateDesign,
     hideCreateDesign,
     setDesignsSelection,
-    loadDesignsSuccess
+    loadDesignsSuccess,
+    getShowErrorMessage,
+    getErrorMessage,
+    showErrorMessage,
+    hideErrorMessage
 } from '../../actions/designs'
 
 import axios from 'axios'
@@ -83,17 +89,22 @@ let DesignsPage = class DesignsPage extends React.Component {
         let design = { "manifest": manifest, "script": this.state.script, "metadata": this.state.metadata }
 
         component.props.handleHideCreateDialog()
+        component.props.handleHideErrorMessage()
 
         axios.post(component.props.config.designs_command_url, design, config)
-            .then(function (content) {
-                if (content.status == 202) {
-                    var designs = component.props.designs.slice()
-                    designs.push({uuid:content.data.uuid, selected: false})
-                    component.props.handleLoadDesigns(designs, component.props.timestamp)
+            .then(function (response) {
+                if (response.status == 202) {
+                    //var designs = component.props.designs.slice()
+                    //designs.push({uuid:content.data.uuid, selected: false})
+                    //component.props.handleLoadDesignsSuccess(designs, component.props.timestamp)
+                } else {
+                    console.log("Can't create a new design: status = " + response.status)
+                    component.props.handleShowErrorMessage("Can't create a new design")
                 }
             })
             .catch(function (error) {
-                console.log(error)
+                console.log("Can't create a new design: " + error)
+                component.props.handleShowErrorMessage("Can't create a new design")
             })
     }
 
@@ -113,12 +124,21 @@ let DesignsPage = class DesignsPage extends React.Component {
             })
 
         component.props.handleHideConfirmDelete()
+        component.props.handleHideErrorMessage()
 
         axios.all(promises)
             .then(function (responses) {
                 let deletedUuids = responses
                     .filter((res) => {
                         return res.status == 202
+                    })
+                    .map((res) => {
+                        return res.config.url.substring(res.config.url.lastIndexOf("/") + 1)
+                    })
+
+                let failedUuids = responses
+                    .filter((res) => {
+                        return res.status != 202
                     })
                     .map((res) => {
                         return res.config.url.substring(res.config.url.lastIndexOf("/") + 1)
@@ -133,10 +153,16 @@ let DesignsPage = class DesignsPage extends React.Component {
                     })
 
                 component.props.handleChangeSelected([])
-                component.props.handleLoadDesigns(designs, component.props.timestamp)
+
+                if (failedUuids.length == 0) {
+                    //component.props.handleLoadDesignsSuccess(designs, component.props.timestamp)
+                } else {
+                    component.props.handleShowErrorMessage("Can't delete designs")
+                }
             })
             .catch(function (error) {
-                console.log(error)
+                console.log("Can't delete designs: " + error)
+                component.props.handleShowErrorMessage("Can't delete designs")
             })
     }
 
@@ -152,6 +178,14 @@ let DesignsPage = class DesignsPage extends React.Component {
 
     handleMetadataChanged = (value) => {
         this.setState({metadata: value})
+    }
+
+    handleClose = (event, reason) => {
+        if (reason === 'clickaway') {
+          return
+        }
+
+        this.props.handleHideErrorMessage()
     }
 
     render() {
@@ -214,6 +248,29 @@ let DesignsPage = class DesignsPage extends React.Component {
                         </DialogActions>
                     </Dialog>
                 )}
+                <Snackbar
+                  anchorOrigin={{
+                    vertical: 'top',
+                    horizontal: 'right',
+                  }}
+                  open={this.props.show_error_message}
+                  autoHideDuration={6000}
+                  onClose={this.handleClose}
+                  ContentProps={{
+                    'aria-describedby': 'message-id',
+                  }}
+                  message={<span id="message-id">{this.props.error_message}</span>}
+                  action={[
+                    <IconButton
+                      key="close"
+                      aria-label="Close"
+                      color="inherit"
+                      onClick={this.handleClose}
+                    >
+                      <CloseIcon />
+                    </IconButton>
+                  ]}
+                />
             </React.Fragment>
         )
     }
@@ -242,6 +299,7 @@ DesignsPage.propTypes = {
     timestamp: PropTypes.number.isRequired,
     show_create_design: PropTypes.bool.isRequired,
     show_delete_designs: PropTypes.bool.isRequired,
+    show_error_message: PropTypes.bool.isRequired,
     classes: PropTypes.object.isRequired,
     theme: PropTypes.object.isRequired
 }
@@ -253,7 +311,9 @@ const mapStateToProps = state => ({
     selected: getSelected(state),
     timestamp: getTimestamp(state),
     show_create_design: getShowCreateDesign(state),
-    show_delete_designs: getShowDeleteDesigns(state)
+    show_delete_designs: getShowDeleteDesigns(state),
+    show_error_message: getShowErrorMessage(state),
+    error_message: getErrorMessage(state)
 })
 
 const mapDispatchToProps = dispatch => ({
@@ -272,8 +332,17 @@ const mapDispatchToProps = dispatch => ({
     handleHideCreateDialog: () => {
         dispatch(hideCreateDesign())
     },
-    handleLoadDesigns: (designs, timestamp) => {
+    handleShowErrorMessage: (error) => {
+        dispatch(showErrorMessage(error))
+    },
+    handleHideErrorMessage: () => {
+        dispatch(hideErrorMessage())
+    },
+    handleLoadDesignsSuccess: (designs, timestamp) => {
         dispatch(loadDesignsSuccess(designs, timestamp))
+    },
+    handleLoadDesignsFailure: (error) => {
+        dispatch(loadDesignsFailure(error))
     }
 })
 

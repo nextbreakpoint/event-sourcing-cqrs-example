@@ -49,7 +49,11 @@ class Config extends React.Component {
 
     render() {
         return (
-            this.props.config ? (this.props.children) : (<Message error={this.props.status.error} text={this.props.status.message}/>)
+            this.props.config ? (this.props.children) : (
+                <div>
+                    <Message error={this.props.status.error} text={this.props.status.message}/>
+                </div>
+            )
         )
     }
 }

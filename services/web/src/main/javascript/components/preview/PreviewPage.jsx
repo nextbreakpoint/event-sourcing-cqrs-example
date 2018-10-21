@@ -18,8 +18,11 @@ import DialogContent from '@material-ui/core/DialogContent'
 import DialogTitle from '@material-ui/core/DialogTitle'
 import Slide from '@material-ui/core/Slide'
 import Fade from '@material-ui/core/Fade'
+import Snackbar from '@material-ui/core/Snackbar'
+import IconButton from '@material-ui/core/IconButton'
 
 import EditIcon from '@material-ui/icons/Edit'
+import CloseIcon from '@material-ui/icons/Close'
 
 import { connect } from 'react-redux'
 
@@ -37,7 +40,11 @@ import {
     getDesign,
     getTimestamp,
     getShowUpdateDesign,
-    loadDesignSuccess
+    loadDesignSuccess,
+    getShowErrorMessage,
+    getErrorMessage,
+    showErrorMessage,
+    hideErrorMessage
 } from '../../actions/preview'
 
 import axios from 'axios'
@@ -72,17 +79,20 @@ let PreviewPage = class PreviewPage extends React.Component {
         const design = { manifest: this.props.design.manifest, script: script, metadata: metadata }
 
         component.props.handleHideUpdateDialog()
+        component.props.handleHideErrorMessage()
 
         axios.put(component.props.config.designs_command_url + '/' + this.props.uuid, design, config)
             .then(function (content) {
-                if (content.status != 202) {
-                    console.log("Can't update design")
+                if (content.status == 202) {
+                    //component.props.handleDesignLoadedSuccess(design, timestamp)
                 } else {
-                    //component.props.handleDesignLoaded(design, timestamp)
+                    console.log("Can't create a new design: status = " + response.status)
+                    component.props.handleShowErrorMessage("Can't update the design")
                 }
             })
             .catch(function (error) {
-                console.log(error)
+                console.log("Can't update the design: " + error)
+                component.props.handleShowErrorMessage("Can't update the design")
             })
     }
 
@@ -92,6 +102,14 @@ let PreviewPage = class PreviewPage extends React.Component {
 
     handleMetadataChanged = (value) => {
         this.setState({metadata: value})
+    }
+
+    handleClose = (event, reason) => {
+        if (reason === 'clickaway') {
+          return
+        }
+
+        this.props.handleHideErrorMessage()
     }
 
     renderMapLayer = (url) => {
@@ -142,20 +160,44 @@ let PreviewPage = class PreviewPage extends React.Component {
                         </DialogActions>
                     </Dialog>
                 )}
+                <Snackbar
+                  anchorOrigin={{
+                    vertical: 'top',
+                    horizontal: 'right',
+                  }}
+                  open={this.props.show_error_message}
+                  autoHideDuration={6000}
+                  onClose={this.handleClose}
+                  ContentProps={{
+                    'aria-describedby': 'message-id',
+                  }}
+                  message={<span id="message-id">{this.props.error_message}</span>}
+                  action={[
+                    <IconButton
+                      key="close"
+                      aria-label="Close"
+                      color="inherit"
+                      onClick={this.handleClose}
+                    >
+                      <CloseIcon />
+                    </IconButton>
+                  ]}
+                />
             </React.Fragment>
         )
     }
 }
 
 PreviewPage.propTypes = {
-  config: PropTypes.object.isRequired,
-  account: PropTypes.object.isRequired,
-  design: PropTypes.object.isRequired,
-  timestamp: PropTypes.number.isRequired,
-  show_update_design: PropTypes.bool.isRequired,
-  classes: PropTypes.object.isRequired,
-  theme: PropTypes.object.isRequired,
-  uuid: PropTypes.string.isRequired
+    config: PropTypes.object.isRequired,
+    account: PropTypes.object.isRequired,
+    design: PropTypes.object.isRequired,
+    timestamp: PropTypes.number.isRequired,
+    show_update_design: PropTypes.bool.isRequired,
+    show_error_message: PropTypes.bool.isRequired,
+    classes: PropTypes.object.isRequired,
+    theme: PropTypes.object.isRequired,
+    uuid: PropTypes.string.isRequired
 }
 
 const styles = theme => ({
@@ -178,7 +220,9 @@ const mapStateToProps = state => ({
     account: getAccount(state),
     design: getDesign(state),
     timestamp: getTimestamp(state),
-    show_update_design: getShowUpdateDesign(state)
+    show_update_design: getShowUpdateDesign(state),
+    show_error_message: getShowErrorMessage(state),
+    error_message: getErrorMessage(state)
 })
 
 const mapDispatchToProps = dispatch => ({
@@ -188,8 +232,17 @@ const mapDispatchToProps = dispatch => ({
     handleHideUpdateDialog: () => {
         dispatch(hideUpdateDesign())
     },
-    handleDesignLoaded: (design, timestamp) => {
+    handleShowErrorMessage: (error) => {
+        dispatch(showErrorMessage(error))
+    },
+    handleHideErrorMessage: () => {
+        dispatch(hideErrorMessage())
+    },
+    handleDesignLoadedSuccess: (design, timestamp) => {
         dispatch(loadDesignSuccess(design, timestamp))
+    },
+    handleDesignLoadedFailure: (error) => {
+        dispatch(loadDesignFailure(error))
     }
 })
 

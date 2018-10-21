@@ -23,6 +23,14 @@ export const hideUpdateDesign = () => ({
   type: Types.HIDE_UPDATE_DESIGN
 })
 
+export const showErrorMessage = (error) => ({
+  type: Types.SHOW_ERROR_MESSAGE, error
+})
+
+export const hideErrorMessage = () => ({
+  type: Types.HIDE_ERROR_MESSAGE
+})
+
 export const getDesign = (state) => {
     return content.getDesign(state)
 }
@@ -38,3 +46,12 @@ export const getTimestamp = (state) => {
 export const getShowUpdateDesign = (state) => {
     return dialog.getShowUpdateDesign(state)
 }
+
+export const getShowErrorMessage = (state) => {
+    return dialog.getShowErrorMessage(state)
+}
+
+export const getErrorMessage = (state) => {
+    return dialog.getErrorMessage(state)
+}
+

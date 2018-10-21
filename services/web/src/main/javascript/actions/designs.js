@@ -34,6 +34,14 @@ export const hideDeleteDesigns = () => ({
   type: Types.HIDE_DELETE_DESIGNS
 })
 
+export const showErrorMessage = (error) => ({
+  type: Types.SHOW_ERROR_MESSAGE, error
+})
+
+export const hideErrorMessage = () => ({
+  type: Types.HIDE_ERROR_MESSAGE
+})
+
 export const setDesignsSorting = (order, orderBy) => ({
   type: Types.DESIGNS_SORTING_UPDATE, order, orderBy
 })
@@ -64,6 +72,14 @@ export const getShowCreateDesign = (state) => {
 
 export const getShowDeleteDesigns = (state) => {
     return dialog.getShowDeleteDesigns(state)
+}
+
+export const getShowErrorMessage = (state) => {
+    return dialog.getShowErrorMessage(state)
+}
+
+export const getErrorMessage = (state) => {
+    return dialog.getErrorMessage(state)
 }
 
 export const getSelected = (state) => {

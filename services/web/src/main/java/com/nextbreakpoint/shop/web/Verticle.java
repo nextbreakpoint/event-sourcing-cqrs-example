@@ -169,11 +169,11 @@ public class Verticle extends AbstractVerticle {
         mainRouter.get("/")
                 .handler(routingContext -> ResponseHelper.redirectToURL(routingContext, () -> webConfig.getString("web_url") + "/content/designs"));
 
-        mainRouter.get("/error/*").handler(createErrorHandler(engine));
+//        mainRouter.get("/error/*").handler(createErrorHandler(engine));
 
-        mainRouter.route().failureHandler(routingContext -> ResponseHelper.redirectToError(routingContext, (status) -> "/error/" + status));
+//        mainRouter.route().failureHandler(routingContext -> ResponseHelper.redirectToError(routingContext, (status) -> "/error/" + status));
 
-        mainRouter.route().handler(routingContext -> ResponseHelper.redirectToURL(routingContext, () -> "/error/404"));
+//        mainRouter.route().handler(routingContext -> ResponseHelper.redirectToURL(routingContext, () -> "/error/404"));
 
         final HttpServerOptions options = ServerUtil.makeServerOptions(config);
 

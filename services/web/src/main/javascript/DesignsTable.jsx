@@ -26,11 +26,24 @@ import DeleteIcon from '@material-ui/icons/Delete'
 
 import { connect } from 'react-redux'
 
-import { changePage, changeRowsPerPage, showCreateDesign, showDeleteDesigns, setPage, setRowsPerPage, setOrder, setSelected } from './actions/designs'
+import {
+    showCreateDesign,
+    showDeleteDesigns,
+    setDesignsSorting,
+    setDesignsSelection,
+    setDesignsPagination,
+    getConfig,
+    getAccount,
+    getDesigns,
+    getTimestamp,
+    getSelected,
+    getOrder,
+    getOrderBy,
+    getPage,
+    getRowsPerPage
+} from './actions/designs'
 
 import axios from 'axios'
-
-const base_url = 'https://localhost:8080'
 
 function createData(uuid) {
   return { uuid: uuid }
@@ -65,7 +78,7 @@ const cells = [
   { id: 'image', numeric: false, disablePadding: true, label: '', enableSort: false, className: 'list-image' }
 ]
 
-class EnhancedTableHead extends React.Component {
+let EnhancedTableHead = class EnhancedTableHead extends React.Component {
   createSortHandler = property => event => {
     this.props.onRequestSort(event, property)
   }
@@ -226,7 +239,7 @@ const styles = theme => ({
   }
 })
 
-class EnhancedTable extends React.Component {
+let EnhancedTable = class EnhancedTable extends React.Component {
   handleRequestSort = (event, property) => {
     const orderBy = property
     let order = 'desc'
@@ -235,15 +248,15 @@ class EnhancedTable extends React.Component {
       order = 'asc'
     }
 
-    this.props.handleChangeOrder(order, orderBy)
+    this.props.handleChangeSorting(order, orderBy)
   }
 
   handleSelectAllClick = event => {
     if (event.target.checked) {
-        this.props.handleChangeSelected(this.props.designs.map(n => n.uuid))
+        this.props.handleChangeSelection(this.props.designs.map(n => n.uuid))
         return
     }
-    this.props.handleChangeSelected([])
+    this.props.handleChangeSelection([])
   }
 
   handleClick = (event, id) => {
@@ -264,26 +277,26 @@ class EnhancedTable extends React.Component {
       )
     }
 
-    if (this.props.role == 'admin') {
-        this.props.handleChangeSelected(newSelected)
+    if (this.props.account.role == 'admin') {
+        this.props.handleChangeSelection(newSelected)
     }
   }
 
   handleModify = () => {
       if (this.props.selected[0]) {
-          window.location = base_url + "/admin/designs/" + this.props.selected[0]
+          window.location = this.props.config.web_url + "/admin/designs/" + this.props.selected[0]
       }
   }
 
   isSelected = id => this.props.selected.indexOf(id) !== -1
 
   render() {
-    const { classes, config, designs, timestamp, role, order, orderBy, selected, rowsPerPage, page } = this.props
+    const { classes, config, designs, timestamp, account, order, orderBy, selected, rowsPerPage, page } = this.props
     const emptyRows = rowsPerPage - Math.min(rowsPerPage, designs.length - page * rowsPerPage)
 
     return (
       <Paper className={classes.root} square={true}>
-        <EnhancedTableToolbar role={role} numSelected={selected.length} onCreate={this.props.handleShowCreateDialog} onDelete={this.props.handleShowDeleteDialog} onModify={this.handleModify}/>
+        <EnhancedTableToolbar role={account.role} numSelected={selected.length} onCreate={this.props.handleShowCreateDialog} onDelete={this.props.handleShowDeleteDialog} onModify={this.handleModify}/>
           <Table className={classes.table} aria-labelledby="tableTitle">
             <EnhancedTableHead
               numSelected={selected.length}
@@ -292,7 +305,7 @@ class EnhancedTable extends React.Component {
               onSelectAllClick={this.handleSelectAllClick}
               onRequestSort={this.handleRequestSort}
               rowCount={designs.length}
-              role={role}
+              role={account.role}
             />
             <TableBody>
               {stableSort(designs, getSorting(order, orderBy))
@@ -310,7 +323,7 @@ class EnhancedTable extends React.Component {
                       selected={isSelected}
                     >
                       <TableCell padding="checkbox">
-                        {role == 'admin' && <Checkbox checked={isSelected} />}
+                        {account.role == 'admin' && <Checkbox checked={isSelected} />}
                       </TableCell>
                       <TableCell scope="row" padding="none">
                         <a href={"/admin/designs/" + n.uuid}><pre>{n.uuid}</pre></a>
@@ -353,8 +366,8 @@ class EnhancedTable extends React.Component {
           nextIconButtonProps={{
             'aria-label': 'Next Page',
           }}
-          onChangePage={this.props.handleChangePage}
-          onChangeRowsPerPage={this.props.handleChangeRowsPerPage}
+          onChangePage={(event, value) => this.props.handleChangePagination(value, this.props.rowsPerPage)}
+          onChangeRowsPerPage={event => this.props.handleChangePagination(this.props.page, event.target.value)}
         />
       </Paper>
     )
@@ -362,33 +375,30 @@ class EnhancedTable extends React.Component {
 }
 
 EnhancedTable.propTypes = {
-  classes: PropTypes.object.isRequired,
-  config: PropTypes.object,
-  designs: PropTypes.array,
-  timestamp: PropTypes.number,
-  role: PropTypes.string,
-  order: PropTypes.string,
-  orderBy: PropTypes.string,
-  selected: PropTypes.array,
-  page: PropTypes.number,
-  rowsPerPage: PropTypes.number
+    config: PropTypes.object,
+    account: PropTypes.object,
+    designs: PropTypes.array,
+    timestamp: PropTypes.number,
+    selected: PropTypes.array,
+    order: PropTypes.string,
+    orderBy: PropTypes.string,
+    page: PropTypes.number,
+    rowsPerPage: PropTypes.number,
+    classes: PropTypes.object.isRequired,
+    theme: PropTypes.object.isRequired
 }
 
-const mapStateToProps = state => {
-    console.log(JSON.stringify(state))
-
-    return {
-        config: state.designs.config,
-        designs: state.designs.designs,
-        timestamp: state.designs.timestamp,
-        role: state.designs.account.role,
-        order: state.designs.order,
-        orderBy: state.designs.orderBy,
-        selected: state.designs.selected,
-        page: state.designs.page,
-        rowsPerPage: state.designs.rowsPerPage
-    }
-}
+const mapStateToProps = state => ({
+    config: getConfig(state),
+    account: getAccount(state),
+    designs: getDesigns(state),
+    timestamp: getTimestamp(state),
+    selected: getSelected(state),
+    order: getOrder(state),
+    orderBy: getOrderBy(state),
+    page: getPage(state),
+    rowsPerPage: getRowsPerPage(state)
+})
 
 const mapDispatchToProps = dispatch => ({
     handleShowDeleteDialog: () => {
@@ -397,17 +407,14 @@ const mapDispatchToProps = dispatch => ({
     handleShowCreateDialog: () => {
         dispatch(showCreateDesign())
     },
-    handleChangePage: (event, page) => {
-        dispatch(setPage(page))
+    handleChangePagination: (page, rowsPerPage) => {
+        dispatch(setDesignsPagination(page, rowsPerPage))
     },
-    handleChangeRowsPerPage: (event) => {
-        dispatch(setRowsPerPage(event.target.value))
+    handleChangeSorting: (order, orderBy) => {
+        dispatch(setDesignsSorting(order, orderBy))
     },
-    handleChangeOrder: (order, orderBy) => {
-        dispatch(setOrder(order, orderBy))
-    },
-    handleChangeSelected: (selected) => {
-        dispatch(setSelected(selected))
+    handleChangeSelection: (selected) => {
+        dispatch(setDesignsSelection(selected))
     }
 })
 

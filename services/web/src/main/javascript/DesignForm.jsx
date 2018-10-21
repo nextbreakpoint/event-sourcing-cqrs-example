@@ -14,13 +14,13 @@ let DesignForm = class DesignForm extends React.Component {
     }
 
     handleScriptChanged = (value) => {
-        this.setState({script: value, metadata: this.state.metadata})
-        this.props.onScriptChanged(this.state.script)
+        this.setState({script: value})
+        this.props.onScriptChanged(value)
     }
 
     handleMetadataChanged = (value) => {
-        this.setState({script: this.state.script, metadata: value})
-        this.props.onMetadataChanged(this.state.metadata)
+        this.setState({metadata: value})
+        this.props.onMetadataChanged(value)
     }
 
     render() {
@@ -28,11 +28,11 @@ let DesignForm = class DesignForm extends React.Component {
             <Grid container justify="space-between" alignItems="stretch" alignContent="space-between">
                 <Grid item xs={6}>
                     <p>Script</p>
-                    <ScriptEditor initialValue={this.state.script} readOnly={false} onContentChanged={(value) => this.handleScriptChanged(value)}/>
+                    <ScriptEditor initialValue={this.state.script} readOnly={false} onContentChanged={this.handleScriptChanged}/>
                 </Grid>
                 <Grid item xs={5}>
                     <p>Metadata</p>
-                    <MetadataEditor initialValue={this.state.metadata} readOnly={false} onContentChanged={(value) => this.handleMetadataChanged(value)}/>
+                    <MetadataEditor initialValue={this.state.metadata} readOnly={false} onContentChanged={this.handleMetadataChanged}/>
                 </Grid>
             </Grid>
         )

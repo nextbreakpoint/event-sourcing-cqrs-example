@@ -1,20 +1,24 @@
 import React from 'react'
-import ReactDOM from 'react-dom'
 import PropTypes from 'prop-types'
 
 import Grid from '@material-ui/core/Grid'
 
-import reducers from './reducers'
+import Message from './Message'
 
 import { connect } from 'react-redux'
 
-import { setAccount } from './actions/designs'
+import {
+    getConfig,
+    getAccount,
+    getAccountStatus,
+    loadAccount,
+    loadAccountSuccess,
+    loadAccountFailure
+} from './actions/designs'
 
 import Cookies from 'universal-cookie'
 
 import axios from 'axios'
-
-const base_url = 'https://localhost:8080'
 
 const cookies = new Cookies()
 
@@ -29,48 +33,50 @@ class Account extends React.Component {
             withCredentials: true
         }
 
+        component.props.handleLoadAccount()
+
         axios.get(component.props.config.accounts_url + '/me', config)
-            .then(function (content) {
-                console.log("Account loaded")
-
-                let { role, name } = content.data
-
-                component.props.handleAccountLoaded({ role, name })
+            .then(function (response) {
+                if (response.status == 200) {
+                    console.log("Account loaded")
+                    let { role, name } = response.data
+                    component.props.handleLoadAccountSuccess({ role, name })
+                } else {
+                    console.log("Can't load account: status = " + response.status)
+                    cookies.remove('token', {domain: window.location.hostname})
+                    component.props.handleLoadAccountSuccess({ "role": "anonymous", "name": "Stranger" })
+                }
             })
             .catch(function (error) {
-                console.log("Account loaded (are you logged in?)")
-
+                console.log("Can't load account: " + error)
                 cookies.remove('token', {domain: window.location.hostname})
-
-                component.props.handleAccountLoaded({ role: 'anonymous', name: 'Stranger' })
+                component.props.handleLoadAccountFailure("Can't load account")
             })
     }
 
     render() {
         return (
-            <Grid container justify="space-between" alignItems="center">
-                <Grid item xs={12}>
-                    {this.props.account ? (this.props.children) : (<p>Loading account...</p>)}
-                </Grid>
-            </Grid>
+            this.props.account ? (this.props.children) : (<Message error={this.props.status.error} text={this.props.status.message}/>)
         )
     }
 }
 
-const mapStateToProps = state => {
-    //console.log(JSON.stringify(state))
-
-    return {
-        config: state.designs.config,
-        account: state.designs.account
-    }
-}
+const mapStateToProps = state => ({
+    config: getConfig(state),
+    account: getAccount(state),
+    status: getAccountStatus(state)
+})
 
 const mapDispatchToProps = dispatch => ({
-    handleAccountLoaded: (account) => {
-        dispatch(setAccount(account))
+    handleLoadAccount: () => {
+        dispatch(loadAccount())
+    },
+    handleLoadAccountSuccess: (config) => {
+        dispatch(loadAccountSuccess(config))
+    },
+    handleLoadAccountFailure: (error) => {
+        dispatch(loadAccountFailure(error))
     }
 })
 
 export default connect(mapStateToProps, mapDispatchToProps)(Account)
-

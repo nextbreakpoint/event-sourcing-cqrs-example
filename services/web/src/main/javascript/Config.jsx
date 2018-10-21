@@ -1,18 +1,21 @@
 import React from 'react'
-import ReactDOM from 'react-dom'
 import PropTypes from 'prop-types'
 
 import Grid from '@material-ui/core/Grid'
 
-import reducers from './reducers'
+import Message from './Message'
 
 import { connect } from 'react-redux'
 
-import { setConfig } from './actions/designs'
+import {
+    getConfig,
+    getConfigStatus,
+    loadConfig,
+    loadConfigSuccess,
+    loadConfigFailure
+} from './actions/designs'
 
 import axios from 'axios'
-
-const base_url = 'https://localhost:8080'
 
 class Config extends React.Component {
     componentDidMount = () => {
@@ -25,41 +28,46 @@ class Config extends React.Component {
             withCredentials: true
         }
 
-        axios.get(base_url + '/config', config)
-            .then(function (content) {
-                console.log("Config loaded")
+        component.props.handleLoadConfig()
 
-                let config = content.data
-
-                component.props.handleConfigLoaded(config)
+        axios.get('/config', config)
+            .then(function (response) {
+                if (response.status == 200) {
+                    console.log("Config loaded")
+                    let config = response.data
+                    component.props.handleLoadConfigSuccess(config)
+                } else {
+                    console.log("Can't load config: status = " + response.status)
+                    component.props.handleLoadConfigFailure("Can't load config")
+                }
             })
             .catch(function (error) {
-                console.log("Can't load config " + error)
+                console.log("Can't load config: " + error)
+                component.props.handleLoadConfigFailure("Can't load config")
             })
     }
 
     render() {
         return (
-            <Grid container justify="space-between" alignItems="center">
-                <Grid item xs={12}>
-                    {this.props.config ? (this.props.children) : (<p>Loading configuration...</p>)}
-                </Grid>
-            </Grid>
+            this.props.config ? (this.props.children) : (<Message error={this.props.status.error} text={this.props.status.message}/>)
         )
     }
 }
 
-const mapStateToProps = state => {
-    //console.log(JSON.stringify(state))
-
-    return {
-        config: state.designs.config
-    }
-}
+const mapStateToProps = state => ({
+    config: getConfig(state),
+    status: getConfigStatus(state)
+})
 
 const mapDispatchToProps = dispatch => ({
-    handleConfigLoaded: (config) => {
-        dispatch(setConfig(config))
+    handleLoadConfig: () => {
+        dispatch(loadConfig())
+    },
+    handleLoadConfigSuccess: (config) => {
+        dispatch(loadConfigSuccess(config))
+    },
+    handleLoadConfigFailure: (error) => {
+        dispatch(loadConfigFailure(error))
     }
 })
 

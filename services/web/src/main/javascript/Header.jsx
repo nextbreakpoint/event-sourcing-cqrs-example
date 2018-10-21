@@ -14,7 +14,11 @@ import MenuIcon from '@material-ui/icons/Menu';
 
 import { connect } from 'react-redux'
 
-import { setAccount } from './actions/designs'
+import {
+    loadAccountSuccess,
+    getConfig,
+    getAccount
+} from './actions/designs'
 
 import axios from 'axios'
 
@@ -22,43 +26,17 @@ import Cookies from 'universal-cookie'
 
 const cookies = new Cookies()
 
-var uuid = undefined
-
-const regexp = /https?:\/\/.*\/admin\/designs\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/g
-const match = regexp.exec(window.location.href)
-
-if (match != null && match.length == 2) {
-    uuid = match[1]
-}
-
-const base_url = 'https://localhost:8080'
-
-const styles = theme => ({
-  root: {
-    flexGrow: 1
-  },
-  grow: {
-    flexGrow: 1
-  },
-  button: {
-    padding: 0
-  },
-  menuButton: {
-    marginRight: 2 * theme.spacing.unit
-  }
-})
-
-class Header extends React.Component {
+let Header = class Header extends React.Component {
     state = {
         anchorEl: null
     }
 
     handleNavigateContentDesigns = () => {
-        window.location = base_url + "/content/designs"
+        window.location = this.props.config.web_url + "/content/designs"
     }
 
     handleNavigateAdminDesigns = () => {
-        window.location = base_url + "/admin/designs"
+        window.location = this.props.config.web_url + "/admin/designs"
     }
 
     handleLogin = () => {
@@ -80,7 +58,7 @@ class Header extends React.Component {
     }
 
     render() {
-        const { classes } = this.props
+        const { classes, title } = this.props
         const { anchorEl } = this.state
         const open = Boolean(anchorEl)
 
@@ -107,9 +85,7 @@ class Header extends React.Component {
                     <MenuItem onClick={this.handleNavigateContentDesigns}>Browse</MenuItem>
                     <MenuItem onClick={this.handleNavigateAdminDesigns}>Admin</MenuItem>
                   </Menu>
-                  <Typography variant="title" color="inherit" className={classes.grow}>
-                    Designs {uuid && (<span>| {uuid}</span>)}
-                  </Typography>
+                  <Typography variant="title" color="inherit" className={classes.grow}>{title}</Typography>
                   {this.props.account.role == 'anonymous' && <Button color="inherit" onClick={this.handleLogin}>Login</Button>}
                   {this.props.account.role != 'anonymous' && <Button color="inherit" onClick={this.handleLogout}>Logout</Button>}
                 </Toolbar>
@@ -118,23 +94,36 @@ class Header extends React.Component {
     }
 }
 
+const styles = theme => ({
+  root: {
+    flexGrow: 1
+  },
+  grow: {
+    flexGrow: 1
+  },
+  button: {
+    padding: 0
+  },
+  menuButton: {
+    marginRight: 2 * theme.spacing.unit
+  }
+})
+
 Header.propTypes = {
-  landing: PropTypes.string.isRequired,
-  parent: PropTypes.object
+    landing: PropTypes.string.isRequired,
+    title: PropTypes.string.isRequired,
+    classes: PropTypes.object.isRequired,
+    theme: PropTypes.object.isRequired
 }
 
-const mapStateToProps = state => {
-    //console.log(JSON.stringify(state))
-
-    return {
-        config: state.designs.config,
-        account: state.designs.account
-    }
-}
+const mapStateToProps = state => ({
+    config: getConfig(state),
+    account: getAccount(state)
+})
 
 const mapDispatchToProps = dispatch => ({
     handleAccountLoaded: (account) => {
-        dispatch(setAccount(account))
+        dispatch(loadAccountSuccess(account))
     }
 })
 

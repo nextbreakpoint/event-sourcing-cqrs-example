@@ -135,7 +135,8 @@ public class Verticle extends AbstractVerticle {
 
         mainRouter.get("/*").handler(routingContext -> injectConfig(routingContext, webConfig));
 
-        mainRouter.get("/config").handler(ConfigHandler.create(webConfig));
+        mainRouter.get("/config").handler(ConfigHandler.create(webConfig))
+                .failureHandler(routingContext -> routingContext.fail(404));
 
         mainRouter.getWithRegex("/admin/designs/" + UUID_REGEXP)
                 .handler(createPageHandler(engine, "admin/preview"));

@@ -1,5 +1,4 @@
 import React from 'react'
-import ReactDOM from 'react-dom'
 import PropTypes from 'prop-types'
 
 import { Editor, EditorState, ContentState, CompositeDecorator } from 'draft-js'
@@ -153,9 +152,9 @@ const styles = {
 }
 
 ScriptEditor.propTypes = {
-  initialValue: PropTypes.string,
-  readOnly: PropTypes.bool,
-  onContentChanged: PropTypes.func
+  initialValue: PropTypes.string.isRequired,
+  readOnly: PropTypes.bool.isRequired,
+  onContentChanged: PropTypes.func.isRequired
 }
 
 export default ScriptEditor

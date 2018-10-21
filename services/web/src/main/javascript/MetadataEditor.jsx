@@ -1,5 +1,4 @@
 import React from 'react'
-import ReactDOM from 'react-dom'
 import PropTypes from 'prop-types'
 
 import { Editor, EditorState, ContentState, CompositeDecorator } from 'draft-js'
@@ -30,7 +29,7 @@ const compositeDecorator = new CompositeDecorator([
   }
 ])
 
-let DesignEditor = class DesignEditor extends React.Component {
+let MetadataEditor = class MetadataEditor extends React.Component {
     state = {
         editorState: EditorState.createWithContent(ContentState.createFromText(this.props.initialValue), compositeDecorator)
     }
@@ -72,10 +71,10 @@ const styles = {
   }
 }
 
-DesignEditor.propTypes = {
-  initialValue: PropTypes.string,
-  readOnly: PropTypes.bool,
-  onContentChanged: PropTypes.func
+MetadataEditor.propTypes = {
+  initialValue: PropTypes.string.isRequired,
+  readOnly: PropTypes.bool.isRequired,
+  onContentChanged: PropTypes.func.isRequired
 }
 
-export default DesignEditor
+export default MetadataEditor

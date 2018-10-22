@@ -170,7 +170,7 @@ let DesignsPage = class DesignsPage extends React.Component {
 
     handleModify = () => {
         if (this.props.selected[0]) {
-            window.location = this.props.config.web_url + "/admin/designs/" + this.props.selected[0]
+            window.location = this.props.config.web_url + "/admin/designs/" + this.props.selected[0] + ".html"
         }
     }
 
@@ -196,7 +196,7 @@ let DesignsPage = class DesignsPage extends React.Component {
                 <CssBaseline />
                 <Grid container justify="space-between" alignItems="center">
                     <Grid item xs={12}>
-                        <Header landing={'/admin/designs'} title={"Designs"}/>
+                        <Header landing={'/admin/designs.html'} title={"Designs"}/>
                     </Grid>
                     <Grid item xs={12}>
                         <DesignsTable/>

@@ -125,7 +125,7 @@ let PreviewPage = class PreviewPage extends React.Component {
                 <CssBaseline />
                 <Grid container justify="space-between" alignItems="center">
                     <Grid item xs={12}>
-                        <Header landing={'/admin/designs/' + this.props.uuid} title={'Design | ' + this.props.uuid}/>
+                        <Header landing={'/admin/designs/' + this.props.uuid + '.html'} title={'Design | ' + this.props.uuid}/>
                     </Grid>
                     <Grid item xs={12}>
                         <div className="preview-container">

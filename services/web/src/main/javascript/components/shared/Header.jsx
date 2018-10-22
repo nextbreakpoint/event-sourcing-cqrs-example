@@ -35,11 +35,11 @@ let Header = class Header extends React.Component {
     }
 
     handleNavigateContentDesigns = () => {
-        window.location = this.props.config.web_url + "/content/designs"
+        window.location = this.props.config.web_url + "/content/designs.html"
     }
 
     handleNavigateAdminDesigns = () => {
-        window.location = this.props.config.web_url + "/admin/designs"
+        window.location = this.props.config.web_url + "/admin/designs.html"
     }
 
     handleLogin = () => {

@@ -30,7 +30,7 @@ class Config extends React.Component {
 
         component.props.handleLoadConfig()
 
-        axios.get('/config', config)
+        axios.get('/config.json', config)
             .then(function (response) {
                 if (response.status == 200) {
                     console.log("Config loaded")

@@ -290,7 +290,7 @@ let EnhancedTable = class EnhancedTable extends React.Component {
 
   handleModify = () => {
       if (this.props.selected[0]) {
-          window.location = this.props.config.web_url + "/admin/designs/" + this.props.selected[0]
+          window.location = this.props.config.web_url + "/admin/designs/" + this.props.selected[0] + ".html"
       }
   }
 
@@ -332,7 +332,7 @@ let EnhancedTable = class EnhancedTable extends React.Component {
                         {account.role == 'admin' && <Checkbox checked={isSelected} />}
                       </TableCell>
                       <TableCell scope="row" padding="none">
-                        <a href={"/admin/designs/" + n.uuid}><pre>{n.uuid}</pre></a>
+                        <a href={"/admin/designs/" + n.uuid + '.html'}><pre>{n.uuid}</pre></a>
                       </TableCell>
                       <TableCell scope="row" padding="none" className="list-image">
                         <ButtonBase
@@ -346,7 +346,7 @@ let EnhancedTable = class EnhancedTable extends React.Component {
                                   borderRadius: '1em'
                                 }}
                               >
-                            <a href={"/admin/designs/" + n.uuid}>
+                            <a href={"/admin/designs/" + n.uuid + ".html"}>
                                 <img className={classes.image} width="128" height="128" src={config.designs_query_url + "/" + n.uuid + "/0/0/0/256.png?t=" + timestamp}/>
                             </a>
                         </ButtonBase>

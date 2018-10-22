@@ -71,7 +71,7 @@ public class DesignsLoadHandler implements Handler<RoutingContext> {
     }
 
     private DesignResource makeDesign(DesignDocument document) {
-        return new DesignResource(document.getUuid(), document.getChecksum(), webUrl + "/content/designs/" + document.getUuid(), designsUrl + "/" + document.getUuid() + "/0/0/0/256.png", "", "", "", "");
+        return new DesignResource(document.getUuid(), document.getChecksum(), webUrl + "/content/designs/" + document.getUuid() + ".html", designsUrl + "/" + document.getUuid() + "/0/0/0/256.png", "", "", "", "");
     }
 
     public static DesignsLoadHandler create(WebClient client, JsonObject config) {

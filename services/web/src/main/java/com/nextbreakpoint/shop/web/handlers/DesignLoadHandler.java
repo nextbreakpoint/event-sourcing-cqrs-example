@@ -75,7 +75,7 @@ public class DesignLoadHandler implements Handler<RoutingContext> {
     }
 
     private DesignResource makeDesign(String uuid, String checksum, String modified, String manifest, String metadata, String script) {
-        return new DesignResource(uuid, checksum, webUrl + "/content/designs/" + uuid, designsUrl + "/" + uuid + "/0/0/0/512.png", modified, manifest, metadata, script);
+        return new DesignResource(uuid, checksum, webUrl + "/content/designs/" + uuid + ".html", designsUrl + "/" + uuid + "/0/0/0/512.png", modified, manifest, metadata, script);
     }
 
     public static DesignLoadHandler create(WebClient client, JsonObject config) {

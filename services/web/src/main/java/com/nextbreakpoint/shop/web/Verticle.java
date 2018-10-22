@@ -136,28 +136,27 @@ public class Verticle extends AbstractVerticle {
 
         mainRouter.get("/*").handler(routingContext -> injectConfig(routingContext, webConfig));
 
-        mainRouter.get("/config").handler(ConfigHandler.create(webConfig))
-                .failureHandler(routingContext -> routingContext.fail(404));
+        mainRouter.get("/config.json").handler(ConfigHandler.create(webConfig));
 
-        mainRouter.getWithRegex("/admin/designs/" + UUID_REGEXP)
+        mainRouter.getWithRegex("/admin/designs/" + UUID_REGEXP + "\\.html")
                 .handler(UUIDInjectHandler.create());
 
-        mainRouter.getWithRegex("/admin/designs/" + UUID_REGEXP)
+        mainRouter.getWithRegex("/admin/designs/" + UUID_REGEXP + "\\.html")
                 .handler(createPageHandler(engine, "admin/preview"));
 
-        mainRouter.get("/admin/designs")
+        mainRouter.get("/admin/designs.html")
                 .handler(createPageHandler(engine, "admin/designs"));
 
-        mainRouter.getWithRegex("/content/designs/" + UUID_REGEXP)
+        mainRouter.getWithRegex("/content/designs/" + UUID_REGEXP + "\\.html")
                 .handler(DesignLoadHandler.create(designsClient, config));
 
-        mainRouter.getWithRegex("/content/designs/" + UUID_REGEXP)
+        mainRouter.getWithRegex("/content/designs/" + UUID_REGEXP + "\\.html")
                 .handler(createPageHandler(engine, "content/preview"));
 
-        mainRouter.get("/content/designs")
+        mainRouter.get("/content/designs.html")
                 .handler(DesignsLoadHandler.create(designsClient, config));
 
-        mainRouter.get("/content/designs")
+        mainRouter.get("/content/designs.html")
                 .handler(createPageHandler(engine, "content/designs"));
 
         mainRouter.getWithRegex("/watch/designs/([0-9]+)/" + UUID_REGEXP)
@@ -167,11 +166,11 @@ public class Verticle extends AbstractVerticle {
                 .handler(routingContext -> ResponseHelper.redirectToURL(routingContext, () -> webConfig.getString("designs_sse_url") + "/" + routingContext.request().getParam("param0")));
 
         mainRouter.get("/")
-                .handler(routingContext -> ResponseHelper.redirectToURL(routingContext, () -> webConfig.getString("web_url") + "/content/designs"));
+                .handler(routingContext -> ResponseHelper.redirectToURL(routingContext, () -> webConfig.getString("web_url") + "/content/designs.html"));
 
         mainRouter.get("/error/*").handler(createErrorHandler(engine));
 
-//        mainRouter.route().failureHandler(routingContext -> ResponseHelper.redirectToError(routingContext, (status) -> "/error/" + status));
+//        mainRouter.route("/*.html").failureHandler(routingContext -> ResponseHelper.redirectToError(routingContext, (status) -> "/error/" + status));
 
 //        mainRouter.route().handler(routingContext -> ResponseHelper.redirectToURL(routingContext, () -> "/error/404"));
 

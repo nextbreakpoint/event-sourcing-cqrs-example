@@ -97,6 +97,7 @@ let DesignsPage = class DesignsPage extends React.Component {
                     //var designs = component.props.designs.slice()
                     //designs.push({uuid:content.data.uuid, selected: false})
                     //component.props.handleLoadDesignsSuccess(designs, component.props.timestamp)
+                    component.props.handleShowErrorMessage("Your request has been accepted...")
                 } else {
                     console.log("Can't create a new design: status = " + response.status)
                     component.props.handleShowErrorMessage("Can't create a new design")
@@ -156,6 +157,7 @@ let DesignsPage = class DesignsPage extends React.Component {
 
                 if (failedUuids.length == 0) {
                     //component.props.handleLoadDesignsSuccess(designs, component.props.timestamp)
+                    component.props.handleShowErrorMessage("Your request has been accepted...")
                 } else {
                     component.props.handleShowErrorMessage("Can't delete designs")
                 }
@@ -300,6 +302,7 @@ DesignsPage.propTypes = {
     show_create_design: PropTypes.bool.isRequired,
     show_delete_designs: PropTypes.bool.isRequired,
     show_error_message: PropTypes.bool.isRequired,
+    error_message: PropTypes.string.isRequired,
     classes: PropTypes.object.isRequired,
     theme: PropTypes.object.isRequired
 }

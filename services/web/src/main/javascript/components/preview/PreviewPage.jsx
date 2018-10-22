@@ -85,6 +85,7 @@ let PreviewPage = class PreviewPage extends React.Component {
             .then(function (content) {
                 if (content.status == 202) {
                     //component.props.handleDesignLoadedSuccess(design, timestamp)
+                    component.props.handleShowErrorMessage("Your request has been accepted...")
                 } else {
                     console.log("Can't create a new design: status = " + response.status)
                     component.props.handleShowErrorMessage("Can't update the design")
@@ -195,6 +196,7 @@ PreviewPage.propTypes = {
     timestamp: PropTypes.number.isRequired,
     show_update_design: PropTypes.bool.isRequired,
     show_error_message: PropTypes.bool.isRequired,
+    error_message: PropTypes.string.isRequired,
     classes: PropTypes.object.isRequired,
     theme: PropTypes.object.isRequired,
     uuid: PropTypes.string.isRequired

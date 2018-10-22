@@ -44,6 +44,10 @@ class Account extends React.Component {
                     console.log("Account loaded")
                     let { role, name } = response.data
                     component.props.handleLoadAccountSuccess({ role, name })
+                } else if (response.status == 403) {
+                    console.log("Not authenticated")
+                    cookies.remove('token', {domain: window.location.hostname})
+                    component.props.handleLoadAccountSuccess({ "role": "anonymous", "name": "Stranger" })
                 } else {
                     console.log("Can't load account: status = " + response.status)
                     cookies.remove('token', {domain: window.location.hostname})
@@ -53,7 +57,7 @@ class Account extends React.Component {
             .catch(function (error) {
                 console.log("Can't load account: " + error)
                 cookies.remove('token', {domain: window.location.hostname})
-                component.props.handleLoadAccountFailure("Can't load account")
+                component.props.handleLoadAccountSuccess({ "role": "anonymous", "name": "Stranger" })
             })
     }
 

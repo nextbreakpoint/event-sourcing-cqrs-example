@@ -21,7 +21,9 @@ import {
     getTimestamp,
     loadDesigns,
     loadDesignsSuccess,
-    loadDesignsFailure
+    loadDesignsFailure,
+    showErrorMessage,
+    hideErrorMessage
 } from '../../actions/designs'
 
 import axios from 'axios'
@@ -54,9 +56,11 @@ let Designs = class Designs extends React.Component {
                 }, false)
             } else {
                 console.log("EventSource not available")
+                component.loadDesigns(timestamp)
             }
         } catch (e) {
-           console.log(e)
+           console.log("Can't subscribe: " + e)
+           component.loadDesigns(timestamp)
         }
     }
 
@@ -76,14 +80,17 @@ let Designs = class Designs extends React.Component {
                     console.log("Designs loaded")
                     let designs = response.data.map((design) => { return { uuid: design.uuid, checksum: design.checksum, selected: false }})
                     component.props.handleLoadDesignsSuccess(designs, timestamp)
+                    //component.props.handleHideErrorMessage()
                 } else {
                     console.log("Can't load designs: status = " + content.status)
-                    component.props.handleLoadDesignsSuccess([], timestamp)
+                    component.props.handleLoadDesignsSuccess([], 0)
+                    component.props.handleShowErrorMessage("Can't load designs")
                 }
             })
             .catch(function (error) {
                 console.log("Can't load designs " + error)
-                component.props.handleLoadDesignsSuccess([], timestamp)
+                component.props.handleLoadDesignsSuccess([], 0)
+                component.props.handleShowErrorMessage("Can't load designs")
             })
     }
 
@@ -114,6 +121,12 @@ const mapStateToProps = state => ({
 })
 
 const mapDispatchToProps = dispatch => ({
+    handleShowErrorMessage: (error) => {
+        dispatch(showErrorMessage(error))
+    },
+    handleHideErrorMessage: () => {
+        dispatch(hideErrorMessage())
+    },
     handleLoadDesigns: () => {
         dispatch(loadDesigns())
     },

@@ -21,7 +21,9 @@ import {
     getTimestamp,
     loadDesign,
     loadDesignSuccess,
-    loadDesignFailure
+    loadDesignFailure,
+    showErrorMessage,
+    hideErrorMessage
 } from '../../actions/preview'
 
 import axios from 'axios'
@@ -54,9 +56,11 @@ let Preview = class Preview extends React.Component {
                 }, false)
             } else {
                 console.log("EventSource not available")
+                component.loadDesign(timestamp)
             }
         } catch (e) {
-           console.log(e)
+           console.log("Can't subscribe: " + e)
+           component.loadDesign(timestamp)
         }
     }
 
@@ -79,14 +83,17 @@ let Preview = class Preview extends React.Component {
                         console.log("Design changed")
                         component.props.handleLoadDesignSuccess(design, timestamp)
                     }
+                    //component.props.handleHideErrorMessage()
                 } else {
                     console.log("Can't load design: status = " + content.status)
-                    component.props.handleLoadDesignFailure("Can't load design")
+                    component.props.handleLoadDesignFailure("Design not found")
+                    component.props.handleShowErrorMessage("Can't load design")
                 }
             })
             .catch(function (error) {
                 console.log("Can't load design: " + error)
-                component.props.handleLoadDesignFailure("Can't load design")
+                component.props.handleLoadDesignFailure("Design not found")
+                component.props.handleShowErrorMessage("Can't load design")
             })
     }
 
@@ -118,6 +125,12 @@ const mapStateToProps = state => ({
 })
 
 const mapDispatchToProps = dispatch => ({
+    handleShowErrorMessage: (error) => {
+        dispatch(showErrorMessage(error))
+    },
+    handleHideErrorMessage: () => {
+        dispatch(hideErrorMessage())
+    },
     handleLoadDesign: () => {
         dispatch(loadDesign())
     },

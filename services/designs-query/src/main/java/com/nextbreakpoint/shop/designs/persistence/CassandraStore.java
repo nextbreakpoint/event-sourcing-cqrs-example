@@ -32,7 +32,7 @@ public class CassandraStore implements Store {
     private static final String ERROR_LIST_DESIGNS = "An error occurred while loading designs";
 
     private static final String SELECT_DESIGN = "SELECT * FROM DESIGNS_VIEW WHERE DESIGN_UUID = ?";
-    private static final String SELECT_DESIGNS = "SELECT DESIGN_UUID, DESIGN_CHECKSUM FROM DESIGNS_VIEW";
+    private static final String SELECT_DESIGNS = "SELECT DESIGN_UUID, DESIGN_CHECKSUM, DESIGN_TIMESTAMP FROM DESIGNS_VIEW";
 
     private static final int EXECUTE_TIMEOUT = 10;
 
@@ -129,7 +129,8 @@ public class CassandraStore implements Store {
     private DesignDocument getMinimalDesignDocument(Row row) {
         final String uuid = row.getUUID("DESIGN_UUID").toString();
         final String checksum = row.getString("DESIGN_CHECKSUM");
-        return new DesignDocument(uuid, null, checksum, null);
+        final Instant timestamp = row.getTimestamp("DESIGN_TIMESTAMP").toInstant();
+        return new DesignDocument(uuid, null, checksum, formatDate(timestamp));
     }
 
     private Object[] makeLoadParams(LoadDesignRequest request) {

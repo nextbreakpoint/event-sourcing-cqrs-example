@@ -1,8 +1,4 @@
-FROM openjdk:11-jdk-slim
-
-RUN apt-get update -y && apt-get install -y openssl python bash wget
-
-RUN wget https://bootstrap.pypa.io/get-pip.py && python get-pip.py && pip install awscli
+FROM node:8
 
 COPY maven/ /maven
 COPY entrypoint.sh /entrypoint.sh
@@ -11,7 +7,10 @@ RUN chmod u+x /entrypoint.sh
 
 EXPOSE ${container.port}
 
-ENV CONFIG_NAME ${config.name}
-ENV SERVICE_JAR ${service.jar}
+ENV SECRETS_PATH /secrets
+ENV CONFIG_PATH /config
+ENV PORT ${container.port}
+
+RUN cd maven && npm install
 
 ENTRYPOINT ["/entrypoint.sh"]

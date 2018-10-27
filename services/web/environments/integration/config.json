@@ -1,0 +1,9 @@
+{
+  "web_url": "https://localhost:8080",
+  "auth_url": "https://${stub.host}:${stub.port}/a/auth",
+  "accounts_url": "https://${stub.host}:${stub.port}/a/accounts",
+  "designs_processor_url": "https://${stub.host}:${stub.port}/p/designs",
+  "designs_command_url": "https://${stub.host}:${stub.port}/c/designs",
+  "designs_query_url": "https://${stub.host}:${stub.port}/q/designs",
+  "designs_sse_url": "https://${stub.host}:${stub.port}/e/designs"
+}

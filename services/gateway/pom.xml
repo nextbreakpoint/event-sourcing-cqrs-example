@@ -8,14 +8,26 @@
         <version>1.0.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>com.nextbreakpoint.shop.web</artifactId>
+    <artifactId>com.nextbreakpoint.shop.gateway</artifactId>
     <properties>
         <container.port>8080</container.port>
         <service.jar>${project.build.finalName}.${project.packaging}</service.jar>
-        <frontend-maven-plugin.version>1.6</frontend-maven-plugin.version>
+        <config.name>gateway.json</config.name>
     </properties>
-    <packaging>jar</packaging>
     <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+            </resource>
+            <resource>
+                <directory>environments</directory>
+                <filtering>true</filtering>
+                <targetPath>environments</targetPath>
+                <includes>
+                    <include>**/*.json</include>
+                </includes>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
@@ -57,46 +69,18 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>com.github.eirslett</groupId>
-                <artifactId>frontend-maven-plugin</artifactId>
-                <version>${frontend-maven-plugin.version}</version>
-                <executions>
-                    <execution>
-                        <id>prepare</id>
-                        <goals>
-                            <goal>install-node-and-npm</goal>
-                        </goals>
-                        <phase>generate-resources</phase>
-                        <configuration>
-                            <nodeVersion>v8.12.0</nodeVersion>
-                            <downloadRoot>https://nodejs.org/dist/</downloadRoot>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>install</id>
-                        <goals>
-                            <goal>npm</goal>
-                        </goals>
-                        <phase>generate-resources</phase>
-                        <configuration>
-                            <workingDirectory>${project.basedir}/src/main/javascript/react</workingDirectory>
-                            <installDirectory>${project.basedir}</installDirectory>
-                            <arguments>install</arguments>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>build</id>
-                        <goals>
-                            <goal>npm</goal>
-                        </goals>
-                        <phase>generate-resources</phase>
-                        <configuration>
-                            <workingDirectory>${project.basedir}/src/main/javascript/react</workingDirectory>
-                            <installDirectory>${project.basedir}</installDirectory>
-                            <arguments>run build</arguments>
-                        </configuration>
-                    </execution>
-                </executions>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>${maven-jar-plugin.version}</version>
+                <configuration>
+                    <archive>
+                        <index>true</index>
+                        <manifest>
+                            <addClasspath>true</addClasspath>
+                            <mainClass>com.nextbreakpoint.shop.gateway.Verticle</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>io.fabric8</groupId>
@@ -118,20 +102,7 @@
                                         <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
                                         <filter>${*}</filter>
                                         <assembly>
-                                            <targetDir>node</targetDir>
-                                            <inline>
-                                                <fileSets>
-                                                    <fileSet>
-                                                        <outputDirectory>.</outputDirectory>
-                                                        <directory>src/main/javascript</directory>
-                                                        <excludes>
-                                                            <exclude>react/**</exclude>
-                                                            <exclude>node_modules/**</exclude>
-                                                            <exclude>package-lock.json</exclude>
-                                                        </excludes>
-                                                    </fileSet>
-                                                </fileSets>
-                                            </inline>
+                                            <descriptorRef>artifact-with-dependencies</descriptorRef>
                                         </assembly>
                                     </build>
                                 </image>
@@ -148,25 +119,32 @@
                             <showLogs>true</showLogs>
                             <images>
                                 <image>
-                                    <name>${environment}-${colour}-shop/web:${project.version}</name>
-                                    <alias>service-web</alias>
+                                    <name>${environment}-${colour}-shop/gateway:${project.version}</name>
+                                    <alias>service-gateway</alias>
+                                    <build>
+                                        <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
+                                        <filter>${*}</filter>
+                                        <assembly>
+                                            <descriptorRef>artifact-with-dependencies</descriptorRef>
+                                        </assembly>
+                                    </build>
                                     <run>
                                         <ports>
                                             <port>${http.port}:${container.port}</port>
                                         </ports>
                                         <volumes>
                                             <bind>
-                                                <volume>${project.basedir}/environments/integration:/config</volume>
+                                                <volume>${project.basedir}/target/classes/environments/integration:/config</volume>
                                                 <volume>${project.basedir}/../secrets:/secrets</volume>
                                             </bind>
                                         </volumes>
                                         <network>
                                             <mode>custom</mode>
                                             <name>shop-test</name>
-                                            <alias>shop-web</alias>
+                                            <alias>shop-gateway</alias>
                                         </network>
                                         <wait>
-                                            <log>Listening on port ${container.port}</log>
+                                            <log>Succeeded in deploying verticle</log>
                                             <time>30000</time>
                                         </wait>
                                     </run>
@@ -183,8 +161,8 @@
                         <configuration>
                             <images>
                                 <image>
-                                    <name>${environment}-${colour}-shop/web:${project.version}</name>
-                                    <alias>service-web</alias>
+                                    <name>${environment}-${colour}-shop/gateway:${project.version}</name>
+                                    <alias>service-gateway</alias>
                                 </image>
                             </images>
                         </configuration>
@@ -198,26 +176,13 @@
                         <configuration>
                             <images>
                                 <image>
-                                    <name>${environment}-${colour}-shop/web:${project.version}</name>
-                                    <alias>service-web</alias>
+                                    <name>${environment}-${colour}-shop/gateway:${project.version}</name>
+                                    <alias>service-gateway</alias>
                                     <build>
                                         <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
                                         <filter>${*}</filter>
                                         <assembly>
-                                            <targetDir>node</targetDir>
-                                            <inline>
-                                                <fileSets>
-                                                    <fileSet>
-                                                        <outputDirectory>.</outputDirectory>
-                                                        <directory>src/main/javascript</directory>
-                                                        <excludes>
-                                                            <exclude>react/**</exclude>
-                                                            <exclude>node_modules/**</exclude>
-                                                            <exclude>package-lock.json</exclude>
-                                                        </excludes>
-                                                    </fileSet>
-                                                </fileSets>
-                                            </inline>
+                                            <descriptorRef>artifact-with-dependencies</descriptorRef>
                                         </assembly>
                                     </build>
                                 </image>
@@ -233,8 +198,8 @@
                         <configuration>
                             <images>
                                 <image>
-                                    <name>${environment}-${colour}-shop/web:${project.version}</name>
-                                    <alias>service-web</alias>
+                                    <name>${environment}-${colour}-shop/gateway:${project.version}</name>
+                                    <alias>service-gateway</alias>
                                 </image>
                             </images>
                         </configuration>
@@ -249,22 +214,29 @@
                             <showLogs>true</showLogs>
                             <images>
                                 <image>
-                                    <name>${environment}-${colour}-shop/web:${project.version}</name>
-                                    <alias>service-web</alias>
+                                    <name>${environment}-${colour}-shop/gateway:${project.version}</name>
+                                    <alias>service-gateway</alias>
+                                    <build>
+                                        <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
+                                        <filter>${*}</filter>
+                                        <assembly>
+                                            <descriptorRef>artifact-with-dependencies</descriptorRef>
+                                        </assembly>
+                                    </build>
                                     <run>
                                         <ports>
                                             <port>${container.port}:${container.port}</port>
                                         </ports>
                                         <volumes>
                                             <bind>
-                                                <volume>${project.basedir}/environments/docker:/config</volume>
+                                                <volume>${project.basedir}/target/classes/environments/docker:/config</volume>
                                                 <volume>${project.basedir}/../secrets:/secrets</volume>
                                             </bind>
                                         </volumes>
                                         <network>
                                             <mode>custom</mode>
                                             <name>shop-dev</name>
-                                            <alias>service-web</alias>
+                                            <alias>service-gateway</alias>
                                         </network>
                                     </run>
                                 </image>
@@ -280,8 +252,8 @@
                         <configuration>
                             <images>
                                 <image>
-                                    <name>${environment}-${colour}-shop/web:${project.version}</name>
-                                    <alias>service-web</alias>
+                                    <name>${environment}-${colour}-shop/gateway:${project.version}</name>
+                                    <alias>service-gateway</alias>
                                 </image>
                             </images>
                         </configuration>
@@ -291,6 +263,40 @@
         </plugins>
     </build>
     <dependencies>
+        <dependency>
+            <groupId>com.nextbreakpoint</groupId>
+            <artifactId>com.nextbreakpoint.shop.common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-web-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-auth-jwt</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-rx-java</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-dropwizard-metrics</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.dropwizard.metrics</groupId>
+            <artifactId>metrics-graphite</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-unit</artifactId>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
@@ -324,27 +330,6 @@
         <dependency>
             <groupId>org.junit.platform</groupId>
             <artifactId>junit-platform-runner</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.nextbreakpoint</groupId>
-            <artifactId>com.nextbreakpoint.shop.common</artifactId>
-            <version>${project.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.vertx</groupId>
-            <artifactId>vertx-auth-jwt</artifactId>
-            <version>${vertx.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.vertx</groupId>
-            <artifactId>vertx-rx-java</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.vertx</groupId>
-            <artifactId>vertx-web</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

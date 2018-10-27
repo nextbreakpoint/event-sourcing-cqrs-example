@@ -1,0 +1,31 @@
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-12">
+                <header>
+                </header>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-12">
+                <section class="designs-grid-container anchor-left anchor-right">
+                    <div class="designs-grid-elements">
+                        {{#each designs}}
+                        <div class="designs-grid-element">
+                            <a href="{{location}}"><img class="designs-grid-element-image" id="{{uuid}}" src="{{imageUrl}}?t={{checksum}}" alt="{{location}}"/></a>
+                            <a href="{{location}}"><span class="designs-grid-element-label">{{uuid}}</span></a>
+                        </div>
+                        {{/each}}
+                    <div>
+                </section>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-12">
+                <footer>
+                    <p>Powered by NextBreakpoint</p>
+                </footer>
+            </div>
+        </div>
+    <div>
+</body>

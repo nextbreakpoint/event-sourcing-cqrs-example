@@ -81,11 +81,11 @@ let PreviewPage = class PreviewPage extends React.Component {
         component.props.handleHideUpdateDialog()
         component.props.handleHideErrorMessage()
 
-        axios.put(component.props.config.designs_command_url + '/' + this.props.uuid, design, config)
+        axios.put(component.props.config.api_url + '/designs/' + this.props.uuid, design, config)
             .then(function (content) {
-                if (content.status == 202) {
+                if (content.status == 202 || content.status == 200) {
                     //component.props.handleDesignLoadedSuccess(design, timestamp)
-                    component.props.handleShowErrorMessage("Your request has been accepted...")
+                    component.props.handleShowErrorMessage("Your request has been processed")
                 } else {
                     console.log("Can't create a new design: status = " + response.status)
                     component.props.handleShowErrorMessage("Can't update the design")
@@ -118,7 +118,7 @@ let PreviewPage = class PreviewPage extends React.Component {
     }
 
     render() {
-        const url = this.props.config.designs_query_url + '/' + this.props.uuid + '/{z}/{x}/{y}/256.png?t=' + this.props.timestamp
+        const url = this.props.config.api_url + '/designs/' + this.props.uuid + '/{z}/{x}/{y}/256.png?t=' + this.props.design.checksum
 
         return (
             <React.Fragment>

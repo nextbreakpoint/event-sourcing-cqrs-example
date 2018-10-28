@@ -91,13 +91,13 @@ let DesignsPage = class DesignsPage extends React.Component {
         component.props.handleHideCreateDialog()
         component.props.handleHideErrorMessage()
 
-        axios.post(component.props.config.designs_command_url, design, config)
+        axios.post(component.props.config.api_url + '/designs', design, config)
             .then(function (response) {
-                if (response.status == 202) {
+                if (response.status == 202 || response.status == 201) {
                     //var designs = component.props.designs.slice()
                     //designs.push({uuid:content.data.uuid, selected: false})
                     //component.props.handleLoadDesignsSuccess(designs, component.props.timestamp)
-                    component.props.handleShowErrorMessage("Your request has been accepted...")
+                    component.props.handleShowErrorMessage("Your request has been processed")
                 } else {
                     console.log("Can't create a new design: status = " + response.status)
                     component.props.handleShowErrorMessage("Can't create a new design")
@@ -121,7 +121,7 @@ let DesignsPage = class DesignsPage extends React.Component {
 
         let promises = this.props.selected
             .map((uuid) => {
-                return axios.delete(component.props.config.designs_command_url + '/' + uuid, config)
+                return axios.delete(component.props.config.api_url + '/designs/' + uuid, config)
             })
 
         component.props.handleHideConfirmDelete()
@@ -131,7 +131,7 @@ let DesignsPage = class DesignsPage extends React.Component {
             .then(function (responses) {
                 let deletedUuids = responses
                     .filter((res) => {
-                        return res.status == 202
+                        return (res.status == 202 || res.status == 200)
                     })
                     .map((res) => {
                         return res.config.url.substring(res.config.url.lastIndexOf("/") + 1)
@@ -139,7 +139,7 @@ let DesignsPage = class DesignsPage extends React.Component {
 
                 let failedUuids = responses
                     .filter((res) => {
-                        return res.status != 202
+                        return (res.status != 202 && res.status != 200)
                     })
                     .map((res) => {
                         return res.config.url.substring(res.config.url.lastIndexOf("/") + 1)
@@ -157,7 +157,7 @@ let DesignsPage = class DesignsPage extends React.Component {
 
                 if (failedUuids.length == 0) {
                     //component.props.handleLoadDesignsSuccess(designs, component.props.timestamp)
-                    component.props.handleShowErrorMessage("Your request has been accepted...")
+                    component.props.handleShowErrorMessage("Your request has been processed")
                 } else {
                     component.props.handleShowErrorMessage("Can't delete designs")
                 }

@@ -110,8 +110,6 @@ public class Verticle extends AbstractVerticle {
 
         final Router mainRouter = Router.router(vertx);
 
-        final Router apiRouter = Router.router(vertx);
-
         mainRouter.route().handler(LoggerHandler.create());
         mainRouter.route().handler(BodyHandler.create());
         mainRouter.route().handler(CookieHandler.create());
@@ -119,7 +117,7 @@ public class Verticle extends AbstractVerticle {
 
         final CorsHandler corsHandler = CORSHandlerFactory.createWithAll(originPattern, asList(AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN, X_MODIFIED), asList(CONTENT_TYPE, X_XSRF_TOKEN, X_MODIFIED));
 
-        apiRouter.route("/designs/*").handler(corsHandler);
+        mainRouter.route("/designs/*").handler(corsHandler);
 
         final Handler<RoutingContext> onAccessDenied = routingContext -> routingContext.fail(Failure.accessDenied("Authorisation failed"));
 
@@ -135,38 +133,36 @@ public class Verticle extends AbstractVerticle {
 
         final Handler deleteDesignHandler = new AccessHandler(jwtProvider, createDeleteDesignHandler(store, sseTopic, messageSource, producer), onAccessDenied, asList(ADMIN));
 
-        apiRouter.get("/designs/:uuid/:zoom/:x/:y/:size.png")
+        mainRouter.get("/designs/:uuid/:zoom/:x/:y/:size.png")
                 .produces(IMAGE_PNG)
                 .handler(getTileHandler);
 
-        apiRouter.get("/designs")
+        mainRouter.get("/designs")
                 .produces(APPLICATION_JSON)
                 .handler(listDesignsHandler);
 
-        apiRouter.getWithRegex("/designs/" + UUID_REGEXP)
+        mainRouter.getWithRegex("/designs/" + UUID_REGEXP)
                 .produces(APPLICATION_JSON)
                 .handler(loadDesignHandler);
 
-        apiRouter.post("/designs")
+        mainRouter.post("/designs")
                 .produces(APPLICATION_JSON)
                 .consumes(APPLICATION_JSON)
                 .handler(insertDesignHandler);
 
-        apiRouter.putWithRegex("/designs/" + UUID_REGEXP)
+        mainRouter.putWithRegex("/designs/" + UUID_REGEXP)
                 .produces(APPLICATION_JSON)
                 .consumes(APPLICATION_JSON)
                 .handler(updateDesignHandler);
 
-        apiRouter.deleteWithRegex("/designs/" + UUID_REGEXP)
+        mainRouter.deleteWithRegex("/designs/" + UUID_REGEXP)
                 .produces(APPLICATION_JSON)
                 .handler(deleteDesignHandler);
 
-        apiRouter.options("/designs/*")
+        mainRouter.options("/designs/*")
                 .handler(ResponseHelper::sendNoContent);
 
         mainRouter.route().failureHandler(ResponseHelper::sendFailure);
-
-        mainRouter.mountSubRouter("/a", apiRouter);
 
         final HttpServerOptions options = ServerUtil.makeServerOptions(config);
 

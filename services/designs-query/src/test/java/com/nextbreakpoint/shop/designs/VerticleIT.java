@@ -56,29 +56,29 @@ public class VerticleIT {
   }
 
   @Test
-  @DisplayName("Should allow OPTIONS on /q/designs without access token")
+  @DisplayName("Should allow OPTIONS on /designs without access token")
   public void shouldAllowOptionsOnDesignsWithoutAccessToken() throws MalformedURLException {
     given().config(restAssuredConfig)
             .with().header("Origin", "https://localhost:8080")
-            .when().options(makeBaseURL("/q/designs"))
+            .when().options(makeBaseURL("/designs"))
             .then().assertThat().statusCode(204)
             .and().header("Access-Control-Allow-Origin", "https://localhost:8080")
             .and().header("Access-Control-Allow-Credentials", "true");
   }
 
   @Test
-  @DisplayName("Should allow OPTIONS on /q/designs/id without access token")
+  @DisplayName("Should allow OPTIONS on /designs/id without access token")
   public void shouldAllowOptionsOnDesignsSlashIdWithoutAccessToken() throws MalformedURLException {
     given().config(restAssuredConfig)
             .with().header("Origin", "https://localhost:8080")
-            .when().options(makeBaseURL("/q/designs/" + UUID.randomUUID().toString()))
+            .when().options(makeBaseURL("/designs/" + UUID.randomUUID().toString()))
             .then().assertThat().statusCode(204)
             .and().header("Access-Control-Allow-Origin", "https://localhost:8080")
             .and().header("Access-Control-Allow-Credentials", "true");
   }
 
   @Test
-  @DisplayName("Should forbid GET on /q/designs when user has unknown authority")
+  @DisplayName("Should forbid GET on /designs when user has unknown authority")
   public void shouldForbidGetOnDesignsWhenUserHasUnknownAuthority() throws MalformedURLException {
     final String otherAuthorization = TestHelper.makeAuthorization("test", Arrays.asList("other"));
 
@@ -87,12 +87,12 @@ public class VerticleIT {
     given().config(restAssuredConfig)
             .with().header(AUTHORIZATION, otherAuthorization)
             .and().accept(ContentType.JSON)
-            .when().get(makeBaseURL("/q/designs"))
+            .when().get(makeBaseURL("/designs"))
             .then().assertThat().statusCode(403);
   }
 
   @Test
-  @DisplayName("Should forbid GET on /q/designs/id when user has unknown authority")
+  @DisplayName("Should forbid GET on /designs/id when user has unknown authority")
   public void shouldForbidGetOnDesignsSlashIdWhenUserHasUnknownAuthority() throws MalformedURLException {
     final String otherAuthorization = TestHelper.makeAuthorization("test", Arrays.asList("other"));
 
@@ -101,12 +101,12 @@ public class VerticleIT {
     given().config(restAssuredConfig)
             .with().header(AUTHORIZATION, otherAuthorization)
             .and().accept(ContentType.JSON)
-            .when().get(makeBaseURL("/q/designs/" + UUID_1))
+            .when().get(makeBaseURL("/designs/" + UUID_1))
             .then().assertThat().statusCode(403);
   }
 
   @Test
-  @DisplayName("Should forbid GET on /q/designs/id/zoom/x/y/256.png when user has unknown authority")
+  @DisplayName("Should forbid GET on /designs/id/zoom/x/y/256.png when user has unknown authority")
   public void shouldForbidGetOnDesignsSlashIdSlashLocationSlashSizeWhenUserHasUnknownAuthority() throws MalformedURLException {
     final String otherAuthorization = TestHelper.makeAuthorization("test", Arrays.asList("other"));
 
@@ -115,12 +115,12 @@ public class VerticleIT {
     given().config(restAssuredConfig)
             .with().header(AUTHORIZATION, otherAuthorization)
             .and().accept("image/png")
-            .when().get(makeBaseURL("/q/designs/" + UUID_2 + "/0/0/0/256.png"))
+            .when().get(makeBaseURL("/designs/" + UUID_2 + "/0/0/0/256.png"))
             .then().assertThat().statusCode(403);
   }
 
   @Test
-  @DisplayName("Should allow GET on /q/designs when user is anonymous")
+  @DisplayName("Should allow GET on /designs when user is anonymous")
   public void shouldAllowGetOnDesignsWhenUserIsAnonymous() throws MalformedURLException {
     final String authorization = TestHelper.makeAuthorization("test", Arrays.asList(Authority.ANONYMOUS));
 
@@ -128,15 +128,19 @@ public class VerticleIT {
 
     DesignDocument[] results = listDesigns(authorization);
 
-    DesignDocument document1 = new DesignDocument(UUID_1, null, "0", null);
-    DesignDocument document2 = new DesignDocument(UUID_2, null, "1", null);
-    DesignDocument document3 = new DesignDocument(UUID_3, null, "2", null);
-
-    assertThat(results).contains(document1, document2, document3);
+    assertThat(results[0].getUuid()).isEqualTo(UUID_1);
+    assertThat(results[1].getUuid()).isEqualTo(UUID_2);
+    assertThat(results[2].getUuid()).isEqualTo(UUID_3);
+    assertThat(results[0].getChecksum()).isEqualTo("0");
+    assertThat(results[1].getChecksum()).isEqualTo("1");
+    assertThat(results[2].getChecksum()).isEqualTo("2");
+    assertThat(results[0].getModified()).isNotNull();
+    assertThat(results[1].getModified()).isNotNull();
+    assertThat(results[2].getModified()).isNotNull();
   }
 
   @Test
-  @DisplayName("Should allow GET on /q/designs/id when user is anonymous")
+  @DisplayName("Should allow GET on /designs/id when user is anonymous")
   public void shouldAllowGetOnDesignsSlashIdWhenUserIsAnonymous() throws MalformedURLException {
     final String authorization = TestHelper.makeAuthorization("test", Arrays.asList(Authority.ANONYMOUS));
 
@@ -151,7 +155,7 @@ public class VerticleIT {
   }
 
   @Test
-  @DisplayName("Should allow GET on /q/designs/id/zoom/x/y/256.png when user is anonymous")
+  @DisplayName("Should allow GET on /designs/id/zoom/x/y/256.png when user is anonymous")
   public void shouldAllowGetOnDesignsSlashIdSlashLocationSlashSizeWhenUserIsAnonymous() throws IOException {
     final String authorization = TestHelper.makeAuthorization("test", Arrays.asList(Authority.ANONYMOUS));
 
@@ -165,7 +169,7 @@ public class VerticleIT {
   }
 
   @Test
-  @DisplayName("Should allow GET on /q/designs when user is admin")
+  @DisplayName("Should allow GET on /designs when user is admin")
   public void shouldAllowGetOnDesignsWhenUserIsAdmin() throws MalformedURLException {
     final String authorization = TestHelper.makeAuthorization("test", Arrays.asList(Authority.ADMIN));
 
@@ -173,15 +177,19 @@ public class VerticleIT {
 
     DesignDocument[] results = listDesigns(authorization);
 
-    DesignDocument document1 = new DesignDocument(UUID_1, null, "0", null);
-    DesignDocument document2 = new DesignDocument(UUID_2, null, "1", null);
-    DesignDocument document3 = new DesignDocument(UUID_3, null, "2", null);
-
-    assertThat(results).contains(document1, document2, document3);
+    assertThat(results[0].getUuid()).isEqualTo(UUID_1);
+    assertThat(results[1].getUuid()).isEqualTo(UUID_2);
+    assertThat(results[2].getUuid()).isEqualTo(UUID_3);
+    assertThat(results[0].getChecksum()).isEqualTo("0");
+    assertThat(results[1].getChecksum()).isEqualTo("1");
+    assertThat(results[2].getChecksum()).isEqualTo("2");
+    assertThat(results[0].getModified()).isNotNull();
+    assertThat(results[1].getModified()).isNotNull();
+    assertThat(results[2].getModified()).isNotNull();
   }
 
   @Test
-  @DisplayName("Should allow GET on /q/designs/id when user is admin")
+  @DisplayName("Should allow GET on /designs/id when user is admin")
   public void shouldAllowGetOnDesignsSlashIdWhenUserIsAdmin() throws MalformedURLException {
     final String authorization = TestHelper.makeAuthorization("test", Arrays.asList(Authority.ADMIN));
 
@@ -196,7 +204,7 @@ public class VerticleIT {
   }
 
   @Test
-  @DisplayName("Should allow GET on /q/designs/id/zoom/x/y/256.png when user is admin")
+  @DisplayName("Should allow GET on /designs/id/zoom/x/y/256.png when user is admin")
   public void shouldAllowGetOnDesignsSlashIdSlashLocationSlashSizeWhenUserIsAdmin() throws IOException {
     final String authorization = TestHelper.makeAuthorization("test", Arrays.asList(Authority.ADMIN));
 
@@ -210,7 +218,7 @@ public class VerticleIT {
   }
 
   @Test
-  @DisplayName("Should allow GET on /q/designs when user is guest")
+  @DisplayName("Should allow GET on /designs when user is guest")
   public void shouldAllowGetOnDesignsWhenUserIsGuest() throws MalformedURLException {
     final String authorization = TestHelper.makeAuthorization("test", Arrays.asList(Authority.GUEST));
 
@@ -218,15 +226,19 @@ public class VerticleIT {
 
     DesignDocument[] results = listDesigns(authorization);
 
-    DesignDocument document1 = new DesignDocument(UUID_1, null, "0", null);
-    DesignDocument document2 = new DesignDocument(UUID_2, null, "1", null);
-    DesignDocument document3 = new DesignDocument(UUID_3, null, "2", null);
-
-    assertThat(results).contains(document1, document2, document3);
+    assertThat(results[0].getUuid()).isEqualTo(UUID_1);
+    assertThat(results[1].getUuid()).isEqualTo(UUID_2);
+    assertThat(results[2].getUuid()).isEqualTo(UUID_3);
+    assertThat(results[0].getChecksum()).isEqualTo("0");
+    assertThat(results[1].getChecksum()).isEqualTo("1");
+    assertThat(results[2].getChecksum()).isEqualTo("2");
+    assertThat(results[0].getModified()).isNotNull();
+    assertThat(results[1].getModified()).isNotNull();
+    assertThat(results[2].getModified()).isNotNull();
   }
 
   @Test
-  @DisplayName("Should allow GET on /q/designs/id when user is guest")
+  @DisplayName("Should allow GET on /designs/id when user is guest")
   public void shouldAllowGetOnDesignsSlashIdWhenUserIsGuest() throws MalformedURLException {
     final String authorization = TestHelper.makeAuthorization("test", Arrays.asList(Authority.GUEST));
 
@@ -241,7 +253,7 @@ public class VerticleIT {
   }
 
   @Test
-  @DisplayName("Should allow GET on /q/designs/id/zoom/x/y/256.png when user is guest")
+  @DisplayName("Should allow GET on /designs/id/zoom/x/y/256.png when user is guest")
   public void shouldAllowGetOnDesignsSlashIdSlashLocationSlashSizeWhenUserIsGuest() throws IOException {
     final String authorization = TestHelper.makeAuthorization("test", Arrays.asList(Authority.GUEST));
 
@@ -255,7 +267,7 @@ public class VerticleIT {
   }
 
   @Test
-  @DisplayName("Should return NOT_FOUND when /q/designs/id does not exist")
+  @DisplayName("Should return NOT_FOUND when /designs/id does not exist")
   public void shouldReturnNotFoundWhenDeisgnDoesNotExist() throws MalformedURLException {
     final String authorization = TestHelper.makeAuthorization("test", Arrays.asList(Authority.ANONYMOUS));
 
@@ -264,12 +276,12 @@ public class VerticleIT {
     given().config(restAssuredConfig)
             .with().header(AUTHORIZATION, authorization)
             .and().accept(ContentType.JSON)
-            .when().get(makeBaseURL("/q/designs/" + NON_EXISTANT_UUID.toString()))
+            .when().get(makeBaseURL("/designs/" + NON_EXISTANT_UUID.toString()))
             .then().assertThat().statusCode(404);
   }
 
   @Test
-  @DisplayName("Should return NOT_FOUND when /q/designs/id/zoom/x/y/256.png does not exist")
+  @DisplayName("Should return NOT_FOUND when /designs/id/zoom/x/y/256.png does not exist")
   public void shouldReturnNotFoundWhenDesignSlashLocationSlashSizeDoesNotExist() throws MalformedURLException {
     final String authorization = TestHelper.makeAuthorization("test", Arrays.asList(Authority.ANONYMOUS));
 
@@ -278,7 +290,7 @@ public class VerticleIT {
     given().config(restAssuredConfig)
             .with().header(AUTHORIZATION, authorization)
             .and().accept("image/png")
-            .when().get(makeBaseURL("/q/designs/" + NON_EXISTANT_UUID.toString() + "/0/0/0/256.png"))
+            .when().get(makeBaseURL("/designs/" + NON_EXISTANT_UUID.toString() + "/0/0/0/256.png"))
             .then().assertThat().statusCode(404);
   }
 
@@ -293,7 +305,7 @@ public class VerticleIT {
     return given().config(restAssuredConfig)
             .with().header(AUTHORIZATION, authorization)
             .and().accept(ContentType.JSON)
-            .when().get(makeBaseURL("/q/designs"))
+            .when().get(makeBaseURL("/designs"))
             .then().assertThat().statusCode(200)
             .extract().body().as(DesignDocument[].class);
   }
@@ -302,7 +314,7 @@ public class VerticleIT {
     return given().config(restAssuredConfig)
             .with().header(AUTHORIZATION, authorization)
             .and().accept(ContentType.JSON)
-            .when().get(makeBaseURL("/q/designs/" + uuid))
+            .when().get(makeBaseURL("/designs/" + uuid))
             .then().assertThat().statusCode(200)
             .extract().body().jsonPath();
   }
@@ -311,7 +323,7 @@ public class VerticleIT {
     return given().config(restAssuredConfig)
             .with().header(AUTHORIZATION, authorization)
             .and().accept("image/png")
-            .when().get(makeBaseURL("/q/designs/" + uuid + "/0/0/0/256.png"))
+            .when().get(makeBaseURL("/designs/" + uuid + "/0/0/0/256.png"))
             .then().assertThat().statusCode(200)
             .and().assertThat().contentType("image/png")
             .extract().response().asByteArray();

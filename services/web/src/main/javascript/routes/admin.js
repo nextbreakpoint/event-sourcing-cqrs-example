@@ -11,7 +11,7 @@ router.get('/designs.html', function(req, res, next) {
         config: JSON.stringify(appConfig),
         layout: 'layout',
         title: 'Designs',
-        url: 'https://localhost:8080'
+        url: appConfig.web_url
     });
 });
 
@@ -20,7 +20,7 @@ router.get('/designs/(:uuid).html', function(req, res, next) {
         config: JSON.stringify(appConfig),
         layout: 'layout',
         title: 'Designs | ' + req.params.uuid,
-        url: 'https://localhost:8080', uuid: req.params.uuid
+        url: appConfig.web_url, uuid: req.params.uuid
     });
 });
 

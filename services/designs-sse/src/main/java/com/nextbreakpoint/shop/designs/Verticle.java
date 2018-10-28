@@ -29,6 +29,7 @@ import io.vertx.rxjava.ext.web.handler.BodyHandler;
 import io.vertx.rxjava.ext.web.handler.CookieHandler;
 import io.vertx.rxjava.ext.web.handler.CorsHandler;
 import io.vertx.rxjava.ext.web.handler.LoggerHandler;
+import io.vertx.rxjava.ext.web.handler.TimeoutHandler;
 import io.vertx.rxjava.kafka.client.consumer.KafkaConsumer;
 import io.vertx.rxjava.kafka.client.consumer.KafkaConsumerRecord;
 import rx.Single;
@@ -97,16 +98,13 @@ public class Verticle extends AbstractVerticle {
 
         final Router mainRouter = Router.router(vertx);
 
-        final Router apiRouter = Router.router(vertx);
-
         mainRouter.route().handler(LoggerHandler.create());
         mainRouter.route().handler(BodyHandler.create());
         mainRouter.route().handler(CookieHandler.create());
-//        mainRouter.route().handler(TimeoutHandler.create(30000));
 
         final CorsHandler corsHandler = CORSHandlerFactory.createWithAll(originPattern, asList(AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN, X_MODIFIED), asList(CONTENT_TYPE, X_XSRF_TOKEN, X_MODIFIED));
 
-        apiRouter.route("/designs/*").handler(corsHandler);
+        mainRouter.route("/watch/designs/*").handler(corsHandler);
 
         final Handler<RoutingContext> onAccessDenied = routingContext -> routingContext.fail(Failure.accessDenied("Authorisation failed"));
 
@@ -114,13 +112,11 @@ public class Verticle extends AbstractVerticle {
 
         final Handler eventHandler = new AccessHandler(jwtProvider, EventsHandler.create(vertx), onAccessDenied, asList(ANONYMOUS, ADMIN, GUEST));
 
-        apiRouter.getWithRegex("/designs/([0-9]+)/" + UUID_REGEXP)
+        mainRouter.getWithRegex("/watch/designs/([0-9]+)/" + UUID_REGEXP)
                 .handler(eventHandler);
 
-        apiRouter.getWithRegex("/designs/([0-9]+)")
+        mainRouter.getWithRegex("/watch/designs/([0-9]+)")
                 .handler(eventHandler);
-
-        mainRouter.mountSubRouter("/e", apiRouter);
 
         final Map<String, Handler<Message>> handlers = new HashMap<>();
 

@@ -89,11 +89,11 @@ public class WebIT {
     final UUID uuid = UUID.randomUUID();
 
     whenHttp(stubServer)
-            .match(get("/a/designs"), withHeader("accept", "application/json"))
+            .match(get("/designs"), withHeader("accept", "application/json"))
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("[{\"uuid\":\"" + uuid + "\",\"checksum\":\"1\"}]"));
 
     whenHttp(stubServer)
-            .match(get("/q/designs"), withHeader("accept", "application/json"))
+            .match(get("/designs"), withHeader("accept", "application/json"))
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("[{\"uuid\":\"" + uuid + "\",\"checksum\":\"1\"}]"));
 
     given().config(restAssuredConfig)
@@ -123,11 +123,11 @@ public class WebIT {
             .encode();
 
     whenHttp(stubServer)
-            .match(get("/a/designs/" + designUuid), withHeader("accept", "application/json"))
+            .match(get("/designs/" + designUuid), withHeader("accept", "application/json"))
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent(content));
 
     whenHttp(stubServer)
-            .match(get("/q/designs/" + designUuid), withHeader("accept", "application/json"))
+            .match(get("/designs/" + designUuid), withHeader("accept", "application/json"))
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent(content));
 
     given().config(restAssuredConfig)
@@ -143,15 +143,15 @@ public class WebIT {
     final UUID accountUuid = UUID.randomUUID();
 
     whenHttp(stubServer)
-            .match(get("/a/designs"), withHeader("accept", "application/json"))
+            .match(get("/designs"), withHeader("accept", "application/json"))
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("[{\"uuid\":\"" + designUuid + "\",\"checksum\":\"1\"}]"));
 
     whenHttp(stubServer)
-            .match(get("/q/designs"), withHeader("accept", "application/json"))
+            .match(get("/designs"), withHeader("accept", "application/json"))
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("[{\"uuid\":\"" + designUuid + "\",\"checksum\":\"1\"}]"));
 
     whenHttp(stubServer)
-            .match(get("/a/accounts/" + accountUuid), withHeader("accept", "application/json"))
+            .match(get("/accounts/" + accountUuid), withHeader("accept", "application/json"))
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"name\":\"test\",\"role\":\"guest\",\"uuid\":\"" + accountUuid + "\"}"));
 
     final Cookie cookie = TestHelper.makeCookie(accountUuid.toString(), Arrays.asList(Authority.GUEST), "localhost");
@@ -185,15 +185,15 @@ public class WebIT {
             .encode();
 
     whenHttp(stubServer)
-            .match(get("/a/designs/" + designUuid), withHeader("accept", "application/json"))
+            .match(get("/designs/" + designUuid), withHeader("accept", "application/json"))
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent(content));
 
     whenHttp(stubServer)
-            .match(get("/q/designs/" + designUuid), withHeader("accept", "application/json"))
+            .match(get("/designs/" + designUuid), withHeader("accept", "application/json"))
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent(content));
 
     whenHttp(stubServer)
-            .match(get("/a/accounts/" + accountUuid), withHeader("accept", "application/json"))
+            .match(get("/accounts/" + accountUuid), withHeader("accept", "application/json"))
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"name\":\"test\",\"role\":\"guest\",\"uuid\":\"" + accountUuid + "\"}"));
 
     final Cookie cookie = TestHelper.makeCookie(accountUuid.toString(), Arrays.asList(Authority.GUEST), "localhost");
@@ -233,7 +233,7 @@ public class WebIT {
     final Cookie cookie = TestHelper.makeCookie("test", Arrays.asList(Authority.GUEST), "localhost");
 
     whenHttp(stubServer)
-            .match(get("/a/accounts/test"), withHeader("accept", "application/json"))
+            .match(get("/accounts/test"), withHeader("accept", "application/json"))
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"name\":\"test\",\"role\":\"guest\",\"uuid\":\"test\"}"));
 
     given().config(restAssuredConfig)
@@ -252,7 +252,7 @@ public class WebIT {
     final Cookie cookie = TestHelper.makeCookie("test", Arrays.asList(Authority.GUEST), "localhost");
 
     whenHttp(stubServer)
-            .match(get("/a/accounts/test"), withHeader("accept", "application/json"))
+            .match(get("/accounts/test"), withHeader("accept", "application/json"))
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"name\":\"test\",\"role\":\"guest\",\"uuid\":\"test\"}"));
 
     given().config(restAssuredConfig)

@@ -89,8 +89,6 @@ public class Verticle extends AbstractVerticle {
 
         final Router mainRouter = Router.router(vertx);
 
-        final Router apiRouter = Router.router(vertx);
-
         mainRouter.route().handler(LoggerHandler.create());
         mainRouter.route().handler(BodyHandler.create());
         mainRouter.route().handler(CookieHandler.create());
@@ -98,7 +96,7 @@ public class Verticle extends AbstractVerticle {
 
         final CorsHandler corsHandler = CORSHandlerFactory.createWithAll(originPattern, asList(AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN));
 
-        apiRouter.route("/accounts/*").handler(corsHandler);
+        mainRouter.route("/accounts/*").handler(corsHandler);
 
         final Handler<RoutingContext> onAccessDenied = routingContext -> routingContext.fail(Failure.accessDenied("Authentication failed"));
 
@@ -112,33 +110,31 @@ public class Verticle extends AbstractVerticle {
 
         final Handler deleteAccountHandler = new AccessHandler(jwtProvider, createDeleteAccountHandler(store), onAccessDenied, asList(ADMIN));
 
-        apiRouter.get("/accounts")
+        mainRouter.get("/accounts")
                 .produces(APPLICATION_JSON)
                 .handler(listAccountsHandler);
 
-        apiRouter.get("/accounts/me")
+        mainRouter.get("/accounts/me")
                 .produces(APPLICATION_JSON)
                 .handler(loadSelfAccountHandler);
 
-        apiRouter.getWithRegex("/accounts/" + UUID_REGEXP)
+        mainRouter.getWithRegex("/accounts/" + UUID_REGEXP)
                 .produces(APPLICATION_JSON)
                 .handler(loadAccountHandler);
 
-        apiRouter.post("/accounts")
+        mainRouter.post("/accounts")
                 .produces(APPLICATION_JSON)
                 .consumes(APPLICATION_JSON)
                 .handler(insertAccountHandler);
 
-        apiRouter.deleteWithRegex("/accounts/" + UUID_REGEXP)
+        mainRouter.deleteWithRegex("/accounts/" + UUID_REGEXP)
                 .produces(APPLICATION_JSON)
                 .handler(deleteAccountHandler);
 
-        apiRouter.options("/accounts/*")
+        mainRouter.options("/accounts/*")
                 .handler(ResponseHelper::sendNoContent);
 
         mainRouter.route().failureHandler(ResponseHelper::sendFailure);
-
-        mainRouter.mountSubRouter("/a", apiRouter);
 
         final HttpServerOptions options = ServerUtil.makeServerOptions(config);
 

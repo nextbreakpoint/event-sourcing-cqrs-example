@@ -36,7 +36,7 @@ let Preview = class Preview extends React.Component {
 
         try {
             if (typeof(EventSource) !== "undefined") {
-                var source = new EventSource(component.props.config.designs_sse_url + "/" + timestamp + "/" + this.props.uuid, { withCredentials: true })
+                var source = new EventSource(component.props.config.sse_url + "/watch/designs/" + timestamp + "/" + this.props.uuid, { withCredentials: true })
 
                 source.onerror = function(error) {
                    console.log(error)
@@ -74,11 +74,14 @@ let Preview = class Preview extends React.Component {
 
         component.props.handleLoadDesign()
 
-        axios.get(component.props.config.designs_query_url + '/' + this.props.uuid, config)
+        axios.get(component.props.config.api_url + '/designs/' + this.props.uuid, config)
             .then(function (response) {
                 if (response.status == 200) {
                     console.log("Design loaded")
                     let design = JSON.parse(response.data.json)
+                    design.checksum = response.data.checksum
+                    design.modified = response.data.modified
+                    design.uuid = response.data.uuid
                     if (component.props.design == undefined || design.script != component.props.design.script || design.metadata != component.props.design.metadata || design.manifest != component.props.design.manifest) {
                         console.log("Design changed")
                         component.props.handleLoadDesignSuccess(design, timestamp)

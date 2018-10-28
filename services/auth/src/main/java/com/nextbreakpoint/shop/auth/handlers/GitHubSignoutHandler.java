@@ -34,7 +34,7 @@ public class GitHubSignoutHandler implements Handler<RoutingContext> {
     }
 
     protected String getRedirectTo(RoutingContext routingContext) {
-        return webUrl + routingContext.request().path().substring("/a/auth/signout".length());
+        return webUrl + routingContext.request().path().substring("/auth/signout".length());
     }
 
     protected void sendRedirectResponse(RoutingContext routingContext, String redirectTo, Cookie cookie) {

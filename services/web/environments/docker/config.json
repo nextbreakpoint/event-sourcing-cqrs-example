@@ -1,9 +1,5 @@
 {
   "web_url": "https://localhost",
-  "auth_url": "https://localhost/a/auth",
-  "accounts_url": "https://localhost/a/accounts",
-  "designs_processor_url": "https://localhost/p/designs",
-  "designs_command_url": "https://localhost/c/designs",
-  "designs_query_url": "https://localhost/q/designs",
-  "designs_sse_url": "https://localhost/e/designs"
+  "api_url": "https://localhost",
+  "sse_url": "https://localhost"
 }

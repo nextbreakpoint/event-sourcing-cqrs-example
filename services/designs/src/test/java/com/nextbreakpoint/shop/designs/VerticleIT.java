@@ -87,14 +87,14 @@ public class VerticleIT {
   public void shouldAllowOptionsRequestWithoutAccessToken() throws MalformedURLException {
     given().config(restAssuredConfig)
             .with().header("Origin", "https://localhost:8080")
-            .when().options(makeBaseURL("/a/designs"))
+            .when().options(makeBaseURL("/designs"))
             .then().assertThat().statusCode(204)
             .and().header("Access-Control-Allow-Origin", "https://localhost:8080")
             .and().header("Access-Control-Allow-Credentials", "true");
 
     given().config(restAssuredConfig)
             .with().header("Origin", "https://localhost:8080")
-            .when().options(makeBaseURL("/a/designs/" + UUID.randomUUID().toString()))
+            .when().options(makeBaseURL("/designs/" + UUID.randomUUID().toString()))
             .then().assertThat().statusCode(204)
             .and().header("Access-Control-Allow-Origin", "https://localhost:8080")
             .and().header("Access-Control-Allow-Credentials", "true");
@@ -107,7 +107,7 @@ public class VerticleIT {
             .and().contentType(ContentType.JSON)
             .and().accept(ContentType.JSON)
             .and().body(createPostData(SCRIPT1))
-            .when().post(makeBaseURL("/a/designs"))
+            .when().post(makeBaseURL("/designs"))
             .then().assertThat().statusCode(403);
   }
 
@@ -122,7 +122,7 @@ public class VerticleIT {
 
     given().config(restAssuredConfig)
             .and().accept(ContentType.JSON)
-            .when().delete(makeBaseURL("/a/designs/" + uuid))
+            .when().delete(makeBaseURL("/designs/" + uuid))
             .then().assertThat().statusCode(403);
   }
 
@@ -140,19 +140,19 @@ public class VerticleIT {
     given().config(restAssuredConfig)
             .with().header(AUTHORIZATION, otherAuthorization)
             .and().accept(ContentType.JSON)
-            .when().get(makeBaseURL("/a/designs"))
+            .when().get(makeBaseURL("/designs"))
             .then().assertThat().statusCode(403);
 
     given().config(restAssuredConfig)
             .with().header(AUTHORIZATION, otherAuthorization)
             .and().accept(ContentType.JSON)
-            .when().get(makeBaseURL("/a/designs/" + uuid))
+            .when().get(makeBaseURL("/designs/" + uuid))
             .then().assertThat().statusCode(403);
 
     given().config(restAssuredConfig)
             .with().header(AUTHORIZATION, otherAuthorization)
             .and().accept("image/png")
-            .when().get(makeBaseURL("/a/designs/" + uuid + "/0/0/0/256.png"))
+            .when().get(makeBaseURL("/designs/" + uuid + "/0/0/0/256.png"))
             .then().assertThat().statusCode(403);
   }
 
@@ -167,17 +167,17 @@ public class VerticleIT {
 
     given().config(restAssuredConfig)
             .and().accept(ContentType.JSON)
-            .when().get(makeBaseURL("/a/designs"))
+            .when().get(makeBaseURL("/designs"))
             .then().assertThat().statusCode(200);
 
     given().config(restAssuredConfig)
             .and().accept(ContentType.JSON)
-            .when().get(makeBaseURL("/a/designs/" + uuid))
+            .when().get(makeBaseURL("/designs/" + uuid))
             .then().assertThat().statusCode(200);
 
     given().config(restAssuredConfig)
             .and().accept("image/png")
-            .when().get(makeBaseURL("/a/designs/" + uuid + "/0/0/0/256.png"))
+            .when().get(makeBaseURL("/designs/" + uuid + "/0/0/0/256.png"))
             .then().assertThat().statusCode(200);
   }
 
@@ -342,7 +342,7 @@ public class VerticleIT {
     given().config(restAssuredConfig)
             .and().header(AUTHORIZATION, authorization)
             .and().accept(ContentType.JSON)
-            .when().delete(makeBaseURL("/a/designs/" + uuid))
+            .when().delete(makeBaseURL("/designs/" + uuid))
             .then().assertThat().statusCode(200)
             .and().contentType(ContentType.JSON)
             .and().body("uuid", notNullValue());
@@ -352,7 +352,7 @@ public class VerticleIT {
     return given().config(restAssuredConfig)
             .and().header(AUTHORIZATION, authorization)
             .and().accept("image/png")
-            .when().get(makeBaseURL("/a/designs/" + uuid + "/0/0/0/256.png"))
+            .when().get(makeBaseURL("/designs/" + uuid + "/0/0/0/256.png"))
             .then().assertThat().statusCode(200)
             .and().contentType("image/png")
             .and().extract().asByteArray();
@@ -363,7 +363,7 @@ public class VerticleIT {
     return given().config(restAssuredConfig)
             .and().header(AUTHORIZATION, authorization)
             .and().accept(ContentType.JSON)
-            .when().get(makeBaseURL("/a/designs"))
+            .when().get(makeBaseURL("/designs"))
             .then().assertThat().statusCode(200)
             .and().contentType(ContentType.JSON)
             .and().extract().body().as(DesignDocument[].class);
@@ -374,7 +374,7 @@ public class VerticleIT {
     return given().config(restAssuredConfig)
             .with().header(AUTHORIZATION, authorization)
             .and().accept(ContentType.JSON)
-            .when().get(makeBaseURL("/a/designs/" + uuid))
+            .when().get(makeBaseURL("/designs/" + uuid))
             .then().assertThat().statusCode(200).extract().jsonPath();
   }
 
@@ -385,7 +385,7 @@ public class VerticleIT {
             .and().contentType(ContentType.JSON)
             .and().accept(ContentType.JSON)
             .and().body(design)
-            .when().post(makeBaseURL("/a/designs"))
+            .when().post(makeBaseURL("/designs"))
             .then().assertThat().statusCode(201)
             .and().contentType(ContentType.JSON)
             .and().body("uuid", notNullValue())
@@ -399,7 +399,7 @@ public class VerticleIT {
             .and().contentType(ContentType.JSON)
             .and().accept(ContentType.JSON)
             .and().body(design)
-            .when().put(makeBaseURL("/a/designs/" + uuid))
+            .when().put(makeBaseURL("/designs/" + uuid))
             .then().assertThat().statusCode(200)
             .and().contentType(ContentType.JSON)
             .and().body("uuid", notNullValue())

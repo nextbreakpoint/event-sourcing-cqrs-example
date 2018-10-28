@@ -37,7 +37,7 @@ router.get('/designs.html', function(req, res, next) {
 
     req.pause();
 
-    axios.get(appConfig.designs_query_url, config)
+    axios.get(appConfig.api_url + '/designs', config)
         .then(function (response) {
             req.resume();
             if (response.status == 200) {
@@ -96,7 +96,7 @@ router.get('/designs/(:uuid).html', function(req, res, next) {
 
     req.pause();
 
-    axios.get(appConfig.designs_query_url + '/' + req.params.uuid, config)
+    axios.get(appConfig.api_url + '/designs/' + req.params.uuid, config)
         .then(function (response) {
             req.resume();
             if (response.status == 200) {
@@ -159,7 +159,7 @@ router.get('/designs/(:uuid)/(:zoom)/(:x)/(:y)/(:size).png', function(req, res, 
 
     req.pause();
 
-    axios.get(appConfig.designs_query_url + '/' + path, config)
+    axios.get(appConfig.api_url + '/designs/' + path, config)
         .then(function (response) {
             req.resume();
             if (response.status == 200) {

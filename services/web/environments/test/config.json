@@ -1,9 +1,5 @@
 {
   "web_url": "https://localhost:8080",
-  "auth_url": "https://localhost:9090/a/auth",
-  "accounts_url": "https://localhost:9090/a/accounts",
-  "designs_processor_url": "https://localhost:9090/p/designs",
-  "designs_command_url": "https://localhost:9090/c/designs",
-  "designs_query_url": "https://localhost:9090/q/designs",
-  "designs_sse_url": "https://localhost:9090/e/designs"
+  "api_url": "https://localhost:9090",
+  "sse_url": "https://localhost:9090"
 }

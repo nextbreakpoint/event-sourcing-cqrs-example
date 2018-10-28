@@ -11,20 +11,14 @@
   "client_truststore_secret": "secret",
 
   "client_verify_host": false,
+  "client_keep_alive": true,
 
-  "jwt_keystore_path": "secrets/keystore-auth.jceks",
-  "jwt_keystore_type": "jceks",
-  "jwt_keystore_secret": "secret",
+  "origin_pattern": "https?://localhost:.*",
 
-  "origin_pattern": "http?://localhost:.*",
-
-  "client_designs_sse_url": "http://${stub.host}:${stub.port}/e/designs",
-
-  "server_auth_url": "http://${stub.host}:${stub.port}/a/auth",
-  "server_accounts_url": "http://${stub.host}:${stub.port}/a/accounts",
-  "server_designs_query_url": "http://${stub.host}:${stub.port}/q/designs",
-
-  "csrf_secret": "tshirts",
+  "server_auth_url": "http://${stub.host}:${stub.port}/auth",
+  "server_accounts_url": "http://${stub.host}:${stub.port}/accounts",
+  "server_designs_query_url": "http://${stub.host}:${stub.port}/designs",
+  "server_designs_command_url": "http://${stub.host}:${stub.port}/designs",
 
   "graphite_reporter_enabled": false,
   "graphite_host": "localhost",

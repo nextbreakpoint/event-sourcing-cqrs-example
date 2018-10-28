@@ -2,26 +2,20 @@ package com.nextbreakpoint.shop.gateway;
 
 import com.nextbreakpoint.shop.common.graphite.GraphiteManager;
 import com.nextbreakpoint.shop.common.vertx.CORSHandlerFactory;
-import com.nextbreakpoint.shop.common.vertx.JWTProviderFactory;
-import com.nextbreakpoint.shop.common.vertx.ResponseHelper;
+import com.nextbreakpoint.shop.common.vertx.HttpClientFactory;
 import com.nextbreakpoint.shop.common.vertx.ServerUtil;
-import com.nextbreakpoint.shop.common.vertx.WebClientFactory;
-import com.nextbreakpoint.shop.gateway.handlers.UserHandler;
+import com.nextbreakpoint.shop.gateway.handlers.ProxyHandler;
 import io.vertx.core.Future;
 import io.vertx.core.Launcher;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.json.JsonObject;
 import io.vertx.rxjava.core.AbstractVerticle;
+import io.vertx.rxjava.core.http.HttpClient;
 import io.vertx.rxjava.core.http.HttpServer;
-import io.vertx.rxjava.ext.auth.jwt.JWTAuth;
 import io.vertx.rxjava.ext.web.Router;
-import io.vertx.rxjava.ext.web.client.WebClient;
-import io.vertx.rxjava.ext.web.handler.BodyHandler;
-import io.vertx.rxjava.ext.web.handler.CSRFHandler;
-import io.vertx.rxjava.ext.web.handler.CookieHandler;
 import io.vertx.rxjava.ext.web.handler.CorsHandler;
 import io.vertx.rxjava.ext.web.handler.LoggerHandler;
-import io.vertx.rxjava.ext.web.handler.TimeoutHandler;
 import rx.Single;
 
 import java.net.MalformedURLException;
@@ -31,12 +25,9 @@ import static com.nextbreakpoint.shop.common.model.Headers.AUTHORIZATION;
 import static com.nextbreakpoint.shop.common.model.Headers.CONTENT_TYPE;
 import static com.nextbreakpoint.shop.common.model.Headers.X_MODIFIED;
 import static com.nextbreakpoint.shop.common.model.Headers.X_XSRF_TOKEN;
-import static com.nextbreakpoint.shop.common.vertx.ServerUtil.UUID_REGEXP;
 import static java.util.Arrays.asList;
 
 public class Verticle extends AbstractVerticle {
-    private static final String TEMPLATES = "templates";
-
     private HttpServer server;
 
     public static void main(String[] args) {
@@ -72,34 +63,21 @@ public class Verticle extends AbstractVerticle {
 
         final Integer port = config.getInteger("host_port");
 
-        final String secret = config.getString("csrf_secret");
-
         final String originPattern = config.getString("origin_pattern");
-
-        final JWTAuth jwtProvider = JWTProviderFactory.create(vertx, config);
-
-        final WebClient accountsClient = WebClientFactory.create(vertx, config.getString("server_accounts_url"), config);
 
         final Router mainRouter = Router.router(vertx);
 
         mainRouter.route().handler(LoggerHandler.create());
-        mainRouter.route().handler(CookieHandler.create());
-        mainRouter.route().handler(BodyHandler.create());
-        mainRouter.route().handler(TimeoutHandler.create(30000));
 
-        final CorsHandler corsHandler = CORSHandlerFactory.createWithAll(originPattern, asList(AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN, X_MODIFIED), asList(CONTENT_TYPE, X_XSRF_TOKEN, X_MODIFIED));
+//        final CorsHandler corsHandler = CORSHandlerFactory.createWithAll(originPattern, asList(AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN, X_MODIFIED), asList(CONTENT_TYPE, X_XSRF_TOKEN, X_MODIFIED));
+//
+//        mainRouter.route("/*").handler(corsHandler);
 
-        mainRouter.route("/*").handler(corsHandler);
+        configureAuthRoute(config, mainRouter);
 
-        mainRouter.route("/*").handler(CSRFHandler.create(secret));
+        configureAccountRoute(config, mainRouter);
 
-        mainRouter.route("/*").handler(UserHandler.create(jwtProvider, accountsClient));
-
-        mainRouter.getWithRegex("/watch/designs/([0-9]+)/" + UUID_REGEXP)
-                .handler(routingContext -> ResponseHelper.redirectToURL(routingContext, () -> config.getString("client_designs_sse_url") + "/" + routingContext.request().getParam("param0") + "/" + routingContext.request().getParam("param1")));
-
-        mainRouter.getWithRegex("/watch/designs/([0-9]+)")
-                .handler(routingContext -> ResponseHelper.redirectToURL(routingContext, () -> config.getString("client_designs_sse_url") + "/" + routingContext.request().getParam("param0")));
+        configureDesignsRoute(config, mainRouter);
 
         final HttpServerOptions options = ServerUtil.makeServerOptions(config);
 
@@ -108,5 +86,79 @@ public class Verticle extends AbstractVerticle {
                 .listen(port);
 
         return null;
+    }
+
+    private void configureAuthRoute(JsonObject config, Router mainRouter) throws MalformedURLException {
+        final Router authRouter = Router.router(vertx);
+
+        final HttpClient authClient = HttpClientFactory.create(vertx, config.getString("server_auth_url"), config);
+
+        authRouter.route("/*")
+                .method(HttpMethod.GET)
+                .handler(new ProxyHandler(authClient));
+
+        authRouter.route("/*")
+                .method(HttpMethod.OPTIONS)
+                .handler(new ProxyHandler(authClient));
+
+        mainRouter.mountSubRouter("/auth", authRouter);
+    }
+
+    private void configureAccountRoute(JsonObject config, Router mainRouter) throws MalformedURLException {
+        final Router accountsRouter = Router.router(vertx);
+
+        final HttpClient accountsClient = HttpClientFactory.create(vertx, config.getString("server_accounts_url"), config);
+
+        accountsRouter.route("/*")
+                .method(HttpMethod.GET)
+                .handler(new ProxyHandler(accountsClient));
+
+        accountsRouter.route("/*")
+                .method(HttpMethod.OPTIONS)
+                .handler(new ProxyHandler(accountsClient));
+
+        accountsRouter.route("/*")
+                .method(HttpMethod.POST)
+                .handler(new ProxyHandler(accountsClient));
+
+        mainRouter.mountSubRouter("/accounts", accountsRouter);
+    }
+
+    private void configureDesignsRoute(JsonObject config, Router mainRouter) throws MalformedURLException {
+        final Router designsRouter = Router.router(vertx);
+
+        final HttpClient designsCommandClient = HttpClientFactory.create(vertx, config.getString("server_designs_command_url"), config);
+
+        final HttpClient designsQueryClient = HttpClientFactory.create(vertx, config.getString("server_designs_query_url"), config);
+
+        designsRouter.route("/*")
+                .method(HttpMethod.OPTIONS)
+                .handler(new ProxyHandler(designsQueryClient));
+
+        designsRouter.route("/*")
+                .method(HttpMethod.HEAD)
+                .handler(new ProxyHandler(designsQueryClient));
+
+        designsRouter.route("/*")
+                .method(HttpMethod.GET)
+                .handler(new ProxyHandler(designsQueryClient));
+
+        designsRouter.route("/*")
+                .method(HttpMethod.POST)
+                .handler(new ProxyHandler(designsCommandClient));
+
+        designsRouter.route("/*")
+                .method(HttpMethod.PUT)
+                .handler(new ProxyHandler(designsCommandClient));
+
+        designsRouter.route("/*")
+                .method(HttpMethod.PATCH)
+                .handler(new ProxyHandler(designsCommandClient));
+
+        designsRouter.route("/*")
+                .method(HttpMethod.DELETE)
+                .handler(new ProxyHandler(designsCommandClient));
+
+        mainRouter.mountSubRouter("/designs", designsRouter);
     }
 }

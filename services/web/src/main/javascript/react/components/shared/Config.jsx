@@ -28,23 +28,7 @@ class Config extends React.Component {
             withCredentials: true
         }
 
-        component.props.handleLoadConfig()
-
-        axios.get('/config.json', config)
-            .then(function (response) {
-                if (response.status == 200) {
-                    console.log("Config loaded")
-                    let config = response.data
-                    component.props.handleLoadConfigSuccess(config)
-                } else {
-                    console.log("Can't load config: status = " + response.status)
-                    component.props.handleLoadConfigFailure("Can't load config")
-                }
-            })
-            .catch(function (error) {
-                console.log("Can't load config: " + error)
-                component.props.handleLoadConfigFailure("Can't load config")
-            })
+        component.props.handleLoadConfigSuccess(window.config)
     }
 
     render() {

@@ -347,7 +347,7 @@ let EnhancedTable = class EnhancedTable extends React.Component {
                                 }}
                               >
                             <a href={"/admin/designs/" + n.uuid + ".html"}>
-                                <img className={classes.image} width="128" height="128" src={config.designs_query_url + "/" + n.uuid + "/0/0/0/256.png?t=" + timestamp}/>
+                                <img className={classes.image} width="128" height="128" src={config.api_url + "/designs/" + n.uuid + "/0/0/0/256.png?t=" + n.checksum}/>
                             </a>
                         </ButtonBase>
                       </TableCell>

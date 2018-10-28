@@ -38,7 +38,7 @@ class Account extends React.Component {
 
         component.props.handleLoadAccount()
 
-        axios.get(component.props.config.accounts_url + '/me', config)
+        axios.get(component.props.config.api_url + '/accounts/me', config)
             .then(function (response) {
                 if (response.status == 200) {
                     console.log("Account loaded")

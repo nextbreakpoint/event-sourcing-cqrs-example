@@ -36,7 +36,7 @@ let Designs = class Designs extends React.Component {
 
         try {
             if (typeof(EventSource) !== "undefined") {
-                var source = new EventSource(component.props.config.designs_sse_url + "/" + timestamp, { withCredentials: true })
+                var source = new EventSource(component.props.config.sse_url + "/watch/designs/" + timestamp, { withCredentials: true })
 
                 source.onerror = function(error) {
                    console.log(error)
@@ -74,7 +74,7 @@ let Designs = class Designs extends React.Component {
 
         component.props.handleLoadDesigns()
 
-        axios.get(component.props.config.designs_query_url, config)
+        axios.get(component.props.config.api_url + '/designs', config)
             .then(function (response) {
                 if (response.status == 200) {
                     console.log("Designs loaded")

@@ -30,6 +30,7 @@ import static com.nextbreakpoint.shop.common.model.ContentType.APPLICATION_JSON;
 import static com.nextbreakpoint.shop.common.model.Headers.ACCEPT;
 import static com.nextbreakpoint.shop.common.model.Headers.AUTHORIZATION;
 import static com.nextbreakpoint.shop.common.model.Headers.CONTENT_TYPE;
+import static com.nextbreakpoint.shop.common.model.Headers.X_TRACE_ID;
 import static com.nextbreakpoint.shop.common.vertx.Authentication.NULL_USER_UUID;
 
 public class GitHubSigninHandler implements Handler<RoutingContext> {
@@ -104,6 +105,7 @@ public class GitHubSigninHandler implements Handler<RoutingContext> {
 
         accountsClient.get("/accounts")
                 .putHeader(AUTHORIZATION, Authentication.makeAuthorization(accessToken))
+                .putHeader(X_TRACE_ID, routingContext.get("request-trace-id"))
                 .addQueryParam("email", userEmail)
                 .rxSend()
                 .subscribe(response -> handleFoundAccount(routingContext, redirectTo, userEmail, accessToken, oauthAccessToken, response), err -> routingContext.fail(Failure.authenticationError(err)));
@@ -153,6 +155,7 @@ public class GitHubSigninHandler implements Handler<RoutingContext> {
                 .putHeader(AUTHORIZATION, Authentication.makeAuthorization(accessToken))
                 .putHeader(CONTENT_TYPE, APPLICATION_JSON)
                 .putHeader(ACCEPT, APPLICATION_JSON)
+                .putHeader(X_TRACE_ID, routingContext.get("request-trace-id"))
                 .rxSendJsonObject(makeAccount(userEmail, userInfo))
                 .subscribe(response -> handleAccount(routingContext, redirectTo, response, "Cannot create account"), err -> routingContext.fail(Failure.authenticationError(err)));
     }
@@ -161,6 +164,7 @@ public class GitHubSigninHandler implements Handler<RoutingContext> {
         accountsClient.get("/accounts/" + accounts.getString(0))
                 .putHeader(AUTHORIZATION, Authentication.makeAuthorization(accessToken))
                 .putHeader(ACCEPT, APPLICATION_JSON)
+                .putHeader(X_TRACE_ID, routingContext.get("request-trace-id"))
                 .rxSend()
                 .subscribe(response -> handleAccount(routingContext, redirectTo, response, "Cannot fetch account"), err -> routingContext.fail(Failure.authenticationError(err)));
     }

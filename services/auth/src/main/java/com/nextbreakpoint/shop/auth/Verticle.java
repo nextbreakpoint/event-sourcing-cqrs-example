@@ -4,6 +4,7 @@ import com.nextbreakpoint.shop.auth.handlers.GitHubSigninHandler;
 import com.nextbreakpoint.shop.auth.handlers.GitHubSignoutHandler;
 import com.nextbreakpoint.shop.common.graphite.GraphiteManager;
 import com.nextbreakpoint.shop.common.vertx.CORSHandlerFactory;
+import com.nextbreakpoint.shop.common.vertx.MDCHandler;
 import com.nextbreakpoint.shop.common.vertx.ResponseHelper;
 import com.nextbreakpoint.shop.common.vertx.ServerUtil;
 import io.vertx.core.Future;
@@ -11,6 +12,7 @@ import io.vertx.core.Handler;
 import io.vertx.core.Launcher;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.handler.LoggerFormat;
 import io.vertx.rxjava.core.AbstractVerticle;
 import io.vertx.rxjava.core.http.HttpServer;
 import io.vertx.rxjava.ext.web.Router;
@@ -70,7 +72,8 @@ public class Verticle extends AbstractVerticle {
 
         final Router mainRouter = Router.router(vertx);
 
-        mainRouter.route().handler(LoggerHandler.create());
+        mainRouter.route().handler(MDCHandler.create());
+        mainRouter.route().handler(LoggerHandler.create(true, LoggerFormat.DEFAULT));
         mainRouter.route().handler(CookieHandler.create());
         mainRouter.route().handler(BodyHandler.create());
 

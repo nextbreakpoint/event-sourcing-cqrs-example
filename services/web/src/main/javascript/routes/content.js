@@ -52,19 +52,19 @@ router.get('/designs.html', function(req, res, next) {
                     modified: design.modified
                 }))
                 res.render('content/designs', {
-                    config: JSON.stringify(appConfig),
+                    config: appConfig,
                     layout: 'bootstrap',
                     title: 'Designs',
-                    url: '',
+                    url: appConfig.web_url,
                     designs: designs
                 });
             } else {
                 console.log("Can't load designs: status = " + content.status)
                 res.render('content/designs', {
-                    config: JSON.stringify(appConfig),
+                    config: appConfig,
                     layout: 'bootstrap',
                     title: 'Designs',
-                    url: '',
+                    url: appConfig.web_url,
                     designs: []
                 });
             }
@@ -73,10 +73,10 @@ router.get('/designs.html', function(req, res, next) {
             req.resume();
             console.log("Can't load designs " + error)
             res.render('content/designs', {
-                config: JSON.stringify(appConfig),
+                config: appConfig,
                 layout: 'bootstrap',
-                itle: 'Designs',
-                url: '',
+                title: 'Designs',
+                url: appConfig.web_url,
                 designs: []
             });
         })
@@ -112,19 +112,20 @@ router.get('/designs/(:uuid).html', function(req, res, next) {
                     modified: design.modified
                 };
                 res.render('content/preview', {
-                    config: JSON.stringify(appConfig),
+                    config: appConfig,
                     layout: 'bootstrap',
                     title: 'Designs | ' + req.params.uuid,
-                    url: '', uuid: req.params.uuid,
+                    url: appConfig.web_url,
+                    uuid: req.params.uuid,
                     design: design
                 });
             } else {
                 console.log("Can't load design: status = " + content.status)
                 res.render('content/preview', {
-                    config: JSON.stringify(appConfig),
+                    config: appConfig,
                     layout: 'bootstrap',
                     title: 'Designs | ' + req.params.uuid,
-                    url: '',
+                    url: appConfig.web_url,
                     uuid: req.params.uuid
                 });
             }
@@ -133,10 +134,10 @@ router.get('/designs/(:uuid).html', function(req, res, next) {
             req.resume();
             console.log("Can't load design " + error)
             res.render('content/preview', {
-                config: JSON.stringify(appConfig),
+                config: appConfig,
                 layout: 'bootstrap',
                 title: 'Designs | ' + req.params.uuid,
-                url: '',
+                url: appConfig.web_url,
                 uuid: req.params.uuid
             });
         })

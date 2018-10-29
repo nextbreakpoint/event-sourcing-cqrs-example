@@ -1,31 +1,16 @@
-<body>
-    <div class="container">
-        <div class="row">
-            <div class="col-sm-12">
-                <header>
-                </header>
-            </div>
+<body class="container-fluid">
+    <header class="col-sm-12"></header>
+    {{#each designs}}
+    <section class="col-sm-12 text-center element">
+        <div class="text-left">
+            <a href="{{location}}"><img class="element-image" id="{{uuid}}" src="{{imageUrl}}?t={{checksum}}" alt="{{location}}"/></a>
         </div>
-        <div class="row">
-            <div class="col-sm-12">
-                <section class="designs-grid-container anchor-left anchor-right">
-                    <div class="designs-grid-elements">
-                        {{#each designs}}
-                        <div class="designs-grid-element">
-                            <a href="{{location}}"><img class="designs-grid-element-image" id="{{uuid}}" src="{{imageUrl}}?t={{checksum}}" alt="{{location}}"/></a>
-                            <a href="{{location}}"><span class="designs-grid-element-label">{{uuid}}</span></a>
-                        </div>
-                        {{/each}}
-                    <div>
-                </section>
-            </div>
+        <div class="text-rigth">
+            <a href="{{location}}"><span class="element-label">{{uuid}}</span></a>
         </div>
-        <div class="row">
-            <div class="col-sm-12">
-                <footer>
-                    <p>Powered by NextBreakpoint</p>
-                </footer>
-            </div>
-        </div>
-    <div>
+    </section>
+    {{/each}}
+    <footer class="col-sm-12">
+        <p>Powered by NextBreakpoint</p>
+    </footer>
 </body>

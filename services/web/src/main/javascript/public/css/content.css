@@ -10,28 +10,22 @@ header {
 footer {
     position: relative;
     text-align: center;
-    padding-top: 10%;
+    padding-top: 5%;
 }
 
-.designs-grid-container {
-    position: relative;
-    text-align: center;
-}
-
-.designs-grid-elements {
-    position: relative;
+.element {
+    padding-top: 5%;
+    padding-bottom: 5%;
     display: inline-block;
-    text-align: center;
 }
 
-.designs-grid-element {
-    position: relative;
-    display: block;
-    margin-top: 10%;
-    min-width: 1024px;
+.element div {
+    width: 45%;
+    max-width: 400px;
+    display: inline-block;
 }
 
-.designs-grid-element-image {
+.element-image {
     position: relative;
     display: inline-block;
     width: 256px;
@@ -40,31 +34,8 @@ footer {
     border: 1pt solid #e0e0e0;
 }
 
-.designs-grid-element-label {
+.element-label {
     padding: 3% 0 3% 3%;
-}
-
-.design-container {
-    position: relative;
-    text-align: center;
-    padding: 5% 2% 5% 2%;
-}
-
-.design-image {
-    position: relative;
-    display: inline-block;
-    text-align: center;
-    width: 100%;
-    border-radius: 1%;
-    border: 1.5pt solid #e0e0e0;
-}
-
-.design-script {
-    padding: 3%;
-    border-radius: 2%;
-    border: 1pt solid #e0e0e0;
-    margin: 2%;
-    text-align: left;
 }
 
 .preview-container {
@@ -73,6 +44,7 @@ footer {
     text-align: center;
     width: 100%;
     max-height: 1024px;
+    padding: 0;
 }
 
 .preview {
@@ -81,34 +53,6 @@ footer {
     position: relative;
     margin: 0;
     overflow: hidden;
-}
-
-.anchor-left {
-    left: 0;
-}
-
-.anchor-right {
-    right: 0;
-}
-
-.anchor-top {
-    top: 0;
-}
-
-.anchor-bottom {
-    bottom: 0;
-}
-
-.left-align {
-    text-align: left;
-}
-
-.center-align {
-    text-align: center;
-}
-
-.right-align {
-    text-align: right;
 }
 
 a, a:active, a:hover, a:visited {
@@ -123,3 +67,39 @@ a, a:active, a:hover, a:visited {
     text-align: center;
 }
 
+.container-fluid {
+    padding: 0;
+}
+
+@media (max-width: 800px) {
+    .element-image {
+        width: 200px;
+        height: 200px;
+    }
+
+    .element-label {
+        font-size: 0.8em;
+    }
+}
+
+@media (max-width: 600px) {
+    .element-image {
+        width: 128px;
+        height: 128px;
+    }
+
+    .element-label {
+        font-size: 0.6em;
+    }
+}
+
+@media (max-width: 300px) {
+    .element-image {
+        width: 64px;
+        height: 64px;
+    }
+
+    .element-label {
+        font-size: 0.4em;
+    }
+}

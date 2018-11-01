@@ -21,6 +21,7 @@ import java.net.URL;
 import java.util.UUID;
 
 import static com.jayway.restassured.RestAssured.given;
+import static com.nextbreakpoint.shop.common.model.Headers.X_TRACE_ID;
 import static com.xebialabs.restito.builder.stub.StubHttp.whenHttp;
 import static com.xebialabs.restito.builder.verify.VerifyHttp.verifyHttp;
 import static com.xebialabs.restito.semantics.Action.contentType;
@@ -92,8 +93,8 @@ public class VerticleIT {
   }
 
   @Test
-  @DisplayName("callback should create an account and redirect to designs when authenticated user doesn't have an account")
-  public void callbackShouldCreateAnAccountAndRedirectToDesignsWhenAuthenticatedUserDoNotHaveAnAccount() throws MalformedURLException {
+  @DisplayName("should create an account and redirect to designs when authenticated user doesn't have an account")
+  public void shouldCreateAnAccountAndRedirectToDesignsWhenAuthenticatedUserDoNotHaveAnAccount() throws MalformedURLException {
     whenHttp(stubServer)
             .match(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"access_token\":\"abcdef\"}"));
@@ -107,11 +108,11 @@ public class VerticleIT {
             .then(status(HttpStatus.OK_200), stringContent("[{\"email\":\"test@localhost\", \"primary\":true}]"));
 
     whenHttp(stubServer)
-            .match(get(ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"))
+            .match(get(ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"), withHeader(X_TRACE_ID, "n/a"))
             .then(status(HttpStatus.OK_200), stringContent("[]"));
 
     whenHttp(stubServer)
-            .match(post(ACCOUNTS_PATH), withPostBody(), withHeader("Authorization"))
+            .match(post(ACCOUNTS_PATH), withPostBody(), withHeader("Authorization"), withHeader(X_TRACE_ID, "n/a"))
             .then(status(HttpStatus.CREATED_201), stringContent("{\"role\":\"guest\", \"uuid\":\"" + SOME_UUID + "\"}"));
 
     given().config(restAssuredConfig)
@@ -124,12 +125,13 @@ public class VerticleIT {
     verifyHttp(stubServer).once(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
             .then().once(get(OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
             .then().once(get(OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"))
-            .then().once(post(ACCOUNTS_PATH), withPostBody(), withHeader("authorization"));
+//            .then().once(get(ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"), withHeader(X_TRACE_ID, "n/a"))
+            .then().once(post(ACCOUNTS_PATH), withPostBody(), withHeader("authorization"), withHeader(X_TRACE_ID, "n/a"));
   }
 
   @Test
-  @DisplayName("callback should not create an account and redirect to designs when authenticated user already has an account")
-  public void callbackShouldNotCreateAnAccountAndRedirectToDesignsWhenAuthenticatedUserAlreadyHasAnAccount() throws MalformedURLException {
+  @DisplayName("should not create an account and redirect to designs when authenticated user already has an account")
+  public void shouldNotCreateAnAccountAndRedirectToDesignsWhenAuthenticatedUserAlreadyHasAnAccount() throws MalformedURLException {
     whenHttp(stubServer)
             .match(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"access_token\":\"abcdef\"}"));
@@ -161,8 +163,8 @@ public class VerticleIT {
   }
 
   @Test
-  @DisplayName("callback should redirect to error 500 when it can't retrieve oauth data")
-  public void callbackShouldRedirectToError403WhenItCannotRetrieveOAuthData() throws MalformedURLException {
+  @DisplayName("should redirect to error 500 when it can't retrieve oauth data")
+  public void shouldRedirectToError403WhenItCannotRetrieveOAuthData() throws MalformedURLException {
     whenHttp(stubServer)
             .match(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
             .then(status(HttpStatus.INTERNAL_SERVER_ERROR_500));
@@ -179,8 +181,8 @@ public class VerticleIT {
   }
 
   @Test
-  @DisplayName("callback should redirect to error 403 when it can't retrieve user data")
-  public void callbackShouldRedirectToError403WhenItCannotRetrieveUserData() throws MalformedURLException {
+  @DisplayName("should redirect to error 403 when it can't retrieve user data")
+  public void shouldRedirectToError403WhenItCannotRetrieveUserData() throws MalformedURLException {
     whenHttp(stubServer)
             .match(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"access_token\":\"abcdef\"}"));
@@ -203,8 +205,8 @@ public class VerticleIT {
   }
 
   @Test
-  @DisplayName("callback should redirect to error 403 when it can't retrieve user account")
-  public void callbackShouldRedirectToError403WhenItCannotRetrieveUserAccount() throws MalformedURLException {
+  @DisplayName("should redirect to error 403 when it can't retrieve user account")
+  public void shouldRedirectToError403WhenItCannotRetrieveUserAccount() throws MalformedURLException {
     whenHttp(stubServer)
             .match(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"access_token\":\"abcdef\"}"));
@@ -232,8 +234,8 @@ public class VerticleIT {
   }
 
   @Test
-  @DisplayName("callback should redirect to error 500 when it retrieves a malformed list of accounts")
-  public void callbackShouldRedirectToError500WhenItRetrievesAMalformedListOfAcccounts() throws MalformedURLException {
+  @DisplayName("should redirect to error 500 when it retrieves a malformed list of accounts")
+  public void shouldRedirectToError500WhenItRetrievesAMalformedListOfAcccounts() throws MalformedURLException {
     whenHttp(stubServer)
             .match(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"access_token\":\"abcdef\"}"));
@@ -261,8 +263,8 @@ public class VerticleIT {
   }
 
   @Test
-  @DisplayName("callback should redirect to error 403 when it can't create an account")
-  public void callbackShouldRedirectToError403WhenItCannotCreateAnAccount() throws MalformedURLException {
+  @DisplayName("should redirect to error 403 when it can't create an account")
+  public void shouldRedirectToError403WhenItCannotCreateAnAccount() throws MalformedURLException {
     whenHttp(stubServer)
             .match(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"access_token\":\"abcdef\"}"));
@@ -297,8 +299,8 @@ public class VerticleIT {
   }
 
   @Test
-  @DisplayName("callback should redirect to error 403 when it can't retrieve an account")
-  public void callbackShouldRedirectToError403WhenItCannotRetrieveAnAccount() throws MalformedURLException {
+  @DisplayName("should redirect to error 403 when it can't retrieve an account")
+  public void shouldRedirectToError403WhenItCannotRetrieveAnAccount() throws MalformedURLException {
     whenHttp(stubServer)
             .match(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"access_token\":\"abcdef\"}"));
@@ -334,8 +336,8 @@ public class VerticleIT {
   }
 
   @Test
-  @DisplayName("callback should redirect to error 403 when it retrieves an invalid account")
-  public void callbackShouldRedirectToError403WhenItRetrievesAnInvalidAccount() throws MalformedURLException {
+  @DisplayName("should redirect to error 403 when it retrieves an invalid account")
+  public void shouldRedirectToError403WhenItRetrievesAnInvalidAccount() throws MalformedURLException {
     whenHttp(stubServer)
             .match(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"access_token\":\"abcdef\"}"));
@@ -378,8 +380,8 @@ public class VerticleIT {
   }
 
   @Test
-  @DisplayName("callback should redirect to error 500 when it retrieves a malformed account")
-  public void callbackShouldRedirectToError500WhenItRetrievesAMalformedAccount() throws MalformedURLException {
+  @DisplayName("should redirect to error 500 when it retrieves a malformed account")
+  public void shouldRedirectToError500WhenItRetrievesAMalformedAccount() throws MalformedURLException {
     whenHttp(stubServer)
             .match(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"access_token\":\"abcdef\"}"));
@@ -411,8 +413,8 @@ public class VerticleIT {
   }
 
   @Test
-  @DisplayName("callback should redirect to error 500 when it retrieves malformed user data")
-  public void callbackShouldRedirectToError500WhenItRetrievesMalformedUserData() throws MalformedURLException {
+  @DisplayName("should redirect to error 500 when it retrieves malformed user data")
+  public void shouldRedirectToError500WhenItRetrievesMalformedUserData() throws MalformedURLException {
     whenHttp(stubServer)
             .match(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"access_token\":\"abcdef\"}"));
@@ -435,8 +437,8 @@ public class VerticleIT {
   }
 
   @Test
-  @DisplayName("callback should redirect to error 403 when it retrieves malformed oauth response")
-  public void callbackShouldRedirectToError403WhenItRetrievesMalformedOAuthResponse() throws MalformedURLException {
+  @DisplayName("should redirect to error 403 when it retrieves malformed oauth response")
+  public void shouldRedirectToError403WhenItRetrievesMalformedOAuthResponse() throws MalformedURLException {
     whenHttp(stubServer)
             .match(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{}"));
@@ -450,5 +452,43 @@ public class VerticleIT {
 
     verifyHttp(stubServer).once(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
             .then().never(get(OAUTH_USER_EMAILS_PATH));
+  }
+
+  @Test
+  @DisplayName("should propagate the trace id when creating an account")
+  public void shouldPropagateTheTraceIdWhenCreatingAnAccount() throws MalformedURLException {
+    whenHttp(stubServer)
+            .match(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
+            .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"access_token\":\"abcdef\"}"));
+
+    whenHttp(stubServer)
+            .match(get(OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"))
+            .then(status(HttpStatus.OK_200), stringContent("{\"name\":\"test\"}"));
+
+    whenHttp(stubServer)
+            .match(get(OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
+            .then(status(HttpStatus.OK_200), stringContent("[{\"email\":\"test@localhost\", \"primary\":true}]"));
+
+    whenHttp(stubServer)
+            .match(get(ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"), withHeader(X_TRACE_ID, "xxx"))
+            .then(status(HttpStatus.OK_200), stringContent("[]"));
+
+    whenHttp(stubServer)
+            .match(post(ACCOUNTS_PATH), withPostBody(), withHeader("Authorization"), withHeader(X_TRACE_ID, "xxx"))
+            .then(status(HttpStatus.CREATED_201), stringContent("{\"role\":\"guest\", \"uuid\":\"" + SOME_UUID + "\"}"));
+
+    given().config(restAssuredConfig)
+            .with().param("code", "xxx")
+            .and().param("state", "/auth/signin/content/designs")
+            .and().header(X_TRACE_ID, "xxx")
+            .when().get(makeBaseURL("/auth/callback"))
+            .then().assertThat().statusCode(303)
+            .and().header("Location", startsWith("https://localhost:8080/content/designs"));
+
+    verifyHttp(stubServer).once(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
+            .then().once(get(OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
+            .then().once(get(OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"))
+//            .then().once(get(ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"), withHeader(X_TRACE_ID, "xxx"))
+            .then().once(post(ACCOUNTS_PATH), withPostBody(), withHeader("authorization"), withHeader(X_TRACE_ID, "xxx"));
   }
 }

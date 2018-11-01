@@ -23,6 +23,7 @@ public class MDCHandler implements Handler<RoutingContext> {
                 if (contextTraceId != null) {
                     MDC.put("request-trace-id", contextTraceId);
                 } else {
+                    context.put("request-trace-id", "n/a");
                     MDC.put("request-trace-id", "n/a");
                 }
             }

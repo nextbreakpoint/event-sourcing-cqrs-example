@@ -42,7 +42,7 @@ router.get('/designs.html', function(req, res, next) {
             req.resume();
             if (response.status == 200) {
                 if (req.app.get('env') === 'development') {
-                    console.log(JSON.stringify(response.data));
+                    console.log("designs = " + JSON.stringify(response.data));
                 }
                 let designs = response.data.map((design) => ({
                     uuid: design.uuid,
@@ -101,7 +101,7 @@ router.get('/designs/(:uuid).html', function(req, res, next) {
             req.resume();
             if (response.status == 200) {
                 if (req.app.get('env') === 'development') {
-                    console.log(JSON.stringify(response.data));
+                    console.log("design = " + JSON.stringify(response.data));
                 }
                 let design = response.data;
                 design = {

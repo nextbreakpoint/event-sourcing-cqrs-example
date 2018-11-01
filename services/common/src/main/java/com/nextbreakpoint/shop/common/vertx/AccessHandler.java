@@ -32,7 +32,7 @@ public class AccessHandler implements Handler<RoutingContext> {
     }
 
     private void onAuthenticationError(RoutingContext routingContext, Throwable err) {
-        logger.info("Authentication error", err);
+        logger.debug("Authentication error", err);
         onAccessDenied.handle(routingContext);
     }
 

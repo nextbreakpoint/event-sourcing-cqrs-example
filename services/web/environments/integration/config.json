@@ -1,5 +1,4 @@
 {
   "web_url": "https://localhost:8080",
-  "api_url": "https://${stub.host}:${stub.port}",
-  "sse_url": "https://${stub.host}:${stub.port}"
+  "api_url": "https://${stub.host}:${stub.port}"
 }

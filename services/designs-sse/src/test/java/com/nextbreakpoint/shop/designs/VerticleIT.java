@@ -118,7 +118,7 @@ public class VerticleIT {
         final String[] open = new String[]{null};
         final String[] update = new String[]{null};
 
-        eventSource.connect("/watch/designs/0", null, result -> {
+        eventSource.connect("/designs/0", null, result -> {
             connected[0] = result.succeeded();
             producer.rxWrite(createKafkaRecord(designChangedMessage)).subscribe();
         }).onMessage(sseMessage -> {
@@ -167,7 +167,7 @@ public class VerticleIT {
         final String[] open = new String[]{null};
         final String[] update = new String[]{null};
 
-        eventSource.connect("/watch/designs/0/" + designId, null, result -> {
+        eventSource.connect("/designs/0/" + designId, null, result -> {
             connected[0] = result.succeeded();
             producer.rxWrite(createKafkaRecord(designChangedMessage)).subscribe();
         }).onMessage(sseMessage -> {

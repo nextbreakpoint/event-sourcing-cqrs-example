@@ -1,5 +1,4 @@
 {
   "web_url": "https://localhost",
-  "api_url": "https://localhost",
-  "sse_url": "https://localhost"
+  "api_url": "https://localhost"
 }

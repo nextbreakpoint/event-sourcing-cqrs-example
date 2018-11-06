@@ -1,5 +1,4 @@
 {
   "web_url": "https://localhost:8080",
-  "api_url": "https://localhost:4000",
-  "sse_url": "https://localhost:3041"
+  "api_url": "https://localhost:4000"
 }

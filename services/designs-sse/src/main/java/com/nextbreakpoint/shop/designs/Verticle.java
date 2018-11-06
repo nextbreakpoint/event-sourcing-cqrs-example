@@ -29,7 +29,6 @@ import io.vertx.rxjava.ext.web.handler.BodyHandler;
 import io.vertx.rxjava.ext.web.handler.CookieHandler;
 import io.vertx.rxjava.ext.web.handler.CorsHandler;
 import io.vertx.rxjava.ext.web.handler.LoggerHandler;
-import io.vertx.rxjava.ext.web.handler.TimeoutHandler;
 import io.vertx.rxjava.kafka.client.consumer.KafkaConsumer;
 import io.vertx.rxjava.kafka.client.consumer.KafkaConsumerRecord;
 import rx.Single;
@@ -104,7 +103,7 @@ public class Verticle extends AbstractVerticle {
 
         final CorsHandler corsHandler = CORSHandlerFactory.createWithAll(originPattern, asList(AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN, X_MODIFIED), asList(CONTENT_TYPE, X_XSRF_TOKEN, X_MODIFIED));
 
-        mainRouter.route("/watch/designs/*").handler(corsHandler);
+        mainRouter.route("/designs/*").handler(corsHandler);
 
         final Handler<RoutingContext> onAccessDenied = routingContext -> routingContext.fail(Failure.accessDenied("Authorisation failed"));
 
@@ -112,10 +111,10 @@ public class Verticle extends AbstractVerticle {
 
         final Handler eventHandler = new AccessHandler(jwtProvider, EventsHandler.create(vertx), onAccessDenied, asList(ANONYMOUS, ADMIN, GUEST));
 
-        mainRouter.getWithRegex("/watch/designs/([0-9]+)/" + UUID_REGEXP)
+        mainRouter.getWithRegex("/designs/([0-9]+)/" + UUID_REGEXP)
                 .handler(eventHandler);
 
-        mainRouter.getWithRegex("/watch/designs/([0-9]+)")
+        mainRouter.getWithRegex("/designs/([0-9]+)")
                 .handler(eventHandler);
 
         final Map<String, Handler<Message>> handlers = new HashMap<>();

@@ -11,10 +11,10 @@ import java.util.Objects;
 public class WatchHandler implements Handler<RoutingContext> {
     private static final Logger logger = LoggerFactory.getLogger(WatchHandler.class.getName());
 
-    private final String url;
+    private final String watchURL;
 
-    public WatchHandler(String url) {
-        this.url = Objects.requireNonNull(url);
+    public WatchHandler(String watchURL) {
+        this.watchURL = Objects.requireNonNull(watchURL);
     }
 
     @Override
@@ -27,6 +27,10 @@ public class WatchHandler implements Handler<RoutingContext> {
 
         // we should select the server according to user and resource
 
-        ResponseHelper.redirectToURL(context, () -> url + "/" + context.request().uri().substring("/watch/".length()));
+        final String resource = context.request().uri().substring("/watch/".length());
+
+        logger.info("Redirect watch to resource " + watchURL + "/" + resource);
+
+        ResponseHelper.redirectToURL(context, () -> watchURL + "/" + resource);
     }
 }

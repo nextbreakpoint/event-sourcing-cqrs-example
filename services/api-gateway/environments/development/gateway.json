@@ -13,12 +13,17 @@
   "client_verify_host": false,
   "client_keep_alive": true,
 
+  "jwt_keystore_path": "../secrets/keystore-auth.jceks",
+  "jwt_keystore_type": "jceks",
+  "jwt_keystore_secret": "secret",
+
   "origin_pattern": "https?://localhost:.*",
 
   "server_auth_url": "https://localhost:3000/a/auth",
   "server_accounts_url": "https://localhost:3002/accounts",
   "server_designs_query_url": "https://localhost:3021/designs",
   "server_designs_command_url": "https://localhost:3031/designs",
+  "server_designs_sse_url": "https://localhost:3041/designs",
 
   "graphite_reporter_enabled": false,
   "graphite_host": "localhost",

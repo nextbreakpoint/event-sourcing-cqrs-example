@@ -19,16 +19,7 @@ import axios from 'axios'
 
 class Config extends React.Component {
     componentDidMount = () => {
-        console.log("Loading config...")
-
-        let component = this
-
-        let config = {
-            timeout: 5000,
-            withCredentials: true
-        }
-
-        component.props.handleLoadConfigSuccess(window.config)
+        this.props.handleLoadConfigSuccess(window.config)
     }
 
     render() {

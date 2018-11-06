@@ -1,4 +1,4 @@
-package com.nextbreakpoint.shop.gateway.handlers;
+package com.nextbreakpoint.shop.router.handlers;
 
 import io.vertx.core.Handler;
 import io.vertx.core.logging.Logger;
@@ -10,7 +10,6 @@ import io.vertx.rxjava.core.http.HttpServerResponse;
 import io.vertx.rxjava.ext.web.RoutingContext;
 
 import java.util.Objects;
-import java.util.UUID;
 
 public class ProxyHandler implements Handler<RoutingContext> {
     private final Logger logger = LoggerFactory.getLogger(ProxyHandler.class.getName());

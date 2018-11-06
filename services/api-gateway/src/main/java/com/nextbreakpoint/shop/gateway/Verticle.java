@@ -1,11 +1,13 @@
 package com.nextbreakpoint.shop.gateway;
 
 import com.nextbreakpoint.shop.common.graphite.GraphiteManager;
+import com.nextbreakpoint.shop.common.vertx.CORSHandlerFactory;
 import com.nextbreakpoint.shop.common.vertx.MDCHandler;
 import com.nextbreakpoint.shop.common.vertx.HttpClientFactory;
 import com.nextbreakpoint.shop.common.vertx.ServerUtil;
 import com.nextbreakpoint.shop.common.vertx.TraceHandler;
-import com.nextbreakpoint.shop.gateway.handlers.ProxyHandler;
+import com.nextbreakpoint.shop.gateway.handlers.WatchHandler;
+import com.nextbreakpoint.shop.router.handlers.ProxyHandler;
 import io.vertx.core.Future;
 import io.vertx.core.Launcher;
 import io.vertx.core.http.HttpMethod;
@@ -16,10 +18,15 @@ import io.vertx.rxjava.core.AbstractVerticle;
 import io.vertx.rxjava.core.http.HttpClient;
 import io.vertx.rxjava.core.http.HttpServer;
 import io.vertx.rxjava.ext.web.Router;
+import io.vertx.rxjava.ext.web.handler.CorsHandler;
 import io.vertx.rxjava.ext.web.handler.LoggerHandler;
+import io.vertx.rxjava.ext.web.handler.TimeoutHandler;
 import rx.Single;
 
 import java.net.MalformedURLException;
+
+import static com.nextbreakpoint.shop.common.model.Headers.*;
+import static java.util.Arrays.asList;
 
 public class Verticle extends AbstractVerticle {
     private HttpServer server;
@@ -64,16 +71,19 @@ public class Verticle extends AbstractVerticle {
         mainRouter.route().handler(TraceHandler.create());
         mainRouter.route().handler(MDCHandler.create());
         mainRouter.route().handler(LoggerHandler.create(true, LoggerFormat.DEFAULT));
+        mainRouter.route().handler(TimeoutHandler.create(5000L));
 
-//        final CorsHandler corsHandler = CORSHandlerFactory.createWithAll(originPattern, asList(AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN, X_MODIFIED), asList(CONTENT_TYPE, X_XSRF_TOKEN, X_MODIFIED));
-//
-//        mainRouter.route("/*").handler(corsHandler);
+        final CorsHandler corsHandler = CORSHandlerFactory.createWithAll(originPattern, asList(AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN, X_MODIFIED), asList(CONTENT_TYPE, X_XSRF_TOKEN, X_MODIFIED));
+
+        mainRouter.route("/*").handler(corsHandler);
 
         configureAuthRoute(config, mainRouter);
 
         configureAccountRoute(config, mainRouter);
 
         configureDesignsRoute(config, mainRouter);
+
+        configureWatchRoute(config, mainRouter);
 
         final HttpServerOptions options = ServerUtil.makeServerOptions(config);
 
@@ -156,5 +166,21 @@ public class Verticle extends AbstractVerticle {
                 .handler(new ProxyHandler(designsCommandClient));
 
         mainRouter.mountSubRouter("/designs", designsRouter);
+    }
+
+    private void configureWatchRoute(JsonObject config, Router mainRouter) throws MalformedURLException {
+        final Router designsRouter = Router.router(vertx);
+
+        final HttpClient designsSSEClient = HttpClientFactory.create(vertx, config.getString("server_designs_sse_url"), config);
+
+        designsRouter.route("/*")
+                .method(HttpMethod.OPTIONS)
+                .handler(new ProxyHandler(designsSSEClient));
+
+        designsRouter.routeWithRegex("/designs/*")
+                .method(HttpMethod.GET)
+                .handler(new WatchHandler(config.getString("server_designs_sse_url")));
+
+        mainRouter.mountSubRouter("/watch", designsRouter);
     }
 }

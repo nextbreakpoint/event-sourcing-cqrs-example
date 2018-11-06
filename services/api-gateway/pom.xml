@@ -8,9 +8,9 @@
         <version>1.0.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>com.nextbreakpoint.shop.gateway</artifactId>
+    <artifactId>com.nextbreakpoint.shop.api-gateway</artifactId>
     <properties>
-        <container.port>8080</container.port>
+        <container.port>4000</container.port>
         <service.jar>${project.build.finalName}.${project.packaging}</service.jar>
         <config.name>gateway.json</config.name>
     </properties>
@@ -96,8 +96,8 @@
                         <configuration>
                             <images>
                                 <image>
-                                    <name>${environment}-${colour}-shop/web:${project.version}</name>
-                                    <alias>service-web</alias>
+                                    <name>${environment}-${colour}-shop/api-gateway:${project.version}</name>
+                                    <alias>service-api-gateway</alias>
                                     <build>
                                         <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
                                         <filter>${*}</filter>
@@ -119,8 +119,8 @@
                             <showLogs>true</showLogs>
                             <images>
                                 <image>
-                                    <name>${environment}-${colour}-shop/gateway:${project.version}</name>
-                                    <alias>service-gateway</alias>
+                                    <name>${environment}-${colour}-shop/api-gateway:${project.version}</name>
+                                    <alias>service-api-gateway</alias>
                                     <build>
                                         <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
                                         <filter>${*}</filter>
@@ -141,7 +141,7 @@
                                         <network>
                                             <mode>custom</mode>
                                             <name>shop-test</name>
-                                            <alias>shop-gateway</alias>
+                                            <alias>shop-api-gateway</alias>
                                         </network>
                                         <wait>
                                             <log>Succeeded in deploying verticle</log>
@@ -161,8 +161,8 @@
                         <configuration>
                             <images>
                                 <image>
-                                    <name>${environment}-${colour}-shop/gateway:${project.version}</name>
-                                    <alias>service-gateway</alias>
+                                    <name>${environment}-${colour}-shop/api-gateway:${project.version}</name>
+                                    <alias>service-api-gateway</alias>
                                 </image>
                             </images>
                         </configuration>
@@ -176,8 +176,8 @@
                         <configuration>
                             <images>
                                 <image>
-                                    <name>${environment}-${colour}-shop/gateway:${project.version}</name>
-                                    <alias>service-gateway</alias>
+                                    <name>${environment}-${colour}-shop/api-gateway:${project.version}</name>
+                                    <alias>service-api-gateway</alias>
                                     <build>
                                         <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
                                         <filter>${*}</filter>
@@ -198,8 +198,8 @@
                         <configuration>
                             <images>
                                 <image>
-                                    <name>${environment}-${colour}-shop/gateway:${project.version}</name>
-                                    <alias>service-gateway</alias>
+                                    <name>${environment}-${colour}-shop/api-gateway:${project.version}</name>
+                                    <alias>service-api-gateway</alias>
                                 </image>
                             </images>
                         </configuration>
@@ -214,8 +214,8 @@
                             <showLogs>true</showLogs>
                             <images>
                                 <image>
-                                    <name>${environment}-${colour}-shop/gateway:${project.version}</name>
-                                    <alias>service-gateway</alias>
+                                    <name>${environment}-${colour}-shop/api-gateway:${project.version}</name>
+                                    <alias>service-api-gateway</alias>
                                     <build>
                                         <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
                                         <filter>${*}</filter>
@@ -236,7 +236,7 @@
                                         <network>
                                             <mode>custom</mode>
                                             <name>shop-dev</name>
-                                            <alias>service-gateway</alias>
+                                            <alias>service-api-gateway</alias>
                                         </network>
                                     </run>
                                 </image>
@@ -252,8 +252,8 @@
                         <configuration>
                             <images>
                                 <image>
-                                    <name>${environment}-${colour}-shop/gateway:${project.version}</name>
-                                    <alias>service-gateway</alias>
+                                    <name>${environment}-${colour}-shop/api-gateway:${project.version}</name>
+                                    <alias>service-api-gateway</alias>
                                 </image>
                             </images>
                         </configuration>

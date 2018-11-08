@@ -23,7 +23,7 @@
   "server_accounts_url": "http://${stub.host}:${stub.port}/accounts",
   "server_designs_query_url": "http://${stub.host}:${stub.port}/designs",
   "server_designs_command_url": "http://${stub.host}:${stub.port}/designs",
-  "server_designs_sse_url": "http://${stub.host}:${stub.port}/designs",
+  "server_designs_sse_url": "http://${stub.host}:${stub.port}/watch/designs",
 
   "graphite_reporter_enabled": false,
   "graphite_host": "localhost",

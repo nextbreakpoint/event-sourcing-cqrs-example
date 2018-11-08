@@ -97,7 +97,7 @@
                             <images>
                                 <image>
                                     <name>${environment}-${colour}-shop/api-gateway:${project.version}</name>
-                                    <alias>service-api-gateway</alias>
+                                    <alias>api-gateway</alias>
                                     <build>
                                         <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
                                         <filter>${*}</filter>
@@ -120,7 +120,7 @@
                             <images>
                                 <image>
                                     <name>${environment}-${colour}-shop/api-gateway:${project.version}</name>
-                                    <alias>service-api-gateway</alias>
+                                    <alias>api-gateway</alias>
                                     <build>
                                         <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
                                         <filter>${*}</filter>
@@ -162,7 +162,7 @@
                             <images>
                                 <image>
                                     <name>${environment}-${colour}-shop/api-gateway:${project.version}</name>
-                                    <alias>service-api-gateway</alias>
+                                    <alias>api-gateway</alias>
                                 </image>
                             </images>
                         </configuration>
@@ -177,7 +177,7 @@
                             <images>
                                 <image>
                                     <name>${environment}-${colour}-shop/api-gateway:${project.version}</name>
-                                    <alias>service-api-gateway</alias>
+                                    <alias>api-gateway</alias>
                                     <build>
                                         <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
                                         <filter>${*}</filter>
@@ -199,7 +199,7 @@
                             <images>
                                 <image>
                                     <name>${environment}-${colour}-shop/api-gateway:${project.version}</name>
-                                    <alias>service-api-gateway</alias>
+                                    <alias>api-gateway</alias>
                                 </image>
                             </images>
                         </configuration>
@@ -215,7 +215,7 @@
                             <images>
                                 <image>
                                     <name>${environment}-${colour}-shop/api-gateway:${project.version}</name>
-                                    <alias>service-api-gateway</alias>
+                                    <alias>api-gateway</alias>
                                     <build>
                                         <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
                                         <filter>${*}</filter>
@@ -236,7 +236,7 @@
                                         <network>
                                             <mode>custom</mode>
                                             <name>shop-dev</name>
-                                            <alias>service-api-gateway</alias>
+                                            <alias>api-gateway</alias>
                                         </network>
                                     </run>
                                 </image>
@@ -253,7 +253,7 @@
                             <images>
                                 <image>
                                     <name>${environment}-${colour}-shop/api-gateway:${project.version}</name>
-                                    <alias>service-api-gateway</alias>
+                                    <alias>api-gateway</alias>
                                 </image>
                             </images>
                         </configuration>

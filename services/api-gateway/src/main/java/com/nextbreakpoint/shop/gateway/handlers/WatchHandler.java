@@ -19,17 +19,17 @@ public class WatchHandler implements Handler<RoutingContext> {
 
     @Override
     public void handle(RoutingContext context) {
-        final String user = context.user().principal().getString("user");
-
-        if (user == null || !context.request().uri().startsWith("/watch/")) {
-            context.fail(500);
-        }
+//        final String user = context.user().principal().getString("user");
+//
+//        if (user == null || !context.request().uri().startsWith("/watch/")) {
+//            context.fail(500);
+//        }
 
         // we should select the server according to user and resource
 
-        final String resource = context.request().uri().substring("/watch/".length());
+        final String resource = context.request().uri().substring("/watch/designs/".length());
 
-        logger.info("Redirect watch to resource " + watchURL + "/" + resource);
+        logger.info("Redirect watch request to resource " + watchURL + "/" + resource);
 
         ResponseHelper.redirectToURL(context, () -> watchURL + "/" + resource);
     }

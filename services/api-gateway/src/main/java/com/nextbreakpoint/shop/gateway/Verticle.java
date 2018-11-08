@@ -73,17 +73,13 @@ public class Verticle extends AbstractVerticle {
         mainRouter.route().handler(LoggerHandler.create(true, LoggerFormat.DEFAULT));
         mainRouter.route().handler(TimeoutHandler.create(5000L));
 
-        final CorsHandler corsHandler = CORSHandlerFactory.createWithAll(originPattern, asList(AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN, X_MODIFIED), asList(CONTENT_TYPE, X_XSRF_TOKEN, X_MODIFIED));
-
-        mainRouter.route("/*").handler(corsHandler);
-
         configureAuthRoute(config, mainRouter);
 
         configureAccountRoute(config, mainRouter);
 
         configureDesignsRoute(config, mainRouter);
 
-        configureWatchRoute(config, mainRouter);
+        configureWatchRoute(config, mainRouter, originPattern);
 
         final HttpServerOptions options = ServerUtil.makeServerOptions(config);
 
@@ -168,16 +164,20 @@ public class Verticle extends AbstractVerticle {
         mainRouter.mountSubRouter("/designs", designsRouter);
     }
 
-    private void configureWatchRoute(JsonObject config, Router mainRouter) throws MalformedURLException {
+    private void configureWatchRoute(JsonObject config, Router mainRouter, String originPattern) throws MalformedURLException {
         final Router designsRouter = Router.router(vertx);
 
         final HttpClient designsSSEClient = HttpClientFactory.create(vertx, config.getString("server_designs_sse_url"), config);
+
+//        final CorsHandler corsHandler = CORSHandlerFactory.createWithAll(originPattern, asList(AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN, X_MODIFIED, ORIGIN), asList(CONTENT_TYPE, X_XSRF_TOKEN, X_MODIFIED, ORIGIN));
+//
+//        designsRouter.route("/*").handler(corsHandler);
 
         designsRouter.route("/*")
                 .method(HttpMethod.OPTIONS)
                 .handler(new ProxyHandler(designsSSEClient));
 
-        designsRouter.routeWithRegex("/designs/*")
+        designsRouter.route("/designs/*")
                 .method(HttpMethod.GET)
                 .handler(new WatchHandler(config.getString("server_designs_sse_url")));
 

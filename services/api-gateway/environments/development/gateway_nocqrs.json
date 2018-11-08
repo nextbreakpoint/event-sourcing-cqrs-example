@@ -23,7 +23,7 @@
   "server_accounts_url": "https://localhost:3002/accounts",
   "server_designs_query_url": "https://localhost:3001/designs",
   "server_designs_command_url": "https://localhost:3001/designs",
-  "server_designs_sse_url": "https://localhost:3041/designs",
+  "server_designs_sse_url": "https://localhost:3041/watch/designs",
 
   "graphite_reporter_enabled": false,
   "graphite_host": "localhost",

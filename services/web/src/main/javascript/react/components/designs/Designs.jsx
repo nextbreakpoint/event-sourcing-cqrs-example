@@ -34,26 +34,43 @@ let Designs = class Designs extends React.Component {
 
         let component = this
 
+        let config = {
+            timeout: 10000,
+            withCredentials: true
+        }
+
         try {
             if (typeof(EventSource) !== "undefined") {
-                var source = new EventSource(component.props.config.api_url + "/watch/designs/" + timestamp, { withCredentials: true })
+                axios.get(component.props.config.api_url + "/watch/designs/" + timestamp, config)
+                    .then(function (response) {
+                        if (response.status == 303) {
+                            var source = new EventSource(response.headers.location, { withCredentials: true })
 
-                source.onerror = function(error) {
-                   console.log(error)
-                }
+                            source.onerror = function(error) {
+                               console.log(error)
+                            }
 
-                source.onopen = function() {
-                  component.loadDesigns(timestamp)
-                }
+                            source.onopen = function() {
+                              component.loadDesigns(timestamp)
+                            }
 
-                source.addEventListener("update",  function(event) {
-                   let timestamp = Number(event.lastEventId)
+                            source.addEventListener("update",  function(event) {
+                               let timestamp = Number(event.lastEventId)
 
-                   if (component.props.timestamp == undefined || timestamp > component.props.timestamp) {
-                      console.log("Reloading designs...")
-                      component.loadDesigns(timestamp)
-                   }
-                }, false)
+                               if (component.props.timestamp == undefined || timestamp > component.props.timestamp) {
+                                  console.log("Reloading designs...")
+                                  component.loadDesigns(timestamp)
+                               }
+                            }, false)
+                        } else {
+                            console.log("Can't redirect to SSE server")
+                            component.loadDesigns(timestamp)
+                        }
+                    })
+                    .catch(function (error) {
+                        console.log("Can't retrieve url of SSE server")
+                        component.loadDesigns(timestamp)
+                    })
             } else {
                 console.log("EventSource not available")
                 component.loadDesigns(timestamp)

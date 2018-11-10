@@ -26,6 +26,7 @@ import rx.Single;
 import java.net.MalformedURLException;
 
 import static com.nextbreakpoint.shop.common.model.Headers.*;
+import static com.nextbreakpoint.shop.common.vertx.ServerUtil.UUID_REGEXP;
 import static java.util.Arrays.asList;
 
 public class Verticle extends AbstractVerticle {
@@ -73,13 +74,13 @@ public class Verticle extends AbstractVerticle {
         mainRouter.route().handler(LoggerHandler.create(true, LoggerFormat.DEFAULT));
         mainRouter.route().handler(TimeoutHandler.create(5000L));
 
+        configureWatchRoute(config, mainRouter, originPattern);
+
         configureAuthRoute(config, mainRouter);
 
         configureAccountRoute(config, mainRouter);
 
         configureDesignsRoute(config, mainRouter);
-
-        configureWatchRoute(config, mainRouter, originPattern);
 
         final HttpServerOptions options = ServerUtil.makeServerOptions(config);
 
@@ -167,20 +168,21 @@ public class Verticle extends AbstractVerticle {
     private void configureWatchRoute(JsonObject config, Router mainRouter, String originPattern) throws MalformedURLException {
         final Router designsRouter = Router.router(vertx);
 
-        final HttpClient designsSSEClient = HttpClientFactory.create(vertx, config.getString("server_designs_sse_url"), config);
+        final HttpClient designsSSEClient = HttpClientFactory.create(vertx, config.getString("client_designs_sse_url"), config);
 
-//        final CorsHandler corsHandler = CORSHandlerFactory.createWithAll(originPattern, asList(AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN, X_MODIFIED, ORIGIN), asList(CONTENT_TYPE, X_XSRF_TOKEN, X_MODIFIED, ORIGIN));
-//
-//        designsRouter.route("/*").handler(corsHandler);
+        final CorsHandler corsHandler = CORSHandlerFactory.createWithAll(originPattern, asList(AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN, X_MODIFIED, LOCATION), asList(CONTENT_TYPE, X_XSRF_TOKEN, X_MODIFIED, LOCATION));
 
-        designsRouter.route("/*")
-                .method(HttpMethod.OPTIONS)
+        designsRouter.route("/*").handler(corsHandler);
+
+        designsRouter.options("/*")
                 .handler(new ProxyHandler(designsSSEClient));
 
-        designsRouter.route("/designs/*")
-                .method(HttpMethod.GET)
-                .handler(new WatchHandler(config.getString("server_designs_sse_url")));
+        designsRouter.getWithRegex("/([0-9]+)")
+                .handler(new WatchHandler(config.getString("client_designs_sse_url")));
 
-        mainRouter.mountSubRouter("/watch", designsRouter);
+        designsRouter.get("/*")
+                .handler(new WatchHandler(config.getString("client_designs_sse_url")));
+
+        mainRouter.mountSubRouter("/watch/designs", designsRouter);
     }
 }

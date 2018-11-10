@@ -8,7 +8,7 @@
   "jwt_keystore_type": "jceks",
   "jwt_keystore_secret": "secret",
 
-  "origin_pattern": "https?://localhost:.*",
+  "origin_pattern": "https://localhost(:[0-9]+)?",
 
   "graphite_reporter_enabled": false,
   "graphite_host": "localhost",

@@ -15,6 +15,7 @@ import com.nextbreakpoint.shop.designs.handlers.EventsHandler;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Launcher;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
@@ -110,6 +111,10 @@ public class Verticle extends AbstractVerticle {
         mainRouter.route().failureHandler(ResponseHelper::sendFailure);
 
         final Handler eventHandler = new AccessHandler(jwtProvider, EventsHandler.create(vertx), onAccessDenied, asList(ANONYMOUS, ADMIN, GUEST));
+
+        mainRouter.route("/*")
+                .method(HttpMethod.OPTIONS)
+                .handler(ResponseHelper::sendNoContent);
 
         mainRouter.getWithRegex("/watch/designs/([0-9]+)/" + UUID_REGEXP)
                 .handler(eventHandler);

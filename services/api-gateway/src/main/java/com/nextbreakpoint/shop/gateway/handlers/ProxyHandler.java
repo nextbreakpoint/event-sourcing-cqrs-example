@@ -1,4 +1,4 @@
-package com.nextbreakpoint.shop.router.handlers;
+package com.nextbreakpoint.shop.gateway.handlers;
 
 import io.vertx.core.Handler;
 import io.vertx.core.logging.Logger;

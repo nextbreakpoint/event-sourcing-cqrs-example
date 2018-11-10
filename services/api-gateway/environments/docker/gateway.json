@@ -17,13 +17,14 @@
   "jwt_keystore_type": "jceks",
   "jwt_keystore_secret": "secret",
 
-  "origin_pattern": "https?://localhost:.*",
+  "origin_pattern": "https://localhost(:[0-9]+)?",
 
   "server_auth_url": "https://service-auth:3000/a/auth",
   "server_accounts_url": "https://service-accounts:3002/accounts",
-  "server_designs_query_url": "https://service-designs:3021/designs",
-  "server_designs_command_url": "https://localhost:3031/designs",
-  "server_designs_sse_url": "https://localhost:3041/watch/designs",
+  "server_designs_query_url": "https://service-designs-query:3021/designs",
+  "server_designs_command_url": "https://service-designs-command:3031/designs",
+
+  "client_designs_sse_url": "https://localhost:3041/watch/designs",
 
   "graphite_reporter_enabled": false,
   "graphite_host": "localhost",

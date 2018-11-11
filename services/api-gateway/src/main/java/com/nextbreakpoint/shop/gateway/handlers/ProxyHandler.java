@@ -33,13 +33,13 @@ public class ProxyHandler implements Handler<RoutingContext> {
 
             proxyResponse.exceptionHandler(error -> {
                         logger.error("Failed while processing response", error);
-                        context.fail(500);
+                        frontResponse.setStatusCode(500).end();
                     })
                     .handler(buffer -> frontResponse.write(buffer))
                     .endHandler(c -> frontResponse.end());
         }).exceptionHandler(error -> {
             logger.error("Failed while processing request", error);
-            context.fail(500);
+            frontResponse.setStatusCode(500).end();
         });
 
         proxyRequest.headers().addAll(frontRequest.headers());
@@ -48,7 +48,7 @@ public class ProxyHandler implements Handler<RoutingContext> {
 
         frontRequest.exceptionHandler(error -> {
                     logger.error("Failed while producing request", error);
-                    context.fail(500);
+                    frontResponse.setStatusCode(500).end();
                 })
                 .handler(buffer -> proxyRequest.write(buffer))
                 .endHandler(x -> proxyRequest.end());

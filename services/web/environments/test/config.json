@@ -1,4 +1,5 @@
 {
-  "web_url": "https://localhost:8080",
-  "api_url": "https://localhost:9090"
+  "client_web_url": "https://localhost:8080",
+  "client_api_url": "https://localhost:9090",
+  "server_api_url": "https://localhost:9090"
 }

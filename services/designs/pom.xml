@@ -120,12 +120,13 @@
                             <autoCreateCustomNetworks>true</autoCreateCustomNetworks>
                             <images>
                                 <image>
-                                    <name>mysql:8.0.2</name>
+                                    <name>mysql:8.0.13</name>
                                     <alias>mysql-designs</alias>
                                     <run>
                                         <ports>
                                             <port>3306:3306</port>
                                         </ports>
+                                        <memory>536870912</memory>
                                         <env>
                                             <MYSQL_ROOT_PASSWORD>password</MYSQL_ROOT_PASSWORD>
                                         </env>
@@ -140,7 +141,7 @@
                                             <alias>mysql-designs</alias>
                                         </network>
                                         <wait>
-                                            <log>/usr/sbin/mysqld: ready for connections. Version: '8.0.2-dmr'  socket: '/var/run/mysqld/mysqld.sock'  port: 3306</log>
+                                            <log>/usr/sbin/mysqld: ready for connections. Version: '8.0.13'  socket: '/var/run/mysqld/mysqld.sock'  port: 3306</log>
                                             <time>60000</time>
                                         </wait>
                                     </run>
@@ -152,6 +153,7 @@
                                         <ports>
                                             <port>2181:2181</port>
                                         </ports>
+                                        <memory>268435456</memory>
                                         <env>
                                             <ZOO_MY_ID>1</ZOO_MY_ID>
                                         </env>
@@ -173,6 +175,7 @@
                                         <ports>
                                             <port>9092:9092</port>
                                         </ports>
+                                        <memory>1073741824</memory>
                                         <env>
                                             <ZK_CONNECT>zookeeper-designs:2181</ZK_CONNECT>
                                             <ADVERTISED_HOST>kafka-designs</ADVERTISED_HOST>
@@ -206,6 +209,7 @@
                                         <ports>
                                             <port>${http.port}:${container.port}</port>
                                         </ports>
+                                        <memory>536870912</memory>
                                         <volumes>
                                             <bind>
                                                 <volume>${project.basedir}/target/classes/environments/integration:/config</volume>
@@ -244,7 +248,7 @@
                                     <alias>service-designs</alias>
                                 </image>
                                 <image>
-                                    <name>mysql:8.0.2</name>
+                                    <name>mysql:8.0.13</name>
                                     <alias>mysql-designs</alias>
                                 </image>
                                 <image>
@@ -318,6 +322,7 @@
                                         <ports>
                                             <port>${container.port}:${container.port}</port>
                                         </ports>
+                                        <memory>1073741824</memory>
                                         <volumes>
                                             <bind>
                                                 <volume>${project.basedir}/target/classes/environments/docker:/config</volume>

@@ -115,6 +115,7 @@
                         </goals>
                         <configuration>
                             <showLogs>true</showLogs>
+                            <startParallel>true</startParallel>
                             <autoCreateCustomNetworks>true</autoCreateCustomNetworks>
                             <images>
                                 <image>
@@ -124,6 +125,7 @@
                                         <ports>
                                             <port>9042:9042</port>
                                         </ports>
+                                        <memory>1073741824</memory>
                                         <env>
                                             <CASSANDRA_RACK>rack1</CASSANDRA_RACK>
                                             <CASSANDRA_DC>datacenter1</CASSANDRA_DC>
@@ -159,6 +161,7 @@
                                         <ports>
                                             <port>${http.port}:${container.port}</port>
                                         </ports>
+                                        <memory>268435456</memory>
                                         <volumes>
                                             <bind>
                                                 <volume>${project.basedir}/target/classes/environments/integration:/config</volume>
@@ -261,6 +264,7 @@
                                         <ports>
                                             <port>${container.port}:${container.port}</port>
                                         </ports>
+                                        <memory>1073741824</memory>
                                         <volumes>
                                             <bind>
                                                 <volume>${project.basedir}/target/classes/environments/docker:/config</volume>

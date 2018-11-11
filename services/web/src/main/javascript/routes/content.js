@@ -37,7 +37,7 @@ router.get('/designs.html', function(req, res, next) {
 
     req.pause();
 
-    axios.get(appConfig.api_url + '/designs', config)
+    axios.get(appConfig.server_api_url + '/designs', config)
         .then(function (response) {
             req.resume();
             if (response.status == 200) {
@@ -47,15 +47,15 @@ router.get('/designs.html', function(req, res, next) {
                 let designs = response.data.map((design) => ({
                     uuid: design.uuid,
                     checksum: design.checksum,
-                    location: appConfig.web_url + '/content/designs/' + design.uuid + ".html",
-                    imageUrl: appConfig.web_url + '/content/designs/' + design.uuid + "/0/0/0/256.png",
+                    location: appConfig.client_web_url + '/content/designs/' + design.uuid + ".html",
+                    imageUrl: appConfig.client_web_url + '/content/designs/' + design.uuid + "/0/0/0/256.png",
                     modified: design.modified
                 }))
                 res.render('content/designs', {
                     config: appConfig,
                     layout: 'bootstrap',
                     title: 'Designs',
-                    url: appConfig.web_url,
+                    url: appConfig.client_web_url,
                     designs: designs
                 });
             } else {
@@ -64,7 +64,7 @@ router.get('/designs.html', function(req, res, next) {
                     config: appConfig,
                     layout: 'bootstrap',
                     title: 'Designs',
-                    url: appConfig.web_url,
+                    url: appConfig.client_web_url,
                     designs: []
                 });
             }
@@ -76,7 +76,7 @@ router.get('/designs.html', function(req, res, next) {
                 config: appConfig,
                 layout: 'bootstrap',
                 title: 'Designs',
-                url: appConfig.web_url,
+                url: appConfig.client_web_url,
                 designs: []
             });
         })
@@ -96,7 +96,7 @@ router.get('/designs/(:uuid).html', function(req, res, next) {
 
     req.pause();
 
-    axios.get(appConfig.api_url + '/designs/' + req.params.uuid, config)
+    axios.get(appConfig.server_api_url + '/designs/' + req.params.uuid, config)
         .then(function (response) {
             req.resume();
             if (response.status == 200) {
@@ -107,15 +107,15 @@ router.get('/designs/(:uuid).html', function(req, res, next) {
                 design = {
                     uuid: design.uuid,
                     checksum: design.checksum,
-                    location: appConfig.web_url + '/content/designs/' + design.uuid + ".html",
-                    imageUrl: appConfig.web_url + '/content/designs/' + design.uuid + "/0/0/0/512.png",
+                    location: appConfig.client_web_url + '/content/designs/' + design.uuid + ".html",
+                    imageUrl: appConfig.client_web_url + '/content/designs/' + design.uuid + "/0/0/0/512.png",
                     modified: design.modified
                 };
                 res.render('content/preview', {
                     config: appConfig,
                     layout: 'bootstrap',
                     title: 'Designs | ' + req.params.uuid,
-                    url: appConfig.web_url,
+                    url: appConfig.client_web_url,
                     uuid: req.params.uuid,
                     design: design
                 });
@@ -125,7 +125,7 @@ router.get('/designs/(:uuid).html', function(req, res, next) {
                     config: appConfig,
                     layout: 'bootstrap',
                     title: 'Designs | ' + req.params.uuid,
-                    url: appConfig.web_url,
+                    url: appConfig.client_web_url,
                     uuid: req.params.uuid
                 });
             }
@@ -137,7 +137,7 @@ router.get('/designs/(:uuid).html', function(req, res, next) {
                 config: appConfig,
                 layout: 'bootstrap',
                 title: 'Designs | ' + req.params.uuid,
-                url: appConfig.web_url,
+                url: appConfig.client_web_url,
                 uuid: req.params.uuid
             });
         })
@@ -160,7 +160,7 @@ router.get('/designs/(:uuid)/(:zoom)/(:x)/(:y)/(:size).png', function(req, res, 
 
     req.pause();
 
-    axios.get(appConfig.api_url + '/designs/' + path, config)
+    axios.get(appConfig.server_api_url + '/designs/' + path, config)
         .then(function (response) {
             req.resume();
             if (response.status == 200) {

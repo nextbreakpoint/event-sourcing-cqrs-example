@@ -6,7 +6,6 @@
     <version>1.0.0</version>
     <modules>
         <module>cassandra</module>
-        <module>zookeeper</module>
         <module>kafka</module>
         <module>mysql</module>
         <module>nginx</module>

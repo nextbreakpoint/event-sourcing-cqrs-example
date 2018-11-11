@@ -6,8 +6,8 @@ import com.nextbreakpoint.shop.common.vertx.MDCHandler;
 import com.nextbreakpoint.shop.common.vertx.HttpClientFactory;
 import com.nextbreakpoint.shop.common.vertx.ServerUtil;
 import com.nextbreakpoint.shop.common.vertx.TraceHandler;
+import com.nextbreakpoint.shop.gateway.handlers.ProxyHandler;
 import com.nextbreakpoint.shop.gateway.handlers.WatchHandler;
-import com.nextbreakpoint.shop.router.handlers.ProxyHandler;
 import io.vertx.core.Future;
 import io.vertx.core.Launcher;
 import io.vertx.core.http.HttpMethod;
@@ -72,7 +72,7 @@ public class Verticle extends AbstractVerticle {
         mainRouter.route().handler(TraceHandler.create());
         mainRouter.route().handler(MDCHandler.create());
         mainRouter.route().handler(LoggerHandler.create(true, LoggerFormat.DEFAULT));
-        mainRouter.route().handler(TimeoutHandler.create(5000L));
+        mainRouter.route().handler(TimeoutHandler.create(30000L));
 
         configureWatchRoute(config, mainRouter, originPattern);
 

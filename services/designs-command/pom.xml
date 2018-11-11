@@ -115,6 +115,7 @@
                         </goals>
                         <configuration>
                             <showLogs>true</showLogs>
+                            <startParallel>true</startParallel>
                             <autoCreateCustomNetworks>true</autoCreateCustomNetworks>
                             <images>
                                 <image>
@@ -124,6 +125,7 @@
                                         <ports>
                                             <port>2181:2181</port>
                                         </ports>
+                                        <memory>268435456</memory>
                                         <env>
                                             <ZOO_MY_ID>1</ZOO_MY_ID>
                                         </env>
@@ -145,6 +147,7 @@
                                         <ports>
                                             <port>9092:9092</port>
                                         </ports>
+                                        <memory>1073741824</memory>
                                         <env>
                                             <ZK_CONNECT>zookeeper-designs-command:2181</ZK_CONNECT>
                                             <ADVERTISED_HOST>kafka-designs-command</ADVERTISED_HOST>
@@ -178,6 +181,7 @@
                                         <ports>
                                             <port>${http.port}:${container.port}</port>
                                         </ports>
+                                        <memory>268435456</memory>
                                         <volumes>
                                             <bind>
                                                 <volume>${project.basedir}/target/classes/environments/integration:/config</volume>
@@ -285,6 +289,7 @@
                                         <ports>
                                             <port>${container.port}:${container.port}</port>
                                         </ports>
+                                        <memory>268435456</memory>
                                         <volumes>
                                             <bind>
                                                 <volume>${project.basedir}/target/classes/environments/docker:/config</volume>

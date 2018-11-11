@@ -35,7 +35,7 @@ let Preview = class Preview extends React.Component {
         let timestamp = Date.now()
 
         let config = {
-            timeout: 10000,
+            timeout: 30000,
             withCredentials: true
         }
 
@@ -43,7 +43,7 @@ let Preview = class Preview extends React.Component {
             if (typeof(EventSource) !== "undefined") {
                 axios.get(component.props.config.api_url + "/watch/designs/" + timestamp + "/" + this.props.uuid, config)
                     .then(function (response) {
-                        if (response.status == 303) {
+                        if (response.status == 200) {
                             var source = new EventSource(response.headers.location, { withCredentials: true })
 
                             source.onerror = function(error) {
@@ -85,7 +85,7 @@ let Preview = class Preview extends React.Component {
         let component = this
 
         let config = {
-            timeout: 10000,
+            timeout: 30000,
             withCredentials: true
         }
 

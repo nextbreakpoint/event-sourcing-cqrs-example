@@ -14,7 +14,7 @@
   "graphite_host": "localhost",
   "graphite_port": 2003,
 
-  "jdbc_url": "jdbc:mysql://localhost:3306/accounts?useSSL=false&nullNamePatternMatchesAll=true",
+  "jdbc_url": "jdbc:mysql://localhost:3306/accounts?useSSL=false&allowPublicKeyRetrieval=true&nullNamePatternMatchesAll=true",
   "jdbc_driver": "com.mysql.cj.jdbc.Driver",
   "jdbc_username": "verticle",
   "jdbc_password": "password",

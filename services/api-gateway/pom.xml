@@ -132,6 +132,7 @@
                                         <ports>
                                             <port>${http.port}:${container.port}</port>
                                         </ports>
+                                        <memory>268435456</memory>
                                         <volumes>
                                             <bind>
                                                 <volume>${project.basedir}/target/classes/environments/integration:/config</volume>
@@ -227,6 +228,7 @@
                                         <ports>
                                             <port>${container.port}:${container.port}</port>
                                         </ports>
+                                        <memory>268435456</memory>
                                         <volumes>
                                             <bind>
                                                 <volume>${project.basedir}/target/classes/environments/docker:/config</volume>

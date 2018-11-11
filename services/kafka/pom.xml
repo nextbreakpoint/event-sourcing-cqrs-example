@@ -28,15 +28,38 @@
                             <autoCreateCustomNetworks>true</autoCreateCustomNetworks>
                             <images>
                                 <image>
+                                    <name>nextbreakpoint/zookeeper:3.4.12-1</name>
+                                    <alias>zookeeper</alias>
+                                    <run>
+                                        <ports>
+                                            <port>2181:2181</port>
+                                        </ports>
+                                        <memory>268435456</memory>
+                                        <env>
+                                            <ZOO_MY_ID>1</ZOO_MY_ID>
+                                        </env>
+                                        <network>
+                                            <mode>custom</mode>
+                                            <name>shop-dev</name>
+                                            <alias>zookeeper</alias>
+                                        </network>
+                                        <wait>
+                                            <log>binding to port 0.0.0.0/0.0.0.0:2181</log>
+                                            <time>60000</time>
+                                        </wait>
+                                    </run>
+                                </image>
+                                <image>
                                     <name>nextbreakpoint/kafka:1.1.0-1</name>
                                     <alias>kafka</alias>
                                     <run>
                                         <ports>
                                             <port>9092:9092</port>
                                         </ports>
+                                        <memory>1073741824</memory>
                                         <env>
                                           <ZK_CONNECT>zookeeper:2181</ZK_CONNECT>
-                                          <ADVERTISED_HOST>localhost</ADVERTISED_HOST>
+                                          <ADVERTISED_HOST>kafka</ADVERTISED_HOST>
                                           <BROKER_ID>1</BROKER_ID>
                                         </env>
                                         <network>
@@ -48,6 +71,9 @@
                                             <log>started \(kafka.server.KafkaServer\)</log>
                                             <time>60000</time>
                                         </wait>
+                                        <dependsOn>
+                                            <container>zookeeper</container>
+                                        </dependsOn>
                                     </run>
                                 </image>
                             </images>
@@ -64,6 +90,10 @@
                                 <image>
                                     <name>nextbreakpoint/kafka:1.1.0-1</name>
                                     <alias>kafka</alias>
+                                </image>
+                                <image>
+                                    <name>nextbreakpoint/zookeeper:3.4.12-1</name>
+                                    <alias>zookeeper</alias>
                                 </image>
                             </images>
                         </configuration>

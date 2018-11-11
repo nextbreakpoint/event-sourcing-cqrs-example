@@ -66,7 +66,7 @@ let PreviewPage = class PreviewPage extends React.Component {
         let component = this
 
         let config = {
-            timeout: 10000,
+            timeout: 30000,
             metadata: {'content-type': 'application/json'},
             withCredentials: true
         }

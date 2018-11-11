@@ -6,7 +6,6 @@ var logger = require('morgan');
 var sassMiddleware = require('node-sass-middleware');
 
 var indexRouter = require('./routes/index');
-var configRouter = require('./routes/config');
 var adminRouter = require('./routes/admin');
 var contentRouter = require('./routes/content');
 
@@ -32,7 +31,6 @@ app.use(sassMiddleware({
 app.use(express.static(path.join(__dirname, 'public'), { immutable: true, maxAge: 3600000 }));
 
 app.use('/', indexRouter);
-app.use('/', configRouter);
 app.use('/admin', adminRouter);
 app.use('/content', contentRouter);
 

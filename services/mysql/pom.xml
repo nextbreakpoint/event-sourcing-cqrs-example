@@ -28,12 +28,13 @@
                             <autoCreateCustomNetworks>true</autoCreateCustomNetworks>
                             <images>
                                 <image>
-                                    <name>mysql:8.0.2</name>
+                                    <name>mysql:8.0.13</name>
                                     <alias>mysql</alias>
                                     <run>
                                         <ports>
                                             <port>3306:3306</port>
                                         </ports>
+                                        <memory>536870912</memory>
                                         <env>
                                             <MYSQL_ROOT_PASSWORD>password</MYSQL_ROOT_PASSWORD>
                                         </env>
@@ -48,7 +49,7 @@
                                             <alias>mysql</alias>
                                         </network>
                                         <wait>
-                                            <log>/usr/sbin/mysqld: ready for connections. Version: '8.0.2-dmr'  socket: '/var/run/mysqld/mysqld.sock'  port: 3306</log>
+                                            <log>/usr/sbin/mysqld: ready for connections. Version: '8.0.13'  socket: '/var/run/mysqld/mysqld.sock'  port: 3306</log>
                                             <time>60000</time>
                                         </wait>
                                     </run>
@@ -65,7 +66,7 @@
                         <configuration>
                             <images>
                                 <image>
-                                    <name>mysql:8.0.2</name>
+                                    <name>mysql:8.0.13</name>
                                     <alias>mysql</alias>
                                 </image>
                             </images>

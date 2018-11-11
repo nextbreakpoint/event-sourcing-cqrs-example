@@ -36,6 +36,7 @@
                                             <port>80:80</port>
                                             <port>443:443</port>
                                         </ports>
+                                        <memory>134217728</memory>
                                         <volumes>
                                             <bind>
                                                 <volume>${project.basedir}/etc/nginx/nginx.conf:/etc/nginx/nginx.conf</volume>

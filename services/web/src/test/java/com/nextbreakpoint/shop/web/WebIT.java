@@ -92,9 +92,9 @@ public class WebIT {
             .match(get("/designs"), withHeader("accept", "application/json"))
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("[{\"uuid\":\"" + uuid + "\",\"checksum\":\"1\"}]"));
 
-    whenHttp(stubServer)
-            .match(get("/designs"), withHeader("accept", "application/json"))
-            .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("[{\"uuid\":\"" + uuid + "\",\"checksum\":\"1\"}]"));
+//    whenHttp(stubServer)
+//            .match(get("/designs"), withHeader("accept", "application/json"))
+//            .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("[{\"uuid\":\"" + uuid + "\",\"checksum\":\"1\"}]"));
 
     given().config(restAssuredConfig)
             .when().get(makeBaseURL("/content/designs.html"))
@@ -126,9 +126,9 @@ public class WebIT {
             .match(get("/designs/" + designUuid), withHeader("accept", "application/json"))
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent(content));
 
-    whenHttp(stubServer)
-            .match(get("/designs/" + designUuid), withHeader("accept", "application/json"))
-            .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent(content));
+//    whenHttp(stubServer)
+//            .match(get("/designs/" + designUuid), withHeader("accept", "application/json"))
+//            .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent(content));
 
     given().config(restAssuredConfig)
             .when().get(makeBaseURL("/content/designs/" + designUuid + ".html"))
@@ -146,9 +146,9 @@ public class WebIT {
             .match(get("/designs"), withHeader("accept", "application/json"))
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("[{\"uuid\":\"" + designUuid + "\",\"checksum\":\"1\"}]"));
 
-    whenHttp(stubServer)
-            .match(get("/designs"), withHeader("accept", "application/json"))
-            .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("[{\"uuid\":\"" + designUuid + "\",\"checksum\":\"1\"}]"));
+//    whenHttp(stubServer)
+//            .match(get("/designs"), withHeader("accept", "application/json"))
+//            .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("[{\"uuid\":\"" + designUuid + "\",\"checksum\":\"1\"}]"));
 
     whenHttp(stubServer)
             .match(get("/accounts/" + accountUuid), withHeader("accept", "application/json"))
@@ -188,9 +188,9 @@ public class WebIT {
             .match(get("/designs/" + designUuid), withHeader("accept", "application/json"))
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent(content));
 
-    whenHttp(stubServer)
-            .match(get("/designs/" + designUuid), withHeader("accept", "application/json"))
-            .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent(content));
+//    whenHttp(stubServer)
+//            .match(get("/designs/" + designUuid), withHeader("accept", "application/json"))
+//            .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent(content));
 
     whenHttp(stubServer)
             .match(get("/accounts/" + accountUuid), withHeader("accept", "application/json"))

@@ -9,6 +9,7 @@
         <module>kafka</module>
         <module>mysql</module>
         <module>nginx</module>
+        <module>consul</module>
         <module>common</module>
         <module>designs</module>
         <module>designs-query</module>
@@ -290,6 +291,11 @@
             <dependency>
                 <groupId>io.vertx</groupId>
                 <artifactId>vertx-dropwizard-metrics</artifactId>
+                <version>${vertx.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.vertx</groupId>
+                <artifactId>vertx-service-discovery-bridge-consul</artifactId>
                 <version>${vertx.version}</version>
             </dependency>
             <dependency>

@@ -52,7 +52,7 @@ router.get('/designs.html', function(req, res, next) {
                     modified: design.modified
                 }))
                 res.render('content/designs', {
-                    config: appConfig,
+                    config: {"api_url":appConfig.client_api_url,"web_url":appConfig.client_web_url},
                     layout: 'bootstrap',
                     title: 'Designs',
                     url: appConfig.client_web_url,
@@ -61,7 +61,7 @@ router.get('/designs.html', function(req, res, next) {
             } else {
                 console.log("Can't load designs: status = " + content.status)
                 res.render('content/designs', {
-                    config: appConfig,
+                    config: {"api_url":appConfig.client_api_url,"web_url":appConfig.client_web_url},
                     layout: 'bootstrap',
                     title: 'Designs',
                     url: appConfig.client_web_url,
@@ -73,7 +73,7 @@ router.get('/designs.html', function(req, res, next) {
             req.resume();
             console.log("Can't load designs " + error)
             res.render('content/designs', {
-                config: appConfig,
+                config: {"api_url":appConfig.client_api_url,"web_url":appConfig.client_web_url},
                 layout: 'bootstrap',
                 title: 'Designs',
                 url: appConfig.client_web_url,
@@ -112,7 +112,7 @@ router.get('/designs/(:uuid).html', function(req, res, next) {
                     modified: design.modified
                 };
                 res.render('content/preview', {
-                    config: appConfig,
+                    config: {"api_url":appConfig.client_api_url,"web_url":appConfig.client_web_url},
                     layout: 'bootstrap',
                     title: 'Designs | ' + req.params.uuid,
                     url: appConfig.client_web_url,
@@ -122,7 +122,7 @@ router.get('/designs/(:uuid).html', function(req, res, next) {
             } else {
                 console.log("Can't load design: status = " + content.status)
                 res.render('content/preview', {
-                    config: appConfig,
+                    config: {"api_url":appConfig.client_api_url,"web_url":appConfig.client_web_url},
                     layout: 'bootstrap',
                     title: 'Designs | ' + req.params.uuid,
                     url: appConfig.client_web_url,
@@ -134,7 +134,7 @@ router.get('/designs/(:uuid).html', function(req, res, next) {
             req.resume();
             console.log("Can't load design " + error)
             res.render('content/preview', {
-                config: appConfig,
+                config: {"api_url":appConfig.client_api_url,"web_url":appConfig.client_web_url},
                 layout: 'bootstrap',
                 title: 'Designs | ' + req.params.uuid,
                 url: appConfig.client_web_url,

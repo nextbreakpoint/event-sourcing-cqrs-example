@@ -13,6 +13,9 @@
   "client_verify_host": false,
   "client_keep_alive": true,
 
+  "consul_host": "consul-api-gateway",
+  "consul_port": 8400,
+
   "jwt_keystore_path": "secrets/keystore-auth.jceks",
   "jwt_keystore_type": "jceks",
   "jwt_keystore_secret": "secret",
@@ -23,8 +26,6 @@
   "server_accounts_url": "http://${stub.host}:${stub.port}/accounts",
   "server_designs_query_url": "http://${stub.host}:${stub.port}/designs",
   "server_designs_command_url": "http://${stub.host}:${stub.port}/designs",
-
-  "client_designs_sse_url": "http://${stub.host}:${stub.port}/watch/designs",
 
   "graphite_reporter_enabled": false,
   "graphite_host": "localhost",

@@ -4,7 +4,10 @@ import io.vertx.core.Handler;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.rxjava.ext.web.RoutingContext;
+import io.vertx.rxjava.servicediscovery.ServiceDiscovery;
+import io.vertx.servicediscovery.Record;
 
+import java.util.List;
 import java.util.Objects;
 
 import static com.nextbreakpoint.shop.common.model.Headers.LOCATION;
@@ -12,21 +15,39 @@ import static com.nextbreakpoint.shop.common.model.Headers.LOCATION;
 public class WatchHandler implements Handler<RoutingContext> {
     private static final Logger logger = LoggerFactory.getLogger(WatchHandler.class.getName());
 
-    private final String watchURL;
+    private final ServiceDiscovery serviceDiscovery;
 
-    public WatchHandler(String watchURL) {
-        this.watchURL = Objects.requireNonNull(watchURL);
+    public WatchHandler(ServiceDiscovery serviceDiscovery) {
+        this.serviceDiscovery = Objects.requireNonNull(serviceDiscovery);
+    }
+
+    protected boolean isDesignsSSE(Record record) {
+        return record.getName().equals("designs-sse");
     }
 
     @Override
     public void handle(RoutingContext context) {
-        // we should select the server according to user and resource
-        // final String user = context.user().principal().getString("user");
+        final List<Record> records = serviceDiscovery.rxGetRecords(this::isDesignsSSE).toBlocking().value();
 
-        final String resource = context.request().uri().substring("/watch/designs/".length());
+        if (records.size() > 0) {
+            // use a random uniform distribution for now
+            int index = (int) Math.round(Math.random() * (records.size() - 1));
 
-        logger.info("Redirect watch request to resource " + watchURL + "/" + resource);
+            // we could select the server according to usage or user/resource
+            // final String user = context.user().principal().getString("user");
 
-        context.response().putHeader(LOCATION, watchURL + "/" + resource).setStatusCode(200).end();
+            final Record selectedRecord = records.get(index);
+
+            final String host = selectedRecord.getMetadata().getString("ServiceAddress");
+            final Integer port = selectedRecord.getMetadata().getInteger("ServicePort");
+
+            final String resource = "https://" + host + ":" + port + context.request().uri();
+
+            logger.info("Redirect watch request to resource " + resource);
+
+            context.response().putHeader(LOCATION, resource).setStatusCode(200).end();
+        } else {
+            context.response().setStatusCode(404).end();
+        }
     }
 }

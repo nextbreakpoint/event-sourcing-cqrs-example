@@ -117,7 +117,44 @@
                         </goals>
                         <configuration>
                             <showLogs>true</showLogs>
+                            <autoCreateCustomNetworks>true</autoCreateCustomNetworks>
                             <images>
+                                <image>
+                                    <name>consul:latest</name>
+                                    <alias>consul-api-gateway</alias>
+                                    <run>
+                                        <ports>
+                                            <port>8300:8300</port>
+                                            <port>8301:8301</port>
+                                            <port>8302:8302</port>
+                                            <port>8400:8400</port>
+                                            <port>8600:8600</port>
+                                        </ports>
+                                        <entrypoint>
+                                            <exec>
+                                                <arg>consul</arg>
+                                                <arg>agent</arg>
+                                                <arg>-data-dir=/consul/data</arg>
+                                                <arg>-config-dir=/consul/config</arg>
+                                            </exec>
+                                        </entrypoint>
+                                        <memory>268435456</memory>
+                                        <volumes>
+                                            <bind>
+                                                <volume>${project.basedir}/target/classes/environments/integration/consul.json:/consul/config/config.json</volume>
+                                            </bind>
+                                        </volumes>
+                                        <network>
+                                            <mode>custom</mode>
+                                            <name>shop-test</name>
+                                            <alias>consul-api-gateway</alias>
+                                        </network>
+                                        <wait>
+                                            <!--<log>Succeeded in deploying verticle</log>-->
+                                            <time>10000</time>
+                                        </wait>
+                                    </run>
+                                </image>
                                 <image>
                                     <name>${environment}-${colour}-shop/api-gateway:${project.version}</name>
                                     <alias>api-gateway</alias>
@@ -148,6 +185,9 @@
                                             <log>Succeeded in deploying verticle</log>
                                             <time>30000</time>
                                         </wait>
+                                        <dependsOn>
+                                            <container>consul-api-gateway</container>
+                                        </dependsOn>
                                     </run>
                                 </image>
                             </images>
@@ -164,6 +204,10 @@
                                 <image>
                                     <name>${environment}-${colour}-shop/api-gateway:${project.version}</name>
                                     <alias>api-gateway</alias>
+                                </image>
+                                <image>
+                                    <name>consul:latest</name>
+                                    <alias>consul-api-gateway</alias>
                                 </image>
                             </images>
                         </configuration>
@@ -289,6 +333,10 @@
         <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-dropwizard-metrics</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-service-discovery-bridge-consul</artifactId>
         </dependency>
         <dependency>
             <groupId>io.dropwizard.metrics</groupId>

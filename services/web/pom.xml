@@ -96,6 +96,19 @@
                             <arguments>run build</arguments>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>run</id>
+                        <goals>
+                            <goal>install-node-and-npm</goal>
+                            <goal>npm</goal>
+                        </goals>
+                        <phase>none</phase>
+                        <configuration>
+                            <workingDirectory>${project.basedir}/src/main/javascript</workingDirectory>
+                            <installDirectory>${project.basedir}</installDirectory>
+                            <arguments>run start</arguments>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
             <plugin>

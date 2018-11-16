@@ -150,7 +150,7 @@
                                             <alias>consul-api-gateway</alias>
                                         </network>
                                         <wait>
-                                            <!--<log>Succeeded in deploying verticle</log>-->
+                                            <log>agent: Synced service "designs-sse"</log>
                                             <time>10000</time>
                                         </wait>
                                     </run>

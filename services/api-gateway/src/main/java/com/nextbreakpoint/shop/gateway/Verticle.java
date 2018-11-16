@@ -71,7 +71,7 @@ public class Verticle extends AbstractVerticle {
 
         final String originPattern = config.getString("origin_pattern");
 
-        final Integer consulHost = config.getInteger("consul_host");
+        final String consulHost = config.getString("consul_host");
         final Integer consulPort = config.getInteger("consul_port");
 
         final JsonObject configuration = new JsonObject()

@@ -17,6 +17,8 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.sql.ResultSet;
+import io.vertx.ext.sql.SQLOptions;
+import io.vertx.ext.sql.TransactionIsolation;
 import io.vertx.ext.sql.UpdateResult;
 import io.vertx.rxjava.ext.jdbc.JDBCClient;
 import io.vertx.rxjava.ext.sql.SQLConnection;
@@ -34,6 +36,8 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 public class MySQLStore implements Store {
     private final Logger logger = LoggerFactory.getLogger(MySQLStore.class.getName());
+
+    private static final SQLOptions OPTIONS = new SQLOptions().setTransactionIsolation(TransactionIsolation.SERIALIZABLE);
 
     private static final String ERROR_GET_CONNECTION = "An error occurred while getting a connection";
     private static final String ERROR_INSERT_DESIGN = "An error occurred while inserting a design";
@@ -90,6 +94,7 @@ public class MySQLStore implements Store {
     private Single<SQLConnection> withConnection() {
         return client.rxGetConnection()
                 .timeout(CONNECT_TIMEOUT, SECONDS)
+                .doOnSuccess(conn -> conn.setOptions(OPTIONS))
                 .doOnError(err -> handleError(ERROR_GET_CONNECTION, err));
     }
 

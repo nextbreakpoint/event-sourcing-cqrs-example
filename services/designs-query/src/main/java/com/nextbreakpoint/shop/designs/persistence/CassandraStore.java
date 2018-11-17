@@ -83,7 +83,7 @@ public class CassandraStore implements Store {
                 .map(pst -> pst.bind(makeLoadParams(request)))
                 .map(session::executeAsync)
                 .flatMap(this::getResultSet)
-                .map(rs -> toDesignDocuments(rs, this::getDesignDocument))
+                .map(rs -> toDesignDocuments(rs, 1, this::getDesignDocument))
                 .map(documents -> documents.stream().findFirst().orElse(null))
                 .map(document -> new LoadDesignResponse(request.getUuid(), document));
     }
@@ -93,19 +93,22 @@ public class CassandraStore implements Store {
                 .map(PreparedStatement::bind)
                 .map(session::executeAsync)
                 .flatMap(this::getResultSet)
-                .map(rs -> toDesignDocuments(rs, this::getMinimalDesignDocument))
+                .map(rs -> toDesignDocuments(rs, 0, this::getMinimalDesignDocument))
                 .map(ListDesignsResponse::new);
     }
 
-    private List<DesignDocument> toDesignDocuments(ResultSet rs, Function<Row, DesignDocument> mapper) {
+    private List<DesignDocument> toDesignDocuments(ResultSet rs, int limit, Function<Row, DesignDocument> mapper) {
         final List<DesignDocument> documents = new ArrayList<>();
         final Iterator<Row> iter = rs.iterator();
-        if (iter.hasNext()) {
+        while (iter.hasNext()) {
             if (rs.getAvailableWithoutFetching() >= 100 && !rs.isFullyFetched()) {
                 rs.fetchMoreResults();
             }
             final Row row = iter.next();
             documents.add(mapper.apply(row));
+            if (limit > 0 && documents.size() >= limit) {
+                break;
+            }
         }
         return documents;
     }

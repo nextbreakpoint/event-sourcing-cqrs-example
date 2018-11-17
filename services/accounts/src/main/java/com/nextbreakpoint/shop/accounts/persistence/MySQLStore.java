@@ -24,14 +24,15 @@ import rx.Single;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
-import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.stream.Collectors.toList;
 
 public class MySQLStore implements Store {
     private final Logger logger = LoggerFactory.getLogger(MySQLStore.class.getName());
 
-    private static final SQLOptions OPTIONS = new SQLOptions().setTransactionIsolation(TransactionIsolation.SERIALIZABLE);
+    private static final SQLOptions OPTIONS = new SQLOptions()
+            .setTransactionIsolation(TransactionIsolation.SERIALIZABLE)
+            .setQueryTimeout(10000);
 
     private static final String ERROR_GET_CONNECTION = "An error occurred while getting a connection";
     private static final String ERROR_INSERT_ACCOUNT = "An error occurred while inserting an account";
@@ -44,9 +45,6 @@ public class MySQLStore implements Store {
     private static final String DELETE_ACCOUNT = "DELETE FROM ACCOUNTS WHERE UUID = ?";
     private static final String SELECT_ACCOUNTS = "SELECT * FROM ACCOUNTS";
     private static final String SELECT_ACCOUNTS_BY_EMAIL = "SELECT * FROM ACCOUNTS WHERE EMAIL = ?";
-
-    private static final int EXECUTE_TIMEOUT = 10;
-    private static final int CONNECT_TIMEOUT = 5;
 
     private final JDBCClient client;
 
@@ -80,53 +78,46 @@ public class MySQLStore implements Store {
 
     private Single<SQLConnection> withConnection() {
         return client.rxGetConnection()
-                .timeout(CONNECT_TIMEOUT, SECONDS)
                 .doOnSuccess(conn -> conn.setOptions(OPTIONS))
                 .doOnError(err -> handleError(ERROR_GET_CONNECTION, err));
     }
 
     private Single<InsertAccountResponse> doInsertAccount(SQLConnection conn, InsertAccountRequest request) {
-        return conn.rxUpdateWithParams(INSERT_ACCOUNT, makeInsertParams(request))
-                .timeout(EXECUTE_TIMEOUT, SECONDS)
+        return conn.rxSetAutoCommit(false)
+                .flatMap(x -> conn.rxUpdateWithParams(INSERT_ACCOUNT, makeInsertParams(request)))
                 .map(UpdateResult::getUpdated)
                 .map(result -> new InsertAccountResponse(request.getUuid(), request.getRole(), result))
+                .doOnError(x -> conn.rxRollback().subscribe())
+                .doOnSuccess(x -> conn.rxCommit().subscribe())
                 .doAfterTerminate(() -> conn.rxClose().subscribe());
     }
 
     private Single<LoadAccountResponse> doLoadAccount(SQLConnection conn, LoadAccountRequest request) {
-        return conn.rxQueryWithParams(SELECT_ACCOUNT, makeLoadParams(request))
-                .timeout(EXECUTE_TIMEOUT, SECONDS)
+        return conn.rxSetAutoCommit(true)
+                .flatMap(x -> conn.rxQueryWithParams(SELECT_ACCOUNT, makeLoadParams(request)))
                 .map(ResultSet::getRows)
                 .map(this::exactlyOne)
-                .map(result -> result.map(row -> {
-                    final String uuid = row.getString("UUID");
-                    final String name = row.getString("NAME");
-                    final String role = row.getString("ROLE");
-                    final Account account = new Account(uuid.toString(), name, role);
-                    return new LoadAccountResponse(request.getUuid(), account);
-                }).orElseGet(() -> new LoadAccountResponse(request.getUuid(), null)))
+                .map(result -> result.map(this::toAccount).orElse(null))
+                .map(account -> new LoadAccountResponse(request.getUuid(), account))
                 .doAfterTerminate(() -> conn.rxClose().subscribe());
     }
 
     private Single<DeleteAccountResponse> doDeleteAccount(SQLConnection conn, DeleteAccountRequest request) {
-        return conn.rxUpdateWithParams(DELETE_ACCOUNT, makeDeleteParams(request))
-                .timeout(EXECUTE_TIMEOUT, SECONDS)
+        return conn.rxSetAutoCommit(false)
+                .flatMap(x -> conn.rxUpdateWithParams(DELETE_ACCOUNT, makeDeleteParams(request)))
                 .map(UpdateResult::getUpdated)
                 .map(result -> new DeleteAccountResponse(request.getUuid(), result))
+                .doOnError(x -> conn.rxRollback().subscribe())
+                .doOnSuccess(x -> conn.rxCommit().subscribe())
                 .doAfterTerminate(() -> conn.rxClose().subscribe());
     }
 
     private Single<ListAccountsResponse> doListAccounts(SQLConnection conn, ListAccountsRequest request) {
-        return selectAccounts(conn, request)
-                .timeout(EXECUTE_TIMEOUT, SECONDS)
+        return conn.rxSetAutoCommit(true)
+                .flatMap(x -> selectAccounts(conn, request))
                 .map(ResultSet::getRows)
-                .map(result -> {
-                    final List<String> list = result
-                            .stream()
-                            .map(x -> x.getString("UUID"))
-                            .collect(Collectors.toList());
-                    return new ListAccountsResponse(list);
-                })
+                .map(result -> result.stream().map(x -> x.getString("UUID")).collect(toList()))
+                .map(ListAccountsResponse::new)
                 .doAfterTerminate(() -> conn.rxClose().subscribe());
     }
 
@@ -136,6 +127,13 @@ public class MySQLStore implements Store {
         } else {
             return conn.rxQuery(SELECT_ACCOUNTS);
         }
+    }
+
+    private Account toAccount(JsonObject row) {
+        final String uuid = row.getString("UUID");
+        final String name = row.getString("NAME");
+        final String role = row.getString("ROLE");
+        return new Account(uuid, name, role);
     }
 
     private Optional<JsonObject> exactlyOne(List<JsonObject> list) {

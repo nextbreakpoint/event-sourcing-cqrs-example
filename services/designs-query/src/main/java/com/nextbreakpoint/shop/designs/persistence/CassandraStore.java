@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class CassandraStore implements Store {
@@ -80,22 +81,33 @@ public class CassandraStore implements Store {
     private Single<LoadDesignResponse> doLoadDesign(Session session, LoadDesignRequest request) {
         return Single.from(selectDesign)
                 .map(pst -> pst.bind(makeLoadParams(request)))
-                .map(bst -> session.executeAsync(bst))
-                .flatMap(rsf -> getResultSet(rsf))
-                .map(rs -> {
-                    final List<DesignDocument> documents = new ArrayList<>();
-                    final Iterator<Row> iter = rs.iterator();
-                    if (iter.hasNext()) {
-                        if (rs.getAvailableWithoutFetching() >= 100 && !rs.isFullyFetched()) {
-                            rs.fetchMoreResults();
-                        }
-                        final Row row = iter.next();
-                        documents.add(getDesignDocument(row));
-                    }
-                    return documents;
-                })
-                .map(documents -> documents.stream().findFirst())
-                .map(document -> new LoadDesignResponse(request.getUuid(), document.orElse(null)));
+                .map(session::executeAsync)
+                .flatMap(this::getResultSet)
+                .map(rs -> toDesignDocuments(rs, this::getDesignDocument))
+                .map(documents -> documents.stream().findFirst().orElse(null))
+                .map(document -> new LoadDesignResponse(request.getUuid(), document));
+    }
+
+    private Single<ListDesignsResponse> doListDesigns(Session session, ListDesignsRequest request) {
+        return Single.from(selectDesigns)
+                .map(PreparedStatement::bind)
+                .map(session::executeAsync)
+                .flatMap(this::getResultSet)
+                .map(rs -> toDesignDocuments(rs, this::getMinimalDesignDocument))
+                .map(ListDesignsResponse::new);
+    }
+
+    private List<DesignDocument> toDesignDocuments(ResultSet rs, Function<Row, DesignDocument> mapper) {
+        final List<DesignDocument> documents = new ArrayList<>();
+        final Iterator<Row> iter = rs.iterator();
+        if (iter.hasNext()) {
+            if (rs.getAvailableWithoutFetching() >= 100 && !rs.isFullyFetched()) {
+                rs.fetchMoreResults();
+            }
+            final Row row = iter.next();
+            documents.add(mapper.apply(row));
+        }
+        return documents;
     }
 
     private DesignDocument getDesignDocument(Row row) {
@@ -104,26 +116,6 @@ public class CassandraStore implements Store {
         final String checksum = row.getString("DESIGN_CHECKSUM");
         final Instant timestamp = row.getTimestamp("DESIGN_TIMESTAMP").toInstant();
         return new DesignDocument(uuid, json, checksum, formatDate(timestamp));
-    }
-
-    private Single<ListDesignsResponse> doListDesigns(Session session, ListDesignsRequest request) {
-        return Single.from(selectDesigns)
-                .map(pst -> pst.bind())
-                .map(bst -> session.executeAsync(bst))
-                .flatMap(rsf -> getResultSet(rsf))
-                .map(rs -> {
-                    final List<DesignDocument> documents = new ArrayList<>();
-                    final Iterator<Row> iter = rs.iterator();
-                    while (iter.hasNext()) {
-                        if (rs.getAvailableWithoutFetching() >= 100 && !rs.isFullyFetched()) {
-                            rs.fetchMoreResults();
-                        }
-                        final Row row = iter.next();
-                        documents.add(getMinimalDesignDocument(row));
-                    }
-                    return documents;
-                })
-                .map(documents -> new ListDesignsResponse(documents));
     }
 
     private DesignDocument getMinimalDesignDocument(Row row) {

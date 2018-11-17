@@ -238,6 +238,8 @@ public class VerticleIT {
 
       updateDesign(authorization, uuid1, createPostData(SCRIPT2));
 
+      pause();
+
 //      await().atMost(TWO_SECONDS)
 //              .pollInterval(ONE_HUNDRED_MILLISECONDS)
 //              .untilAsserted(() -> {
@@ -301,6 +303,8 @@ public class VerticleIT {
 
       deleteDesign(authorization, uuid1);
 
+      pause();
+
 //      await().atMost(TWO_SECONDS)
 //              .pollInterval(ONE_HUNDRED_MILLISECONDS)
 //              .untilAsserted(() -> {
@@ -321,6 +325,8 @@ public class VerticleIT {
       assertThat(getDesigns(authorization)).doesNotContain(document1);
 
       deleteDesign(authorization, uuid2);
+
+      pause();
 
       assertThat(getDesigns(authorization)).doesNotContain(document1, document2);
     } finally {

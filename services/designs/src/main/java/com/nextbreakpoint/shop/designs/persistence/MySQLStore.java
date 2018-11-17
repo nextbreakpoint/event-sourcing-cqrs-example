@@ -30,14 +30,16 @@ import java.time.format.DateTimeFormatter;
 import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.UUID;
 
-import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.stream.Collectors.toList;
 
 public class MySQLStore implements Store {
     private final Logger logger = LoggerFactory.getLogger(MySQLStore.class.getName());
 
-    private static final SQLOptions OPTIONS = new SQLOptions().setTransactionIsolation(TransactionIsolation.SERIALIZABLE);
+    private static final SQLOptions OPTIONS = new SQLOptions()
+            .setTransactionIsolation(TransactionIsolation.READ_COMMITTED)
+            .setQueryTimeout(10000);
 
     private static final String ERROR_GET_CONNECTION = "An error occurred while getting a connection";
     private static final String ERROR_INSERT_DESIGN = "An error occurred while inserting a design";
@@ -51,9 +53,6 @@ public class MySQLStore implements Store {
     private static final String SELECT_DESIGN = "SELECT * FROM DESIGNS WHERE UUID = ?";
     private static final String SELECT_DESIGNS = "SELECT * FROM DESIGNS";
     private static final String DELETE_DESIGN = "DELETE FROM DESIGNS WHERE UUID = ?";
-
-    private static final int EXECUTE_TIMEOUT = 10;
-    private static final int CONNECT_TIMEOUT = 5;
 
     private final JDBCClient client;
 
@@ -93,15 +92,13 @@ public class MySQLStore implements Store {
 
     private Single<SQLConnection> withConnection() {
         return client.rxGetConnection()
-                .timeout(CONNECT_TIMEOUT, SECONDS)
                 .doOnSuccess(conn -> conn.setOptions(OPTIONS))
                 .doOnError(err -> handleError(ERROR_GET_CONNECTION, err));
     }
 
     private Single<InsertDesignResponse> doInsertDesign(SQLConnection conn, InsertDesignRequest request) {
         return conn.rxSetAutoCommit(false)
-                .timeout(EXECUTE_TIMEOUT, SECONDS)
-                .flatMap(x -> conn.rxUpdateWithParams(INSERT_DESIGN, makeInsertParams(request)).timeout(EXECUTE_TIMEOUT, SECONDS))
+                .flatMap(x -> conn.rxUpdateWithParams(INSERT_DESIGN, makeInsertParams(request)))
                 .map(UpdateResult::getUpdated)
                 .map(result -> new InsertDesignResponse(request.getUuid(), result))
                 .doOnError(x -> conn.rxRollback().subscribe())
@@ -111,8 +108,7 @@ public class MySQLStore implements Store {
 
     private Single<UpdateDesignResponse> doUpdateDesign(UpdateDesignRequest request, SQLConnection conn) {
         return conn.rxSetAutoCommit(false)
-                .timeout(EXECUTE_TIMEOUT, SECONDS)
-                .flatMap(x -> conn.rxUpdateWithParams(UPDATE_DESIGN, makeUpdateParams(request)).timeout(EXECUTE_TIMEOUT, SECONDS))
+                .flatMap(x -> conn.rxUpdateWithParams(UPDATE_DESIGN, makeUpdateParams(request)))
                 .map(UpdateResult::getUpdated)
                 .map(result -> new UpdateDesignResponse(request.getUuid(), result))
                 .doOnError(x -> conn.rxRollback().subscribe())
@@ -121,25 +117,18 @@ public class MySQLStore implements Store {
     }
 
     private Single<LoadDesignResponse> doLoadDesign(SQLConnection conn, LoadDesignRequest request) {
-        return conn.rxQueryWithParams(SELECT_DESIGN, new JsonArray().add(request.getUuid().toString()))
-                .timeout(EXECUTE_TIMEOUT, SECONDS)
+        return conn.rxSetAutoCommit(true)
+                .flatMap(x -> conn.rxQueryWithParams(SELECT_DESIGN, new JsonArray().add(request.getUuid().toString())))
                 .map(ResultSet::getRows)
                 .map(this::exactlyOne)
-                .map(result -> result.map(row -> {
-                    final String uuid = row.getString("UUID");
-                    final String json = row.getString("JSON");
-                    final String updated = row.getString("UPDATED");
-                    final String checksum = row.getString("CHECKSUM");
-                    return new DesignDocument(uuid, json, checksum, formatDate(convertStringToInstant(updated)));
-                })
-                .map(document -> new LoadDesignResponse(request.getUuid(), document))
-                .orElseGet(() -> new LoadDesignResponse(request.getUuid(), null)))
+                .map(result -> result.map(this::toDocument).orElse(null))
+                .map(document -> new LoadDesignResponse(UUID.fromString(document.getUuid()), document))
                 .doAfterTerminate(() -> conn.rxClose().subscribe());
     }
 
     private Single<DeleteDesignResponse> doDeleteDesign(SQLConnection conn, DeleteDesignRequest request) {
         return conn.rxSetAutoCommit(false)
-                .flatMap(x -> conn.rxUpdateWithParams(DELETE_DESIGN, makeDeleteParams(request)).timeout(EXECUTE_TIMEOUT, SECONDS))
+                .flatMap(x -> conn.rxUpdateWithParams(DELETE_DESIGN, makeDeleteParams(request)))
                 .map(UpdateResult::getUpdated)
                 .map(result -> new DeleteDesignResponse(request.getUuid(), result))
                 .doOnError(err -> conn.rxRollback().subscribe())
@@ -148,18 +137,26 @@ public class MySQLStore implements Store {
     }
 
     private Single<ListDesignsResponse> doListDesigns(SQLConnection conn) {
-        return conn.rxQuery(SELECT_DESIGNS)
-                .timeout(EXECUTE_TIMEOUT, SECONDS)
+        return conn.rxSetAutoCommit(true)
+                .flatMap(x -> conn.rxQuery(SELECT_DESIGNS))
                 .map(ResultSet::getRows)
-                .map(result -> result.stream()
-                        .map(row -> {
-                            final String uuid = row.getString("UUID");
-                            final String checksum = row.getString("CHECKSUM");
-                            return new DesignDocument(uuid, null, checksum, null);
-                        })
-                        .collect(Collectors.toList()))
-                .map(documents -> new ListDesignsResponse(documents))
+                .map(result -> result.stream().map(this::toDocumentNoJSON).collect(toList()))
+                .map(ListDesignsResponse::new)
                 .doAfterTerminate(() -> conn.rxClose().subscribe());
+    }
+
+    private DesignDocument toDocument(JsonObject row) {
+        final String uuid = row.getString("UUID");
+        final String json = row.getString("JSON");
+        final String updated = row.getString("UPDATED");
+        final String checksum = row.getString("CHECKSUM");
+        return new DesignDocument(uuid, json, checksum, formatDate(convertStringToInstant(updated)));
+    }
+
+    private DesignDocument toDocumentNoJSON(JsonObject row) {
+        final String uuid = row.getString("UUID");
+        final String checksum = row.getString("CHECKSUM");
+        return new DesignDocument(uuid, null, checksum, null);
     }
 
     private Optional<JsonObject> exactlyOne(List<JsonObject> list) {

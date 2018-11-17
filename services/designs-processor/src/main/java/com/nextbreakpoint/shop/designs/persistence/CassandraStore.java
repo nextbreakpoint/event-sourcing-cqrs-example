@@ -18,6 +18,7 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import rx.Single;
 
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -107,30 +108,32 @@ public class CassandraStore implements Store {
     private Single<PersistenceResult> appendDesignEvent(Session session, UUID uuid, Object[] values) {
         return Single.from(insertDesign)
                 .map(pst -> pst.bind(values))
-                .map(bst -> session.executeAsync(bst))
-                .flatMap(rsf -> getResultSet(rsf))
+                .map(session::executeAsync)
+                .flatMap(this::getResultSet)
                 .map(rs -> new PersistenceResult(uuid));
     }
 
     private Single<PersistenceResult> updateDesignView(Session session, UUID uuid) {
         return Single.from(selectDesign)
                 .map(pst -> pst.bind(new Object[] { uuid }))
-                .map(bst -> session.executeAsync(bst))
-                .flatMap(rsf -> getResultSet(rsf))
-                .map(rs -> {
-                    final List<DesignChange> changes = new ArrayList<>();
-                    final Iterator<Row> iter = rs.iterator();
-                    while (iter.hasNext()) {
-                        if (rs.getAvailableWithoutFetching() >= 100 && !rs.isFullyFetched()) {
-                            rs.fetchMoreResults();
-                        }
-                        final Row row = iter.next();
-                        changes.add(getDesignChange(row));
-                    }
-                    return changes;
-                })
+                .map(session::executeAsync)
+                .flatMap(this::getResultSet)
+                .map(this::toDesignChanges)
                 .map(changes -> changes.stream().reduce(this::mergeChanges))
                 .flatMap(maybeChange -> maybeChange.map(change -> updateDesignView(session, change)).orElseGet(() -> Single.just(new PersistenceResult(uuid))));
+    }
+
+    private List<DesignChange> toDesignChanges(ResultSet rs) {
+        final List<DesignChange> changes = new ArrayList<>();
+        final Iterator<Row> iter = rs.iterator();
+        while (iter.hasNext()) {
+            if (rs.getAvailableWithoutFetching() >= 100 && !rs.isFullyFetched()) {
+                rs.fetchMoreResults();
+            }
+            final Row row = iter.next();
+            changes.add(getDesignChange(row));
+        }
+        return changes;
     }
 
     private Single<PersistenceResult> updateDesignView(Session session, DesignChange change) {
@@ -138,22 +141,22 @@ public class CassandraStore implements Store {
             case "created": {
                 return Single.from(insertDesignView)
                         .map(pst -> pst.bind(makeInsertViewParams(change)))
-                        .map(bst -> session.executeAsync(bst))
-                        .flatMap(rsf -> getResultSet(rsf))
+                        .map(session::executeAsync)
+                        .flatMap(this::getResultSet)
                         .map(rs -> new PersistenceResult(change.getUuid()));
             }
             case "updated": {
                 return Single.from(updateDesignView)
                         .map(pst -> pst.bind(makeUpdateViewParams(change)))
-                        .map(bst -> session.executeAsync(bst))
-                        .flatMap(rsf -> getResultSet(rsf))
+                        .map(session::executeAsync)
+                        .flatMap(this::getResultSet)
                         .map(rs -> new PersistenceResult(change.getUuid()));
             }
             case "deleted": {
                 return Single.from(deleteDesignView)
                         .map(pst -> pst.bind(makeDeleteViewParams(change)))
-                        .map(bst -> session.executeAsync(bst))
-                        .flatMap(rsf -> getResultSet(rsf))
+                        .map(session::executeAsync)
+                        .flatMap(this::getResultSet)
                         .map(rs -> new PersistenceResult(change.getUuid()));
             }
         }
@@ -203,7 +206,7 @@ public class CassandraStore implements Store {
 
     private String computeChecksum(String json) {
         try {
-            final byte[] bytes = json.getBytes("UTF-8");
+            final byte[] bytes = json.getBytes(StandardCharsets.UTF_8);
             final MessageDigest md = MessageDigest.getInstance("MD5");
             return Base64.getEncoder().encodeToString(md.digest(bytes));
         } catch (Exception e) {

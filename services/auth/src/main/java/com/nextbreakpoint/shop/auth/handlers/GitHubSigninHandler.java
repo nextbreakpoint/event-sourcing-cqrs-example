@@ -34,7 +34,7 @@ import static com.nextbreakpoint.shop.common.model.Headers.X_TRACE_ID;
 import static com.nextbreakpoint.shop.common.vertx.Authentication.NULL_USER_UUID;
 
 public class GitHubSigninHandler implements Handler<RoutingContext> {
-    public static final String CALLBACK_PATH = "/auth/callback";
+    private static final String CALLBACK_PATH = "/auth/callback";
 
     private final OAuth2AuthHandler oauthHandler;
     private final WebClient accountsClient;
@@ -216,7 +216,7 @@ public class GitHubSigninHandler implements Handler<RoutingContext> {
                 .setTokenPath(oauthTokenPath)
                 .setAuthorizationPath(oauthAuthorisePath);
 
-        final OAuth2Auth oauth2Provider = OAuth2Auth.create(vetx, OAuth2FlowType.AUTH_CODE, oauth2Options);
+        final OAuth2Auth oauth2Provider = OAuth2Auth.create(vetx, oauth2Options);
         final OAuth2AuthHandler oauth2 = OAuth2AuthHandler.create(oauth2Provider, authUrl + CALLBACK_PATH);
 
         oauth2.addAuthority(oauthAuthority);

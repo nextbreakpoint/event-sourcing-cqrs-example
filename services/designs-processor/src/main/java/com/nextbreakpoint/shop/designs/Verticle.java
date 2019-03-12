@@ -158,7 +158,7 @@ public class Verticle extends AbstractVerticle {
         final HttpServerOptions options = ServerUtil.makeServerOptions(config);
 
         server = vertx.createHttpServer(options)
-                .requestHandler(mainRouter::accept)
+                .requestHandler(mainRouter)
                 .listen(port);
 
         return null;

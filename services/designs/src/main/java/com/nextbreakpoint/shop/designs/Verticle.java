@@ -124,17 +124,17 @@ public class Verticle extends AbstractVerticle {
 
         final Handler<RoutingContext> onAccessDenied = routingContext -> routingContext.fail(Failure.accessDenied("Authorisation failed"));
 
-        final Handler getTileHandler = new AccessHandler(jwtProvider, new TileHandler(store, executor), onAccessDenied, asList(ADMIN, GUEST, ANONYMOUS));
+        final Handler<RoutingContext>  getTileHandler = new AccessHandler(jwtProvider, new TileHandler(store, executor), onAccessDenied, asList(ADMIN, GUEST, ANONYMOUS));
 
-        final Handler listDesignsHandler = new AccessHandler(jwtProvider, createListDesignsHandler(store), onAccessDenied, asList(ADMIN, GUEST, ANONYMOUS));
+        final Handler<RoutingContext>  listDesignsHandler = new AccessHandler(jwtProvider, createListDesignsHandler(store), onAccessDenied, asList(ADMIN, GUEST, ANONYMOUS));
 
-        final Handler loadDesignHandler = new AccessHandler(jwtProvider, createLoadDesignHandler(store), onAccessDenied, asList(ADMIN, GUEST, ANONYMOUS));
+        final Handler<RoutingContext>  loadDesignHandler = new AccessHandler(jwtProvider, createLoadDesignHandler(store), onAccessDenied, asList(ADMIN, GUEST, ANONYMOUS));
 
-        final Handler insertDesignHandler = new AccessHandler(jwtProvider, createInsertDesignHandler(store, sseTopic, messageSource, producer), onAccessDenied, asList(ADMIN));
+        final Handler<RoutingContext>  insertDesignHandler = new AccessHandler(jwtProvider, createInsertDesignHandler(store, sseTopic, messageSource, producer), onAccessDenied, asList(ADMIN));
 
-        final Handler updateDesignHandler = new AccessHandler(jwtProvider, createUpdateDesignHandler(store, sseTopic, messageSource, producer), onAccessDenied, asList(ADMIN));
+        final Handler<RoutingContext>  updateDesignHandler = new AccessHandler(jwtProvider, createUpdateDesignHandler(store, sseTopic, messageSource, producer), onAccessDenied, asList(ADMIN));
 
-        final Handler deleteDesignHandler = new AccessHandler(jwtProvider, createDeleteDesignHandler(store, sseTopic, messageSource, producer), onAccessDenied, asList(ADMIN));
+        final Handler<RoutingContext>  deleteDesignHandler = new AccessHandler(jwtProvider, createDeleteDesignHandler(store, sseTopic, messageSource, producer), onAccessDenied, asList(ADMIN));
 
         mainRouter.get("/designs/:uuid/:zoom/:x/:y/:size.png")
                 .produces(IMAGE_PNG)
@@ -170,7 +170,7 @@ public class Verticle extends AbstractVerticle {
         final HttpServerOptions options = ServerUtil.makeServerOptions(config);
 
         server = vertx.createHttpServer(options)
-                .requestHandler(mainRouter::accept)
+                .requestHandler(mainRouter)
                 .listen(port);
 
         return null;

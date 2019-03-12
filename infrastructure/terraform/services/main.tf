@@ -193,43 +193,43 @@ EOF
   filename = "../../secrets/environments/${var.environment}/${var.colour}/config/designs-sse.json"
 }
 
-resource "local_file" "designs_config" {
-  content = <<EOF
-{
-  "host_port": 43031,
-
-  "server_keystore_path": "/keystores/keystore-server.jks",
-  "server_keystore_secret": "${var.keystore_password}",
-
-  "jwt_keystore_path": "/keystores/keystore-auth.jceks",
-  "jwt_keystore_type": "jceks",
-  "jwt_keystore_secret": "${var.keystore_password}",
-
-  "origin_pattern": "https://${var.hosted_zone_name}(:[0-9]+)?",
-
-  "graphite_reporter_enabled": false,
-  "graphite_host": "http://${var.environment}-${var.colour}-swarm-manager.${var.hosted_zone_name}",
-  "graphite_port": 2003,
-
-  "jdbc_url": "jdbc:mysql://shop-mysql:43306/designs?useSSL=false&allowPublicKeyRetrieval=true&nullNamePatternMatchesAll=true",
-  "jdbc_driver": "com.mysql.cj.jdbc.Driver",
-  "jdbc_username": "${var.mysql_username}",
-  "jdbc_password": "${var.mysql_password}",
-  "jdbc_max_pool_size": 200,
-  "jdbc_min_pool_size": 20,
-
-  "message_source": "service-designs",
-
-  "kafka_bootstrap_servers": "${var.environment}-${var.colour}-swarm-worker-int.${var.hosted_zone_name}:9092",
-
-  "sse_topic": "designs-sse",
-
-  "max_execution_time_in_millis": 30000
-}
-EOF
-
-  filename = "../../secrets/environments/${var.environment}/${var.colour}/config/designs.json"
-}
+# resource "local_file" "designs_config" {
+#   content = <<EOF
+# {
+#   "host_port": 43031,
+#
+#   "server_keystore_path": "/keystores/keystore-server.jks",
+#   "server_keystore_secret": "${var.keystore_password}",
+#
+#   "jwt_keystore_path": "/keystores/keystore-auth.jceks",
+#   "jwt_keystore_type": "jceks",
+#   "jwt_keystore_secret": "${var.keystore_password}",
+#
+#   "origin_pattern": "https://${var.hosted_zone_name}(:[0-9]+)?",
+#
+#   "graphite_reporter_enabled": false,
+#   "graphite_host": "http://${var.environment}-${var.colour}-swarm-manager.${var.hosted_zone_name}",
+#   "graphite_port": 2003,
+#
+#   "jdbc_url": "jdbc:mysql://shop-mysql:43306/designs?useSSL=false&allowPublicKeyRetrieval=true&nullNamePatternMatchesAll=true",
+#   "jdbc_driver": "com.mysql.cj.jdbc.Driver",
+#   "jdbc_username": "${var.mysql_username}",
+#   "jdbc_password": "${var.mysql_password}",
+#   "jdbc_max_pool_size": 200,
+#   "jdbc_min_pool_size": 20,
+#
+#   "message_source": "service-designs",
+#
+#   "kafka_bootstrap_servers": "${var.environment}-${var.colour}-swarm-worker-int.${var.hosted_zone_name}:9092",
+#
+#   "sse_topic": "designs-sse",
+#
+#   "max_execution_time_in_millis": 30000
+# }
+# EOF
+#
+#   filename = "../../secrets/environments/${var.environment}/${var.colour}/config/designs.json"
+# }
 
 resource "local_file" "accounts_config" {
   content = <<EOF

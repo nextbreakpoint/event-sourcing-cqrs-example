@@ -2,6 +2,6 @@
 
 pushd $(pwd)/../services
 
-./deploy.sh $1 $2 $3
+./scripts/deploy.sh $1 $2 $3
 
 popd

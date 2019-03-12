@@ -1,10 +1,10 @@
 # example-images-shop
 
-This repository contains the source code and the deployment scripts of an example of micro-services based application. The application depends on the infrastructure explained at https://github.com/nextbreakpoint/infrastructure-as-code. The micro-services are written in Java using [Vert.x](https://vertx.io) framework and they depend on Apache Cassandra, Apache Kafka and Apache Zookeeper provided by the infrastructure.
+This repository contains the source code and the deployment scripts of an example of micro-services based application. The application requires the infrastructure documented in the repository [infrastructure-as-code](https://github.com/nextbreakpoint/infrastructure-as-code). The micro-services are written in Java using [Vert.x](https://vertx.io) framework and they depend on Apache Cassandra, Apache Kafka and Apache Zookeeper.
 
     THIS PROJECT IS WORK IN PROGRESS
 
-## How to deploy the application
+## Configure and generate secrets
 
 Create a file main.json in the infrastructure/config directory. Copy the content from the file template-main.json. The file should look like:
 
@@ -44,6 +44,8 @@ Generate secrets with command:
 
     ./docker_run.sh generate_secrets
 
+## Deploy the application
+
 Create ECR repositories with command:
 
     ./docker_run.sh module_create ecr
@@ -68,7 +70,7 @@ Create target groups and Route53's records with command:
 
     ./docker_run.sh module_create targets
 
-In order to create the targets groups you must create the Load Balancers (see https://github.com/nextbreakpoint/infrastructure-as-code).
+In order to create the targets groups you must create the Load Balancers (see [infrastructure-as-code](https://github.com/nextbreakpoint/infrastructure-as-code)).
 
 Copy SSH key for accessing EC2 machines and change permissions:
 
@@ -90,26 +92,36 @@ Configure MySQL server with command:
 
     ./swarm_run.sh setup_mysql
 
+Configure Kafka topics with command:
+
+    ./swarm_run.sh create_kafka_topics
+
 Deploy services on Docker Swarm with commands:
 
     ./swarm_run.sh deploy_stack shop-auth
     ./swarm_run.sh deploy_stack shop-accounts
-    ./swarm_run.sh deploy_stack shop-designs
+    ./swarm_run.sh deploy_stack shop-designs-command
+    ./swarm_run.sh deploy_stack shop-designs-processor
+    ./swarm_run.sh deploy_stack shop-designs-query
+    ./swarm_run.sh deploy_stack shop-designs-sse
     ./swarm_run.sh deploy_stack shop-web
 
-## How to access the application
+## Access the application
 
 Open a browser at https://prod-green-shop.yourdomain.com/content/designs.
 
 You will be redirected to GitHub for authentication. Use the email you configured in the main.json to login as admin.
 
-## How to remove the application
+## Destroy the application
 
 Remove services with commands:
 
     ./swarm_run.sh remove_stack shop-auth
     ./swarm_run.sh remove_stack shop-accounts
-    ./swarm_run.sh remove_stack shop-designs
+    ./swarm_run.sh remove_stack shop-designs-command
+    ./swarm_run.sh remove_stack shop-designs-processor
+    ./swarm_run.sh remove_stack shop-designs-query
+    ./swarm_run.sh remove_stack shop-designs-sse
     ./swarm_run.sh remove_stack shop-web
 
 Remove MySQL server with command:
@@ -119,6 +131,10 @@ Remove MySQL server with command:
 Remove NGINX server with command:
 
     ./swarm_run.sh remove_stack shop-nginx
+
+Delete Kafka topics with command:
+
+    ./swarm_run.sh delete_kafka_topics
 
 Delete Cassandra keyspaces and users with command:
 
@@ -136,8 +152,10 @@ Destroy ECR repositories with command:
 
     ./docker_run.sh module_destroy ecr
 
+## Reset Terraform
+
 Reset Terraform's state with command:
 
     ./docker_run.sh reset_terraform
 
-Be careful to don't reset the state before destroying all managed infrastructure.
+Be careful to don't reset the state before destroying the infrastructure.

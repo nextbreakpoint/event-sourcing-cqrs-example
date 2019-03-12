@@ -38,68 +38,64 @@ Create a file main.json in the infrastructure/config directory. Copy the content
 
 Configure Terraform's backend with command:
 
-    cd infrastructure && ./docker_run.sh configure_terraform your_terraform_bucket
+    ./docker_run.sh configure_terraform your_terraform_bucket
 
 Generate secrets with command:
 
-    cd infrastructure && ./docker_run.sh generate_secrets
+    ./docker_run.sh generate_secrets
 
 Create ECR repositories with command:
 
-    cd infrastructure && ./docker_run.sh module_create ecr
+    ./docker_run.sh module_create ecr
 
-Build Docker images with command:
+Build Docker images and push images to ECR with command:
 
-    cd services && cd mvn clean package
-
-Deploy images to ECR with command:
-
-    cd services && ./scripts/deploy.sh your_aws_account_id.dkr.ecr.eu-west-1.amazonaws.com your_access_id your_secret_access_key
+    ./build_and_push_images.sh your_aws_account_id.dkr.ecr.eu-west-1.amazonaws.com your_access_id your_secret_access_key
 
 Create services configuration files with command:
 
-    cd infrastructure && ./docker_run.sh module_create services
+    ./docker_run.sh module_create services
 
 Create NGINX configuration file with command:
 
-    cd infrastructure && ./docker_run.sh module_create nginx
+    ./docker_run.sh module_create nginx
 
 Create secrets files in S3 with command:
 
-    cd infrastructure && ./docker_run.sh module_create secrets
+    ./docker_run.sh module_create secrets
 
 Create target groups and Route53's records with command:
 
-    cd infrastructure && ./docker_run.sh module_create targets
+    ./docker_run.sh module_create targets
 
 In order to create the targets groups you must create the Load Balancers (see https://github.com/nextbreakpoint/infrastructure-as-code).
 
 Copy SSH key for accessing EC2 machines and change permissions:
 
-    cd infrastructure && chmod 600 prod-green-deployer.pem
+    chmod 600 prod-green-deployer.pem
 
 Create Cassandra keyspaces and users with command:
 
-    cd infrastructure && ./cassandra_script.sh create
+    ./cassandra_script.sh create
 
 Deploy NGINX server on Docker Swarm with command:
 
-    cd infrastructure && ./swarm_run.sh deploy_stack shop-nginx
+    ./swarm_run.sh deploy_stack shop-nginx
 
 Deploy MySQL server on Docker Swarm with command:
 
-    cd infrastructure && ./swarm_run.sh deploy_stack shop-mysql
+    ./swarm_run.sh deploy_stack shop-mysql
 
 Configure MySQL server with command:
 
-    cd infrastructure && ./swarm_run.sh setup_mysql
+    ./swarm_run.sh setup_mysql
 
 Deploy services on Docker Swarm with commands:
 
-    cd infrastructure && ./swarm_run.sh deploy_stack shop-auth
-    cd infrastructure && ./swarm_run.sh deploy_stack shop-accounts
-    cd infrastructure && ./swarm_run.sh deploy_stack shop-designs
-    cd infrastructure && ./swarm_run.sh deploy_stack shop-web
+    ./swarm_run.sh deploy_stack shop-auth
+    ./swarm_run.sh deploy_stack shop-accounts
+    ./swarm_run.sh deploy_stack shop-designs
+    ./swarm_run.sh deploy_stack shop-web
 
 ## How to access the application
 
@@ -111,34 +107,34 @@ You will be redirected to GitHub for authentication. Use the email you configure
 
 Remove services with commands:
 
-    cd infrastructure && ./swarm_run.sh remove_stack shop-auth
-    cd infrastructure && ./swarm_run.sh remove_stack shop-accounts
-    cd infrastructure && ./swarm_run.sh remove_stack shop-designs
-    cd infrastructure && ./swarm_run.sh remove_stack shop-web
+    ./swarm_run.sh remove_stack shop-auth
+    ./swarm_run.sh remove_stack shop-accounts
+    ./swarm_run.sh remove_stack shop-designs
+    ./swarm_run.sh remove_stack shop-web
 
 Remove MySQL server with command:
 
-    cd infrastructure && ./swarm_run.sh remove_stack shop-mysql
+    ./swarm_run.sh remove_stack shop-mysql
 
 Remove NGINX server with command:
 
-    cd infrastructure && ./swarm_run.sh remove_stack shop-nginx
+    ./swarm_run.sh remove_stack shop-nginx
 
 Delete Cassandra keyspaces and users with command:
 
-    cd infrastructure && ./cassandra_script.sh destroy
+    ./cassandra_script.sh destroy
 
 Destroy target groups and Route53's records with command:
 
-    cd infrastructure && ./docker_run.sh module_destroy targets
+    ./docker_run.sh module_destroy targets
 
 Destroy secrets files in S3 with command:
 
-    cd infrastructure && ./docker_run.sh module_destroy secrets
+    ./docker_run.sh module_destroy secrets
 
 Destroy ECR repositories with command:
 
-    cd infrastructure && ./docker_run.sh module_destroy ecr
+    ./docker_run.sh module_destroy ecr
 
 Reset Terraform's state with command:
 

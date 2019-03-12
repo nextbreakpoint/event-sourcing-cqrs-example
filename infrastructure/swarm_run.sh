@@ -23,6 +23,10 @@ export WORKER_C=$(host ${ENVIRONMENT}-${COLOUR}-swarm-worker-int-c.${HOSTED_ZONE
 export NGINX_VERSION=latest
 export NGINX_IMAGE=nginx:${NGINX_VERSION}
 
+export KAFKA_VERSION=1.1.0
+export KAFKA_REVISION=1
+export KAFKA_IMAGE=nextbreakpoint/kafka:${KAFKA_VERSION}-${KAFKA_REVISION}
+
 export SHOP_ACCOUNTS_IMAGE=${ACCOUNT_ID}.dkr.ecr.eu-west-1.amazonaws.com/${ENVIRONMENT}-${COLOUR}-shop/accounts:1.0.0
 export SHOP_DESIGNS_IMAGE=${ACCOUNT_ID}.dkr.ecr.eu-west-1.amazonaws.com/${ENVIRONMENT}-${COLOUR}-shop/designs:1.0.0
 export SHOP_AUTH_IMAGE=${ACCOUNT_ID}.dkr.ecr.eu-west-1.amazonaws.com/${ENVIRONMENT}-${COLOUR}-shop/auth:1.0.0

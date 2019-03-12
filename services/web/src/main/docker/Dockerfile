@@ -1,4 +1,4 @@
-FROM node:11-alpine
+FROM node:8
 
 COPY maven/ /maven
 COPY entrypoint.sh /entrypoint.sh
@@ -13,4 +13,5 @@ ENV PORT ${container.port}
 
 RUN cd maven && npm install
 
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["sh"]
+CMD ["/entrypoint.sh"]

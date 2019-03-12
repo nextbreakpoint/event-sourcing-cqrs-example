@@ -116,7 +116,6 @@
                         <configuration>
                             <showLogs>true</showLogs>
                             <startParallel>true</startParallel>
-                            <autoCreateCustomNetworks>true</autoCreateCustomNetworks>
                             <images>
                                 <image>
                                     <name>nextbreakpoint/zookeeper:3.4.12-1</name>

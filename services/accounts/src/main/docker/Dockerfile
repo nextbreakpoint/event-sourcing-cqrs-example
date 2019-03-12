@@ -10,4 +10,5 @@ EXPOSE ${container.port}
 ENV CONFIG_NAME ${config.name}
 ENV SERVICE_JAR ${service.jar}
 
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["sh"]
+CMD ["/entrypoint.sh"]

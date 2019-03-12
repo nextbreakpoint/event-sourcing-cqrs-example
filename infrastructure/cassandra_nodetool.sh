@@ -9,6 +9,6 @@ export CASSANDRA_PASSWORD=$(cat $(pwd)/config/main.json | jq -r ".cassandra_pass
 
 export ENVIRONMENT_SECRETS_PATH=$(pwd)/secrets/environments/${ENVIRONMENT}/${COLOUR}
 
-export CASSANDRA_HOST=${ENVIRONMENT}-${COLOUR}-swarm-worker.${HOSTED_ZONE_NAME}
+export CASSANDRA_HOST=${ENVIRONMENT}-${COLOUR}-swarm-worker-int.${HOSTED_ZONE_NAME}
 
 docker run --rm -it -e JVM_OPTS="$JVM_OPTS -Djava.rmi.server.hostname=$CASSANDRA_HOST" cassandra:3.11 nodetool -u $CASSANDRA_USERNAME -pw $CASSANDRA_PASSWORD -h $CASSANDRA_HOST -p 7199 "$@"

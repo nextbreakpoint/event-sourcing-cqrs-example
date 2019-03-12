@@ -22,6 +22,6 @@
   "cassandra_username": "cassandra",
   "cassandra_password": "cassandra",
 
-  "verticle_username": "shop",
-  "verticle_password": "changeme"
+  "mysql_username": "shop",
+  "mysql_password": "changeme"
 }

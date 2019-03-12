@@ -32,11 +32,11 @@ Create a file main.json in the infrastructure/config directory. Copy the content
       "cassandra_username": "cassandra",
       "cassandra_password": "cassandra",
 
-      "verticle_username": "shop",
-      "verticle_password": "changeme"
+      "mysql_username": "shop",
+      "mysql_password": "changeme"
     }
 
-Configure the Terraform's backend with command:
+Configure Terraform's backend with command:
 
     cd infrastructure && ./docker_run.sh configure_terraform your_terraform_bucket
 
@@ -48,11 +48,11 @@ Create ECR repositories with command:
 
     cd infrastructure && ./docker_run.sh module_create ecr
 
-Build the Docker images with command:
+Build Docker images with command:
 
     cd services && cd mvn clean package
 
-Deploy the images to ECR with command:
+Deploy images to ECR with command:
 
     cd services && ./scripts/deploy.sh your_aws_account_id.dkr.ecr.eu-west-1.amazonaws.com your_access_id your_secret_access_key
 
@@ -82,16 +82,24 @@ Create Cassandra keyspaces and users with command:
 
     cd infrastructure && ./cassandra_script.sh create
 
-Deploy the micro-services on Docker Swarm with commands:
+Deploy NGINX server on Docker Swarm with command:
+
+    cd infrastructure && ./swarm_run.sh deploy_stack shop-nginx
+
+Deploy MySQL server on Docker Swarm with command:
+
+    cd infrastructure && ./swarm_run.sh deploy_stack shop-mysql
+
+Configure MySQL server with command:
+
+    cd infrastructure && ./swarm_run.sh setup_mysql
+
+Deploy services on Docker Swarm with commands:
 
     cd infrastructure && ./swarm_run.sh deploy_stack shop-auth
     cd infrastructure && ./swarm_run.sh deploy_stack shop-accounts
     cd infrastructure && ./swarm_run.sh deploy_stack shop-designs
     cd infrastructure && ./swarm_run.sh deploy_stack shop-web
-
-Deploy the NGINX server on Docker Swarm with command:
-
-    cd infrastructure && ./swarm_run.sh deploy_stack shop-nginx
 
 ## How to access the application
 
@@ -101,22 +109,26 @@ You will be redirected to GitHub for authentication. Use the email you configure
 
 ## How to remove the application
 
-Remove NGINX server with command:
-
-    cd infrastructure && ./swarm_run.sh remove_stack shop-nginx
-
-Remove the micro-services with commands:
+Remove services with commands:
 
     cd infrastructure && ./swarm_run.sh remove_stack shop-auth
     cd infrastructure && ./swarm_run.sh remove_stack shop-accounts
     cd infrastructure && ./swarm_run.sh remove_stack shop-designs
     cd infrastructure && ./swarm_run.sh remove_stack shop-web
 
+Remove MySQL server with command:
+
+    cd infrastructure && ./swarm_run.sh remove_stack shop-mysql
+
+Remove NGINX server with command:
+
+    cd infrastructure && ./swarm_run.sh remove_stack shop-nginx
+
 Delete Cassandra keyspaces and users with command:
 
     cd infrastructure && ./cassandra_script.sh destroy
 
-Destroy the target groups and Route53's records with command:
+Destroy target groups and Route53's records with command:
 
     cd infrastructure && ./docker_run.sh module_destroy targets
 
@@ -124,7 +136,7 @@ Destroy secrets files in S3 with command:
 
     cd infrastructure && ./docker_run.sh module_destroy secrets
 
-Destroy the ECR repositories with command:
+Destroy ECR repositories with command:
 
     cd infrastructure && ./docker_run.sh module_destroy ecr
 

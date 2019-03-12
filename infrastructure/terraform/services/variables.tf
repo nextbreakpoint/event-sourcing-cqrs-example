@@ -45,7 +45,13 @@ variable "keystore_password" {}
 variable "truststore_password" {}
 
 ### MANDATORY ###
-variable "verticle_username" {}
+variable "cassandra_username" {}
 
 ### MANDATORY ###
-variable "verticle_password" {}
+variable "cassandra_password" {}
+
+### MANDATORY ###
+variable "mysql_username" {}
+
+### MANDATORY ###
+variable "mysql_password" {}

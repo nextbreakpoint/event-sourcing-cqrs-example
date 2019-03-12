@@ -19,3 +19,4 @@ terraform.tfstate*
 **/tfplan
 secrets
 services/web/node
+dependency-reduced-pom.xml

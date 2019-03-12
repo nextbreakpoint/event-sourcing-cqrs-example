@@ -10,16 +10,15 @@
         <module>mysql</module>
         <module>nginx</module>
         <module>consul</module>
-        <module>common</module>
-        <module>designs</module>
+        <module>web</module>
+        <module>api-gateway</module>
         <module>designs-query</module>
         <module>designs-command</module>
         <module>designs-processor</module>
         <module>designs-sse</module>
-        <module>accounts</module>
         <module>auth</module>
-        <module>api-gateway</module>
-        <module>web</module>
+        <module>accounts</module>
+        <module>designs</module>
     </modules>
     <packaging>pom</packaging>
     <licenses>
@@ -39,22 +38,17 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <environment>prod</environment>
         <colour>green</colour>
-        <try.version>2.0.3</try.version>
         <junit5jupiter.version>5.0.2</junit5jupiter.version>
         <junit5platform.version>1.0.2</junit5platform.version>
         <mockito.version>1.9.5</mockito.version>
         <assertj.version>3.6.2</assertj.version>
-        <vertx.version>3.5.0</vertx.version>
-        <slf4j.version>1.7.25</slf4j.version>
+        <vertx.version>3.6.3</vertx.version>
         <restassured.version>2.4.0</restassured.version>
         <hamcrest.version>1.3</hamcrest.version>
         <restito.version>0.9.1</restito.version>
         <awaitility.version>3.0.0</awaitility.version>
-        <dropwizard.version>3.1.0</dropwizard.version>
-        <log4j2.version>2.11.1</log4j2.version>
-        <mysql-connector.version>8.0.12</mysql-connector.version>
-        <cassandra-driver-core.version>3.5.1</cassandra-driver-core.version>
-        <nf.version>2.0.3</nf.version>
+        <jackson.version>2.9.8</jackson.version>
+        <nextfractal.version>2.1.0</nextfractal.version>
         <maven-jar-plugin.version>3.0.2</maven-jar-plugin.version>
         <maven-compiler-plugin.version>3.8.0</maven-compiler-plugin.version>
         <maven-source-plugin.version>3.0.1</maven-source-plugin.version>
@@ -62,17 +56,15 @@
         <maven-surefire-plugin.version>2.22.0</maven-surefire-plugin.version>
         <maven-failsafe-plugin.version>2.22.0</maven-failsafe-plugin.version>
         <maven-toolchains-plugin.version>1.1</maven-toolchains-plugin.version>
+        <maven-shade-plugin.version>3.2.1</maven-shade-plugin.version>
         <build-helper-maven-plugin.version>1.9.1</build-helper-maven-plugin.version>
-        <docker-maven-plugin.version>0.27.2</docker-maven-plugin.version>
+        <docker-maven-plugin.version>0.28.0</docker-maven-plugin.version>
         <java.version>11</java.version>
         <maven.source.release>11</maven.source.release>
         <maven.target.release>11</maven.target.release>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
-        <logstash-gelf.version>1.11.2</logstash-gelf.version>
         <stub.host>localhost</stub.host>
-        <jaxb-api.version>2.2.11</jaxb-api.version>
-        <activation.version>1.1.1</activation.version>
     </properties>
     <build>
         <plugins>
@@ -179,160 +171,65 @@
             <dependency>
                 <groupId>com.nextbreakpoint</groupId>
                 <artifactId>com.nextbreakpoint.nextfractal.core</artifactId>
-                <version>${nf.version}</version>
+                <version>${nextfractal.version}</version>
                 <exclusions>
                     <exclusion>
                         <groupId>com.fasterxml.jackson.core</groupId>
                         <artifactId>jackson-databind</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.fasterxml.jackson.core</groupId>
+                        <artifactId>jackson-annotations</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
             <dependency>
                 <groupId>com.nextbreakpoint</groupId>
                 <artifactId>com.nextbreakpoint.nextfractal.mandelbrot</artifactId>
-                <version>${nf.version}</version>
+                <version>${nextfractal.version}</version>
                 <exclusions>
                     <exclusion>
                         <groupId>com.fasterxml.jackson.core</groupId>
                         <artifactId>jackson-databind</artifactId>
                     </exclusion>
+                    <exclusion>
+                        <groupId>com.fasterxml.jackson.core</groupId>
+                        <artifactId>jackson-annotations</artifactId>
+                    </exclusion>
                 </exclusions>
             </dependency>
             <dependency>
-                <groupId>org.apache.logging.log4j</groupId>
-                <artifactId>log4j-slf4j-impl</artifactId>
-                <version>${log4j2.version}</version>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-core</artifactId>
+                <version>${jackson.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.apache.logging.log4j</groupId>
-                <artifactId>log4j-1.2-api</artifactId>
-                <version>${log4j2.version}</version>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>${jackson.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.apache.logging.log4j</groupId>
-                <artifactId>log4j-jcl</artifactId>
-                <version>${log4j2.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.logging.log4j</groupId>
-                <artifactId>log4j-jul</artifactId>
-                <version>${log4j2.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>mysql</groupId>
-                <artifactId>mysql-connector-java</artifactId>
-                <version>${mysql-connector.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>biz.paluch.logging</groupId>
-                <artifactId>logstash-gelf</artifactId>
-                <version>${logstash-gelf.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.vertx</groupId>
-                <artifactId>vertx-zookeeper</artifactId>
-                <version>${vertx.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.vertx</groupId>
-                <artifactId>vertx-core</artifactId>
-                <version>${vertx.version}</version>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-annotations</artifactId>
+                <version>${jackson.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.vertx</groupId>
                 <artifactId>vertx-web</artifactId>
                 <version>${vertx.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.vertx</groupId>
-                <artifactId>vertx-web-client</artifactId>
-                <version>${vertx.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.vertx</groupId>
-                <artifactId>vertx-jdbc-client</artifactId>
-                <version>${vertx.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.vertx</groupId>
-                <artifactId>vertx-web-templ-pebble</artifactId>
-                <version>${vertx.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.vertx</groupId>
-                <artifactId>vertx-auth-oauth2</artifactId>
-                <version>${vertx.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.vertx</groupId>
-                <artifactId>vertx-auth-jwt</artifactId>
-                <version>${vertx.version}</version>
+                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>io.vertx</groupId>
                 <artifactId>vertx-rx-java</artifactId>
                 <version>${vertx.version}</version>
+                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>io.vertx</groupId>
-                <artifactId>vertx-kafka-client</artifactId>
+                <artifactId>vertx-auth-jwt</artifactId>
                 <version>${vertx.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.slf4j</groupId>
-                        <artifactId>slf4j-log4j12</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>log4j</groupId>
-                        <artifactId>log4j</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>io.vertx</groupId>
-                <artifactId>vertx-dropwizard-metrics</artifactId>
-                <version>${vertx.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.vertx</groupId>
-                <artifactId>vertx-service-discovery-bridge-consul</artifactId>
-                <version>${vertx.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.datastax.cassandra</groupId>
-                <artifactId>cassandra-driver-core</artifactId>
-                <version>${cassandra-driver-core.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>io.netty</groupId>
-                        <artifactId>netty-codec</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>io.dropwizard.metrics</groupId>
-                <artifactId>metrics-graphite</artifactId>
-                <version>${dropwizard.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>javax.xml.bind</groupId>
-                <artifactId>jaxb-api</artifactId>
-                <version>${jaxb-api.version}</version>
-            </dependency>
-            <!--<dependency>-->
-                <!--<groupId>com.sun.xml.bind</groupId>-->
-                <!--<artifactId>jaxb-core</artifactId>-->
-                <!--<version>${jaxb-api.version}</version>-->
-            <!--</dependency>-->
-            <!--<dependency>-->
-                <!--<groupId>com.sun.xml.bind</groupId>-->
-                <!--<artifactId>jaxb-impl</artifactId>-->
-                <!--<version>${jaxb-api.version}</version>-->
-            <!--</dependency>-->
-            <dependency>
-                <groupId>javax.activation</groupId>
-                <artifactId>activation</artifactId>
-                <version>${activation.version}</version>
+                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>io.vertx</groupId>
@@ -375,6 +272,12 @@
                 <artifactId>restito</artifactId>
                 <version>${restito.version}</version>
                 <scope>test</scope>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>slf4j-api</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.junit.jupiter</groupId>
@@ -392,40 +295,54 @@
     </dependencyManagement>
     <dependencies>
         <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-slf4j-impl</artifactId>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-1.2-api</artifactId>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-jcl</artifactId>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-jul</artifactId>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>biz.paluch.logging</groupId>
-            <artifactId>logstash-gelf</artifactId>
+            <groupId>com.jayway.restassured</groupId>
+            <artifactId>rest-assured</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>javax.xml.bind</groupId>
-            <artifactId>jaxb-api</artifactId>
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest-core</artifactId>
+            <scope>test</scope>
         </dependency>
-        <!--<dependency>-->
-            <!--<groupId>com.sun.xml.bind</groupId>-->
-            <!--<artifactId>jaxb-core</artifactId>-->
-        <!--</dependency>-->
-        <!--<dependency>-->
-            <!--<groupId>com.sun.xml.bind</groupId>-->
-            <!--<artifactId>jaxb-impl</artifactId>-->
-        <!--</dependency>-->
         <dependency>
-            <groupId>javax.activation</groupId>
-            <artifactId>activation</artifactId>
+            <groupId>com.xebialabs.restito</groupId>
+            <artifactId>restito</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-runner</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.awaitility</groupId>
+            <artifactId>awaitility</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
     <profiles>

@@ -4,7 +4,7 @@ import com.nextbreakpoint.shop.common.model.Failure;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import io.vertx.ext.auth.jwt.JWTOptions;
+import io.vertx.ext.jwt.JWTOptions;
 import io.vertx.rxjava.ext.auth.User;
 import io.vertx.rxjava.ext.auth.jwt.JWTAuth;
 import io.vertx.rxjava.ext.web.Cookie;
@@ -26,7 +26,7 @@ public class Authentication {
     public static final String NULL_USER_UUID = new UUID(0, 0).toString();
 
     public static final String JWT_SUBJECT = "designs";
-    public static final long JWT_EXPIRES_IN_MINUTES = 60 * 24;
+    public static final int JWT_EXPIRES_IN_MINUTES = 60 * 24;
 
     public static final int COOKIE_MAX_AGE = 3600 * 24;
     public static final String COOKIE_NAME = "token";

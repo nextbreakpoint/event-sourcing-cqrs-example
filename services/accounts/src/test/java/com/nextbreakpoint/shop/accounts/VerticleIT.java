@@ -203,12 +203,16 @@ public class VerticleIT {
 
     final String uuid1 = createAccount(authorization, account1);
 
+    pause();
+
     final JsonPath json1 = getAccount(authorization, uuid1);
 
     assertThat(json1.getString("uuid")).isEqualTo(uuid1);
     assertThat(json1.getString("role")).isEqualTo("guest");
 
     final String uuid2 = createAccount(authorization, account2);
+
+    pause();
 
     final JsonPath json2 = getAccount(authorization, uuid2);
 
@@ -223,10 +227,14 @@ public class VerticleIT {
 
     deleteAccount(authorization, uuid1);
 
+    pause();
+
     assertThat(getAccounts(authorization)).contains(uuid2);
     assertThat(getAccounts(authorization)).doesNotContain(uuid1);
 
     deleteAccount(authorization, uuid2);
+
+    pause();
 
     assertThat(getAccounts(authorization)).doesNotContain(uuid1, uuid2);
   }

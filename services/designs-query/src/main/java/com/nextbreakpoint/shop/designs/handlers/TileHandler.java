@@ -1,8 +1,8 @@
 package com.nextbreakpoint.shop.designs.handlers;
 
-import com.nextbreakpoint.nextfractal.core.Bundle;
-import com.nextbreakpoint.nextfractal.core.TileGenerator;
-import com.nextbreakpoint.nextfractal.core.TileUtils;
+import com.nextbreakpoint.nextfractal.core.common.Bundle;
+import com.nextbreakpoint.nextfractal.core.common.TileGenerator;
+import com.nextbreakpoint.nextfractal.core.common.TileUtils;
 import com.nextbreakpoint.shop.common.model.Failure;
 import com.nextbreakpoint.shop.designs.Store;
 import com.nextbreakpoint.shop.designs.model.LoadDesignRequest;

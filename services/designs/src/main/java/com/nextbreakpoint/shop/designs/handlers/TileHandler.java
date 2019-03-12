@@ -1,8 +1,9 @@
 package com.nextbreakpoint.shop.designs.handlers;
 
-import com.nextbreakpoint.nextfractal.core.Bundle;
-import com.nextbreakpoint.nextfractal.core.TileGenerator;
-import com.nextbreakpoint.nextfractal.core.TileUtils;
+import com.nextbreakpoint.nextfractal.core.common.Bundle;
+import com.nextbreakpoint.nextfractal.core.common.CoreFactory;
+import com.nextbreakpoint.nextfractal.core.common.TileGenerator;
+import com.nextbreakpoint.nextfractal.core.common.TileUtils;
 import com.nextbreakpoint.shop.common.model.Failure;
 import com.nextbreakpoint.shop.designs.Store;
 import com.nextbreakpoint.shop.designs.model.LoadDesignRequest;
@@ -18,6 +19,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Objects;
+import java.util.ServiceLoader;
 import java.util.TimeZone;
 import java.util.UUID;
 

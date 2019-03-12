@@ -44,7 +44,7 @@ public class ProxyHandler implements Handler<RoutingContext> {
 
         proxyRequest.headers().addAll(frontRequest.headers());
 
-        proxyRequest.putHeader("X-TRACE-ID", context.get("request-trace-id"));
+        proxyRequest.putHeader("X-TRACE-ID", (String)context.get("request-trace-id"));
 
         frontRequest.exceptionHandler(error -> {
                     logger.error("Failed while producing request", error);

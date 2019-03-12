@@ -219,6 +219,8 @@ public class VerticleIT {
 //                assertThat(actualEvent.getTimestamp()).isGreaterThan(eventTimestamp0);
 //              });
 
+        pause();
+
         final JsonPath jsonPath0 = getDesign(authorization, uuid1);
 
         assertThat(jsonPath0.getString("uuid")).isEqualTo(uuid1);
@@ -272,6 +274,8 @@ public class VerticleIT {
       assertThat(object1.get("manifest")).isEqualTo(MANIFEST);
 
       final String uuid2 = createDesign(authorization, createPostData(SCRIPT1));
+
+      pause();
 
       final JsonPath jsonPath2 = getDesign(authorization, uuid2);
 
@@ -338,7 +342,7 @@ public class VerticleIT {
 
   private void pause() {
     try {
-      Thread.sleep(100);
+      Thread.sleep(1000);
     } catch (InterruptedException e) {
     }
   }

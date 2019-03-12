@@ -8,10 +8,12 @@ java \
     -XX:GCTimeRatio=4 \
     -XX:AdaptiveSizePolicyWeight=90 \
     -XX:MaxRAMPercentage=70 \
+    --module-path /maven \
+    --add-modules ALL-MODULE-PATH \
     --add-opens java.base/java.nio=ALL-UNNAMED \
     --add-opens java.base/sun.nio.ch=ALL-UNNAMED \
     --add-opens java.base/sun.net.dns=ALL-UNNAMED \
     -Dnetworkaddress.cache.ttl=1 \
     -Dvertx.logger-delegate-factory-class-name=io.vertx.core.logging.SLF4JLogDelegateFactory \
-    -jar /maven/$SERVICE_JAR \
+    com.nextbreakpoint.shop.accounts.Verticle \
     /config/$CONFIG_NAME

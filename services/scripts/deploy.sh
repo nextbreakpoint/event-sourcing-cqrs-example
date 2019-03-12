@@ -8,6 +8,6 @@ mvn clean install
 
 popd
 
-mvn clean verify
+mvn clean compile -T 4 -DskipTests=true
 
-mvn docker:build docker:push -Ddocker.registry=$1 -Ddocker.username=$2 -Ddocker.password=$3
+mvn package io.fabric8:docker-maven-plugin:push@push -DskipTests=true -Ddocker.registry=$1 -Ddocker.username=$2 -Ddocker.password=$3

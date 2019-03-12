@@ -1,8 +1,8 @@
-FROM openjdk:11-jdk-slim
+FROM ${java.image}
 
-RUN apt-get update -y && apt-get install -y openssl python bash wget
+#RUN apt-get update -y && apt-get install -y openssl python bash wget
 
-RUN wget https://bootstrap.pypa.io/get-pip.py && python get-pip.py && pip install awscli
+#RUN wget https://bootstrap.pypa.io/get-pip.py && python get-pip.py && pip install awscli
 
 COPY maven/ /maven
 COPY entrypoint.sh /entrypoint.sh

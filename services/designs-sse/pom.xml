@@ -262,6 +262,13 @@
                                 <image>
                                     <name>${environment}-${colour}-shop/designs-sse:${project.version}</name>
                                     <alias>service-designs-sse</alias>
+                                    <build>
+                                        <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
+                                        <filter>${*}</filter>
+                                        <assembly>
+                                            <descriptorRef>artifact-with-dependencies</descriptorRef>
+                                        </assembly>
+                                    </build>
                                 </image>
                             </images>
                         </configuration>

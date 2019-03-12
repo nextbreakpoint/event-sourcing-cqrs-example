@@ -245,6 +245,13 @@
                                 <image>
                                     <name>${environment}-${colour}-shop/api-gateway:${project.version}</name>
                                     <alias>api-gateway</alias>
+                                    <build>
+                                        <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
+                                        <filter>${*}</filter>
+                                        <assembly>
+                                            <descriptorRef>artifact-with-dependencies</descriptorRef>
+                                        </assembly>
+                                    </build>
                                 </image>
                             </images>
                         </configuration>

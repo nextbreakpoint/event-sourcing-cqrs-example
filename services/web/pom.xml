@@ -249,6 +249,26 @@
                                 <image>
                                     <name>${environment}-${colour}-shop/web:${project.version}</name>
                                     <alias>service-web</alias>
+                                    <build>
+                                        <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
+                                        <filter>${*}</filter>
+                                        <assembly>
+                                            <targetDir>node</targetDir>
+                                            <inline>
+                                                <fileSets>
+                                                    <fileSet>
+                                                        <outputDirectory>.</outputDirectory>
+                                                        <directory>src/main/javascript</directory>
+                                                        <excludes>
+                                                            <exclude>react/**</exclude>
+                                                            <exclude>node_modules/**</exclude>
+                                                            <exclude>package-lock.json</exclude>
+                                                        </excludes>
+                                                    </fileSet>
+                                                </fileSets>
+                                            </inline>
+                                        </assembly>
+                                    </build>
                                 </image>
                             </images>
                         </configuration>

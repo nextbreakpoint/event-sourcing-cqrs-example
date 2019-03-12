@@ -1,4 +1,4 @@
-FROM node:8
+FROM node:11-alpine
 
 COPY maven/ /maven
 COPY entrypoint.sh /entrypoint.sh

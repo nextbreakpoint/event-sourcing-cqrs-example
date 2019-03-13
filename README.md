@@ -70,7 +70,7 @@ Create target groups and Route53's records with command:
 
     ./docker_run.sh module_create targets
 
-In order to create the targets groups you must create the Load Balancers (see [infrastructure-as-code](https://github.com/nextbreakpoint/infrastructure-as-code)).
+In order to create the targets groups you must create the Load Balancers as documented in [infrastructure-as-code](https://github.com/nextbreakpoint/infrastructure-as-code).
 
 Copy SSH key for accessing EC2 machines and change permissions:
 
@@ -92,19 +92,30 @@ Configure MySQL server with command:
 
     ./swarm_run.sh setup_mysql
 
+Create JAAS configuration for Kafka:
+
+    cat secrets/environments/prod/green/kafka/client_jaas.conf
+
+    Client {
+           org.apache.zookeeper.server.auth.DigestLoginModule required
+           username="kafka"
+           password="your_password";
+    };
+
 Configure Kafka topics with command:
 
-    ./swarm_run.sh create_kafka_topics
+    ./swarm_cmd.sh prod-green-swarm-worker-int.yourdomain.com "./swarm/create_kafka_topics.sh"
 
 Deploy services on Docker Swarm with commands:
 
-    ./swarm_run.sh deploy_stack shop-auth
-    ./swarm_run.sh deploy_stack shop-accounts
-    ./swarm_run.sh deploy_stack shop-designs-command
     ./swarm_run.sh deploy_stack shop-designs-processor
+    ./swarm_run.sh deploy_stack shop-designs-command
     ./swarm_run.sh deploy_stack shop-designs-query
     ./swarm_run.sh deploy_stack shop-designs-sse
+    ./swarm_run.sh deploy_stack shop-accounts
+    ./swarm_run.sh deploy_stack shop-auth
     ./swarm_run.sh deploy_stack shop-web
+    ./swarm_run.sh deploy_stack shop-api-gateway
 
 ## Access the application
 
@@ -116,13 +127,14 @@ You will be redirected to GitHub for authentication. Use the email you configure
 
 Remove services with commands:
 
+    ./swarm_run.sh remove_stack shop-api-gateway
+    ./swarm_run.sh remove_stack shop-web
     ./swarm_run.sh remove_stack shop-auth
     ./swarm_run.sh remove_stack shop-accounts
+    ./swarm_run.sh remove_stack shop-designs-sse
+    ./swarm_run.sh remove_stack shop-designs-query
     ./swarm_run.sh remove_stack shop-designs-command
     ./swarm_run.sh remove_stack shop-designs-processor
-    ./swarm_run.sh remove_stack shop-designs-query
-    ./swarm_run.sh remove_stack shop-designs-sse
-    ./swarm_run.sh remove_stack shop-web
 
 Remove MySQL server with command:
 
@@ -134,7 +146,7 @@ Remove NGINX server with command:
 
 Delete Kafka topics with command:
 
-    ./swarm_run.sh delete_kafka_topics
+    ./swarm_cmd.sh prod-green-swarm-worker-int.yourdomain.com "./swarm/delete_kafka_topics.sh"
 
 Delete Cassandra keyspaces and users with command:
 

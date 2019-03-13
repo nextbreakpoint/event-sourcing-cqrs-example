@@ -9,4 +9,6 @@ export DOCKER_HOST=tcp://$1:2376
 export DOCKER_TLS=1
 export DOCKER_CERT_PATH=${ENVIRONMENT_SECRETS_PATH}/swarm
 
+export KAFKA_VERSION=1.1.0
+
 $2

@@ -1,17 +1,17 @@
 version: '3.4'
 services:
-  shop-designs:
+  shop-api-gateway:
     labels:
-        service: shop-designs-command
-    image: ${SHOP_DESIGNS_COMMAND_IMAGE}
+        service: shop-api-gateway
+    image: ${SHOP_API_GATEWAY_IMAGE}
     volumes:
       - storage:/data
     logging:
       options:
         labels: "service"
     ports:
-      - target: 43031
-        published: 43031
+      - target: 44000
+        published: 44000
         protocol: tcp
         mode: ingress
     deploy:
@@ -37,7 +37,7 @@ services:
           memory: 256M
     secrets:
       - source: server_conf
-        target: /config/designs-command.json
+        target: /config/api-gateway.json
         uid: '1000'
         gid: '1000'
         mode: 0440
@@ -59,7 +59,7 @@ volumes:
     storage:
 secrets:
   server_conf:
-    file: ${ENVIRONMENT_SECRETS_PATH}/config/designs-command.json
+    file: ${ENVIRONMENT_SECRETS_PATH}/config/api-gateway.json
   keystore_auth:
     file: ${ENVIRONMENT_SECRETS_PATH}/keystores/keystore-auth.jceks
   keystore_server:

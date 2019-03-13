@@ -47,6 +47,13 @@ resource "aws_s3_bucket_object" "truststore-server" {
   etag   = "${md5(file("../../secrets/environments/${var.environment}/${var.colour}/keystores/truststore-server.jks"))}"
 }
 
+resource "aws_s3_bucket_object" "api-gateway" {
+  bucket = "${var.secrets_bucket_name}"
+  key    = "environments/${var.environment}/${var.colour}/shop/config/api-gateway.json"
+  source = "../../secrets/environments/${var.environment}/${var.colour}/config/api-gateway.json"
+  etag   = "${md5(file("../../secrets/environments/${var.environment}/${var.colour}/config/api-gateway.json"))}"
+}
+
 resource "aws_s3_bucket_object" "auth" {
   bucket = "${var.secrets_bucket_name}"
   key    = "environments/${var.environment}/${var.colour}/shop/config/auth.json"
@@ -54,11 +61,32 @@ resource "aws_s3_bucket_object" "auth" {
   etag   = "${md5(file("../../secrets/environments/${var.environment}/${var.colour}/config/auth.json"))}"
 }
 
-resource "aws_s3_bucket_object" "designs" {
+resource "aws_s3_bucket_object" "designs-command" {
   bucket = "${var.secrets_bucket_name}"
-  key    = "environments/${var.environment}/${var.colour}/shop/config/designs.json"
-  source = "../../secrets/environments/${var.environment}/${var.colour}/config/designs.json"
-  etag   = "${md5(file("../../secrets/environments/${var.environment}/${var.colour}/config/designs.json"))}"
+  key    = "environments/${var.environment}/${var.colour}/shop/config/designs-command.json"
+  source = "../../secrets/environments/${var.environment}/${var.colour}/config/designs-command.json"
+  etag   = "${md5(file("../../secrets/environments/${var.environment}/${var.colour}/config/designs-command.json"))}"
+}
+
+resource "aws_s3_bucket_object" "designs-processor" {
+  bucket = "${var.secrets_bucket_name}"
+  key    = "environments/${var.environment}/${var.colour}/shop/config/designs-processor.json"
+  source = "../../secrets/environments/${var.environment}/${var.colour}/config/designs-processor.json"
+  etag   = "${md5(file("../../secrets/environments/${var.environment}/${var.colour}/config/designs-processor.json"))}"
+}
+
+resource "aws_s3_bucket_object" "designs-query" {
+  bucket = "${var.secrets_bucket_name}"
+  key    = "environments/${var.environment}/${var.colour}/shop/config/designs-query.json"
+  source = "../../secrets/environments/${var.environment}/${var.colour}/config/designs-query.json"
+  etag   = "${md5(file("../../secrets/environments/${var.environment}/${var.colour}/config/designs-query.json"))}"
+}
+
+resource "aws_s3_bucket_object" "designs-sse" {
+  bucket = "${var.secrets_bucket_name}"
+  key    = "environments/${var.environment}/${var.colour}/shop/config/designs-sse.json"
+  source = "../../secrets/environments/${var.environment}/${var.colour}/config/designs-sse.json"
+  etag   = "${md5(file("../../secrets/environments/${var.environment}/${var.colour}/config/designs-sse.json"))}"
 }
 
 resource "aws_s3_bucket_object" "accounts" {

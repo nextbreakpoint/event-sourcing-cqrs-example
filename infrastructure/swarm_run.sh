@@ -27,8 +27,12 @@ export KAFKA_VERSION=1.1.0
 export KAFKA_REVISION=1
 export KAFKA_IMAGE=nextbreakpoint/kafka:${KAFKA_VERSION}-${KAFKA_REVISION}
 
+export SHOP_API_GATEWAY_IMAGE=${ACCOUNT_ID}.dkr.ecr.eu-west-1.amazonaws.com/${ENVIRONMENT}-${COLOUR}-shop/api-gateway:1.0.0
+export SHOP_DESIGNS_COMMAND_IMAGE=${ACCOUNT_ID}.dkr.ecr.eu-west-1.amazonaws.com/${ENVIRONMENT}-${COLOUR}-shop/designs-command:1.0.0
+export SHOP_DESIGNS_PROCESSOR_IMAGE=${ACCOUNT_ID}.dkr.ecr.eu-west-1.amazonaws.com/${ENVIRONMENT}-${COLOUR}-shop/designs-processor:1.0.0
+export SHOP_DESIGNS_QUERY_IMAGE=${ACCOUNT_ID}.dkr.ecr.eu-west-1.amazonaws.com/${ENVIRONMENT}-${COLOUR}-shop/designs-query:1.0.0
+export SHOP_DESIGNS_SSE_IMAGE=${ACCOUNT_ID}.dkr.ecr.eu-west-1.amazonaws.com/${ENVIRONMENT}-${COLOUR}-shop/designs-sse:1.0.0
 export SHOP_ACCOUNTS_IMAGE=${ACCOUNT_ID}.dkr.ecr.eu-west-1.amazonaws.com/${ENVIRONMENT}-${COLOUR}-shop/accounts:1.0.0
-export SHOP_DESIGNS_IMAGE=${ACCOUNT_ID}.dkr.ecr.eu-west-1.amazonaws.com/${ENVIRONMENT}-${COLOUR}-shop/designs:1.0.0
 export SHOP_AUTH_IMAGE=${ACCOUNT_ID}.dkr.ecr.eu-west-1.amazonaws.com/${ENVIRONMENT}-${COLOUR}-shop/auth:1.0.0
 export SHOP_WEB_IMAGE=${ACCOUNT_ID}.dkr.ecr.eu-west-1.amazonaws.com/${ENVIRONMENT}-${COLOUR}-shop/web:1.0.0
 

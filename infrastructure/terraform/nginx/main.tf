@@ -46,10 +46,19 @@ http {
     ssl_protocols       TLSv1 TLSv1.1 TLSv1.2;
     ssl_ciphers         HIGH:!aNULL:!MD5;
 
+    location /watch {
+        resolver 127.0.0.11 valid=30s;
+        set $upstream_auth shop-api-gateway;
+        proxy_pass https://$upstream_auth:44000$request_uri;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+
     location /auth {
         resolver 127.0.0.11 valid=30s;
-        set $upstream_auth shop-auth;
-        proxy_pass https://$upstream_auth:43000$request_uri;
+        set $upstream_auth shop-api-gateway;
+        proxy_pass https://$upstream_auth:44000$request_uri;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -57,8 +66,8 @@ http {
 
     location /api/designs {
         resolver 127.0.0.11 valid=30s;
-        set $upstream_designs shop-designs;
-        proxy_pass https://$upstream_designs:43001$request_uri;
+        set $upstream_designs shop-api-gateway;
+        proxy_pass https://$upstream_designs:44000$request_uri;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -66,25 +75,11 @@ http {
 
     location /api/accounts {
         resolver 127.0.0.11 valid=30s;
-        set $upstream_accounts shop-accounts;
-        proxy_pass https://$upstream_accounts:43002$request_uri;
+        set $upstream_accounts shop-api-gateway;
+        proxy_pass https://$upstream_accounts:44000$request_uri;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    }
-
-    location /watch {
-        resolver 127.0.0.11 valid=30s;
-        set $upstream_web shop-web;
-        proxy_pass https://$upstream_web:48080$request_uri;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header Connection '';
-        proxy_http_version 1.1;
-        chunked_transfer_encoding off;
-        proxy_buffering off;
-        proxy_cache off;
     }
 
     location / {

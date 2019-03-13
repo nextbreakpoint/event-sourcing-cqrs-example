@@ -37,27 +37,22 @@ services:
           memory: 256M
     secrets:
       - source: server_conf
-        target: /config/web.json
+        target: /config/config.json
         uid: '1000'
         gid: '1000'
         mode: 0440
-      - source: keystore_auth
-        target: /keystores/keystore-auth.jceks
+      - source: ca_cert
+        target: /secrets/ca_cert.pem
         uid: '1000'
         gid: '1000'
         mode: 0440
-      - source: keystore_server
-        target: /keystores/keystore-server.jks
+      - source: server_key
+        target: /secrets/server_key.pem
         uid: '1000'
         gid: '1000'
         mode: 0440
-      - source: keystore_client
-        target: /keystores/keystore-client.jks
-        uid: '1000'
-        gid: '1000'
-        mode: 0440
-      - source: truststore_client
-        target: /keystores/truststore-client.jks
+      - source: server_cert
+        target: /secrets/server_cert.pem
         uid: '1000'
         gid: '1000'
         mode: 0440
@@ -70,11 +65,9 @@ volumes:
 secrets:
   server_conf:
     file: ${ENVIRONMENT_SECRETS_PATH}/config/web.json
-  keystore_auth:
-    file: ${ENVIRONMENT_SECRETS_PATH}/keystores/keystore-auth.jceks
-  keystore_server:
-    file: ${ENVIRONMENT_SECRETS_PATH}/keystores/keystore-server.jks
-  keystore_client:
-    file: ${ENVIRONMENT_SECRETS_PATH}/keystores/keystore-client.jks
-  truststore_client:
-    file: ${ENVIRONMENT_SECRETS_PATH}/keystores/truststore-client.jks
+  ca_cert:
+    file: ${ENVIRONMENT_SECRETS_PATH}/nginx/ca_cert.pem
+  server_key:
+    file: ${ENVIRONMENT_SECRETS_PATH}/nginx/server_key.pem
+  server_cert:
+    file: ${ENVIRONMENT_SECRETS_PATH}/nginx/server_cert.pem

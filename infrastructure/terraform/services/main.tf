@@ -16,6 +16,43 @@ provider "local" {
 # Resources
 ##############################################################################
 
+resource "local_file" "api_gateway_config" {
+  content = <<EOF
+{
+  "host_port": 44000,
+
+  "server_keystore_path": "/keystores/keystore-server.jks",
+  "server_keystore_secret": "${var.keystore_password}",
+
+  "client_keystore_path": "/keystores/keystore-client.jks",
+  "client_keystore_secret": "${var.keystore_password}",
+
+  "client_verify_host": false,
+  "client_keep_alive": true,
+
+  "consul_host": "https://${var.environment}-${var.colour}-swarm-worker-int.${var.hosted_zone_name}",
+  "consul_port": 8400,
+
+  "jwt_keystore_path": "/keystores/keystore-auth.jceks",
+  "jwt_keystore_type": "jceks",
+  "jwt_keystore_secret": "${var.keystore_password}",
+
+  "origin_pattern": "https://${var.hosted_zone_name}(:[0-9]+)?",
+
+  "server_auth_url": "https://${var.environment}-${var.colour}-swarm-worker-int.${var.hosted_zone_name}:43000",
+  "server_accounts_url": "https://${var.environment}-${var.colour}-swarm-worker-int.${var.hosted_zone_name}:43031",
+  "server_designs_query_url": "https://${var.environment}-${var.colour}-swarm-worker-int.${var.hosted_zone_name}:43021",
+  "server_designs_command_url": "https://${var.environment}-${var.colour}-swarm-worker-int.${var.hosted_zone_name}:43002",
+
+  "graphite_reporter_enabled": false,
+  "graphite_host": "http://${var.environment}-${var.colour}-swarm-manager.${var.hosted_zone_name}",
+  "graphite_port": 2003,
+}
+EOF
+
+  filename = "../../secrets/environments/${var.environment}/${var.colour}/config/api-gateway.json"
+}
+
 resource "local_file" "auth_config" {
   content = <<EOF
 {
@@ -266,7 +303,7 @@ resource "local_file" "web_config" {
 {
   "client_web_url": "https://${var.hosted_zone_name}",
   "client_api_url": "https://${var.hosted_zone_name}",
-  "server_api_url": "https://${var.environment}-${var.colour}-swarm-worker-int.${var.hosted_zone_name}:4400"
+  "server_api_url": "https://${var.environment}-${var.colour}-swarm-worker-int.${var.hosted_zone_name}:44000"
 }
 EOF
 

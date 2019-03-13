@@ -3,7 +3,7 @@ services:
   shop-designs:
     labels:
         service: shop-designs-query
-    image: ${SHOP_DESIGNS_IMAGE}
+    image: ${SHOP_DESIGNS_QUERY_IMAGE}
     volumes:
       - storage:/data
     logging:

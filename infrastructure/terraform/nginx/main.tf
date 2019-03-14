@@ -33,13 +33,13 @@ http {
 
   server {
     listen 80;
-    server_name ${var.environment}-${var.colour}-swarm-worker.${var.hosted_zone_name} ${var.environment}-${var.colour}-shop.${var.hosted_zone_name};
+    server_name ${var.environment}-${var.colour}-swarm-worker-int.${var.hosted_zone_name} ${var.environment}-${var.colour}-shop.${var.hosted_zone_name};
     return 301 https://$$server_name$$request_uri;
   }
 
   server {
     listen 443 ssl;
-    server_name ${var.environment}-${var.colour}-swarm-worker.${var.hosted_zone_name} ${var.environment}-${var.colour}-shop.${var.hosted_zone_name};
+    server_name ${var.environment}-${var.colour}-swarm-worker-int.${var.hosted_zone_name} ${var.environment}-${var.colour}-shop.${var.hosted_zone_name};
 
     ssl_certificate     /etc/nginx/ca_and_server_cert.pem;
     ssl_certificate_key /etc/nginx/server_key.pem;

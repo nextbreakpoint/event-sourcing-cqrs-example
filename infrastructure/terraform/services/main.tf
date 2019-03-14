@@ -27,11 +27,14 @@ resource "local_file" "api_gateway_config" {
   "client_keystore_path": "/keystores/keystore-client.jks",
   "client_keystore_secret": "${var.keystore_password}",
 
+  "client_truststore_path": "/keystores/truststore-client.jks",
+  "client_truststore_secret": "${var.truststore_password}",
+
   "client_verify_host": false,
   "client_keep_alive": true,
 
-  "consul_host": "https://${var.environment}-${var.colour}-swarm-worker-int.${var.hosted_zone_name}",
-  "consul_port": 8400,
+  "consul_host": "${var.environment}-${var.colour}-swarm-worker-int.${var.hosted_zone_name}",
+  "consul_port": 8500,
 
   "jwt_keystore_path": "/keystores/keystore-auth.jceks",
   "jwt_keystore_type": "jceks",
@@ -39,14 +42,14 @@ resource "local_file" "api_gateway_config" {
 
   "origin_pattern": "https://${var.hosted_zone_name}(:[0-9]+)?",
 
-  "server_auth_url": "https://${var.environment}-${var.colour}-swarm-worker-int.${var.hosted_zone_name}:43000",
-  "server_accounts_url": "https://${var.environment}-${var.colour}-swarm-worker-int.${var.hosted_zone_name}:43031",
-  "server_designs_query_url": "https://${var.environment}-${var.colour}-swarm-worker-int.${var.hosted_zone_name}:43021",
-  "server_designs_command_url": "https://${var.environment}-${var.colour}-swarm-worker-int.${var.hosted_zone_name}:43002",
+  "server_auth_url": "https://shop-auth:43000",
+  "server_accounts_url": "https://shop-accounts:43002",
+  "server_designs_query_url": "https://shop-designs-query:43021",
+  "server_designs_command_url": "https://shop-designs-command:43031",
 
   "graphite_reporter_enabled": false,
   "graphite_host": "http://${var.environment}-${var.colour}-swarm-manager.${var.hosted_zone_name}",
-  "graphite_port": 2003,
+  "graphite_port": 2003
 }
 EOF
 
@@ -75,6 +78,8 @@ resource "local_file" "auth_config" {
   "jwt_keystore_path": "/keystores/keystore-auth.jceks",
   "jwt_keystore_type": "jceks",
   "jwt_keystore_secret": "${var.keystore_password}",
+
+  "origin_pattern": "https://${var.hosted_zone_name}(:[0-9]+)?",
 
   "client_web_url": "https://${var.environment}-${var.colour}-swarm-worker-int.${var.hosted_zone_name}:7443",
   "client_auth_url": "https://${var.environment}-${var.colour}-swarm-worker-int.${var.hosted_zone_name}:7443",
@@ -280,7 +285,7 @@ resource "local_file" "accounts_config" {
   "jwt_keystore_type": "jceks",
   "jwt_keystore_secret": "${var.keystore_password}",
 
-  "client_web_url": "https://${var.environment}-${var.colour}-swarm-worker-int.${var.hosted_zone_name}:7443",
+  "origin_pattern": "https://${var.hosted_zone_name}(:[0-9]+)?",
 
   "graphite_reporter_enabled": false,
   "graphite_host": "http://${var.environment}-${var.colour}-swarm-manager.${var.hosted_zone_name}",
@@ -291,7 +296,7 @@ resource "local_file" "accounts_config" {
   "jdbc_username": "${var.mysql_username}",
   "jdbc_password": "${var.mysql_password}",
   "jdbc_max_pool_size": 200,
-  "jdbc_min_pool_size": 20,
+  "jdbc_min_pool_size": 20
 }
 EOF
 

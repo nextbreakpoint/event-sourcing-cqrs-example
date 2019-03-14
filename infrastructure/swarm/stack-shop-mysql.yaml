@@ -22,6 +22,7 @@ services:
         constraints:
           - node.role == worker
           - node.labels.zone == a
+          - node.labels.public == false
       update_config:
         parallelism: 1
         failure_action: rollback

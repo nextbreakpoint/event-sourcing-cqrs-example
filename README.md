@@ -92,19 +92,9 @@ Configure MySQL server with command:
 
     ./swarm_run.sh setup_mysql
 
-Create JAAS configuration for Kafka:
-
-    cat secrets/environments/prod/green/kafka/client_jaas.conf
-
-    Client {
-           org.apache.zookeeper.server.auth.DigestLoginModule required
-           username="kafka"
-           password="your_password";
-    };
-
 Configure Kafka topics with command:
 
-    ./swarm_cmd.sh prod-green-swarm-worker-int.yourdomain.com "./swarm/create_kafka_topics.sh"
+    ./kafka_run.sh create_kafka_topics
 
 Deploy services on Docker Swarm with commands:
 
@@ -146,7 +136,7 @@ Remove NGINX server with command:
 
 Delete Kafka topics with command:
 
-    ./swarm_cmd.sh prod-green-swarm-worker-int.yourdomain.com "./swarm/delete_kafka_topics.sh"
+    ./kafka_run.sh delete_kafka_topics
 
 Delete Cassandra keyspaces and users with command:
 

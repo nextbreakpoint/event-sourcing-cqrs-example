@@ -10,7 +10,7 @@ services:
       options:
         labels: "service"
     ports:
-      - target: 48080
+      - target: 8080
         published: 48080
         protocol: tcp
         mode: ingress
@@ -19,6 +19,7 @@ services:
       placement:
         constraints:
           - node.role == worker
+          - node.labels.public == false
       update_config:
         parallelism: 1
         failure_action: rollback

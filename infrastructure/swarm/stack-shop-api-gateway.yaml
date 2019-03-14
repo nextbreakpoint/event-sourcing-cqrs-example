@@ -19,6 +19,7 @@ services:
       placement:
         constraints:
           - node.role == worker
+          - node.labels.public == false
       update_config:
         parallelism: 1
         failure_action: rollback
@@ -37,7 +38,7 @@ services:
           memory: 256M
     secrets:
       - source: server_conf
-        target: /config/api-gateway.json
+        target: /config/gateway.json
         uid: '1000'
         gid: '1000'
         mode: 0440
@@ -48,6 +49,16 @@ services:
         mode: 0440
       - source: keystore_server
         target: /keystores/keystore-server.jks
+        uid: '1000'
+        gid: '1000'
+        mode: 0440
+      - source: keystore_client
+        target: /keystores/keystore-client.jks
+        uid: '1000'
+        gid: '1000'
+        mode: 0440
+      - source: truststore_client
+        target: /keystores/truststore-client.jks
         uid: '1000'
         gid: '1000'
         mode: 0440
@@ -64,3 +75,7 @@ secrets:
     file: ${ENVIRONMENT_SECRETS_PATH}/keystores/keystore-auth.jceks
   keystore_server:
     file: ${ENVIRONMENT_SECRETS_PATH}/keystores/keystore-server.jks
+  keystore_client:
+    file: ${ENVIRONMENT_SECRETS_PATH}/keystores/keystore-client.jks
+  truststore_client:
+    file: ${ENVIRONMENT_SECRETS_PATH}/keystores/truststore-client.jks

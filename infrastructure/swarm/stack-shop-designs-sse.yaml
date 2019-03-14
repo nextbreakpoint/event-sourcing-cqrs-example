@@ -19,7 +19,7 @@ services:
       placement:
         constraints:
           - node.role == worker
-          - node.public == true
+          - node.labels.public == true
       update_config:
         parallelism: 1
         failure_action: rollback

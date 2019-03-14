@@ -1,7 +1,5 @@
 DROP KEYSPACE IF EXISTS designs;
-DROP KEYSPACE IF EXISTS accounts;
 
 DROP ROLE IF EXISTS shop;
 
 DROP ROLE IF EXISTS designs_admin;
-DROP ROLE IF EXISTS accounts_admin;

@@ -42,6 +42,7 @@ import static com.nextbreakpoint.shop.common.model.Headers.ACCEPT;
 import static com.nextbreakpoint.shop.common.model.Headers.AUTHORIZATION;
 import static com.nextbreakpoint.shop.common.model.Headers.CONTENT_TYPE;
 import static com.nextbreakpoint.shop.common.model.Headers.X_MODIFIED;
+import static com.nextbreakpoint.shop.common.model.Headers.X_TRACE_ID;
 import static com.nextbreakpoint.shop.common.model.Headers.X_XSRF_TOKEN;
 import static com.nextbreakpoint.shop.common.vertx.ServerUtil.UUID_REGEXP;
 import static com.nextbreakpoint.shop.designs.Factory.createDeleteDesignHandler;
@@ -118,7 +119,7 @@ public class Verticle extends AbstractVerticle {
         mainRouter.route().handler(CookieHandler.create());
         mainRouter.route().handler(TimeoutHandler.create(90000));
 
-        final CorsHandler corsHandler = CORSHandlerFactory.createWithAll(originPattern, asList(AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN, X_MODIFIED), asList(CONTENT_TYPE, X_XSRF_TOKEN, X_MODIFIED));
+        final CorsHandler corsHandler = CORSHandlerFactory.createWithAll(originPattern, asList(AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN, X_MODIFIED, X_TRACE_ID), asList(CONTENT_TYPE, X_XSRF_TOKEN, X_MODIFIED, X_TRACE_ID));
 
         mainRouter.route("/designs/*").handler(corsHandler);
 

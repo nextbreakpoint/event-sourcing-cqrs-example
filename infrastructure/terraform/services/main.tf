@@ -42,10 +42,10 @@ resource "local_file" "api_gateway_config" {
 
   "origin_pattern": "https://${var.hosted_zone_name}(:[0-9]+)?",
 
-  "server_auth_url": "https://shop-auth:43000",
-  "server_accounts_url": "https://shop-accounts:43002",
-  "server_designs_query_url": "https://shop-designs-query:43021",
-  "server_designs_command_url": "https://shop-designs-command:43031",
+  "server_auth_url": "https://${var.environment}-${var.colour}-swarm-worker-int.${var.hosted_zone_name}:43000",
+  "server_accounts_url": "https://${var.environment}-${var.colour}-swarm-worker-int.${var.hosted_zone_name}:43002",
+  "server_designs_query_url": "https://${var.environment}-${var.colour}-swarm-worker-int.${var.hosted_zone_name}:43021",
+  "server_designs_command_url": "https://${var.environment}-${var.colour}-swarm-worker-int.${var.hosted_zone_name}:43031",
 
   "graphite_reporter_enabled": false,
   "graphite_host": "http://${var.environment}-${var.colour}-swarm-manager.${var.hosted_zone_name}",
@@ -84,8 +84,8 @@ resource "local_file" "auth_config" {
   "client_web_url": "https://${var.environment}-${var.colour}-swarm-worker-int.${var.hosted_zone_name}:7443",
   "client_auth_url": "https://${var.environment}-${var.colour}-swarm-worker-int.${var.hosted_zone_name}:7443",
 
-  "server_auth_url": "https://shop-auth:43000",
-  "server_accounts_url": "https://shop-accounts:43002",
+  "server_auth_url": "https://${var.environment}-${var.colour}-swarm-manager.${var.hosted_zone_name}:43000",
+  "server_accounts_url": "https://${var.environment}-${var.colour}-swarm-manager.${var.hosted_zone_name}:43002",
 
   "github_url": "https://api.github.com",
 
@@ -94,7 +94,7 @@ resource "local_file" "auth_config" {
   "oauth_authorize_path": "/oauth/authorize",
   "oauth_authority": "user:email",
 
-  "cookie_domain": "${var.environment}-${var.colour}-swarm-worker.${var.hosted_zone_name}",
+  "cookie_domain": "${var.environment}-${var.colour}-swarm-worker-int.${var.hosted_zone_name}",
 
   "admin_users": ["${var.github_user_email}"],
 
@@ -225,7 +225,7 @@ resource "local_file" "designs_sse_config" {
   "graphite_host": "http://${var.environment}-${var.colour}-swarm-manager.${var.hosted_zone_name}",
   "graphite_port": 2003,
 
-  "kafka_bootstrap_servers": "${var.environment}-${var.colour}-swarm-worker-int:9092",
+  "kafka_bootstrap_servers": "${var.environment}-${var.colour}-swarm-worker-int.${var.hosted_zone_name}:9092",
   "kafka_group_id": "designs-sse",
 
   "sse_topic": "designs-sse"
@@ -253,7 +253,7 @@ EOF
 #   "graphite_host": "http://${var.environment}-${var.colour}-swarm-manager.${var.hosted_zone_name}",
 #   "graphite_port": 2003,
 #
-#   "jdbc_url": "jdbc:mysql://shop-mysql:43306/designs?useSSL=false&allowPublicKeyRetrieval=true&nullNamePatternMatchesAll=true",
+#   "jdbc_url": "jdbc:mysql://${var.environment}-${var.colour}-swarm-worker-int.${var.hosted_zone_name}:43306/designs?useSSL=false&allowPublicKeyRetrieval=true&nullNamePatternMatchesAll=true",
 #   "jdbc_driver": "com.mysql.cj.jdbc.Driver",
 #   "jdbc_username": "${var.mysql_username}",
 #   "jdbc_password": "${var.mysql_password}",
@@ -291,7 +291,7 @@ resource "local_file" "accounts_config" {
   "graphite_host": "http://${var.environment}-${var.colour}-swarm-manager.${var.hosted_zone_name}",
   "graphite_port": 2003,
 
-  "jdbc_url": "jdbc:mysql://shop-mysql:43306/designs?useSSL=false&allowPublicKeyRetrieval=true&nullNamePatternMatchesAll=true",
+  "jdbc_url": "jdbc:mysql://${var.environment}-${var.colour}-swarm-worker-int.${var.hosted_zone_name}:43306/shop?useSSL=false&allowPublicKeyRetrieval=true&nullNamePatternMatchesAll=true",
   "jdbc_driver": "com.mysql.cj.jdbc.Driver",
   "jdbc_username": "${var.mysql_username}",
   "jdbc_password": "${var.mysql_password}",
@@ -306,8 +306,8 @@ EOF
 resource "local_file" "web_config" {
   content = <<EOF
 {
-  "client_web_url": "https://${var.hosted_zone_name}",
-  "client_api_url": "https://${var.hosted_zone_name}",
+  "client_web_url": "https://${var.environment}-${var.colour}-swarm-worker-int.${var.hosted_zone_name}:7443",
+  "client_api_url": "https://${var.environment}-${var.colour}-swarm-worker-int.${var.hosted_zone_name}:7443",
   "server_api_url": "https://${var.environment}-${var.colour}-swarm-worker-int.${var.hosted_zone_name}:44000"
 }
 EOF

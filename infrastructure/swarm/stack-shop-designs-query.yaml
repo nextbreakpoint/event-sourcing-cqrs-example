@@ -1,6 +1,6 @@
 version: '3.4'
 services:
-  shop-designs:
+  shop-designs-query:
     labels:
         service: shop-designs-query
     image: ${SHOP_DESIGNS_QUERY_IMAGE}

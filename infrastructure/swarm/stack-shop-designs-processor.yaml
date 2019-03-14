@@ -1,6 +1,6 @@
 version: '3.4'
 services:
-  shop-designs:
+  shop-designs-processor:
     labels:
         service: shop-designs-processor
     image: ${SHOP_DESIGNS_PROCESSOR_IMAGE}
@@ -32,7 +32,7 @@ services:
       resources:
         limits:
           cpus: '1'
-          memory: 512M
+          memory: 1024M
         reservations:
           cpus: '0.1'
           memory: 256M

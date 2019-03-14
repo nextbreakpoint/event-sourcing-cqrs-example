@@ -1,6 +1,6 @@
 version: '3.4'
 services:
-  shop-designs:
+  shop-designs-sse:
     labels:
         service: shop-designs-sse
     image: ${SHOP_DESIGNS_SSE_IMAGE}

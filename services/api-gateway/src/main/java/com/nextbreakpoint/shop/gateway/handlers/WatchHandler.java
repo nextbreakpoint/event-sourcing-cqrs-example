@@ -47,6 +47,8 @@ public class WatchHandler implements Handler<RoutingContext> {
 
             context.response().putHeader(LOCATION, resource).setStatusCode(200).end();
         } else {
+            logger.warn("No records found for service designs-sse");
+
             context.response().setStatusCode(404).end();
         }
     }

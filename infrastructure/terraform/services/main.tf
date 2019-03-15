@@ -314,3 +314,34 @@ EOF
 
   filename = "../../secrets/environments/${var.environment}/${var.colour}/config/web.json"
 }
+
+resource "local_file" "consul_config" {
+  content = <<EOF
+{
+  "cert_file": "/consul/config/server_cert.pem",
+  "log_level": "info",
+  "leave_on_terminate": true,
+  "translate_wan_addrs": true,
+  "disable_update_check": true,
+  "enable_script_checks": true,
+  "skip_leave_on_interrupt": true,
+  "ports": { "https": 8500, "http": -1 },
+  "dns_config": {
+    "allow_stale": true,
+    "max_stale": "1s",
+    "service_ttl": {
+      "*": "5s"
+    }
+  },
+  "services": [{
+    "name": "designs-sse",
+    "tags": [
+      "http-endpoint"
+    ],
+    "port": 43041
+  }]
+}
+EOF
+
+  filename = "../../secrets/environments/${var.environment}/${var.colour}/config/consul.json"
+}

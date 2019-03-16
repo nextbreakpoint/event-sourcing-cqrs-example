@@ -41,6 +41,7 @@ import static com.nextbreakpoint.shop.common.model.ContentType.APPLICATION_JSON;
 import static com.nextbreakpoint.shop.common.model.Headers.ACCEPT;
 import static com.nextbreakpoint.shop.common.model.Headers.AUTHORIZATION;
 import static com.nextbreakpoint.shop.common.model.Headers.CONTENT_TYPE;
+import static com.nextbreakpoint.shop.common.model.Headers.COOKIE;
 import static com.nextbreakpoint.shop.common.model.Headers.X_XSRF_TOKEN;
 import static com.nextbreakpoint.shop.common.vertx.ServerUtil.UUID_REGEXP;
 import static java.util.Arrays.asList;
@@ -97,7 +98,7 @@ public class Verticle extends AbstractVerticle {
         mainRouter.route().handler(CookieHandler.create());
         mainRouter.route().handler(TimeoutHandler.create(30000));
 
-        final CorsHandler corsHandler = CORSHandlerFactory.createWithAll(originPattern, asList(AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN));
+        final CorsHandler corsHandler = CORSHandlerFactory.createWithAll(originPattern, asList(COOKIE, AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN));
 
         mainRouter.route("/accounts/*").handler(corsHandler);
 

@@ -28,6 +28,7 @@ import java.net.MalformedURLException;
 import static com.nextbreakpoint.shop.common.model.Headers.ACCEPT;
 import static com.nextbreakpoint.shop.common.model.Headers.AUTHORIZATION;
 import static com.nextbreakpoint.shop.common.model.Headers.CONTENT_TYPE;
+import static com.nextbreakpoint.shop.common.model.Headers.COOKIE;
 import static com.nextbreakpoint.shop.common.model.Headers.X_TRACE_ID;
 import static java.util.Arrays.asList;
 
@@ -78,7 +79,7 @@ public class Verticle extends AbstractVerticle {
         mainRouter.route().handler(CookieHandler.create());
         mainRouter.route().handler(BodyHandler.create());
 
-        final CorsHandler corsHandler = CORSHandlerFactory.createWithGetOnly(originPattern, asList(AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_TRACE_ID));
+        final CorsHandler corsHandler = CORSHandlerFactory.createWithGetOnly(originPattern, asList(COOKIE, AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_TRACE_ID));
 
         final Handler<RoutingContext> signinHandler = createSigninHandler(config, mainRouter);
 

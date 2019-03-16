@@ -125,7 +125,11 @@ resource "local_file" "designs_command_config" {
   "graphite_host": "http://${var.environment}-${var.colour}-swarm-manager.${var.hosted_zone_name}",
   "graphite_port": 2003,
 
-  "kafka_bootstrap_servers": "${var.environment}-${var.colour}-swarm-worker-int.${var.hosted_zone_name}:9092",
+  "kafka_bootstrap_servers": "kafka1:9092,kafka2:9092,kafka3:9092",
+  "kafka_keystore_location": "/keystores/kafka-keystore-client.jks",
+  "kafka_truststore_location": "/keystores/kafka-truststore-client.jks",
+  "kafka_keystore_password": "${var.kafka_keystore_password}",
+  "kafka_truststore_password": "${var.kafka_truststore_password}",
 
   "events_topic": "designs-events",
 
@@ -163,7 +167,11 @@ resource "local_file" "designs_processor_config" {
 
   "message_source": "service-designs",
 
-  "kafka_bootstrap_servers": "${var.environment}-${var.colour}-swarm-worker-int.${var.hosted_zone_name}:9092",
+  "kafka_bootstrap_servers": "kafka1:9092,kafka2:9092,kafka3:9092",
+  "kafka_keystore_location": "/keystores/kafka-keystore-client.jks",
+  "kafka_truststore_location": "/keystores/kafka-truststore-client.jks",
+  "kafka_keystore_password": "${var.kafka_keystore_password}",
+  "kafka_truststore_password": "${var.kafka_truststore_password}",
   "kafka_group_id": "designs-processor",
 
   "events_topic": "designs-events",
@@ -225,7 +233,11 @@ resource "local_file" "designs_sse_config" {
   "graphite_host": "http://${var.environment}-${var.colour}-swarm-manager.${var.hosted_zone_name}",
   "graphite_port": 2003,
 
-  "kafka_bootstrap_servers": "${var.environment}-${var.colour}-swarm-worker-int.${var.hosted_zone_name}:9092",
+  "kafka_bootstrap_servers": "kafka1:9092,kafka2:9092,kafka3:9092",
+  "kafka_keystore_location": "/keystores/kafka-keystore-client.jks",
+  "kafka_truststore_location": "/keystores/kafka-truststore-client.jks",
+  "kafka_keystore_password": "${var.kafka_keystore_password}",
+  "kafka_truststore_password": "${var.kafka_truststore_password}",
   "kafka_group_id": "designs-sse",
 
   "sse_topic": "designs-sse"

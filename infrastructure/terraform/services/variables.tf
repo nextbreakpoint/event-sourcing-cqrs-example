@@ -55,3 +55,9 @@ variable "mysql_username" {}
 
 ### MANDATORY ###
 variable "mysql_password" {}
+
+### MANDATORY ###
+variable "kafka_keystore_password" {}
+
+### MANDATORY ###
+variable "kafka_truststore_password" {}

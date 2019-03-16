@@ -25,5 +25,8 @@
   "cassandra_password": "cassandra",
 
   "mysql_username": "shop",
-  "mysql_password": "changeme"
+  "mysql_password": "changeme",
+
+  "kafka_keystore_password": "your_keystore_password",
+  "kafka_truststore_password": "your_truststore_password"
 }

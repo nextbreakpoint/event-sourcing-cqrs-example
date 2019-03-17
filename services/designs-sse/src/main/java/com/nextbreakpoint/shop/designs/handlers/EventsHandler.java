@@ -85,6 +85,8 @@ public class EventsHandler implements Handler<RoutingContext> {
 
                 data.put("uuid", watchKey);
 
+                logger.info("Send update notification to session " + watcher.sessionId);
+
                 routingContext.response().write(makeEvent("update", message.getLong("timestamp"), data.encode()));
             } catch (Exception e) {
                 logger.warn("Cannot write message (session = " + sessionId + ")", e);
@@ -121,6 +123,8 @@ public class EventsHandler implements Handler<RoutingContext> {
     private void notifyWatcher(Watcher watcher, Long timestamp) {
         watcher.setOffset(timestamp);
 
+        logger.info("Notify watcher for session " + watcher.sessionId);
+
         final JsonObject message = makeMessageData(timestamp);
 
         vertx.eventBus().publish("events.handler.output." + watcher.getSessionId(), message);
@@ -151,24 +155,30 @@ public class EventsHandler implements Handler<RoutingContext> {
         final String watchKey = event.getUuid().toString();
         final Long timestamp = event.getTimestamp();
 
+        logger.info("Processing event " + event.getUuid() + " (timestamp = " + timestamp +  ")");
+
         final Set<Watcher> watchers = watcherMap.get(watchKey);
 
         if (watchers != null && watchers.size() > 0) {
-            watchers.stream().forEach(watcher -> {
+            watchers.forEach(watcher -> {
                 if (watcher.getOffset() < timestamp) {
                     notifyWatcher(watcher, timestamp);
                 }
             });
+        } else {
+            logger.info("No watchers found for resource " + watchKey);
         }
 
         final Set<Watcher> otherWatchers = watcherMap.get("*");
 
         if (otherWatchers != null && otherWatchers.size() > 0) {
-            otherWatchers.stream().forEach(watcher -> {
+            otherWatchers.forEach(watcher -> {
                 if (watcher.getOffset() < timestamp) {
                     notifyWatcher(watcher, timestamp);
                 }
             });
+        } else {
+            logger.info("No watchers found for all resources");
         }
     }
 

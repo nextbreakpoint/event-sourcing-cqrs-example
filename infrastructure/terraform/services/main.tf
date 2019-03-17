@@ -34,21 +34,21 @@ resource "local_file" "api_gateway_config" {
   "client_keep_alive": true,
 
   "consul_host": "${var.environment}-${var.colour}-swarm-worker-int.${var.hosted_zone_name}",
-  "consul_port": 8500,
+  "consul_port": 8400,
 
   "jwt_keystore_path": "/keystores/keystore-auth.jceks",
   "jwt_keystore_type": "jceks",
   "jwt_keystore_secret": "${var.keystore_password}",
 
-  "origin_pattern": "https://${var.hosted_zone_name}(:[0-9]+)?",
+  "origin_pattern": "https://${var.environment}-${var.colour}-swarm-worker-int.${var.hosted_zone_name}(:[0-9]+)?",
 
   "server_auth_url": "https://${var.environment}-${var.colour}-swarm-worker-int.${var.hosted_zone_name}:43000",
   "server_accounts_url": "https://${var.environment}-${var.colour}-swarm-worker-int.${var.hosted_zone_name}:43002",
   "server_designs_query_url": "https://${var.environment}-${var.colour}-swarm-worker-int.${var.hosted_zone_name}:43021",
   "server_designs_command_url": "https://${var.environment}-${var.colour}-swarm-worker-int.${var.hosted_zone_name}:43031",
 
-  "graphite_reporter_enabled": false,
-  "graphite_host": "http://${var.environment}-${var.colour}-swarm-manager.${var.hosted_zone_name}",
+  "graphite_reporter_enabled": true,
+  "graphite_host": "${var.environment}-${var.colour}-swarm-manager.${var.hosted_zone_name}",
   "graphite_port": 2003
 }
 EOF
@@ -79,7 +79,7 @@ resource "local_file" "auth_config" {
   "jwt_keystore_type": "jceks",
   "jwt_keystore_secret": "${var.keystore_password}",
 
-  "origin_pattern": "https://${var.hosted_zone_name}(:[0-9]+)?",
+  "origin_pattern": "https://${var.environment}-${var.colour}-swarm-worker-int.${var.hosted_zone_name}(:[0-9]+)?",
 
   "client_web_url": "https://${var.environment}-${var.colour}-swarm-worker-int.${var.hosted_zone_name}:7443",
   "client_auth_url": "https://${var.environment}-${var.colour}-swarm-worker-int.${var.hosted_zone_name}:7443",
@@ -98,8 +98,8 @@ resource "local_file" "auth_config" {
 
   "admin_users": ["${var.github_user_email}"],
 
-  "graphite_reporter_enabled": false,
-  "graphite_host": "http://${var.environment}-${var.colour}-swarm-worker-int.${var.hosted_zone_name}",
+  "graphite_reporter_enabled": true,
+  "graphite_host": "${var.environment}-${var.colour}-swarm-worker-int.${var.hosted_zone_name}",
   "graphite_port": 2003
 }
 EOF
@@ -119,10 +119,10 @@ resource "local_file" "designs_command_config" {
   "jwt_keystore_type": "jceks",
   "jwt_keystore_secret": "${var.keystore_password}",
 
-  "origin_pattern": "https://${var.hosted_zone_name}(:[0-9]+)?",
+  "origin_pattern": "https://${var.environment}-${var.colour}-swarm-worker-int.${var.hosted_zone_name}(:[0-9]+)?",
 
-  "graphite_reporter_enabled": false,
-  "graphite_host": "http://${var.environment}-${var.colour}-swarm-manager.${var.hosted_zone_name}",
+  "graphite_reporter_enabled": true,
+  "graphite_host": "${var.environment}-${var.colour}-swarm-manager.${var.hosted_zone_name}",
   "graphite_port": 2003,
 
   "kafka_bootstrap_servers": "kafka1:9092,kafka2:9092,kafka3:9092",
@@ -152,10 +152,10 @@ resource "local_file" "designs_processor_config" {
   "jwt_keystore_type": "jceks",
   "jwt_keystore_secret": "${var.keystore_password}",
 
-  "origin_pattern": "https://${var.hosted_zone_name}(:[0-9]+)?",
+  "origin_pattern": "https://${var.environment}-${var.colour}-swarm-worker-int.${var.hosted_zone_name}(:[0-9]+)?",
 
-  "graphite_reporter_enabled": false,
-  "graphite_host": "http://${var.environment}-${var.colour}-swarm-manager.${var.hosted_zone_name}",
+  "graphite_reporter_enabled": true,
+  "graphite_host": "${var.environment}-${var.colour}-swarm-manager.${var.hosted_zone_name}",
   "graphite_port": 2003,
 
   "cassandra_cluster": "${var.environment}-${var.colour}",
@@ -195,10 +195,10 @@ resource "local_file" "designs_query_config" {
   "jwt_keystore_type": "jceks",
   "jwt_keystore_secret": "${var.keystore_password}",
 
-  "origin_pattern": "https://${var.hosted_zone_name}(:[0-9]+)?",
+  "origin_pattern": "https://${var.environment}-${var.colour}-swarm-worker-int.${var.hosted_zone_name}(:[0-9]+)?",
 
-  "graphite_reporter_enabled": false,
-  "graphite_host": "http://${var.environment}-${var.colour}-swarm-manager.${var.hosted_zone_name}",
+  "graphite_reporter_enabled": true,
+  "graphite_host": "${var.environment}-${var.colour}-swarm-manager.${var.hosted_zone_name}",
   "graphite_port": 2003,
 
   "cassandra_cluster": "${var.environment}-${var.colour}",
@@ -215,7 +215,7 @@ EOF
   filename = "../../secrets/environments/${var.environment}/${var.colour}/config/designs-query.json"
 }
 
-resource "local_file" "designs_sse_config" {
+resource "local_file" "designs_sse_config_a" {
   content = <<EOF
 {
   "host_port": 43041,
@@ -227,10 +227,10 @@ resource "local_file" "designs_sse_config" {
   "jwt_keystore_type": "jceks",
   "jwt_keystore_secret": "${var.keystore_password}",
 
-  "origin_pattern": "https://${var.hosted_zone_name}(:[0-9]+)?",
+  "origin_pattern": "https://${var.environment}-${var.colour}-swarm-worker-int.${var.hosted_zone_name}(:[0-9]+)?",
 
-  "graphite_reporter_enabled": false,
-  "graphite_host": "http://${var.environment}-${var.colour}-swarm-manager.${var.hosted_zone_name}",
+  "graphite_reporter_enabled": true,
+  "graphite_host": "${var.environment}-${var.colour}-swarm-manager.${var.hosted_zone_name}",
   "graphite_port": 2003,
 
   "kafka_bootstrap_servers": "kafka1:9092,kafka2:9092,kafka3:9092",
@@ -238,13 +238,77 @@ resource "local_file" "designs_sse_config" {
   "kafka_truststore_location": "/keystores/kafka-truststore-client.jks",
   "kafka_keystore_password": "${var.kafka_keystore_password}",
   "kafka_truststore_password": "${var.kafka_truststore_password}",
-  "kafka_group_id": "designs-sse",
+  "kafka_group_id": "designs-sse-a",
 
   "sse_topic": "designs-sse"
 }
 EOF
 
-  filename = "../../secrets/environments/${var.environment}/${var.colour}/config/designs-sse.json"
+  filename = "../../secrets/environments/${var.environment}/${var.colour}/config/designs-sse-a.json"
+}
+
+resource "local_file" "designs_sse_config_b" {
+  content = <<EOF
+{
+  "host_port": 43041,
+
+  "server_keystore_path": "/keystores/keystore-server.jks",
+  "server_keystore_secret": "${var.keystore_password}",
+
+  "jwt_keystore_path": "/keystores/keystore-auth.jceks",
+  "jwt_keystore_type": "jceks",
+  "jwt_keystore_secret": "${var.keystore_password}",
+
+  "origin_pattern": "https://${var.environment}-${var.colour}-swarm-worker-int.${var.hosted_zone_name}(:[0-9]+)?",
+
+  "graphite_reporter_enabled": true,
+  "graphite_host": "${var.environment}-${var.colour}-swarm-manager.${var.hosted_zone_name}",
+  "graphite_port": 2003,
+
+  "kafka_bootstrap_servers": "kafka1:9092,kafka2:9092,kafka3:9092",
+  "kafka_keystore_location": "/keystores/kafka-keystore-client.jks",
+  "kafka_truststore_location": "/keystores/kafka-truststore-client.jks",
+  "kafka_keystore_password": "${var.kafka_keystore_password}",
+  "kafka_truststore_password": "${var.kafka_truststore_password}",
+  "kafka_group_id": "designs-sse-b",
+
+  "sse_topic": "designs-sse"
+}
+EOF
+
+  filename = "../../secrets/environments/${var.environment}/${var.colour}/config/designs-sse-b.json"
+}
+
+resource "local_file" "designs_sse_config_c" {
+  content = <<EOF
+{
+  "host_port": 43041,
+
+  "server_keystore_path": "/keystores/keystore-server.jks",
+  "server_keystore_secret": "${var.keystore_password}",
+
+  "jwt_keystore_path": "/keystores/keystore-auth.jceks",
+  "jwt_keystore_type": "jceks",
+  "jwt_keystore_secret": "${var.keystore_password}",
+
+  "origin_pattern": "https://${var.environment}-${var.colour}-swarm-worker-int.${var.hosted_zone_name}(:[0-9]+)?",
+
+  "graphite_reporter_enabled": true,
+  "graphite_host": "${var.environment}-${var.colour}-swarm-manager.${var.hosted_zone_name}",
+  "graphite_port": 2003,
+
+  "kafka_bootstrap_servers": "kafka1:9092,kafka2:9092,kafka3:9092",
+  "kafka_keystore_location": "/keystores/kafka-keystore-client.jks",
+  "kafka_truststore_location": "/keystores/kafka-truststore-client.jks",
+  "kafka_keystore_password": "${var.kafka_keystore_password}",
+  "kafka_truststore_password": "${var.kafka_truststore_password}",
+  "kafka_group_id": "designs-sse-c",
+
+  "sse_topic": "designs-sse"
+}
+EOF
+
+  filename = "../../secrets/environments/${var.environment}/${var.colour}/config/designs-sse-c.json"
 }
 
 # resource "local_file" "designs_config" {
@@ -259,10 +323,10 @@ EOF
 #   "jwt_keystore_type": "jceks",
 #   "jwt_keystore_secret": "${var.keystore_password}",
 #
-#   "origin_pattern": "https://${var.hosted_zone_name}(:[0-9]+)?",
+#   "origin_pattern": "https://${var.environment}-${var.colour}-swarm-worker-int.${var.hosted_zone_name}(:[0-9]+)?",
 #
-#   "graphite_reporter_enabled": false,
-#   "graphite_host": "http://${var.environment}-${var.colour}-swarm-manager.${var.hosted_zone_name}",
+#   "graphite_reporter_enabled": true,
+#   "graphite_host": "${var.environment}-${var.colour}-swarm-manager.${var.hosted_zone_name}",
 #   "graphite_port": 2003,
 #
 #   "jdbc_url": "jdbc:mysql://${var.environment}-${var.colour}-swarm-worker-int.${var.hosted_zone_name}:43306/designs?useSSL=false&allowPublicKeyRetrieval=true&nullNamePatternMatchesAll=true",
@@ -297,10 +361,10 @@ resource "local_file" "accounts_config" {
   "jwt_keystore_type": "jceks",
   "jwt_keystore_secret": "${var.keystore_password}",
 
-  "origin_pattern": "https://${var.hosted_zone_name}(:[0-9]+)?",
+  "origin_pattern": "https://${var.environment}-${var.colour}-swarm-worker-int.${var.hosted_zone_name}(:[0-9]+)?",
 
-  "graphite_reporter_enabled": false,
-  "graphite_host": "http://${var.environment}-${var.colour}-swarm-manager.${var.hosted_zone_name}",
+  "graphite_reporter_enabled": true,
+  "graphite_host": "${var.environment}-${var.colour}-swarm-manager.${var.hosted_zone_name}",
   "graphite_port": 2003,
 
   "jdbc_url": "jdbc:mysql://${var.environment}-${var.colour}-swarm-worker-int.${var.hosted_zone_name}:43306/shop?useSSL=false&allowPublicKeyRetrieval=true&nullNamePatternMatchesAll=true",
@@ -327,7 +391,7 @@ EOF
   filename = "../../secrets/environments/${var.environment}/${var.colour}/config/web.json"
 }
 
-resource "local_file" "consul_config" {
+resource "local_file" "consul_config_a" {
   content = <<EOF
 {
   "cert_file": "/consul/config/server_cert.pem",
@@ -337,7 +401,7 @@ resource "local_file" "consul_config" {
   "disable_update_check": true,
   "enable_script_checks": true,
   "skip_leave_on_interrupt": true,
-  "ports": { "https": 8500, "http": -1 },
+  "ports": { "https": -1, "http": 8400 },
   "dns_config": {
     "allow_stale": true,
     "max_stale": "1s",
@@ -350,10 +414,73 @@ resource "local_file" "consul_config" {
     "tags": [
       "http-endpoint"
     ],
-    "port": 43041
+    "port": 443,
+    "address": "${var.environment}-${var.colour}-swarm-worker-ext-pub-a.${var.hosted_zone_name}"
   }]
 }
 EOF
 
-  filename = "../../secrets/environments/${var.environment}/${var.colour}/config/consul.json"
+  filename = "../../secrets/environments/${var.environment}/${var.colour}/config/consul-a.json"
+}
+resource "local_file" "consul_config_b" {
+  content = <<EOF
+{
+  "cert_file": "/consul/config/server_cert.pem",
+  "log_level": "info",
+  "leave_on_terminate": true,
+  "translate_wan_addrs": true,
+  "disable_update_check": true,
+  "enable_script_checks": true,
+  "skip_leave_on_interrupt": true,
+  "ports": { "https": -1, "http": 8400 },
+  "dns_config": {
+    "allow_stale": true,
+    "max_stale": "1s",
+    "service_ttl": {
+      "*": "5s"
+    }
+  },
+  "services": [{
+    "name": "designs-sse",
+    "tags": [
+      "http-endpoint"
+    ],
+    "port": 443,
+    "address": "${var.environment}-${var.colour}-swarm-worker-ext-pub-b.${var.hosted_zone_name}"
+  }]
+}
+EOF
+
+  filename = "../../secrets/environments/${var.environment}/${var.colour}/config/consul-b.json"
+}
+resource "local_file" "consul_config_c" {
+  content = <<EOF
+{
+  "cert_file": "/consul/config/server_cert.pem",
+  "log_level": "info",
+  "leave_on_terminate": true,
+  "translate_wan_addrs": true,
+  "disable_update_check": true,
+  "enable_script_checks": true,
+  "skip_leave_on_interrupt": true,
+  "ports": { "https": -1, "http": 8400 },
+  "dns_config": {
+    "allow_stale": true,
+    "max_stale": "1s",
+    "service_ttl": {
+      "*": "5s"
+    }
+  },
+  "services": [{
+    "name": "designs-sse",
+    "tags": [
+      "http-endpoint"
+    ],
+    "port": 443,
+    "address": "${var.environment}-${var.colour}-swarm-worker-ext-pub-c.${var.hosted_zone_name}"
+  }]
+}
+EOF
+
+  filename = "../../secrets/environments/${var.environment}/${var.colour}/config/consul-c.json"
 }

@@ -35,7 +35,7 @@ services:
           window: 120s
         resources:
           limits:
-            cpus: '0.2'
+            cpus: '0.5'
             memory: 128M
           reservations:
             cpus: '0.1'
@@ -87,7 +87,7 @@ services:
         window: 120s
       resources:
         limits:
-          cpus: '0.2'
+          cpus: '0.5'
           memory: 128M
         reservations:
           cpus: '0.1'
@@ -139,7 +139,7 @@ services:
         window: 120s
       resources:
         limits:
-          cpus: '0.2'
+          cpus: '0.5'
           memory: 128M
         reservations:
           cpus: '0.1'

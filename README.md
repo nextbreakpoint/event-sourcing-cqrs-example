@@ -17,9 +17,13 @@ Create a file main.json in the infrastructure/config directory. Copy the content
       "hosted_zone_name": "yourdomain.com",
       "hosted_zone_id": "your_public_zone_id",
 
+      "shop_hostname": "prod-green-shop.yourdomain.com",
+
       "bastion_host": "bastion.yourdomain.com",
 
       "secrets_bucket_name": "your_secrets_bucket_name",
+
+      "consul_datacenter": "internal",
 
       "github_user_email": "your_github_user_email",
       "github_client_id": "your_github_client_id",
@@ -54,17 +58,9 @@ Build Docker images and push images to ECR with command:
 
     ./build_and_push_images.sh your_aws_account_id.dkr.ecr.eu-west-1.amazonaws.com your_access_id your_secret_access_key
 
-Create services configuration files with command:
+Create configuration files with command:
 
-    ./docker_run.sh module_create services
-
-Create NGINX configuration file with command:
-
-    ./docker_run.sh module_create nginx
-
-Create secrets files in S3 with command:
-
-    ./docker_run.sh module_create secrets
+    ./docker_run.sh module_create config
 
 Create target groups and Route53's records with command:
 
@@ -146,9 +142,9 @@ Destroy target groups and Route53's records with command:
 
     ./docker_run.sh module_destroy targets
 
-Destroy secrets files in S3 with command:
+Destroy configuration files with command:
 
-    ./docker_run.sh module_destroy secrets
+    ./docker_run.sh module_destroy config
 
 Destroy ECR repositories with command:
 

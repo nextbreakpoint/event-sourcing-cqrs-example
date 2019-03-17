@@ -1,17 +1,141 @@
 version: '3.4'
 services:
-  shop-designs:
+  shop-designs-command:
     labels:
-        service: shop-designs
-    image: ${SHOP_DESIGNS_IMAGE}
+        service: shop-designs-command
+    image: ${SHOP_DESIGNS_COMMAND_IMAGE}
     volumes:
       - storage:/data
     logging:
       options:
         labels: "service"
     ports:
-      - target: 43001
-        published: 43001
+      - target: 43031
+        published: 43031
+        protocol: tcp
+        mode: ingress
+    deploy:
+      replicas: 3
+      placement:
+        constraints:
+          - node.role == worker
+          - node.labels.public == false
+      update_config:
+        parallelism: 1
+        failure_action: rollback
+        delay: 30s
+        order: stop-first
+      restart_policy:
+        condition: any
+        delay: 5s
+        window: 120s
+      resources:
+        limits:
+          cpus: '1'
+          memory: 2048M
+        reservations:
+          cpus: '0.1'
+          memory: 256M
+    secrets:
+      - source: server_command_conf
+        target: /config/designs-command.json
+        uid: '1000'
+        gid: '1000'
+        mode: 0440
+      - source: keystore_auth
+        target: /keystores/keystore-auth.jceks
+        uid: '1000'
+        gid: '1000'
+        mode: 0440
+      - source: keystore_server
+        target: /keystores/keystore-server.jks
+        uid: '1000'
+        gid: '1000'
+        mode: 0440
+      - source: kafka_keystore_client
+        target: /keystores/kafka-keystore-client.jks
+        uid: '1000'
+        gid: '1000'
+        mode: 0440
+      - source: kafka_truststore_client
+        target: /keystores/kafka-truststore-client.jks
+        uid: '1000'
+        gid: '1000'
+        mode: 0440
+  shop-designs-processor:
+    labels:
+        service: shop-designs-processor
+    image: ${SHOP_DESIGNS_PROCESSOR_IMAGE}
+    volumes:
+      - storage:/data
+    logging:
+      options:
+        labels: "service"
+    ports:
+      - target: 43011
+        published: 43011
+        protocol: tcp
+        mode: ingress
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == worker
+          - node.labels.public == false
+      update_config:
+        parallelism: 1
+        failure_action: rollback
+        delay: 30s
+        order: stop-first
+      restart_policy:
+        condition: any
+        delay: 5s
+        window: 120s
+      resources:
+        limits:
+          cpus: '1'
+          memory: 2048M
+        reservations:
+          cpus: '0.1'
+          memory: 256M
+    secrets:
+      - source: server_processor_conf
+        target: /config/designs-processor.json
+        uid: '1000'
+        gid: '1000'
+        mode: 0440
+      - source: keystore_auth
+        target: /keystores/keystore-auth.jceks
+        uid: '1000'
+        gid: '1000'
+        mode: 0440
+      - source: keystore_server
+        target: /keystores/keystore-server.jks
+        uid: '1000'
+        gid: '1000'
+        mode: 0440
+      - source: kafka_keystore_client
+        target: /keystores/kafka-keystore-client.jks
+        uid: '1000'
+        gid: '1000'
+        mode: 0440
+      - source: kafka_truststore_client
+        target: /keystores/kafka-truststore-client.jks
+        uid: '1000'
+        gid: '1000'
+        mode: 0440
+  shop-designs-query:
+    labels:
+        service: shop-designs-query
+    image: ${SHOP_DESIGNS_QUERY_IMAGE}
+    volumes:
+      - storage:/data
+    logging:
+      options:
+        labels: "service"
+    ports:
+      - target: 43021
+        published: 43021
         protocol: tcp
         mode: ingress
     deploy:
@@ -37,8 +161,8 @@ services:
           cpus: '0.1'
           memory: 256M
     secrets:
-      - source: server_conf
-        target: /config/designs.json
+      - source: server_query_conf
+        target: /config/designs-query.json
         uid: '1000'
         gid: '1000'
         mode: 0440
@@ -52,6 +176,195 @@ services:
         uid: '1000'
         gid: '1000'
         mode: 0440
+  shop-designs-sse-a:
+    labels:
+        service: shop-designs-sse-a
+    image: ${SHOP_DESIGNS_SSE_IMAGE}
+    volumes:
+      - storage:/data
+    logging:
+      options:
+        labels: "service"
+    ports:
+      - target: 43041
+        published: 43041
+        protocol: tcp
+        mode: host
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == worker
+          - node.labels.public == true
+          - node.labels.zone == a
+      update_config:
+        parallelism: 1
+        failure_action: rollback
+        delay: 30s
+        order: stop-first
+      restart_policy:
+        condition: any
+        delay: 5s
+        window: 120s
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1280M
+        reservations:
+          cpus: '0.1'
+          memory: 256M
+    secrets:
+      - source: server_sse_conf_a
+        target: /config/designs-sse.json
+        uid: '1000'
+        gid: '1000'
+        mode: 0440
+      - source: keystore_auth
+        target: /keystores/keystore-auth.jceks
+        uid: '1000'
+        gid: '1000'
+        mode: 0440
+      - source: keystore_server
+        target: /keystores/keystore-server.jks
+        uid: '1000'
+        gid: '1000'
+        mode: 0440
+      - source: kafka_keystore_client
+        target: /keystores/kafka-keystore-client.jks
+        uid: '1000'
+        gid: '1000'
+        mode: 0440
+      - source: kafka_truststore_client
+        target: /keystores/kafka-truststore-client.jks
+        uid: '1000'
+        gid: '1000'
+        mode: 0440
+  shop-designs-sse-b:
+    labels:
+        service: shop-designs-sse
+    image: ${SHOP_DESIGNS_SSE_IMAGE}
+    volumes:
+      - storage:/data
+    logging:
+      options:
+        labels: "service"
+    ports:
+      - target: 43041
+        published: 43041
+        protocol: tcp
+        mode: host
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == worker
+          - node.labels.public == true
+          - node.labels.zone == b
+      update_config:
+        parallelism: 1
+        failure_action: rollback
+        delay: 30s
+        order: stop-first
+      restart_policy:
+        condition: any
+        delay: 5s
+        window: 120s
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1280M
+        reservations:
+          cpus: '0.1'
+          memory: 256M
+    secrets:
+      - source: server_sse_conf_b
+        target: /config/designs-sse.json
+        uid: '1000'
+        gid: '1000'
+        mode: 0440
+      - source: keystore_auth
+        target: /keystores/keystore-auth.jceks
+        uid: '1000'
+        gid: '1000'
+        mode: 0440
+      - source: keystore_server
+        target: /keystores/keystore-server.jks
+        uid: '1000'
+        gid: '1000'
+        mode: 0440
+      - source: kafka_keystore_client
+        target: /keystores/kafka-keystore-client.jks
+        uid: '1000'
+        gid: '1000'
+        mode: 0440
+      - source: kafka_truststore_client
+        target: /keystores/kafka-truststore-client.jks
+        uid: '1000'
+        gid: '1000'
+        mode: 0440
+  shop-designs-sse-c:
+    labels:
+        service: shop-designs-sse
+    image: ${SHOP_DESIGNS_SSE_IMAGE}
+    volumes:
+      - storage:/data
+    logging:
+      options:
+        labels: "service"
+    ports:
+      - target: 43041
+        published: 43041
+        protocol: tcp
+        mode: host
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == worker
+          - node.labels.public == true
+          - node.labels.zone == c
+      update_config:
+        parallelism: 1
+        failure_action: rollback
+        delay: 30s
+        order: stop-first
+      restart_policy:
+        condition: any
+        delay: 5s
+        window: 120s
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1280M
+        reservations:
+          cpus: '0.1'
+          memory: 256M
+    secrets:
+      - source: server_sse_conf_c
+        target: /config/designs-sse.json
+        uid: '1000'
+        gid: '1000'
+        mode: 0440
+      - source: keystore_auth
+        target: /keystores/keystore-auth.jceks
+        uid: '1000'
+        gid: '1000'
+        mode: 0440
+      - source: keystore_server
+        target: /keystores/keystore-server.jks
+        uid: '1000'
+        gid: '1000'
+        mode: 0440
+      - source: kafka_keystore_client
+        target: /keystores/kafka-keystore-client.jks
+        uid: '1000'
+        gid: '1000'
+        mode: 0440
+      - source: kafka_truststore_client
+        target: /keystores/kafka-truststore-client.jks
+        uid: '1000'
+        gid: '1000'
+        mode: 0440
 networks:
   default:
     external:
@@ -59,9 +372,23 @@ networks:
 volumes:
     storage:
 secrets:
-  server_conf:
-    file: ${ENVIRONMENT_SECRETS_PATH}/config/designs.json
+  server_processor_conf:
+    file: ${ENVIRONMENT_SECRETS_PATH}/config/designs-processor.json
+  server_command_conf:
+    file: ${ENVIRONMENT_SECRETS_PATH}/config/designs-command.json
+  server_query_conf:
+    file: ${ENVIRONMENT_SECRETS_PATH}/config/designs-query.json
+  server_sse_conf_a:
+    file: ${ENVIRONMENT_SECRETS_PATH}/config/designs-sse-a.json
+  server_sse_conf_b:
+    file: ${ENVIRONMENT_SECRETS_PATH}/config/designs-sse-b.json
+  server_sse_conf_c:
+    file: ${ENVIRONMENT_SECRETS_PATH}/config/designs-sse-c.json
   keystore_auth:
     file: ${ENVIRONMENT_SECRETS_PATH}/keystores/keystore-auth.jceks
   keystore_server:
     file: ${ENVIRONMENT_SECRETS_PATH}/keystores/keystore-server.jks
+  kafka_keystore_client:
+    file: ${ENVIRONMENT_SECRETS_PATH}/kafka/keystore-client.jks
+  kafka_truststore_client:
+    file: ${ENVIRONMENT_SECRETS_PATH}/kafka/truststore-client.jks

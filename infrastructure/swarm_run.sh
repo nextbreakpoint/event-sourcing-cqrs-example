@@ -19,6 +19,9 @@ export MANAGER_C=$(host ${ENVIRONMENT}-${COLOUR}-swarm-manager-c.${HOSTED_ZONE_N
 export WORKER_A=$(host ${ENVIRONMENT}-${COLOUR}-swarm-worker-int-a.${HOSTED_ZONE_NAME} | grep -m1 " has address " | awk '{ print $4 }')
 export WORKER_B=$(host ${ENVIRONMENT}-${COLOUR}-swarm-worker-int-b.${HOSTED_ZONE_NAME} | grep -m1 " has address " | awk '{ print $4 }')
 export WORKER_C=$(host ${ENVIRONMENT}-${COLOUR}-swarm-worker-int-c.${HOSTED_ZONE_NAME} | grep -m1 " has address " | awk '{ print $4 }')
+export EXT_WORKER_A=$(host ${ENVIRONMENT}-${COLOUR}-swarm-worker-ext-a.${HOSTED_ZONE_NAME} | grep -m1 " has address " | awk '{ print $4 }')
+export EXT_WORKER_B=$(host ${ENVIRONMENT}-${COLOUR}-swarm-worker-ext-b.${HOSTED_ZONE_NAME} | grep -m1 " has address " | awk '{ print $4 }')
+export EXT_WORKER_C=$(host ${ENVIRONMENT}-${COLOUR}-swarm-worker-ext-c.${HOSTED_ZONE_NAME} | grep -m1 " has address " | awk '{ print $4 }')
 
 export CONSUL_DATACENTER=$(cat $(pwd)/config/main.json | jq -r ".consul_datacenter")
 export CONSUL_SECRET=$(cat $(pwd)/secrets/consul.json | jq -r ".consul_secret")
@@ -38,6 +41,10 @@ export SHOP_DESIGNS_SSE_IMAGE=${ACCOUNT_ID}.dkr.ecr.eu-west-1.amazonaws.com/${EN
 export SHOP_ACCOUNTS_IMAGE=${ACCOUNT_ID}.dkr.ecr.eu-west-1.amazonaws.com/${ENVIRONMENT}-${COLOUR}-shop/accounts:1.0.0
 export SHOP_AUTH_IMAGE=${ACCOUNT_ID}.dkr.ecr.eu-west-1.amazonaws.com/${ENVIRONMENT}-${COLOUR}-shop/auth:1.0.0
 export SHOP_WEB_IMAGE=${ACCOUNT_ID}.dkr.ecr.eu-west-1.amazonaws.com/${ENVIRONMENT}-${COLOUR}-shop/web:1.0.0
+
+export ADVERTISE_EXT_WORKER_AGENT_1=$EXT_WORKER_A
+export ADVERTISE_EXT_WORKER_AGENT_2=$EXT_WORKER_B
+export ADVERTISE_EXT_WORKER_AGENT_3=$EXT_WORKER_C
 
 export DOCKER_HOST=tcp://${ENVIRONMENT}-${COLOUR}-swarm-manager.${HOSTED_ZONE_NAME}:2376
 export DOCKER_TLS=1

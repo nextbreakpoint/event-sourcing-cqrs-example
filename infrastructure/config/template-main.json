@@ -7,6 +7,8 @@
   "hosted_zone_name": "yourdomain.com",
   "hosted_zone_id": "your_public_zone_id",
 
+  "shop_hostname": "prod-green-shop.yourdomain.com",
+
   "bastion_host": "bastion.yourdomain.com",
 
   "secrets_bucket_name": "your_secrets_bucket_name",
@@ -25,8 +27,5 @@
   "cassandra_password": "cassandra",
 
   "mysql_username": "shop",
-  "mysql_password": "changeme",
-
-  "kafka_keystore_password": "your_keystore_password",
-  "kafka_truststore_password": "your_truststore_password"
+  "mysql_password": "changeme"
 }

@@ -2,6 +2,6 @@
 # Outputs
 ###################################################################
 
-output "shop-nginx-created" {
+output "shop-config-created" {
   value = "true"
 }

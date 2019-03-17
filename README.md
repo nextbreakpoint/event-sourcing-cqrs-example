@@ -18,6 +18,16 @@ Create a file main.json in the infrastructure/config directory. Copy the content
       "hosted_zone_id": "your_public_zone_id",
 
       "shop_hostname": "prod-green-shop.yourdomain.com",
+      "shop_internal_hostname": "prod-green-swarm-worker-int.yourdomain.com",
+      "shop_internal_hostname_a": "prod-green-swarm-worker-int-a.yourdomain.com",
+      "shop_internal_hostname_b": "prod-green-swarm-worker-int-b.yourdomain.com",
+      "shop_internal_hostname_c": "prod-green-swarm-worker-int-c.yourdomain.com",
+      "shop_external_hostname_a": "prod-green-swarm-worker-ext-a.yourdomain.com",
+      "shop_external_hostname_b": "prod-green-swarm-worker-ext-b.yourdomain.com",
+      "shop_external_hostname_c": "prod-green-swarm-worker-ext-c.yourdomain.com",
+      "shop_external_public_hostname_a": "prod-green-swarm-worker-ext-pub-a.yourdomain.com",
+      "shop_external_public_hostname_b": "prod-green-swarm-worker-ext-pub-b.yourdomain.com",
+      "shop_external_public_hostname_c": "prod-green-swarm-worker-ext-pub-c.yourdomain.com",
 
       "bastion_host": "bastion.yourdomain.com",
 
@@ -61,6 +71,10 @@ Build Docker images and push images to ECR with command:
 Create configuration files with command:
 
     ./docker_run.sh module_create config
+
+Fetch common secrets from S3 bucket (see secrets in [infrastructure-as-code](https://github.com/nextbreakpoint/infrastructure-as-code)):
+
+    ./docker_run.sh fetch_secrets
 
 Create target groups and Route53's records with command:
 

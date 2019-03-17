@@ -89,4 +89,6 @@ mkdir -p $DST
 cp $OUTPUT_GEN/ca_cert.pem $DST
 cp $OUTPUT_GEN/server_cert.pem $DST
 cp $OUTPUT_GEN/server_key.pem $DST
+cp $OUTPUT_GEN/client_cert.pem $DST
+cp $OUTPUT_GEN/client_key.pem $DST
 cp $OUTPUT_GEN/ca_and_server_cert.pem $DST

@@ -57,6 +57,21 @@ services:
         uid: '1000'
         gid: '1000'
         mode: 0440
+      - source: client_key
+        target: /etc/nginx/client_key.pem
+        uid: '1000'
+        gid: '1000'
+        mode: 0440
+      - source: client_cert
+        target: /etc/nginx/client_cert.pem
+        uid: '1000'
+        gid: '1000'
+        mode: 0440
+      - source: ca_cert
+        target: /etc/nginx/ca_cert.pem
+        uid: '1000'
+        gid: '1000'
+        mode: 0440
   shop-nginx-ext-a:
     labels:
         service: shop-nginx-ext
@@ -113,6 +128,21 @@ services:
         mode: 0440
       - source: server_key
         target: /etc/nginx/server_key.pem
+        uid: '1000'
+        gid: '1000'
+        mode: 0440
+      - source: client_key
+        target: /etc/nginx/client_key.pem
+        uid: '1000'
+        gid: '1000'
+        mode: 0440
+      - source: client_cert
+        target: /etc/nginx/client_cert.pem
+        uid: '1000'
+        gid: '1000'
+        mode: 0440
+      - source: ca_cert
+        target: /etc/nginx/ca_cert.pem
         uid: '1000'
         gid: '1000'
         mode: 0440
@@ -175,6 +205,21 @@ services:
         uid: '1000'
         gid: '1000'
         mode: 0440
+      - source: client_key
+        target: /etc/nginx/client_key.pem
+        uid: '1000'
+        gid: '1000'
+        mode: 0440
+      - source: client_cert
+        target: /etc/nginx/client_cert.pem
+        uid: '1000'
+        gid: '1000'
+        mode: 0440
+      - source: ca_cert
+        target: /etc/nginx/ca_cert.pem
+        uid: '1000'
+        gid: '1000'
+        mode: 0440
   shop-nginx-ext-c:
     labels:
         service: shop-nginx-ext
@@ -234,6 +279,21 @@ services:
         uid: '1000'
         gid: '1000'
         mode: 0440
+      - source: client_key
+        target: /etc/nginx/client_key.pem
+        uid: '1000'
+        gid: '1000'
+        mode: 0440
+      - source: client_cert
+        target: /etc/nginx/client_cert.pem
+        uid: '1000'
+        gid: '1000'
+        mode: 0440
+      - source: ca_cert
+        target: /etc/nginx/ca_cert.pem
+        uid: '1000'
+        gid: '1000'
+        mode: 0440
 networks:
   default:
     external:
@@ -254,3 +314,9 @@ secrets:
     file: ${ENVIRONMENT_SECRETS_PATH}/nginx/ca_and_server_cert.pem
   server_key:
     file: ${ENVIRONMENT_SECRETS_PATH}/nginx/server_key.pem
+  client_key:
+    file: ${ENVIRONMENT_SECRETS_PATH}/nginx/client_key.pem
+  client_cert:
+    file: ${ENVIRONMENT_SECRETS_PATH}/nginx/client_cert.pem
+  ca_cert:
+    file: ${ENVIRONMENT_SECRETS_PATH}/nginx/ca_cert.pem

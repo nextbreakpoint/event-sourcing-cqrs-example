@@ -33,6 +33,36 @@ variable "hosted_zone_name" {}
 variable "shop_hostname" {}
 
 ### MANDATORY ###
+variable "shop_internal_hostname" {}
+
+### MANDATORY ###
+variable "shop_internal_hostname_a" {}
+
+### MANDATORY ###
+variable "shop_internal_hostname_b" {}
+
+### MANDATORY ###
+variable "shop_internal_hostname_c" {}
+
+### MANDATORY ###
+variable "shop_external_hostname_a" {}
+
+### MANDATORY ###
+variable "shop_external_hostname_b" {}
+
+### MANDATORY ###
+variable "shop_external_hostname_c" {}
+
+### MANDATORY ###
+variable "shop_external_public_hostname_a" {}
+
+### MANDATORY ###
+variable "shop_external_public_hostname_b" {}
+
+### MANDATORY ###
+variable "shop_external_public_hostname_c" {}
+
+### MANDATORY ###
 variable "github_client_id" {}
 
 ### MANDATORY ###

@@ -500,32 +500,29 @@ http {
     proxy_buffering off;
     proxy_cache off;
 
+    resolver 127.0.0.11 ipv6=off valid=10s;
+
     location /watch {
-        resolver 127.0.0.11 valid=5s;
         set $upstream_api shop-gateway;
         proxy_pass https://$upstream_api:44000$request_uri;
     }
 
     location /auth {
-        resolver 127.0.0.11 valid=5s;
         set $upstream_api shop-gateway;
         proxy_pass https://$upstream_api:44000$request_uri;
     }
 
     location /designs {
-        resolver 127.0.0.11 valid=5s;
         set $upstream_api shop-gateway;
         proxy_pass https://$upstream_api:44000$request_uri;
     }
 
     location /accounts {
-        resolver 127.0.0.11 valid=5s;
         set $upstream_api shop-gateway;
         proxy_pass https://$upstream_api:44000$request_uri;
     }
 
     location / {
-        resolver 127.0.0.11 valid=5s;
         set $upstream_web shop-web;
         proxy_pass https://$upstream_web:8080$request_uri;
     }
@@ -583,14 +580,17 @@ http {
 
     keepalive_timeout      300s;
 
+    proxy_http_version 1.1;
+
+    proxy_buffering off;
+    proxy_cache off;
+
+    resolver 127.0.0.11 ipv6=off valid=10s;
+
     location /watch/designs {
-        resolver 127.0.0.11 valid=5s;
         set $upstream_api shop-designs-sse-a;
         proxy_pass https://$upstream_api:43041$request_uri;
-        proxy_http_version 1.1;
         proxy_set_header Connection "";
-        proxy_buffering off;
-        proxy_cache off;
     }
   }
 }
@@ -646,14 +646,17 @@ http {
 
     keepalive_timeout      300s;
 
+    proxy_http_version 1.1;
+
+    proxy_buffering off;
+    proxy_cache off;
+
+    resolver 127.0.0.11 ipv6=off valid=10s;
+
     location /watch/designs {
-        resolver 127.0.0.11 valid=5s;
         set $upstream_api shop-designs-sse-b;
         proxy_pass https://$upstream_api:43041$request_uri;
-        proxy_http_version 1.1;
         proxy_set_header Connection "";
-        proxy_buffering off;
-        proxy_cache off;
     }
   }
 }
@@ -709,14 +712,17 @@ http {
 
     keepalive_timeout      300s;
 
+    proxy_http_version 1.1;
+
+    proxy_buffering off;
+    proxy_cache off;
+
+    resolver 127.0.0.11 ipv6=off valid=10s;
+
     location /watch/designs {
-        resolver 127.0.0.11 valid=5s;
         set $upstream_api shop-designs-sse-c;
         proxy_pass https://$upstream_api:43041$request_uri;
-        proxy_http_version 1.1;
         proxy_set_header Connection "";
-        proxy_buffering off;
-        proxy_cache off;
     }
   }
 }

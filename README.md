@@ -108,14 +108,11 @@ Configure Kafka topics with command:
 
 Deploy services on Docker Swarm with commands:
 
-    ./swarm_run.sh deploy_stack shop-designs-processor
-    ./swarm_run.sh deploy_stack shop-designs-command
-    ./swarm_run.sh deploy_stack shop-designs-query
-    ./swarm_run.sh deploy_stack shop-designs-sse
-    ./swarm_run.sh deploy_stack shop-accounts
     ./swarm_run.sh deploy_stack shop-auth
+    ./swarm_run.sh deploy_stack shop-accounts
+    ./swarm_run.sh deploy_stack shop-designs
     ./swarm_run.sh deploy_stack shop-web
-    ./swarm_run.sh deploy_stack shop-api-gateway
+    ./swarm_run.sh deploy_stack shop-gateway
 
 ## Access the application
 
@@ -127,14 +124,11 @@ You will be redirected to GitHub for authentication. Use the email you configure
 
 Remove services with commands:
 
-    ./swarm_run.sh remove_stack shop-api-gateway
+    ./swarm_run.sh remove_stack shop-gateway
     ./swarm_run.sh remove_stack shop-web
-    ./swarm_run.sh remove_stack shop-auth
+    ./swarm_run.sh remove_stack shop-designs
     ./swarm_run.sh remove_stack shop-accounts
-    ./swarm_run.sh remove_stack shop-designs-sse
-    ./swarm_run.sh remove_stack shop-designs-query
-    ./swarm_run.sh remove_stack shop-designs-command
-    ./swarm_run.sh remove_stack shop-designs-processor
+    ./swarm_run.sh remove_stack shop-auth
 
 Remove MySQL server with command:
 

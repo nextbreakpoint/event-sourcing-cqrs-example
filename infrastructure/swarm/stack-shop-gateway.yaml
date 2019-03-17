@@ -1,8 +1,8 @@
 version: '3.4'
 services:
-  shop-api-gateway:
+  shop-gateway:
     labels:
-        service: shop-api-gateway
+        service: shop-gateway
     image: ${SHOP_API_GATEWAY_IMAGE}
     volumes:
       - storage:/data
@@ -70,7 +70,7 @@ volumes:
     storage:
 secrets:
   server_conf:
-    file: ${ENVIRONMENT_SECRETS_PATH}/config/api-gateway.json
+    file: ${ENVIRONMENT_SECRETS_PATH}/config/gateway.json
   keystore_auth:
     file: ${ENVIRONMENT_SECRETS_PATH}/keystores/keystore-auth.jceks
   keystore_server:

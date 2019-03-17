@@ -16,7 +16,7 @@ provider "local" {
 # Resources
 ##############################################################################
 
-resource "local_file" "api_gateway_config" {
+resource "local_file" "gateway_config" {
   content = <<EOF
 {
   "host_port": 44000,
@@ -53,7 +53,7 @@ resource "local_file" "api_gateway_config" {
 }
 EOF
 
-  filename = "../../secrets/environments/${var.environment}/${var.colour}/config/api-gateway.json"
+  filename = "../../secrets/environments/${var.environment}/${var.colour}/config/gateway.json"
 }
 
 resource "local_file" "auth_config" {
@@ -162,7 +162,7 @@ resource "local_file" "designs_processor_config" {
   "cassandra_keyspace": "designs",
   "cassandra_username": "${var.cassandra_username}",
   "cassandra_password": "${var.cassandra_password}",
-  "cassandra_contactPoint": "cassandra1,cassandra2,cassandra3",
+  "cassandra_contactPoints": "cassandra1,cassandra2,cassandra3",
   "cassandra_port": 9042,
 
   "message_source": "service-designs",
@@ -205,7 +205,7 @@ resource "local_file" "designs_query_config" {
   "cassandra_keyspace": "designs",
   "cassandra_username": "${var.cassandra_username}",
   "cassandra_password": "${var.cassandra_password}",
-  "cassandra_contactPoint": "cassandra1,cassandra2,cassandra3",
+  "cassandra_contactPoints": "cassandra1,cassandra2,cassandra3",
   "cassandra_port": 9042,
 
   "max_execution_time_in_millis": 30000
@@ -384,7 +384,7 @@ resource "local_file" "web_config" {
 {
   "client_web_url": "https://${var.shop_hostname}:7443",
   "client_api_url": "https://${var.shop_hostname}:7443",
-  "server_api_url": "https://shop-api-gateway:44000"
+  "server_api_url": "https://shop-gateway:44000"
 }
 EOF
 
@@ -523,7 +523,7 @@ http {
 
     location /watch {
         resolver 127.0.0.11 valid=30s;
-        set $upstream_api shop-api-gateway;
+        set $upstream_api shop-gateway;
         proxy_pass https://$upstream_api:44000$request_uri;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
@@ -532,7 +532,7 @@ http {
 
     location /auth {
         resolver 127.0.0.11 valid=30s;
-        set $upstream_api shop-api-gateway;
+        set $upstream_api shop-gateway;
         proxy_pass https://$upstream_api:44000$request_uri;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
@@ -541,7 +541,7 @@ http {
 
     location /designs {
         resolver 127.0.0.11 valid=30s;
-        set $upstream_api shop-api-gateway;
+        set $upstream_api shop-gateway;
         proxy_pass https://$upstream_api:44000$request_uri;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
@@ -550,7 +550,7 @@ http {
 
     location /accounts {
         resolver 127.0.0.11 valid=30s;
-        set $upstream_api shop-api-gateway;
+        set $upstream_api shop-gateway;
         proxy_pass https://$upstream_api:44000$request_uri;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;

@@ -138,6 +138,7 @@ http {
         proxy_set_header Connection "";
         proxy_buffering off;
         proxy_cache off;
+        keepalive_timeout 300s;
     }
   }
 }
@@ -187,6 +188,7 @@ http {
         proxy_set_header Connection "";
         proxy_buffering off;
         proxy_cache off;
+        keepalive_timeout 300s;
     }
   }
 }
@@ -236,6 +238,7 @@ http {
         proxy_set_header Connection "";
         proxy_buffering off;
         proxy_cache off;
+        keepalive_timeout 300s;
     }
   }
 }

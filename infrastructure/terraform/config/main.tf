@@ -533,6 +533,11 @@ http {
     proxy_set_header  X-Real-IP $remote_addr;
     proxy_set_header  X-Forwarded-For $proxy_add_x_forwarded_for;
 
+    proxy_http_version 1.1;
+
+    proxy_buffering off;
+    proxy_cache off;
+
     location /watch {
         resolver 127.0.0.11 valid=30s;
         set $upstream_api ${var.shop_internal_hostname};
@@ -611,8 +616,10 @@ http {
     proxy_set_header  X-Real-IP $remote_addr;
     proxy_set_header  X-Forwarded-For $proxy_add_x_forwarded_for;
 
-    proxy_read_timeout     300;
-    proxy_connect_timeout  300;
+    proxy_read_timeout     300s;
+    proxy_connect_timeout  300s;
+
+    keepalive_timeout      300s;
 
     location /watch/designs {
         resolver 127.0.0.11 valid=30s;
@@ -672,8 +679,10 @@ http {
     proxy_set_header  X-Real-IP $remote_addr;
     proxy_set_header  X-Forwarded-For $proxy_add_x_forwarded_for;
 
-    proxy_read_timeout     300;
-    proxy_connect_timeout  300;
+    proxy_read_timeout     300s;
+    proxy_connect_timeout  300s;
+
+    keepalive_timeout      300s;
 
     location /watch/designs {
         resolver 127.0.0.11 valid=30s;
@@ -733,8 +742,10 @@ http {
     proxy_set_header  X-Real-IP $remote_addr;
     proxy_set_header  X-Forwarded-For $proxy_add_x_forwarded_for;
 
-    proxy_read_timeout     300;
-    proxy_connect_timeout  300;
+    proxy_read_timeout     300s;
+    proxy_connect_timeout  300s;
+
+    keepalive_timeout      300s;
 
     location /watch/designs {
         resolver 127.0.0.11 valid=30s;

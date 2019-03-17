@@ -208,7 +208,7 @@ services:
         window: 120s
       resources:
         limits:
-          cpus: '1'
+          cpus: '0.5'
           memory: 512M
         reservations:
           cpus: '0.1'
@@ -271,7 +271,7 @@ services:
         window: 120s
       resources:
         limits:
-          cpus: '1'
+          cpus: '0.5'
           memory: 512M
         reservations:
           cpus: '0.1'
@@ -334,7 +334,7 @@ services:
         window: 120s
       resources:
         limits:
-          cpus: '1'
+          cpus: '0.5'
           memory: 512M
         reservations:
           cpus: '0.1'

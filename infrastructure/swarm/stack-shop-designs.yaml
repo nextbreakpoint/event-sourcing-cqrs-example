@@ -178,7 +178,7 @@ services:
         mode: 0440
   shop-designs-sse-a:
     labels:
-        service: shop-designs-sse-a
+        service: shop-designs-sse
     image: ${SHOP_DESIGNS_SSE_IMAGE}
     volumes:
       - storage:/data

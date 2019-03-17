@@ -23,8 +23,8 @@ export EXT_WORKER_A=$(host ${ENVIRONMENT}-${COLOUR}-swarm-worker-ext-a.${HOSTED_
 export EXT_WORKER_B=$(host ${ENVIRONMENT}-${COLOUR}-swarm-worker-ext-b.${HOSTED_ZONE_NAME} | grep -m1 " has address " | awk '{ print $4 }')
 export EXT_WORKER_C=$(host ${ENVIRONMENT}-${COLOUR}-swarm-worker-ext-c.${HOSTED_ZONE_NAME} | grep -m1 " has address " | awk '{ print $4 }')
 
-export CONSUL_DATACENTER=$(cat $(pwd)/config/main.json | jq -r ".consul_datacenter")
-export CONSUL_SECRET=$(cat $(pwd)/secrets/consul.json | jq -r ".consul_secret")
+export CONSUL_VERSION=1.2.2
+export CONSUL_IMAGE=consul:${CONSUL_VERSION}
 
 export NGINX_VERSION=latest
 export NGINX_IMAGE=nginx:${NGINX_VERSION}

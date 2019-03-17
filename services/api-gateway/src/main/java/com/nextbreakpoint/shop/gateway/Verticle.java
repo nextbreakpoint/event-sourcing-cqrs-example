@@ -151,16 +151,16 @@ public class Verticle extends AbstractVerticle {
         final HttpClient designsQueryClient = HttpClientFactory.create(vertx, config.getString("server_designs_query_url"), config);
 
         designsRouter.route("/*")
-                .method(HttpMethod.OPTIONS)
-                .handler(new ProxyHandler(designsQueryClient));
-
-        designsRouter.route("/*")
                 .method(HttpMethod.HEAD)
                 .handler(new ProxyHandler(designsQueryClient));
 
         designsRouter.route("/*")
                 .method(HttpMethod.GET)
                 .handler(new ProxyHandler(designsQueryClient));
+
+        designsRouter.route("/*")
+                .method(HttpMethod.OPTIONS)
+                .handler(new ProxyHandler(designsCommandClient));
 
         designsRouter.route("/*")
                 .method(HttpMethod.POST)
@@ -184,7 +184,7 @@ public class Verticle extends AbstractVerticle {
     private void configureWatchRoute(JsonObject config, Router mainRouter, String originPattern, ServiceDiscovery serviceDiscovery) {
         final Router designsRouter = Router.router(vertx);
 
-        final CorsHandler corsHandler = CORSHandlerFactory.createWithAll(originPattern, asList(AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN, X_MODIFIED, LOCATION), asList(CONTENT_TYPE, X_XSRF_TOKEN, X_MODIFIED, LOCATION));
+        final CorsHandler corsHandler = CORSHandlerFactory.createWithAll(originPattern, asList(COOKIE, AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN, X_MODIFIED, LOCATION), asList(COOKIE, CONTENT_TYPE, X_XSRF_TOKEN, X_MODIFIED, LOCATION));
 
         designsRouter.route("/*").handler(corsHandler);
 

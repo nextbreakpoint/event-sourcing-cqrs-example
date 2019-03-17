@@ -121,7 +121,7 @@ public class Verticle extends AbstractVerticle {
 
         final CorsHandler corsHandler = CORSHandlerFactory.createWithAll(originPattern, asList(AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN, X_MODIFIED, X_TRACE_ID), asList(CONTENT_TYPE, X_XSRF_TOKEN, X_MODIFIED, X_TRACE_ID));
 
-        mainRouter.route("/designs/*").handler(corsHandler);
+        mainRouter.route("/*").handler(corsHandler);
 
         final Handler<RoutingContext> onAccessDenied = routingContext -> routingContext.fail(Failure.accessDenied("Authorisation failed"));
 
@@ -163,7 +163,7 @@ public class Verticle extends AbstractVerticle {
                 .produces(APPLICATION_JSON)
                 .handler(deleteDesignHandler);
 
-        mainRouter.options("/designs/*")
+        mainRouter.options("/*")
                 .handler(ResponseHelper::sendNoContent);
 
         mainRouter.route().failureHandler(ResponseHelper::sendFailure);

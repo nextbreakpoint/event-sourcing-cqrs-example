@@ -106,23 +106,22 @@ public class Verticle extends AbstractVerticle {
 
         final CorsHandler corsHandler = CORSHandlerFactory.createWithAll(originPattern, asList(COOKIE, AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN, X_MODIFIED, X_TRACE_ID));
 
-        mainRouter.route("/watch/designs/*").handler(corsHandler);
+        mainRouter.route("/*").handler(corsHandler);
 
         final Handler<RoutingContext> onAccessDenied = routingContext -> routingContext.fail(Failure.accessDenied("Authorisation failed"));
 
         mainRouter.route().failureHandler(ResponseHelper::sendFailure);
 
-        final Handler eventHandler = new AccessHandler(jwtProvider, EventsHandler.create(vertx), onAccessDenied, asList(ANONYMOUS, ADMIN, GUEST));
-
-        mainRouter.route("/*")
-                .method(HttpMethod.OPTIONS)
-                .handler(ResponseHelper::sendNoContent);
+        final Handler<RoutingContext> eventHandler = new AccessHandler(jwtProvider, EventsHandler.create(vertx), onAccessDenied, asList(ANONYMOUS, ADMIN, GUEST));
 
         mainRouter.getWithRegex("/watch/designs/([0-9]+)/" + UUID_REGEXP)
                 .handler(eventHandler);
 
         mainRouter.getWithRegex("/watch/designs/([0-9]+)")
                 .handler(eventHandler);
+
+        mainRouter.options("/*")
+                .handler(ResponseHelper::sendNoContent);
 
         final Map<String, Handler<Message>> handlers = new HashMap<>();
 

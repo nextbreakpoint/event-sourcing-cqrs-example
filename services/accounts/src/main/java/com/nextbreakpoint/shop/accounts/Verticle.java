@@ -100,7 +100,7 @@ public class Verticle extends AbstractVerticle {
 
         final CorsHandler corsHandler = CORSHandlerFactory.createWithAll(originPattern, asList(COOKIE, AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN));
 
-        mainRouter.route("/accounts/*").handler(corsHandler);
+        mainRouter.route("/*").handler(corsHandler);
 
         final Handler<RoutingContext> onAccessDenied = routingContext -> routingContext.fail(Failure.accessDenied("Authentication failed"));
 
@@ -135,7 +135,7 @@ public class Verticle extends AbstractVerticle {
                 .produces(APPLICATION_JSON)
                 .handler(deleteAccountHandler);
 
-        mainRouter.options("/accounts/*")
+        mainRouter.options("/*")
                 .handler(ResponseHelper::sendNoContent);
 
         mainRouter.route().failureHandler(ResponseHelper::sendFailure);

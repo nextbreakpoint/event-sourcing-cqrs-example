@@ -85,10 +85,12 @@ public class Verticle extends AbstractVerticle {
 
         final Handler<RoutingContext> signoutHandler = createSignoutHandler(config, mainRouter);
 
-        mainRouter.route("/auth/*").handler(corsHandler);
+        mainRouter.route("/*").handler(corsHandler);
 
         mainRouter.get("/auth/signin/*").handler(signinHandler);
         mainRouter.get("/auth/signout/*").handler(signoutHandler);
+
+        mainRouter.options("/*").handler(ResponseHelper::sendNoContent);
 
         mainRouter.route().failureHandler(routingContext -> redirectOnFailure(routingContext, webUrl));
 

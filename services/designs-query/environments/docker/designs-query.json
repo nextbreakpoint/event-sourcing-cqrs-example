@@ -18,7 +18,7 @@
   "cassandra_keyspace": "designs",
   "cassandra_username": "admin",
   "cassandra_password": "password",
-  "cassandra_contactPoint": "cassandra",
+  "cassandra_contactPoints": "cassandra",
   "cassandra_port": 9042,
 
   "max_execution_time_in_millis": 30000

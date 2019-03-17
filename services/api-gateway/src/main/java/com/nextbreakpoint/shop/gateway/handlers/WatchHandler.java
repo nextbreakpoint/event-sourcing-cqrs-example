@@ -9,6 +9,7 @@ import io.vertx.servicediscovery.Record;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 import static com.nextbreakpoint.shop.common.model.Headers.LOCATION;
 
@@ -21,13 +22,17 @@ public class WatchHandler implements Handler<RoutingContext> {
         this.serviceDiscovery = Objects.requireNonNull(serviceDiscovery);
     }
 
-    protected boolean isDesignsSSE(Record record) {
+    private boolean isDesignsSSE(Record record) {
         return record.getName().equals("designs-sse");
     }
 
     @Override
     public void handle(RoutingContext context) {
-        final List<Record> records = serviceDiscovery.rxGetRecords(this::isDesignsSSE).toBlocking().value();
+        final List<Record> records = serviceDiscovery
+                .rxGetRecords(this::isDesignsSSE)
+                .timeout(5, TimeUnit.SECONDS)
+                .toBlocking()
+                .value();
 
         if (records.size() > 0) {
             // use a random uniform distribution for now

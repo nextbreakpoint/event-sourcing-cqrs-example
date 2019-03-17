@@ -42,13 +42,13 @@ resource "local_file" "gateway_config" {
 
   "origin_pattern": "https://([a-z_-]+).${var.hosted_zone_name}(:[0-9]+)?",
 
-  "server_auth_url": "https://${var.shop_internal_hostname}:43000",
-  "server_accounts_url": "https://${var.shop_internal_hostname}:43002",
-  "server_designs_query_url": "https://${var.shop_internal_hostname}:43021",
-  "server_designs_command_url": "https://${var.shop_internal_hostname}:43031",
+  "server_auth_url": "https://shop-auth:43000",
+  "server_accounts_url": "https://shop-accounts:43002",
+  "server_designs_query_url": "https://shop-designs-query:43021",
+  "server_designs_command_url": "https://shop-designs-command:43031",
 
   "graphite_reporter_enabled": true,
-  "graphite_host": "${var.shop_internal_hostname}",
+  "graphite_host": "graphite",
   "graphite_port": 2003
 }
 EOF
@@ -84,8 +84,8 @@ resource "local_file" "auth_config" {
   "client_web_url": "https://${var.shop_hostname}:7443",
   "client_auth_url": "https://${var.shop_hostname}:7443",
 
-  "server_auth_url": "https://${var.shop_internal_hostname}:43000",
-  "server_accounts_url": "https://${var.shop_internal_hostname}:43002",
+  "server_auth_url": "https://shop-auth:43000",
+  "server_accounts_url": "https://shop-accounts:43002",
 
   "github_url": "https://api.github.com",
 
@@ -99,7 +99,7 @@ resource "local_file" "auth_config" {
   "admin_users": ["${var.github_user_email}"],
 
   "graphite_reporter_enabled": true,
-  "graphite_host": "${var.shop_internal_hostname}",
+  "graphite_host": "graphite",
   "graphite_port": 2003
 }
 EOF
@@ -122,10 +122,10 @@ resource "local_file" "designs_command_config" {
   "origin_pattern": "https://([a-z_-]+).${var.hosted_zone_name}(:[0-9]+)?",
 
   "graphite_reporter_enabled": true,
-  "graphite_host": "${var.shop_internal_hostname}",
+  "graphite_host": "graphite",
   "graphite_port": 2003,
 
-  "kafka_bootstrap_servers": "${var.shop_internal_hostname_a}:9092,${var.shop_internal_hostname_b}:9092,${var.shop_internal_hostname_c}:9092",
+  "kafka_bootstrap_servers": "kafka1:9092,kafka2:9092,kafka3:9092",
   "kafka_keystore_location": "/keystores/kafka-keystore-client.jks",
   "kafka_truststore_location": "/keystores/kafka-truststore-client.jks",
   "kafka_keystore_password": "${data.terraform_remote_state.secrets.kafka-keystore-password}",
@@ -155,19 +155,19 @@ resource "local_file" "designs_processor_config" {
   "origin_pattern": "https://([a-z_-]+).${var.hosted_zone_name}(:[0-9]+)?",
 
   "graphite_reporter_enabled": true,
-  "graphite_host": "${var.shop_internal_hostname}",
+  "graphite_host": "graphite",
   "graphite_port": 2003,
 
   "cassandra_cluster": "${var.environment}-${var.colour}",
   "cassandra_keyspace": "designs",
   "cassandra_username": "${var.cassandra_username}",
   "cassandra_password": "${var.cassandra_password}",
-  "cassandra_contactPoints": "${var.shop_internal_hostname_a},${var.shop_internal_hostname_b},${var.shop_internal_hostname_c}",
+  "cassandra_contactPoints": "cassandra1,cassandra2,cassandra3",
   "cassandra_port": 9042,
 
   "message_source": "service-designs",
 
-  "kafka_bootstrap_servers": "${var.shop_internal_hostname_a}:9092,${var.shop_internal_hostname_b}:9092,${var.shop_internal_hostname_c}:9092",
+  "kafka_bootstrap_servers": "kafka1:9092,kafka2:9092,kafka3:9092",
   "kafka_keystore_location": "/keystores/kafka-keystore-client.jks",
   "kafka_truststore_location": "/keystores/kafka-truststore-client.jks",
   "kafka_keystore_password": "${data.terraform_remote_state.secrets.kafka-keystore-password}",
@@ -198,14 +198,14 @@ resource "local_file" "designs_query_config" {
   "origin_pattern": "https://([a-z_-]+).${var.hosted_zone_name}(:[0-9]+)?",
 
   "graphite_reporter_enabled": true,
-  "graphite_host": "${var.shop_internal_hostname}",
+  "graphite_host": "graphite",
   "graphite_port": 2003,
 
   "cassandra_cluster": "${var.environment}-${var.colour}",
   "cassandra_keyspace": "designs",
   "cassandra_username": "${var.cassandra_username}",
   "cassandra_password": "${var.cassandra_password}",
-  "cassandra_contactPoints": "${var.shop_internal_hostname_a},${var.shop_internal_hostname_b},${var.shop_internal_hostname_c}",
+  "cassandra_contactPoints": "cassandra1,cassandra2,cassandra3",
   "cassandra_port": 9042,
 
   "max_execution_time_in_millis": 30000
@@ -230,10 +230,10 @@ resource "local_file" "designs_sse_config_a" {
   "origin_pattern": "https://([a-z_-]+).${var.hosted_zone_name}(:[0-9]+)?",
 
   "graphite_reporter_enabled": true,
-  "graphite_host": "${var.shop_internal_hostname}",
+  "graphite_host": "graphite",
   "graphite_port": 2003,
 
-  "kafka_bootstrap_servers": "${var.shop_internal_hostname_a}:9092,${var.shop_internal_hostname_b}:9092,${var.shop_internal_hostname_c}:9092",
+  "kafka_bootstrap_servers": "kafka1:9092,kafka2:9092,kafka3:9092",
   "kafka_keystore_location": "/keystores/kafka-keystore-client.jks",
   "kafka_truststore_location": "/keystores/kafka-truststore-client.jks",
   "kafka_keystore_password": "${data.terraform_remote_state.secrets.kafka-keystore-password}",
@@ -262,10 +262,10 @@ resource "local_file" "designs_sse_config_b" {
   "origin_pattern": "https://([a-z_-]+).${var.hosted_zone_name}(:[0-9]+)?",
 
   "graphite_reporter_enabled": true,
-  "graphite_host": "${var.shop_internal_hostname}",
+  "graphite_host": "graphite",
   "graphite_port": 2003,
 
-  "kafka_bootstrap_servers": "${var.shop_internal_hostname_a}:9092,${var.shop_internal_hostname_b}:9092,${var.shop_internal_hostname_c}:9092",
+  "kafka_bootstrap_servers": "kafka1:9092,kafka2:9092,kafka3:9092",
   "kafka_keystore_location": "/keystores/kafka-keystore-client.jks",
   "kafka_truststore_location": "/keystores/kafka-truststore-client.jks",
   "kafka_keystore_password": "${data.terraform_remote_state.secrets.kafka-keystore-password}",
@@ -294,10 +294,10 @@ resource "local_file" "designs_sse_config_c" {
   "origin_pattern": "https://([a-z_-]+).${var.hosted_zone_name}(:[0-9]+)?",
 
   "graphite_reporter_enabled": true,
-  "graphite_host": "${var.shop_internal_hostname}",
+  "graphite_host": "graphite",
   "graphite_port": 2003,
 
-  "kafka_bootstrap_servers": "${var.shop_internal_hostname_a}:9092,${var.shop_internal_hostname_b}:9092,${var.shop_internal_hostname_c}:9092",
+  "kafka_bootstrap_servers": "kafka1:9092,kafka2:9092,kafka3:9092",
   "kafka_keystore_location": "/keystores/kafka-keystore-client.jks",
   "kafka_truststore_location": "/keystores/kafka-truststore-client.jks",
   "kafka_keystore_password": "${data.terraform_remote_state.secrets.kafka-keystore-password}",
@@ -310,44 +310,6 @@ EOF
 
   filename = "../../secrets/environments/${var.environment}/${var.colour}/config/designs-sse-c.json"
 }
-
-# resource "local_file" "designs_config" {
-#   content = <<EOF
-# {
-#   "host_port": 43031,
-#
-#   "server_keystore_path": "/keystores/keystore-server.jks",
-#   "server_keystore_secret": "${var.keystore_password}",
-#
-#   "jwt_keystore_path": "/keystores/keystore-auth.jceks",
-#   "jwt_keystore_type": "jceks",
-#   "jwt_keystore_secret": "${var.keystore_password}",
-#
-#   "origin_pattern": "https://([a-z_-]+).${var.hosted_zone_name}(:[0-9]+)?",
-#
-#   "graphite_reporter_enabled": true,
-#   "graphite_host": "${var.shop_internal_hostname}",
-#   "graphite_port": 2003,
-#
-#   "jdbc_url": "jdbc:mysql://${var.shop_internal_hostname}:43306/designs?useSSL=false&allowPublicKeyRetrieval=true&nullNamePatternMatchesAll=true",
-#   "jdbc_driver": "com.mysql.cj.jdbc.Driver",
-#   "jdbc_username": "${var.mysql_username}",
-#   "jdbc_password": "${var.mysql_password}",
-#   "jdbc_max_pool_size": 200,
-#   "jdbc_min_pool_size": 20,
-#
-#   "message_source": "service-designs",
-#
-#   "kafka_bootstrap_servers": "${var.shop_internal_hostname_a}:9092,${var.shop_internal_hostname_b}:9092,${var.shop_internal_hostname_c}:9092",
-#
-#   "sse_topic": "designs-sse",
-#
-#   "max_execution_time_in_millis": 30000
-# }
-# EOF
-#
-#   filename = "../../secrets/environments/${var.environment}/${var.colour}/config/designs.json"
-# }
 
 resource "local_file" "accounts_config" {
   content = <<EOF
@@ -364,10 +326,10 @@ resource "local_file" "accounts_config" {
   "origin_pattern": "https://([a-z_-]+).${var.hosted_zone_name}(:[0-9]+)?",
 
   "graphite_reporter_enabled": true,
-  "graphite_host": "${var.shop_internal_hostname}",
+  "graphite_host": "graphite",
   "graphite_port": 2003,
 
-  "jdbc_url": "jdbc:mysql://${var.shop_internal_hostname}:43306/shop?useSSL=false&allowPublicKeyRetrieval=true&nullNamePatternMatchesAll=true",
+  "jdbc_url": "jdbc:mysql://shop-mysql:3306/shop?useSSL=false&allowPublicKeyRetrieval=true&nullNamePatternMatchesAll=true",
   "jdbc_driver": "com.mysql.cj.jdbc.Driver",
   "jdbc_username": "${var.mysql_username}",
   "jdbc_password": "${var.mysql_password}",
@@ -523,11 +485,11 @@ http {
 
     proxy_ssl_verify          off;
     proxy_ssl_verify_depth    2;
-    proxy_ssl_session_reuse   on;
+    #proxy_ssl_session_reuse   on;
 
-    proxy_ssl_certificate         /etc/nginx/client_cert.pem;
-    proxy_ssl_certificate_key     /etc/nginx/client_key.pem;
-    proxy_ssl_trusted_certificate /etc/nginx/ca_cert.pem;
+    #proxy_ssl_certificate         /etc/nginx/client_cert.pem;
+    #proxy_ssl_certificate_key     /etc/nginx/client_key.pem;
+    #proxy_ssl_trusted_certificate /etc/nginx/ca_cert.pem;
 
     proxy_set_header  Host $host;
     proxy_set_header  X-Real-IP $remote_addr;
@@ -539,33 +501,33 @@ http {
     proxy_cache off;
 
     location /watch {
-        resolver 127.0.0.11 valid=30s;
-        set $upstream_api ${var.shop_internal_hostname};
+        resolver 127.0.0.11 valid=5s;
+        set $upstream_api shop-gateway;
         proxy_pass https://$upstream_api:44000$request_uri;
     }
 
     location /auth {
-        resolver 127.0.0.11 valid=30s;
-        set $upstream_api ${var.shop_internal_hostname};
+        resolver 127.0.0.11 valid=5s;
+        set $upstream_api shop-gateway;
         proxy_pass https://$upstream_api:44000$request_uri;
     }
 
     location /designs {
-        resolver 127.0.0.11 valid=30s;
-        set $upstream_api ${var.shop_internal_hostname};
+        resolver 127.0.0.11 valid=5s;
+        set $upstream_api shop-gateway;
         proxy_pass https://$upstream_api:44000$request_uri;
     }
 
     location /accounts {
-        resolver 127.0.0.11 valid=30s;
-        set $upstream_api ${var.shop_internal_hostname};
+        resolver 127.0.0.11 valid=5s;
+        set $upstream_api shop-gateway;
         proxy_pass https://$upstream_api:44000$request_uri;
     }
 
     location / {
-        resolver 127.0.0.11 valid=30s;
-        set $upstream_web ${var.shop_internal_hostname};
-        proxy_pass https://$upstream_web:48080$request_uri;
+        resolver 127.0.0.11 valid=5s;
+        set $upstream_web shop-web;
+        proxy_pass https://$upstream_web:8080$request_uri;
     }
   }
 }
@@ -606,11 +568,11 @@ http {
 
     proxy_ssl_verify          off;
     proxy_ssl_verify_depth    2;
-    proxy_ssl_session_reuse   on;
+    #proxy_ssl_session_reuse   on;
 
-    proxy_ssl_certificate         /etc/nginx/client_cert.pem;
-    proxy_ssl_certificate_key     /etc/nginx/client_key.pem;
-    proxy_ssl_trusted_certificate /etc/nginx/ca_cert.pem;
+    #proxy_ssl_certificate         /etc/nginx/client_cert.pem;
+    #proxy_ssl_certificate_key     /etc/nginx/client_key.pem;
+    #proxy_ssl_trusted_certificate /etc/nginx/ca_cert.pem;
 
     proxy_set_header  Host $host;
     proxy_set_header  X-Real-IP $remote_addr;
@@ -622,8 +584,8 @@ http {
     keepalive_timeout      300s;
 
     location /watch/designs {
-        resolver 127.0.0.11 valid=30s;
-        set $upstream_api ${var.shop_external_hostname_a};
+        resolver 127.0.0.11 valid=5s;
+        set $upstream_api shop-designs-sse-a;
         proxy_pass https://$upstream_api:43041$request_uri;
         proxy_http_version 1.1;
         proxy_set_header Connection "";
@@ -669,11 +631,11 @@ http {
 
     proxy_ssl_verify          off;
     proxy_ssl_verify_depth    2;
-    proxy_ssl_session_reuse   on;
+    #proxy_ssl_session_reuse   on;
 
-    proxy_ssl_certificate         /etc/nginx/client_cert.pem;
-    proxy_ssl_certificate_key     /etc/nginx/client_key.pem;
-    proxy_ssl_trusted_certificate /etc/nginx/ca_cert.pem;
+    #proxy_ssl_certificate         /etc/nginx/client_cert.pem;
+    #proxy_ssl_certificate_key     /etc/nginx/client_key.pem;
+    #proxy_ssl_trusted_certificate /etc/nginx/ca_cert.pem;
 
     proxy_set_header  Host $host;
     proxy_set_header  X-Real-IP $remote_addr;
@@ -685,8 +647,8 @@ http {
     keepalive_timeout      300s;
 
     location /watch/designs {
-        resolver 127.0.0.11 valid=30s;
-        set $upstream_api ${var.shop_external_hostname_b};
+        resolver 127.0.0.11 valid=5s;
+        set $upstream_api shop-designs-sse-b;
         proxy_pass https://$upstream_api:43041$request_uri;
         proxy_http_version 1.1;
         proxy_set_header Connection "";
@@ -732,11 +694,11 @@ http {
 
     proxy_ssl_verify          off;
     proxy_ssl_verify_depth    2;
-    proxy_ssl_session_reuse   on;
+    #proxy_ssl_session_reuse   on;
 
-    proxy_ssl_certificate         /etc/nginx/client_cert.pem;
-    proxy_ssl_certificate_key     /etc/nginx/client_key.pem;
-    proxy_ssl_trusted_certificate /etc/nginx/ca_cert.pem;
+    #proxy_ssl_certificate         /etc/nginx/client_cert.pem;
+    #proxy_ssl_certificate_key     /etc/nginx/client_key.pem;
+    #proxy_ssl_trusted_certificate /etc/nginx/ca_cert.pem;
 
     proxy_set_header  Host $host;
     proxy_set_header  X-Real-IP $remote_addr;
@@ -748,8 +710,8 @@ http {
     keepalive_timeout      300s;
 
     location /watch/designs {
-        resolver 127.0.0.11 valid=30s;
-        set $upstream_api ${var.shop_external_hostname_c};
+        resolver 127.0.0.11 valid=5s;
+        set $upstream_api shop-designs-sse-c;
         proxy_pass https://$upstream_api:43041$request_uri;
         proxy_http_version 1.1;
         proxy_set_header Connection "";

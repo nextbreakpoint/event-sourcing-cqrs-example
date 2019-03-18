@@ -165,7 +165,7 @@
                 <artifactId>docker-maven-plugin</artifactId>
                 <version>${docker-maven-plugin.version}</version>
                 <configuration>
-                  <autoCreateCustomNetworks>true</autoCreateCustomNetworks>
+                  <!--<autoCreateCustomNetworks>true</autoCreateCustomNetworks>-->
                 </configuration>
             </plugin>
         </plugins>

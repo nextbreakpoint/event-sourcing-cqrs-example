@@ -25,7 +25,6 @@
                         </goals>
                         <configuration>
                             <showLogs>true</showLogs>
-                            <autoCreateCustomNetworks>true</autoCreateCustomNetworks>
                             <images>
                                 <image>
                                     <name>nginx:latest</name>

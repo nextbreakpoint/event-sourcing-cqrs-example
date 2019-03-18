@@ -44,10 +44,6 @@ resource "aws_ecr_repository" "gateway" {
   name = "${var.environment}-${var.colour}-shop/gateway"
 }
 
-resource "aws_ecr_repository" "weblet-admin" {
-  name = "${var.environment}-${var.colour}-shop/weblet-admin"
-}
-
-resource "aws_ecr_repository" "weblet-static" {
-  name = "${var.environment}-${var.colour}-shop/weblet-static"
+resource "aws_ecr_repository" "weblet-root" {
+  name = "${var.environment}-${var.colour}-shop/weblet-root"
 }

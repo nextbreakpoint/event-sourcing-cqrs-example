@@ -8,7 +8,7 @@
         <version>1.0.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>com.nextbreakpoint.shop.weblet.admin</artifactId>
+    <artifactId>com.nextbreakpoint.shop.weblet.root</artifactId>
     <properties>
         <container.port>8080</container.port>
         <service.jar>${project.build.finalName}.${project.packaging}</service.jar>
@@ -125,8 +125,8 @@
                         <configuration>
                             <images>
                                 <image>
-                                    <name>${environment}-${colour}-shop/weblet-admin:${project.version}</name>
-                                    <alias>service-weblet-admin</alias>
+                                    <name>${environment}-${colour}-shop/weblet-root:${project.version}</name>
+                                    <alias>service-weblet-root</alias>
                                     <build>
                                         <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
                                         <filter>${*}</filter>
@@ -161,8 +161,8 @@
                             <showLogs>true</showLogs>
                             <images>
                                 <image>
-                                    <name>${environment}-${colour}-shop/weblet-admin:${project.version}</name>
-                                    <alias>service-weblet-admin</alias>
+                                    <name>${environment}-${colour}-shop/weblet-root:${project.version}</name>
+                                    <alias>service-weblet-root</alias>
                                     <run>
                                         <ports>
                                             <port>${http.port}:${container.port}</port>
@@ -177,7 +177,7 @@
                                         <network>
                                             <mode>custom</mode>
                                             <name>shop-test</name>
-                                            <alias>shop-weblet-admin</alias>
+                                            <alias>shop-weblet-root</alias>
                                         </network>
                                         <wait>
                                             <log>Listening on port ${container.port}</log>
@@ -197,8 +197,8 @@
                         <configuration>
                             <images>
                                 <image>
-                                    <name>${environment}-${colour}-shop/weblet-admin:${project.version}</name>
-                                    <alias>service-weblet-admin</alias>
+                                    <name>${environment}-${colour}-shop/weblet-root:${project.version}</name>
+                                    <alias>service-weblet-root</alias>
                                 </image>
                             </images>
                         </configuration>
@@ -212,8 +212,8 @@
                         <configuration>
                             <images>
                                 <image>
-                                    <name>${environment}-${colour}-shop/weblet-admin:${project.version}</name>
-                                    <alias>service-weblet-admin</alias>
+                                    <name>${environment}-${colour}-shop/weblet-root:${project.version}</name>
+                                    <alias>service-weblet-root</alias>
                                     <build>
                                         <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
                                         <filter>${*}</filter>
@@ -247,8 +247,8 @@
                         <configuration>
                             <images>
                                 <image>
-                                    <name>${environment}-${colour}-shop/weblet-admin:${project.version}</name>
-                                    <alias>service-weblet-admin</alias>
+                                    <name>${environment}-${colour}-shop/weblet-root:${project.version}</name>
+                                    <alias>service-weblet-root</alias>
                                     <build>
                                         <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
                                         <filter>${*}</filter>
@@ -283,8 +283,8 @@
                             <showLogs>true</showLogs>
                             <images>
                                 <image>
-                                    <name>${environment}-${colour}-shop/weblet-admin:${project.version}</name>
-                                    <alias>service-weblet-admin</alias>
+                                    <name>${environment}-${colour}-shop/weblet-root:${project.version}</name>
+                                    <alias>service-weblet-root</alias>
                                     <run>
                                         <ports>
                                             <port>${container.port}:${container.port}</port>
@@ -299,7 +299,7 @@
                                         <network>
                                             <mode>custom</mode>
                                             <name>shop-dev</name>
-                                            <alias>service-weblet-admin</alias>
+                                            <alias>service-weblet-root</alias>
                                         </network>
                                     </run>
                                 </image>
@@ -315,8 +315,8 @@
                         <configuration>
                             <images>
                                 <image>
-                                    <name>${environment}-${colour}-shop/weblet-admin:${project.version}</name>
-                                    <alias>service-weblet-admin</alias>
+                                    <name>${environment}-${colour}-shop/weblet-root:${project.version}</name>
+                                    <alias>service-weblet-root</alias>
                                 </image>
                             </images>
                         </configuration>

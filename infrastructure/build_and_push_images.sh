@@ -1,6 +1,6 @@
 #!/bin/sh
 
-pushd $(pwd)/../services
+pushd $(pwd)/../platform
 
 ./scripts/deploy.sh $1 $2 $3
 

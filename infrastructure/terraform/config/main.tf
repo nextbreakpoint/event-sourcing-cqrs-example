@@ -53,7 +53,7 @@ resource "local_file" "gateway_config" {
 }
 EOF
 
-  filename = "../../secrets/environments/${var.environment}/${var.colour}/config/gateway.json"
+  filename = "../../secrets/environments/${var.environment}/${var.colour}/services/gateway.json"
 }
 
 resource "local_file" "authentication_config" {
@@ -104,7 +104,7 @@ resource "local_file" "authentication_config" {
 }
 EOF
 
-  filename = "../../secrets/environments/${var.environment}/${var.colour}/config/authentication.json"
+  filename = "../../secrets/environments/${var.environment}/${var.colour}/services/authentication.json"
 }
 
 resource "local_file" "designs_command_config" {
@@ -137,7 +137,7 @@ resource "local_file" "designs_command_config" {
 }
 EOF
 
-  filename = "../../secrets/environments/${var.environment}/${var.colour}/config/designs-command.json"
+  filename = "../../secrets/environments/${var.environment}/${var.colour}/services/designs-command.json"
 }
 
 resource "local_file" "designs_processor_config" {
@@ -180,7 +180,7 @@ resource "local_file" "designs_processor_config" {
 }
 EOF
 
-  filename = "../../secrets/environments/${var.environment}/${var.colour}/config/designs-processor.json"
+  filename = "../../secrets/environments/${var.environment}/${var.colour}/services/designs-processor.json"
 }
 
 resource "local_file" "designs_query_config" {
@@ -212,7 +212,7 @@ resource "local_file" "designs_query_config" {
 }
 EOF
 
-  filename = "../../secrets/environments/${var.environment}/${var.colour}/config/designs-query.json"
+  filename = "../../secrets/environments/${var.environment}/${var.colour}/services/designs-query.json"
 }
 
 resource "local_file" "designs_sse_config_a" {
@@ -244,7 +244,7 @@ resource "local_file" "designs_sse_config_a" {
 }
 EOF
 
-  filename = "../../secrets/environments/${var.environment}/${var.colour}/config/designs-sse-a.json"
+  filename = "../../secrets/environments/${var.environment}/${var.colour}/services/designs-sse-a.json"
 }
 
 resource "local_file" "designs_sse_config_b" {
@@ -276,7 +276,7 @@ resource "local_file" "designs_sse_config_b" {
 }
 EOF
 
-  filename = "../../secrets/environments/${var.environment}/${var.colour}/config/designs-sse-b.json"
+  filename = "../../secrets/environments/${var.environment}/${var.colour}/services/designs-sse-b.json"
 }
 
 resource "local_file" "designs_sse_config_c" {
@@ -308,7 +308,7 @@ resource "local_file" "designs_sse_config_c" {
 }
 EOF
 
-  filename = "../../secrets/environments/${var.environment}/${var.colour}/config/designs-sse-c.json"
+  filename = "../../secrets/environments/${var.environment}/${var.colour}/services/designs-sse-c.json"
 }
 
 resource "local_file" "accounts_config" {
@@ -338,10 +338,10 @@ resource "local_file" "accounts_config" {
 }
 EOF
 
-  filename = "../../secrets/environments/${var.environment}/${var.colour}/config/accounts.json"
+  filename = "../../secrets/environments/${var.environment}/${var.colour}/services/accounts.json"
 }
 
-resource "local_file" "weblet_admin_config" {
+resource "local_file" "weblet_root_config" {
   content = <<EOF
 {
   "client_web_url": "https://${var.shop_hostname}:7443",
@@ -350,19 +350,7 @@ resource "local_file" "weblet_admin_config" {
 }
 EOF
 
-  filename = "../../secrets/environments/${var.environment}/${var.colour}/config/weblet-admin.json"
-}
-
-resource "local_file" "weblet_static_config" {
-  content = <<EOF
-{
-  "client_web_url": "https://${var.shop_hostname}:7443",
-  "client_api_url": "https://${var.shop_hostname}:7443",
-  "server_api_url": "https://${var.shop_internal_hostname}:44000"
-}
-EOF
-
-  filename = "../../secrets/environments/${var.environment}/${var.colour}/config/weblet-static.json"
+  filename = "../../secrets/environments/${var.environment}/${var.colour}/services/weblet-root.json"
 }
 
 resource "local_file" "consul_config_a" {
@@ -396,7 +384,7 @@ resource "local_file" "consul_config_a" {
 }
 EOF
 
-  filename = "../../secrets/environments/${var.environment}/${var.colour}/config/consul-a.json"
+  filename = "../../secrets/environments/${var.environment}/${var.colour}/consul/consul-a.json"
 }
 resource "local_file" "consul_config_b" {
   content = <<EOF
@@ -429,7 +417,7 @@ resource "local_file" "consul_config_b" {
 }
 EOF
 
-  filename = "../../secrets/environments/${var.environment}/${var.colour}/config/consul-b.json"
+  filename = "../../secrets/environments/${var.environment}/${var.colour}/consul/consul-b.json"
 }
 resource "local_file" "consul_config_c" {
   content = <<EOF
@@ -462,7 +450,7 @@ resource "local_file" "consul_config_c" {
 }
 EOF
 
-  filename = "../../secrets/environments/${var.environment}/${var.colour}/config/consul-c.json"
+  filename = "../../secrets/environments/${var.environment}/${var.colour}/consul/consul-c.json"
 }
 
 resource "local_file" "nginx_config_int" {
@@ -534,13 +522,8 @@ http {
         proxy_pass https://$upstream_api:44000$request_uri;
     }
 
-    location /admin {
-        set $upstream_weblet shop-weblet-admin;
-        proxy_pass https://$upstream_weblet:8080$request_uri;
-    }
-
     location / {
-        set $upstream_weblet shop-weblet-admin;
+        set $upstream_weblet shop-weblet-root;
         proxy_pass https://$upstream_weblet:8080$request_uri;
     }
   }

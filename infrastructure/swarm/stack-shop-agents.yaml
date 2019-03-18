@@ -165,8 +165,8 @@ secrets:
     file: ${ENVIRONMENT_SECRETS_PATH}/consul/server_cert.pem
 configs:
   consul_config_a:
-    file: ${ENVIRONMENT_SECRETS_PATH}/config/consul-a.json
+    file: ${ENVIRONMENT_SECRETS_PATH}/consul/consul-a.json
   consul_config_b:
-    file: ${ENVIRONMENT_SECRETS_PATH}/config/consul-b.json
+    file: ${ENVIRONMENT_SECRETS_PATH}/consul/consul-b.json
   consul_config_c:
-    file: ${ENVIRONMENT_SECRETS_PATH}/config/consul-c.json
+    file: ${ENVIRONMENT_SECRETS_PATH}/consul/consul-c.json

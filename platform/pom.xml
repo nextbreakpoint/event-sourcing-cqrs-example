@@ -10,7 +10,7 @@
         <module>integration/mysql</module>
         <module>integration/nginx</module>
         <module>integration/consul</module>
-        <module>services/weblet-admin</module>
+        <module>services/weblet-root</module>
         <module>services/gateway</module>
         <module>services/designs-query</module>
         <module>services/designs-command</module>

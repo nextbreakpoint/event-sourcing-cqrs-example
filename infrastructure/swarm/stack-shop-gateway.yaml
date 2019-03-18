@@ -70,7 +70,7 @@ volumes:
     storage:
 secrets:
   server_conf:
-    file: ${ENVIRONMENT_SECRETS_PATH}/config/gateway.json
+    file: ${ENVIRONMENT_SECRETS_PATH}/services/gateway.json
   keystore_auth:
     file: ${ENVIRONMENT_SECRETS_PATH}/keystores/keystore-auth.jceks
   keystore_server:

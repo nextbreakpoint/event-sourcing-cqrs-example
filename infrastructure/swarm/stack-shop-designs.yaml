@@ -373,17 +373,17 @@ volumes:
     storage:
 secrets:
   server_processor_conf:
-    file: ${ENVIRONMENT_SECRETS_PATH}/config/designs-processor.json
+    file: ${ENVIRONMENT_SECRETS_PATH}/services/designs-processor.json
   server_command_conf:
-    file: ${ENVIRONMENT_SECRETS_PATH}/config/designs-command.json
+    file: ${ENVIRONMENT_SECRETS_PATH}/services/designs-command.json
   server_query_conf:
-    file: ${ENVIRONMENT_SECRETS_PATH}/config/designs-query.json
+    file: ${ENVIRONMENT_SECRETS_PATH}/services/designs-query.json
   server_sse_conf_a:
-    file: ${ENVIRONMENT_SECRETS_PATH}/config/designs-sse-a.json
+    file: ${ENVIRONMENT_SECRETS_PATH}/services/designs-sse-a.json
   server_sse_conf_b:
-    file: ${ENVIRONMENT_SECRETS_PATH}/config/designs-sse-b.json
+    file: ${ENVIRONMENT_SECRETS_PATH}/services/designs-sse-b.json
   server_sse_conf_c:
-    file: ${ENVIRONMENT_SECRETS_PATH}/config/designs-sse-c.json
+    file: ${ENVIRONMENT_SECRETS_PATH}/services/designs-sse-c.json
   keystore_auth:
     file: ${ENVIRONMENT_SECRETS_PATH}/keystores/keystore-auth.jceks
   keystore_server:

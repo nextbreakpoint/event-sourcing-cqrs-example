@@ -111,7 +111,7 @@ Deploy services on Docker Swarm with commands:
     ./swarm_run.sh deploy_stack shop-authentication
     ./swarm_run.sh deploy_stack shop-accounts
     ./swarm_run.sh deploy_stack shop-designs
-    ./swarm_run.sh deploy_stack shop-weblet-admin
+    ./swarm_run.sh deploy_stack shop-weblets
     ./swarm_run.sh deploy_stack shop-gateway
 
 ## Access the application
@@ -125,7 +125,7 @@ You will be redirected to GitHub for authentication. Use the email you configure
 Remove services with commands:
 
     ./swarm_run.sh remove_stack shop-gateway
-    ./swarm_run.sh remove_stack shop-weblet-admin
+    ./swarm_run.sh remove_stack shop-weblets
     ./swarm_run.sh remove_stack shop-designs
     ./swarm_run.sh remove_stack shop-accounts
     ./swarm_run.sh remove_stack shop-authentication

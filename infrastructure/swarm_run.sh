@@ -40,7 +40,7 @@ export SHOP_DESIGNS_SSE_IMAGE=${ACCOUNT_ID}.dkr.ecr.eu-west-1.amazonaws.com/${EN
 export SHOP_ACCOUNTS_IMAGE=${ACCOUNT_ID}.dkr.ecr.eu-west-1.amazonaws.com/${ENVIRONMENT}-${COLOUR}-shop/accounts:1.0.0
 export SHOP_AUTH_IMAGE=${ACCOUNT_ID}.dkr.ecr.eu-west-1.amazonaws.com/${ENVIRONMENT}-${COLOUR}-shop/authentication:1.0.0
 export SHOP_GATEWAY_IMAGE=${ACCOUNT_ID}.dkr.ecr.eu-west-1.amazonaws.com/${ENVIRONMENT}-${COLOUR}-shop/gateway:1.0.0
-export SHOP_WEBLET_ADMIN_IMAGE=${ACCOUNT_ID}.dkr.ecr.eu-west-1.amazonaws.com/${ENVIRONMENT}-${COLOUR}-shop/weblet-admin:1.0.0
+export SHOP_WEBLET_ADMIN_IMAGE=${ACCOUNT_ID}.dkr.ecr.eu-west-1.amazonaws.com/${ENVIRONMENT}-${COLOUR}-shop/weblet-root:1.0.0
 
 export ADVERTISE_EXT_WORKER_AGENT_1=$EXT_WORKER_A
 export ADVERTISE_EXT_WORKER_AGENT_2=$EXT_WORKER_B

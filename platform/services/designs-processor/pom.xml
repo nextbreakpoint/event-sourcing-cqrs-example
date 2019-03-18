@@ -191,7 +191,7 @@
                                         </network>
                                         <wait>
                                             <log>Initializing designs.designs</log>
-                                            <time>90000</time>
+                                            <time>120000</time>
                                         </wait>
                                     </run>
                                 </image>

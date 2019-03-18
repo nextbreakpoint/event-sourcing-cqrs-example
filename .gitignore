@@ -18,5 +18,5 @@ terraform.tfstate*
 .terraform
 **/tfplan
 secrets
-services/web/node
+services/weblet-admin/node
 dependency-reduced-pom.xml

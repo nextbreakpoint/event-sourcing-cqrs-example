@@ -1,17 +1,17 @@
 version: '3.4'
 services:
-  shop-gateway:
+  shop-authentication:
     labels:
-        service: shop-gateway
-    image: ${SHOP_GATEWAY_IMAGE}
+        service: shop-authentication
+    image: ${SHOP_AUTH_IMAGE}
     volumes:
       - storage:/data
     logging:
       options:
         labels: "service"
     ports:
-      - target: 44000
-        published: 44000
+      - target: 43000
+        published: 43000
         protocol: tcp
         mode: ingress
     deploy:
@@ -38,7 +38,7 @@ services:
           memory: 256M
     secrets:
       - source: server_conf
-        target: /config/gateway.json
+        target: /config/authentication.json
         uid: '1000'
         gid: '1000'
         mode: 0440
@@ -70,7 +70,7 @@ volumes:
     storage:
 secrets:
   server_conf:
-    file: ${ENVIRONMENT_SECRETS_PATH}/config/gateway.json
+    file: ${ENVIRONMENT_SECRETS_PATH}/config/authentication.json
   keystore_auth:
     file: ${ENVIRONMENT_SECRETS_PATH}/keystores/keystore-auth.jceks
   keystore_server:

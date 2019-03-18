@@ -36,14 +36,18 @@ resource "aws_ecr_repository" "accounts" {
   name = "${var.environment}-${var.colour}-shop/accounts"
 }
 
-resource "aws_ecr_repository" "auth" {
-  name = "${var.environment}-${var.colour}-shop/auth"
+resource "aws_ecr_repository" "authentication" {
+  name = "${var.environment}-${var.colour}-shop/authentication"
 }
 
-resource "aws_ecr_repository" "web" {
-  name = "${var.environment}-${var.colour}-shop/web"
+resource "aws_ecr_repository" "gateway" {
+  name = "${var.environment}-${var.colour}-shop/gateway"
 }
 
-resource "aws_ecr_repository" "api-gateway" {
-  name = "${var.environment}-${var.colour}-shop/api-gateway"
+resource "aws_ecr_repository" "weblet-admin" {
+  name = "${var.environment}-${var.colour}-shop/weblet-admin"
+}
+
+resource "aws_ecr_repository" "weblet-static" {
+  name = "${var.environment}-${var.colour}-shop/weblet-static"
 }

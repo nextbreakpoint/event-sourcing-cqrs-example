@@ -42,7 +42,7 @@ resource "local_file" "gateway_config" {
 
   "origin_pattern": "https://([a-z_-]+).${var.hosted_zone_name}(:[0-9]+)?",
 
-  "server_auth_url": "https://shop-auth:43000",
+  "server_auth_url": "https://shop-authentication:43000",
   "server_accounts_url": "https://shop-accounts:43002",
   "server_designs_query_url": "https://shop-designs-query:43021",
   "server_designs_command_url": "https://shop-designs-command:43031",
@@ -56,7 +56,7 @@ EOF
   filename = "../../secrets/environments/${var.environment}/${var.colour}/config/gateway.json"
 }
 
-resource "local_file" "auth_config" {
+resource "local_file" "authentication_config" {
   content = <<EOF
 {
   "host_port": 43000,
@@ -84,7 +84,7 @@ resource "local_file" "auth_config" {
   "client_web_url": "https://${var.shop_hostname}:7443",
   "client_auth_url": "https://${var.shop_hostname}:7443",
 
-  "server_auth_url": "https://shop-auth:43000",
+  "server_auth_url": "https://shop-authentication:43000",
   "server_accounts_url": "https://shop-accounts:43002",
 
   "github_url": "https://api.github.com",
@@ -104,7 +104,7 @@ resource "local_file" "auth_config" {
 }
 EOF
 
-  filename = "../../secrets/environments/${var.environment}/${var.colour}/config/auth.json"
+  filename = "../../secrets/environments/${var.environment}/${var.colour}/config/authentication.json"
 }
 
 resource "local_file" "designs_command_config" {
@@ -341,7 +341,7 @@ EOF
   filename = "../../secrets/environments/${var.environment}/${var.colour}/config/accounts.json"
 }
 
-resource "local_file" "web_config" {
+resource "local_file" "weblet_admin_config" {
   content = <<EOF
 {
   "client_web_url": "https://${var.shop_hostname}:7443",
@@ -350,7 +350,19 @@ resource "local_file" "web_config" {
 }
 EOF
 
-  filename = "../../secrets/environments/${var.environment}/${var.colour}/config/web.json"
+  filename = "../../secrets/environments/${var.environment}/${var.colour}/config/weblet-admin.json"
+}
+
+resource "local_file" "weblet_static_config" {
+  content = <<EOF
+{
+  "client_web_url": "https://${var.shop_hostname}:7443",
+  "client_api_url": "https://${var.shop_hostname}:7443",
+  "server_api_url": "https://${var.shop_internal_hostname}:44000"
+}
+EOF
+
+  filename = "../../secrets/environments/${var.environment}/${var.colour}/config/weblet-static.json"
 }
 
 resource "local_file" "consul_config_a" {
@@ -522,9 +534,14 @@ http {
         proxy_pass https://$upstream_api:44000$request_uri;
     }
 
+    location /admin {
+        set $upstream_weblet shop-weblet-admin;
+        proxy_pass https://$upstream_weblet:8080$request_uri;
+    }
+
     location / {
-        set $upstream_web shop-web;
-        proxy_pass https://$upstream_web:8080$request_uri;
+        set $upstream_weblet shop-weblet-admin;
+        proxy_pass https://$upstream_weblet:8080$request_uri;
     }
   }
 }

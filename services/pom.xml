@@ -5,20 +5,20 @@
     <artifactId>com.nextbreakpoint.shop</artifactId>
     <version>1.0.0</version>
     <modules>
-        <module>cassandra</module>
-        <module>kafka</module>
-        <module>mysql</module>
-        <module>nginx</module>
-        <module>consul</module>
-        <module>web</module>
-        <module>api-gateway</module>
-        <module>designs-query</module>
-        <module>designs-command</module>
-        <module>designs-processor</module>
-        <module>designs-sse</module>
-        <module>auth</module>
-        <module>accounts</module>
-        <module>designs</module>
+        <module>integration/cassandra</module>
+        <module>integration/kafka</module>
+        <module>integration/mysql</module>
+        <module>integration/nginx</module>
+        <module>integration/consul</module>
+        <module>services/weblet-admin</module>
+        <module>services/gateway</module>
+        <module>services/designs-query</module>
+        <module>services/designs-command</module>
+        <module>services/designs-processor</module>
+        <module>services/designs-sse</module>
+        <module>services/authentication</module>
+        <module>services/accounts</module>
+        <module>services/designs</module>
     </modules>
     <packaging>pom</packaging>
     <licenses>

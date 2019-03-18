@@ -16,5 +16,5 @@ java \
     -Dnetworkaddress.cache.ttl=1 \
     -Dnetworkaddress.cache.negative.ttl=1 \
     -Dvertx.logger-delegate-factory-class-name=io.vertx.core.logging.SLF4JLogDelegateFactory \
-    com.nextbreakpoint.shop.auth.Verticle \
+    com.nextbreakpoint.shop.authentication.Verticle \
     /config/$CONFIG_NAME

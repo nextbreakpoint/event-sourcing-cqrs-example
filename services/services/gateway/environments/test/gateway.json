@@ -1,13 +1,13 @@
 {
   "host_port": 4000,
 
-  "server_keystore_path": "../secrets/keystore-server.jks",
+  "server_keystore_path": "../../secrets/keystore-server.jks",
   "server_keystore_secret": "secret",
 
-  "client_keystore_path": "../secrets/keystore-client.jks",
+  "client_keystore_path": "../../secrets/keystore-client.jks",
   "client_keystore_secret": "secret",
 
-  "client_truststore_path": "../secrets/truststore-client.jks",
+  "client_truststore_path": "../../secrets/truststore-client.jks",
   "client_truststore_secret": "secret",
 
   "client_verify_host": false,
@@ -16,7 +16,7 @@
   "consul_host": "localhost",
   "consul_port": 8400,
 
-  "jwt_keystore_path": "../secrets/keystore-auth.jceks",
+  "jwt_keystore_path": "../../secrets/keystore-auth.jceks",
   "jwt_keystore_type": "jceks",
   "jwt_keystore_secret": "secret",
 

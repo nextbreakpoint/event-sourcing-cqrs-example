@@ -73,9 +73,9 @@ public class VerticleIT {
         final JsonObject config = new JsonObject();
         config.put("client_keep_alive", true);
         config.put("client_verify_host", false);
-        config.put("client_keystore_path", "../secrets/keystore-client.jks");
+        config.put("client_keystore_path", "../../secrets/keystore-client.jks");
         config.put("client_keystore_secret", "secret");
-        config.put("client_truststore_path", "../secrets/truststore-client.jks");
+        config.put("client_truststore_path", "../../secrets/truststore-client.jks");
         config.put("client_truststore_secret", "secret");
         final Integer port = Integer.getInteger("http.port", 3041);
         eventSource = new EventSource(vertx, "https://localhost:" + port, config);

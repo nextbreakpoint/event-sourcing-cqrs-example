@@ -103,7 +103,7 @@ Deploy services on Docker Swarm with commands:
 
 ## Access the application
 
-Open a browser at https://prod-green-shop.yourdomain.com/content/designs.
+Open a browser at https://prod-green-shop.yourdomain.com:7443 or https://prod-green-shop.yourdomain.com when using the Load Balancer.
 
 You will be redirected to GitHub for authentication. Use the email you configured in the main.json to login as admin.
 

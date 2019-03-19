@@ -6,34 +6,21 @@ This repository contains the source code and the deployment scripts of an exampl
 
 ## Configure and generate secrets
 
-Create a file main.json in the infrastructure/config directory. Copy the content from the file template-main.json. The file should look like:
+Create a file main.json in the config directory. Copy the content from the file template-main.json. The file should look like:
 
     {
       "account_id": "your_account_id",
-
       "environment": "prod",
       "colour": "green",
-
       "hosted_zone_name": "yourdomain.com",
       "hosted_zone_id": "your_public_zone_id",
-
-      "shop_hostname": "prod-green-shop.yourdomain.com",
-      "shop_internal_hostname": "prod-green-swarm-worker-int.yourdomain.com",
-      "shop_internal_hostname_a": "prod-green-swarm-worker-int-a.yourdomain.com",
-      "shop_internal_hostname_b": "prod-green-swarm-worker-int-b.yourdomain.com",
-      "shop_internal_hostname_c": "prod-green-swarm-worker-int-c.yourdomain.com",
-      "shop_external_hostname_a": "prod-green-swarm-worker-ext-a.yourdomain.com",
-      "shop_external_hostname_b": "prod-green-swarm-worker-ext-b.yourdomain.com",
-      "shop_external_hostname_c": "prod-green-swarm-worker-ext-c.yourdomain.com",
-      "shop_external_public_hostname_a": "prod-green-swarm-worker-ext-pub-a.yourdomain.com",
-      "shop_external_public_hostname_b": "prod-green-swarm-worker-ext-pub-b.yourdomain.com",
-      "shop_external_public_hostname_c": "prod-green-swarm-worker-ext-pub-c.yourdomain.com",
-
-      "bastion_host": "bastion.yourdomain.com",
-
       "secrets_bucket_name": "your_secrets_bucket_name",
 
-      "consul_datacenter": "internal",
+      "shop_external_hostname": "prod-green-shop.yourdomain.com",
+      "shop_internal_hostname": "prod-green-swarm-worker-int.yourdomain.com",
+      "shop_sse_external_hostname_a": "prod-green-swarm-worker-ext-pub-a.yourdomain.com",
+      "shop_sse_external_hostname_b": "prod-green-swarm-worker-ext-pub-b.yourdomain.com",
+      "shop_sse_external_hostname_c": "prod-green-swarm-worker-ext-pub-c.yourdomain.com",
 
       "github_user_email": "your_github_user_email",
       "github_client_id": "your_github_client_id",

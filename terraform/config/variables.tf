@@ -30,37 +30,19 @@ variable "secrets_bucket_name" {}
 variable "hosted_zone_name" {}
 
 ### MANDATORY ###
-variable "shop_hostname" {}
+variable "shop_external_hostname" {}
 
 ### MANDATORY ###
 variable "shop_internal_hostname" {}
 
 ### MANDATORY ###
-variable "shop_internal_hostname_a" {}
+variable "shop_sse_external_hostname_a" {}
 
 ### MANDATORY ###
-variable "shop_internal_hostname_b" {}
+variable "shop_sse_external_hostname_b" {}
 
 ### MANDATORY ###
-variable "shop_internal_hostname_c" {}
-
-### MANDATORY ###
-variable "shop_external_hostname_a" {}
-
-### MANDATORY ###
-variable "shop_external_hostname_b" {}
-
-### MANDATORY ###
-variable "shop_external_hostname_c" {}
-
-### MANDATORY ###
-variable "shop_external_public_hostname_a" {}
-
-### MANDATORY ###
-variable "shop_external_public_hostname_b" {}
-
-### MANDATORY ###
-variable "shop_external_public_hostname_c" {}
+variable "shop_sse_external_hostname_c" {}
 
 ### MANDATORY ###
 variable "github_client_id" {}
@@ -88,6 +70,3 @@ variable "mysql_username" {}
 
 ### MANDATORY ###
 variable "mysql_password" {}
-
-### MANDATORY ###
-variable "consul_datacenter" {}

@@ -81,8 +81,8 @@ resource "local_file" "authentication_config" {
 
   "origin_pattern": "https://([a-z_-]+).${var.hosted_zone_name}(:[0-9]+)?",
 
-  "client_web_url": "https://${var.shop_hostname}:7443",
-  "client_auth_url": "https://${var.shop_hostname}:7443",
+  "client_web_url": "https://${var.shop_external_hostname}:7443",
+  "client_auth_url": "https://${var.shop_external_hostname}:7443",
 
   "server_auth_url": "https://shop-authentication:43000",
   "server_accounts_url": "https://shop-accounts:43002",
@@ -344,8 +344,8 @@ EOF
 resource "local_file" "weblet_root_config" {
   content = <<EOF
 {
-  "client_web_url": "https://${var.shop_hostname}:7443",
-  "client_api_url": "https://${var.shop_hostname}:7443",
+  "client_web_url": "https://${var.shop_external_hostname}:7443",
+  "client_api_url": "https://${var.shop_external_hostname}:7443",
   "server_api_url": "https://${var.shop_internal_hostname}:44000"
 }
 EOF
@@ -357,7 +357,7 @@ resource "local_file" "consul_config_a" {
   content = <<EOF
 {
   "encrypt": "${data.terraform_remote_state.secrets.consul-secret}",
-  "datacenter": "${var.consul_datacenter}",
+  "datacenter": "${data.terraform_remote_state.secrets.consul-datacenter}",
   "cert_file": "/consul/config/server_cert.pem",
   "log_level": "info",
   "leave_on_terminate": true,
@@ -379,7 +379,7 @@ resource "local_file" "consul_config_a" {
       "http-endpoint"
     ],
     "port": 443,
-    "address": "${var.shop_external_public_hostname_a}"
+    "address": "${var.shop_sse_external_hostname_a}"
   }]
 }
 EOF
@@ -390,7 +390,7 @@ resource "local_file" "consul_config_b" {
   content = <<EOF
 {
   "encrypt": "${data.terraform_remote_state.secrets.consul-secret}",
-  "datacenter": "${var.consul_datacenter}",
+  "datacenter": "${data.terraform_remote_state.secrets.consul-datacenter}",
   "cert_file": "/consul/config/server_cert.pem",
   "log_level": "info",
   "leave_on_terminate": true,
@@ -412,7 +412,7 @@ resource "local_file" "consul_config_b" {
       "http-endpoint"
     ],
     "port": 443,
-    "address": "${var.shop_external_public_hostname_b}"
+    "address": "${var.shop_sse_external_hostname_b}"
   }]
 }
 EOF
@@ -423,7 +423,7 @@ resource "local_file" "consul_config_c" {
   content = <<EOF
 {
   "encrypt": "${data.terraform_remote_state.secrets.consul-secret}",
-  "datacenter": "${var.consul_datacenter}",
+  "datacenter": "${data.terraform_remote_state.secrets.consul-datacenter}",
   "cert_file": "/consul/config/server_cert.pem",
   "log_level": "info",
   "leave_on_terminate": true,
@@ -445,7 +445,7 @@ resource "local_file" "consul_config_c" {
       "http-endpoint"
     ],
     "port": 443,
-    "address": "${var.shop_external_public_hostname_c}"
+    "address": "${var.shop_sse_external_hostname_c}"
   }]
 }
 EOF
@@ -470,13 +470,13 @@ http {
 
   server {
     listen 80;
-    server_name ${var.shop_internal_hostname} ${var.shop_hostname};
+    server_name ${var.shop_external_hostname};
     return 301 https://$$server_name$$request_uri;
   }
 
   server {
     listen 443 ssl;
-    server_name ${var.shop_internal_hostname} ${var.shop_hostname};
+    server_name ${var.shop_external_hostname};
 
     ssl_certificate     /etc/nginx/ca_and_server_cert.pem;
     ssl_certificate_key /etc/nginx/server_key.pem;
@@ -550,13 +550,13 @@ http {
 
   server {
     listen 80;
-    server_name ${var.shop_external_public_hostname_a} ${var.shop_external_hostname_a};
+    server_name ${var.shop_sse_external_hostname_a};
     return 301 https://$$server_name$$request_uri;
   }
 
   server {
     listen 443 ssl;
-    server_name ${var.shop_external_public_hostname_a} ${var.shop_external_hostname_a};
+    server_name ${var.shop_sse_external_hostname_a};
 
     ssl_certificate     /etc/nginx/ca_and_server_cert.pem;
     ssl_certificate_key /etc/nginx/server_key.pem;
@@ -616,13 +616,13 @@ http {
 
   server {
     listen 80;
-    server_name ${var.shop_external_public_hostname_b} ${var.shop_external_hostname_b};
+    server_name ${var.shop_sse_external_hostname_b};
     return 301 https://$$server_name$$request_uri;
   }
 
   server {
     listen 443 ssl;
-    server_name ${var.shop_external_public_hostname_b} ${var.shop_external_hostname_b};
+    server_name ${var.shop_sse_external_hostname_b};
 
     ssl_certificate     /etc/nginx/ca_and_server_cert.pem;
     ssl_certificate_key /etc/nginx/server_key.pem;
@@ -682,13 +682,13 @@ http {
 
   server {
     listen 80;
-    server_name ${var.shop_external_public_hostname_c} ${var.shop_external_hostname_c};
+    server_name ${var.shop_sse_external_hostname_c};
     return 301 https://$$server_name$$request_uri;
   }
 
   server {
     listen 443 ssl;
-    server_name ${var.shop_external_public_hostname_c} ${var.shop_external_hostname_c};
+    server_name ${var.shop_sse_external_hostname_c};
 
     ssl_certificate     /etc/nginx/ca_and_server_cert.pem;
     ssl_certificate_key /etc/nginx/server_key.pem;

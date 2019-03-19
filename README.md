@@ -1,6 +1,6 @@
-# example-images-shop
+# event-sourcing-cqrs-example
 
-This repository contains the source code and the deployment scripts of an example of micro-services based application. The application requires the infrastructure documented in the repository [infrastructure-as-code](https://github.com/nextbreakpoint/infrastructure-as-code). The micro-services are written in Java using [Vert.x](https://vertx.io) framework and they depend on Apache Cassandra, Apache Kafka and Apache Zookeeper.
+This repository contains the source code and the deployment scripts of an application using Micro-Services Architecture, CQRS and Event Sourcing. The application requires the infrastructure documented in the repository [infrastructure-as-code](https://github.com/nextbreakpoint/infrastructure-as-code). The micro-services are written in Java using [Vert.x](https://vertx.io) framework and they depend on Apache Cassandra, Apache Kafka and Apache Zookeeper.
 
     THIS PROJECT IS WORK IN PROGRESS
 

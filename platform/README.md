@@ -1,4 +1,4 @@
-# example-images-shop
+# event-sourcing-cqrs-example
 
 Create Docker networks:
 

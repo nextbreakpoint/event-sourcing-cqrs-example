@@ -32,6 +32,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
+import static org.awaitility.Duration.FIVE_SECONDS;
 import static org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS;
 import static org.awaitility.Duration.TWO_SECONDS;
 
@@ -130,7 +131,7 @@ public class VerticleIT {
             System.out.println(sseEvent);
         }).onClose(nothing -> {});
 
-        await().atMost(TWO_SECONDS)
+        await().atMost(FIVE_SECONDS)
                 .pollInterval(ONE_HUNDRED_MILLISECONDS)
                 .untilAsserted(() -> {
                     assertThat(connected[0]).isNotNull();

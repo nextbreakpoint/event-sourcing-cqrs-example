@@ -1,5 +1,9 @@
 # event-sourcing-cqrs-example
 
+Generate secrets:
+
+    ./scripts/secrets.sh
+
 Create Docker networks:
 
     docker network create shop-test

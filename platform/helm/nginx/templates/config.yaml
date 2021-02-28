@@ -1,0 +1,76 @@
+{{- $fullname := include "service.fullname" . -}}
+{{- $name := include "service.name" . -}}
+{{- $chart := include "service.chart" . -}}
+{{- $root := . }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $root.Values.name | default "nginx" | quote }}
+  namespace: {{ $root.Release.Namespace | quote }}
+  labels:
+    chart: {{ $chart }}
+    release: {{ $root.Release.Name }}
+    heritage: {{ $root.Release.Service }}
+data:
+  nginx.conf: |
+      worker_processes 4;
+      worker_rlimit_nofile 8192;
+
+      events {
+        worker_connections 4096;
+      }
+
+      user nginx nginx;
+
+      http {
+        ssl_session_cache     shared:SSL:10m;
+        ssl_session_timeout   10m;
+
+        server {
+          listen 80 default_server;
+          server_name {{ $root.Values.hostname | default "localhost" | quote }};
+          return 301 https://$server_name$request_uri;
+        }
+
+        server {
+          listen 443 ssl;
+          server_name {{ $root.Values.hostname | default "localhost" | quote }};
+
+          ssl_certificate     /etc/nginx/server_cert.pem;
+          ssl_certificate_key /etc/nginx/server_key.pem;
+          ssl_protocols       TLSv1 TLSv1.1 TLSv1.2;
+          ssl_ciphers         HIGH:!aNULL:!MD5;
+
+          proxy_set_header Host $host;
+          proxy_set_header X-Real-IP $remote_addr;
+          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+          #resolver 127.0.0.11 valid=30s;
+          resolver kube-dns.kube-system.svc.cluster.local valid=30s;
+
+          location /watch {
+            set $upstream_gateway gateway.blueprint.svc.cluster.local;
+            proxy_pass https://$upstream_gateway:8080$request_uri;
+          }
+
+          location /auth {
+            set $upstream_gateway gateway.blueprint.svc.cluster.local;
+            proxy_pass https://$upstream_gateway:8080$request_uri;
+          }
+
+          location /designs {
+            set $upstream_gateway gateway.blueprint.svc.cluster.local;
+            proxy_pass https://$upstream_gateway:8080$request_uri;
+          }
+
+          location /accounts {
+            set $upstream_gateway gateway.blueprint.svc.cluster.local;
+            proxy_pass https://$upstream_gateway:8080$request_uri;
+          }
+
+          location / {
+            set $upstream_frontend frontend.blueprint.svc.cluster.local;
+            proxy_pass https://$upstream_frontend:8080$request_uri;
+          }
+        }
+      }

@@ -20,3 +20,4 @@ terraform.tfstate*
 secrets
 dependency-reduced-pom.xml
 **/node
+.gradle

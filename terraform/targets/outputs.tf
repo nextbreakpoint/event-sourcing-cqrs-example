@@ -2,6 +2,6 @@
 # Outputs
 ##############################################################################
 
-output "shop-targets-created" {
+output "blueprint-targets-created" {
   value = "true"
 }

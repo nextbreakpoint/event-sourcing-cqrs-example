@@ -1,5 +1,5 @@
 DROP KEYSPACE IF EXISTS designs;
 
-DROP ROLE IF EXISTS shop;
+DROP ROLE IF EXISTS blueprint;
 
 DROP ROLE IF EXISTS designs_admin;

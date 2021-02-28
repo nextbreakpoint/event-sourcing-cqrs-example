@@ -1,2 +1,0 @@
-Automatic-Module-Name: com.nextbreakpoint.shop.common
-

@@ -1,0 +1,30 @@
+# Default values.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+image:
+  repository: nextbreakpoint/kafka
+  tag: 6.1.0-1
+  pullPolicy: IfNotPresent
+  pullSecrets:
+
+annotations:
+
+strategy:
+  type: Recreate
+
+resources:
+  requests:
+    memory: "2048Mi"
+    cpu: "0.1"
+  limits:
+    memory: "2048Mi"
+    cpu: "1.0"
+
+serviceAccount: default
+
+secretName:
+
+externalName:
+
+zookeeperName:

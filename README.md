@@ -1,6 +1,11 @@
 # event-sourcing-cqrs-example
 
-This repository contains the source code and the deployment scripts of an application using Micro-Services Architecture, CQRS and Event Sourcing. The application requires the infrastructure documented in the repository [infrastructure-as-code](https://github.com/nextbreakpoint/infrastructure-as-code). The micro-services are written in Java using [Vert.x](https://vertx.io) framework and they depend on Apache Cassandra, Apache Kafka and Apache Zookeeper.
+This repository contains the source code and the deployment scripts of an application
+using Micro-Services Architecture, CQRS and Event Sourcing. The application requires
+the infrastructure documented in the repository
+[infrastructure-as-code](https://github.com/nextbreakpoint/infrastructure-as-code).
+The micro-services are written in Java using [Vert.x](https://vertx.io) framework
+and they depend on Apache Cassandra, Apache Kafka and Apache Zookeeper.
 
     THIS PROJECT IS WORK IN PROGRESS
 
@@ -16,11 +21,11 @@ Create a file main.json in the config directory. Copy the content from the file 
       "hosted_zone_id": "your_public_zone_id",
       "secrets_bucket_name": "your_secrets_bucket_name",
 
-      "shop_external_hostname": "prod-green-shop.yourdomain.com",
-      "shop_internal_hostname": "prod-green-swarm-worker-int.yourdomain.com",
-      "shop_sse_external_hostname_a": "prod-green-swarm-worker-ext-pub-a.yourdomain.com",
-      "shop_sse_external_hostname_b": "prod-green-swarm-worker-ext-pub-b.yourdomain.com",
-      "shop_sse_external_hostname_c": "prod-green-swarm-worker-ext-pub-c.yourdomain.com",
+      "blueprint_external_hostname": "prod-green-blueprint.yourdomain.com",
+      "blueprint_internal_hostname": "prod-green-swarm-worker-int.yourdomain.com",
+      "blueprint_sse_external_hostname_a": "prod-green-swarm-worker-ext-pub-a.yourdomain.com",
+      "blueprint_sse_external_hostname_b": "prod-green-swarm-worker-ext-pub-b.yourdomain.com",
+      "blueprint_sse_external_hostname_c": "prod-green-swarm-worker-ext-pub-c.yourdomain.com",
 
       "github_user_email": "your_github_user_email",
       "github_client_id": "your_github_client_id",
@@ -33,7 +38,7 @@ Create a file main.json in the config directory. Copy the content from the file 
       "cassandra_username": "cassandra",
       "cassandra_password": "cassandra",
 
-      "mysql_username": "shop",
+      "mysql_username": "blueprint",
       "mysql_password": "changeme"
     }
 
@@ -79,11 +84,11 @@ Create Cassandra keyspaces and users with command:
 
 Deploy NGINX server on Docker Swarm with command:
 
-    ./swarm_run.sh deploy_stack shop-nginx
+    ./swarm_run.sh deploy_stack blueprint-nginx
 
 Deploy MySQL server on Docker Swarm with command:
 
-    ./swarm_run.sh deploy_stack shop-mysql
+    ./swarm_run.sh deploy_stack blueprint-mysql
 
 Configure MySQL server with command:
 
@@ -95,15 +100,15 @@ Configure Kafka topics with command:
 
 Deploy services on Docker Swarm with commands:
 
-    ./swarm_run.sh deploy_stack shop-authentication
-    ./swarm_run.sh deploy_stack shop-accounts
-    ./swarm_run.sh deploy_stack shop-designs
-    ./swarm_run.sh deploy_stack shop-weblets
-    ./swarm_run.sh deploy_stack shop-gateway
+    ./swarm_run.sh deploy_stack blueprint-authentication
+    ./swarm_run.sh deploy_stack blueprint-accounts
+    ./swarm_run.sh deploy_stack blueprint-designs
+    ./swarm_run.sh deploy_stack blueprint-weblets
+    ./swarm_run.sh deploy_stack blueprint-gateway
 
 ## Access the application
 
-Open a browser at https://prod-green-shop.yourdomain.com:7443 or https://prod-green-shop.yourdomain.com when using the Load Balancer.
+Open a browser at https://prod-green-blueprint.yourdomain.com:7443 or https://prod-green-blueprint.yourdomain.com when using the Load Balancer.
 
 You will be redirected to GitHub for authentication. Use the email you configured in the main.json to login as admin.
 
@@ -111,19 +116,19 @@ You will be redirected to GitHub for authentication. Use the email you configure
 
 Remove services with commands:
 
-    ./swarm_run.sh remove_stack shop-gateway
-    ./swarm_run.sh remove_stack shop-weblets
-    ./swarm_run.sh remove_stack shop-designs
-    ./swarm_run.sh remove_stack shop-accounts
-    ./swarm_run.sh remove_stack shop-authentication
+    ./swarm_run.sh remove_stack blueprint-gateway
+    ./swarm_run.sh remove_stack blueprint-weblets
+    ./swarm_run.sh remove_stack blueprint-designs
+    ./swarm_run.sh remove_stack blueprint-accounts
+    ./swarm_run.sh remove_stack blueprint-authentication
 
 Remove MySQL server with command:
 
-    ./swarm_run.sh remove_stack shop-mysql
+    ./swarm_run.sh remove_stack blueprint-mysql
 
 Remove NGINX server with command:
 
-    ./swarm_run.sh remove_stack shop-nginx
+    ./swarm_run.sh remove_stack blueprint-nginx
 
 Delete Kafka topics with command:
 

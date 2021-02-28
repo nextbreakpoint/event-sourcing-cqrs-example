@@ -1,0 +1,123 @@
+{{- $fullname := include "service.fullname" . -}}
+{{- $name := include "service.name" . -}}
+{{- $chart := include "service.chart" . -}}
+{{- $root := . }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $root.Values.name | default "kafka" | quote }}
+  namespace: {{ $root.Release.Namespace | quote }}
+  labels:
+    app: {{ $root.Values.name | default "kafka" | quote }}
+    chart: {{ $chart }}
+    release: {{ $root.Release.Name }}
+    heritage: {{ $root.Release.Service }}
+spec:
+  replicas: {{ $root.Values.replicas | default 0 }}
+  {{- if $root.Values.strategy }}
+  strategy:
+    {{ toYaml $root.Values.strategy | indent 4 | trim }}
+  {{- end}}
+  selector:
+    matchLabels:
+      app: {{ $root.Values.name | default "kafka" | quote }}
+  template:
+    metadata:
+      {{- if $root.Values.annotations }}
+      annotations:
+        {{ toYaml $root.Values.annotations | indent 8 | trim }}
+      {{- end}}
+      labels:
+        app: {{ $root.Values.name | default "kafka" | quote }}
+    spec:
+      serviceAccountName: {{ $root.Values.serviceAccount | default "kafka" }}
+      {{- if $root.Values.image }}
+      {{- if $root.Values.image.pullSecrets }}
+      imagePullSecrets:
+        - name: {{ toYaml $root.Values.image.pullSecrets | indent 8 | trim }}
+      {{- end}}
+      {{- end}}
+      volumes:
+        {{- if $root.Values.secretName}}
+        - name: secret-vol
+          secret:
+            secretName: {{ $root.Values.secretName | quote }}
+        {{- end}}
+      hostname: {{ $root.Values.internalName | default "kafka" }}
+      containers:
+        - name: {{ $root.Values.name | default "kafka" | quote }}
+          image: "{{ $root.Values.image.registry }}{{ $root.Values.image.repository }}:{{ $root.Values.image.tag }}"
+          imagePullPolicy: {{ $root.Values.image.pullPolicy }}
+          ports:
+            - name: broker
+              containerPort: 9092
+              protocol: TCP
+            - name: broker-external
+              containerPort: {{ $root.Values.externalPort | default 9093 }}
+              protocol: TCP
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            {{- if $root.Values.secretName}}
+            - name: KEYSTORE_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $root.Values.secretName }}
+                  key: KEYSTORE_SECRET
+            - name: TRUSTSTORE_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $root.Values.secretName }}
+                  key: TRUSTSTORE_SECRET
+            {{- end}}
+            - name: KAFKA_ZOOKEEPER_CONNECT
+              value: {{ $root.Values.zookeeperName | default "zookeeper" }}:{{ $root.Values.zookeeperPort | default 2181 }}
+            - name: KAFKA_ADVERTISED_LISTENERS
+              value: PLAINTEXT_EXTERNAL://{{ $root.Values.externalName | default "localhost" }}:{{ $root.Values.externalPort | default 9093 }},PLAINTEXT_INTERNAL://kafka:9092
+            - name: KAFKA_LISTENERS
+              value: PLAINTEXT_EXTERNAL://0.0.0.0:{{ $root.Values.externalPort | default 9093 }},PLAINTEXT_INTERNAL://0.0.0.0:9092
+            - name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
+              value: PLAINTEXT_EXTERNAL:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+            - name: KAFKA_INTER_BROKER_LISTENER_NAME
+              value: PLAINTEXT_INTERNAL
+            - name: KAFKA_BROKER_ID
+              value: {{ $root.Values.brokerId | default 1 | quote }}
+            - name: KAFKA_BROKER_RACK
+              value: "rack1"
+            - name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
+              value: "1"
+            - name: KAFKA_NUM_PARTITIONS
+              value: "16"
+            - name: KAFKA_DELETE_TOPICS
+              value: "true"
+            - name: KAFKA_AUTO_CREATE_TOPICS
+              value: "true"
+            - name: KAFKA_LOG_RETENTION_HOURS
+              value: "24"
+            - name: KAFKA_TRANSACTION_MAX_TIMEOUT_MS
+              value: "60000"
+            - name: KAFKA_HEAP_OPTS
+              value: "-Xms1500M -Xmx1500M"
+            - name: CONFLUENT_SUPPORT_METRICS_ENABLE
+              value: "false"
+          volumeMounts:
+            {{- if $root.Values.secretName}}
+            - name: secret-vol
+              readOnly: true
+              mountPath: /etc/keystore.jks
+              subPath: keystore.jks
+            - name: secret-vol
+              readOnly: true
+              mountPath: /etc/truststore.jks
+              subPath: truststore.jks
+            {{- end}}
+          {{- if $root.Values.resources }}
+          resources:
+            {{ $root.Values.resources | toYaml | indent 12 | trim }}
+          {{- end}}

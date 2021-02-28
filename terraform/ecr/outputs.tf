@@ -2,6 +2,6 @@
 # Outputs
 ###################################################################
 
-output "shop-ecr-created" {
+output "blueprint-ecr-created" {
   value = "true"
 }

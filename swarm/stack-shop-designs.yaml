@@ -1,8 +1,8 @@
 version: '3.4'
 services:
-  shop-designs-command:
+  blueprint-designs-command:
     labels:
-        service: shop-designs-command
+        service: blueprint-designs-command
     image: ${SHOP_DESIGNS_COMMAND_IMAGE}
     volumes:
       - storage:/data
@@ -62,9 +62,9 @@ services:
         uid: '1000'
         gid: '1000'
         mode: 0440
-  shop-designs-processor:
+  blueprint-designs-processor:
     labels:
-        service: shop-designs-processor
+        service: blueprint-designs-processor
     image: ${SHOP_DESIGNS_PROCESSOR_IMAGE}
     volumes:
       - storage:/data
@@ -124,9 +124,9 @@ services:
         uid: '1000'
         gid: '1000'
         mode: 0440
-  shop-designs-query:
+  blueprint-designs-query:
     labels:
-        service: shop-designs-query
+        service: blueprint-designs-query
     image: ${SHOP_DESIGNS_QUERY_IMAGE}
     volumes:
       - storage:/data
@@ -176,9 +176,9 @@ services:
         uid: '1000'
         gid: '1000'
         mode: 0440
-  shop-designs-sse-a:
+  blueprint-designs-sse-a:
     labels:
-        service: shop-designs-sse
+        service: blueprint-designs-sse
     image: ${SHOP_DESIGNS_SSE_IMAGE}
     volumes:
       - storage:/data
@@ -239,9 +239,9 @@ services:
         uid: '1000'
         gid: '1000'
         mode: 0440
-  shop-designs-sse-b:
+  blueprint-designs-sse-b:
     labels:
-        service: shop-designs-sse
+        service: blueprint-designs-sse
     image: ${SHOP_DESIGNS_SSE_IMAGE}
     volumes:
       - storage:/data
@@ -302,9 +302,9 @@ services:
         uid: '1000'
         gid: '1000'
         mode: 0440
-  shop-designs-sse-c:
+  blueprint-designs-sse-c:
     labels:
-        service: shop-designs-sse
+        service: blueprint-designs-sse
     image: ${SHOP_DESIGNS_SSE_IMAGE}
     volumes:
       - storage:/data

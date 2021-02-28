@@ -2,32 +2,21 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <artifactId>com.nextbreakpoint.blueprint.accounts</artifactId>
     <parent>
         <groupId>com.nextbreakpoint</groupId>
-        <artifactId>com.nextbreakpoint.shop</artifactId>
+        <artifactId>com.nextbreakpoint.blueprint.bom</artifactId>
         <version>1.0.0</version>
     </parent>
-    <modelVersion>4.0.0</modelVersion>
-    <artifactId>com.nextbreakpoint.shop.accounts</artifactId>
-    <properties>
-        <container.port>3002</container.port>
-        <service.jar>${project.build.finalName}.${project.packaging}</service.jar>
-        <config.name>accounts.json</config.name>
-    </properties>
+    <repositories>
+        <repository>
+            <id>github</id>
+            <name>GitHub NextBreakpoint Apache Maven Packages</name>
+            <url>https://maven.pkg.github.com/nextbreakpoint/blueprint</url>
+        </repository>
+    </repositories>
     <build>
-        <resources>
-            <resource>
-                <directory>src/main/resources</directory>
-            </resource>
-            <resource>
-                <directory>environments</directory>
-                <filtering>true</filtering>
-                <targetPath>environments</targetPath>
-                <includes>
-                    <include>**/*.json</include>
-                </includes>
-            </resource>
-        </resources>
         <plugins>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
@@ -43,7 +32,6 @@
                         <configuration>
                             <portNames>
                                 <portName>http.port</portName>
-                                <portName>database.port</portName>
                             </portNames>
                         </configuration>
                     </execution>
@@ -62,7 +50,6 @@
                         <configuration>
                             <systemProperties>
                                 <http.port>${http.port}</http.port>
-                                <database.port>${database.port}</database.port>
                             </systemProperties>
                         </configuration>
                     </execution>
@@ -77,228 +64,29 @@
                         <index>true</index>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>com.nextbreakpoint.shop.accounts.Verticle</mainClass>
+                            <mainClass>com.nextbreakpoint.blueprint.accounts.Verticle</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>io.fabric8</groupId>
-                <artifactId>docker-maven-plugin</artifactId>
-                <version>${docker-maven-plugin.version}</version>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>${maven-dependency-plugin.version}</version>
                 <executions>
                     <execution>
-                        <id>build-integration-test</id>
-                        <phase>pre-integration-test</phase>
-                        <goals>
-                            <goal>build</goal>
-                        </goals>
-                        <configuration>
-                            <images>
-                                <image>
-                                    <name>${environment}-${colour}-shop/accounts:${project.version}</name>
-                                    <alias>service-accounts</alias>
-                                    <build>
-                                        <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
-                                        <filter>${*}</filter>
-                                        <assembly>
-                                            <descriptorRef>artifact-with-dependencies</descriptorRef>
-                                        </assembly>
-                                    </build>
-                                </image>
-                            </images>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>start-integration-test</id>
-                        <phase>pre-integration-test</phase>
-                        <goals>
-                            <goal>start</goal>
-                        </goals>
-                        <configuration>
-                            <showLogs>true</showLogs>
-                            <images>
-                                <image>
-                                    <name>mysql:8.0.13</name>
-                                    <alias>mysql-accounts</alias>
-                                    <run>
-                                        <ports>
-                                            <port>3306:3306</port>
-                                        </ports>
-                                        <memory>536870912</memory>
-                                        <env>
-                                            <MYSQL_ROOT_PASSWORD>password</MYSQL_ROOT_PASSWORD>
-                                        </env>
-                                        <volumes>
-                                            <bind>
-                                                <volume>${project.basedir}/scripts:/docker-entrypoint-initdb.d</volume>
-                                            </bind>
-                                        </volumes>
-                                        <network>
-                                            <mode>custom</mode>
-                                            <name>shop-test</name>
-                                            <alias>mysql-accounts</alias>
-                                        </network>
-                                        <wait>
-                                            <log>/usr/sbin/mysqld: ready for connections. Version: '8.0.13'  socket: '/var/run/mysqld/mysqld.sock'  port: 3306</log>
-                                            <time>60000</time>
-                                        </wait>
-                                    </run>
-                                </image>
-                                <image>
-                                    <name>${environment}-${colour}-shop/accounts:${project.version}</name>
-                                    <alias>service-accounts</alias>
-                                    <build>
-                                        <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
-                                        <filter>${*}</filter>
-                                        <assembly>
-                                            <descriptorRef>artifact-with-dependencies</descriptorRef>
-                                        </assembly>
-                                    </build>
-                                    <run>
-                                        <ports>
-                                            <port>${http.port}:${container.port}</port>
-                                        </ports>
-                                        <memory>268435456</memory>
-                                        <volumes>
-                                            <bind>
-                                                <volume>${project.basedir}/target/classes/environments/integration:/config</volume>
-                                                <volume>${project.basedir}/../../secrets:/secrets</volume>
-                                            </bind>
-                                        </volumes>
-                                        <network>
-                                            <mode>custom</mode>
-                                            <name>shop-test</name>
-                                            <alias>service-accounts</alias>
-                                        </network>
-                                        <wait>
-                                            <log>Succeeded in deploying verticle</log>
-                                            <time>60000</time>
-                                        </wait>
-                                        <dependsOn>
-                                            <container>mysql-accounts</container>
-                                        </dependsOn>
-                                    </run>
-                                </image>
-                            </images>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>stop-integration-test</id>
-                        <phase>post-integration-test</phase>
-                        <goals>
-                            <goal>stop</goal>
-                        </goals>
-                        <configuration>
-                            <images>
-                                <image>
-                                    <name>${environment}-${colour}-shop/accounts:${project.version}</name>
-                                    <alias>service-accounts</alias>
-                                </image>
-                                <image>
-                                    <name>mysql:8.0.13</name>
-                                    <alias>mysql-accounts</alias>
-                                </image>
-                            </images>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>package</id>
+                        <id>copy-dependencies</id>
                         <phase>package</phase>
                         <goals>
-                            <goal>build</goal>
+                            <goal>copy-dependencies</goal>
                         </goals>
                         <configuration>
-                            <images>
-                                <image>
-                                    <name>${environment}-${colour}-shop/accounts:${project.version}</name>
-                                    <alias>service-accounts</alias>
-                                    <build>
-                                        <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
-                                        <filter>${*}</filter>
-                                        <assembly>
-                                            <descriptorRef>artifact-with-dependencies</descriptorRef>
-                                        </assembly>
-                                    </build>
-                                </image>
-                            </images>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>push</id>
-                        <phase>none</phase>
-                        <goals>
-                            <goal>push</goal>
-                        </goals>
-                        <configuration>
-                            <images>
-                                <image>
-                                    <name>${environment}-${colour}-shop/accounts:${project.version}</name>
-                                    <alias>service-accounts</alias>
-                                    <build>
-                                        <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
-                                        <filter>${*}</filter>
-                                        <assembly>
-                                            <descriptorRef>artifact-with-dependencies</descriptorRef>
-                                        </assembly>
-                                    </build>
-                                </image>
-                            </images>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>start-service</id>
-                        <phase>none</phase>
-                        <goals>
-                            <goal>start</goal>
-                        </goals>
-                        <configuration>
-                            <showLogs>true</showLogs>
-                            <images>
-                                <image>
-                                    <name>${environment}-${colour}-shop/accounts:${project.version}</name>
-                                    <alias>service-accounts</alias>
-                                    <build>
-                                        <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
-                                        <filter>${*}</filter>
-                                        <assembly>
-                                            <descriptorRef>artifact-with-dependencies</descriptorRef>
-                                        </assembly>
-                                    </build>
-                                    <run>
-                                        <ports>
-                                            <port>${container.port}:${container.port}</port>
-                                        </ports>
-                                        <memory>268435456</memory>
-                                        <volumes>
-                                            <bind>
-                                                <volume>${project.basedir}/target/classes/environments/docker:/config</volume>
-                                                <volume>${project.basedir}/../../secrets:/secrets</volume>
-                                            </bind>
-                                        </volumes>
-                                        <network>
-                                            <mode>custom</mode>
-                                            <name>shop-dev</name>
-                                            <alias>service-accounts</alias>
-                                        </network>
-                                    </run>
-                                </image>
-                            </images>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>stop-service</id>
-                        <phase>none</phase>
-                        <goals>
-                            <goal>stop</goal>
-                        </goals>
-                        <configuration>
-                            <images>
-                                <image>
-                                    <name>${environment}-${colour}-shop/accounts:${project.version}</name>
-                                    <alias>service-accounts</alias>
-                                </image>
-                            </images>
+                            <outputDirectory>${project.build.directory}/libs</outputDirectory>
+                            <overWriteReleases>false</overWriteReleases>
+                            <overWriteSnapshots>false</overWriteSnapshots>
+                            <overWriteIfNewer>true</overWriteIfNewer>
+                            <includeScope>runtime</includeScope>
+                            <excludeScope>test</excludeScope>
                         </configuration>
                     </execution>
                 </executions>
@@ -308,8 +96,25 @@
     <dependencies>
         <dependency>
             <groupId>com.nextbreakpoint</groupId>
-            <artifactId>com.nextbreakpoint.shop.common</artifactId>
+            <artifactId>com.nextbreakpoint.blueprint.common.core</artifactId>
             <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.nextbreakpoint</groupId>
+            <artifactId>com.nextbreakpoint.blueprint.common.vertx</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.nextbreakpoint</groupId>
+            <artifactId>com.nextbreakpoint.blueprint.common.mysql</artifactId>
+            <version>${project.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.nextbreakpoint</groupId>
+            <artifactId>com.nextbreakpoint.blueprint.common.test</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>

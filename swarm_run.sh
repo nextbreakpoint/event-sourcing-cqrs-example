@@ -33,14 +33,14 @@ export KAFKA_VERSION=1.1.0
 export KAFKA_REVISION=1
 export KAFKA_IMAGE=nextbreakpoint/kafka:${KAFKA_VERSION}-${KAFKA_REVISION}
 
-export SHOP_DESIGNS_COMMAND_IMAGE=${ACCOUNT_ID}.dkr.ecr.eu-west-1.amazonaws.com/${ENVIRONMENT}-${COLOUR}-shop/designs-command:1.0.0
-export SHOP_DESIGNS_PROCESSOR_IMAGE=${ACCOUNT_ID}.dkr.ecr.eu-west-1.amazonaws.com/${ENVIRONMENT}-${COLOUR}-shop/designs-processor:1.0.0
-export SHOP_DESIGNS_QUERY_IMAGE=${ACCOUNT_ID}.dkr.ecr.eu-west-1.amazonaws.com/${ENVIRONMENT}-${COLOUR}-shop/designs-query:1.0.0
-export SHOP_DESIGNS_SSE_IMAGE=${ACCOUNT_ID}.dkr.ecr.eu-west-1.amazonaws.com/${ENVIRONMENT}-${COLOUR}-shop/designs-sse:1.0.0
-export SHOP_ACCOUNTS_IMAGE=${ACCOUNT_ID}.dkr.ecr.eu-west-1.amazonaws.com/${ENVIRONMENT}-${COLOUR}-shop/accounts:1.0.0
-export SHOP_AUTH_IMAGE=${ACCOUNT_ID}.dkr.ecr.eu-west-1.amazonaws.com/${ENVIRONMENT}-${COLOUR}-shop/authentication:1.0.0
-export SHOP_GATEWAY_IMAGE=${ACCOUNT_ID}.dkr.ecr.eu-west-1.amazonaws.com/${ENVIRONMENT}-${COLOUR}-shop/gateway:1.0.0
-export SHOP_WEBLET_ADMIN_IMAGE=${ACCOUNT_ID}.dkr.ecr.eu-west-1.amazonaws.com/${ENVIRONMENT}-${COLOUR}-shop/weblet-root:1.0.0
+export SHOP_DESIGNS_COMMAND_IMAGE=${ACCOUNT_ID}.dkr.ecr.eu-west-1.amazonaws.com/${ENVIRONMENT}-${COLOUR}-blueprint/designs-command:1.0.0
+export SHOP_DESIGNS_PROCESSOR_IMAGE=${ACCOUNT_ID}.dkr.ecr.eu-west-1.amazonaws.com/${ENVIRONMENT}-${COLOUR}-blueprint/designs-processor:1.0.0
+export SHOP_DESIGNS_QUERY_IMAGE=${ACCOUNT_ID}.dkr.ecr.eu-west-1.amazonaws.com/${ENVIRONMENT}-${COLOUR}-blueprint/designs-query:1.0.0
+export SHOP_DESIGNS_SSE_IMAGE=${ACCOUNT_ID}.dkr.ecr.eu-west-1.amazonaws.com/${ENVIRONMENT}-${COLOUR}-blueprint/designs-sse:1.0.0
+export SHOP_ACCOUNTS_IMAGE=${ACCOUNT_ID}.dkr.ecr.eu-west-1.amazonaws.com/${ENVIRONMENT}-${COLOUR}-blueprint/accounts:1.0.0
+export SHOP_AUTH_IMAGE=${ACCOUNT_ID}.dkr.ecr.eu-west-1.amazonaws.com/${ENVIRONMENT}-${COLOUR}-blueprint/authentication:1.0.0
+export SHOP_GATEWAY_IMAGE=${ACCOUNT_ID}.dkr.ecr.eu-west-1.amazonaws.com/${ENVIRONMENT}-${COLOUR}-blueprint/gateway:1.0.0
+export SHOP_WEBLET_ADMIN_IMAGE=${ACCOUNT_ID}.dkr.ecr.eu-west-1.amazonaws.com/${ENVIRONMENT}-${COLOUR}-blueprint/weblet-root:1.0.0
 
 export ADVERTISE_EXT_WORKER_AGENT_1=$EXT_WORKER_A
 export ADVERTISE_EXT_WORKER_AGENT_2=$EXT_WORKER_B

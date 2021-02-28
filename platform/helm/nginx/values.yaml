@@ -1,0 +1,29 @@
+# Default values.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+image:
+  repository: nginx
+  tag: latest
+  pullPolicy: IfNotPresent
+  pullSecrets:
+
+annotations:
+
+strategy:
+  type: Recreate
+
+resources:
+  requests:
+    memory: "1024Mi"
+    cpu: "0.1"
+  limits:
+    memory: "1024Mi"
+    cpu: "1.0"
+
+serviceAccount: default
+
+configName:
+secretName:
+
+hostname:

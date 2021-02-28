@@ -2,13 +2,13 @@ ALTER KEYSPACE "system_auth" WITH REPLICATION = { 'class' : 'NetworkTopologyStra
 
 CREATE KEYSPACE IF NOT EXISTS designs WITH REPLICATION = { 'class' : 'NetworkTopologyStrategy', 'datacenter1' : 3 };
 
-CREATE ROLE IF NOT EXISTS shop WITH PASSWORD = 'changeme' AND LOGIN = true;
+CREATE ROLE IF NOT EXISTS blueprint WITH PASSWORD = 'changeme' AND LOGIN = true;
 
 CREATE ROLE IF NOT EXISTS designs_admin;
 
 GRANT ALL PERMISSIONS on KEYSPACE designs TO designs_admin;
 
-GRANT designs_admin TO shop;
+GRANT designs_admin TO blueprint;
 
 USE designs;
 

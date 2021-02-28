@@ -1,0 +1,29 @@
+{
+  "host_port": "8080",
+
+  "server_keystore_path": "../../secrets/keystore-server.jks",
+  "server_keystore_secret": "${KEYSTORE_SECRET}",
+
+  "jwt_keystore_path": "../../secrets/keystore-auth.jceks",
+  "jwt_keystore_type": "jceks",
+  "jwt_keystore_secret": "${KEYSTORE_SECRET}",
+
+  "origin_pattern": "https://localhost(:[0-9]+)?",
+
+  "jdbc_url": "jdbc:mysql://localhost:3306/designs?useSSL=false&allowPublicKeyRetrieval=true&nullNamePatternMatchesAll=true",
+  "jdbc_driver": "com.mysql.cj.jdbc.Driver",
+  "jdbc_username": "${DATABASE_USERNAME}",
+  "jdbc_password": "${DATABASE_PASSWORD}",
+  "jdbc_max_pool_size": "200",
+  "jdbc_min_pool_size": "20",
+
+  "graphite_reporter_enabled": "false",
+  "graphite_host": "localhost",
+  "graphite_port": "2003",
+
+  "max_execution_time_in_millis": "30000",
+
+  "kafka_bootstrap_servers": "localhost:9092",
+  "message_source": "service-designs",
+  "sse_topic": "designs-sse"
+}

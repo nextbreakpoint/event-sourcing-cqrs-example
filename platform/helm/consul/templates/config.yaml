@@ -1,0 +1,43 @@
+{{- $fullname := include "service.fullname" . -}}
+{{- $name := include "service.name" . -}}
+{{- $chart := include "service.chart" . -}}
+{{- $root := . }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $root.Values.name | default "consul" | quote }}
+  namespace: {{ $root.Release.Namespace | quote }}
+  labels:
+    chart: {{ $chart }}
+    release: {{ $root.Release.Name }}
+    heritage: {{ $root.Release.Service }}
+data:
+  config.json: |
+    {
+      "log_level": "info",
+      "client_addr": "0.0.0.0",
+      "bind_addr": "0.0.0.0",
+      "server": true,
+      "bootstrap": true,
+      "leave_on_terminate": true,
+      "translate_wan_addrs": true,
+      "disable_update_check": true,
+      "enable_script_checks": true,
+      "skip_leave_on_interrupt": true,
+      "ports": { "https": -1, "http": 8400 },
+      "dns_config": {
+        "allow_stale": true,
+        "max_stale": "1s",
+        "service_ttl": {
+          "*": "5s"
+        }
+      },
+      "services": [{
+        "name": "designs-sse",
+        "tags": [
+          "http-endpoint"
+        ],
+        "port": {{ $root.Values.servicePort | default "443" }},
+        "address": {{ $root.Values.serviceName | default "localhost" | quote }}
+      }]
+    }

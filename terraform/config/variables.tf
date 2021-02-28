@@ -30,19 +30,19 @@ variable "secrets_bucket_name" {}
 variable "hosted_zone_name" {}
 
 ### MANDATORY ###
-variable "shop_external_hostname" {}
+variable "blueprint_external_hostname" {}
 
 ### MANDATORY ###
-variable "shop_internal_hostname" {}
+variable "blueprint_internal_hostname" {}
 
 ### MANDATORY ###
-variable "shop_sse_external_hostname_a" {}
+variable "blueprint_sse_external_hostname_a" {}
 
 ### MANDATORY ###
-variable "shop_sse_external_hostname_b" {}
+variable "blueprint_sse_external_hostname_b" {}
 
 ### MANDATORY ###
-variable "shop_sse_external_hostname_c" {}
+variable "blueprint_sse_external_hostname_c" {}
 
 ### MANDATORY ###
 variable "github_client_id" {}

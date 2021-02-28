@@ -33,7 +33,7 @@ resource "local_file" "gateway_config" {
   "client_verify_host": false,
   "client_keep_alive": true,
 
-  "consul_host": "${var.shop_internal_hostname}",
+  "consul_host": "${var.blueprint_internal_hostname}",
   "consul_port": 8400,
 
   "jwt_keystore_path": "/keystores/keystore-auth.jceks",
@@ -42,10 +42,10 @@ resource "local_file" "gateway_config" {
 
   "origin_pattern": "https://([a-z_-]+).${var.hosted_zone_name}(:[0-9]+)?",
 
-  "server_auth_url": "https://shop-authentication:43000",
-  "server_accounts_url": "https://shop-accounts:43002",
-  "server_designs_query_url": "https://shop-designs-query:43021",
-  "server_designs_command_url": "https://shop-designs-command:43031",
+  "server_auth_url": "https://blueprint-authentication:43000",
+  "server_accounts_url": "https://blueprint-accounts:43002",
+  "server_designs_query_url": "https://blueprint-designs-query:43021",
+  "server_designs_command_url": "https://blueprint-designs-command:43031",
 
   "graphite_reporter_enabled": true,
   "graphite_host": "graphite",
@@ -81,11 +81,11 @@ resource "local_file" "authentication_config" {
 
   "origin_pattern": "https://([a-z_-]+).${var.hosted_zone_name}(:[0-9]+)?",
 
-  "client_web_url": "https://${var.shop_external_hostname}:7443",
-  "client_auth_url": "https://${var.shop_external_hostname}:7443",
+  "client_web_url": "https://${var.blueprint_external_hostname}:7443",
+  "client_auth_url": "https://${var.blueprint_external_hostname}:7443",
 
-  "server_auth_url": "https://shop-authentication:43000",
-  "server_accounts_url": "https://shop-accounts:43002",
+  "server_auth_url": "https://blueprint-authentication:43000",
+  "server_accounts_url": "https://blueprint-accounts:43002",
 
   "github_url": "https://api.github.com",
 
@@ -329,7 +329,7 @@ resource "local_file" "accounts_config" {
   "graphite_host": "graphite",
   "graphite_port": 2003,
 
-  "jdbc_url": "jdbc:mysql://shop-mysql:3306/shop?useSSL=false&allowPublicKeyRetrieval=true&nullNamePatternMatchesAll=true",
+  "jdbc_url": "jdbc:mysql://blueprint-mysql:3306/blueprint?useSSL=false&allowPublicKeyRetrieval=true&nullNamePatternMatchesAll=true",
   "jdbc_driver": "com.mysql.cj.jdbc.Driver",
   "jdbc_username": "${var.mysql_username}",
   "jdbc_password": "${var.mysql_password}",
@@ -344,9 +344,9 @@ EOF
 resource "local_file" "weblet_root_config" {
   content = <<EOF
 {
-  "client_web_url": "https://${var.shop_external_hostname}:7443",
-  "client_api_url": "https://${var.shop_external_hostname}:7443",
-  "server_api_url": "https://${var.shop_internal_hostname}:44000"
+  "client_web_url": "https://${var.blueprint_external_hostname}:7443",
+  "client_api_url": "https://${var.blueprint_external_hostname}:7443",
+  "server_api_url": "https://${var.blueprint_internal_hostname}:44000"
 }
 EOF
 
@@ -379,7 +379,7 @@ resource "local_file" "consul_config_a" {
       "http-endpoint"
     ],
     "port": 443,
-    "address": "${var.shop_sse_external_hostname_a}"
+    "address": "${var.blueprint_sse_external_hostname_a}"
   }]
 }
 EOF
@@ -412,7 +412,7 @@ resource "local_file" "consul_config_b" {
       "http-endpoint"
     ],
     "port": 443,
-    "address": "${var.shop_sse_external_hostname_b}"
+    "address": "${var.blueprint_sse_external_hostname_b}"
   }]
 }
 EOF
@@ -445,7 +445,7 @@ resource "local_file" "consul_config_c" {
       "http-endpoint"
     ],
     "port": 443,
-    "address": "${var.shop_sse_external_hostname_c}"
+    "address": "${var.blueprint_sse_external_hostname_c}"
   }]
 }
 EOF
@@ -470,13 +470,13 @@ http {
 
   server {
     listen 80;
-    server_name ${var.shop_external_hostname};
+    server_name ${var.blueprint_external_hostname};
     return 301 https://$$server_name$$request_uri;
   }
 
   server {
     listen 443 ssl;
-    server_name ${var.shop_external_hostname};
+    server_name ${var.blueprint_external_hostname};
 
     ssl_certificate     /etc/nginx/ca_and_server_cert.pem;
     ssl_certificate_key /etc/nginx/server_key.pem;
@@ -503,27 +503,27 @@ http {
     resolver 127.0.0.11 ipv6=off valid=10s;
 
     location /watch {
-        set $upstream_api shop-gateway;
+        set $upstream_api blueprint-gateway;
         proxy_pass https://$upstream_api:44000$request_uri;
     }
 
     location /auth {
-        set $upstream_api shop-gateway;
+        set $upstream_api blueprint-gateway;
         proxy_pass https://$upstream_api:44000$request_uri;
     }
 
     location /designs {
-        set $upstream_api shop-gateway;
+        set $upstream_api blueprint-gateway;
         proxy_pass https://$upstream_api:44000$request_uri;
     }
 
     location /accounts {
-        set $upstream_api shop-gateway;
+        set $upstream_api blueprint-gateway;
         proxy_pass https://$upstream_api:44000$request_uri;
     }
 
     location / {
-        set $upstream_weblet shop-weblet-root;
+        set $upstream_weblet blueprint-weblet-root;
         proxy_pass https://$upstream_weblet:8080$request_uri;
     }
   }
@@ -550,13 +550,13 @@ http {
 
   server {
     listen 80;
-    server_name ${var.shop_sse_external_hostname_a};
+    server_name ${var.blueprint_sse_external_hostname_a};
     return 301 https://$$server_name$$request_uri;
   }
 
   server {
     listen 443 ssl;
-    server_name ${var.shop_sse_external_hostname_a};
+    server_name ${var.blueprint_sse_external_hostname_a};
 
     ssl_certificate     /etc/nginx/ca_and_server_cert.pem;
     ssl_certificate_key /etc/nginx/server_key.pem;
@@ -588,7 +588,7 @@ http {
     resolver 127.0.0.11 ipv6=off valid=10s;
 
     location /watch/designs {
-        set $upstream_api shop-designs-sse-a;
+        set $upstream_api blueprint-designs-sse-a;
         proxy_pass https://$upstream_api:43041$request_uri;
         proxy_set_header Connection "";
     }
@@ -616,13 +616,13 @@ http {
 
   server {
     listen 80;
-    server_name ${var.shop_sse_external_hostname_b};
+    server_name ${var.blueprint_sse_external_hostname_b};
     return 301 https://$$server_name$$request_uri;
   }
 
   server {
     listen 443 ssl;
-    server_name ${var.shop_sse_external_hostname_b};
+    server_name ${var.blueprint_sse_external_hostname_b};
 
     ssl_certificate     /etc/nginx/ca_and_server_cert.pem;
     ssl_certificate_key /etc/nginx/server_key.pem;
@@ -654,7 +654,7 @@ http {
     resolver 127.0.0.11 ipv6=off valid=10s;
 
     location /watch/designs {
-        set $upstream_api shop-designs-sse-b;
+        set $upstream_api blueprint-designs-sse-b;
         proxy_pass https://$upstream_api:43041$request_uri;
         proxy_set_header Connection "";
     }
@@ -682,13 +682,13 @@ http {
 
   server {
     listen 80;
-    server_name ${var.shop_sse_external_hostname_c};
+    server_name ${var.blueprint_sse_external_hostname_c};
     return 301 https://$$server_name$$request_uri;
   }
 
   server {
     listen 443 ssl;
-    server_name ${var.shop_sse_external_hostname_c};
+    server_name ${var.blueprint_sse_external_hostname_c};
 
     ssl_certificate     /etc/nginx/ca_and_server_cert.pem;
     ssl_certificate_key /etc/nginx/server_key.pem;
@@ -720,7 +720,7 @@ http {
     resolver 127.0.0.11 ipv6=off valid=10s;
 
     location /watch/designs {
-        set $upstream_api shop-designs-sse-c;
+        set $upstream_api blueprint-designs-sse-c;
         proxy_pass https://$upstream_api:43041$request_uri;
         proxy_set_header Connection "";
     }

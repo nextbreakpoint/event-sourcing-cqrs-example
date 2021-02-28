@@ -1,0 +1,48 @@
+{{- $fullname := include "service.fullname" . -}}
+{{- $name := include "service.name" . -}}
+{{- $chart := include "service.chart" . -}}
+{{- $root := . }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $root.Values.name | default "gateway" | quote }}
+  namespace: {{ $root.Release.Namespace | quote }}
+  labels:
+    chart: {{ $chart }}
+    release: {{ $root.Release.Name }}
+    heritage: {{ $root.Release.Service }}
+data:
+  config.json: |
+    {
+      "host_port": "8080",
+
+      "server_keystore_path": "/etc/keystore_server.jks",
+      "server_keystore_secret": "${KEYSTORE_SECRET}",
+
+      "client_keystore_path": "/etc/keystore_client.jks",
+      "client_keystore_secret": "${KEYSTORE_SECRET}",
+
+      "client_truststore_path": "/etc/truststore_client.jks",
+      "client_truststore_secret": "${KEYSTORE_SECRET}",
+
+      "client_verify_host": "false",
+      "client_keep_alive": "true",
+
+      "jwt_keystore_path": "/etc/keystore_auth.jceks",
+      "jwt_keystore_type": "jceks",
+      "jwt_keystore_secret": "${KEYSTORE_SECRET}",
+
+      "origin_pattern": "https://{{ $root.Values.clientDomain | default "localhost" }}(:[0-9]+)?",
+
+      "consul_host": "consul",
+      "consul_port": "8400",
+
+      "server_auth_url": "{{ $root.Values.authApiUrl | default "https://authentication:8080" }}/auth",
+      "server_accounts_url": "{{ $root.Values.accountsApiUrl | default "https://accounts:8080" }}/accounts",
+      "server_designs_query_url": "{{ $root.Values.designsAggregateFetcherApiUrl | default "https://designs-aggregate-fetcher:8080" }}/designs",
+      "server_designs_command_url": "{{ $root.Values.designsCommandProducerApiUrl | default "https://designs-command-producer:8080" }}/designs",
+
+      "graphite_reporter_enabled": "false",
+      "graphite_host": "graphite",
+      "graphite_port": "2003"
+    }

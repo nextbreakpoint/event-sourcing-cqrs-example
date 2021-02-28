@@ -1,0 +1,33 @@
+{
+  "host_port": "8080",
+
+  "server_keystore_path": "../../secrets/keystore-server.jks",
+  "server_keystore_secret": "${KEYSTORE_SECRET}",
+
+  "client_keystore_path": "../../secrets/keystore-client.jks",
+  "client_keystore_secret": "${KEYSTORE_SECRET}",
+
+  "client_truststore_path": "../../secrets/truststore-client.jks",
+  "client_truststore_secret": "${KEYSTORE_SECRET}",
+
+  "client_verify_host": "false",
+  "client_keep_alive": "true",
+
+  "jwt_keystore_path": "../../secrets/keystore-auth.jceks",
+  "jwt_keystore_type": "jceks",
+  "jwt_keystore_secret": "${KEYSTORE_SECRET}",
+
+  "origin_pattern": "https://localhost(:[0-9]+)?",
+
+  "consul_host": "localhost",
+  "consul_port": "8400",
+
+  "server_auth_url": "http://localhost:9000/auth",
+  "server_accounts_url": "http://localhost:9000/accounts",
+  "server_designs_query_url": "http://localhost:9000/designs",
+  "server_designs_command_url": "http://localhost:9000/designs",
+
+  "graphite_reporter_enabled": "false",
+  "graphite_host": "localhost",
+  "graphite_port": "2003"
+}

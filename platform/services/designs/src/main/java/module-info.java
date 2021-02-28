@@ -1,8 +1,10 @@
-module com.nextbreakpoint.shop.designs {
-    requires com.nextbreakpoint.shop.common;
+module com.nextbreakpoint.blueprint.designs {
+    requires com.nextbreakpoint.blueprint.common.core;
+    requires com.nextbreakpoint.blueprint.common.vertx;
     requires transitive com.nextbreakpoint.nextfractal.core;
     requires transitive com.nextbreakpoint.nextfractal.mandelbrot;
     requires com.fasterxml.jackson.core;
     requires com.fasterxml.jackson.databind;
-    opens com.nextbreakpoint.shop.designs to com.nextbreakpoint.shop.common, com.fasterxml.jackson.databind;
+    requires java.desktop;
+    opens com.nextbreakpoint.blueprint.designs to com.nextbreakpoint.blueprint.common.vertx, com.fasterxml.jackson.databind;
 }

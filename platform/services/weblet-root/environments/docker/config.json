@@ -1,5 +1,0 @@
-{
-  "client_web_url": "https://localhost",
-  "client_api_url": "https://localhost",
-  "server_api_url": "https://api-gateway:4000"
-}

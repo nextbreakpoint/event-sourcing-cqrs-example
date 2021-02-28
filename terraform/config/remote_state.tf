@@ -6,7 +6,7 @@ terraform {
   backend "s3" {
     bucket = "terraform"
     region = "eu-west-1"
-    key    = "shop-config.tfstate"
+    key    = "blueprint-config.tfstate"
   }
 }
 

@@ -1,8 +1,8 @@
 version: '3.4'
 services:
-  shop-nginx-int:
+  blueprint-nginx-int:
     labels:
-        service: shop-nginx-int
+        service: blueprint-nginx-int
     image: ${NGINX_IMAGE}
     volumes:
       - storage:/data
@@ -72,9 +72,9 @@ services:
         uid: '1000'
         gid: '1000'
         mode: 0440
-  shop-nginx-ext-a:
+  blueprint-nginx-ext-a:
     labels:
-        service: shop-nginx-ext
+        service: blueprint-nginx-ext
     image: ${NGINX_IMAGE}
     volumes:
       - storage:/data
@@ -146,9 +146,9 @@ services:
         uid: '1000'
         gid: '1000'
         mode: 0440
-  shop-nginx-ext-b:
+  blueprint-nginx-ext-b:
     labels:
-        service: shop-nginx-ext
+        service: blueprint-nginx-ext
     image: ${NGINX_IMAGE}
     volumes:
       - storage:/data
@@ -220,9 +220,9 @@ services:
         uid: '1000'
         gid: '1000'
         mode: 0440
-  shop-nginx-ext-c:
+  blueprint-nginx-ext-c:
     labels:
-        service: shop-nginx-ext
+        service: blueprint-nginx-ext
     image: ${NGINX_IMAGE}
     volumes:
       - storage:/data

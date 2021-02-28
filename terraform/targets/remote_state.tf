@@ -6,7 +6,7 @@ terraform {
   backend "s3" {
     bucket = "terraform"
     region = "eu-west-1"
-    key    = "shop-targets.tfstate"
+    key    = "blueprint-targets.tfstate"
   }
 }
 

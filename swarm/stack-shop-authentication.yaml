@@ -1,8 +1,8 @@
 version: '3.4'
 services:
-  shop-authentication:
+  blueprint-authentication:
     labels:
-        service: shop-authentication
+        service: blueprint-authentication
     image: ${SHOP_AUTH_IMAGE}
     volumes:
       - storage:/data

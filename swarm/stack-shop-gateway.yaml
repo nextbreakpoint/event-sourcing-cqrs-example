@@ -1,8 +1,8 @@
 version: '3.4'
 services:
-  shop-gateway:
+  blueprint-gateway:
     labels:
-        service: shop-gateway
+        service: blueprint-gateway
     image: ${SHOP_GATEWAY_IMAGE}
     volumes:
       - storage:/data

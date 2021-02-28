@@ -2,6 +2,6 @@
 # Outputs
 ###################################################################
 
-output "shop-config-created" {
+output "blueprint-config-created" {
   value = "true"
 }

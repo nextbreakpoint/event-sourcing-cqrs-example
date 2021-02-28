@@ -1,8 +1,8 @@
 version: '3.4'
 services:
-  shop-weblet-root:
+  blueprint-weblet-root:
     labels:
-        service: shop-weblet-root
+        service: blueprint-weblet-root
     image: ${SHOP_WEBLET_ADMIN_IMAGE}
     volumes:
       - storage:/data

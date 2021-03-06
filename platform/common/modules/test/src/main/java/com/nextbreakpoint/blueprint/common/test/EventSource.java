@@ -6,6 +6,7 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.VertxException;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 import io.vertx.rxjava.core.Vertx;
 import io.vertx.rxjava.core.buffer.Buffer;
@@ -45,34 +46,44 @@ public class EventSource {
 		if (client == null) {
 			client = HttpClientFactory.create(environment, vertx, serviceUrl, config);
 		}
-		HttpClientRequest request = client.get(path, response -> {
-			if (response.statusCode() != 200) {
-				VertxException ex = new VertxException("Cannot connect");
-				handler.handle(Future.failedFuture(ex));
-			} else {
-				connecting = false;
-				connected = true;
-				response.handler(this::handleMessage);
-				if (closeHandler != null) {
-					response.endHandler(closeHandler);
-				}
-				handler.handle(Future.succeededFuture());
-			}
-		}).exceptionHandler(e -> {
-			connecting = false;
-			connected = false;
-			handler.handle(Future.failedFuture(e));
-		}).connectionHandler(conn -> {
-			if (closeHandler != null) {
-				conn.closeHandler(closeHandler);
-			}
-		});
-		if (lastEventId != null) {
-			request.headers().add("Last-Event-ID", lastEventId);
-		}
-		request.headers().add("Accept", "text/event-stream");
-		request.setChunked(true);
-		request.end();
+		client.rxRequest(HttpMethod.GET, path)
+				.flatMap(request -> {
+					request.headers().add("Accept", "text/event-stream");
+					request.setChunked(true);
+					if (lastEventId != null) {
+						request.headers().add("Last-Event-ID", lastEventId);
+					}
+					request.exceptionHandler(e -> {
+						connecting = false;
+						connected = false;
+						handler.handle(Future.failedFuture(e));
+					});
+					return request.rxSend();
+				})
+				.doOnSuccess(response -> {
+					response.exceptionHandler(e -> {
+						connecting = false;
+						connected = false;
+						handler.handle(Future.failedFuture(e));
+					});
+					if (response.statusCode() != 200) {
+						VertxException ex = new VertxException("Cannot connect");
+						handler.handle(Future.failedFuture(ex));
+					} else {
+						connecting = false;
+						connected = true;
+						response.handler(this::handleMessage);
+						if (closeHandler != null) {
+							response.endHandler(closeHandler);
+						}
+						handler.handle(Future.succeededFuture());
+					}
+//				}).connectionHandler(conn -> {
+//					if (closeHandler != null) {
+//						conn.closeHandler(closeHandler);
+//					}
+				})
+				.subscribe();
 		return this;
 	}
 

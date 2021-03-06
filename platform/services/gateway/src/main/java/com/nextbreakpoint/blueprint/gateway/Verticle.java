@@ -9,13 +9,15 @@ import com.nextbreakpoint.blueprint.common.vertx.HttpClientFactory;
 import com.nextbreakpoint.blueprint.common.vertx.ResponseHelper;
 import com.nextbreakpoint.blueprint.common.vertx.ServerUtil;
 import com.nextbreakpoint.blueprint.common.vertx.TraceHandler;
-import io.vertx.core.Future;
 import io.vertx.core.Launcher;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerOptions;
+import io.vertx.core.impl.logging.Logger;
+import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.handler.LoggerFormat;
 import io.vertx.rxjava.core.AbstractVerticle;
+import io.vertx.rxjava.core.Promise;
 import io.vertx.rxjava.core.http.HttpClient;
 import io.vertx.rxjava.core.http.HttpServer;
 import io.vertx.rxjava.ext.web.Router;
@@ -25,6 +27,7 @@ import io.vertx.rxjava.ext.web.handler.TimeoutHandler;
 import io.vertx.rxjava.servicediscovery.ServiceDiscovery;
 import io.vertx.rxjava.servicediscovery.spi.ServiceImporter;
 import io.vertx.servicediscovery.consul.ConsulServiceImporter;
+import rx.Completable;
 import rx.Single;
 
 import java.net.MalformedURLException;
@@ -33,39 +36,24 @@ import static com.nextbreakpoint.blueprint.common.core.Headers.*;
 import static java.util.Arrays.asList;
 
 public class Verticle extends AbstractVerticle {
-    private HttpServer server;
+    private final Logger logger = LoggerFactory.getLogger(Verticle.class.getName());
 
     public static void main(String[] args) {
-        System.setProperty("vertx.graphite.options.enabled", "true");
-        System.setProperty("vertx.graphite.options.registryName", "exported");
-
-        //java.security.Security.setProperty("networkaddress.cache.ttl", "<value>");
-
-        Launcher.main(new String[] { "run", Verticle.class.getCanonicalName(), "-conf", args.length > 0 ? args[0] : "config/default.json" });
+        Launcher.main(new String[] { "run", Verticle.class.getCanonicalName(), "-conf", args.length > 0 ? args[0] : "config/localhost.json" });
     }
 
     @Override
-    public void start(Future<Void> startFuture) {
+    public Completable rxStart() {
+        return vertx.rxExecuteBlocking(this::initServer).toCompletable();
+    }
+
+    private void initServer(Promise<Void> promise) {
+        Single.fromCallable(this::createServer).subscribe(httpServer -> promise.complete(), promise::fail);
+    }
+
+    private HttpServer createServer() throws MalformedURLException {
         final JsonObject config = vertx.getOrCreateContext().config();
 
-        vertx.<Void>rxExecuteBlocking(future -> initServer(config, future))
-                .subscribe(x -> startFuture.complete(), err -> startFuture.fail(err));
-    }
-
-    @Override
-    public void stop(Future<Void> stopFuture) {
-        if (server != null) {
-            server.rxClose().subscribe(x -> stopFuture.complete(), err -> stopFuture.fail(err));
-        } else {
-            stopFuture.complete();
-        }
-    }
-
-    private void initServer(JsonObject config, io.vertx.rxjava.core.Future<Void> future) {
-        Single.fromCallable(() -> createServer(config)).subscribe(x -> future.complete(), err -> future.fail(err));
-    }
-
-    private Void createServer(JsonObject config) throws MalformedURLException {
         final Environment environment = Environment.getDefaultEnvironment();
 
         final Integer port = Integer.parseInt(environment.resolve(config.getString("host_port")));
@@ -101,11 +89,12 @@ public class Verticle extends AbstractVerticle {
 
         final HttpServerOptions options = ServerUtil.makeServerOptions(environment, config);
 
-        server = vertx.createHttpServer(options)
-                .requestHandler(mainRouter::accept)
-                .listen(port);
-
-        return null;
+        return vertx.createHttpServer(options)
+                .requestHandler(mainRouter::handle)
+                .rxListen(port)
+                .doOnSuccess(result -> logger.info("Service listening on port " + port))
+                .toBlocking()
+                .value();
     }
 
     private void configureAuthRoute(Environment environment, JsonObject config, Router mainRouter) throws MalformedURLException {

@@ -1,8 +1,8 @@
-package com.nextbreakpoint.blueprint.common.cassandra;
+package com.nextbreakpoint.blueprint.common.vertx;
 
 import com.datastax.driver.core.Cluster;
-import com.nextbreakpoint.blueprint.common.core.Environment;
 import io.vertx.core.json.JsonObject;
+import com.nextbreakpoint.blueprint.common.core.Environment;
 
 import java.util.stream.Stream;
 

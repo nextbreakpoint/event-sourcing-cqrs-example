@@ -12,7 +12,7 @@ import com.nextbreakpoint.blueprint.common.test.TestUtils;
 import com.nextbreakpoint.blueprint.common.test.VertxUtils;
 import com.xebialabs.restito.server.StubServer;
 import io.vertx.core.json.JsonObject;
-import io.vertx.rxjava.ext.web.Cookie;
+import io.vertx.rxjava.core.http.Cookie;
 import org.awaitility.Awaitility;
 import org.awaitility.core.ThrowingRunnable;
 import org.glassfish.grizzly.http.util.HttpStatus;
@@ -52,7 +52,7 @@ public class IntegrationTests {
 
   private static final String KEYSTORE_AUTH_JCEKS_PATH = "../../secrets/keystore_auth.jceks";
 
-  private static final String version = "1.0.0";
+  private static final String version = "1.0.0-1";
   private static final String namespace = "integration";
   private static final long timestamp = System.currentTimeMillis();
 

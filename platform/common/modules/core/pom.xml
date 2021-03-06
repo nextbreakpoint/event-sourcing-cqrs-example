@@ -28,8 +28,8 @@
                         <excludes>
                             <exclude>com.fasterxml.jackson.core:jackson-core:*</exclude>
                             <exclude>com.fasterxml.jackson.core:jackson-databind:*</exclude>
-                            <exclude>javax.activation:activation:*</exclude>
-                            <exclude>javax.xml.bind:jaxb-api:*</exclude>
+<!--                            <exclude>javax.activation:activation:*</exclude>-->
+<!--                            <exclude>javax.xml.bind:jaxb-api:*</exclude>-->
                         </excludes>
                     </artifactSet>
                 </configuration>

@@ -8,7 +8,7 @@ import com.nextbreakpoint.blueprint.designs.Store;
 import com.nextbreakpoint.blueprint.designs.model.LoadDesignRequest;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
-import io.vertx.rxjava.core.Future;
+import io.vertx.rxjava.core.Promise;
 import io.vertx.rxjava.core.WorkerExecutor;
 import io.vertx.rxjava.core.buffer.Buffer;
 import io.vertx.rxjava.core.http.HttpServerRequest;
@@ -39,11 +39,11 @@ public class TileHandler implements Handler<RoutingContext> {
 
     @Override
     public void handle(RoutingContext routingContext) {
-        executor.<byte[]>rxExecuteBlocking(future -> getTileAsync(routingContext, store, future), false)
+        executor.<byte[]>rxExecuteBlocking(promise -> getTileAsync(routingContext, store, promise), false)
                 .subscribe(result -> emitResponse(routingContext, result), err -> routingContext.fail(err));
     }
 
-    private void getTileAsync(RoutingContext routingContext, Store store, Future<byte[]> future) {
+    private void getTileAsync(RoutingContext routingContext, Store store, Promise<byte[]> promise) {
         fromCallable(() -> makeTileParams(routingContext))
                 .flatMap(params -> store.loadDesign(new LoadDesignRequest(params.getUuid()))
                         .map(response -> response.getDesignDocument().orElseThrow(() -> Failure.notFound()))
@@ -51,7 +51,7 @@ public class TileHandler implements Handler<RoutingContext> {
                         .flatMap(object -> fromCallable(() -> convertToBundle(object)))
                         .doOnEach(bundle -> routingContext.response().closeHandler(x -> Thread.currentThread().interrupt()))
                         .flatMap(bundle -> fromCallable(() -> getImage(bundle, params))))
-                .subscribe(bytes -> future.complete(bytes), err -> future.fail(err));
+                .subscribe(bytes -> promise.complete(bytes), err -> promise.fail(err));
     }
 
     private byte[] getImage(Bundle bundle, TileParams params) throws Exception {

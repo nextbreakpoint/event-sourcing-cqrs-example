@@ -41,7 +41,7 @@ import static org.awaitility.Durations.TEN_SECONDS;
 @Tag("integration")
 @DisplayName("Verify contract of service Designs Notification Dispatcher")
 public class IntegrationTests {
-    private static final String version = "1.0.0";
+    private static final String version = "1.0.0-1";
     private static final String namespace = "integration";
     private static final long timestamp = System.currentTimeMillis();
 

@@ -1,8 +1,8 @@
 package com.nextbreakpoint.blueprint.gateway.handlers;
 
 import io.vertx.core.Handler;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import io.vertx.core.impl.logging.Logger;
+import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.rxjava.ext.web.RoutingContext;
 import io.vertx.rxjava.servicediscovery.ServiceDiscovery;
 import io.vertx.servicediscovery.Record;

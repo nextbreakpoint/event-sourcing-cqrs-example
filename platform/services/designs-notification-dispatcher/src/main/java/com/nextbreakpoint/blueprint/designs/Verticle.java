@@ -12,25 +12,25 @@ import com.nextbreakpoint.blueprint.common.vertx.KafkaClientFactory;
 import com.nextbreakpoint.blueprint.common.vertx.ResponseHelper;
 import com.nextbreakpoint.blueprint.common.vertx.ServerUtil;
 import com.nextbreakpoint.blueprint.designs.controllers.DesignChangedController;
-import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Launcher;
 import io.vertx.core.http.HttpServerOptions;
+import io.vertx.core.impl.logging.Logger;
+import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import io.vertx.rxjava.core.AbstractVerticle;
+import io.vertx.rxjava.core.Promise;
 import io.vertx.rxjava.core.http.HttpServer;
 import io.vertx.rxjava.ext.auth.jwt.JWTAuth;
 import io.vertx.rxjava.ext.web.Router;
 import io.vertx.rxjava.ext.web.RoutingContext;
 import io.vertx.rxjava.ext.web.handler.BodyHandler;
-import io.vertx.rxjava.ext.web.handler.CookieHandler;
 import io.vertx.rxjava.ext.web.handler.CorsHandler;
 import io.vertx.rxjava.ext.web.handler.LoggerHandler;
 import io.vertx.rxjava.kafka.client.consumer.KafkaConsumer;
 import io.vertx.rxjava.kafka.client.consumer.KafkaConsumerRecord;
+import rx.Completable;
 import rx.Single;
 
 import java.util.HashMap;
@@ -52,38 +52,22 @@ import static java.util.Arrays.asList;
 public class Verticle extends AbstractVerticle {
     private final Logger logger = LoggerFactory.getLogger(Verticle.class.getName());
 
-    private HttpServer server;
-
     public static void main(String[] args) {
-        System.setProperty("crypto.policy", "unlimited");
-        System.setProperty("vertx.graphite.options.enabled", "true");
-        System.setProperty("vertx.graphite.options.registryName", "exported");
-
-        Launcher.main(new String[] { "run", Verticle.class.getCanonicalName(), "-conf", args.length > 0 ? args[0] : "config/default.json" });
+        Launcher.main(new String[] { "run", Verticle.class.getCanonicalName(), "-conf", args.length > 0 ? args[0] : "config/localhost.json" });
     }
 
     @Override
-    public void start(Future<Void> startFuture) {
+    public Completable rxStart() {
+        return vertx.rxExecuteBlocking(this::initServer).toCompletable();
+    }
+
+    private void initServer(Promise<Void> promise) {
+        Single.fromCallable(this::createServer).subscribe(httpServer -> promise.complete(), promise::fail);
+    }
+
+    private HttpServer createServer() {
         final JsonObject config = vertx.getOrCreateContext().config();
 
-        vertx.<Void>rxExecuteBlocking(future -> initServer(config, future))
-                .subscribe(x -> startFuture.complete(), err -> startFuture.fail(err));
-    }
-
-    @Override
-    public void stop(Future<Void> stopFuture) {
-        if (server != null) {
-            server.rxClose().subscribe(x -> stopFuture.complete(), err -> stopFuture.fail(err));
-        } else {
-            stopFuture.complete();
-        }
-    }
-
-    private void initServer(JsonObject config, io.vertx.rxjava.core.Future<Void> future) {
-        Single.fromCallable(() -> createServer(config)).subscribe(x -> future.complete(), err -> future.fail(err));
-    }
-
-    private Void createServer(JsonObject config) {
         final Environment environment = Environment.getDefaultEnvironment();
 
         final Integer port = Integer.parseInt(environment.resolve(config.getString("host_port")));
@@ -100,7 +84,7 @@ public class Verticle extends AbstractVerticle {
 
         mainRouter.route().handler(LoggerHandler.create());
         mainRouter.route().handler(BodyHandler.create());
-        mainRouter.route().handler(CookieHandler.create());
+//        mainRouter.route().handler(CookieHandler.create());
 
         final CorsHandler corsHandler = CorsHandlerFactory.createWithAll(originPattern, asList(COOKIE, AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN, X_MODIFIED, X_TRACE_ID));
 
@@ -132,11 +116,12 @@ public class Verticle extends AbstractVerticle {
 
         final HttpServerOptions options = ServerUtil.makeServerOptions(environment, config);
 
-        server = vertx.createHttpServer(options)
-                .requestHandler(mainRouter)
-                .listen(port);
-
-        return null;
+        return vertx.createHttpServer(options)
+                .requestHandler(mainRouter::handle)
+                .rxListen(port)
+                .doOnSuccess(result -> logger.info("Service listening on port " + port))
+                .toBlocking()
+                .value();
     }
 
     private void handleError(Throwable err) {

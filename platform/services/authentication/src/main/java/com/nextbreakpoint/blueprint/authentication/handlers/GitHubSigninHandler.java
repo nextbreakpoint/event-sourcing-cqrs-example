@@ -7,16 +7,16 @@ import com.nextbreakpoint.blueprint.common.vertx.Authentication;
 import com.nextbreakpoint.blueprint.common.vertx.JWTProviderFactory;
 import com.nextbreakpoint.blueprint.common.vertx.WebClientFactory;
 import io.vertx.core.Handler;
+import io.vertx.core.impl.logging.Logger;
+import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
-import io.vertx.ext.auth.oauth2.OAuth2ClientOptions;
+import io.vertx.ext.auth.oauth2.OAuth2Options;
 import io.vertx.rxjava.core.Vertx;
 import io.vertx.rxjava.core.buffer.Buffer;
+import io.vertx.rxjava.core.http.Cookie;
 import io.vertx.rxjava.ext.auth.jwt.JWTAuth;
 import io.vertx.rxjava.ext.auth.oauth2.OAuth2Auth;
-import io.vertx.rxjava.ext.web.Cookie;
 import io.vertx.rxjava.ext.web.Router;
 import io.vertx.rxjava.ext.web.RoutingContext;
 import io.vertx.rxjava.ext.web.client.HttpResponse;
@@ -114,7 +114,7 @@ public class GitHubSigninHandler implements Handler<RoutingContext> {
 
         accountsClient.get("/accounts")
                 .putHeader(AUTHORIZATION, Authentication.makeAuthorization(accessToken))
-                .putHeader(X_TRACE_ID, routingContext.get("request-trace-id"))
+                .putHeader(X_TRACE_ID, (String) routingContext.get("request-trace-id"))
                 .addQueryParam("email", userEmail)
                 .rxSend()
                 .subscribe(response -> handleFoundAccount(routingContext, redirectTo, userEmail, accessToken, oauthAccessToken, response), err -> routingContext.fail(Failure.authenticationError(err)));
@@ -166,7 +166,7 @@ public class GitHubSigninHandler implements Handler<RoutingContext> {
                 .putHeader(AUTHORIZATION, Authentication.makeAuthorization(accessToken))
                 .putHeader(CONTENT_TYPE, APPLICATION_JSON)
                 .putHeader(ACCEPT, APPLICATION_JSON)
-                .putHeader(X_TRACE_ID, routingContext.get("request-trace-id"))
+                .putHeader(X_TRACE_ID, (String) routingContext.get("request-trace-id"))
                 .rxSendJsonObject(account)
                 .subscribe(response -> handleAccount(routingContext, redirectTo, response, "Cannot create account"), err -> routingContext.fail(Failure.authenticationError(err)));
     }
@@ -175,7 +175,7 @@ public class GitHubSigninHandler implements Handler<RoutingContext> {
         accountsClient.get("/accounts/" + accounts.getString(0))
                 .putHeader(AUTHORIZATION, Authentication.makeAuthorization(accessToken))
                 .putHeader(ACCEPT, APPLICATION_JSON)
-                .putHeader(X_TRACE_ID, routingContext.get("request-trace-id"))
+                .putHeader(X_TRACE_ID, (String) routingContext.get("request-trace-id"))
                 .rxSend()
                 .subscribe(response -> handleAccount(routingContext, redirectTo, response, "Cannot fetch account"), err -> routingContext.fail(Failure.authenticationError(err)));
     }
@@ -221,7 +221,7 @@ public class GitHubSigninHandler implements Handler<RoutingContext> {
         final String oauthAuthority = environment.resolve(config.getString("oauth_authority"));
         final String authUrl = environment.resolve(config.getString("client_auth_url"));
 
-        final OAuth2ClientOptions oauth2Options = new OAuth2ClientOptions()
+        final OAuth2Options oauth2Options = new OAuth2Options()
                 .setClientID(clientId)
                 .setClientSecret(clientSecret)
                 .setSite(oauthLoginUrl)
@@ -229,9 +229,9 @@ public class GitHubSigninHandler implements Handler<RoutingContext> {
                 .setAuthorizationPath(oauthAuthorisePath);
 
         final OAuth2Auth oauth2Provider = OAuth2Auth.create(vetx, oauth2Options);
-        final OAuth2AuthHandler oauth2 = OAuth2AuthHandler.create(oauth2Provider, authUrl + CALLBACK_PATH);
+        final OAuth2AuthHandler oauth2 = OAuth2AuthHandler.create(vetx, oauth2Provider, authUrl + CALLBACK_PATH);
 
-        oauth2.addAuthority(oauthAuthority);
+        oauth2.withScope(oauthAuthority);
         oauth2.setupCallback(router.route(CALLBACK_PATH));
 
         return oauth2;

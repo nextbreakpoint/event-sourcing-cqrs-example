@@ -78,6 +78,12 @@
         </dependency>
         <dependency>
             <groupId>com.nextbreakpoint</groupId>
+            <artifactId>com.nextbreakpoint.blueprint.common.log4j</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.nextbreakpoint</groupId>
             <artifactId>com.nextbreakpoint.blueprint.common.test</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>

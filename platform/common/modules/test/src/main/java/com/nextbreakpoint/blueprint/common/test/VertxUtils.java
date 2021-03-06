@@ -4,8 +4,8 @@ import com.nextbreakpoint.blueprint.common.vertx.Authentication;
 import io.vertx.ext.auth.KeyStoreOptions;
 import io.vertx.ext.auth.jwt.JWTAuthOptions;
 import io.vertx.rxjava.core.Vertx;
+import io.vertx.rxjava.core.http.Cookie;
 import io.vertx.rxjava.ext.auth.jwt.JWTAuth;
-import io.vertx.rxjava.ext.web.Cookie;
 
 import java.util.*;
 

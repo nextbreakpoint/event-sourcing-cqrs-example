@@ -7,7 +7,7 @@ import com.nextbreakpoint.blueprint.common.vertx.WebClientFactory;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
 import io.vertx.rxjava.core.Vertx;
-import io.vertx.rxjava.ext.web.Cookie;
+import io.vertx.rxjava.core.http.Cookie;
 import io.vertx.rxjava.ext.web.Router;
 import io.vertx.rxjava.ext.web.RoutingContext;
 import io.vertx.rxjava.ext.web.client.WebClient;

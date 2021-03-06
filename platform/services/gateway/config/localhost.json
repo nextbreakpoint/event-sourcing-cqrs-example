@@ -1,19 +1,19 @@
 {
   "host_port": "8080",
 
-  "server_keystore_path": "../../secrets/keystore-server.jks",
+  "server_keystore_path": "../../secrets/keystore_server.jks",
   "server_keystore_secret": "${KEYSTORE_SECRET}",
 
-  "client_keystore_path": "../../secrets/keystore-client.jks",
+  "client_keystore_path": "../../secrets/keystore_client.jks",
   "client_keystore_secret": "${KEYSTORE_SECRET}",
 
-  "client_truststore_path": "../../secrets/truststore-client.jks",
+  "client_truststore_path": "../../secrets/truststore_client.jks",
   "client_truststore_secret": "${KEYSTORE_SECRET}",
 
   "client_verify_host": "false",
   "client_keep_alive": "true",
 
-  "jwt_keystore_path": "../../secrets/keystore-auth.jceks",
+  "jwt_keystore_path": "../../secrets/keystore_auth.jceks",
   "jwt_keystore_type": "jceks",
   "jwt_keystore_secret": "${KEYSTORE_SECRET}",
 

@@ -4,7 +4,9 @@ import io.vertx.core.Handler;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.rxjava.core.buffer.Buffer;
 import io.vertx.rxjava.ext.web.RoutingContext;
-import io.vertx.rxjava.ext.web.templ.TemplateEngine;
+import io.vertx.rxjava.ext.web.common.template.TemplateEngine;
+
+import java.util.HashMap;
 
 public class SimpleTemplateHandler implements Handler<RoutingContext> {
     private final TemplateEngine engine;
@@ -20,7 +22,7 @@ public class SimpleTemplateHandler implements Handler<RoutingContext> {
     }
 
     public void handle(RoutingContext context) {
-        engine.rxRender(context, templateDirectory + "/" + fileName)
+        engine.rxRender(new HashMap<>(), templateDirectory + "/" + fileName)
                 .subscribe(buffer -> emitResponse(context, buffer), err -> context.fail(err));
     }
 

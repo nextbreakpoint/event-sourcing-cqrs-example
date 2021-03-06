@@ -5,10 +5,10 @@ import com.nextbreakpoint.blueprint.common.core.Headers;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import io.vertx.ext.jwt.JWTOptions;
+import io.vertx.ext.auth.JWTOptions;
+import io.vertx.rxjava.core.http.Cookie;
 import io.vertx.rxjava.ext.auth.User;
 import io.vertx.rxjava.ext.auth.jwt.JWTAuth;
-import io.vertx.rxjava.ext.web.Cookie;
 import io.vertx.rxjava.ext.web.RoutingContext;
 import rx.Single;
 
@@ -75,7 +75,7 @@ public class Authentication {
     }
 
     public static Optional<String> hasRole(User user, List<String> roles) {
-        return roles.stream().filter(role -> user.rxIsAuthorised(role).toBlocking().value()).findFirst();
+        return roles.stream().filter(role -> user.rxIsAuthorized(role).toBlocking().value()).findFirst();
     }
 
     public static Single<User> getUser(JWTAuth jwtProvider, RoutingContext routingContext) {

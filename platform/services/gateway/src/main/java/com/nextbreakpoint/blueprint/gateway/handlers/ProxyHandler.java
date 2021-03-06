@@ -1,12 +1,10 @@
 package com.nextbreakpoint.blueprint.gateway.handlers;
 
 import io.vertx.core.Handler;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
-import io.vertx.rxjava.core.http.HttpClient;
-import io.vertx.rxjava.core.http.HttpClientRequest;
-import io.vertx.rxjava.core.http.HttpServerRequest;
-import io.vertx.rxjava.core.http.HttpServerResponse;
+import io.vertx.core.impl.logging.Logger;
+import io.vertx.core.impl.logging.LoggerFactory;
+import io.vertx.rxjava.core.buffer.Buffer;
+import io.vertx.rxjava.core.http.*;
 import io.vertx.rxjava.ext.web.RoutingContext;
 
 import java.util.Objects;
@@ -22,35 +20,39 @@ public class ProxyHandler implements Handler<RoutingContext> {
 
     @Override
     public void handle(RoutingContext context) {
-        final HttpServerRequest frontRequest = context.request();
+        context.request()
+            .bodyHandler(buffer -> handle(context, buffer))
+            .exceptionHandler(err -> {
+                logger.error("Error occurred while reading request", err);
+                context.response().setStatusCode(500).end();
+            })
+            .end();
+    }
 
-        final HttpServerResponse frontResponse = context.response();
+    private void handle(RoutingContext context, Buffer buffer) {
+        final HttpServerRequest request = context.request();
+        final HttpServerResponse response = context.response();
+        final String traceId = context.get("request-trace-id");
 
-        final HttpClientRequest proxyRequest = client.request(frontRequest.method(), frontRequest.uri(), proxyResponse -> {
-            frontResponse.headers().addAll(proxyResponse.headers());
-
-            frontResponse.setStatusCode(proxyResponse.statusCode());
-
-            proxyResponse.exceptionHandler(error -> {
-                        logger.error("Failed while processing response", error);
-                        frontResponse.setStatusCode(500).end();
-                    })
-                    .handler(buffer -> frontResponse.write(buffer))
-                    .endHandler(c -> frontResponse.end());
-        }).exceptionHandler(error -> {
-            logger.error("Failed while processing request", error);
-            frontResponse.setStatusCode(500).end();
-        });
-
-        proxyRequest.headers().addAll(frontRequest.headers());
-
-        proxyRequest.putHeader("X-TRACE-ID", (String)context.get("request-trace-id"));
-
-        frontRequest.exceptionHandler(error -> {
-                    logger.error("Failed while producing request", error);
-                    frontResponse.setStatusCode(500).end();
+        client.rxRequest(request.method(), request.uri())
+                .flatMap(proxyRequest -> {
+                    proxyRequest.headers().addAll(request.headers());
+                    proxyRequest.putHeader("X-TRACE-ID", traceId);
+                    return proxyRequest.rxSend(buffer)
+                            .flatMap(proxyResponse -> {
+                                response.headers().addAll(proxyResponse.headers());
+                                response.setStatusCode(proxyResponse.statusCode());
+                                return proxyResponse.rxBody();
+                            })
+                            .doOnSuccess(body -> {
+                                response.write(body);
+                                response.end();
+                            });
                 })
-                .handler(buffer -> proxyRequest.write(buffer))
-                .endHandler(x -> proxyRequest.end());
+                .doOnError(err -> {
+                    logger.error("Error occurred while processing request", err);
+                    response.setStatusCode(500).end();
+                })
+                .subscribe();
     }
 }

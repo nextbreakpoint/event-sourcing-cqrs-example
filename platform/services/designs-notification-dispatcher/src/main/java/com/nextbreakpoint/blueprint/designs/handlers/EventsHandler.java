@@ -3,10 +3,10 @@ package com.nextbreakpoint.blueprint.designs.handlers;
 import com.nextbreakpoint.blueprint.common.vertx.Failure;
 import com.nextbreakpoint.blueprint.common.core.event.DesignChanged;
 import io.vertx.core.Handler;
+import io.vertx.core.impl.logging.Logger;
+import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import io.vertx.rxjava.core.Vertx;
 import io.vertx.rxjava.core.eventbus.MessageConsumer;
 import io.vertx.rxjava.ext.web.RoutingContext;
@@ -139,7 +139,7 @@ public class EventsHandler implements Handler<RoutingContext> {
     }
 
     private String getWatchKey(RoutingContext routingContext) {
-        final String uuid = routingContext.pathParam("param1");
+        final String uuid = routingContext.pathParam("designId");
         if (uuid == null) {
             return "*";
         } else {
@@ -148,7 +148,7 @@ public class EventsHandler implements Handler<RoutingContext> {
     }
 
     private Long getOffset(RoutingContext routingContext) {
-        return Long.parseLong(routingContext.pathParam("param0"));
+        return Long.parseLong(routingContext.pathParam("offset"));
     }
 
     private void processMessage(DesignChanged event) {

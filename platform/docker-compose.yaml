@@ -1,0 +1,124 @@
+version: '3.7'
+services:
+  mysql:
+    image: mysql:8.0.13
+    environment:
+      MYSQL_ROOT_PASSWORD: 'password'
+    ports:
+      - target: 3306
+        published: 3306
+        protocol: tcp
+        mode: ingress
+    networks:
+      - platform
+    volumes:
+      - /scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+  cassandra:
+    image: nextbreakpoint/cassandra:3.11.10-1
+    environment:
+      CASSANDRA_DC: 'DC1'
+      CASSANDRA_RACK: 'RACK1'
+      JVM_OPTS: '-Xms2G -Xmx2G'
+    ports:
+      - target: 9042
+        published: 9042
+        protocol: tcp
+        mode: ingress
+    networks:
+      - platform
+    volumes:
+      - /scripts/init.cql:/docker-entrypoint-initdb.d/init.cql
+  zookeeper:
+    image: nextbreakpoint/zookeeper:3.6.2-1
+    environment:
+      ZOO_MY_ID: '1'
+    ports:
+      - target: 2181
+        published: 2181
+        protocol: tcp
+        mode: ingress
+    networks:
+      - platform
+  kafka:
+    image: nextbreakpoint/kafka:6.1.0-1
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT_EXTERNAL://192.168.64.12:9093,PLAINTEXT_INTERNAL://kafka:9092'
+      KAFKA_LISTENERS: 'PLAINTEXT_EXTERNAL://0.0.0.0:9093,PLAINTEXT_INTERNAL://0.0.0.0:9092'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'PLAINTEXT_EXTERNAL:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT_INTERNAL'
+      KAFKA_BROKER_ID: '1'
+      KAFKA_BROKER_RACK: 'rack1'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: '1'
+      KAFKA_NUM_PARTITIONS: '16'
+      KAFKA_DELETE_TOPICS: 'true'
+      KAFKA_AUTO_CREATE_TOPICS: 'true'
+      KAFKA_LOG_RETENTION_HOURS: '24'
+      KAFKA_TRANSACTION_MAX_TIMEOUT_MS: '60000'
+      KAFKA_HEAP_OPTS: '-Xms1500M -Xmx1500M'
+      CONFLUENT_SUPPORT_METRICS_ENABLE: 'false'
+    ports:
+      - target: 9092
+        published: 9092
+        protocol: tcp
+        mode: ingress
+      - target: 9093
+        published: 9093
+        protocol: tcp
+        mode: ingress
+    networks:
+      - platform
+  consul:
+    image: consul:1.9.4
+    command:
+      - consul
+      - agent
+      - -data-dir=/consul/data
+      - -config-dir=/consul/config
+    ports:
+      - target: 8300
+        published: 8300
+        protocol: tcp
+        mode: ingress
+      - target: 8301
+        published: 8301
+        protocol: tcp
+        mode: ingress
+      - target: 8302
+        published: 8302
+        protocol: tcp
+        mode: ingress
+      - target: 8400
+        published: 8400
+        protocol: tcp
+        mode: ingress
+      - target: 8600
+        published: 8600
+        protocol: tcp
+        mode: ingress
+    networks:
+      - platform
+    volumes:
+      - /scripts/consul.json:/consul/config/config.json
+  nginx:
+    image: nginx:1.18.0-alpine
+    ports:
+      - target: 80
+        published: 80
+        protocol: tcp
+        mode: ingress
+      - target: 443
+        published: 443
+        protocol: tcp
+        mode: ingress
+    networks:
+      - platform
+    volumes:
+      - /scripts/nginx.conf:/etc/nginx/nginx.conf
+      - /secrets/nginx_server_key.pem:/etc/nginx/server_key.pem
+      - /secrets/nginx_server_cert.pem:/etc/nginx/server_cert.pem
+volumes:
+  data:
+networks:
+  platform:
+    driver: bridge

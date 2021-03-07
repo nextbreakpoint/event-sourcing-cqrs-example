@@ -130,7 +130,7 @@ public class IntegrationTests {
             final String[] open = new String[]{null};
             final String[] update = new String[]{null};
 
-            eventSource.connect("/sse/designs/0", null, result -> {
+            eventSource.connect("/v1/sse/designs/0", null, result -> {
                 connected[0] = result.succeeded();
                 producer[0].send(createKafkaRecord(designChangedMessage));
             }).onEvent("update", sseEvent -> {
@@ -188,7 +188,7 @@ public class IntegrationTests {
             final String[] open = new String[]{null};
             final String[] update = new String[]{null};
 
-            eventSource.connect("/sse/designs/0/" + designId, null, result -> {
+            eventSource.connect("/v1/sse/designs/0/" + designId, null, result -> {
                 connected[0] = result.succeeded();
                 producer[0].send(createKafkaRecord(designChangedMessage));
             }).onEvent("update", sseEvent -> {

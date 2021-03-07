@@ -32,10 +32,6 @@ data:
       "jdbc_max_pool_size": "200",
       "jdbc_min_pool_size": "20",
 
-      "graphite_reporter_enabled": "false",
-      "graphite_host": "graphite",
-      "graphite_port": "2003",
-
       "max_execution_time_in_millis": "30000",
 
       "kafka_bootstrap_servers": "kafka:9092",

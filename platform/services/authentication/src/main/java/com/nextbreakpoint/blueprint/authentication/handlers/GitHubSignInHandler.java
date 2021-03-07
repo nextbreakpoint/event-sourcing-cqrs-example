@@ -35,10 +35,10 @@ import static com.nextbreakpoint.blueprint.common.core.Headers.CONTENT_TYPE;
 import static com.nextbreakpoint.blueprint.common.core.Headers.X_TRACE_ID;
 import static com.nextbreakpoint.blueprint.common.vertx.Authentication.NULL_USER_UUID;
 
-public class GitHubSigninHandler implements Handler<RoutingContext> {
-    private static final Logger logger = LoggerFactory.getLogger(GitHubSigninHandler.class.getName());
+public class GitHubSignInHandler implements Handler<RoutingContext> {
+    private static final Logger logger = LoggerFactory.getLogger(GitHubSignInHandler.class.getName());
 
-    private static final String CALLBACK_PATH = "/auth/callback";
+    private static final String CALLBACK_PATH = "/v1/auth/callback";
 
     private final OAuth2AuthHandler oauthHandler;
     private final WebClient accountsClient;
@@ -48,7 +48,7 @@ public class GitHubSigninHandler implements Handler<RoutingContext> {
     private final String cookieDomain;
     private final String webUrl;
 
-    public GitHubSigninHandler(Environment environment, Vertx vertx, JsonObject config, Router router) throws MalformedURLException {
+    public GitHubSignInHandler(Environment environment, Vertx vertx, JsonObject config, Router router) throws MalformedURLException {
         adminUsers = config.getJsonArray("admin_users")
                 .stream()
                 .map(x -> (String) x)
@@ -112,7 +112,7 @@ public class GitHubSigninHandler implements Handler<RoutingContext> {
     protected void findAccount(RoutingContext routingContext, String redirectTo, String oauthAccessToken, String userEmail) {
         final String accessToken = Authentication.generateToken(jwtProvider, NULL_USER_UUID, Arrays.asList(Authority.PLATFORM));
 
-        accountsClient.get("/accounts")
+        accountsClient.get("/v1/accounts")
                 .putHeader(AUTHORIZATION, Authentication.makeAuthorization(accessToken))
                 .putHeader(X_TRACE_ID, (String) routingContext.get("request-trace-id"))
                 .addQueryParam("email", userEmail)
@@ -162,7 +162,7 @@ public class GitHubSigninHandler implements Handler<RoutingContext> {
     protected void createAccount(RoutingContext routingContext, String redirectTo, String accessToken, String userEmail, JsonObject userInfo) {
         JsonObject account = makeAccount(userEmail, userInfo);
         logger.info("User account: " + account.encode());
-        accountsClient.post("/accounts")
+        accountsClient.post("/v1/accounts")
                 .putHeader(AUTHORIZATION, Authentication.makeAuthorization(accessToken))
                 .putHeader(CONTENT_TYPE, APPLICATION_JSON)
                 .putHeader(ACCEPT, APPLICATION_JSON)
@@ -172,7 +172,7 @@ public class GitHubSigninHandler implements Handler<RoutingContext> {
     }
 
     protected void fetchAccount(RoutingContext routingContext, String redirectTo, String accessToken, JsonArray accounts) {
-        accountsClient.get("/accounts/" + accounts.getString(0))
+        accountsClient.get("/v1/accounts/" + accounts.getString(0))
                 .putHeader(AUTHORIZATION, Authentication.makeAuthorization(accessToken))
                 .putHeader(ACCEPT, APPLICATION_JSON)
                 .putHeader(X_TRACE_ID, (String) routingContext.get("request-trace-id"))
@@ -251,7 +251,7 @@ public class GitHubSigninHandler implements Handler<RoutingContext> {
     }
 
     protected String getRedirectTo(RoutingContext routingContext) {
-        return webUrl + routingContext.request().path().substring("/auth/signin".length());
+        return webUrl + routingContext.request().path().substring("/v1/auth/signin".length());
     }
 
     protected JsonObject makeAccount(String userEmail, JsonObject userInfo) {

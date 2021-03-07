@@ -1,0 +1,16 @@
+{
+  "host_port": "${DESIGNS_PORT}",
+
+  "server_keystore_path": "../../secrets/keystore_server.jks",
+  "server_keystore_secret": "${KEYSTORE_SECRET}",
+
+  "jwt_keystore_path": "../../secrets/keystore_auth.jceks",
+  "jwt_keystore_type": "jceks",
+  "jwt_keystore_secret": "${KEYSTORE_SECRET}",
+
+  "origin_pattern": "https://localhost(:[0-9]+)?",
+
+  "kafka_bootstrap_servers": "${KAFKA_HOST}:9093",
+  "message_source": "service-designs",
+  "events_topic": "designs-events"
+}

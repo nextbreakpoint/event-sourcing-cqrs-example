@@ -10,7 +10,7 @@ import java.util.UUID;
 public class UpdateDesignRequestMapper implements Mapper<RoutingContext, UpdateDesignRequest> {
     @Override
     public UpdateDesignRequest transform(RoutingContext context) {
-        final String uuid = context.request().getParam("param0");
+        final String uuid = context.request().getParam("designId");
 
         final JsonObject bodyAsJson = context.getBodyAsJson();
 

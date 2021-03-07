@@ -1,12 +1,9 @@
 package com.nextbreakpoint.blueprint.authentication;
 
-import com.nextbreakpoint.blueprint.authentication.handlers.GitHubSignoutHandler;
-import com.nextbreakpoint.blueprint.authentication.handlers.GitHubSigninHandler;
+import com.nextbreakpoint.blueprint.authentication.handlers.GitHubSignOutHandler;
+import com.nextbreakpoint.blueprint.authentication.handlers.GitHubSignInHandler;
 import com.nextbreakpoint.blueprint.common.core.Environment;
-import com.nextbreakpoint.blueprint.common.vertx.CorsHandlerFactory;
-import com.nextbreakpoint.blueprint.common.vertx.MDCHandler;
-import com.nextbreakpoint.blueprint.common.vertx.ResponseHelper;
-import com.nextbreakpoint.blueprint.common.vertx.ServerUtil;
+import com.nextbreakpoint.blueprint.common.vertx.*;
 import io.vertx.core.Handler;
 import io.vertx.core.Launcher;
 import io.vertx.core.http.HttpServerOptions;
@@ -14,18 +11,19 @@ import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.handler.LoggerFormat;
+import io.vertx.ext.web.openapi.RouterBuilder;
 import io.vertx.rxjava.core.AbstractVerticle;
 import io.vertx.rxjava.core.Promise;
-import io.vertx.rxjava.core.http.HttpServer;
 import io.vertx.rxjava.ext.web.Router;
 import io.vertx.rxjava.ext.web.RoutingContext;
 import io.vertx.rxjava.ext.web.handler.BodyHandler;
 import io.vertx.rxjava.ext.web.handler.CorsHandler;
 import io.vertx.rxjava.ext.web.handler.LoggerHandler;
 import rx.Completable;
-import rx.Single;
 
 import java.net.MalformedURLException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 import static com.nextbreakpoint.blueprint.common.core.Headers.ACCEPT;
 import static com.nextbreakpoint.blueprint.common.core.Headers.AUTHORIZATION;
@@ -47,63 +45,84 @@ public class Verticle extends AbstractVerticle {
     }
 
     private void initServer(Promise<Void> promise) {
-        Single.fromCallable(this::createServer).subscribe(httpServer -> promise.complete(), promise::fail);
-    }
+        try {
+            final JsonObject config = vertx.getOrCreateContext().config();
 
-    private HttpServer createServer() throws MalformedURLException {
-        final JsonObject config = vertx.getOrCreateContext().config();
+            final Environment environment = Environment.getDefaultEnvironment();
 
-        final Environment environment = Environment.getDefaultEnvironment();
+            final Executor executor = Executors.newSingleThreadExecutor();
 
-        final Integer port = Integer.parseInt(environment.resolve(config.getString("host_port")));
+            final int port = Integer.parseInt(environment.resolve(config.getString("host_port")));
 
-        final String webUrl = environment.resolve(config.getString("client_web_url"));
+            final String webUrl = environment.resolve(config.getString("client_web_url"));
 
-        final String originPattern = environment.resolve(config.getString("origin_pattern"));
+            final String originPattern = environment.resolve(config.getString("origin_pattern"));
 
-        final Router mainRouter = Router.router(vertx);
+            final Router mainRouter = Router.router(vertx);
 
-        mainRouter.route().handler(MDCHandler.create());
-        mainRouter.route().handler(LoggerHandler.create(true, LoggerFormat.DEFAULT));
-//        mainRouter.route().handler(CookieHandler.create());
-        mainRouter.route().handler(BodyHandler.create());
+            final CorsHandler corsHandler = CorsHandlerFactory.createWithGetOnly(originPattern, asList(COOKIE, AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_TRACE_ID));
 
-        final CorsHandler corsHandler = CorsHandlerFactory.createWithGetOnly(originPattern, asList(COOKIE, AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_TRACE_ID));
+            mainRouter.route().handler(MDCHandler.create());
+            mainRouter.route().handler(LoggerHandler.create(true, LoggerFormat.DEFAULT));
+            //mainRouter.route().handler(CookieHandler.create());
+            mainRouter.route().handler(BodyHandler.create());
 
-        final Handler<RoutingContext> signinHandler = createSigninHandler(environment, config, mainRouter);
+            mainRouter.route("/*").handler(corsHandler);
 
-        final Handler<RoutingContext> signoutHandler = createSignoutHandler(environment, config, mainRouter);
+            final Handler<RoutingContext> signinHandler = createSignInHandler(environment, config, mainRouter);
 
-        mainRouter.route("/*").handler(corsHandler);
+            final Handler<RoutingContext> signoutHandler = createSignOutHandler(environment, config, mainRouter);
 
-        mainRouter.get("/auth/signin").handler(signinHandler);
-        mainRouter.get("/auth/signout").handler(signoutHandler);
-        mainRouter.get("/auth/signin/*").handler(signinHandler);
-        mainRouter.get("/auth/signout/*").handler(signoutHandler);
+            final Handler<RoutingContext> openapiHandler = new OpenApiHandler(vertx.getDelegate(), executor, "openapi.yaml");
 
-        mainRouter.options("/*").handler(ResponseHelper::sendNoContent);
+            final String specUri = RouterBuilder.class.getClassLoader().getResource("openapi.yaml").toURI().toString();
 
-        mainRouter.route().failureHandler(routingContext -> redirectOnFailure(routingContext, webUrl));
+            RouterBuilder.create(vertx.getDelegate(), specUri)
+                    .onSuccess(routerBuilder -> {
+                        routerBuilder.operation("signIn")
+                                .handler(context -> signinHandler.handle(RoutingContext.newInstance(context)));
 
-        final HttpServerOptions options = ServerUtil.makeServerOptions(environment, config);
+                        routerBuilder.operation("signOut")
+                                .handler(context -> signoutHandler.handle(RoutingContext.newInstance(context)));
 
-        return vertx.createHttpServer(options)
-                .requestHandler(mainRouter::handle)
-                .rxListen(port)
-                .doOnSuccess(result -> logger.info("Service listening on port " + port))
-                .toBlocking()
-                .value();
+                        final Router apiRouter = Router.newInstance(routerBuilder.createRouter());
+
+                        mainRouter.mountSubRouter("/v1", apiRouter);
+
+                        mainRouter.get("/v1/apidocs").handler(openapiHandler::handle);
+
+                        mainRouter.options("/*").handler(ResponseHelper::sendNoContent);
+
+                        mainRouter.route().failureHandler(routingContext -> redirectOnFailure(routingContext, webUrl));
+
+                        final HttpServerOptions options = ServerUtil.makeServerOptions(environment, config);
+
+                        vertx.createHttpServer(options)
+                                .requestHandler(mainRouter::handle)
+                                .rxListen(port)
+                                .doOnSuccess(result -> logger.info("Service listening on port " + port))
+                                .doOnError(err -> logger.error("Can't create server", err))
+                                .subscribe(result -> promise.complete(), promise::fail);
+                    })
+                    .onFailure(err -> {
+                        logger.error("Can't create router", err);
+                        promise.fail(err);
+                    });
+        } catch (Exception e) {
+            logger.error("Failed to start server", e);
+            promise.fail(e);
+        }
     }
 
     private void redirectOnFailure(RoutingContext routingContext, String webUrl) {
         ResponseHelper.redirectToError(routingContext, statusCode -> webUrl + "/error/" + statusCode);
     }
 
-    protected Handler<RoutingContext> createSigninHandler(Environment environment, JsonObject config, Router router) throws MalformedURLException {
-        return new GitHubSigninHandler(environment, vertx, config, router);
+    protected Handler<RoutingContext> createSignInHandler(Environment environment, JsonObject config, Router router) throws MalformedURLException {
+        return new GitHubSignInHandler(environment, vertx, config, router);
     }
 
-    protected Handler<RoutingContext> createSignoutHandler(Environment environment, JsonObject config, Router router) throws MalformedURLException {
-        return new GitHubSignoutHandler(environment, vertx, config, router);
+    protected Handler<RoutingContext> createSignOutHandler(Environment environment, JsonObject config, Router router) throws MalformedURLException {
+        return new GitHubSignOutHandler(environment, vertx, config, router);
     }
 }

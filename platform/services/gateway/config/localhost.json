@@ -25,9 +25,5 @@
   "server_auth_url": "http://localhost:9000/auth",
   "server_accounts_url": "http://localhost:9000/accounts",
   "server_designs_query_url": "http://localhost:9000/designs",
-  "server_designs_command_url": "http://localhost:9000/designs",
-
-  "graphite_reporter_enabled": "false",
-  "graphite_host": "localhost",
-  "graphite_port": "2003"
+  "server_designs_command_url": "http://localhost:9000/designs"
 }

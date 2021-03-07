@@ -14,12 +14,12 @@ import io.vertx.rxjava.ext.web.client.WebClient;
 
 import java.net.MalformedURLException;
 
-public class GitHubSignoutHandler implements Handler<RoutingContext> {
+public class GitHubSignOutHandler implements Handler<RoutingContext> {
     private final WebClient githubClient;
     private final String cookieDomain;
     private final String webUrl;
 
-    public GitHubSignoutHandler(Environment environment, Vertx vertx, JsonObject config, Router router) throws MalformedURLException {
+    public GitHubSignOutHandler(Environment environment, Vertx vertx, JsonObject config, Router router) throws MalformedURLException {
         cookieDomain = environment.resolve(config.getString("cookie_domain"));
         webUrl = environment.resolve(config.getString("client_web_url"));
         githubClient = WebClientFactory.create(environment, vertx, environment.resolve(config.getString("github_url")));

@@ -9,7 +9,7 @@ import java.util.UUID;
 public class DeleteAccountRequestMapper implements Mapper<RoutingContext, DeleteAccountRequest> {
     @Override
     public DeleteAccountRequest transform(RoutingContext context) {
-        final String uuid = context.request().getParam("param0");
+        final String uuid = context.request().getParam("accountId");
 
         return new DeleteAccountRequest(UUID.fromString(uuid));
     }

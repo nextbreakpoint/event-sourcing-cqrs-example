@@ -1,7 +1,7 @@
 package com.nextbreakpoint.blueprint.common.vertx;
 
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import io.vertx.core.impl.logging.Logger;
+import io.vertx.core.impl.logging.LoggerFactory;
 
 public class Failure extends RuntimeException {
     private static final Logger logger = LoggerFactory.getLogger(Failure.class.getName());

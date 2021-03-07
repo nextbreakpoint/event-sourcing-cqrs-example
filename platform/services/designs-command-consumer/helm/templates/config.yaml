@@ -32,10 +32,6 @@ data:
       "cassandra_contactPoints": "cassandra",
       "cassandra_port": "9042",
 
-      "graphite_reporter_enabled": "false",
-      "graphite_host": "graphite",
-      "graphite_port": "2003",
-
       "kafka_bootstrap_servers": "kafka:9092",
       "kafka_group_id": "designs-command-consumer",
       "message_source": "service-designs",

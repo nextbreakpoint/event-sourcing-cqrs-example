@@ -49,7 +49,7 @@ public class IntegrationTests {
   private static final String OAUTH_TOKEN_PATH = "/login/oauth/access_token";
   private static final String OAUTH_USER_PATH = "/user";
   private static final String OAUTH_USER_EMAILS_PATH = "/user/emails";
-  private static final String ACCOUNTS_PATH = "/accounts";
+  private static final String ACCOUNTS_PATH = "/v1/accounts";
   private static final String SOME_UUID = new UUID(0, 1).toString();
 
   private static final String version = "1.0.0-1";
@@ -112,7 +112,7 @@ public class IntegrationTests {
   @DisplayName("signin should redirect to login when user is not authenticated")
   public void signinShouldRedirectToLoginWhenUserIsNotAuthenticated() throws MalformedURLException {
     given().config(restAssuredConfig)
-            .when().get(makeBaseURL("/auth/signin"))
+            .when().get(makeBaseURL("/v1/auth/signin/content/designs"))
             .then().assertThat().statusCode(302)
             .and().header("Location", containsString("/login/oauth/authorize?"));
   }
@@ -142,8 +142,8 @@ public class IntegrationTests {
 
     given().config(restAssuredConfig)
             .with().param("code", "xxx")
-            .and().param("state", "/auth/signin/content/designs")
-            .when().get(makeBaseURL("/auth/callback"))
+            .and().param("state", "/v1/auth/signin/content/designs")
+            .when().get(makeBaseURL("/v1/auth/callback"))
             .then().assertThat().statusCode(303)
             .and().header("Location", startsWith("https://" + minikubeHost + ":" + httpPort + "/content/designs"));
 
@@ -175,8 +175,8 @@ public class IntegrationTests {
 
     given().config(restAssuredConfig)
             .with().param("code", "xxx")
-            .and().param("state", "/auth/signin/content/designs")
-            .when().get(makeBaseURL("/auth/callback"))
+            .and().param("state", "/v1/auth/signin/content/designs")
+            .when().get(makeBaseURL("/v1/auth/callback"))
             .then().assertThat().statusCode(303)
             .and().header("Location", startsWith("https://" + minikubeHost + ":" + httpPort + "/content/designs"));
 
@@ -196,8 +196,8 @@ public class IntegrationTests {
 
     given().config(restAssuredConfig)
             .with().param("code", "xxx")
-            .and().param("state", "/auth/signin/content/designs")
-            .when().get(makeBaseURL("/auth/callback"))
+            .and().param("state", "/v1/auth/signin/content/designs")
+            .when().get(makeBaseURL("/v1/auth/callback"))
             .then().assertThat().statusCode(303)
             .and().header("Location", startsWith("https://" + minikubeHost + ":" + httpPort + "/error/500"));
 
@@ -218,8 +218,8 @@ public class IntegrationTests {
 
     given().config(restAssuredConfig)
             .with().param("code", "xxx")
-            .and().param("state", "/auth/signin/content/designs")
-            .when().get(makeBaseURL("/auth/callback"))
+            .and().param("state", "/v1/auth/signin/content/designs")
+            .when().get(makeBaseURL("/v1/auth/callback"))
             .then().assertThat().statusCode(303)
             .and().header("Location", startsWith("https://" + minikubeHost + ":" + httpPort + "/error/403"));
 
@@ -246,8 +246,8 @@ public class IntegrationTests {
 
     given().config(restAssuredConfig)
             .with().param("code", "xxx")
-            .and().param("state", "/auth/signin/content/designs")
-            .when().get(makeBaseURL("/auth/callback"))
+            .and().param("state", "/v1/auth/signin/content/designs")
+            .when().get(makeBaseURL("/v1/auth/callback"))
             .then().assertThat().statusCode(303)
             .and().header("Location", startsWith("https://" + minikubeHost + ":" + httpPort + "/error/403"));
 
@@ -275,8 +275,8 @@ public class IntegrationTests {
 
     given().config(restAssuredConfig)
             .with().param("code", "xxx")
-            .and().param("state", "/auth/signin/content/designs")
-            .when().get(makeBaseURL("/auth/callback"))
+            .and().param("state", "/v1/auth/signin/content/designs")
+            .when().get(makeBaseURL("/v1/auth/callback"))
             .then().assertThat().statusCode(303)
             .and().header("Location", startsWith("https://" + minikubeHost + ":" + httpPort + "/error/500"));
 
@@ -312,8 +312,8 @@ public class IntegrationTests {
 
     given().config(restAssuredConfig)
             .with().param("code", "xxx")
-            .and().param("state", "/auth/signin/content/designs")
-            .when().get(makeBaseURL("/auth/callback"))
+            .and().param("state", "/v1/auth/signin/content/designs")
+            .when().get(makeBaseURL("/v1/auth/callback"))
             .then().assertThat().statusCode(303)
             .and().header("Location", startsWith("https://" + minikubeHost + ":" + httpPort + "/error/403"));
 
@@ -348,8 +348,8 @@ public class IntegrationTests {
 
     given().config(restAssuredConfig)
             .with().param("code", "xxx")
-            .and().param("state", "/auth/signin/content/designs")
-            .when().get(makeBaseURL("/auth/callback"))
+            .and().param("state", "/v1/auth/signin/content/designs")
+            .when().get(makeBaseURL("/v1/auth/callback"))
             .then().assertThat().statusCode(303)
             .and().header("Location", startsWith("https://" + minikubeHost + ":" + httpPort + "/error/403"));
 
@@ -381,8 +381,8 @@ public class IntegrationTests {
 
     given().config(restAssuredConfig)
             .with().param("code", "xxx")
-            .and().param("state", "/auth/signin/content/designs")
-            .when().get(makeBaseURL("/auth/callback"))
+            .and().param("state", "/v1/auth/signin/content/designs")
+            .when().get(makeBaseURL("/v1/auth/callback"))
             .then().assertThat().statusCode(303)
             .and().header("Location", startsWith("https://" + minikubeHost + ":" + httpPort + "/error/403"));
 
@@ -392,8 +392,8 @@ public class IntegrationTests {
 
     given().config(restAssuredConfig)
             .with().param("code", "xxx")
-            .and().param("state", "/auth/signin/content/designs")
-            .when().get(makeBaseURL("/auth/callback"))
+            .and().param("state", "/v1/auth/signin/content/designs")
+            .when().get(makeBaseURL("/v1/auth/callback"))
             .then().assertThat().statusCode(303)
             .and().header("Location", startsWith("https://" + minikubeHost + ":" + httpPort + "/error/403"));
 
@@ -425,8 +425,8 @@ public class IntegrationTests {
 
     given().config(restAssuredConfig)
             .with().param("code", "xxx")
-            .and().param("state", "/auth/signin/content/designs")
-            .when().get(makeBaseURL("/auth/callback"))
+            .and().param("state", "/v1/auth/signin/content/designs")
+            .when().get(makeBaseURL("/v1/auth/callback"))
             .then().assertThat().statusCode(303)
             .and().header("Location", startsWith("https://" + minikubeHost + ":" + httpPort + "/error/500"));
 
@@ -450,8 +450,8 @@ public class IntegrationTests {
 
     given().config(restAssuredConfig)
             .with().param("code", "xxx")
-            .and().param("state", "/auth/signin/content/designs")
-            .when().get(makeBaseURL("/auth/callback"))
+            .and().param("state", "/v1/auth/signin/content/designs")
+            .when().get(makeBaseURL("/v1/auth/callback"))
             .then().assertThat().statusCode(303)
             .and().header("Location", startsWith("https://" + minikubeHost + ":" + httpPort + "/error/500"));
 
@@ -470,8 +470,8 @@ public class IntegrationTests {
 
     given().config(restAssuredConfig)
             .with().param("code", "xxx")
-            .and().param("state", "/auth/signin/content/designs")
-            .when().get(makeBaseURL("/auth/callback"))
+            .and().param("state", "/v1/auth/signin/content/designs")
+            .when().get(makeBaseURL("/v1/auth/callback"))
             .then().assertThat().statusCode(303)
             .and().header("Location", startsWith("https://" + minikubeHost + ":" + httpPort + "/error/403"));
 
@@ -504,9 +504,9 @@ public class IntegrationTests {
 
     given().config(restAssuredConfig)
             .with().param("code", "xxx")
-            .and().param("state", "/auth/signin/content/designs")
+            .and().param("state", "/v1/auth/signin/content/designs")
             .and().header(X_TRACE_ID, "xxx")
-            .when().get(makeBaseURL("/auth/callback"))
+            .when().get(makeBaseURL("/v1/auth/callback"))
             .then().assertThat().statusCode(303)
             .and().header("Location", startsWith("https://" + minikubeHost + ":" + httpPort + "/content/designs"));
 

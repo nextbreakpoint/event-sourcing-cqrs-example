@@ -2,20 +2,14 @@ package com.nextbreakpoint.blueprint.designs;
 
 import com.datastax.driver.core.Session;
 import com.nextbreakpoint.blueprint.common.core.Environment;
+import com.nextbreakpoint.blueprint.common.vertx.*;
 import com.nextbreakpoint.blueprint.designs.common.CommandFailureConsumer;
 import com.nextbreakpoint.blueprint.designs.common.CommandSuccessConsumer;
 import com.nextbreakpoint.blueprint.designs.common.ViewFailureConsumer;
 import com.nextbreakpoint.blueprint.designs.common.ViewSuccessConsumer;
 import com.nextbreakpoint.blueprint.designs.model.RecordAndMessage;
-import com.nextbreakpoint.blueprint.common.vertx.CassandraClusterFactory;
 import com.nextbreakpoint.blueprint.common.core.Message;
 import com.nextbreakpoint.blueprint.common.core.MessageType;
-import com.nextbreakpoint.blueprint.common.vertx.CorsHandlerFactory;
-import com.nextbreakpoint.blueprint.common.vertx.JWTProviderFactory;
-import com.nextbreakpoint.blueprint.common.vertx.KafkaClientFactory;
-import com.nextbreakpoint.blueprint.common.vertx.MDCHandler;
-import com.nextbreakpoint.blueprint.common.vertx.ResponseHelper;
-import com.nextbreakpoint.blueprint.common.vertx.ServerUtil;
 import com.nextbreakpoint.blueprint.designs.persistence.CassandraStore;
 import io.vertx.core.Handler;
 import io.vertx.core.Launcher;
@@ -25,11 +19,12 @@ import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.handler.LoggerFormat;
+import io.vertx.ext.web.openapi.RouterBuilder;
 import io.vertx.rxjava.core.AbstractVerticle;
 import io.vertx.rxjava.core.Promise;
-import io.vertx.rxjava.core.http.HttpServer;
 import io.vertx.rxjava.ext.auth.jwt.JWTAuth;
 import io.vertx.rxjava.ext.web.Router;
+import io.vertx.rxjava.ext.web.RoutingContext;
 import io.vertx.rxjava.ext.web.handler.BodyHandler;
 import io.vertx.rxjava.ext.web.handler.CorsHandler;
 import io.vertx.rxjava.ext.web.handler.LoggerHandler;
@@ -38,10 +33,11 @@ import io.vertx.rxjava.kafka.client.consumer.KafkaConsumer;
 import io.vertx.rxjava.kafka.client.consumer.KafkaConsumerRecord;
 import io.vertx.rxjava.kafka.client.producer.KafkaProducer;
 import rx.Completable;
-import rx.Single;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.function.Supplier;
 
 import static com.nextbreakpoint.blueprint.common.core.Headers.ACCEPT;
@@ -68,84 +64,104 @@ public class Verticle extends AbstractVerticle {
     }
 
     private void initServer(Promise<Void> promise) {
-        Single.fromCallable(this::createServer).subscribe(httpServer -> promise.complete(), promise::fail);
-    }
+        try {
+            final JsonObject config = vertx.getOrCreateContext().config();
 
-    private HttpServer createServer() {
-        final JsonObject config = vertx.getOrCreateContext().config();
+            final Environment environment = Environment.getDefaultEnvironment();
 
-        final Environment environment = Environment.getDefaultEnvironment();
+            final Executor executor = Executors.newSingleThreadExecutor();
 
-        final Integer port = Integer.parseInt(environment.resolve(config.getString("host_port")));
+            final int port = Integer.parseInt(environment.resolve(config.getString("host_port")));
 
-        final String originPattern = environment.resolve(config.getString("origin_pattern"));
+            final String originPattern = environment.resolve(config.getString("origin_pattern"));
 
-        final String keyspace = environment.resolve(config.getString("cassandra_keyspace"));
+            final String keyspace = environment.resolve(config.getString("cassandra_keyspace"));
 
-        final String eventsTopic = environment.resolve(config.getString("events_topic"));
+            final String eventsTopic = environment.resolve(config.getString("events_topic"));
 
-        final String sseTopic = environment.resolve(config.getString("sse_topic"));
+            final String sseTopic = environment.resolve(config.getString("sse_topic"));
 
-        final String viewTopic = environment.resolve(config.getString("view_topic"));
+            final String viewTopic = environment.resolve(config.getString("view_topic"));
 
-        final String messageSource = environment.resolve(config.getString("message_source"));
+            final String messageSource = environment.resolve(config.getString("message_source"));
 
-        final JWTAuth jwtProvider = JWTProviderFactory.create(environment, vertx, config);
+            final JWTAuth jwtProvider = JWTProviderFactory.create(environment, vertx, config);
 
-        final KafkaProducer<String, String> producer = KafkaClientFactory.createProducer(environment, vertx, config);
+            final KafkaProducer<String, String> producer = KafkaClientFactory.createProducer(environment, vertx, config);
 
-        final KafkaConsumer<String, String> commandConsumer = KafkaClientFactory.createConsumer(environment, vertx, config);
+            final KafkaConsumer<String, String> commandConsumer = KafkaClientFactory.createConsumer(environment, vertx, config);
 
-        final KafkaConsumer<String, String> viewConsumer = KafkaClientFactory.createConsumer(environment, vertx, config);
+            final KafkaConsumer<String, String> viewConsumer = KafkaClientFactory.createConsumer(environment, vertx, config);
 
-        final Supplier<Session> supplier = () -> CassandraClusterFactory.create(environment, config).connect(keyspace);
+            final Supplier<Session> supplier = () -> CassandraClusterFactory.create(environment, config).connect(keyspace);
 
-        final Store store = new CassandraStore(supplier);
+            final Store store = new CassandraStore(supplier);
 
-        final Router mainRouter = Router.router(vertx);
+            final Router mainRouter = Router.router(vertx);
 
-        mainRouter.route().handler(MDCHandler.create());
-        mainRouter.route().handler(LoggerHandler.create(true, LoggerFormat.DEFAULT));
-        mainRouter.route().handler(BodyHandler.create());
-//        mainRouter.route().handler(CookieHandler.create());
-        mainRouter.route().handler(TimeoutHandler.create(90000));
+            final CorsHandler corsHandler = CorsHandlerFactory.createWithAll(originPattern, asList(AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN, X_MODIFIED), asList(CONTENT_TYPE, X_XSRF_TOKEN, X_MODIFIED));
 
-        final CorsHandler corsHandler = CorsHandlerFactory.createWithAll(originPattern, asList(AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN, X_MODIFIED), asList(CONTENT_TYPE, X_XSRF_TOKEN, X_MODIFIED));
+            final Map<String, Handler<RecordAndMessage>> commandHandlers = new HashMap<>();
 
-        mainRouter.route("/*").handler(corsHandler);
+            commandHandlers.put(MessageType.DESIGN_INSERT, createInsertDesignHandler(store, viewTopic, producer, messageSource, new CommandSuccessConsumer(commandConsumer), new CommandFailureConsumer(commandConsumer)));
+            commandHandlers.put(MessageType.DESIGN_UPDATE, createUpdateDesignHandler(store, viewTopic, producer, messageSource, new CommandSuccessConsumer(commandConsumer), new CommandFailureConsumer(commandConsumer)));
+            commandHandlers.put(MessageType.DESIGN_DELETE, createDeleteDesignHandler(store, viewTopic, producer, messageSource, new CommandSuccessConsumer(commandConsumer), new CommandFailureConsumer(commandConsumer)));
 
-        mainRouter.options("/*").handler(ResponseHelper::sendNoContent);
+            final Map<String, Handler<RecordAndMessage>> viewHandlers = new HashMap<>();
 
-        mainRouter.route().failureHandler(ResponseHelper::sendFailure);
+            viewHandlers.put(MessageType.DESIGN_CHANGED, createDesignChangedHandler(store, sseTopic, producer, messageSource, new ViewSuccessConsumer(viewConsumer), new ViewFailureConsumer(viewConsumer)));
 
-        final Map<String, Handler<RecordAndMessage>> commandHandlers = new HashMap<>();
+            commandConsumer.handler(record -> processRecord(commandHandlers, record))
+                    .rxSubscribe(eventsTopic)
+                    .doOnError(this::handleError)
+                    .subscribe();
 
-        commandHandlers.put(MessageType.DESIGN_INSERT, createInsertDesignHandler(store, viewTopic, producer, messageSource, new CommandSuccessConsumer(commandConsumer), new CommandFailureConsumer(commandConsumer)));
-        commandHandlers.put(MessageType.DESIGN_UPDATE, createUpdateDesignHandler(store, viewTopic, producer, messageSource, new CommandSuccessConsumer(commandConsumer), new CommandFailureConsumer(commandConsumer)));
-        commandHandlers.put(MessageType.DESIGN_DELETE, createDeleteDesignHandler(store, viewTopic, producer, messageSource, new CommandSuccessConsumer(commandConsumer), new CommandFailureConsumer(commandConsumer)));
+            viewConsumer.handler(record -> processRecord(viewHandlers, record))
+                    .rxSubscribe(viewTopic)
+                    .doOnError(this::handleError)
+                    .subscribe();
 
-        final Map<String, Handler<RecordAndMessage>> viewHandlers = new HashMap<>();
+            final Handler<RoutingContext> openapiHandler = new OpenApiHandler(vertx.getDelegate(), executor, "openapi.yaml");
 
-        viewHandlers.put(MessageType.DESIGN_CHANGED, createDesignChangedHandler(store, sseTopic, producer, messageSource, new ViewSuccessConsumer(viewConsumer), new ViewFailureConsumer(viewConsumer)));
+            final String url = RouterBuilder.class.getClassLoader().getResource("openapi.yaml").toURI().toString();
 
-        commandConsumer.handler(record -> processRecord(commandHandlers, record))
-                .rxSubscribe(eventsTopic)
-                .doOnError(this::handleError)
-                .subscribe();
+            RouterBuilder.create(vertx.getDelegate(), url)
+                    .onSuccess(routerBuilder -> {
+                        final Router apiRouter = Router.newInstance(routerBuilder.createRouter());
 
-        viewConsumer.handler(record -> processRecord(viewHandlers, record))
-                .rxSubscribe(viewTopic)
-                .doOnError(this::handleError)
-                .subscribe();
+                        mainRouter.route().handler(MDCHandler.create());
+                        mainRouter.route().handler(LoggerHandler.create(true, LoggerFormat.DEFAULT));
+                        mainRouter.route().handler(BodyHandler.create());
+                        //mainRouter.route().handler(CookieHandler.create());
+                        mainRouter.route().handler(TimeoutHandler.create(30000));
 
-        final HttpServerOptions options = ServerUtil.makeServerOptions(environment, config);
+                        mainRouter.route("/*").handler(corsHandler);
 
-        return vertx.createHttpServer(options)
-                .requestHandler(mainRouter::handle)
-                .rxListen(port)
-                .doOnSuccess(result -> logger.info("Service listening on port " + port))
-                .toBlocking()
-                .value();
+                        mainRouter.mountSubRouter("/v1", apiRouter);
+
+                        mainRouter.get("/v1/apidocs").handler(openapiHandler::handle);
+
+                        mainRouter.options("/*").handler(ResponseHelper::sendNoContent);
+
+                        mainRouter.route().failureHandler(ResponseHelper::sendFailure);
+
+                        final HttpServerOptions options = ServerUtil.makeServerOptions(environment, config);
+
+                        vertx.createHttpServer(options)
+                                .requestHandler(mainRouter::handle)
+                                .rxListen(port)
+                                .doOnSuccess(result -> logger.info("Service listening on port " + port))
+                                .doOnError(err -> logger.error("Can't create server", err))
+                                .subscribe(result -> promise.complete(), promise::fail);
+                    })
+                    .onFailure(err -> {
+                        logger.error("Can't create router", err);
+                        promise.fail(err);
+                    });
+        } catch (Exception e) {
+            logger.error("Failed to start server", e);
+            promise.fail(e);
+        }
     }
 
     private void handleError(Throwable err) {

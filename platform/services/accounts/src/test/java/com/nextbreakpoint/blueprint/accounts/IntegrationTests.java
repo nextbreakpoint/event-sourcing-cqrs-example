@@ -95,21 +95,22 @@ public class IntegrationTests {
   public void shouldAllowOptionsRequestWithoutAccessToken() throws MalformedURLException {
     given().config(restAssuredConfig)
             .with().header("Origin", "https://" + minikubeHost + ":" + httpPort)
-            .when().options(makeBaseURL("/accounts"))
+            .when().queryParam("email", "test@localhost")
+            .when().options(makeBaseURL("/v1/accounts"))
             .then().assertThat().statusCode(204)
             .and().header("Access-Control-Allow-Origin", "https://" + minikubeHost + ":" + httpPort)
             .and().header("Access-Control-Allow-Credentials", "true");
 
     given().config(restAssuredConfig)
             .with().header("Origin", "https://" + minikubeHost + ":" + httpPort)
-            .when().options(makeBaseURL("/accounts/me"))
+            .when().options(makeBaseURL("/v1/accounts/me"))
             .then().assertThat().statusCode(204)
             .and().header("Access-Control-Allow-Origin", "https://" + minikubeHost + ":" + httpPort)
             .and().header("Access-Control-Allow-Credentials", "true");
 
     given().config(restAssuredConfig)
             .with().header("Origin", "https://" + minikubeHost + ":" + httpPort)
-            .when().options(makeBaseURL("/accounts/" + UUID.randomUUID().toString()))
+            .when().options(makeBaseURL("/v1/accounts/" + UUID.randomUUID().toString()))
             .then().assertThat().statusCode(204)
             .and().header("Access-Control-Allow-Origin", "https://" + minikubeHost + ":" + httpPort)
             .and().header("Access-Control-Allow-Credentials", "true");
@@ -120,17 +121,18 @@ public class IntegrationTests {
   public void shouldForbidGetRequestWithoutAccessToken() throws MalformedURLException {
     given().config(restAssuredConfig)
             .with().accept(ContentType.JSON)
-            .when().get(makeBaseURL("/accounts"))
+            .when().queryParam("email", "test@localhost")
+            .when().get(makeBaseURL("/v1/accounts"))
             .then().assertThat().statusCode(403);
 
     given().config(restAssuredConfig)
             .with().accept(ContentType.JSON)
-            .when().get(makeBaseURL("/accounts/me"))
+            .when().get(makeBaseURL("/v1/accounts/me"))
             .then().assertThat().statusCode(403);
 
     given().config(restAssuredConfig)
             .with().accept(ContentType.JSON)
-            .when().get(makeBaseURL("/accounts/" + UUID.randomUUID().toString()))
+            .when().get(makeBaseURL("/v1/accounts/" + UUID.randomUUID().toString()))
             .then().assertThat().statusCode(403);
   }
 
@@ -141,7 +143,7 @@ public class IntegrationTests {
             .and().contentType(ContentType.JSON)
             .and().accept(ContentType.JSON)
             .and().body(createPostData(makeUniqueEmail(), "guest"))
-            .when().post(makeBaseURL("/accounts"))
+            .when().post(makeBaseURL("/v1/accounts"))
             .then().assertThat().statusCode(403);
   }
 
@@ -156,7 +158,7 @@ public class IntegrationTests {
 
     given().config(restAssuredConfig)
             .and().accept(ContentType.JSON)
-            .when().delete(makeBaseURL("/accounts/" + uuid))
+            .when().delete(makeBaseURL("/v1/accounts/" + uuid))
             .then().assertThat().statusCode(403);
   }
 
@@ -174,19 +176,20 @@ public class IntegrationTests {
     given().config(restAssuredConfig)
             .with().header(AUTHORIZATION, otherAuthorization)
             .and().accept(ContentType.JSON)
-            .when().get(makeBaseURL("/accounts" ))
+            .when().queryParam("email", "test@localhost")
+            .when().get(makeBaseURL("/v1/accounts"))
             .then().assertThat().statusCode(403);
 
     given().config(restAssuredConfig)
             .with().header(AUTHORIZATION, otherAuthorization)
             .and().accept(ContentType.JSON)
-            .when().get(makeBaseURL("/accounts/" + uuid))
+            .when().get(makeBaseURL("/v1/accounts/" + uuid))
             .then().assertThat().statusCode(403);
 
     given().config(restAssuredConfig)
             .with().header(AUTHORIZATION, otherAuthorization)
             .and().accept(ContentType.JSON)
-            .when().get(makeBaseURL("/accounts/me"))
+            .when().get(makeBaseURL("/v1/accounts/me"))
             .then().assertThat().statusCode(403);
   }
 
@@ -204,13 +207,14 @@ public class IntegrationTests {
     given().config(restAssuredConfig)
             .with().header(AUTHORIZATION, adminAuthorization)
             .and().accept(ContentType.JSON)
-            .when().get(makeBaseURL("/accounts" ))
+            .when().queryParam("email", "test@localhost")
+            .when().get(makeBaseURL("/v1/accounts"))
             .then().assertThat().statusCode(200);
 
     given().config(restAssuredConfig)
             .with().header(AUTHORIZATION, adminAuthorization)
             .and().accept(ContentType.JSON)
-            .when().get(makeBaseURL("/accounts/" + uuid))
+            .when().get(makeBaseURL("/v1/accounts/" + uuid))
             .then().assertThat().statusCode(200);
 
     final String guestAuthorization = VertxUtils.makeAuthorization(uuid, Arrays.asList(Authority.GUEST), KEYSTORE_AUTH_JCEKS_PATH);
@@ -218,7 +222,7 @@ public class IntegrationTests {
     given().config(restAssuredConfig)
             .with().header(AUTHORIZATION, guestAuthorization)
             .and().accept(ContentType.JSON)
-            .when().get(makeBaseURL("/accounts/me" ))
+            .when().get(makeBaseURL("/v1/accounts/me" ))
             .then().assertThat().statusCode(200);
   }
 
@@ -284,7 +288,7 @@ public class IntegrationTests {
     given().config(restAssuredConfig)
             .and().header(AUTHORIZATION, authorization)
             .and().accept(ContentType.JSON)
-            .when().delete(makeBaseURL("/accounts/" + uuid))
+            .when().delete(makeBaseURL("/v1/accounts/" + uuid))
             .then().assertThat().statusCode(200)
             .and().contentType(ContentType.JSON)
             .and().body("uuid", notNullValue());
@@ -295,7 +299,7 @@ public class IntegrationTests {
             .and().header(AUTHORIZATION, authorization)
             .and().accept(ContentType.JSON)
             .and().queryParam("email", email)
-            .when().get(makeBaseURL("/accounts"))
+            .when().get(makeBaseURL("/v1/accounts"))
             .then().assertThat().statusCode(200)
             .and().contentType(ContentType.JSON)
             .and().extract().as(String[].class);
@@ -305,7 +309,7 @@ public class IntegrationTests {
     return given().config(restAssuredConfig)
             .and().header(AUTHORIZATION, authorization)
             .and().accept(ContentType.JSON)
-            .when().get(makeBaseURL("/accounts"))
+            .when().get(makeBaseURL("/v1/accounts"))
             .then().assertThat().statusCode(200)
             .and().contentType(ContentType.JSON)
             .and().extract().body().as(String[].class);
@@ -315,7 +319,7 @@ public class IntegrationTests {
     return given().config(restAssuredConfig)
             .with().header(AUTHORIZATION, authorization)
             .and().accept(ContentType.JSON)
-            .when().get(makeBaseURL("/accounts/" + uuid))
+            .when().get(makeBaseURL("/v1/accounts/" + uuid))
             .then().assertThat().statusCode(200)
             .and().extract().jsonPath();
   }
@@ -326,7 +330,7 @@ public class IntegrationTests {
             .and().contentType(ContentType.JSON)
             .and().accept(ContentType.JSON)
             .and().body(account)
-            .when().post(makeBaseURL("/accounts"))
+            .when().post(makeBaseURL("/v1/accounts"))
             .then().assertThat().statusCode(201)
             .and().contentType(ContentType.JSON)
             .and().body("uuid", notNullValue())

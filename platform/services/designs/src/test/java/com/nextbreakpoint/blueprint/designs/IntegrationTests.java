@@ -127,14 +127,14 @@ public class IntegrationTests {
   public void shouldAllowOptionsRequestWithoutAccessToken() throws MalformedURLException {
     given().config(restAssuredConfig)
             .with().header("Origin", "https://" + minikubeHost + ":" + httpPort)
-            .when().options(makeBaseURL("/designs"))
+            .when().options(makeBaseURL("/v1/designs"))
             .then().assertThat().statusCode(204)
             .and().header("Access-Control-Allow-Origin", "https://" + minikubeHost + ":" + httpPort)
             .and().header("Access-Control-Allow-Credentials", "true");
 
     given().config(restAssuredConfig)
             .with().header("Origin", "https://" + minikubeHost + ":" + httpPort)
-            .when().options(makeBaseURL("/designs/" + UUID.randomUUID().toString()))
+            .when().options(makeBaseURL("/v1/designs/" + UUID.randomUUID().toString()))
             .then().assertThat().statusCode(204)
             .and().header("Access-Control-Allow-Origin", "https://" + minikubeHost + ":" + httpPort)
             .and().header("Access-Control-Allow-Credentials", "true");
@@ -147,7 +147,7 @@ public class IntegrationTests {
             .and().contentType(ContentType.JSON)
             .and().accept(ContentType.JSON)
             .and().body(createPostData(SCRIPT1))
-            .when().post(makeBaseURL("/designs"))
+            .when().post(makeBaseURL("/v1/designs"))
             .then().assertThat().statusCode(403);
   }
 
@@ -162,7 +162,7 @@ public class IntegrationTests {
 
     given().config(restAssuredConfig)
             .and().accept(ContentType.JSON)
-            .when().delete(makeBaseURL("/designs/" + uuid))
+            .when().delete(makeBaseURL("/v1/designs/" + uuid))
             .then().assertThat().statusCode(403);
   }
 
@@ -180,19 +180,19 @@ public class IntegrationTests {
     given().config(restAssuredConfig)
             .with().header(AUTHORIZATION, otherAuthorization)
             .and().accept(ContentType.JSON)
-            .when().get(makeBaseURL("/designs"))
+            .when().get(makeBaseURL("/v1/designs"))
             .then().assertThat().statusCode(403);
 
     given().config(restAssuredConfig)
             .with().header(AUTHORIZATION, otherAuthorization)
             .and().accept(ContentType.JSON)
-            .when().get(makeBaseURL("/designs/" + uuid))
+            .when().get(makeBaseURL("/v1/designs/" + uuid))
             .then().assertThat().statusCode(403);
 
     given().config(restAssuredConfig)
             .with().header(AUTHORIZATION, otherAuthorization)
             .and().accept("image/png")
-            .when().get(makeBaseURL("/designs/" + uuid + "/0/0/0/256.png"))
+            .when().get(makeBaseURL("/v1/designs/" + uuid + "/0/0/0/256.png"))
             .then().assertThat().statusCode(403);
   }
 
@@ -209,17 +209,17 @@ public class IntegrationTests {
 
     given().config(restAssuredConfig)
             .and().accept(ContentType.JSON)
-            .when().get(makeBaseURL("/designs"))
+            .when().get(makeBaseURL("/v1/designs"))
             .then().assertThat().statusCode(200);
 
     given().config(restAssuredConfig)
             .and().accept(ContentType.JSON)
-            .when().get(makeBaseURL("/designs/" + uuid))
+            .when().get(makeBaseURL("/v1/designs/" + uuid))
             .then().assertThat().statusCode(200);
 
     given().config(restAssuredConfig)
             .and().accept("image/png")
-            .when().get(makeBaseURL("/designs/" + uuid + "/0/0/0/256.png"))
+            .when().get(makeBaseURL("/v1/designs/" + uuid + "/0/0/0/256.png"))
             .then().assertThat().statusCode(200);
   }
 
@@ -235,7 +235,7 @@ public class IntegrationTests {
     KafkaConsumer<String, String> consumer[] = new KafkaConsumer[1];
 
     try {
-      consumer[0] = KafkaUtils.createConsumer(environment, createConsumerConfig("designs-test"));
+      consumer[0] = KafkaUtils.createConsumer(environment, createConsumerConfig("test"));
 
       consumer[0].subscribe(Collections.singleton("designs-sse"));
 
@@ -447,7 +447,7 @@ public class IntegrationTests {
     given().config(restAssuredConfig)
             .and().header(AUTHORIZATION, authorization)
             .and().accept(ContentType.JSON)
-            .when().delete(makeBaseURL("/designs/" + uuid))
+            .when().delete(makeBaseURL("/v1/designs/" + uuid))
             .then().assertThat().statusCode(200)
             .and().contentType(ContentType.JSON)
             .and().body("uuid", notNullValue());
@@ -457,7 +457,7 @@ public class IntegrationTests {
     return given().config(restAssuredConfig)
             .and().header(AUTHORIZATION, authorization)
             .and().accept("image/png")
-            .when().get(makeBaseURL("/designs/" + uuid + "/0/0/0/256.png"))
+            .when().get(makeBaseURL("/v1/designs/" + uuid + "/0/0/0/256.png"))
             .then().assertThat().statusCode(200)
             .and().contentType("image/png")
             .and().extract().asByteArray();
@@ -468,7 +468,7 @@ public class IntegrationTests {
     return given().config(restAssuredConfig)
             .and().header(AUTHORIZATION, authorization)
             .and().accept(ContentType.JSON)
-            .when().get(makeBaseURL("/designs"))
+            .when().get(makeBaseURL("/v1/designs"))
             .then().assertThat().statusCode(200)
             .and().contentType(ContentType.JSON)
             .and().extract().body().as(DesignDocument[].class);
@@ -479,7 +479,7 @@ public class IntegrationTests {
     return given().config(restAssuredConfig)
             .with().header(AUTHORIZATION, authorization)
             .and().accept(ContentType.JSON)
-            .when().get(makeBaseURL("/designs/" + uuid))
+            .when().get(makeBaseURL("/v1/designs/" + uuid))
             .then().assertThat().statusCode(200).extract().jsonPath();
   }
 
@@ -490,7 +490,7 @@ public class IntegrationTests {
             .and().contentType(ContentType.JSON)
             .and().accept(ContentType.JSON)
             .and().body(design)
-            .when().post(makeBaseURL("/designs"))
+            .when().post(makeBaseURL("/v1/designs"))
             .then().assertThat().statusCode(201)
             .and().contentType(ContentType.JSON)
             .and().body("uuid", notNullValue())
@@ -504,7 +504,7 @@ public class IntegrationTests {
             .and().contentType(ContentType.JSON)
             .and().accept(ContentType.JSON)
             .and().body(design)
-            .when().put(makeBaseURL("/designs/" + uuid))
+            .when().put(makeBaseURL("/v1/designs/" + uuid))
             .then().assertThat().statusCode(200)
             .and().contentType(ContentType.JSON)
             .and().body("uuid", notNullValue())

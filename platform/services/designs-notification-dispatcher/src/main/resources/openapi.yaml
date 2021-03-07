@@ -1,0 +1,60 @@
+openapi: 3.0.1
+info:
+  title: Designs Notification Dispatcher API
+  description: API contract of service Designs Notification Dispatcher
+  version: 1.0.0
+externalDocs:
+  description: Find out more about Swagger
+  url: http://swagger.io
+servers:
+  - url: https://localhost/v1
+tags:
+  - name: designs
+    description: Everything about receiving notifications when designs are modified
+paths:
+  /sse/designs/{offset}/{designId}:
+    get:
+      tags:
+        - designs
+      summary: Watch events related to a given design
+      operationId: watchDesign
+      parameters:
+        - name: offset
+          in: path
+          description: offset of initial event
+          required: true
+          schema:
+            type: integer
+        - name: designId
+          in: path
+          description: uuid of design to watch
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Started watching
+          content:
+            {}
+  /sse/designs/{offset}:
+    get:
+      tags:
+        - designs
+      summary: Watch events related to designs collection
+      operationId: watchDesigns
+      parameters:
+        - name: offset
+          in: path
+          description: offset of initial event
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Started watching
+          content:
+            {}
+components:
+  schemas:
+    {}

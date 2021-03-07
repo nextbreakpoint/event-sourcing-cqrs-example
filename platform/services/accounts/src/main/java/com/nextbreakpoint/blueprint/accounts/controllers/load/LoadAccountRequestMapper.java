@@ -9,7 +9,7 @@ import java.util.UUID;
 public class LoadAccountRequestMapper implements Mapper<RoutingContext, LoadAccountRequest> {
     @Override
     public LoadAccountRequest transform(RoutingContext context) {
-        final String uuid = context.request().getParam("param0");
+        final String uuid = context.request().getParam("accountId");
 
         return new LoadAccountRequest(UUID.fromString(uuid));
     }

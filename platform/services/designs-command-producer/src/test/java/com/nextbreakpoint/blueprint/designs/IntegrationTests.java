@@ -37,9 +37,11 @@ import org.junit.runner.RunWith;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static com.jayway.restassured.RestAssured.given;
 import static com.nextbreakpoint.blueprint.common.core.Headers.AUTHORIZATION;
@@ -117,62 +119,62 @@ public class IntegrationTests {
     }
 
     @Test
-    @DisplayName("Should allow OPTIONS on /designs without access token")
+    @DisplayName("Should allow OPTIONS on /v1/designs without access token")
     public void shouldAllowOptionsOnDesignsWithoutAccessToken() throws MalformedURLException {
         given().config(restAssuredConfig)
                 .with().header("Origin", "https://" + minikubeHost + ":" + httpPort)
-                .when().options(makeBaseURL("/designs"))
+                .when().options(makeBaseURL("/v1/designs"))
                 .then().assertThat().statusCode(204)
                 .and().header("Access-Control-Allow-Origin", "https://" + minikubeHost + ":" + httpPort)
                 .and().header("Access-Control-Allow-Credentials", "true");
     }
 
     @Test
-    @DisplayName("Should allow OPTIONS on /designs/id without access token")
+    @DisplayName("Should allow OPTIONS on /v1/designs/id without access token")
     public void shouldAllowOptionsOnDesignsSlashIdWithoutAccessToken() throws MalformedURLException {
         given().config(restAssuredConfig)
                 .with().header("Origin", "https://" + minikubeHost + ":" + httpPort)
-                .when().options(makeBaseURL("/designs/" + UUID.randomUUID().toString()))
+                .when().options(makeBaseURL("/v1/designs/" + UUID.randomUUID().toString()))
                 .then().assertThat().statusCode(204)
                 .and().header("Access-Control-Allow-Origin", "https://" + minikubeHost + ":" + httpPort)
                 .and().header("Access-Control-Allow-Credentials", "true");
     }
 
     @Test
-    @DisplayName("Should forbid POST on /designs without access token")
+    @DisplayName("Should forbid POST on /v1/designs without access token")
     public void shouldForbidPostOnDesignsWithoutAccessToken() throws MalformedURLException {
         given().config(restAssuredConfig)
                 .and().contentType(ContentType.JSON)
                 .and().accept(ContentType.JSON)
                 .and().body(createPostData())
-                .when().post(makeBaseURL("/designs"))
+                .when().post(makeBaseURL("/v1/designs"))
                 .then().assertThat().statusCode(403);
     }
 
     @Test
-    @DisplayName("Should forbid PUT on /designs/id without access token")
+    @DisplayName("Should forbid PUT on /v1/designs/id without access token")
     public void shouldForbidPutOnDesignsSlashIdWithoutAccessToken() throws MalformedURLException {
         given().config(restAssuredConfig)
                 .and().contentType(ContentType.JSON)
                 .and().accept(ContentType.JSON)
                 .and().body(createPostData())
-                .when().put(makeBaseURL("/designs/" + UUID.randomUUID().toString()))
+                .when().put(makeBaseURL("/v1/designs/" + UUID.randomUUID().toString()))
                 .then().assertThat().statusCode(403);
     }
 
     @Test
-    @DisplayName("Should forbid DELETE on /designs/id without access token")
+    @DisplayName("Should forbid DELETE on /v1/designs/id without access token")
     public void shouldForbidDeleteOnDesignsSlashIdWithoutAccessToken() throws MalformedURLException {
         final String uuid = UUID.randomUUID().toString();
 
         given().config(restAssuredConfig)
                 .and().accept(ContentType.JSON)
-                .when().delete(makeBaseURL("/designs/" + uuid))
+                .when().delete(makeBaseURL("/v1/designs/" + uuid))
                 .then().assertThat().statusCode(403);
     }
 
     @Test
-    @DisplayName("Should send a message after accepting POST on /designs")
+    @DisplayName("Should send a message after accepting POST on /v1/designs")
     public void shouldAcceptPostOnDesigns() throws IOException, InterruptedException {
         final String authorization = VertxUtils.makeAuthorization("test", Arrays.asList(Authority.ADMIN), KEYSTORE_AUTH_JCEKS_PATH);
 
@@ -183,7 +185,7 @@ public class IntegrationTests {
         Thread polling = null;
 
         try {
-            consumer[0] = KafkaUtils.createConsumer(environment, createConsumerConfig("insert-design"));
+            consumer[0] = KafkaUtils.createConsumer(environment, createConsumerConfig("test-insert"));
 
             consumer[0].subscribe(Collections.singleton("designs-events"));
 
@@ -195,14 +197,12 @@ public class IntegrationTests {
 
             polling.start();
 
-            pause(5000);
-
             createDesign(authorization, createPostData());
 
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final Optional<Message> message = safelyFindMessage(records);
+                        final Optional<Message> message = safelyFindMessage(records, "design-insert");
                         assertThat(message.isEmpty()).isFalse();
                         Message decodedMessage = message.get();
                         assertThat(decodedMessage.getMessageType()).isEqualTo("design-insert");
@@ -230,7 +230,7 @@ public class IntegrationTests {
     }
 
     @Test
-    @DisplayName("Should send a message after accepting PUT on /designs/id")
+    @DisplayName("Should send a message after accepting PUT on /v1/designs/id")
     public void shouldAcceptPutOnDesignsSlashId() throws IOException, InterruptedException {
         final String authorization = VertxUtils.makeAuthorization("test", Arrays.asList(Authority.ADMIN), KEYSTORE_AUTH_JCEKS_PATH);
 
@@ -241,7 +241,7 @@ public class IntegrationTests {
         Thread polling = null;
 
         try {
-            consumer[0] = KafkaUtils.createConsumer(environment, createConsumerConfig("update-design"));
+            consumer[0] = KafkaUtils.createConsumer(environment, createConsumerConfig("test-update"));
 
             consumer[0].subscribe(Collections.singleton("designs-events"));
 
@@ -255,14 +255,12 @@ public class IntegrationTests {
 
             polling.start();
 
-            pause(5000);
-
             updateDesign(authorization, createPostData(), uuid);
 
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final Optional<Message> message = safelyFindMessage(records);
+                        final Optional<Message> message = safelyFindMessage(records, "design-update");
                         assertThat(message.isEmpty()).isFalse();
                         Message decodedMessage = message.get();
                         assertThat(decodedMessage.getMessageType()).isEqualTo("design-update");
@@ -290,7 +288,7 @@ public class IntegrationTests {
     }
 
     @Test
-    @DisplayName("Should send a message after accepting DELETE on /designs/id")
+    @DisplayName("Should send a message after accepting DELETE on /v1/designs/id")
     public void shouldAcceptDeleteOnDesignsSlashId() throws IOException, InterruptedException {
         final String authorization = VertxUtils.makeAuthorization("test", Arrays.asList(Authority.ADMIN), KEYSTORE_AUTH_JCEKS_PATH);
 
@@ -301,7 +299,7 @@ public class IntegrationTests {
         Thread polling = null;
 
         try {
-            consumer[0] = KafkaUtils.createConsumer(environment, createConsumerConfig("delete-design"));
+            consumer[0] = KafkaUtils.createConsumer(environment, createConsumerConfig("test-delete"));
 
             consumer[0].subscribe(Collections.singleton("designs-events"));
 
@@ -315,14 +313,12 @@ public class IntegrationTests {
 
             polling.start();
 
-            pause(5000);
-
             deleteDesign(authorization, uuid);
 
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final Optional<Message> message = safelyFindMessage(records);
+                        final Optional<Message> message = safelyFindMessage(records, "design-delete");
                         assertThat(message.isEmpty()).isFalse();
                         Message decodedMessage = message.get();
                         assertThat(decodedMessage.getMessageType()).isEqualTo("design-delete");
@@ -345,16 +341,11 @@ public class IntegrationTests {
         }
     }
 
-    private void clearRecords(List<ConsumerRecord<String, String>> records) {
-        synchronized (records) {
-            records.clear();
-        }
-    }
-
-    private Optional<Message> safelyFindMessage(List<ConsumerRecord<String, String>> records) {
+    private Optional<Message> safelyFindMessage(List<ConsumerRecord<String, String>> records, String messageType) {
         synchronized (records) {
             return records.stream()
                     .map(record -> Json.decodeValue(record.value(), Message.class))
+                    .filter(message -> message.getMessageType().equals(messageType))
                     .findFirst();
         }
     }
@@ -369,7 +360,7 @@ public class IntegrationTests {
         return new Thread(() -> {
             try {
                 while (!Thread.interrupted()) {
-                    ConsumerRecords<String, String> consumerRecords = kafkaConsumer.poll(5000);
+                    ConsumerRecords<String, String> consumerRecords = kafkaConsumer.poll(Duration.ofSeconds(5));
                     System.out.println("Received " + consumerRecords.count() + " messages");
                     consumerRecords.forEach(consumerRecord -> safelyAppendRecord(records, consumerRecord));
                     kafkaConsumer.commitSync();
@@ -391,7 +382,7 @@ public class IntegrationTests {
         given().config(restAssuredConfig)
                 .and().header(AUTHORIZATION, authorization)
                 .and().accept(ContentType.JSON)
-                .when().delete(makeBaseURL("/designs/" + uuid))
+                .when().delete(makeBaseURL("/v1/designs/" + uuid))
                 .then().assertThat().statusCode(202)
                 .and().contentType(ContentType.JSON);
     }
@@ -402,7 +393,7 @@ public class IntegrationTests {
                 .and().contentType(ContentType.JSON)
                 .and().accept(ContentType.JSON)
                 .and().body(design)
-                .when().post(makeBaseURL("/designs"))
+                .when().post(makeBaseURL("/v1/designs"))
                 .then().assertThat().statusCode(202)
                 .and().contentType(ContentType.JSON);
 //            .and().body("messageId", notNullValue())
@@ -415,7 +406,7 @@ public class IntegrationTests {
                 .and().contentType(ContentType.JSON)
                 .and().accept(ContentType.JSON)
                 .and().body(design)
-                .when().put(makeBaseURL("/designs/" + uuid))
+                .when().put(makeBaseURL("/v1/designs/" + uuid))
                 .then().assertThat().statusCode(202)
                 .and().contentType(ContentType.JSON);
     }
@@ -423,7 +414,6 @@ public class IntegrationTests {
     private JsonObject createConsumerConfig(String group) {
         final JsonObject config = new JsonObject();
         config.put("kafka_bootstrap_servers", minikubeHost + ":" + kafkaPort);
-        config.put("kafka_auto_offset_reset", "latest");
         config.put("kafka_group_id", group);
         return config;
     }

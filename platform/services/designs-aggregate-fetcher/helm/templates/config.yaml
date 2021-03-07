@@ -32,9 +32,5 @@ data:
       "cassandra_contactPoints": "cassandra",
       "cassandra_port": "9042",
 
-      "graphite_reporter_enabled": "false",
-      "graphite_host": "graphite",
-      "graphite_port": "2003",
-
       "max_execution_time_in_millis": "30000"
     }

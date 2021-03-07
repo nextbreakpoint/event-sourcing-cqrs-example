@@ -17,6 +17,16 @@
         </repository>
     </repositories>
     <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <includes>
+                    <include>**/*.txt</include>
+                    <include>**/*.xml</include>
+                    <include>**/*.yaml</include>
+                </includes>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>

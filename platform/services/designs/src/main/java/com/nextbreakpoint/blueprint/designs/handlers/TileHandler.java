@@ -63,7 +63,7 @@ public class TileHandler implements Handler<RoutingContext> {
     private TileParams makeTileParams(RoutingContext context) {
         final HttpServerRequest request = context.request();
 
-        final UUID uuid = UUID.fromString(request.getParam("uuid"));
+        final UUID uuid = UUID.fromString(request.getParam("designId"));
         final int zoom = Integer.parseInt(request.getParam("zoom"));
         final int x = Integer.parseInt(request.getParam("x"));
         final int y = Integer.parseInt(request.getParam("y"));

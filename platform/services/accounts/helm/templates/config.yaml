@@ -30,9 +30,5 @@ data:
       "jdbc_username": "${DATABASE_USERNAME}",
       "jdbc_password": "${DATABASE_PASSWORD}",
       "jdbc_max_pool_size": "200",
-      "jdbc_min_pool_size": "20",
-
-      "graphite_reporter_enabled": "false",
-      "graphite_host": "graphite",
-      "graphite_port": "2003"
+      "jdbc_min_pool_size": "20"
     }

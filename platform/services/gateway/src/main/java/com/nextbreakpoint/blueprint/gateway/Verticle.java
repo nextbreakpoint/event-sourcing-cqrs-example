@@ -56,7 +56,7 @@ public class Verticle extends AbstractVerticle {
 
         final Environment environment = Environment.getDefaultEnvironment();
 
-        final Integer port = Integer.parseInt(environment.resolve(config.getString("host_port")));
+        final int port = Integer.parseInt(environment.resolve(config.getString("host_port")));
 
         final String originPattern = environment.resolve(config.getString("origin_pattern"));
 

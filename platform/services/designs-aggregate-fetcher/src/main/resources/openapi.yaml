@@ -1,0 +1,158 @@
+openapi: 3.0.1
+info:
+  title: Designs Aggregate Fetcher API
+  description: API contract of service Designs Aggregate Fetcher
+  version: 1.0.0
+externalDocs:
+  description: Find out more about Swagger
+  url: http://swagger.io
+servers:
+  - url: https://localhost/v1
+tags:
+  - name: designs
+    description: Everything about fetching designs
+paths:
+  /designs/{designId}:
+    get:
+      tags:
+        - designs
+      summary: Load an design
+      operationId: loadDesign
+      parameters:
+        - name: designId
+          in: path
+          description: uuid of design to return
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Design'
+        400:
+          description: Invalid uuid supplied
+          content: {}
+        404:
+          description: Design not found
+          content: {}
+#      security:
+#        - design_auth:
+#            - admin
+#            - guest
+#            - anonymous
+  /designs:
+    get:
+      tags:
+        - designs
+      summary: List designs
+      operationId: listDesigns
+      responses:
+        200:
+          description: Return design
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListDesignsResponse'
+#      security:
+#        - design_auth:
+#            - admin
+#            - guest
+#            - anonymous
+  /designs/{designId}/{zoom}/{x}/{y}/{size}.png:
+    get:
+      tags:
+        - designs
+      summary: Load an design
+      operationId: getTile
+      parameters:
+        - name: designId
+          in: path
+          description: uuid of design to return
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: zoom
+          in: path
+          description: zoom level
+          required: true
+          schema:
+            type: integer
+        - name: x
+          in: path
+          description: Position x
+          required: true
+          schema:
+            type: integer
+        - name: y
+          in: path
+          description: Position y
+          required: true
+          schema:
+            type: integer
+        - name: size
+          in: path
+          description: Size
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Return tile
+          content:
+            image/png:
+              {}
+        400:
+          description: Invalid uuid supplied
+          content: {}
+        404:
+          description: Design not found
+          content: {}
+#      security:
+#        - design_auth:
+#            - admin
+#            - guest
+#            - anonymous
+components:
+  schemas:
+    ListDesignsResponse:
+      type: array
+      items:
+        type: object
+        properties:
+          uuid:
+            type: string
+            format: uuid
+          json:
+            type: string
+          modified:
+            type: string
+          checksum:
+            type: string
+    Design:
+      type: object
+      properties:
+        uuid:
+          type: string
+          format: uuid
+        json:
+          type: string
+        modified:
+          type: string
+        checksum:
+          type: string
+#  securitySchemes:
+#    design_auth:
+#      type: oauth2
+#      flows:
+#        implicit:
+#          authorizationUrl: https://localhost:8081/auth/signin
+#          scopes:
+#            anonymous: user not logged
+#            admin: user logged as admin
+#            guest: user logged as guest
+#            platform: platform token

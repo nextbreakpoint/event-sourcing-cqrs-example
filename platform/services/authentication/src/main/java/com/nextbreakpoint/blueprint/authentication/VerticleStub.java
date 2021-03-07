@@ -1,6 +1,6 @@
 package com.nextbreakpoint.blueprint.authentication;
 
-import com.nextbreakpoint.blueprint.authentication.handlers.GitHubSigninHandler;
+import com.nextbreakpoint.blueprint.authentication.handlers.GitHubSignInHandler;
 import com.nextbreakpoint.blueprint.common.core.Environment;
 import com.nextbreakpoint.blueprint.common.vertx.Failure;
 import io.vertx.core.Launcher;
@@ -18,8 +18,8 @@ public class VerticleStub extends Verticle {
     }
 
     @Override
-    protected GitHubSigninHandler createSigninHandler(Environment environment, JsonObject config, Router router) throws MalformedURLException {
-        return new GitHubSigninHandler(environment, vertx, config, router) {
+    protected GitHubSignInHandler createSignInHandler(Environment environment, JsonObject config, Router router) throws MalformedURLException {
+        return new GitHubSignInHandler(environment, vertx, config, router) {
             @Override
             public void handle(RoutingContext routingContext) {
                 try {

@@ -2,14 +2,7 @@ package com.nextbreakpoint.blueprint.accounts;
 
 import com.nextbreakpoint.blueprint.accounts.persistence.MySQLStore;
 import com.nextbreakpoint.blueprint.common.core.Environment;
-import com.nextbreakpoint.blueprint.common.vertx.Failure;
-import com.nextbreakpoint.blueprint.common.vertx.AccessHandler;
-import com.nextbreakpoint.blueprint.common.vertx.CorsHandlerFactory;
-import com.nextbreakpoint.blueprint.common.vertx.JDBCClientFactory;
-import com.nextbreakpoint.blueprint.common.vertx.JWTProviderFactory;
-import com.nextbreakpoint.blueprint.common.vertx.MDCHandler;
-import com.nextbreakpoint.blueprint.common.vertx.ResponseHelper;
-import com.nextbreakpoint.blueprint.common.vertx.ServerUtil;
+import com.nextbreakpoint.blueprint.common.vertx.*;
 import io.vertx.core.Handler;
 import io.vertx.core.Launcher;
 import io.vertx.core.http.HttpServerOptions;
@@ -17,9 +10,9 @@ import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.handler.LoggerFormat;
+import io.vertx.ext.web.openapi.RouterBuilder;
 import io.vertx.rxjava.core.AbstractVerticle;
 import io.vertx.rxjava.core.Promise;
-import io.vertx.rxjava.core.http.HttpServer;
 import io.vertx.rxjava.ext.auth.jwt.JWTAuth;
 import io.vertx.rxjava.ext.jdbc.JDBCClient;
 import io.vertx.rxjava.ext.web.Router;
@@ -29,18 +22,18 @@ import io.vertx.rxjava.ext.web.handler.CorsHandler;
 import io.vertx.rxjava.ext.web.handler.LoggerHandler;
 import io.vertx.rxjava.ext.web.handler.TimeoutHandler;
 import rx.Completable;
-import rx.Single;
+
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 import static com.nextbreakpoint.blueprint.common.core.Authority.ADMIN;
 import static com.nextbreakpoint.blueprint.common.core.Authority.GUEST;
 import static com.nextbreakpoint.blueprint.common.core.Authority.PLATFORM;
-import static com.nextbreakpoint.blueprint.common.core.ContentType.APPLICATION_JSON;
 import static com.nextbreakpoint.blueprint.common.core.Headers.ACCEPT;
 import static com.nextbreakpoint.blueprint.common.core.Headers.AUTHORIZATION;
 import static com.nextbreakpoint.blueprint.common.core.Headers.CONTENT_TYPE;
 import static com.nextbreakpoint.blueprint.common.core.Headers.COOKIE;
 import static com.nextbreakpoint.blueprint.common.core.Headers.X_XSRF_TOKEN;
-import static com.nextbreakpoint.blueprint.common.vertx.ServerUtil.UUID_REGEXP;
 import static java.util.Arrays.asList;
 
 public class Verticle extends AbstractVerticle {
@@ -56,81 +49,94 @@ public class Verticle extends AbstractVerticle {
     }
 
     private void initServer(Promise<Void> promise) {
-        Single.fromCallable(this::createServer).subscribe(httpServer -> promise.complete(), promise::fail);
-    }
+        try {
+            final JsonObject config = vertx.getOrCreateContext().config();
 
-    private HttpServer createServer() {
-        final JsonObject config = vertx.getOrCreateContext().config();
+            final Environment environment = Environment.getDefaultEnvironment();
 
-        final Environment environment = Environment.getDefaultEnvironment();
+            final Executor executor = Executors.newSingleThreadExecutor();
 
-        final Integer port = Integer.parseInt(environment.resolve(config.getString("host_port")));
+            final int port = Integer.parseInt(environment.resolve(config.getString("host_port")));
 
-        final String originPattern = environment.resolve(config.getString("origin_pattern"));
+            final String originPattern = environment.resolve(config.getString("origin_pattern"));
 
-        final JWTAuth jwtProvider = JWTProviderFactory.create(environment, vertx, config);
+            final JWTAuth jwtProvider = JWTProviderFactory.create(environment, vertx, config);
 
-        final JDBCClient jdbcClient = JDBCClientFactory.create(environment, vertx, config);
+            final JDBCClient jdbcClient = JDBCClientFactory.create(environment, vertx, config);
 
-        final Store store = new MySQLStore(jdbcClient);
+            final Store store = new MySQLStore(jdbcClient);
 
-        final Router mainRouter = Router.router(vertx);
+            final Router mainRouter = Router.router(vertx);
 
-        mainRouter.route().handler(MDCHandler.create());
-        mainRouter.route().handler(LoggerHandler.create(true, LoggerFormat.DEFAULT));
-        mainRouter.route().handler(BodyHandler.create());
-//        mainRouter.route().handler(CookieHandler.create());
-        mainRouter.route().handler(TimeoutHandler.create(30000));
+            final CorsHandler corsHandler = CorsHandlerFactory.createWithAll(originPattern, asList(COOKIE, AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN));
 
-        final CorsHandler corsHandler = CorsHandlerFactory.createWithAll(originPattern, asList(COOKIE, AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN));
+            final Handler<RoutingContext> onAccessDenied = routingContext -> routingContext.fail(Failure.accessDenied("Authentication failed"));
 
-        mainRouter.route("/*").handler(corsHandler);
+            final Handler<RoutingContext> listAccountsHandler = new AccessHandler(jwtProvider, Factory.createListAccountsHandler(store), onAccessDenied, asList(ADMIN, PLATFORM));
 
-        final Handler<RoutingContext> onAccessDenied = routingContext -> routingContext.fail(Failure.accessDenied("Authentication failed"));
+            final Handler<RoutingContext> loadSelfAccountHandler = new AccessHandler(jwtProvider, Factory.createLoadSelfAccountHandler(store), onAccessDenied, asList(ADMIN, GUEST));
 
-        final Handler<RoutingContext> listAccountsHandler = new AccessHandler(jwtProvider, Factory.createListAccountsHandler(store), onAccessDenied, asList(ADMIN, PLATFORM));
+            final Handler<RoutingContext> loadAccountHandler = new AccessHandler(jwtProvider, Factory.createLoadAccountHandler(store), onAccessDenied, asList(ADMIN, PLATFORM));
 
-        final Handler<RoutingContext> loadSelfAccountHandler = new AccessHandler(jwtProvider, Factory.createLoadSelfAccountHandler(store), onAccessDenied, asList(ADMIN, GUEST));
+            final Handler<RoutingContext> insertAccountHandler = new AccessHandler(jwtProvider, Factory.createInsertAccountHandler(store), onAccessDenied, asList(ADMIN, PLATFORM));
 
-        final Handler<RoutingContext> loadAccountHandler = new AccessHandler(jwtProvider, Factory.createLoadAccountHandler(store), onAccessDenied, asList(ADMIN, PLATFORM));
+            final Handler<RoutingContext> deleteAccountHandler = new AccessHandler(jwtProvider, Factory.createDeleteAccountHandler(store), onAccessDenied, asList(ADMIN));
 
-        final Handler<RoutingContext> insertAccountHandler = new AccessHandler(jwtProvider, Factory.createInsertAccountHandler(store), onAccessDenied, asList(ADMIN, PLATFORM));
+            final Handler<RoutingContext> openapiHandler = new OpenApiHandler(vertx.getDelegate(), executor, "openapi.yaml");
 
-        final Handler<RoutingContext> deleteAccountHandler = new AccessHandler(jwtProvider, Factory.createDeleteAccountHandler(store), onAccessDenied, asList(ADMIN));
+            final String url = RouterBuilder.class.getClassLoader().getResource("openapi.yaml").toURI().toString();
 
-        mainRouter.get("/accounts")
-                .produces(APPLICATION_JSON)
-                .handler(listAccountsHandler);
+            RouterBuilder.create(vertx.getDelegate(), url)
+                    .onSuccess(routerBuilder -> {
+                        routerBuilder.operation("listAccounts")
+                                .handler(context -> listAccountsHandler.handle(RoutingContext.newInstance(context)));
 
-        mainRouter.get("/accounts/me")
-                .produces(APPLICATION_JSON)
-                .handler(loadSelfAccountHandler);
+                        routerBuilder.operation("loadSelfAccount")
+                                .handler(context -> loadSelfAccountHandler.handle(RoutingContext.newInstance(context)));
 
-        mainRouter.getWithRegex("/accounts/" + UUID_REGEXP)
-                .produces(APPLICATION_JSON)
-                .handler(loadAccountHandler);
+                        routerBuilder.operation("loadAccount")
+                                .handler(context -> loadAccountHandler.handle(RoutingContext.newInstance(context)));
 
-        mainRouter.post("/accounts")
-                .produces(APPLICATION_JSON)
-                .consumes(APPLICATION_JSON)
-                .handler(insertAccountHandler);
+                        routerBuilder.operation("insertAccount")
+                                .handler(context -> insertAccountHandler.handle(RoutingContext.newInstance(context)));
 
-        mainRouter.deleteWithRegex("/accounts/" + UUID_REGEXP)
-                .produces(APPLICATION_JSON)
-                .handler(deleteAccountHandler);
+                        routerBuilder.operation("deleteAccount")
+                                .handler(context -> deleteAccountHandler.handle(RoutingContext.newInstance(context)));
 
-        mainRouter.options("/*")
-                .handler(ResponseHelper::sendNoContent);
+                        final Router apiRouter = Router.newInstance(routerBuilder.createRouter());
 
-        mainRouter.route().failureHandler(ResponseHelper::sendFailure);
+                        mainRouter.route().handler(MDCHandler.create());
+                        mainRouter.route().handler(LoggerHandler.create(true, LoggerFormat.DEFAULT));
+                        mainRouter.route().handler(BodyHandler.create());
+                        //mainRouter.route().handler(CookieHandler.create());
+                        mainRouter.route().handler(TimeoutHandler.create(30000));
 
-        final HttpServerOptions options = ServerUtil.makeServerOptions(environment, config);
+                        mainRouter.route("/*").handler(corsHandler);
 
-        return vertx.createHttpServer(options)
-                .requestHandler(mainRouter::handle)
-                .rxListen(port)
-                .doOnSuccess(result -> logger.info("Service listening on port " + port))
-                .toBlocking()
-                .value();
+                        mainRouter.mountSubRouter("/v1", apiRouter);
+
+                        mainRouter.get("/v1/apidocs").handler(openapiHandler::handle);
+
+                        mainRouter.options("/*").handler(ResponseHelper::sendNoContent);
+
+                        mainRouter.route().failureHandler(ResponseHelper::sendFailure);
+
+                        final HttpServerOptions options = ServerUtil.makeServerOptions(environment, config);
+
+                        vertx.createHttpServer(options)
+                                .requestHandler(mainRouter::handle)
+                                .rxListen(port)
+                                .doOnSuccess(result -> logger.info("Service listening on port " + port))
+                                .doOnError(err -> logger.error("Can't create server", err))
+                                .subscribe(result -> promise.complete(), promise::fail);
+                    })
+                    .onFailure(err -> {
+                        logger.error("Can't create router", err);
+                        promise.fail(err);
+                    });
+        } catch (Exception e) {
+            logger.error("Failed to start server", e);
+            promise.fail(e);
+        }
     }
 }

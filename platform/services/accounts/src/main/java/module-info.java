@@ -3,5 +3,6 @@ module com.nextbreakpoint.blueprint.accounts {
     requires com.nextbreakpoint.blueprint.common.vertx;
     requires com.fasterxml.jackson.core;
     requires com.fasterxml.jackson.databind;
+    requires java.sql;
     opens com.nextbreakpoint.blueprint.accounts to com.nextbreakpoint.blueprint.common.vertx;
 }

@@ -37,6 +37,7 @@ import org.junit.platform.runner.JUnitPlatform;
 import org.junit.runner.RunWith;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
@@ -127,7 +128,7 @@ public class IntegrationTests {
 
             producer = KafkaUtils.createProducer(environment, createProducerConfig());
 
-            consumer[0] = KafkaUtils.createConsumer(environment, createConsumerConfig("insert-design"));
+            consumer[0] = KafkaUtils.createConsumer(environment, createConsumerConfig("test-insert"));
 
             consumer[0].subscribe(Collections.singleton("designs-sse"));
 
@@ -186,9 +187,9 @@ public class IntegrationTests {
             await().atMost(TEN_MINUTES)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final Optional<Message> message = safelyFindMessage(records, designId);
-                        assertThat(message.isEmpty()).isFalse();
-                        Message actualMessage = message.get();
+                        final List<Message> messages = safelyFindMessages(records, designId);
+                        assertThat(messages).hasSize(1);
+                        final Message actualMessage = messages.get(messages.size() - 1);
                         assertThat(actualMessage.getTimestamp()).isNotNull();
                         assertThat(actualMessage.getMessageSource()).isEqualTo("service-designs");
                         assertThat(actualMessage.getPartitionKey()).isEqualTo(designId.toString());
@@ -227,7 +228,7 @@ public class IntegrationTests {
 
             producer = KafkaUtils.createProducer(environment, createProducerConfig());
 
-            consumer[0] = KafkaUtils.createConsumer(environment, createConsumerConfig("update-design"));
+            consumer[0] = KafkaUtils.createConsumer(environment, createConsumerConfig("test-update"));
 
             consumer[0].subscribe(Collections.singleton("designs-sse"));
 
@@ -298,9 +299,9 @@ public class IntegrationTests {
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final Optional<Message> message = safelyFindMessage(records, designId);
-                        assertThat(message.isEmpty()).isFalse();
-                        Message actualMessage = message.get();
+                        final List<Message> messages = safelyFindMessages(records, designId);
+                        assertThat(messages).hasSize(2);
+                        final Message actualMessage = messages.get(messages.size() - 1);
                         assertThat(actualMessage.getTimestamp()).isNotNull();
                         assertThat(actualMessage.getMessageSource()).isEqualTo("service-designs");
                         assertThat(actualMessage.getPartitionKey()).isEqualTo(designId.toString());
@@ -339,7 +340,7 @@ public class IntegrationTests {
 
             producer = KafkaUtils.createProducer(environment, createProducerConfig());
 
-            consumer[0] = KafkaUtils.createConsumer(environment, createConsumerConfig("delete-design"));
+            consumer[0] = KafkaUtils.createConsumer(environment, createConsumerConfig("test-delete"));
 
             consumer[0].subscribe(Collections.singleton("designs-sse"));
 
@@ -404,9 +405,9 @@ public class IntegrationTests {
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final Optional<Message> message = safelyFindMessage(records, designId);
-                        assertThat(message.isEmpty()).isFalse();
-                        Message actualMessage = message.get();
+                        final List<Message> messages = safelyFindMessages(records, designId);
+                        assertThat(messages).hasSize(2);
+                        final Message actualMessage = messages.get(messages.size() - 1);
                         assertThat(actualMessage.getTimestamp()).isNotNull();
                         assertThat(actualMessage.getMessageSource()).isEqualTo("service-designs");
                         assertThat(actualMessage.getPartitionKey()).isEqualTo(designId.toString());
@@ -431,18 +432,12 @@ public class IntegrationTests {
         }
     }
 
-    private void clearRecords(List<ConsumerRecord<String, String>> records) {
-        synchronized (records) {
-            records.clear();
-        }
-    }
-
-    private Optional<Message> safelyFindMessage(List<ConsumerRecord<String, String>> records, UUID designId) {
+    private List<Message> safelyFindMessages(List<ConsumerRecord<String, String>> records, UUID designId) {
         synchronized (records) {
             return records.stream()
                     .map(record -> Json.decodeValue(record.value(), Message.class))
                     .filter(value -> value.getPartitionKey().equals(designId.toString()))
-                    .findFirst();
+                    .collect(Collectors.toList());
         }
     }
 
@@ -456,7 +451,7 @@ public class IntegrationTests {
         return new Thread(() -> {
             try {
                 while (!Thread.interrupted()) {
-                    ConsumerRecords<String, String> consumerRecords = kafkaConsumer.poll(5000);
+                    ConsumerRecords<String, String> consumerRecords = kafkaConsumer.poll(Duration.ofSeconds(5));
                     System.out.println("Received " + consumerRecords.count() + " messages");
                     consumerRecords.forEach(consumerRecord -> safelyAppendRecord(records, consumerRecord));
                     kafkaConsumer.commitSync();
@@ -487,13 +482,19 @@ public class IntegrationTests {
     private JsonObject createConsumerConfig(String group) {
         final JsonObject config = new JsonObject();
         config.put("kafka_bootstrap_servers", minikubeHost + ":" + kafkaPort);
-        config.put("kafka_auto_offset_reset", "earliest");
         config.put("kafka_group_id", group);
         return config;
     }
 
     private ProducerRecord<String, String> createKafkaRecord(Message message) {
         return new ProducerRecord("designs-events", message.getPartitionKey(), Json.encode(message));
+    }
+
+    private void pause(int millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException e) {
+        }
     }
 
     private Message createInsertDesignMessage(UUID messageId, UUID partitionKey, long timestamp, InsertDesign event) {

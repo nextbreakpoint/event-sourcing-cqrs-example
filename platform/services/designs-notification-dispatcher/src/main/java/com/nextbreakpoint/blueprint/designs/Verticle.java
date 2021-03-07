@@ -1,16 +1,10 @@
 package com.nextbreakpoint.blueprint.designs;
 
 import com.nextbreakpoint.blueprint.common.core.Environment;
+import com.nextbreakpoint.blueprint.common.vertx.*;
 import com.nextbreakpoint.blueprint.designs.handlers.EventsHandler;
-import com.nextbreakpoint.blueprint.common.vertx.Failure;
 import com.nextbreakpoint.blueprint.common.core.Message;
 import com.nextbreakpoint.blueprint.common.core.MessageType;
-import com.nextbreakpoint.blueprint.common.vertx.AccessHandler;
-import com.nextbreakpoint.blueprint.common.vertx.CorsHandlerFactory;
-import com.nextbreakpoint.blueprint.common.vertx.JWTProviderFactory;
-import com.nextbreakpoint.blueprint.common.vertx.KafkaClientFactory;
-import com.nextbreakpoint.blueprint.common.vertx.ResponseHelper;
-import com.nextbreakpoint.blueprint.common.vertx.ServerUtil;
 import com.nextbreakpoint.blueprint.designs.controllers.DesignChangedController;
 import io.vertx.core.Handler;
 import io.vertx.core.Launcher;
@@ -19,9 +13,9 @@ import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.openapi.RouterBuilder;
 import io.vertx.rxjava.core.AbstractVerticle;
 import io.vertx.rxjava.core.Promise;
-import io.vertx.rxjava.core.http.HttpServer;
 import io.vertx.rxjava.ext.auth.jwt.JWTAuth;
 import io.vertx.rxjava.ext.web.Router;
 import io.vertx.rxjava.ext.web.RoutingContext;
@@ -31,10 +25,11 @@ import io.vertx.rxjava.ext.web.handler.LoggerHandler;
 import io.vertx.rxjava.kafka.client.consumer.KafkaConsumer;
 import io.vertx.rxjava.kafka.client.consumer.KafkaConsumerRecord;
 import rx.Completable;
-import rx.Single;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 import static com.nextbreakpoint.blueprint.common.core.Authority.ADMIN;
 import static com.nextbreakpoint.blueprint.common.core.Authority.ANONYMOUS;
@@ -46,7 +41,6 @@ import static com.nextbreakpoint.blueprint.common.core.Headers.COOKIE;
 import static com.nextbreakpoint.blueprint.common.core.Headers.X_MODIFIED;
 import static com.nextbreakpoint.blueprint.common.core.Headers.X_TRACE_ID;
 import static com.nextbreakpoint.blueprint.common.core.Headers.X_XSRF_TOKEN;
-import static com.nextbreakpoint.blueprint.common.vertx.ServerUtil.UUID_REGEXP;
 import static java.util.Arrays.asList;
 
 public class Verticle extends AbstractVerticle {
@@ -62,66 +56,85 @@ public class Verticle extends AbstractVerticle {
     }
 
     private void initServer(Promise<Void> promise) {
-        Single.fromCallable(this::createServer).subscribe(httpServer -> promise.complete(), promise::fail);
-    }
+        try {
+            final JsonObject config = vertx.getOrCreateContext().config();
 
-    private HttpServer createServer() {
-        final JsonObject config = vertx.getOrCreateContext().config();
+            final Environment environment = Environment.getDefaultEnvironment();
 
-        final Environment environment = Environment.getDefaultEnvironment();
+            final Executor executor = Executors.newSingleThreadExecutor();
 
-        final Integer port = Integer.parseInt(environment.resolve(config.getString("host_port")));
+            final int port = Integer.parseInt(environment.resolve(config.getString("host_port")));
 
-        final String originPattern = environment.resolve(config.getString("origin_pattern"));
+            final String originPattern = environment.resolve(config.getString("origin_pattern"));
 
-        final String sseTopic = environment.resolve(config.getString("sse_topic"));
+            final String sseTopic = environment.resolve(config.getString("sse_topic"));
 
-        final JWTAuth jwtProvider = JWTProviderFactory.create(environment, vertx, config);
+            final JWTAuth jwtProvider = JWTProviderFactory.create(environment, vertx, config);
 
-        final KafkaConsumer<String, String> consumer = KafkaClientFactory.createConsumer(environment, vertx, config);
+            final KafkaConsumer<String, String> consumer = KafkaClientFactory.createConsumer(environment, vertx, config);
 
-        final Router mainRouter = Router.router(vertx);
+            final Router mainRouter = Router.router(vertx);
 
-        mainRouter.route().handler(LoggerHandler.create());
-        mainRouter.route().handler(BodyHandler.create());
-//        mainRouter.route().handler(CookieHandler.create());
+            final CorsHandler corsHandler = CorsHandlerFactory.createWithAll(originPattern, asList(COOKIE, AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN, X_MODIFIED, X_TRACE_ID));
 
-        final CorsHandler corsHandler = CorsHandlerFactory.createWithAll(originPattern, asList(COOKIE, AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN, X_MODIFIED, X_TRACE_ID));
+            final Handler<RoutingContext> onAccessDenied = routingContext -> routingContext.fail(Failure.accessDenied("Authorisation failed"));
 
-        mainRouter.route("/*").handler(corsHandler);
+            final Handler<RoutingContext> eventHandler = new AccessHandler(jwtProvider, EventsHandler.create(vertx), onAccessDenied, asList(ANONYMOUS, ADMIN, GUEST));
 
-        final Handler<RoutingContext> onAccessDenied = routingContext -> routingContext.fail(Failure.accessDenied("Authorisation failed"));
+            final Map<String, Handler<Message>> handlers = new HashMap<>();
 
-        mainRouter.route().failureHandler(ResponseHelper::sendFailure);
+            handlers.put(MessageType.DESIGN_CHANGED, Factory.createDesignChangedHandler(new DesignChangedController(vertx, "events.handler.input")));
 
-        final Handler<RoutingContext> eventHandler = new AccessHandler(jwtProvider, EventsHandler.create(vertx), onAccessDenied, asList(ANONYMOUS, ADMIN, GUEST));
+            consumer.handler(record -> processRecord(handlers, record))
+                    .rxSubscribe(sseTopic)
+                    .doOnError(this::handleError)
+                    .subscribe();
 
-        mainRouter.getWithRegex("/sse/designs/([0-9]+)/" + UUID_REGEXP)
-                .handler(eventHandler);
+            final Handler<RoutingContext> openapiHandler = new OpenApiHandler(vertx.getDelegate(), executor, "openapi.yaml");
 
-        mainRouter.getWithRegex("/sse/designs/([0-9]+)")
-                .handler(eventHandler);
+            final String url = RouterBuilder.class.getClassLoader().getResource("openapi.yaml").toURI().toString();
 
-        mainRouter.options("/*")
-                .handler(ResponseHelper::sendNoContent);
+            RouterBuilder.create(vertx.getDelegate(), url)
+                    .onSuccess(routerBuilder -> {
+                        routerBuilder.operation("watchDesign")
+                                .handler(context -> eventHandler.handle(RoutingContext.newInstance(context)));
 
-        final Map<String, Handler<Message>> handlers = new HashMap<>();
+                        routerBuilder.operation("watchDesigns")
+                                .handler(context -> eventHandler.handle(RoutingContext.newInstance(context)));
+//
+                        final Router apiRouter = Router.newInstance(routerBuilder.createRouter());
 
-        handlers.put(MessageType.DESIGN_CHANGED, Factory.createDesignChangedHandler(new DesignChangedController(vertx, "events.handler.input")));
+                        mainRouter.route().handler(LoggerHandler.create());
+                        mainRouter.route().handler(BodyHandler.create());
+                        //mainRouter.route().handler(CookieHandler.create());
 
-        consumer.handler(record -> processRecord(handlers, record))
-                .rxSubscribe(sseTopic)
-                .doOnError(this::handleError)
-                .subscribe();
+                        mainRouter.route("/*").handler(corsHandler);
 
-        final HttpServerOptions options = ServerUtil.makeServerOptions(environment, config);
+                        mainRouter.mountSubRouter("/v1", apiRouter);
 
-        return vertx.createHttpServer(options)
-                .requestHandler(mainRouter::handle)
-                .rxListen(port)
-                .doOnSuccess(result -> logger.info("Service listening on port " + port))
-                .toBlocking()
-                .value();
+                        mainRouter.get("/v1/apidocs").handler(openapiHandler::handle);
+
+                        mainRouter.options("/*").handler(ResponseHelper::sendNoContent);
+
+                        mainRouter.route().failureHandler(ResponseHelper::sendFailure);
+
+                        final HttpServerOptions options = ServerUtil.makeServerOptions(environment, config);
+
+                        vertx.createHttpServer(options)
+                                .requestHandler(mainRouter::handle)
+                                .rxListen(port)
+                                .doOnSuccess(result -> logger.info("Service listening on port " + port))
+                                .doOnError(err -> logger.error("Can't create server", err))
+                                .subscribe(result -> promise.complete(), promise::fail);
+                    })
+                    .onFailure(err -> {
+                        logger.error("Can't create router", err);
+                        promise.fail(err);
+                    });
+        } catch (Exception e) {
+            logger.error("Failed to start server", e);
+            promise.fail(e);
+        }
     }
 
     private void handleError(Throwable err) {

@@ -32,8 +32,11 @@ public class AccessHandler implements Handler<RoutingContext> {
     }
 
     private void onAuthenticationError(RoutingContext routingContext, Throwable err) {
-        logger.debug("User is not authorized");
-        logger.trace("User is not authorized", err);
+        if (logger.isTraceEnabled()) {
+            logger.trace("User is not authorized", err);
+        } else {
+            logger.debug("User is not authorized");
+        }
         onAccessDenied.handle(routingContext);
     }
 

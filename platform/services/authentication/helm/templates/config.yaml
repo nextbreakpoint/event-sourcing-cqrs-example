@@ -50,9 +50,5 @@ data:
 
       "cookie_domain": {{ $root.Values.clientDomain | default "localhost" | quote }},
 
-      "admin_users": ["${GITHUB_ACCOUNT_ID}"],
-
-      "graphite_reporter_enabled": "false",
-      "graphite_host": "graphite",
-      "graphite_port": "2003"
+      "admin_users": ["${GITHUB_ACCOUNT_ID}"]
     }

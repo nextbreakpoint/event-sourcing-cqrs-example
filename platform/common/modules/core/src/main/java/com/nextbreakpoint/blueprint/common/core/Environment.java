@@ -1,6 +1,5 @@
 package com.nextbreakpoint.blueprint.common.core;
 
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -26,16 +25,23 @@ public class Environment {
     }
 
     public String resolve(String input) {
-        return Optional.ofNullable(input)
-                .map(text -> pattern.matcher(text))
-                .filter(Matcher::matches)
-                .map(matcher -> matcher.group(1))
-                .map(this::evaluate)
-                .orElse(input);
+        if (input == null) {
+            return null;
+        }
+        final Matcher matcher = pattern.matcher(input);
+        final StringBuilder sb = new StringBuilder();
+        while (matcher.find()) {
+            matcher.appendReplacement(sb, evaluate(matcher.group(1)));
+        }
+        matcher.appendTail(sb);
+        return sb.toString();
     }
 
     private String evaluate(String expression) {
         final String value = getEnv.apply(expression.toUpperCase());
-        return value != null ? value : getProperty.apply(expression.toLowerCase());
+        if (value == null) {
+            return getProperty.apply(expression.toLowerCase());
+        }
+        return value;
     }
 }

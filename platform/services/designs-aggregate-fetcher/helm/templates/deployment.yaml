@@ -76,6 +76,8 @@ spec:
                 secretKeyRef:
                   name: {{ $root.Values.secretName | default "designs-aggregate-fetcher" | quote }}
                   key: DATABASE_PASSWORD
+            - name: JAEGER_SERVICE_NAME
+              value: {{ $root.Values.name | default "authentication" | quote }}
           volumeMounts:
             - name: config-vol
               readOnly: true

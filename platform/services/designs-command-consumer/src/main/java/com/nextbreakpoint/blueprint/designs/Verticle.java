@@ -2,6 +2,7 @@ package com.nextbreakpoint.blueprint.designs;
 
 import com.datastax.driver.core.Session;
 import com.nextbreakpoint.blueprint.common.core.Environment;
+import com.nextbreakpoint.blueprint.common.core.IOUtils;
 import com.nextbreakpoint.blueprint.common.vertx.*;
 import com.nextbreakpoint.blueprint.designs.common.CommandFailureConsumer;
 import com.nextbreakpoint.blueprint.designs.common.CommandSuccessConsumer;
@@ -11,8 +12,10 @@ import com.nextbreakpoint.blueprint.designs.model.RecordAndMessage;
 import com.nextbreakpoint.blueprint.common.core.Message;
 import com.nextbreakpoint.blueprint.common.core.MessageType;
 import com.nextbreakpoint.blueprint.designs.persistence.CassandraStore;
-import io.vertx.core.Handler;
-import io.vertx.core.Launcher;
+import io.vertx.core.DeploymentOptions;
+import io.vertx.core.Handler;import io.vertx.core.Launcher;
+import io.vertx.core.VertxOptions;
+import io.vertx.core.dns.AddressResolverOptions;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
@@ -20,8 +23,11 @@ import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.handler.LoggerFormat;
 import io.vertx.ext.web.openapi.RouterBuilder;
+import io.vertx.micrometer.MicrometerMetricsOptions;
+import io.vertx.micrometer.VertxPrometheusOptions;
 import io.vertx.rxjava.core.AbstractVerticle;
 import io.vertx.rxjava.core.Promise;
+import io.vertx.rxjava.core.Vertx;
 import io.vertx.rxjava.ext.auth.jwt.JWTAuth;
 import io.vertx.rxjava.ext.web.Router;
 import io.vertx.rxjava.ext.web.RoutingContext;
@@ -32,8 +38,11 @@ import io.vertx.rxjava.ext.web.handler.TimeoutHandler;
 import io.vertx.rxjava.kafka.client.consumer.KafkaConsumer;
 import io.vertx.rxjava.kafka.client.consumer.KafkaConsumerRecord;
 import io.vertx.rxjava.kafka.client.producer.KafkaProducer;
+import io.vertx.tracing.opentracing.OpenTracingOptions;
 import rx.Completable;
 
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executor;
@@ -52,10 +61,40 @@ import static com.nextbreakpoint.blueprint.designs.Factory.createUpdateDesignHan
 import static java.util.Arrays.asList;
 
 public class Verticle extends AbstractVerticle {
-    private final Logger logger = LoggerFactory.getLogger(Verticle.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(Verticle.class.getName());
 
     public static void main(String[] args) {
-        Launcher.main(new String[] { "run", Verticle.class.getCanonicalName(), "-conf", args.length > 0 ? args[0] : "config/localhost.json" });
+        try {
+            final JsonObject config = loadConfig(args.length > 0 ? args[0] : "config/localhost.json");
+
+            final VertxPrometheusOptions prometheusOptions = new VertxPrometheusOptions().setEnabled(true);
+
+            final MicrometerMetricsOptions metricsOptions = new MicrometerMetricsOptions()
+                    .setPrometheusOptions(prometheusOptions).setEnabled(true);
+
+            final OpenTracingOptions tracingOptions = new OpenTracingOptions();
+
+            final AddressResolverOptions addressResolverOptions = new AddressResolverOptions()
+                    .setCacheNegativeTimeToLive(0)
+                    .setCacheMaxTimeToLive(30);
+
+            final VertxOptions vertxOptions = new VertxOptions()
+                    .setAddressResolverOptions(addressResolverOptions)
+                    .setMetricsOptions(metricsOptions)
+                    .setTracingOptions(tracingOptions);
+
+            final Vertx vertx = Vertx.vertx(vertxOptions);
+
+            vertx.deployVerticle(new Verticle(), new DeploymentOptions().setConfig(config));
+        } catch (Exception e) {
+            logger.error("Can't start service", e);
+        }
+    }
+
+    private static JsonObject loadConfig(String configPath) throws IOException {
+        try (FileInputStream stream = new FileInputStream(configPath)) {
+            return new JsonObject(IOUtils.toString(stream));
+        }
     }
 
     @Override

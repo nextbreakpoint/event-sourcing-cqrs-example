@@ -117,6 +117,69 @@ services:
       - /scripts/nginx.conf:/etc/nginx/nginx.conf
       - /secrets/nginx_server_key.pem:/etc/nginx/server_key.pem
       - /secrets/nginx_server_cert.pem:/etc/nginx/server_cert.pem
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch-oss:7.10.2
+    environment:
+      discovery.type: single-node
+      # xpack.security.enabled: 'false'
+      ES_JAVA_OPTS: '-Xms2G -Xmx2G'
+    ports:
+      - target: 9200
+        published: 9200
+        protocol: tcp
+        mode: ingress
+      - target: 9300
+        published: 9300
+        protocol: tcp
+        mode: ingress
+    networks:
+      - platform
+  kibana:
+    image: docker.elastic.co/kibana/kibana-oss:7.10.2
+    ports:
+      - target: 5601
+        published: 5601
+        protocol: tcp
+        mode: ingress
+    networks:
+      - platform
+  jaeger:
+    image: jaegertracing/all-in-one:1.22
+    environment:
+      SPAN_STORAGE_TYPE: elasticsearch
+      ES_SERVER_URLS: http://elasticsearch:9200
+      ES_TAGS_AS_FIELDS_ALL: 'true'
+    ports:
+      - target: 16686
+        published: 16686
+        protocol: tcp
+        mode: ingress
+      - target: 5775
+        published: 5775
+        protocol: udp
+        mode: ingress
+      - target: 5778
+        published: 5778
+        protocol: tcp
+        mode: ingress
+      - target: 6831
+        published: 6831
+        protocol: udp
+        mode: ingress
+      - target: 6832
+        published: 6832
+        protocol: udp
+        mode: ingress
+      - target: 14250
+        published: 14250
+        protocol: tcp
+        mode: ingress
+      - target: 14268
+        published: 14268
+        protocol: tcp
+        mode: ingress
+    networks:
+      - platform
 volumes:
   data:
 networks:

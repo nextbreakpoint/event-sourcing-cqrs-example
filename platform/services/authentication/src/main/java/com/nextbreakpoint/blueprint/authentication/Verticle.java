@@ -3,24 +3,32 @@ package com.nextbreakpoint.blueprint.authentication;
 import com.nextbreakpoint.blueprint.authentication.handlers.GitHubSignOutHandler;
 import com.nextbreakpoint.blueprint.authentication.handlers.GitHubSignInHandler;
 import com.nextbreakpoint.blueprint.common.core.Environment;
+import com.nextbreakpoint.blueprint.common.core.IOUtils;
 import com.nextbreakpoint.blueprint.common.vertx.*;
-import io.vertx.core.Handler;
-import io.vertx.core.Launcher;
+import io.vertx.core.*;
+import io.vertx.core.dns.AddressResolverOptions;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.handler.LoggerFormat;
 import io.vertx.ext.web.openapi.RouterBuilder;
+import io.vertx.micrometer.MicrometerMetricsOptions;
+import io.vertx.micrometer.VertxPrometheusOptions;
 import io.vertx.rxjava.core.AbstractVerticle;
 import io.vertx.rxjava.core.Promise;
+import io.vertx.rxjava.core.Vertx;
 import io.vertx.rxjava.ext.web.Router;
 import io.vertx.rxjava.ext.web.RoutingContext;
 import io.vertx.rxjava.ext.web.handler.BodyHandler;
 import io.vertx.rxjava.ext.web.handler.CorsHandler;
 import io.vertx.rxjava.ext.web.handler.LoggerHandler;
+import io.vertx.rxjava.micrometer.PrometheusScrapingHandler;
+import io.vertx.tracing.opentracing.OpenTracingOptions;
 import rx.Completable;
 
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -33,10 +41,40 @@ import static com.nextbreakpoint.blueprint.common.core.Headers.X_TRACE_ID;
 import static java.util.Arrays.asList;
 
 public class Verticle extends AbstractVerticle {
-    private final Logger logger = LoggerFactory.getLogger(Verticle.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(Verticle.class.getName());
 
     public static void main(String[] args) {
-        Launcher.main(new String[] { "run", Verticle.class.getCanonicalName(), "-conf", args.length > 0 ? args[0] : "config/localhost.json" });
+        try {
+            final JsonObject config = loadConfig(args.length > 0 ? args[0] : "config/localhost.json");
+
+            final VertxPrometheusOptions prometheusOptions = new VertxPrometheusOptions().setEnabled(true);
+
+            final MicrometerMetricsOptions metricsOptions = new MicrometerMetricsOptions()
+                    .setPrometheusOptions(prometheusOptions).setEnabled(true);
+
+            final OpenTracingOptions tracingOptions = new OpenTracingOptions();
+
+            final AddressResolverOptions addressResolverOptions = new AddressResolverOptions()
+                    .setCacheNegativeTimeToLive(0)
+                    .setCacheMaxTimeToLive(30);
+
+            final VertxOptions vertxOptions = new VertxOptions()
+                    .setAddressResolverOptions(addressResolverOptions)
+                    .setMetricsOptions(metricsOptions)
+                    .setTracingOptions(tracingOptions);
+
+            final Vertx vertx = Vertx.vertx(vertxOptions);
+
+            vertx.deployVerticle(new Verticle(), new DeploymentOptions().setConfig(config));
+        } catch (Exception e) {
+            logger.error("Can't start service", e);
+        }
+    }
+
+    private static JsonObject loadConfig(String configPath) throws IOException {
+        try (FileInputStream stream = new FileInputStream(configPath)) {
+            return new JsonObject(IOUtils.toString(stream));
+        }
     }
 
     @Override
@@ -60,14 +98,18 @@ public class Verticle extends AbstractVerticle {
 
             final Router mainRouter = Router.router(vertx);
 
-            final CorsHandler corsHandler = CorsHandlerFactory.createWithGetOnly(originPattern, asList(COOKIE, AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_TRACE_ID));
-
             mainRouter.route().handler(MDCHandler.create());
             mainRouter.route().handler(LoggerHandler.create(true, LoggerFormat.DEFAULT));
             //mainRouter.route().handler(CookieHandler.create());
             mainRouter.route().handler(BodyHandler.create());
 
+            final CorsHandler corsHandler = CorsHandlerFactory.createWithGetOnly(originPattern, asList(COOKIE, AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_TRACE_ID));
+
             mainRouter.route("/*").handler(corsHandler);
+
+            mainRouter.options("/*").handler(ResponseHelper::sendNoContent);
+
+            mainRouter.route("/metrics").handler(PrometheusScrapingHandler.create());
 
             final Handler<RoutingContext> signinHandler = createSignInHandler(environment, config, mainRouter);
 
@@ -90,8 +132,6 @@ public class Verticle extends AbstractVerticle {
                         mainRouter.mountSubRouter("/v1", apiRouter);
 
                         mainRouter.get("/v1/apidocs").handler(openapiHandler::handle);
-
-                        mainRouter.options("/*").handler(ResponseHelper::sendNoContent);
 
                         mainRouter.route().failureHandler(routingContext -> redirectOnFailure(routingContext, webUrl));
 

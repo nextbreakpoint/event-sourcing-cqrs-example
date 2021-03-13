@@ -66,6 +66,8 @@ spec:
                 secretKeyRef:
                   name: {{ $root.Values.secretName | default "designs-command-producer" | quote }}
                   key: KEYSTORE_SECRET
+            - name: JAEGER_SERVICE_NAME
+              value: {{ $root.Values.name | default "authentication" | quote }}
           volumeMounts:
             - name: config-vol
               readOnly: true

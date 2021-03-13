@@ -308,7 +308,7 @@ public class IntegrationTests {
   private static boolean isServiceReady(String namespace, String name) throws IOException, InterruptedException {
     String logs = KubeUtils.fetchLogs(namespace, name);
     String[] lines = logs.split("\n");
-    boolean serviceReady = Arrays.stream(lines).anyMatch(line -> line.contains("Succeeded in deploying verticle"));
+    boolean serviceReady = Arrays.stream(lines).anyMatch(line -> line.contains("Service listening on port 8080"));
     return serviceReady;
   }
 

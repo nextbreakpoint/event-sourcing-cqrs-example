@@ -1,9 +1,9 @@
 package com.nextbreakpoint.blueprint.authentication.handlers;
 
-import com.nextbreakpoint.blueprint.common.core.Environment;
 import com.nextbreakpoint.blueprint.common.core.Authority;
-import com.nextbreakpoint.blueprint.common.vertx.Failure;
+import com.nextbreakpoint.blueprint.common.core.Environment;
 import com.nextbreakpoint.blueprint.common.vertx.Authentication;
+import com.nextbreakpoint.blueprint.common.vertx.Failure;
 import com.nextbreakpoint.blueprint.common.vertx.JWTProviderFactory;
 import com.nextbreakpoint.blueprint.common.vertx.WebClientFactory;
 import io.vertx.core.Handler;
@@ -29,10 +29,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.nextbreakpoint.blueprint.common.core.ContentType.APPLICATION_JSON;
-import static com.nextbreakpoint.blueprint.common.core.Headers.ACCEPT;
-import static com.nextbreakpoint.blueprint.common.core.Headers.AUTHORIZATION;
-import static com.nextbreakpoint.blueprint.common.core.Headers.CONTENT_TYPE;
-import static com.nextbreakpoint.blueprint.common.core.Headers.X_TRACE_ID;
+import static com.nextbreakpoint.blueprint.common.core.Headers.*;
 import static com.nextbreakpoint.blueprint.common.vertx.Authentication.NULL_USER_UUID;
 
 public class GitHubSignInHandler implements Handler<RoutingContext> {
@@ -114,6 +111,7 @@ public class GitHubSignInHandler implements Handler<RoutingContext> {
 
         accountsClient.get("/v1/accounts")
                 .putHeader(AUTHORIZATION, Authentication.makeAuthorization(accessToken))
+                .putHeader(ACCEPT, APPLICATION_JSON)
                 .putHeader(X_TRACE_ID, (String) routingContext.get("request-trace-id"))
                 .addQueryParam("email", userEmail)
                 .rxSend()

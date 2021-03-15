@@ -1,7 +1,7 @@
 package com.nextbreakpoint.blueprint.designs.handlers;
 
-import com.nextbreakpoint.blueprint.common.vertx.Failure;
 import com.nextbreakpoint.blueprint.common.core.event.DesignChanged;
+import com.nextbreakpoint.blueprint.common.vertx.Failure;
 import io.vertx.core.Handler;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
@@ -11,11 +11,7 @@ import io.vertx.rxjava.core.Vertx;
 import io.vertx.rxjava.core.eventbus.MessageConsumer;
 import io.vertx.rxjava.ext.web.RoutingContext;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 public class EventsHandler implements Handler<RoutingContext> {
     private final Logger logger = LoggerFactory.getLogger(EventsHandler.class.getName());

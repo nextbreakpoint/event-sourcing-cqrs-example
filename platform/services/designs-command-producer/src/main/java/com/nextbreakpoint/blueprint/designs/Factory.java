@@ -1,5 +1,11 @@
 package com.nextbreakpoint.blueprint.designs;
 
+import com.nextbreakpoint.blueprint.common.core.command.DeleteDesign;
+import com.nextbreakpoint.blueprint.common.core.command.InsertDesign;
+import com.nextbreakpoint.blueprint.common.core.command.UpdateDesign;
+import com.nextbreakpoint.blueprint.common.vertx.ErrorConsumer;
+import com.nextbreakpoint.blueprint.common.vertx.JsonConsumer;
+import com.nextbreakpoint.blueprint.common.vertx.TemplateHandler;
 import com.nextbreakpoint.blueprint.designs.controllers.delete.DeleteDesignController;
 import com.nextbreakpoint.blueprint.designs.controllers.delete.DeleteDesignInputMapper;
 import com.nextbreakpoint.blueprint.designs.controllers.delete.DeleteDesignMessageMapper;
@@ -13,12 +19,6 @@ import com.nextbreakpoint.blueprint.designs.controllers.update.UpdateDesignInput
 import com.nextbreakpoint.blueprint.designs.controllers.update.UpdateDesignMessageMapper;
 import com.nextbreakpoint.blueprint.designs.controllers.update.UpdateDesignOutputMapper;
 import com.nextbreakpoint.blueprint.designs.model.CommandResult;
-import com.nextbreakpoint.blueprint.common.core.command.DeleteDesign;
-import com.nextbreakpoint.blueprint.common.core.command.InsertDesign;
-import com.nextbreakpoint.blueprint.common.core.command.UpdateDesign;
-import com.nextbreakpoint.blueprint.common.vertx.TemplateHandler;
-import com.nextbreakpoint.blueprint.common.vertx.ErrorConsumer;
-import com.nextbreakpoint.blueprint.common.vertx.JsonConsumer;
 import io.vertx.core.Handler;
 import io.vertx.rxjava.ext.web.RoutingContext;
 import io.vertx.rxjava.kafka.client.producer.KafkaProducer;

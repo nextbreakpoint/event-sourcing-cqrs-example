@@ -1,7 +1,7 @@
 package com.nextbreakpoint.blueprint.designs.controllers.insert;
 
-import com.nextbreakpoint.blueprint.common.vertx.Controller;
 import com.nextbreakpoint.blueprint.common.core.event.DesignChanged;
+import com.nextbreakpoint.blueprint.common.vertx.Controller;
 import com.nextbreakpoint.blueprint.common.vertx.DesignChangedMapper;
 import com.nextbreakpoint.blueprint.designs.Store;
 import com.nextbreakpoint.blueprint.designs.model.InsertDesignRequest;

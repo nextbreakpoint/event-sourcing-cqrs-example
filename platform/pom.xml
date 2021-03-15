@@ -33,6 +33,9 @@
         <hamcrest.version>2.2</hamcrest.version>
         <restito.version>0.9.4</restito.version>
         <awaitility.version>4.0.3</awaitility.version>
+        <ktor.version>1.5.2</ktor.version>
+        <pact-jvm-provider.version>4.1.0</pact-jvm-provider.version>
+        <pact-jvm-consumer.version>4.1.0</pact-jvm-consumer.version>
         <maven-jar-plugin.version>3.1.1</maven-jar-plugin.version>
         <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
         <maven-source-plugin.version>3.2.1</maven-source-plugin.version>
@@ -43,12 +46,16 @@
         <maven-shade-plugin.version>3.2.1</maven-shade-plugin.version>
         <maven-dependency-plugin.version>3.1.2</maven-dependency-plugin.version>
         <build-helper-maven-plugin.version>1.9.1</build-helper-maven-plugin.version>
+        <pact-provider-maven.version>4.1.0</pact-provider-maven.version>
         <java.version>11</java.version>
         <maven.source.release>11</maven.source.release>
         <maven.target.release>11</maven.target.release>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
         <stub.host>localhost</stub.host>
+        <minikube.host>localhost</minikube.host>
+        <pactbroker.host>localhost</pactbroker.host>
+        <pactbroker.port>9292</pactbroker.port>
     </properties>
     <build>
         <plugins>
@@ -118,10 +125,11 @@
                 <configuration>
                     <parallel>both</parallel>
                     <threadCount>5</threadCount>
-                    <argLine>--add-opens java.base/java.nio=ALL-UNNAMED --add-opens java.base/sun.nio.ch=ALL-UNNAMED --add-opens java.base/sun.net.dns=ALL-UNNAMED</argLine>
+<!--                    <argLine>&#45;&#45;add-opens java.base/java.nio=ALL-UNNAMED &#45;&#45;add-opens java.base/sun.nio.ch=ALL-UNNAMED &#45;&#45;add-opens java.base/sun.net.dns=ALL-UNNAMED</argLine>-->
                     <includes>
                         <include>**/*Test.java</include>
                     </includes>
+                    <useSystemClassLoader>false</useSystemClassLoader>
                 </configuration>
             </plugin>
             <plugin>
@@ -137,10 +145,10 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <argLine>--add-opens java.base/java.nio=ALL-UNNAMED --add-opens java.base/sun.nio.ch=ALL-UNNAMED --add-opens java.base/sun.net.dns=ALL-UNNAMED --add-opens com.fasterxml.jackson.core/com.fasterxml.jackson.core=ALL-UNNAMED --add-opens com.fasterxml.jackson.databind/com.fasterxml.jackson.databind=ALL-UNNAMED</argLine>
                     <includes>
                         <include>**/*IT.java</include>
                     </includes>
+                    <useSystemClassLoader>false</useSystemClassLoader>
                 </configuration>
             </plugin>
         </plugins>
@@ -209,8 +217,20 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter-params</artifactId>
+                <version>${junit5jupiter.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
                 <groupId>org.junit.platform</groupId>
                 <artifactId>junit-platform-runner</artifactId>
+                <version>${junit5platform.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.junit.platform</groupId>
+                <artifactId>junit-platform-commons</artifactId>
                 <version>${junit5platform.version}</version>
                 <scope>test</scope>
             </dependency>
@@ -260,6 +280,82 @@
                 <groupId>org.awaitility</groupId>
                 <artifactId>awaitility</artifactId>
                 <version>${awaitility.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>au.com.dius.pact</groupId>
+                <artifactId>provider</artifactId>
+                <version>${pact-jvm-provider.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>io.ktor</groupId>
+                        <artifactId>ktor-server-netty</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>io.ktor</groupId>
+                        <artifactId>ktor-network-tls-certificates</artifactId>
+                    </exclusion>
+                </exclusions>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>au.com.dius.pact.provider</groupId>
+                <artifactId>junit5</artifactId>
+                <version>${pact-jvm-provider.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.junit.jupiter</groupId>
+                        <artifactId>junit-jupiter-api</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>au.com.dius.pact</groupId>
+                        <artifactId>provider</artifactId>
+                    </exclusion>
+                </exclusions>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>au.com.dius.pact</groupId>
+                <artifactId>consumer</artifactId>
+                <version>${pact-jvm-consumer.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>io.ktor</groupId>
+                        <artifactId>ktor-server-netty</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>io.ktor</groupId>
+                        <artifactId>ktor-network-tls-certificates</artifactId>
+                    </exclusion>
+                </exclusions>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>au.com.dius.pact.consumer</groupId>
+                <artifactId>junit5</artifactId>
+                <version>${pact-jvm-consumer.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.junit.jupiter</groupId>
+                        <artifactId>junit-jupiter-api</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>au.com.dius.pact</groupId>
+                        <artifactId>consumer</artifactId>
+                    </exclusion>
+                </exclusions>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.ktor</groupId>
+                <artifactId>ktor-server-netty</artifactId>
+                <version>${ktor.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.ktor</groupId>
+                <artifactId>ktor-network-tls-certificates</artifactId>
+                <version>${ktor.version}</version>
                 <scope>test</scope>
             </dependency>
         </dependencies>
@@ -321,52 +417,35 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.junit.platform</groupId>
             <artifactId>junit-platform-runner</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-commons</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
     <profiles>
         <profile>
-            <id>Mac</id>
-            <activation>
-                <os><family>mac</family></os>
-            </activation>
-            <properties>
-                <stub.host>192.168.64.1</stub.host>
-            </properties>
-        </profile>
-        <profile>
-            <id>integration</id>
+            <id>minikube</id>
             <activation>
                 <property>
-                    <name>integration</name>
+                    <name>minikube</name>
                     <value>true</value>
                 </property>
             </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-failsafe-plugin</artifactId>
-                        <version>${maven-failsafe-plugin.version}</version>
-                        <executions>
-                            <execution>
-                                <goals>
-                                    <goal>integration-test</goal>
-                                    <goal>verify</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                        <configuration>
-                            <argLine>--add-opens java.base/java.nio=ALL-UNNAMED --add-opens java.base/sun.nio.ch=ALL-UNNAMED --add-opens java.base/sun.net.dns=ALL-UNNAMED --add-opens com.fasterxml.jackson.core/com.fasterxml.jackson.core=ALL-UNNAMED --add-opens com.fasterxml.jackson.databind/com.fasterxml.jackson.databind=ALL-UNNAMED</argLine>
-                            <includes>
-                                <include>**/IntegrationTests.java</include>
-                            </includes>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
+            <properties>
+                <stub.host>192.168.64.1</stub.host>
+                <minikube.host>192.168.64.12</minikube.host>
+                <pactbroker.host>192.168.64.12</pactbroker.host>
+            </properties>
         </profile>
         <profile>
             <id>platform</id>

@@ -1,14 +1,7 @@
 package com.nextbreakpoint.blueprint.accounts.persistence;
 
 import com.nextbreakpoint.blueprint.accounts.Store;
-import com.nextbreakpoint.blueprint.accounts.model.DeleteAccountRequest;
-import com.nextbreakpoint.blueprint.accounts.model.DeleteAccountResponse;
-import com.nextbreakpoint.blueprint.accounts.model.InsertAccountRequest;
-import com.nextbreakpoint.blueprint.accounts.model.InsertAccountResponse;
-import com.nextbreakpoint.blueprint.accounts.model.ListAccountsRequest;
-import com.nextbreakpoint.blueprint.accounts.model.ListAccountsResponse;
-import com.nextbreakpoint.blueprint.accounts.model.LoadAccountRequest;
-import com.nextbreakpoint.blueprint.accounts.model.LoadAccountResponse;
+import com.nextbreakpoint.blueprint.accounts.model.*;
 import com.nextbreakpoint.blueprint.common.core.Account;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;

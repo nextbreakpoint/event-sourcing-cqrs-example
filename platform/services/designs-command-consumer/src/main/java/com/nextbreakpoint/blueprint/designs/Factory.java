@@ -1,7 +1,5 @@
 package com.nextbreakpoint.blueprint.designs;
 
-import com.nextbreakpoint.blueprint.designs.model.CommandOutput;
-import com.nextbreakpoint.blueprint.designs.model.RecordAndMessage;
 import com.nextbreakpoint.blueprint.common.core.command.DeleteDesign;
 import com.nextbreakpoint.blueprint.common.core.command.InsertDesign;
 import com.nextbreakpoint.blueprint.common.core.command.UpdateDesign;
@@ -16,6 +14,8 @@ import com.nextbreakpoint.blueprint.designs.controllers.insert.InsertDesignContr
 import com.nextbreakpoint.blueprint.designs.controllers.insert.InsertDesignInputMapper;
 import com.nextbreakpoint.blueprint.designs.controllers.update.UpdateDesignController;
 import com.nextbreakpoint.blueprint.designs.controllers.update.UpdateDesignInputMapper;
+import com.nextbreakpoint.blueprint.designs.model.CommandOutput;
+import com.nextbreakpoint.blueprint.designs.model.RecordAndMessage;
 import io.vertx.core.Handler;
 import io.vertx.rxjava.kafka.client.producer.KafkaProducer;
 

@@ -59,10 +59,17 @@
                             <goal>verify</goal>
                         </goals>
                         <configuration>
+                            <includes>
+                                <include>**/TestSuite.java</include>
+                            </includes>
                             <systemProperties>
+                                <pactbroker.host>${pactbroker.host}</pactbroker.host>
+                                <pactbroker.port>${pactbroker.port}</pactbroker.port>
+                                <build.version>${project.version}</build.version>
                                 <http.port>${http.port}</http.port>
                                 <stub.port>${stub.port}</stub.port>
                             </systemProperties>
+                            <useSystemClassLoader>false</useSystemClassLoader>
                         </configuration>
                     </execution>
                 </executions>

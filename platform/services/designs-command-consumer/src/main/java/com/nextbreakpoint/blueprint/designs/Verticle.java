@@ -3,17 +3,17 @@ package com.nextbreakpoint.blueprint.designs;
 import com.datastax.driver.core.Session;
 import com.nextbreakpoint.blueprint.common.core.Environment;
 import com.nextbreakpoint.blueprint.common.core.IOUtils;
+import com.nextbreakpoint.blueprint.common.core.Message;
+import com.nextbreakpoint.blueprint.common.core.MessageType;
 import com.nextbreakpoint.blueprint.common.vertx.*;
 import com.nextbreakpoint.blueprint.designs.common.CommandFailureConsumer;
 import com.nextbreakpoint.blueprint.designs.common.CommandSuccessConsumer;
 import com.nextbreakpoint.blueprint.designs.common.ViewFailureConsumer;
 import com.nextbreakpoint.blueprint.designs.common.ViewSuccessConsumer;
 import com.nextbreakpoint.blueprint.designs.model.RecordAndMessage;
-import com.nextbreakpoint.blueprint.common.core.Message;
-import com.nextbreakpoint.blueprint.common.core.MessageType;
 import com.nextbreakpoint.blueprint.designs.persistence.CassandraStore;
 import io.vertx.core.DeploymentOptions;
-import io.vertx.core.Handler;import io.vertx.core.Launcher;
+import io.vertx.core.Handler;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.dns.AddressResolverOptions;
 import io.vertx.core.http.HttpServerOptions;
@@ -49,15 +49,8 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.function.Supplier;
 
-import static com.nextbreakpoint.blueprint.common.core.Headers.ACCEPT;
-import static com.nextbreakpoint.blueprint.common.core.Headers.AUTHORIZATION;
-import static com.nextbreakpoint.blueprint.common.core.Headers.CONTENT_TYPE;
-import static com.nextbreakpoint.blueprint.common.core.Headers.X_MODIFIED;
-import static com.nextbreakpoint.blueprint.common.core.Headers.X_XSRF_TOKEN;
-import static com.nextbreakpoint.blueprint.designs.Factory.createDeleteDesignHandler;
-import static com.nextbreakpoint.blueprint.designs.Factory.createDesignChangedHandler;
-import static com.nextbreakpoint.blueprint.designs.Factory.createInsertDesignHandler;
-import static com.nextbreakpoint.blueprint.designs.Factory.createUpdateDesignHandler;
+import static com.nextbreakpoint.blueprint.common.core.Headers.*;
+import static com.nextbreakpoint.blueprint.designs.Factory.*;
 import static java.util.Arrays.asList;
 
 public class Verticle extends AbstractVerticle {

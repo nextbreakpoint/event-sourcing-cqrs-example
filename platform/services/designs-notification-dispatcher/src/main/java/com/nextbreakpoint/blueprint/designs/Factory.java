@@ -1,8 +1,8 @@
 package com.nextbreakpoint.blueprint.designs;
 
-import com.nextbreakpoint.blueprint.common.vertx.Controller;
 import com.nextbreakpoint.blueprint.common.core.Message;
 import com.nextbreakpoint.blueprint.common.core.event.DesignChanged;
+import com.nextbreakpoint.blueprint.common.vertx.Controller;
 import com.nextbreakpoint.blueprint.common.vertx.TemplateHandler;
 import com.nextbreakpoint.blueprint.common.vertx.consumer.MessaggeFailureConsumer;
 import com.nextbreakpoint.blueprint.common.vertx.consumer.MessaggeSuccessConsumer;

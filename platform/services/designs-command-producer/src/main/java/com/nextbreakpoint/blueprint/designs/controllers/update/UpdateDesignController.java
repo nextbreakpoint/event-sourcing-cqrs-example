@@ -1,9 +1,9 @@
 package com.nextbreakpoint.blueprint.designs.controllers.update;
 
-import com.nextbreakpoint.blueprint.common.vertx.Controller;
 import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.Message;
 import com.nextbreakpoint.blueprint.common.core.command.UpdateDesign;
+import com.nextbreakpoint.blueprint.common.vertx.Controller;
 import com.nextbreakpoint.blueprint.designs.model.CommandResult;
 import com.nextbreakpoint.blueprint.designs.model.CommandStatus;
 import io.vertx.core.impl.logging.Logger;

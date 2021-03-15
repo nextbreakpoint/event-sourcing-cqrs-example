@@ -2,11 +2,11 @@ package com.nextbreakpoint.blueprint.designs;
 
 import com.nextbreakpoint.blueprint.common.core.Environment;
 import com.nextbreakpoint.blueprint.common.core.IOUtils;
-import com.nextbreakpoint.blueprint.common.vertx.*;
-import com.nextbreakpoint.blueprint.designs.handlers.EventsHandler;
 import com.nextbreakpoint.blueprint.common.core.Message;
 import com.nextbreakpoint.blueprint.common.core.MessageType;
+import com.nextbreakpoint.blueprint.common.vertx.*;
 import com.nextbreakpoint.blueprint.designs.controllers.DesignChangedController;
+import com.nextbreakpoint.blueprint.designs.handlers.EventsHandler;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Handler;
 import io.vertx.core.VertxOptions;
@@ -40,16 +40,8 @@ import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-import static com.nextbreakpoint.blueprint.common.core.Authority.ADMIN;
-import static com.nextbreakpoint.blueprint.common.core.Authority.ANONYMOUS;
-import static com.nextbreakpoint.blueprint.common.core.Authority.GUEST;
-import static com.nextbreakpoint.blueprint.common.core.Headers.ACCEPT;
-import static com.nextbreakpoint.blueprint.common.core.Headers.AUTHORIZATION;
-import static com.nextbreakpoint.blueprint.common.core.Headers.CONTENT_TYPE;
-import static com.nextbreakpoint.blueprint.common.core.Headers.COOKIE;
-import static com.nextbreakpoint.blueprint.common.core.Headers.X_MODIFIED;
-import static com.nextbreakpoint.blueprint.common.core.Headers.X_TRACE_ID;
-import static com.nextbreakpoint.blueprint.common.core.Headers.X_XSRF_TOKEN;
+import static com.nextbreakpoint.blueprint.common.core.Authority.*;
+import static com.nextbreakpoint.blueprint.common.core.Headers.*;
 import static java.util.Arrays.asList;
 
 public class Verticle extends AbstractVerticle {

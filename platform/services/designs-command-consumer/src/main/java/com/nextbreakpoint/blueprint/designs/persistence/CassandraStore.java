@@ -1,32 +1,22 @@
 package com.nextbreakpoint.blueprint.designs.persistence;
 
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.ResultSetFuture;
-import com.datastax.driver.core.Row;
-import com.datastax.driver.core.Session;
+import com.datastax.driver.core.*;
 import com.datastax.driver.core.utils.UUIDs;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.nextbreakpoint.blueprint.designs.Store;
-import com.nextbreakpoint.blueprint.designs.model.PersistenceResult;
 import com.nextbreakpoint.blueprint.common.core.DesignChange;
 import com.nextbreakpoint.blueprint.common.core.command.DeleteDesign;
 import com.nextbreakpoint.blueprint.common.core.command.InsertDesign;
 import com.nextbreakpoint.blueprint.common.core.command.UpdateDesign;
 import com.nextbreakpoint.blueprint.common.core.event.DesignChanged;
+import com.nextbreakpoint.blueprint.designs.Store;
+import com.nextbreakpoint.blueprint.designs.model.PersistenceResult;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import rx.Single;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 

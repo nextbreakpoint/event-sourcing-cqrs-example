@@ -1,9 +1,9 @@
 package com.nextbreakpoint.blueprint.designs.controllers.load;
 
-import com.nextbreakpoint.blueprint.designs.model.LoadDesignRequest;
-import com.nextbreakpoint.blueprint.designs.model.LoadDesignResponse;
 import com.nextbreakpoint.blueprint.common.vertx.Controller;
 import com.nextbreakpoint.blueprint.designs.Store;
+import com.nextbreakpoint.blueprint.designs.model.LoadDesignRequest;
+import com.nextbreakpoint.blueprint.designs.model.LoadDesignResponse;
 import rx.Single;
 
 import java.util.Objects;

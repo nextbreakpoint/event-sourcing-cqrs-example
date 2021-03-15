@@ -38,16 +38,8 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.function.Supplier;
 
-import static com.nextbreakpoint.blueprint.common.core.Authority.ADMIN;
-import static com.nextbreakpoint.blueprint.common.core.Authority.ANONYMOUS;
-import static com.nextbreakpoint.blueprint.common.core.Authority.GUEST;
-import static com.nextbreakpoint.blueprint.common.core.Headers.ACCEPT;
-import static com.nextbreakpoint.blueprint.common.core.Headers.AUTHORIZATION;
-import static com.nextbreakpoint.blueprint.common.core.Headers.CONTENT_TYPE;
-import static com.nextbreakpoint.blueprint.common.core.Headers.COOKIE;
-import static com.nextbreakpoint.blueprint.common.core.Headers.X_MODIFIED;
-import static com.nextbreakpoint.blueprint.common.core.Headers.X_TRACE_ID;
-import static com.nextbreakpoint.blueprint.common.core.Headers.X_XSRF_TOKEN;
+import static com.nextbreakpoint.blueprint.common.core.Authority.*;
+import static com.nextbreakpoint.blueprint.common.core.Headers.*;
 import static com.nextbreakpoint.blueprint.designs.Factory.createListDesignsHandler;
 import static com.nextbreakpoint.blueprint.designs.Factory.createLoadDesignHandler;
 import static java.util.Arrays.asList;

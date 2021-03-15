@@ -1,15 +1,6 @@
 package com.nextbreakpoint.blueprint.designs;
 
-import com.nextbreakpoint.blueprint.designs.model.DeleteDesignRequest;
-import com.nextbreakpoint.blueprint.designs.model.DeleteDesignResponse;
-import com.nextbreakpoint.blueprint.designs.model.InsertDesignRequest;
-import com.nextbreakpoint.blueprint.designs.model.InsertDesignResponse;
-import com.nextbreakpoint.blueprint.designs.model.ListDesignsRequest;
-import com.nextbreakpoint.blueprint.designs.model.ListDesignsResponse;
-import com.nextbreakpoint.blueprint.designs.model.LoadDesignRequest;
-import com.nextbreakpoint.blueprint.designs.model.LoadDesignResponse;
-import com.nextbreakpoint.blueprint.designs.model.UpdateDesignRequest;
-import com.nextbreakpoint.blueprint.designs.model.UpdateDesignResponse;
+import com.nextbreakpoint.blueprint.designs.model.*;
 import rx.Single;
 
 public interface Store {

@@ -4,7 +4,9 @@ import io.vertx.core.Handler;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.rxjava.core.buffer.Buffer;
-import io.vertx.rxjava.core.http.*;
+import io.vertx.rxjava.core.http.HttpClient;
+import io.vertx.rxjava.core.http.HttpServerRequest;
+import io.vertx.rxjava.core.http.HttpServerResponse;
 import io.vertx.rxjava.ext.web.RoutingContext;
 
 import java.util.Objects;

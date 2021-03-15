@@ -1,11 +1,13 @@
 package com.nextbreakpoint.blueprint.authentication;
 
-import com.nextbreakpoint.blueprint.authentication.handlers.GitHubSignOutHandler;
 import com.nextbreakpoint.blueprint.authentication.handlers.GitHubSignInHandler;
+import com.nextbreakpoint.blueprint.authentication.handlers.GitHubSignOutHandler;
 import com.nextbreakpoint.blueprint.common.core.Environment;
 import com.nextbreakpoint.blueprint.common.core.IOUtils;
 import com.nextbreakpoint.blueprint.common.vertx.*;
-import io.vertx.core.*;
+import io.vertx.core.DeploymentOptions;
+import io.vertx.core.Handler;
+import io.vertx.core.VertxOptions;
 import io.vertx.core.dns.AddressResolverOptions;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.impl.logging.Logger;
@@ -33,11 +35,7 @@ import java.net.MalformedURLException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-import static com.nextbreakpoint.blueprint.common.core.Headers.ACCEPT;
-import static com.nextbreakpoint.blueprint.common.core.Headers.AUTHORIZATION;
-import static com.nextbreakpoint.blueprint.common.core.Headers.CONTENT_TYPE;
-import static com.nextbreakpoint.blueprint.common.core.Headers.COOKIE;
-import static com.nextbreakpoint.blueprint.common.core.Headers.X_TRACE_ID;
+import static com.nextbreakpoint.blueprint.common.core.Headers.*;
 import static java.util.Arrays.asList;
 
 public class Verticle extends AbstractVerticle {

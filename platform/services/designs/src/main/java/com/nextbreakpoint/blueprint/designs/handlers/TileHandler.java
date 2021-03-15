@@ -1,11 +1,11 @@
 package com.nextbreakpoint.blueprint.designs.handlers;
 
+import com.nextbreakpoint.blueprint.common.vertx.Failure;
 import com.nextbreakpoint.blueprint.designs.Store;
+import com.nextbreakpoint.blueprint.designs.model.LoadDesignRequest;
 import com.nextbreakpoint.nextfractal.core.common.Bundle;
 import com.nextbreakpoint.nextfractal.core.common.TileGenerator;
 import com.nextbreakpoint.nextfractal.core.common.TileUtils;
-import com.nextbreakpoint.blueprint.common.vertx.Failure;
-import com.nextbreakpoint.blueprint.designs.model.LoadDesignRequest;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
 import io.vertx.rxjava.core.Promise;
@@ -15,11 +15,7 @@ import io.vertx.rxjava.core.http.HttpServerRequest;
 import io.vertx.rxjava.ext.web.RoutingContext;
 
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Objects;
-import java.util.TimeZone;
-import java.util.UUID;
+import java.util.*;
 
 import static com.nextbreakpoint.blueprint.common.core.ContentType.IMAGE_PNG;
 import static com.nextbreakpoint.blueprint.common.core.Headers.CONTENT_TYPE;

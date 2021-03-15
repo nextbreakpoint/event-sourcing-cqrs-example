@@ -1,17 +1,13 @@
 package com.nextbreakpoint.blueprint.designs.persistence;
 
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.ResultSetFuture;
-import com.datastax.driver.core.Row;
-import com.datastax.driver.core.Session;
+import com.datastax.driver.core.*;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.nextbreakpoint.blueprint.common.core.DesignDocument;
+import com.nextbreakpoint.blueprint.designs.Store;
 import com.nextbreakpoint.blueprint.designs.model.ListDesignsRequest;
 import com.nextbreakpoint.blueprint.designs.model.ListDesignsResponse;
 import com.nextbreakpoint.blueprint.designs.model.LoadDesignRequest;
 import com.nextbreakpoint.blueprint.designs.model.LoadDesignResponse;
-import com.nextbreakpoint.blueprint.common.core.DesignDocument;
-import com.nextbreakpoint.blueprint.designs.Store;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import rx.Single;

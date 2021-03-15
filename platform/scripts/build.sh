@@ -4,7 +4,10 @@ set -e
 
 eval $(minikube docker-env)
 
-export REPOSITORY=integration
+export REPOSITORY="integration"
+export VERSION="1.0.0"
+export BUILD="true"
+export TEST="true"
 
 # mvn clean install
 
@@ -13,46 +16,82 @@ export REPOSITORY=integration
 # popd
 
 pushd services/frontend
-sh build.sh $REPOSITORY
-mvn clean verify -Dintegration=true
+if [ "$BUILD" == "true" ]; then
+  sh build.sh $REPOSITORY $VERSION
+fi
+if [ "$TEST" == "true" ]; then
+  mvn clean verify -Dminikube=true
+fi
 popd
 
 pushd services/gateway
-sh build.sh $REPOSITORY
-mvn clean verify -Dintegration=true
+if [ "$BUILD" == "true" ]; then
+  sh build.sh $REPOSITORY $VERSION
+fi
+if [ "$TEST" == "true" ]; then
+  mvn clean verify -Dminikube=true
+fi
 popd
 
 pushd services/authentication
-sh build.sh $REPOSITORY
-mvn clean verify -Dintegration=true
+if [ "$BUILD" == "true" ]; then
+  sh build.sh $REPOSITORY $VERSION
+fi
+if [ "$TEST" == "true" ]; then
+  mvn clean verify -Dminikube=true
+fi
 popd
 
 pushd services/accounts
-sh build.sh $REPOSITORY
-mvn clean verify -Dintegration=true
+if [ "$BUILD" == "true" ]; then
+  sh build.sh $REPOSITORY $VERSION
+fi
+if [ "$TEST" == "true" ]; then
+  mvn clean verify -Dminikube=true
+fi
 popd
 
 pushd services/designs
-sh build.sh $REPOSITORY
-mvn clean verify -Dintegration=true
+if [ "$BUILD" == "true" ]; then
+  sh build.sh $REPOSITORY $VERSION
+fi
+if [ "$TEST" == "true" ]; then
+  mvn clean verify -Dminikube=true
+fi
 popd
 
 pushd services/designs-command-consumer
-sh build.sh $REPOSITORY
-mvn clean verify -Dintegration=true
+if [ "$BUILD" == "true" ]; then
+  sh build.sh $REPOSITORY $VERSION
+fi
+if [ "$TEST" == "true" ]; then
+  mvn clean verify -Dminikube=true
+fi
 popd
 
 pushd services/designs-command-producer
-sh build.sh $REPOSITORY
-mvn clean verify -Dintegration=true
+if [ "$BUILD" == "true" ]; then
+  sh build.sh $REPOSITORY $VERSION
+fi
+if [ "$TEST" == "true" ]; then
+  mvn clean verify -Dminikube=true
+fi
 popd
 
 pushd services/designs-notification-dispatcher
-sh build.sh $REPOSITORY
-mvn clean verify -Dintegration=true
+if [ "$BUILD" == "true" ]; then
+  sh build.sh $REPOSITORY $VERSION
+fi
+if [ "$TEST" == "true" ]; then
+  mvn clean verify -Dminikube=true
+fi
 popd
 
 pushd services/designs-aggregate-fetcher
-sh build.sh $REPOSITORY
-mvn clean verify -Dintegration=true
+if [ "$BUILD" == "true" ]; then
+  sh build.sh $REPOSITORY $VERSION
+fi
+if [ "$TEST" == "true" ]; then
+  mvn clean verify -Dminikube=true
+fi
 popd

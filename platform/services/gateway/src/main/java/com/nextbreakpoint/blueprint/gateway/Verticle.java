@@ -2,14 +2,9 @@ package com.nextbreakpoint.blueprint.gateway;
 
 import com.nextbreakpoint.blueprint.common.core.Environment;
 import com.nextbreakpoint.blueprint.common.core.IOUtils;
+import com.nextbreakpoint.blueprint.common.vertx.*;
 import com.nextbreakpoint.blueprint.gateway.handlers.ProxyHandler;
 import com.nextbreakpoint.blueprint.gateway.handlers.WatchHandler;
-import com.nextbreakpoint.blueprint.common.vertx.CorsHandlerFactory;
-import com.nextbreakpoint.blueprint.common.vertx.MDCHandler;
-import com.nextbreakpoint.blueprint.common.vertx.HttpClientFactory;
-import com.nextbreakpoint.blueprint.common.vertx.ResponseHelper;
-import com.nextbreakpoint.blueprint.common.vertx.ServerUtil;
-import com.nextbreakpoint.blueprint.common.vertx.TraceHandler;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.dns.AddressResolverOptions;

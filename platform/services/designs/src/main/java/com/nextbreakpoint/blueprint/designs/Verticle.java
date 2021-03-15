@@ -3,8 +3,8 @@ package com.nextbreakpoint.blueprint.designs;
 import com.nextbreakpoint.blueprint.common.core.Environment;
 import com.nextbreakpoint.blueprint.common.core.IOUtils;
 import com.nextbreakpoint.blueprint.common.vertx.*;
-import com.nextbreakpoint.blueprint.designs.persistence.MySQLStore;
 import com.nextbreakpoint.blueprint.designs.handlers.TileHandler;
+import com.nextbreakpoint.blueprint.designs.persistence.MySQLStore;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Handler;
 import io.vertx.core.VertxOptions;
@@ -38,20 +38,9 @@ import java.io.IOException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-import static com.nextbreakpoint.blueprint.common.core.Authority.ADMIN;
-import static com.nextbreakpoint.blueprint.common.core.Authority.ANONYMOUS;
-import static com.nextbreakpoint.blueprint.common.core.Authority.GUEST;
-import static com.nextbreakpoint.blueprint.common.core.Headers.ACCEPT;
-import static com.nextbreakpoint.blueprint.common.core.Headers.AUTHORIZATION;
-import static com.nextbreakpoint.blueprint.common.core.Headers.CONTENT_TYPE;
-import static com.nextbreakpoint.blueprint.common.core.Headers.X_MODIFIED;
-import static com.nextbreakpoint.blueprint.common.core.Headers.X_TRACE_ID;
-import static com.nextbreakpoint.blueprint.common.core.Headers.X_XSRF_TOKEN;
-import static com.nextbreakpoint.blueprint.designs.Factory.createDeleteDesignHandler;
-import static com.nextbreakpoint.blueprint.designs.Factory.createInsertDesignHandler;
-import static com.nextbreakpoint.blueprint.designs.Factory.createListDesignsHandler;
-import static com.nextbreakpoint.blueprint.designs.Factory.createLoadDesignHandler;
-import static com.nextbreakpoint.blueprint.designs.Factory.createUpdateDesignHandler;
+import static com.nextbreakpoint.blueprint.common.core.Authority.*;
+import static com.nextbreakpoint.blueprint.common.core.Headers.*;
+import static com.nextbreakpoint.blueprint.designs.Factory.*;
 import static java.util.Arrays.asList;
 
 public class Verticle extends AbstractVerticle {

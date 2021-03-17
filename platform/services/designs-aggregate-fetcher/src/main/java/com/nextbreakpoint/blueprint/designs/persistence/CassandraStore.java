@@ -8,16 +8,13 @@ import com.nextbreakpoint.blueprint.designs.model.ListDesignsRequest;
 import com.nextbreakpoint.blueprint.designs.model.ListDesignsResponse;
 import com.nextbreakpoint.blueprint.designs.model.LoadDesignRequest;
 import com.nextbreakpoint.blueprint.designs.model.LoadDesignResponse;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import io.vertx.core.impl.logging.Logger;
+import io.vertx.core.impl.logging.LoggerFactory;
 import rx.Single;
 
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -111,7 +108,7 @@ public class CassandraStore implements Store {
 
     private DesignDocument getDesignDocument(Row row) {
         final String uuid = row.getUUID("DESIGN_UUID").toString();
-        final String json = row.getString("DESIGN_JSON");
+        final String json = new String(Base64.getDecoder().decode(row.getString("DESIGN_JSON").getBytes()));
         final String checksum = row.getString("DESIGN_CHECKSUM");
         final Instant timestamp = row.getTimestamp("DESIGN_TIMESTAMP").toInstant();
         return new DesignDocument(uuid, json, checksum, formatDate(timestamp));

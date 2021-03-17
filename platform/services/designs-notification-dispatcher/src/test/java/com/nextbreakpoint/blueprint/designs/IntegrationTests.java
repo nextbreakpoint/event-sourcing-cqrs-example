@@ -7,72 +7,64 @@ import com.nextbreakpoint.blueprint.common.core.event.DesignChanged;
 import com.nextbreakpoint.blueprint.common.test.EventSource;
 import com.nextbreakpoint.blueprint.common.test.KafkaUtils;
 import io.vertx.core.json.Json;
-import io.vertx.core.json.JsonObject;
 import io.vertx.rxjava.core.Vertx;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.junit.jupiter.api.*;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.awaitility.Durations.ONE_SECOND;
 import static org.awaitility.Durations.TEN_SECONDS;
 
-@Tag("slow")
-public class TestSuite {
+public class IntegrationTests {
     private static final TestScenario scenario = new TestScenario();
 
     private static Environment environment = Environment.getDefaultEnvironment();
 
+    private static final List<SSENotification> notifications = Collections.synchronizedList(new ArrayList<>());
+    private static KafkaProducer<String, String> producer;
+    private static EventSource eventSource;
+
     @BeforeAll
     public static void before() throws IOException, InterruptedException {
         scenario.before();
+
+        producer = KafkaUtils.createProducer(environment, scenario.createProducerConfig());
+
+        final Vertx vertx = new Vertx(io.vertx.core.Vertx.vertx());
+
+        eventSource = new EventSource(environment, vertx, "https://" + scenario.getServiceHost() + ":" + scenario.getServicePort(), scenario.getEventSourceConfig());
     }
 
     @AfterAll
     public static void after() throws IOException, InterruptedException {
+        if (producer != null) {
+            try {
+                producer.close();
+            } catch (Exception ignore) {
+            }
+        }
+
+        if (eventSource != null) {
+            eventSource.close();
+        }
+
         scenario.after();
     }
 
     @Nested
+    @Tag("slow")
     @Tag("integration")
     @DisplayName("Verify behaviour of designs-notification-dispatcher service")
-    public class VerifyServiceIntegration {
-        private EventSource eventSource;
-
-        @BeforeEach
-        public void setup() {
-            final Vertx vertx = new Vertx(io.vertx.core.Vertx.vertx());
-            final JsonObject config = new JsonObject();
-            config.put("client_keep_alive", "true");
-            config.put("client_verify_host", "false");
-            config.put("client_keystore_path", "../../secrets/keystore_client.jks");
-            config.put("client_keystore_secret", "secret");
-            config.put("client_truststore_path", "../../secrets/truststore_client.jks");
-            config.put("client_truststore_secret", "secret");
-            eventSource = new EventSource(environment, vertx, "https://" + scenario.getServiceHost() + ":" + scenario.getServicePort(), config);
-        }
-
-        @AfterEach
-        public void reset() {
-            if (eventSource != null) {
-                eventSource.close();
-            }
-        }
-
+    public class VerifyService {
         @Test
         @DisplayName("Should notify watchers after receiving a DesignChanged event")
-        public void shouldNotifyWatchersWhenRecevingAnEvent() throws IOException {
-            final KafkaProducer<String, String> producer[] = new KafkaProducer[1];
-
+        public void shouldNotifyWatchersWhenReceivingAnEvent() throws IOException {
             try {
-                producer[0] = KafkaUtils.createProducer(environment, scenario.createProducerConfig());
-
                 long eventTimestamp = System.currentTimeMillis();
 
                 final UUID messageId = UUID.randomUUID();
@@ -84,32 +76,32 @@ public class TestSuite {
 
                 final Message designChangedMessage = createDesignChangedMessage(messageId, designId, messageTimestamp, designChangedEvent);
 
-                final Boolean[] connected = new Boolean[]{null};
-                final String[] open = new String[]{null};
-                final String[] update = new String[]{null};
+                notifications.clear();
 
                 eventSource.connect("/v1/sse/designs/0", null, result -> {
-                    connected[0] = result.succeeded();
-                    producer[0].send(createKafkaRecord(designChangedMessage));
+                    notifications.add(new SSENotification("CONNECT", result.succeeded() ? "SUCCESS" : "FAILURE"));
+                    producer.send(createKafkaRecord(designChangedMessage));
                 }).onEvent("update", sseEvent -> {
-                    update[0] = sseEvent;
-                    System.out.println(sseEvent);
+                    notifications.add(new SSENotification("UPDATE", sseEvent));
                 }).onEvent("open", sseEvent -> {
-                    open[0] = sseEvent;
-                    System.out.println(sseEvent);
-                }).onClose(nothing -> {});
+                    notifications.add(new SSENotification("OPEN", sseEvent));
+                }).onClose(nothing -> {
+                });
 
                 await().atMost(TEN_SECONDS)
                         .pollInterval(ONE_SECOND)
                         .untilAsserted(() -> {
-                            assertThat(connected[0]).isNotNull();
-                            assertThat(connected[0]).isTrue();
-                            assertThat(open[0]).isNotNull();
-                            String openData = open[0].split("\n")[1];
+                            assertThat(notifications).isNotEmpty();
+                            List<SSENotification> events = new ArrayList<>(notifications);
+                            events.forEach(System.out::println);
+                            assertThat(notifications).hasSize(3);
+                            assertThat(events.get(0).type).isEqualTo("CONNECT");
+                            assertThat(events.get(1).type).isEqualTo("OPEN");
+                            assertThat(events.get(2).type).isEqualTo("UPDATE");
+                            String openData = events.get(1).body.split("\n")[1];
                             Map<String, Object> openObject = Json.decodeValue(openData, HashMap.class);
                             assertThat(openObject.get("session")).isNotNull();
-                            assertThat(update[0]).isNotNull();
-                            String updateData = update[0].split("\n")[1];
+                            String updateData = events.get(2).body.split("\n")[1];
                             Map<String, Object> updateObject = Json.decodeValue(updateData, HashMap.class);
                             assertThat(updateObject.get("session")).isNotNull();
                             assertThat(updateObject.get("session")).isEqualTo(openObject.get("session"));
@@ -117,20 +109,14 @@ public class TestSuite {
                             assertThat(updateObject.get("uuid")).isEqualTo("*");
                         });
             } finally {
-                if (producer[0] != null) {
-                    producer[0].close();
-                }
+                eventSource.close();
             }
         }
 
         @Test
         @DisplayName("Should notify watchers after receiving a DesignChanged event for single design")
-        public void shouldNotifyWatchersWhenRecevingAnEventForSingleDesign() throws IOException {
-            final KafkaProducer<String, String> producer[] = new KafkaProducer[1];
-
+        public void shouldNotifyWatchersWhenReceivingAnEventForSingleDesign() throws IOException {
             try {
-                producer[0] = KafkaUtils.createProducer(environment, scenario.createProducerConfig());
-
                 long eventTimestamp = System.currentTimeMillis();
 
                 final UUID messageId = UUID.randomUUID();
@@ -142,32 +128,32 @@ public class TestSuite {
 
                 final Message designChangedMessage = createDesignChangedMessage(messageId, designId, messageTimestamp, designChangedEvent);
 
-                final Boolean[] connected = new Boolean[]{null};
-                final String[] open = new String[]{null};
-                final String[] update = new String[]{null};
+                notifications.clear();
 
                 eventSource.connect("/v1/sse/designs/0/" + designId, null, result -> {
-                    connected[0] = result.succeeded();
-                    producer[0].send(createKafkaRecord(designChangedMessage));
+                    notifications.add(new SSENotification("CONNECT", result.succeeded() ? "SUCCESS" : "FAILURE"));
+                    producer.send(createKafkaRecord(designChangedMessage));
                 }).onEvent("update", sseEvent -> {
-                    update[0] = sseEvent;
-                    System.out.println(sseEvent);
+                    notifications.add(new SSENotification("UPDATE", sseEvent));
                 }).onEvent("open", sseEvent -> {
-                    open[0] = sseEvent;
-                    System.out.println(sseEvent);
-                }).onClose(nothing -> {});
+                    notifications.add(new SSENotification("OPEN", sseEvent));
+                }).onClose(nothing -> {
+                });
 
                 await().atMost(TEN_SECONDS)
                         .pollInterval(ONE_SECOND)
                         .untilAsserted(() -> {
-                            assertThat(connected[0]).isNotNull();
-                            assertThat(connected[0]).isTrue();
-                            assertThat(open[0]).isNotNull();
-                            String openData = open[0].split("\n")[1];
+                            assertThat(notifications).isNotEmpty();
+                            List<SSENotification> events = new ArrayList<>(notifications);
+                            events.forEach(System.out::println);
+                            assertThat(notifications).hasSize(3);
+                            assertThat(events.get(0).type).isEqualTo("CONNECT");
+                            assertThat(events.get(1).type).isEqualTo("OPEN");
+                            assertThat(events.get(2).type).isEqualTo("UPDATE");
+                            String openData = events.get(1).body.split("\n")[1];
                             Map<String, Object> openObject = Json.decodeValue(openData, HashMap.class);
                             assertThat(openObject.get("session")).isNotNull();
-                            assertThat(update[0]).isNotNull();
-                            String updateData = update[0].split("\n")[1];
+                            String updateData = events.get(2).body.split("\n")[1];
                             Map<String, Object> updateObject = Json.decodeValue(updateData, HashMap.class);
                             assertThat(updateObject.get("session")).isNotNull();
                             assertThat(updateObject.get("session")).isEqualTo(openObject.get("session"));
@@ -175,18 +161,31 @@ public class TestSuite {
                             assertThat(updateObject.get("uuid")).isEqualTo(designId.toString());
                         });
             } finally {
-                if (producer[0] != null) {
-                    producer[0].close();
-                }
+                eventSource.close();
             }
         }
+    }
 
-        private ProducerRecord<String, String> createKafkaRecord(Message message) {
-            return new ProducerRecord<>("designs-sse", message.getPartitionKey(), Json.encode(message));
+    private static ProducerRecord<String, String> createKafkaRecord(Message message) {
+        return new ProducerRecord<>("designs-sse", message.getPartitionKey(), Json.encode(message));
+    }
+
+    private static Message createDesignChangedMessage(UUID messageId, UUID partitionKey, long timestamp, DesignChanged event) {
+        return new Message(messageId.toString(), MessageType.DESIGN_CHANGED, Json.encode(event), "test", partitionKey.toString(), timestamp);
+    }
+
+    private static class SSENotification {
+        public final String type;
+        public final String body;
+
+        public SSENotification(String type, String body) {
+            this.type = type;
+            this.body = body;
         }
 
-        private Message createDesignChangedMessage(UUID messageId, UUID partitionKey, long timestamp, DesignChanged event) {
-            return new Message(messageId.toString(), MessageType.DESIGN_CHANGED, Json.encode(event), "test", partitionKey.toString(), timestamp);
+        @Override
+        public String toString() {
+            return type + ": " + body;
         }
     }
 }

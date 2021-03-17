@@ -174,7 +174,7 @@ public class KubeUtils {
             if (executeCommand(command, false, baos) == 0) {
                 String output = baos.toString();
                 String[] lines = output.split("\n");
-                System.out.printf("Minikube ip: " + lines[0]);
+                System.out.println("Minikube ip: " + lines[0]);
                 return lines[0];
             } else {
                 throw new IOException("Can't get minikube ip address");

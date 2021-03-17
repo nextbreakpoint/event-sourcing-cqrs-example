@@ -48,6 +48,7 @@ public class TestScenario {
     scenario = Scenario.builder()
             .withNamespace("integration")
             .withVersion(version)
+            .withTimestamp(System.currentTimeMillis())
             .withServiceName("gateway")
             .withBuildImage(buildImages)
             .withSecretArgs(secretArgs)

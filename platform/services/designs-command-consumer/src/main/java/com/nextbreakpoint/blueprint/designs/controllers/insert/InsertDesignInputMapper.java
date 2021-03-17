@@ -4,10 +4,10 @@ import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.MessageType;
 import com.nextbreakpoint.blueprint.common.core.command.InsertDesign;
 import com.nextbreakpoint.blueprint.designs.model.RecordAndMessage;
+import io.vertx.core.impl.logging.Logger;
+import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.Json;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 
 public class InsertDesignInputMapper implements Mapper<RecordAndMessage, InsertDesign> {
     private final Logger logger = LoggerFactory.getLogger(InsertDesignInputMapper.class.getName());

@@ -5,9 +5,9 @@ import com.nextbreakpoint.blueprint.common.core.Message;
 import com.nextbreakpoint.blueprint.common.core.event.DesignChanged;
 import com.nextbreakpoint.blueprint.common.vertx.Controller;
 import com.nextbreakpoint.blueprint.designs.Store;
+import io.vertx.core.impl.logging.Logger;
+import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.Json;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import io.vertx.rxjava.kafka.client.producer.KafkaProducer;
 import io.vertx.rxjava.kafka.client.producer.KafkaProducerRecord;
 import rx.Single;
@@ -31,6 +31,7 @@ public class DesignChangedController implements Controller<DesignChanged, Design
 
     @Override
     public Single<DesignChanged> onNext(DesignChanged event) {
+        logger.info("Produce change event: " + event.getUuid());
         return store.updateDesign(event)
                 .flatMap(result -> sendMessageOrFail(event))
                 .doOnError(e -> logger.error("Can't send message", e));

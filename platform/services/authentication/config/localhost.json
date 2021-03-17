@@ -21,7 +21,6 @@
   "client_web_url": "https://localhost:8080",
   "client_auth_url": "https://localhost:8080",
 
-  "server_auth_url": "http://localhost:9000",
   "server_accounts_url": "http://localhost:9000",
 
   "github_url": "http://localhost:9000",

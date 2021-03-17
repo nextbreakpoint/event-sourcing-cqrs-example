@@ -60,6 +60,15 @@ if [ "$TEST" == "true" ]; then
 fi
 popd
 
+pushd services/designs-notification-dispatcher
+if [ "$BUILD" == "true" ]; then
+  sh build.sh $REPOSITORY $VERSION
+fi
+if [ "$TEST" == "true" ]; then
+  mvn clean verify -Dminikube=true
+fi
+popd
+
 pushd services/designs-command-consumer
 if [ "$BUILD" == "true" ]; then
   sh build.sh $REPOSITORY $VERSION
@@ -70,15 +79,6 @@ fi
 popd
 
 pushd services/designs-command-producer
-if [ "$BUILD" == "true" ]; then
-  sh build.sh $REPOSITORY $VERSION
-fi
-if [ "$TEST" == "true" ]; then
-  mvn clean verify -Dminikube=true
-fi
-popd
-
-pushd services/designs-notification-dispatcher
 if [ "$BUILD" == "true" ]; then
   sh build.sh $REPOSITORY $VERSION
 fi

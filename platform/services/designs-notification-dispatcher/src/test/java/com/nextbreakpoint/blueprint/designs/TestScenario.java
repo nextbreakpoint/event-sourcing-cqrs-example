@@ -40,6 +40,8 @@ public class TestScenario {
     scenario = Scenario.builder()
             .withNamespace("integration")
             .withVersion(version)
+            .withTimestamp(System.currentTimeMillis())
+            .withTimestamp(System.currentTimeMillis())
             .withServiceName("designs-notification-dispatcher")
             .withBuildImage(buildImages)
             .withSecretArgs(secretArgs)
@@ -90,5 +92,16 @@ public class TestScenario {
 
   public JsonObject createProducerConfig() {
     return scenario.createProducerConfig();
+  }
+
+  public JsonObject getEventSourceConfig() {
+    final JsonObject config = new JsonObject();
+    config.put("client_keep_alive", "true");
+    config.put("client_verify_host", "false");
+    config.put("client_keystore_path", "../../secrets/keystore_client.jks");
+    config.put("client_keystore_secret", "secret");
+    config.put("client_truststore_path", "../../secrets/truststore_client.jks");
+    config.put("client_truststore_secret", "secret");
+    return config;
   }
 }

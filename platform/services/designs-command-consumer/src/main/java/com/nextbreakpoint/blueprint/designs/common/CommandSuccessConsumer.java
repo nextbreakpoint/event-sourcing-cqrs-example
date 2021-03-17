@@ -2,8 +2,8 @@ package com.nextbreakpoint.blueprint.designs.common;
 
 import com.nextbreakpoint.blueprint.designs.model.CommandOutput;
 import com.nextbreakpoint.blueprint.designs.model.RecordAndMessage;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import io.vertx.core.impl.logging.Logger;
+import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.rxjava.kafka.client.consumer.KafkaConsumer;
 
 import java.util.Objects;

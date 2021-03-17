@@ -5,6 +5,7 @@ RUN rm -fR node_modules
 RUN npm install
 RUN npm run build
 RUN ls -al
+
 FROM node:15.10.0-alpine3.12
 COPY /app /app
 WORKDIR /app

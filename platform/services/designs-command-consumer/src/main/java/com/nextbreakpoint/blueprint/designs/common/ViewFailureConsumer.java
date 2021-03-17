@@ -1,13 +1,11 @@
 package com.nextbreakpoint.blueprint.designs.common;
 
 import com.nextbreakpoint.blueprint.designs.model.RecordAndMessage;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
-import io.vertx.kafka.client.common.TopicPartition;
+import io.vertx.core.impl.logging.Logger;
+import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.rxjava.kafka.client.consumer.KafkaConsumer;
 
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 
 public class ViewFailureConsumer implements BiConsumer<RecordAndMessage, Throwable> {
@@ -21,13 +19,13 @@ public class ViewFailureConsumer implements BiConsumer<RecordAndMessage, Throwab
 
     @Override
     public void accept(RecordAndMessage input, Throwable error) {
-        final TopicPartition topicPartition = new TopicPartition(input.getRecord().topic(), input.getRecord().partition());
+//        final TopicPartition topicPartition = new TopicPartition(input.getRecord().topic(), input.getRecord().partition());
 
-        consumer.rxPause(topicPartition)
-                .flatMap(x -> consumer.rxSeek(topicPartition, input.getRecord().offset()))
-                .delay(5, TimeUnit.SECONDS)
-                .flatMap(x -> consumer.rxResume(topicPartition))
-                .subscribe();
+//        consumer.rxPause(topicPartition)
+//                .flatMap(x -> consumer.rxSeek(topicPartition, input.getRecord().offset()))
+//                .delay(5, TimeUnit.SECONDS)
+//                .flatMap(x -> consumer.rxResume(topicPartition))
+//                .subscribe();
 
         logger.error("Failed to process message: id=" + input.getMessage().getMessageId(), error);
     }

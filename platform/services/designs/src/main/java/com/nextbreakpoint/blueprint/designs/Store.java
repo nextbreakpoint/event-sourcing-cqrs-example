@@ -1,6 +1,7 @@
 package com.nextbreakpoint.blueprint.designs;
 
 import com.nextbreakpoint.blueprint.designs.model.*;
+
 import rx.Single;
 
 public interface Store {

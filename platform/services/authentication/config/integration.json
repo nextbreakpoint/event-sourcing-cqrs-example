@@ -21,7 +21,6 @@
   "client_web_url": "https://localhost:${FRONTEND_PORT}",
   "client_auth_url": "https://localhost:${AUTHENTICATION_PORT}",
 
-  "server_auth_url": "https://localhost:${AUTHENTICATION_PORT}",
   "server_accounts_url": "https://localhost:${ACCOUNTS_PORT}",
 
   "github_url": "http://localhost:9000",

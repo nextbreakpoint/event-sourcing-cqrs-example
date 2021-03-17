@@ -29,12 +29,14 @@ public class Scenario {
 
     private String serviceHost;
     private String stubHost;
+    private String mysqlHost;
     private String kafkaHost;
     private String consulHost;
     private String cassandraHost;
 
     private String httpPort;
     private String stubPort;
+    private String mysqlPort;
     private String kafkaPort;
     private String consulPort;
     private String cassandraPort;
@@ -80,6 +82,7 @@ public class Scenario {
 
         httpPort = TestUtils.getVariable("HTTP_PORT", System.getProperty("http.port", "8080"));
         stubPort = TestUtils.getVariable("STUB_PORT", System.getProperty("stub.port", "9000"));
+        mysqlPort = TestUtils.getVariable("MYSQL_PORT", System.getProperty("mysql.port", "3306"));
         kafkaPort = TestUtils.getVariable("KAFKA_PORT", System.getProperty("kafka.port", "9093"));
         consulPort = TestUtils.getVariable("CONSUL_PORT", System.getProperty("consul.port", "8400"));
         cassandraPort = TestUtils.getVariable("CASSANDRA_PORT", System.getProperty("cassandra.port", "9042"));
@@ -87,12 +90,14 @@ public class Scenario {
         if (scenarioState.localhost) {
             serviceHost = "localhost";
             stubHost = "localhost";
+            mysqlHost = "localhost";
             kafkaHost = "localhost";
             consulHost = "localhost";
             cassandraHost = "localhost";
         } else {
             serviceHost = KubeUtils.getMinikubeIp();
             stubHost = serviceHost.substring(0, serviceHost.lastIndexOf(".")) + ".1";
+            mysqlHost = serviceHost;
             kafkaHost = serviceHost;
             consulHost = serviceHost;
             cassandraHost = serviceHost;
@@ -111,6 +116,7 @@ public class Scenario {
             if (scenarioState.mysql) {
                 installMySQL();
                 waitForMySQL();
+                exposeMySQL();
             }
 
             if (scenarioState.cassandra) {
@@ -157,7 +163,7 @@ public class Scenario {
 
         if (scenarioState.stubServer) {
             if (stubServer != null) {
-                stubServer.clear();
+                stubServer.stop();
             }
         }
 
@@ -449,6 +455,14 @@ public class Scenario {
         return serverReady && databaseReady;
     }
 
+    private void exposeMySQL() throws IOException, InterruptedException {
+        System.out.println("Exposing MySQL...");
+        if (KubeUtils.exposeService(scenarioState.namespace,"mysql", Integer.parseInt(mysqlPort), 3306) != 0) {
+            throw new RuntimeException("Can't expose MySQL");
+        }
+        System.out.println("MySQL exposed");
+    }
+
     private void installZookeeper() throws IOException, InterruptedException {
         System.out.println("Installing Zookeeper...");
         final List<String> args = Arrays.asList("--set=replicas=1");
@@ -543,7 +557,7 @@ public class Scenario {
     private static boolean isCassandraReady(String namespace) throws IOException, InterruptedException {
         String logs = KubeUtils.fetchLogs(namespace, "cassandra");
         String[] lines = logs.split("\n");
-        boolean serverReady = Arrays.stream(lines).anyMatch(line -> line.contains("Truncate of designs.designs is complete"));
+        boolean serverReady = Arrays.stream(lines).anyMatch(line -> line.contains("Created default superuser role"));
         return serverReady;
     }
 
@@ -688,6 +702,10 @@ public class Scenario {
         return stubHost;
     }
 
+    public String getMySQLHost() {
+        return mysqlHost;
+    }
+
     public String getKafkaHost() {
         return kafkaHost;
     }
@@ -706,6 +724,10 @@ public class Scenario {
 
     public String getStubPort() {
         return stubPort;
+    }
+
+    public String getMySQLPort() {
+        return mysqlPort;
     }
 
     public String getKafkaPort() {

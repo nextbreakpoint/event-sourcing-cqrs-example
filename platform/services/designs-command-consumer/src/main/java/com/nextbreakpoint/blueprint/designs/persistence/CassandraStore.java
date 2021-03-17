@@ -10,8 +10,8 @@ import com.nextbreakpoint.blueprint.common.core.command.UpdateDesign;
 import com.nextbreakpoint.blueprint.common.core.event.DesignChanged;
 import com.nextbreakpoint.blueprint.designs.Store;
 import com.nextbreakpoint.blueprint.designs.model.PersistenceResult;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import io.vertx.core.impl.logging.Logger;
+import io.vertx.core.impl.logging.LoggerFactory;
 import rx.Single;
 
 import java.nio.charset.StandardCharsets;
@@ -28,7 +28,7 @@ public class CassandraStore implements Store {
     private static final String ERROR_DELETE_DESIGN = "An error occurred while deleting a design";
 
     private static final String INSERT_DESIGN = "INSERT INTO DESIGNS (DESIGN_UUID, DESIGN_JSON, DESIGN_STATUS, DESIGN_CHECKSUM, EVENT_TIMESTAMP) VALUES (?, ?, ?, ?, ?)";
-    private static final String SELECT_DESIGN = "SELECT * FROM DESIGNS WHERE DESIGN_UUID = ?";
+    private static final String SELECT_DESIGN = "SELECT * FROM DESIGNS WHERE DESIGN_UUID = ? ORDER BY EVENT_TIMESTAMP ASC";
     private static final String INSERT_DESIGN_VIEW = "INSERT INTO DESIGNS_VIEW (DESIGN_UUID, DESIGN_JSON, DESIGN_CHECKSUM, DESIGN_TIMESTAMP) VALUES (?, ?, ?, ?)";
     private static final String UPDATE_DESIGN_VIEW = "UPDATE DESIGNS_VIEW SET DESIGN_JSON=?, DESIGN_CHECKSUM=?, DESIGN_TIMESTAMP=? WHERE DESIGN_UUID=?";
     private static final String DELETE_DESIGN_VIEW = "DELETE FROM DESIGNS_VIEW WHERE DESIGN_UUID=?";
@@ -171,15 +171,15 @@ public class CassandraStore implements Store {
     }
 
     private Object[] makeInsertParams(InsertDesign command) {
-        return new Object[] { command.getUuid(), command.getJson(), "CREATED", computeChecksum(command.getJson()), command.getTimestamp() };
+        return new Object[] { command.getUuid(), Base64.getEncoder().encodeToString(command.getJson().getBytes()), "CREATED", computeChecksum(command.getJson()), UUIDs.timeBased() };
     }
 
     private Object[] makeUpdateParams(UpdateDesign command) {
-        return new Object[] { command.getUuid(), command.getJson(), "UPDATED", computeChecksum(command.getJson()), command.getTimestamp() };
+        return new Object[] { command.getUuid(), Base64.getEncoder().encodeToString(command.getJson().getBytes()), "UPDATED", computeChecksum(command.getJson()), UUIDs.timeBased() };
     }
 
     private Object[] makeDeleteParams(DeleteDesign command) {
-        return new Object[] { command.getUuid(), null, "DELETED", null, command.getTimestamp() };
+        return new Object[] { command.getUuid(), null, "DELETED", null, UUIDs.timeBased() };
     }
 
     private Object[] makeInsertViewParams(DesignChange change) {

@@ -1,6 +1,5 @@
 package com.nextbreakpoint.blueprint.designs.controllers.insert;
 
-import com.datastax.driver.core.utils.UUIDs;
 import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.command.InsertDesign;
 import io.vertx.core.json.JsonObject;
@@ -31,6 +30,6 @@ public class InsertDesignInputMapper implements Mapper<RoutingContext, InsertDes
                 .put("script", script)
                 .encode();
 
-        return new InsertDesign(UUID.randomUUID(), json, UUIDs.timeBased());
+        return new InsertDesign(UUID.randomUUID(), json, String.valueOf(System.currentTimeMillis()));
     }
 }

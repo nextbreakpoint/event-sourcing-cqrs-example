@@ -10,7 +10,9 @@ import io.vertx.core.json.JsonObject;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 public class TestScenario {
   private Scenario scenario;
@@ -43,6 +45,7 @@ public class TestScenario {
     scenario = Scenario.builder()
             .withNamespace("integration")
             .withVersion(version)
+            .withTimestamp(System.currentTimeMillis())
             .withServiceName("designs")
             .withBuildImage(buildImages)
             .withSecretArgs(secretArgs)
@@ -103,5 +106,9 @@ public class TestScenario {
 
   public JsonObject createConsumerConfig(String group) {
     return scenario.createConsumerConfig(group);
+  }
+
+  public String getMySqlConnectionUrl(String db) {
+    return String.format("jdbc:mysql://%s:%s/%s", scenario.getMySQLHost(), scenario.getMySQLPort(), db);
   }
 }

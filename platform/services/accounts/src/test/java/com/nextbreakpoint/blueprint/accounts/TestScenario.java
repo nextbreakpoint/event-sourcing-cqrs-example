@@ -44,6 +44,7 @@ public class TestScenario {
     scenario = Scenario.builder()
             .withNamespace("integration")
             .withVersion(version)
+            .withTimestamp(System.currentTimeMillis())
             .withServiceName("accounts")
             .withBuildImage(buildImages)
             .withSecretArgs(secretArgs)
@@ -98,5 +99,9 @@ public class TestScenario {
 
   public String makeAuthorization(String user, String role) {
     return VertxUtils.makeAuthorization(user, Collections.singletonList(role), "../../secrets/keystore_auth.jceks");
+  }
+
+  public String getMySqlConnectionUrl(String db) {
+    return String.format("jdbc:mysql://%s:%s/%s", scenario.getMySQLHost(), scenario.getMySQLPort(), db);
   }
 }

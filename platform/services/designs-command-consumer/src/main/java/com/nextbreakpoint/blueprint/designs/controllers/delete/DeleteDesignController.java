@@ -6,9 +6,9 @@ import com.nextbreakpoint.blueprint.common.core.command.DeleteDesign;
 import com.nextbreakpoint.blueprint.common.core.event.DesignChanged;
 import com.nextbreakpoint.blueprint.common.vertx.Controller;
 import com.nextbreakpoint.blueprint.designs.Store;
+import io.vertx.core.impl.logging.Logger;
+import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.Json;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import io.vertx.rxjava.kafka.client.producer.KafkaProducer;
 import io.vertx.rxjava.kafka.client.producer.KafkaProducerRecord;
 import rx.Single;
@@ -32,6 +32,7 @@ public class DeleteDesignController implements Controller<DeleteDesign, DesignCh
 
     @Override
     public Single<DesignChanged> onNext(DeleteDesign command) {
+        logger.info("Process delete command: " + command.getUuid());
         return store.deleteDesign(command)
                 .map(result -> new DesignChanged(result.getUuid(), System.currentTimeMillis()))
                 .flatMap(this::sendMessageOrFail)

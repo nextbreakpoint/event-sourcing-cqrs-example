@@ -204,6 +204,7 @@ public class Verticle extends AbstractVerticle {
         final Message message = Json.decodeValue(record.value(), Message.class);
         final Handler<RecordAndMessage> handler = handlers.get(message.getMessageType());
         if (handler != null) {
+            logger.info("Receive message of type: " + message.getMessageType());
             handler.handle(new RecordAndMessage(record, message));
         } else {
             logger.warn("Can't handle message with type: " + message.getMessageType());

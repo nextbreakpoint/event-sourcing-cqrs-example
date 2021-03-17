@@ -1,24 +1,16 @@
 package com.nextbreakpoint.blueprint.accounts;
 
-import au.com.dius.pact.provider.junit5.HttpsTestTarget;
-import au.com.dius.pact.provider.junit5.PactVerificationContext;
-import au.com.dius.pact.provider.junit5.PactVerificationInvocationContextProvider;
-import au.com.dius.pact.provider.junitsupport.Consumer;
-import au.com.dius.pact.provider.junitsupport.Provider;
-import au.com.dius.pact.provider.junitsupport.State;
-import au.com.dius.pact.provider.junitsupport.loader.PactBroker;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.http.ContentType;
 import com.jayway.restassured.path.json.JsonPath;
 import com.nextbreakpoint.blueprint.common.core.Authority;
-import com.nextbreakpoint.blueprint.common.core.Headers;
-import com.nextbreakpoint.blueprint.common.vertx.Authentication;
-import org.apache.http.HttpRequest;
 import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -29,17 +21,14 @@ import static com.nextbreakpoint.blueprint.common.core.Headers.AUTHORIZATION;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.CoreMatchers.notNullValue;
 
-@Tag("slow")
-public class TestSuite {
-  private final UUID ACCOUNT_UUID = new UUID(1L, 1L);
+public class IntegrationTests {
+  private static final AtomicInteger counter = new AtomicInteger(10);
 
   private static final TestScenario scenario = new TestScenario();
 
   @BeforeAll
   public static void before() throws IOException, InterruptedException {
     scenario.before();
-    System.setProperty("pact.verifier.publishResults", "true");
-    System.setProperty("pact.provider.version", scenario.getVersion());
   }
 
   @AfterAll
@@ -48,10 +37,16 @@ public class TestSuite {
   }
 
   @Nested
+  @Tag("slow")
   @Tag("integration")
   @DisplayName("Verify behaviour of accounts service")
-  public class VerifyServiceIntegration {
-    private final AtomicInteger counter = new AtomicInteger(10);
+  public class VerifyServiceApi {
+    @BeforeEach
+    public void setup() throws SQLException {
+      try (Connection connection = DriverManager.getConnection(scenario.getMySqlConnectionUrl("accounts"), "root", "password")) {
+        connection.prepareStatement("TRUNCATE ACCOUNTS;").execute();
+      }
+    }
 
     @AfterEach
     public void reset() {
@@ -244,144 +239,77 @@ public class TestSuite {
 
       assertThat(getAccounts(authorization)).doesNotContain(uuid1, uuid2);
     }
+  }
 
-    private void pause() {
-      try {
-        Thread.sleep(1000);
-      } catch (InterruptedException ignored) {
-      }
-    }
-
-    private void deleteAccount(String authorization, String uuid) throws MalformedURLException {
-      given().config(scenario.getRestAssuredConfig())
-              .and().header(AUTHORIZATION, authorization)
-              .and().accept(ContentType.JSON)
-              .when().delete(scenario.makeBaseURL("/v1/accounts/" + uuid))
-              .then().assertThat().statusCode(200)
-              .and().contentType(ContentType.JSON)
-              .and().body("uuid", notNullValue());
-    }
-
-    private String[] findAccount(String authorization, String email) throws MalformedURLException {
-      return given().config(scenario.getRestAssuredConfig())
-              .and().header(AUTHORIZATION, authorization)
-              .and().accept(ContentType.JSON)
-              .and().queryParam("email", email)
-              .when().get(scenario.makeBaseURL("/v1/accounts"))
-              .then().assertThat().statusCode(200)
-              .and().contentType(ContentType.JSON)
-              .and().extract().as(String[].class);
-    }
-
-    private String[] getAccounts(String authorization) throws MalformedURLException {
-      return given().config(scenario.getRestAssuredConfig())
-              .and().header(AUTHORIZATION, authorization)
-              .and().accept(ContentType.JSON)
-              .when().get(scenario.makeBaseURL("/v1/accounts"))
-              .then().assertThat().statusCode(200)
-              .and().contentType(ContentType.JSON)
-              .and().extract().body().as(String[].class);
-    }
-
-    private JsonPath getAccount(String authorization, String uuid) throws MalformedURLException {
-      return given().config(scenario.getRestAssuredConfig())
-              .with().header(AUTHORIZATION, authorization)
-              .and().accept(ContentType.JSON)
-              .when().get(scenario.makeBaseURL("/v1/accounts/" + uuid))
-              .then().assertThat().statusCode(200)
-              .and().extract().jsonPath();
-    }
-
-    private String createAccount(String authorization, Map<String, Object> account) throws MalformedURLException {
-      return given().config(scenario.getRestAssuredConfig())
-              .and().header(AUTHORIZATION, authorization)
-              .and().contentType(ContentType.JSON)
-              .and().accept(ContentType.JSON)
-              .and().body(account)
-              .when().post(scenario.makeBaseURL("/v1/accounts"))
-              .then().assertThat().statusCode(201)
-              .and().contentType(ContentType.JSON)
-              .and().body("uuid", notNullValue())
-              .and().extract().response().body().jsonPath().getString("uuid");
-    }
-
-    private Map<String, Object> createPostData(String email, String role) {
-      final Map<String, Object> data = new HashMap<>();
-      data.put("email", email);
-      data.put("name", "test");
-      data.put("role", role);
-      return data;
-    }
-
-    private String makeUniqueEmail() {
-      return "user" + counter.getAndIncrement() + "@localhost";
+  private static void pause() {
+    try {
+      Thread.sleep(1000);
+    } catch (InterruptedException ignored) {
     }
   }
 
-  @Nested
-  @Tag("pact")
-  @DisplayName("Verify contract between accounts and authentication")
-  @Provider("accounts")
-  @Consumer("authentication")
-  @PactBroker
-  public class VerifyAuthenticationPact {
-    @BeforeEach
-    public void before(PactVerificationContext context) {
-      context.setTarget(new HttpsTestTarget(scenario.getServiceHost(), Integer.parseInt(scenario.getServicePort()), "/", true));
-    }
-
-    @TestTemplate
-    @ExtendWith(PactVerificationInvocationContextProvider.class)
-    @DisplayName("Verify interaction")
-    public void pactVerificationTestTemplate(PactVerificationContext context, HttpRequest request) {
-      final String authorization = scenario.makeAuthorization(Authentication.NULL_USER_UUID, Authority.PLATFORM);
-      request.setHeader(Headers.AUTHORIZATION, authorization);
-      context.verifyInteraction();
-    }
-
-    @State("account exists for email")
-    public void accountExistsForEmail() throws IOException, InterruptedException {
-      scenario.executeMySQLCommand(scenario.getNamespace(), "accounts", "TRUNCATE ACCOUNTS;");
-      scenario.executeMySQLCommand(scenario.getNamespace(), "accounts", "INSERT INTO ACCOUNTS (UUID,NAME,EMAIL,ROLE) VALUES ('" + ACCOUNT_UUID + "','test','test@localhost','guest');");
-    }
-
-    @State("account exists for uuid")
-    public void accountExistsForUuid() throws IOException, InterruptedException {
-      scenario.executeMySQLCommand(scenario.getNamespace(), "accounts", "TRUNCATE ACCOUNTS;");
-      scenario.executeMySQLCommand(scenario.getNamespace(), "accounts", "INSERT INTO ACCOUNTS (UUID,NAME,EMAIL,ROLE) VALUES ('" + ACCOUNT_UUID + "','test','test@localhost','guest');");
-    }
-
-    @State("user is authenticated")
-    public void userHasAdminPermission() throws IOException, InterruptedException {
-      scenario.executeMySQLCommand(scenario.getNamespace(), "accounts", "TRUNCATE ACCOUNTS;");
-    }
+  private static String[] findAccount(String authorization, String email) throws MalformedURLException {
+    return given().config(scenario.getRestAssuredConfig())
+            .and().header(AUTHORIZATION, authorization)
+            .and().accept(ContentType.JSON)
+            .and().queryParam("email", email)
+            .when().get(scenario.makeBaseURL("/v1/accounts"))
+            .then().assertThat().statusCode(200)
+            .and().contentType(ContentType.JSON)
+            .and().extract().as(String[].class);
   }
 
-  @Nested
-  @Tag("pact")
-  @DisplayName("Verify contract between accounts and frontend")
-  @Provider("accounts")
-  @Consumer("frontend")
-  @PactBroker
-  public class VerifyFrontendPact {
-    @BeforeEach
-    public void before(PactVerificationContext context) {
-      context.setTarget(new HttpsTestTarget(scenario.getServiceHost(), Integer.parseInt(scenario.getServicePort()), "/", true));
-    }
+  private static String[] getAccounts(String authorization) throws MalformedURLException {
+    return given().config(scenario.getRestAssuredConfig())
+            .and().header(AUTHORIZATION, authorization)
+            .and().accept(ContentType.JSON)
+            .when().get(scenario.makeBaseURL("/v1/accounts"))
+            .then().assertThat().statusCode(200)
+            .and().contentType(ContentType.JSON)
+            .and().extract().body().as(String[].class);
+  }
 
-    @TestTemplate
-    @ExtendWith(PactVerificationInvocationContextProvider.class)
-    @DisplayName("Verify interaction")
-    public void pactVerificationTestTemplate(PactVerificationContext context, HttpRequest request) {
-      final String authorization = scenario.makeAuthorization(Authentication.NULL_USER_UUID, Authority.PLATFORM);
-      request.setHeader(Headers.AUTHORIZATION, authorization);
-      context.verifyInteraction();
-    }
+  private static JsonPath getAccount(String authorization, String uuid) throws MalformedURLException {
+    return given().config(scenario.getRestAssuredConfig())
+            .with().header(AUTHORIZATION, authorization)
+            .and().accept(ContentType.JSON)
+            .when().get(scenario.makeBaseURL("/v1/accounts/" + uuid))
+            .then().assertThat().statusCode(200)
+            .and().extract().jsonPath();
+  }
 
-    @State("account exists for uuid")
-    public void accountExistsForUuid() throws IOException, InterruptedException {
-      scenario.executeMySQLCommand(scenario.getNamespace(), "accounts", "TRUNCATE ACCOUNTS;");
-      scenario.executeMySQLCommand(scenario.getNamespace(), "accounts", "INSERT INTO ACCOUNTS (UUID,NAME,EMAIL,ROLE) VALUES ('" + ACCOUNT_UUID + "','test','test@localhost','guest');");
-    }
+  private static String createAccount(String authorization, Map<String, Object> account) throws MalformedURLException {
+    return given().config(scenario.getRestAssuredConfig())
+            .and().header(AUTHORIZATION, authorization)
+            .and().contentType(ContentType.JSON)
+            .and().accept(ContentType.JSON)
+            .and().body(account)
+            .when().post(scenario.makeBaseURL("/v1/accounts"))
+            .then().assertThat().statusCode(201)
+            .and().contentType(ContentType.JSON)
+            .and().body("uuid", notNullValue())
+            .and().extract().response().body().jsonPath().getString("uuid");
+  }
+
+  private static void deleteAccount(String authorization, String uuid) throws MalformedURLException {
+    given().config(scenario.getRestAssuredConfig())
+            .and().header(AUTHORIZATION, authorization)
+            .and().accept(ContentType.JSON)
+            .when().delete(scenario.makeBaseURL("/v1/accounts/" + uuid))
+            .then().assertThat().statusCode(200)
+            .and().contentType(ContentType.JSON)
+            .and().body("uuid", notNullValue());
+  }
+
+  private static Map<String, Object> createPostData(String email, String role) {
+    final Map<String, Object> data = new HashMap<>();
+    data.put("email", email);
+    data.put("name", "test");
+    data.put("role", role);
+    return data;
+  }
+
+  private static String makeUniqueEmail() {
+    return "user" + counter.getAndIncrement() + "@localhost";
   }
 }

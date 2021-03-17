@@ -6,4 +6,18 @@
             <password>${env.GITHUB_PASSWORD}</password>
         </server>
     </servers>
+    <mirrors>
+        <mirror>
+            <id>nexus</id>
+            <name>Nexus</name>
+            <url>http://192.168.64.12:38081/repository/maven-central/</url>
+            <mirrorOf>*</mirrorOf>
+        </mirror>
+        <mirror>
+            <id>github</id>
+            <name>GitHub</name>
+            <url>https://maven.pkg.github.com/nextbreakpoint/blueprint</url>
+            <mirrorOf>github</mirrorOf>
+        </mirror>
+    </mirrors>
 </settings>

@@ -13,6 +13,15 @@ import java.util.List;
 
 public class TestScenario {
   private Scenario scenario;
+  private Integer pactPort;
+
+  public TestScenario() {
+    this(null);
+  }
+
+  public TestScenario(Integer pactPort) {
+    this.pactPort = pactPort;
+  }
 
   public void before() throws IOException, InterruptedException {
     final String version = TestUtils.getVariable("BUILD_VERSION", System.getProperty("build.version", "0"));
@@ -42,8 +51,7 @@ public class TestScenario {
             "--set=clientDomain=${serviceHost}",
             "--set=clientWebUrl=https://${serviceHost}:${servicePort}",
             "--set=clientAuthUrl=https://${serviceHost}:${servicePort}",
-            "--set=authApiUrl=http://${stubHost}:${stubPort}",
-            "--set=accountsApiUrl=http://${stubHost}:${stubPort}",
+            pactPort != null ? "--set=accountsApiUrl=http://${stubHost}:" + pactPort : "--set=accountsApiUrl=http://${stubHost}:${stubPort}",
             "--set=githubApiUrl=http://${stubHost}:${stubPort}",
             "--set=githubOAuthUrl=http://${stubHost}:${stubPort}",
             "--set=image.pullPolicy=Never",
@@ -54,6 +62,7 @@ public class TestScenario {
     scenario = Scenario.builder()
             .withNamespace("integration")
             .withVersion(version)
+            .withTimestamp(System.currentTimeMillis())
             .withServiceName("authentication")
             .withBuildImage(buildImages)
             .withSecretArgs(secretArgs)

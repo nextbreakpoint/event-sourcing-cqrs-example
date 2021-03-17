@@ -1,6 +1,5 @@
 package com.nextbreakpoint.blueprint.designs.controllers.update;
 
-import com.datastax.driver.core.utils.UUIDs;
 import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.command.UpdateDesign;
 import io.vertx.core.json.JsonObject;
@@ -37,6 +36,6 @@ public class UpdateDesignInputMapper implements Mapper<RoutingContext, UpdateDes
                 .put("script", script)
                 .encode();
 
-        return new UpdateDesign(UUID.fromString(uuid), json, UUIDs.timeBased());
+        return new UpdateDesign(UUID.fromString(uuid), json, String.valueOf(System.currentTimeMillis()));
     }
 }

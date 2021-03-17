@@ -44,6 +44,7 @@ public class TestScenario {
     scenario = Scenario.builder()
             .withNamespace("integration")
             .withVersion(version)
+            .withTimestamp(System.currentTimeMillis())
             .withServiceName("designs-command-consumer")
             .withBuildImage(buildImages)
             .withSecretArgs(secretArgs)

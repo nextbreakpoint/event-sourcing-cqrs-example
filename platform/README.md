@@ -102,7 +102,7 @@ Deploy secrets for services:
 
 Deploy services:
 
-    helm install service-authentication platform/services/authentication/helm -n blueprint --set replicas=1,clientDomain=$(minikube ip),clientWebUrl=https://$(minikube ip):443,clientAuthUrl=https://$(minikube ip):443
+    helm install service-authentication platform/services/authentication/helm -n blueprint --set replicas=1,clientDomain=$(minikube ip),clientWebUrl=https://$(minikube ip):8081,clientAuthUrl=https://$(minikube ip):8081
     helm install service-accounts platform/services/accounts/helm -n blueprint --set replicas=1,clientDomain=$(minikube ip)
     helm install service-designs platform/services/designs/helm -n blueprint --set replicas=1,clientDomain=$(minikube ip)
     helm install service-designs-aggregate-fetcher platform/services/designs-aggregate-fetcher/helm -n blueprint --set replicas=1,clientDomain=$(minikube ip)
@@ -112,7 +112,7 @@ Deploy services:
 
     helm install service-gateway platform/services/gateway/helm -n blueprint --set replicas=1,clientDomain=$(minikube ip)
 
-    helm install service-frontend platform/services/frontend/helm -n blueprint --set replicas=1,clientWebUrl=https://$(minikube ip):443,clientApiUrl=https://$(minikube ip):443
+    helm install service-frontend platform/services/frontend/helm -n blueprint --set replicas=1,clientWebUrl=https://$(minikube ip):8081,clientApiUrl=https://$(minikube ip):8081
 
 Check services:
 

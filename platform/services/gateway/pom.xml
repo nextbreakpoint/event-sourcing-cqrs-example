@@ -60,7 +60,7 @@
                         </goals>
                         <configuration>
                             <includes>
-                                <include>**/TestSuite.java</include>
+                                <include>**/IntegrationTests.java</include>
                             </includes>
                             <systemProperties>
                                 <pactbroker.host>${pactbroker.host}</pactbroker.host>

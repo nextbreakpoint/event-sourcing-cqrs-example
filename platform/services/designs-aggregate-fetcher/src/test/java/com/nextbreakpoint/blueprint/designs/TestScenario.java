@@ -1,9 +1,11 @@
 package com.nextbreakpoint.blueprint.designs;
 
 import com.jayway.restassured.config.RestAssuredConfig;
+import com.nextbreakpoint.blueprint.common.test.KubeUtils;
 import com.nextbreakpoint.blueprint.common.test.Scenario;
 import com.nextbreakpoint.blueprint.common.test.TestUtils;
 import com.nextbreakpoint.blueprint.common.test.VertxUtils;
+import io.vertx.core.json.JsonObject;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -43,6 +45,7 @@ public class TestScenario {
     scenario = Scenario.builder()
             .withNamespace("integration")
             .withVersion(version)
+            .withTimestamp(System.currentTimeMillis())
             .withServiceName("designs-aggregate-fetcher")
             .withBuildImage(buildImages)
             .withSecretArgs(secretArgs)
@@ -88,5 +91,18 @@ public class TestScenario {
 
   public String makeAuthorization(String user, String role) {
     return VertxUtils.makeAuthorization(user, Collections.singletonList(role), "../../secrets/keystore_auth.jceks");
+  }
+
+  public int executeCassandraCommand(String namespace, String database, String sql) throws IOException, InterruptedException {
+    final List<String> command = Arrays.asList(
+            "sh",
+            "-c",
+            "kubectl -n " + namespace + " exec -i $(kubectl -n integration get pods -l app=cassandra -o json | jq -r '.items[0].metadata.name') -- cqlsh -u admin -p password -k " + database + " -e \"" + sql + "\""
+    );
+    return KubeUtils.executeCommand(command, true);
+  }
+
+  public JsonObject createCassandraConfig() {
+    return scenario.createCassandraConfig();
   }
 }

@@ -1,10 +1,17 @@
 package com.nextbreakpoint.blueprint.designs;
 
+import com.datastax.driver.core.Cluster;
+import com.datastax.driver.core.PreparedStatement;
+import com.datastax.driver.core.Session;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.http.ContentType;
 import com.jayway.restassured.path.json.JsonPath;
 import com.nextbreakpoint.blueprint.common.core.Authority;
 import com.nextbreakpoint.blueprint.common.core.DesignDocument;
+import com.nextbreakpoint.blueprint.common.core.Environment;
+import com.nextbreakpoint.blueprint.common.vertx.CassandraClusterFactory;
+import io.vertx.core.json.JsonObject;
+import org.apache.commons.codec.binary.Base64;
 import org.junit.jupiter.api.*;
 
 import javax.imageio.ImageIO;
@@ -12,38 +19,75 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.jayway.restassured.RestAssured.given;
 import static com.nextbreakpoint.blueprint.common.core.Headers.AUTHORIZATION;
 import static org.assertj.core.api.Assertions.assertThat;
 
-@Tag("slow")
-public class TestSuite {
-  private static final String JSON_1 = "{\"metadata\":\"{\\\"translation\\\":{\\\"x\\\":0.0,\\\"y\\\":0.0,\\\"z\\\":1.0,\\\"w\\\":0.0},\\\"rotation\\\":{\\\"x\\\":0.0,\\\"y\\\":0.0,\\\"z\\\":0.0,\\\"w\\\":0.0},\\\"scale\\\":{\\\"x\\\":1.0,\\\"y\\\":1.0,\\\"z\\\":1.0,\\\"w\\\":1.0},\\\"point\\\":{\\\"x\\\":0.0,\\\"y\\\":0.0},\\\"julia\\\":false,\\\"options\\\":{\\\"showPreview\\\":false,\\\"showTraps\\\":false,\\\"showOrbit\\\":false,\\\"showPoint\\\":false,\\\"previewOrigin\\\":{\\\"x\\\":0.0,\\\"y\\\":0.0},\\\"previewSize\\\":{\\\"x\\\":0.25,\\\"y\\\":0.25}}}\",\"manifest\":\"{\\\"pluginId\\\":\\\"Mandelbrot\\\"}\",\"script\":\"fractal {\\norbit [-2.0 - 2.0i,+2.0 + 2.0i] [x,n] {\\nloop [0, 200] (mod2(x) > 40) {\\nx = x * x + w;\\n}\\n}\\ncolor [#FF000000] {\\npalette gradient {\\n[#FFFFFFFF > #FF000000, 100];\\n[#FF000000 > #FFFFFFFF, 100];\\n}\\ninit {\\nm = 100 * (1 + sin(mod(x) * 0.2 / pi));\\n}\\nrule (n > 0) [1] {\\ngradient[m - 1]\\n}\\n}\\n}\\n\"}";
-
-  private static final String UUID_0 = new UUID(0, 0).toString();
-  private static final String UUID_1 = "48f6563e-e095-4d91-b473-4d8afc758c43";
-  private static final String UUID_2 = "2fe33eed-58f7-425b-b10c-2e490c0f248e";
-  private static final String UUID_3 = "51a0ce28-10a7-4a2e-ac6b-b80f682c0bb7";
-  private static final String UUID_4 = "afb0f952-b26a-46de-8e65-40d5e98dc243";
+public class IntegrationTests {
+  private static final String SCRIPT1 = "fractal {\norbit [-2.0 - 2.0i,+2.0 + 2.0i] [x,n] {\nloop [0, 200] (mod2(x) > 40) {\nx = x * x + w;\n}\n}\ncolor [#FF000000] {\npalette gradient {\n[#FFFFFFFF > #FF000000, 100];\n[#FF000000 > #FFFFFFFF, 100];\n}\ninit {\nm = 100 * (1 + sin(mod(x) * 0.2 / pi));\n}\nrule (n > 0) [1] {\ngradient[m - 1]\n}\n}\n}\n";
+  private static final String SCRIPT2 = "fractal {\norbit [-2.0 - 2.0i,+2.0 + 2.0i] [x,n] {\nloop [0, 100] (mod2(x) > 30) {\nx = x * x + w;\n}\n}\ncolor [#FF000000] {\npalette gradient {\n[#FFFFFFFF > #FF000000, 100];\n[#FF000000 > #FFFFFFFF, 100];\n}\ninit {\nm = 100 * (1 + sin(mod(x) * 0.2 / pi));\n}\nrule (n > 0) [1] {\ngradient[m - 1]\n}\n}\n}\n";
+  private static final String SCRIPT3 = "fractal {\norbit [-2.0 - 2.0i,+2.0 + 2.0i] [x,n] {\nloop [0, 100] (mod2(x) > 20) {\nx = x * x + w;\n}\n}\ncolor [#FF000000] {\npalette gradient {\n[#FFFFFFFF > #FF000000, 100];\n[#FF000000 > #FFFFFFFF, 100];\n}\ninit {\nm = 100 * (1 + sin(mod(x) * 0.2 / pi));\n}\nrule (n > 0) [1] {\ngradient[m - 1]\n}\n}\n}\n";
+  private static final String METADATA = "{\"translation\":{\"x\":0.0,\"y\":0.0,\"z\":1.0,\"w\":0.0},\"rotation\":{\"x\":0.0,\"y\":0.0,\"z\":0.0,\"w\":0.0},\"scale\":{\"x\":1.0,\"y\":1.0,\"z\":1.0,\"w\":1.0},\"point\":{\"x\":0.0,\"y\":0.0},\"julia\":false,\"options\":{\"showPreview\":false,\"showTraps\":false,\"showOrbit\":false,\"showPoint\":false,\"previewOrigin\":{\"x\":0.0,\"y\":0.0},\"previewSize\":{\"x\":0.25,\"y\":0.25}}}";
+  private static final String MANIFEST = "{\"pluginId\":\"Mandelbrot\"}";
+  private static final UUID DESIGN_UUID_0 = new UUID(0L, 0L);
+  private static final UUID DESIGN_UUID_1 = new UUID(1L, 1L);
+  private static final UUID DESIGN_UUID_2 = new UUID(1L, 2L);
+  private static final UUID DESIGN_UUID_3 = new UUID(1L, 3L);
+  private static final UUID DESIGN_UUID_4 = new UUID(1L, 4L);
 
   private static final TestScenario scenario = new TestScenario();
+
+  private static Environment environment = Environment.getDefaultEnvironment();
+
+  private static Cluster cluster;
 
   @BeforeAll
   public static void before() throws IOException, InterruptedException {
     scenario.before();
+
+    cluster = CassandraClusterFactory.create(environment, scenario.createCassandraConfig());
   }
 
   @AfterAll
   public static void after() throws IOException, InterruptedException {
+    if (cluster != null) {
+      try {
+        cluster.close();
+      } catch (Exception ignore) {
+      }
+    }
+
     scenario.after();
   }
 
   @Nested
+  @Tag("slow")
   @Tag("integration")
   @DisplayName("Verify behaviour of designs-aggregate-fetcher service")
-  public class VerifyServiceIntegration {
+  public class VerifyServiceApi {
+    @BeforeEach
+    public void setup() {
+      try (Session session = cluster.connect("designs")) {
+        final PreparedStatement statement1 = session.prepare("TRUNCATE DESIGNS_VIEW;");
+        session.execute(statement1.bind()).one();
+        final PreparedStatement statement2 = session.prepare("INSERT INTO DESIGNS_VIEW (DESIGN_UUID, DESIGN_JSON, DESIGN_CHECKSUM, DESIGN_TIMESTAMP) VALUES (?,?,?,toTimeStamp(now()));");
+        String json1 = Base64.encodeBase64String(new JsonObject(createPostData(MANIFEST, METADATA, SCRIPT1)).toString().getBytes());
+        session.execute(statement2.bind(DESIGN_UUID_1, json1, "1")).one();
+        String json2 = Base64.encodeBase64String(new JsonObject(createPostData(MANIFEST, METADATA, SCRIPT2)).toString().getBytes());
+        session.execute(statement2.bind(DESIGN_UUID_2, json2, "2")).one();
+        String json3 = Base64.encodeBase64String(new JsonObject(createPostData(MANIFEST, METADATA, SCRIPT3)).toString().getBytes());
+        session.execute(statement2.bind(DESIGN_UUID_3, json2, "3")).one();
+        String json4 = Base64.encodeBase64String(new JsonObject(createPostData(MANIFEST, METADATA, SCRIPT3)).toString().getBytes());
+        session.execute(statement2.bind(DESIGN_UUID_4, json2, "4")).one();
+        final PreparedStatement statement3 = session.prepare("DELETE FROM DESIGNS_VIEW WHERE DESIGN_UUID=?");
+        session.execute(statement3.bind(DESIGN_UUID_4)).one();
+      }
+    }
+
     @AfterEach
     public void reset() {
       RestAssured.reset();
@@ -95,7 +139,7 @@ public class TestSuite {
       given().config(scenario.getRestAssuredConfig())
               .with().header(AUTHORIZATION, otherAuthorization)
               .and().accept(ContentType.JSON)
-              .when().get(scenario.makeBaseURL("/v1/designs/" + UUID_1))
+              .when().get(scenario.makeBaseURL("/v1/designs/" + DESIGN_UUID_1))
               .then().assertThat().statusCode(403);
     }
 
@@ -109,7 +153,7 @@ public class TestSuite {
       given().config(scenario.getRestAssuredConfig())
               .with().header(AUTHORIZATION, otherAuthorization)
               .and().accept("image/png")
-              .when().get(scenario.makeBaseURL("/v1/designs/" + UUID_2 + "/0/0/0/256.png"))
+              .when().get(scenario.makeBaseURL("/v1/designs/" + DESIGN_UUID_2 + "/0/0/0/256.png"))
               .then().assertThat().statusCode(403);
     }
 
@@ -122,15 +166,19 @@ public class TestSuite {
 
       DesignDocument[] results = listDesigns(authorization);
 
-      assertThat(results[0].getUuid()).isEqualTo(UUID_1);
-      assertThat(results[1].getUuid()).isEqualTo(UUID_2);
-      assertThat(results[2].getUuid()).isEqualTo(UUID_3);
-      assertThat(results[0].getChecksum()).isEqualTo("0");
-      assertThat(results[1].getChecksum()).isEqualTo("4");
-      assertThat(results[2].getChecksum()).isEqualTo("3");
-      assertThat(results[0].getModified()).isNotNull();
-      assertThat(results[1].getModified()).isNotNull();
-      assertThat(results[2].getModified()).isNotNull();
+      List<DesignDocument> sortedResults = Stream.of(results)
+              .sorted(Comparator.comparing(DesignDocument::getUuid))
+              .collect(Collectors.toList());
+
+      assertThat(sortedResults.get(0).getUuid()).isEqualTo(DESIGN_UUID_1.toString());
+      assertThat(sortedResults.get(1).getUuid()).isEqualTo(DESIGN_UUID_2.toString());
+      assertThat(sortedResults.get(2).getUuid()).isEqualTo(DESIGN_UUID_3.toString());
+      assertThat(sortedResults.get(0).getChecksum()).isEqualTo("1");
+      assertThat(sortedResults.get(1).getChecksum()).isEqualTo("2");
+      assertThat(sortedResults.get(2).getChecksum()).isEqualTo("3");
+      assertThat(sortedResults.get(0).getModified()).isNotNull();
+      assertThat(sortedResults.get(1).getModified()).isNotNull();
+      assertThat(sortedResults.get(2).getModified()).isNotNull();
     }
 
     @Test
@@ -140,10 +188,11 @@ public class TestSuite {
 
       pause();
 
-      JsonPath result = loadDesign(authorization, UUID_1);
+      JsonPath result = loadDesign(authorization, DESIGN_UUID_1);
 
-      assertThat(result.getString("uuid")).isEqualTo(UUID_1);
-      assertThat(result.getString("json")).isEqualTo(JSON_1);
+      String json1 = new JsonObject(createPostData(MANIFEST, METADATA, SCRIPT1)).toString();
+      assertThat(result.getString("uuid")).isEqualTo(DESIGN_UUID_1.toString());
+      assertThat(result.getString("json")).isEqualTo(json1);
       assertThat(result.getString("modified")).isNotNull();
       assertThat(result.getString("checksum")).isNotNull();
     }
@@ -155,7 +204,7 @@ public class TestSuite {
 
       pause();
 
-      byte[] result = getTile(authorization, UUID_2);
+      byte[] result = getTile(authorization, DESIGN_UUID_2);
 
       final BufferedImage image = ImageIO.read(new ByteArrayInputStream(result));
       assertThat(image.getWidth()).isEqualTo(256);
@@ -171,15 +220,19 @@ public class TestSuite {
 
       DesignDocument[] results = listDesigns(authorization);
 
-      assertThat(results[0].getUuid()).isEqualTo(UUID_1);
-      assertThat(results[1].getUuid()).isEqualTo(UUID_2);
-      assertThat(results[2].getUuid()).isEqualTo(UUID_3);
-      assertThat(results[0].getChecksum()).isEqualTo("0");
-      assertThat(results[1].getChecksum()).isEqualTo("4");
-      assertThat(results[2].getChecksum()).isEqualTo("3");
-      assertThat(results[0].getModified()).isNotNull();
-      assertThat(results[1].getModified()).isNotNull();
-      assertThat(results[2].getModified()).isNotNull();
+      List<DesignDocument> sortedResults = Stream.of(results)
+              .sorted(Comparator.comparing(DesignDocument::getUuid))
+              .collect(Collectors.toList());
+
+      assertThat(sortedResults.get(0).getUuid()).isEqualTo(DESIGN_UUID_1.toString());
+      assertThat(sortedResults.get(1).getUuid()).isEqualTo(DESIGN_UUID_2.toString());
+      assertThat(sortedResults.get(2).getUuid()).isEqualTo(DESIGN_UUID_3.toString());
+      assertThat(sortedResults.get(0).getChecksum()).isEqualTo("1");
+      assertThat(sortedResults.get(1).getChecksum()).isEqualTo("2");
+      assertThat(sortedResults.get(2).getChecksum()).isEqualTo("3");
+      assertThat(sortedResults.get(0).getModified()).isNotNull();
+      assertThat(sortedResults.get(1).getModified()).isNotNull();
+      assertThat(sortedResults.get(2).getModified()).isNotNull();
     }
 
     @Test
@@ -189,10 +242,11 @@ public class TestSuite {
 
       pause();
 
-      JsonPath result = loadDesign(authorization, UUID_1);
+      JsonPath result = loadDesign(authorization, DESIGN_UUID_1);
 
-      assertThat(result.getString("uuid")).isEqualTo(UUID_1);
-      assertThat(result.getString("json")).isEqualTo(JSON_1);
+      String json1 = new JsonObject(createPostData(MANIFEST, METADATA, SCRIPT1)).toString();
+      assertThat(result.getString("uuid")).isEqualTo(DESIGN_UUID_1.toString());
+      assertThat(result.getString("json")).isEqualTo(json1);
       assertThat(result.getString("modified")).isNotNull();
       assertThat(result.getString("checksum")).isNotNull();
     }
@@ -204,7 +258,7 @@ public class TestSuite {
 
       pause();
 
-      byte[] result = getTile(authorization, UUID_2);
+      byte[] result = getTile(authorization, DESIGN_UUID_2);
 
       final BufferedImage image = ImageIO.read(new ByteArrayInputStream(result));
       assertThat(image.getWidth()).isEqualTo(256);
@@ -220,15 +274,19 @@ public class TestSuite {
 
       DesignDocument[] results = listDesigns(authorization);
 
-      assertThat(results[0].getUuid()).isEqualTo(UUID_1);
-      assertThat(results[1].getUuid()).isEqualTo(UUID_2);
-      assertThat(results[2].getUuid()).isEqualTo(UUID_3);
-      assertThat(results[0].getChecksum()).isEqualTo("0");
-      assertThat(results[1].getChecksum()).isEqualTo("4");
-      assertThat(results[2].getChecksum()).isEqualTo("3");
-      assertThat(results[0].getModified()).isNotNull();
-      assertThat(results[1].getModified()).isNotNull();
-      assertThat(results[2].getModified()).isNotNull();
+      List<DesignDocument> sortedResults = Stream.of(results)
+              .sorted(Comparator.comparing(DesignDocument::getUuid))
+              .collect(Collectors.toList());
+
+      assertThat(sortedResults.get(0).getUuid()).isEqualTo(DESIGN_UUID_1.toString());
+      assertThat(sortedResults.get(1).getUuid()).isEqualTo(DESIGN_UUID_2.toString());
+      assertThat(sortedResults.get(2).getUuid()).isEqualTo(DESIGN_UUID_3.toString());
+      assertThat(sortedResults.get(0).getChecksum()).isEqualTo("1");
+      assertThat(sortedResults.get(1).getChecksum()).isEqualTo("2");
+      assertThat(sortedResults.get(2).getChecksum()).isEqualTo("3");
+      assertThat(sortedResults.get(0).getModified()).isNotNull();
+      assertThat(sortedResults.get(1).getModified()).isNotNull();
+      assertThat(sortedResults.get(2).getModified()).isNotNull();
     }
 
     @Test
@@ -238,10 +296,11 @@ public class TestSuite {
 
       pause();
 
-      JsonPath result = loadDesign(authorization, UUID_1);
+      JsonPath result = loadDesign(authorization, DESIGN_UUID_1);
 
-      assertThat(result.getString("uuid")).isEqualTo(UUID_1);
-      assertThat(result.getString("json")).isEqualTo(JSON_1);
+      String json1 = new JsonObject(createPostData(MANIFEST, METADATA, SCRIPT1)).toString();
+      assertThat(result.getString("uuid")).isEqualTo(DESIGN_UUID_1.toString());
+      assertThat(result.getString("json")).isEqualTo(json1);
       assertThat(result.getString("modified")).isNotNull();
       assertThat(result.getString("checksum")).isNotNull();
     }
@@ -253,7 +312,7 @@ public class TestSuite {
 
       pause();
 
-      byte[] result = getTile(authorization, UUID_2);
+      byte[] result = getTile(authorization, DESIGN_UUID_2);
 
       final BufferedImage image = ImageIO.read(new ByteArrayInputStream(result));
       assertThat(image.getWidth()).isEqualTo(256);
@@ -270,7 +329,7 @@ public class TestSuite {
       given().config(scenario.getRestAssuredConfig())
               .with().header(AUTHORIZATION, authorization)
               .and().accept(ContentType.JSON)
-              .when().get(scenario.makeBaseURL("/v1/designs/" + UUID_0))
+              .when().get(scenario.makeBaseURL("/v1/designs/" + DESIGN_UUID_0))
               .then().assertThat().statusCode(404);
     }
 
@@ -284,7 +343,7 @@ public class TestSuite {
       given().config(scenario.getRestAssuredConfig())
               .with().header(AUTHORIZATION, authorization)
               .and().accept("image/png")
-              .when().get(scenario.makeBaseURL("/v1/designs/" + UUID_0 + "/0/0/0/256.png"))
+              .when().get(scenario.makeBaseURL("/v1/designs/" + DESIGN_UUID_0 + "/0/0/0/256.png"))
               .then().assertThat().statusCode(404);
     }
 
@@ -298,7 +357,7 @@ public class TestSuite {
       given().config(scenario.getRestAssuredConfig())
               .with().header(AUTHORIZATION, authorization)
               .and().accept(ContentType.JSON)
-              .when().get(scenario.makeBaseURL("/v1/designs/" + UUID_4))
+              .when().get(scenario.makeBaseURL("/v1/designs/" + DESIGN_UUID_4))
               .then().assertThat().statusCode(404);
     }
 
@@ -312,43 +371,51 @@ public class TestSuite {
       given().config(scenario.getRestAssuredConfig())
               .with().header(AUTHORIZATION, authorization)
               .and().accept("image/png")
-              .when().get(scenario.makeBaseURL("/v1/designs/" + UUID_4 + "/0/0/0/256.png"))
+              .when().get(scenario.makeBaseURL("/v1/designs/" + DESIGN_UUID_4 + "/0/0/0/256.png"))
               .then().assertThat().statusCode(404);
     }
+  }
 
-    private void pause() {
-      try {
-        Thread.sleep(100);
-      } catch (InterruptedException ignored) {
-      }
+  private static void pause() {
+    try {
+      Thread.sleep(100);
+    } catch (InterruptedException ignored) {
     }
+  }
 
-    protected DesignDocument[] listDesigns(String authorization) throws MalformedURLException {
-      return given().config(scenario.getRestAssuredConfig())
-              .with().header(AUTHORIZATION, authorization)
-              .and().accept(ContentType.JSON)
-              .when().get(scenario.makeBaseURL("/v1/designs"))
-              .then().assertThat().statusCode(200)
-              .extract().body().as(DesignDocument[].class);
-    }
+  private static DesignDocument[] listDesigns(String authorization) throws MalformedURLException {
+    return given().config(scenario.getRestAssuredConfig())
+            .with().header(AUTHORIZATION, authorization)
+            .and().accept(ContentType.JSON)
+            .when().get(scenario.makeBaseURL("/v1/designs"))
+            .then().assertThat().statusCode(200)
+            .extract().body().as(DesignDocument[].class);
+  }
 
-    protected JsonPath loadDesign(String authorization, String uuid) throws MalformedURLException {
-      return given().config(scenario.getRestAssuredConfig())
-              .with().header(AUTHORIZATION, authorization)
-              .and().accept(ContentType.JSON)
-              .when().get(scenario.makeBaseURL("/v1/designs/" + uuid))
-              .then().assertThat().statusCode(200)
-              .extract().body().jsonPath();
-    }
+  private static JsonPath loadDesign(String authorization, UUID uuid) throws MalformedURLException {
+    return given().config(scenario.getRestAssuredConfig())
+            .with().header(AUTHORIZATION, authorization)
+            .and().accept(ContentType.JSON)
+            .when().get(scenario.makeBaseURL("/v1/designs/" + uuid))
+            .then().assertThat().statusCode(200)
+            .extract().body().jsonPath();
+  }
 
-    protected byte[] getTile(String authorization, String uuid) throws MalformedURLException {
-      return given().config(scenario.getRestAssuredConfig())
-              .with().header(AUTHORIZATION, authorization)
-              .and().accept("image/png")
-              .when().get(scenario.makeBaseURL("/v1/designs/" + uuid + "/0/0/0/256.png"))
-              .then().assertThat().statusCode(200)
-              .and().assertThat().contentType("image/png")
-              .extract().response().asByteArray();
-    }
+  private static byte[] getTile(String authorization, UUID uuid) throws MalformedURLException {
+    return given().config(scenario.getRestAssuredConfig())
+            .with().header(AUTHORIZATION, authorization)
+            .and().accept("image/png")
+            .when().get(scenario.makeBaseURL("/v1/designs/" + uuid + "/0/0/0/256.png"))
+            .then().assertThat().statusCode(200)
+            .and().assertThat().contentType("image/png")
+            .extract().response().asByteArray();
+  }
+
+  private static Map<String, Object> createPostData(String manifest, String metadata, String script) {
+    final Map<String, Object> data = new HashMap<>();
+    data.put("manifest", manifest);
+    data.put("metadata", metadata);
+    data.put("script", script);
+    return data;
   }
 }

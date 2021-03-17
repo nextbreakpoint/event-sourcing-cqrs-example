@@ -2,8 +2,8 @@ package com.nextbreakpoint.blueprint.common.vertx.consumer;
 
 import com.nextbreakpoint.blueprint.common.core.Message;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import io.vertx.core.impl.logging.Logger;
+import io.vertx.core.impl.logging.LoggerFactory;
 
 import java.util.function.BiConsumer;
 

@@ -26,16 +26,6 @@ import java.util.Optional;
 public class Factory {
     private Factory() {}
 
-    public static Handler<RoutingContext> createDeleteDesignHandler(Store store, String topic, String source, KafkaProducer<String, String> producer) {
-        return TemplateHandler.<RoutingContext, DeleteDesignRequest, DeleteDesignResponse, String>builder()
-                .withInputMapper(new DeleteDesignRequestMapper())
-                .withOutputMapper(new DeleteDesignResponseMapper())
-                .withController(new DeleteDesignController(store, topic, producer, new DesignChangedMapper(source)))
-                .onSuccess(new JsonConsumer(200))
-                .onFailure(new ErrorConsumer())
-                .build();
-    }
-
     public static Handler<RoutingContext> createInsertDesignHandler(Store store, String topic, String source, KafkaProducer<String, String> producer) {
         return TemplateHandler.<RoutingContext, InsertDesignRequest, InsertDesignResponse, String>builder()
                 .withInputMapper(new InsertDesignRequestMapper())
@@ -51,6 +41,16 @@ public class Factory {
                 .withInputMapper(new UpdateDesignRequestMapper())
                 .withOutputMapper(new UpdateDesignResponseMapper())
                 .withController(new UpdateDesignController(store, topic, producer, new DesignChangedMapper(source)))
+                .onSuccess(new JsonConsumer(200))
+                .onFailure(new ErrorConsumer())
+                .build();
+    }
+
+    public static Handler<RoutingContext> createDeleteDesignHandler(Store store, String topic, String source, KafkaProducer<String, String> producer) {
+        return TemplateHandler.<RoutingContext, DeleteDesignRequest, DeleteDesignResponse, String>builder()
+                .withInputMapper(new DeleteDesignRequestMapper())
+                .withOutputMapper(new DeleteDesignResponseMapper())
+                .withController(new DeleteDesignController(store, topic, producer, new DesignChangedMapper(source)))
                 .onSuccess(new JsonConsumer(200))
                 .onFailure(new ErrorConsumer())
                 .build();

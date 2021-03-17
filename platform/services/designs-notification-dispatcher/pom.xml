@@ -59,7 +59,8 @@
                         </goals>
                         <configuration>
                             <includes>
-                                <include>**/TestSuite.java</include>
+                                <include>**/IntegrationTests.java</include>
+                                <include>**/PactTests.java</include>
                             </includes>
                             <systemProperties>
                                 <pactbroker.host>${pactbroker.host}</pactbroker.host>
@@ -68,6 +69,26 @@
                                 <http.port>${http.port}</http.port>
                             </systemProperties>
                             <useSystemClassLoader>false</useSystemClassLoader>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>au.com.dius.pact.provider</groupId>
+                <artifactId>maven</artifactId>
+                <version>${pact-provider-maven.version}</version>
+                <executions>
+                    <execution>
+                        <id>publish</id>
+                        <phase>post-integration-test</phase>
+                        <goals>
+                            <goal>publish</goal>
+                        </goals>
+                        <configuration>
+                            <pactDirectory>${project.build.directory}/pacts</pactDirectory>
+                            <pactBrokerUrl>http://${pactbroker.host}:${pactbroker.port}</pactBrokerUrl>
+                            <skipPactPublish>false</skipPactPublish>
+                            <trimSnapshot>true</trimSnapshot>
                         </configuration>
                     </execution>
                 </executions>
@@ -147,6 +168,26 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>au.com.dius.pact</groupId>
+            <artifactId>consumer</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>au.com.dius.pact.consumer</groupId>
+            <artifactId>junit5</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.ktor</groupId>
+            <artifactId>ktor-server-netty</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.ktor</groupId>
+            <artifactId>ktor-network-tls-certificates</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>

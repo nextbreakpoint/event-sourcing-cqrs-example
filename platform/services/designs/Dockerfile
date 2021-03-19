@@ -1,8 +1,4 @@
 FROM maven:3-openjdk-11 AS build
-ARG github_username
-ARG github_password
-ENV GITHUB_USERNAME ${github_username}
-ENV GITHUB_PASSWORD ${github_password}
 ADD . /src
 WORKDIR /src
 RUN mvn clean verify -s settings.xml -t toolchains.xml -DskipTests=true

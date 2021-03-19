@@ -1,23 +1,16 @@
 <settings>
-    <servers>
-        <server>
-            <id>github</id>
-            <username>${env.GITHUB_USERNAME}</username>
-            <password>${env.GITHUB_PASSWORD}</password>
-        </server>
-    </servers>
     <mirrors>
         <mirror>
-            <id>nexus</id>
-            <name>Nexus</name>
-            <url>http://192.168.64.12:38081/repository/maven-central/</url>
-            <mirrorOf>*</mirrorOf>
+            <id>nexus-maven-central</id>
+            <name>Nexus - Maven Central</name>
+            <url>http://192.168.64.12:38081/repository/maven-central</url>
+            <mirrorOf>*,!nexus</mirrorOf>
         </mirror>
         <mirror>
-            <id>github</id>
-            <name>GitHub</name>
-            <url>https://maven.pkg.github.com/nextbreakpoint/blueprint</url>
-            <mirrorOf>github</mirrorOf>
+            <id>nexus-maven-internal</id>
+            <name>Nexus - Maven Internal</name>
+            <url>http://192.168.64.12:38081/repository/maven-internal</url>
+            <mirrorOf>nexus</mirrorOf>
         </mirror>
     </mirrors>
 </settings>

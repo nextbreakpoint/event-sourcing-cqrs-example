@@ -10,6 +10,7 @@ import org.awaitility.Awaitility;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -21,9 +22,6 @@ import java.util.stream.Collectors;
 
 public class Scenario {
     private final ScenarioState scenarioState;
-
-    private String githubUsername;
-    private String githubPassword;
 
     private boolean buildDockerImages;
 
@@ -73,11 +71,6 @@ public class Scenario {
     }
 
     public void create() throws IOException, InterruptedException {
-        if (scenarioState.buildImage) {
-            githubUsername = TestUtils.getVariable("GITHUB_USERNAME");
-            githubPassword = TestUtils.getVariable("GITHUB_PASSWORD");
-        }
-
         buildDockerImages = scenarioState.buildImage;
 
         httpPort = TestUtils.getVariable("HTTP_PORT", System.getProperty("http.port", "8080"));
@@ -386,10 +379,7 @@ public class Scenario {
         }
         KubeUtils.cleanDockerImages();
         System.out.println("Building image...");
-        List<String> args = Arrays.asList(
-                "--build-arg", "github_username=" + githubUsername,
-                "--build-arg", "github_password=" + githubPassword
-        );
+        List<String> args = Collections.emptyList();
         if (KubeUtils.buildDockerImage(".", "integration/" + scenarioState.serviceName + ":" + scenarioState.version, args) != 0) {
             throw new RuntimeException("Can't build image");
         }

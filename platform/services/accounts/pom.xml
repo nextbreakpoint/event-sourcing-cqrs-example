@@ -11,9 +11,9 @@
     </parent>
     <repositories>
         <repository>
-            <id>github</id>
-            <name>GitHub NextBreakpoint Apache Maven Packages</name>
-            <url>https://maven.pkg.github.com/nextbreakpoint/blueprint</url>
+            <id>nexus</id>
+            <name>Nexus</name>
+            <url>http://192.168.64.12:38081/repository/maven-internal</url>
         </repository>
     </repositories>
     <properties>

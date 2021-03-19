@@ -9,11 +9,11 @@ export VERSION="1.0.0"
 export BUILD="true"
 export TEST="true"
 
-# mvn clean install
-
-# pushd common
-# mvn clean install
-# popd
+#mvn clean deploy -s settings.xml -Dnexus=true
+#
+#pushd common
+#mvn clean deploy -s settings.xml -Dnexus=true
+#popd
 
 pushd services/frontend
 if [ "$BUILD" == "true" ]; then

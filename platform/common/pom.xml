@@ -18,11 +18,22 @@
         <module>modules/mysql</module>
         <module>modules/cassandra</module>
     </modules>
-    <distributionManagement>
-        <repository>
-            <id>github</id>
-            <name>GitHub NextBreakpoint Apache Maven Packages</name>
-            <url>https://maven.pkg.github.com/nextbreakpoint/blueprint</url>
-        </repository>
-    </distributionManagement>
+    <profiles>
+        <profile>
+            <id>nexus</id>
+            <activation>
+                <property>
+                    <name>nexus</name>
+                    <value>true</value>
+                </property>
+            </activation>
+            <distributionManagement>
+                <repository>
+                    <id>nexus</id>
+                    <name>Nexus</name>
+                    <url>http://192.168.64.12:38081/repository/maven-internal/</url>
+                </repository>
+            </distributionManagement>
+        </profile>
+    </profiles>
 </project>

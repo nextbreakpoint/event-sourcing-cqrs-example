@@ -69,11 +69,6 @@ Check Consul:
 
     kubectl -n blueprint logs -f --tail=-1 -l app=consul
 
-Export GitHub credentials:
-
-    export GITHUB_USERNAME=your-username
-    export GITHUB_PASSWORD=your-password
-
 Build services:
 
     ./build_services.sh
@@ -145,3 +140,11 @@ Scale services:
 
 Only one replica per partition is allowed for designs-command-consumer.
 Only one replica per node is allowed for designs-notification-dispatcher.
+
+
+docker exec -it $(docker container ls -f name=platform_nexus -q) cat /nexus-data/admin.password
+
+export NEXUS_USERNAME=admin
+export NEXUS_PASSWORD=$(docker exec -it $(docker container ls -f name=platform_nexus -q) cat /nexus-data/admin.password)
+
+curl -u ${NEXUS_USERNAME}:${NEXUS_PASSWORD} -X POST "http://192.168.64.12:38081/service/rest/v1/repositories/maven/hosted" -H "accept: application/json" -H "Content-Type: application/json" -d "{ \"name\": \"maven-internal\", \"online\": true, \"storage\": { \"blobStoreName\": \"default\", \"strictContentTypeValidation\": true, \"writePolicy\": \"allow_once\" }, \"cleanup\": { \"policyNames\": [ \"string\" ] }, \"component\": { \"proprietaryComponents\": true }, \"maven\": { \"versionPolicy\": \"MIXED\", \"layoutPolicy\": \"STRICT\" }}"

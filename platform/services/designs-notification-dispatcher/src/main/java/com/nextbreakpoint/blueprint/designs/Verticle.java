@@ -98,7 +98,7 @@ public class Verticle extends AbstractVerticle {
 
             final String originPattern = environment.resolve(config.getString("origin_pattern"));
 
-            final String sseTopic = environment.resolve(config.getString("sse_topic"));
+            final String eventTopic = environment.resolve(config.getString("design_event_topic"));
 
             final JWTAuth jwtProvider = JWTProviderFactory.create(environment, vertx, config);
 
@@ -106,7 +106,7 @@ public class Verticle extends AbstractVerticle {
 
             final Router mainRouter = Router.router(vertx);
 
-            final CorsHandler corsHandler = CorsHandlerFactory.createWithAll(originPattern, asList(COOKIE, AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN, X_MODIFIED, X_TRACE_ID));
+            final CorsHandler corsHandler = CorsHandlerFactory.createWithAll(originPattern, asList(COOKIE, AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN));
 
             final Handler<RoutingContext> onAccessDenied = routingContext -> routingContext.fail(Failure.accessDenied("Authorisation failed"));
 
@@ -117,7 +117,7 @@ public class Verticle extends AbstractVerticle {
             handlers.put(MessageType.DESIGN_CHANGED, Factory.createDesignChangedHandler(new DesignChangedController(vertx, "events.handler.input")));
 
             consumer.handler(record -> processRecord(handlers, record))
-                    .rxSubscribe(sseTopic)
+                    .rxSubscribe(eventTopic)
                     .doOnError(this::handleError)
                     .subscribe();
 
@@ -143,7 +143,7 @@ public class Verticle extends AbstractVerticle {
 
                         mainRouter.mountSubRouter("/v1", apiRouter);
 
-                        mainRouter.get("/v1/apidocs").handler(openapiHandler::handle);
+                        mainRouter.get("/v1/apidocs").handler(openapiHandler);
 
                         mainRouter.options("/*").handler(ResponseHelper::sendNoContent);
 
@@ -152,7 +152,7 @@ public class Verticle extends AbstractVerticle {
                         final HttpServerOptions options = ServerUtil.makeServerOptions(environment, config);
 
                         vertx.createHttpServer(options)
-                                .requestHandler(mainRouter::handle)
+                                .requestHandler(mainRouter)
                                 .rxListen(port)
                                 .doOnSuccess(result -> logger.info("Service listening on port " + port))
                                 .doOnError(err -> logger.error("Can't create server", err))
@@ -175,10 +175,11 @@ public class Verticle extends AbstractVerticle {
     private void processRecord(Map<String, Handler<Message>> handlers, KafkaConsumerRecord<String, String> record) {
         final Message message = Json.decodeValue(record.value(), Message.class);
         final Handler<Message> handler = handlers.get(message.getMessageType());
-        logger.info("Received message " + message.getMessageType() + " (" + message.getMessageId() + ")");
         if (handler != null) {
-            logger.info("Processing message " + message.getMessageType() + " (" + message.getMessageId() + ")");
+            logger.info("Receive message of type: " + message.getMessageType());
             handler.handle(message);
+        } else {
+            logger.info("Ignore message of type: " + message.getMessageType());
         }
     }
 }

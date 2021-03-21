@@ -33,12 +33,14 @@ import rx.Completable;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 import static com.nextbreakpoint.blueprint.common.core.Authority.*;
 import static com.nextbreakpoint.blueprint.common.core.Headers.*;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 
 public class Verticle extends AbstractVerticle {
     private static final Logger logger = LoggerFactory.getLogger(Verticle.class.getName());
@@ -114,7 +116,7 @@ public class Verticle extends AbstractVerticle {
 
             final Handler<RoutingContext> insertAccountHandler = new AccessHandler(jwtProvider, Factory.createInsertAccountHandler(store), onAccessDenied, asList(ADMIN, PLATFORM));
 
-            final Handler<RoutingContext> deleteAccountHandler = new AccessHandler(jwtProvider, Factory.createDeleteAccountHandler(store), onAccessDenied, asList(ADMIN));
+            final Handler<RoutingContext> deleteAccountHandler = new AccessHandler(jwtProvider, Factory.createDeleteAccountHandler(store), onAccessDenied, singletonList(ADMIN));
 
             final Handler<RoutingContext> openapiHandler = new OpenApiHandler(vertx.getDelegate(), executor, "openapi.yaml");
 
@@ -149,7 +151,7 @@ public class Verticle extends AbstractVerticle {
 
                         mainRouter.mountSubRouter("/v1", apiRouter);
 
-                        mainRouter.get("/v1/apidocs").handler(openapiHandler::handle);
+                        mainRouter.get("/v1/apidocs").handler(openapiHandler);
 
                         mainRouter.options("/*").handler(ResponseHelper::sendNoContent);
 
@@ -160,7 +162,7 @@ public class Verticle extends AbstractVerticle {
                         final HttpServerOptions options = ServerUtil.makeServerOptions(environment, config);
 
                         vertx.createHttpServer(options)
-                                .requestHandler(mainRouter::handle)
+                                .requestHandler(mainRouter)
                                 .rxListen(port)
                                 .doOnSuccess(result -> logger.info("Service listening on port " + port))
                                 .doOnError(err -> logger.error("Can't create server", err))

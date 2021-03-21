@@ -9,12 +9,12 @@ import java.util.UUID;
 public class InsertDesign {
     private final UUID uuid;
     private final String json;
-    private final String timestamp;
+    private final Long timestamp;
 
     @JsonCreator
     public InsertDesign(@JsonProperty("uuid") UUID uuid,
                         @JsonProperty("json") String json,
-                        @JsonProperty("timestamp") String timestamp) {
+                        @JsonProperty("timestamp") Long timestamp) {
         this.uuid = Objects.requireNonNull(uuid);
         this.json = Objects.requireNonNull(json);
         this.timestamp = Objects.requireNonNull(timestamp);
@@ -28,7 +28,7 @@ public class InsertDesign {
         return json;
     }
 
-    public String getTimestamp() {
+    public Long getTimestamp() {
         return timestamp;
     }
 }

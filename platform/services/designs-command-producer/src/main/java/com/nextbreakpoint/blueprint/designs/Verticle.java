@@ -31,12 +31,14 @@ import rx.Completable;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 import static com.nextbreakpoint.blueprint.common.core.Authority.ADMIN;
 import static com.nextbreakpoint.blueprint.common.core.Headers.*;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 
 public class Verticle extends AbstractVerticle {
     private static final Logger logger = LoggerFactory.getLogger(Verticle.class.getName());
@@ -92,7 +94,7 @@ public class Verticle extends AbstractVerticle {
 
             final String originPattern = environment.resolve(config.getString("origin_pattern"));
 
-            final String topic = environment.resolve(config.getString("events_topic"));
+            final String topic = environment.resolve(config.getString("design_command_topic"));
 
             final String messageSource = environment.resolve(config.getString("message_source"));
 
@@ -102,15 +104,15 @@ public class Verticle extends AbstractVerticle {
 
             final Router mainRouter = Router.router(vertx);
 
-            final CorsHandler corsHandler = CorsHandlerFactory.createWithAll(originPattern, asList(COOKIE, AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN, X_MODIFIED, X_TRACE_ID), asList(COOKIE, CONTENT_TYPE, X_XSRF_TOKEN, X_MODIFIED, X_TRACE_ID));
+            final CorsHandler corsHandler = CorsHandlerFactory.createWithAll(originPattern, asList(COOKIE, AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN), asList(COOKIE, CONTENT_TYPE, X_XSRF_TOKEN));
 
             final Handler<RoutingContext> onAccessDenied = routingContext -> routingContext.fail(Failure.accessDenied("Authorisation failed"));
 
-            final Handler<RoutingContext> insertDesignHandler = new AccessHandler(jwtProvider, Factory.createInsertDesignHandler(producer, topic, messageSource), onAccessDenied, asList(ADMIN));
+            final Handler<RoutingContext> insertDesignHandler = new AccessHandler(jwtProvider, Factory.createInsertDesignHandler(producer, topic, messageSource), onAccessDenied, singletonList(ADMIN));
 
-            final Handler<RoutingContext> updateDesignHandler = new AccessHandler(jwtProvider, Factory.createUpdateDesignHandler(producer, topic, messageSource), onAccessDenied, asList(ADMIN));
+            final Handler<RoutingContext> updateDesignHandler = new AccessHandler(jwtProvider, Factory.createUpdateDesignHandler(producer, topic, messageSource), onAccessDenied, singletonList(ADMIN));
 
-            final Handler<RoutingContext> deleteDesignHandler = new AccessHandler(jwtProvider, Factory.createDeleteDesignHandler(producer, topic, messageSource), onAccessDenied, asList(ADMIN));
+            final Handler<RoutingContext> deleteDesignHandler = new AccessHandler(jwtProvider, Factory.createDeleteDesignHandler(producer, topic, messageSource), onAccessDenied, singletonList(ADMIN));
 
             final Handler<RoutingContext> openapiHandler = new OpenApiHandler(vertx.getDelegate(), executor, "openapi.yaml");
 
@@ -139,7 +141,7 @@ public class Verticle extends AbstractVerticle {
 
                     mainRouter.mountSubRouter("/v1", apiRouter);
 
-                    mainRouter.get("/v1/apidocs").handler(openapiHandler::handle);
+                    mainRouter.get("/v1/apidocs").handler(openapiHandler);
 
                     mainRouter.options("/*").handler(ResponseHelper::sendNoContent);
 
@@ -148,7 +150,7 @@ public class Verticle extends AbstractVerticle {
                     final HttpServerOptions options = ServerUtil.makeServerOptions(environment, config);
 
                     vertx.createHttpServer(options)
-                            .requestHandler(mainRouter::handle)
+                            .requestHandler(mainRouter)
                             .rxListen(port)
                             .doOnSuccess(result -> logger.info("Service listening on port " + port))
                             .doOnError(err -> logger.error("Can't create server", err))

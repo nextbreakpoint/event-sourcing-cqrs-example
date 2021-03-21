@@ -112,7 +112,6 @@ public class GitHubSignInHandler implements Handler<RoutingContext> {
         accountsClient.get("/v1/accounts")
                 .putHeader(AUTHORIZATION, Authentication.makeAuthorization(accessToken))
                 .putHeader(ACCEPT, APPLICATION_JSON)
-                .putHeader(X_TRACE_ID, (String) routingContext.get("request-trace-id"))
                 .addQueryParam("email", userEmail)
                 .rxSend()
                 .subscribe(response -> handleFoundAccount(routingContext, redirectTo, userEmail, accessToken, oauthAccessToken, response), err -> routingContext.fail(Failure.authenticationError(err)));
@@ -164,7 +163,6 @@ public class GitHubSignInHandler implements Handler<RoutingContext> {
                 .putHeader(AUTHORIZATION, Authentication.makeAuthorization(accessToken))
                 .putHeader(CONTENT_TYPE, APPLICATION_JSON)
                 .putHeader(ACCEPT, APPLICATION_JSON)
-                .putHeader(X_TRACE_ID, (String) routingContext.get("request-trace-id"))
                 .rxSendJsonObject(account)
                 .subscribe(response -> handleAccount(routingContext, redirectTo, response, "Cannot create account"), err -> routingContext.fail(Failure.authenticationError(err)));
     }
@@ -173,7 +171,6 @@ public class GitHubSignInHandler implements Handler<RoutingContext> {
         accountsClient.get("/v1/accounts/" + accounts.getString(0))
                 .putHeader(AUTHORIZATION, Authentication.makeAuthorization(accessToken))
                 .putHeader(ACCEPT, APPLICATION_JSON)
-                .putHeader(X_TRACE_ID, (String) routingContext.get("request-trace-id"))
                 .rxSend()
                 .subscribe(response -> handleAccount(routingContext, redirectTo, response, "Cannot fetch account"), err -> routingContext.fail(Failure.authenticationError(err)));
     }

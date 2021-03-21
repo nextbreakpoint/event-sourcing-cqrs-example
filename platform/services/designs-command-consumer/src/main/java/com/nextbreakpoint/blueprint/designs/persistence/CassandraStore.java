@@ -27,11 +27,11 @@ public class CassandraStore implements Store {
     private static final String ERROR_UPDATE_DESIGN = "An error occurred while updating a design";
     private static final String ERROR_DELETE_DESIGN = "An error occurred while deleting a design";
 
-    private static final String INSERT_DESIGN = "INSERT INTO DESIGNS (DESIGN_UUID, DESIGN_JSON, DESIGN_STATUS, DESIGN_CHECKSUM, EVENT_TIMESTAMP) VALUES (?, ?, ?, ?, ?)";
-    private static final String SELECT_DESIGN = "SELECT * FROM DESIGNS WHERE DESIGN_UUID = ? ORDER BY EVENT_TIMESTAMP ASC";
-    private static final String INSERT_DESIGN_VIEW = "INSERT INTO DESIGNS_VIEW (DESIGN_UUID, DESIGN_JSON, DESIGN_CHECKSUM, DESIGN_TIMESTAMP) VALUES (?, ?, ?, ?)";
-    private static final String UPDATE_DESIGN_VIEW = "UPDATE DESIGNS_VIEW SET DESIGN_JSON=?, DESIGN_CHECKSUM=?, DESIGN_TIMESTAMP=? WHERE DESIGN_UUID=?";
-    private static final String DELETE_DESIGN_VIEW = "DELETE FROM DESIGNS_VIEW WHERE DESIGN_UUID=?";
+    private static final String INSERT_DESIGN = "INSERT INTO DESIGN_EVENT (DESIGN_UUID, DESIGN_DATA, DESIGN_STATUS, DESIGN_CHECKSUM, EVENT_TIMESTAMP) VALUES (?, ?, ?, ?, ?)";
+    private static final String SELECT_DESIGN = "SELECT * FROM DESIGN_EVENT WHERE DESIGN_UUID = ? ORDER BY EVENT_TIMESTAMP ASC";
+    private static final String INSERT_DESIGN_VIEW = "INSERT INTO DESIGN_AGGREGATE (DESIGN_UUID, DESIGN_DATA, DESIGN_CHECKSUM, DESIGN_UPDATED) VALUES (?, ?, ?, ?)";
+    private static final String UPDATE_DESIGN_VIEW = "UPDATE DESIGN_AGGREGATE SET DESIGN_DATA=?, DESIGN_CHECKSUM=?, DESIGN_UPDATED=? WHERE DESIGN_UUID=?";
+    private static final String DELETE_DESIGN_VIEW = "DELETE FROM DESIGN_AGGREGATE WHERE DESIGN_UUID=?";
 
     private static final int EXECUTE_TIMEOUT = 10;
 
@@ -163,7 +163,7 @@ public class CassandraStore implements Store {
 
     private DesignChange getDesignChange(Row row) {
         final UUID uuid = row.getUUID("DESIGN_UUID");
-        final String json = row.getString("DESIGN_JSON");
+        final String json = row.getString("DESIGN_DATA");
         final String status = row.getString("DESIGN_STATUS");
         final String checksum = row.getString("DESIGN_CHECKSUM");
         final Date modified = new Date(UUIDs.unixTimestamp(row.getUUID("EVENT_TIMESTAMP")));
@@ -171,11 +171,11 @@ public class CassandraStore implements Store {
     }
 
     private Object[] makeInsertParams(InsertDesign command) {
-        return new Object[] { command.getUuid(), Base64.getEncoder().encodeToString(command.getJson().getBytes()), "CREATED", computeChecksum(command.getJson()), UUIDs.timeBased() };
+        return new Object[] { command.getUuid(), command.getJson(), "CREATED", computeChecksum(command.getJson()), UUIDs.timeBased() };
     }
 
     private Object[] makeUpdateParams(UpdateDesign command) {
-        return new Object[] { command.getUuid(), Base64.getEncoder().encodeToString(command.getJson().getBytes()), "UPDATED", computeChecksum(command.getJson()), UUIDs.timeBased() };
+        return new Object[] { command.getUuid(), command.getJson(), "UPDATED", computeChecksum(command.getJson()), UUIDs.timeBased() };
     }
 
     private Object[] makeDeleteParams(DeleteDesign command) {

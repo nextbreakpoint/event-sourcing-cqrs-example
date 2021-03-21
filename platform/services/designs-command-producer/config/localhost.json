@@ -12,5 +12,5 @@
 
   "kafka_bootstrap_servers": "${KAFKA_HOST}:9093",
   "message_source": "service-designs",
-  "events_topic": "designs-events"
+  "design_command_topic": "design-command"
 }

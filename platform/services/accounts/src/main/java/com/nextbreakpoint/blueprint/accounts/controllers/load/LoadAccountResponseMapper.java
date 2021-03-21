@@ -13,7 +13,7 @@ public class LoadAccountResponseMapper implements Mapper<LoadAccountResponse, Op
                 .map(Account -> new JsonObject()
                         .put("uuid", Account.getUuid())
                         .put("name", Account.getName())
-                        .put("role", Account.getRole())
+                        .put("role", Account.getAuthorities())
                         .encode());
 
         return json;

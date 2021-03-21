@@ -101,7 +101,7 @@ public class Verticle extends AbstractVerticle {
             //mainRouter.route().handler(CookieHandler.create());
             mainRouter.route().handler(BodyHandler.create());
 
-            final CorsHandler corsHandler = CorsHandlerFactory.createWithGetOnly(originPattern, asList(COOKIE, AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_TRACE_ID));
+            final CorsHandler corsHandler = CorsHandlerFactory.createWithGetOnly(originPattern, asList(COOKIE, AUTHORIZATION, CONTENT_TYPE, ACCEPT));
 
             mainRouter.route("/*").handler(corsHandler);
 
@@ -129,14 +129,14 @@ public class Verticle extends AbstractVerticle {
 
                         mainRouter.mountSubRouter("/v1", apiRouter);
 
-                        mainRouter.get("/v1/apidocs").handler(openapiHandler::handle);
+                        mainRouter.get("/v1/apidocs").handler(openapiHandler);
 
                         mainRouter.route().failureHandler(routingContext -> redirectOnFailure(routingContext, webUrl));
 
                         final HttpServerOptions options = ServerUtil.makeServerOptions(environment, config);
 
                         vertx.createHttpServer(options)
-                                .requestHandler(mainRouter::handle)
+                                .requestHandler(mainRouter)
                                 .rxListen(port)
                                 .doOnSuccess(result -> logger.info("Service listening on port " + port))
                                 .doOnError(err -> logger.error("Can't create server", err))

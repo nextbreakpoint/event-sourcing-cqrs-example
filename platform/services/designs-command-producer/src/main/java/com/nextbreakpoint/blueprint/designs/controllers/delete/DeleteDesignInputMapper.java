@@ -15,6 +15,6 @@ public class DeleteDesignInputMapper implements Mapper<RoutingContext, DeleteDes
             throw new IllegalStateException("parameter uuid (designId) missing from routing context");
         }
 
-        return new DeleteDesign(UUID.fromString(uuid), String.valueOf(System.currentTimeMillis()));
+        return new DeleteDesign(UUID.fromString(uuid), System.currentTimeMillis());
     }
 }

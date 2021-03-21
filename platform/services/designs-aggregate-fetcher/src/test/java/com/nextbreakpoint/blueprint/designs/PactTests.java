@@ -15,7 +15,6 @@ import com.nextbreakpoint.blueprint.common.core.Environment;
 import com.nextbreakpoint.blueprint.common.core.Headers;
 import com.nextbreakpoint.blueprint.common.vertx.CassandraClusterFactory;
 import io.vertx.core.json.JsonObject;
-import org.apache.commons.codec.binary.Base64;
 import org.apache.http.HttpRequest;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -86,12 +85,12 @@ public class PactTests {
     @State("there are some designs")
     public void designsExist() {
       try (Session session = cluster.connect("designs")) {
-        final PreparedStatement statement1 = session.prepare("TRUNCATE DESIGNS_VIEW;");
+        final PreparedStatement statement1 = session.prepare("TRUNCATE DESIGN_AGGREGATE;");
         session.execute(statement1.bind()).one();
-        final PreparedStatement statement2 = session.prepare("INSERT INTO DESIGNS_VIEW (DESIGN_UUID, DESIGN_JSON, DESIGN_CHECKSUM, DESIGN_TIMESTAMP) VALUES (?,?,?,toTimeStamp(now()));");
-        String json1 = Base64.encodeBase64String(new JsonObject(createPostData(MANIFEST, METADATA, SCRIPT1)).toString().getBytes());
+        final PreparedStatement statement2 = session.prepare("INSERT INTO DESIGN_AGGREGATE (DESIGN_UUID, DESIGN_DATA, DESIGN_CHECKSUM, DESIGN_CREATED, DESIGN_UPDATED) VALUES (?,?,?,toTimeStamp(now()),toTimeStamp(now()));");
+        String json1 = new JsonObject(createPostData(MANIFEST, METADATA, SCRIPT1)).toString();
         session.execute(statement2.bind(DESIGN_UUID_1, json1, "1")).one();
-        String json2 = Base64.encodeBase64String(new JsonObject(createPostData(MANIFEST, METADATA, SCRIPT2)).toString().getBytes());
+        String json2 = new JsonObject(createPostData(MANIFEST, METADATA, SCRIPT2)).toString();
         session.execute(statement2.bind(DESIGN_UUID_2, json2, "2")).one();
       }
     }
@@ -99,10 +98,10 @@ public class PactTests {
     @State("design exists for uuid")
     public void designExistsForUuid() {
       try (Session session = cluster.connect("designs")) {
-        final PreparedStatement statement1 = session.prepare("TRUNCATE DESIGNS_VIEW;");
+        final PreparedStatement statement1 = session.prepare("TRUNCATE DESIGN_AGGREGATE;");
         session.execute(statement1.bind()).one();
-        final PreparedStatement statement2 = session.prepare("INSERT INTO DESIGNS_VIEW (DESIGN_UUID, DESIGN_JSON, DESIGN_CHECKSUM, DESIGN_TIMESTAMP) VALUES (?,?,?,toTimeStamp(now()));");
-        String json1 = Base64.encodeBase64String(new JsonObject(createPostData(MANIFEST, METADATA, SCRIPT1)).toString().getBytes());
+        final PreparedStatement statement2 = session.prepare("INSERT INTO DESIGN_AGGREGATE (DESIGN_UUID, DESIGN_DATA, DESIGN_CHECKSUM, DESIGN_CREATED, DESIGN_UPDATED) VALUES (?,?,?,toTimeStamp(now()),toTimeStamp(now()));");
+        String json1 = new JsonObject(createPostData(MANIFEST, METADATA, SCRIPT1)).toString();
         session.execute(statement2.bind(DESIGN_UUID_1, json1, "1")).one();
       }
     }

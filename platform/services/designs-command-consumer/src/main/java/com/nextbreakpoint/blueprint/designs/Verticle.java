@@ -109,11 +109,11 @@ public class Verticle extends AbstractVerticle {
 
             final String keyspace = environment.resolve(config.getString("cassandra_keyspace"));
 
-            final String eventsTopic = environment.resolve(config.getString("events_topic"));
+            final String eventTopic = environment.resolve(config.getString("design_event_topic"));
 
-            final String sseTopic = environment.resolve(config.getString("sse_topic"));
+            final String commandTopic = environment.resolve(config.getString("design_command_topic"));
 
-            final String viewTopic = environment.resolve(config.getString("view_topic"));
+            final String aggregateTopic = environment.resolve(config.getString("design_aggregate_topic"));
 
             final String messageSource = environment.resolve(config.getString("message_source"));
 
@@ -131,25 +131,25 @@ public class Verticle extends AbstractVerticle {
 
             final Router mainRouter = Router.router(vertx);
 
-            final CorsHandler corsHandler = CorsHandlerFactory.createWithAll(originPattern, asList(AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN, X_MODIFIED), asList(CONTENT_TYPE, X_XSRF_TOKEN, X_MODIFIED));
+            final CorsHandler corsHandler = CorsHandlerFactory.createWithAll(originPattern, asList(AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN), asList(CONTENT_TYPE, X_XSRF_TOKEN));
 
             final Map<String, Handler<RecordAndMessage>> commandHandlers = new HashMap<>();
 
-            commandHandlers.put(MessageType.DESIGN_INSERT, createInsertDesignHandler(store, viewTopic, producer, messageSource, new CommandSuccessConsumer(commandConsumer), new CommandFailureConsumer(commandConsumer)));
-            commandHandlers.put(MessageType.DESIGN_UPDATE, createUpdateDesignHandler(store, viewTopic, producer, messageSource, new CommandSuccessConsumer(commandConsumer), new CommandFailureConsumer(commandConsumer)));
-            commandHandlers.put(MessageType.DESIGN_DELETE, createDeleteDesignHandler(store, viewTopic, producer, messageSource, new CommandSuccessConsumer(commandConsumer), new CommandFailureConsumer(commandConsumer)));
+            commandHandlers.put(MessageType.DESIGN_INSERT, createInsertDesignHandler(store, aggregateTopic, producer, messageSource, new CommandSuccessConsumer(commandConsumer), new CommandFailureConsumer(commandConsumer)));
+            commandHandlers.put(MessageType.DESIGN_UPDATE, createUpdateDesignHandler(store, aggregateTopic, producer, messageSource, new CommandSuccessConsumer(commandConsumer), new CommandFailureConsumer(commandConsumer)));
+            commandHandlers.put(MessageType.DESIGN_DELETE, createDeleteDesignHandler(store, aggregateTopic, producer, messageSource, new CommandSuccessConsumer(commandConsumer), new CommandFailureConsumer(commandConsumer)));
 
-            final Map<String, Handler<RecordAndMessage>> viewHandlers = new HashMap<>();
+            final Map<String, Handler<RecordAndMessage>> aggregateHandlers = new HashMap<>();
 
-            viewHandlers.put(MessageType.DESIGN_CHANGED, createDesignChangedHandler(store, sseTopic, producer, messageSource, new ViewSuccessConsumer(viewConsumer), new ViewFailureConsumer(viewConsumer)));
+            aggregateHandlers.put(MessageType.DESIGN_CHANGED, createDesignChangedHandler(store, eventTopic, producer, messageSource, new ViewSuccessConsumer(viewConsumer), new ViewFailureConsumer(viewConsumer)));
 
             commandConsumer.handler(record -> processRecord(commandHandlers, record))
-                    .rxSubscribe(eventsTopic)
+                    .rxSubscribe(commandTopic)
                     .doOnError(this::handleError)
                     .subscribe();
 
-            viewConsumer.handler(record -> processRecord(viewHandlers, record))
-                    .rxSubscribe(viewTopic)
+            viewConsumer.handler(record -> processRecord(aggregateHandlers, record))
+                    .rxSubscribe(aggregateTopic)
                     .doOnError(this::handleError)
                     .subscribe();
 
@@ -171,7 +171,7 @@ public class Verticle extends AbstractVerticle {
 
                         mainRouter.mountSubRouter("/v1", apiRouter);
 
-                        mainRouter.get("/v1/apidocs").handler(openapiHandler::handle);
+                        mainRouter.get("/v1/apidocs").handler(openapiHandler);
 
                         mainRouter.options("/*").handler(ResponseHelper::sendNoContent);
 
@@ -180,7 +180,7 @@ public class Verticle extends AbstractVerticle {
                         final HttpServerOptions options = ServerUtil.makeServerOptions(environment, config);
 
                         vertx.createHttpServer(options)
-                                .requestHandler(mainRouter::handle)
+                                .requestHandler(mainRouter)
                                 .rxListen(port)
                                 .doOnSuccess(result -> logger.info("Service listening on port " + port))
                                 .doOnError(err -> logger.error("Can't create server", err))
@@ -207,7 +207,7 @@ public class Verticle extends AbstractVerticle {
             logger.info("Receive message of type: " + message.getMessageType());
             handler.handle(new RecordAndMessage(record, message));
         } else {
-            logger.warn("Can't handle message with type: " + message.getMessageType());
+            logger.info("Ignore message of type: " + message.getMessageType());
         }
     }
 }

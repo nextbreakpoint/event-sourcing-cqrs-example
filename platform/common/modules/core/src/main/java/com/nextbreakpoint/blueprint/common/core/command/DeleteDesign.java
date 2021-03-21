@@ -8,11 +8,11 @@ import java.util.UUID;
 
 public class DeleteDesign {
     private final UUID uuid;
-    private final String timestamp;
+    private final Long timestamp;
 
     @JsonCreator
     public DeleteDesign(@JsonProperty("uuid") UUID uuid,
-                        @JsonProperty("timestamp") String timestamp) {
+                        @JsonProperty("timestamp") Long timestamp) {
         this.uuid = Objects.requireNonNull(uuid);
         this.timestamp = Objects.requireNonNull(timestamp);
     }
@@ -21,7 +21,7 @@ public class DeleteDesign {
         return uuid;
     }
 
-    public String getTimestamp() {
+    public Long getTimestamp() {
         return timestamp;
     }
 }

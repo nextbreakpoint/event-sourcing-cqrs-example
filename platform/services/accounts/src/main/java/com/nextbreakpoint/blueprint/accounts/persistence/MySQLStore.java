@@ -33,11 +33,11 @@ public class MySQLStore implements Store {
     private static final String ERROR_DELETE_ACCOUNT = "An error occurred while deleting an account";
     private static final String ERROR_FIND_ACCOUNTS = "An error occurred while loading accounts";
 
-    private static final String INSERT_ACCOUNT = "INSERT INTO ACCOUNTS (UUID, NAME, EMAIL, ROLE) VALUES (?, ?, ?, ?)";
-    private static final String SELECT_ACCOUNT = "SELECT * FROM ACCOUNTS WHERE UUID = ?";
-    private static final String DELETE_ACCOUNT = "DELETE FROM ACCOUNTS WHERE UUID = ?";
-    private static final String SELECT_ACCOUNTS = "SELECT * FROM ACCOUNTS";
-    private static final String SELECT_ACCOUNTS_BY_EMAIL = "SELECT * FROM ACCOUNTS WHERE EMAIL = ?";
+    private static final String INSERT_ACCOUNT = "INSERT INTO ACCOUNT_ENTITY (ACCOUNT_UUID, ACCOUNT_NAME, ACCOUNT_EMAIL, ACCOUNT_AUTHORITIES, ACCOUNT_CREATED) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)";
+    private static final String SELECT_ACCOUNT = "SELECT * FROM ACCOUNT_ENTITY WHERE ACCOUNT_UUID = ?";
+    private static final String DELETE_ACCOUNT = "DELETE FROM ACCOUNT_ENTITY WHERE ACCOUNT_UUID = ?";
+    private static final String SELECT_ACCOUNTS = "SELECT * FROM ACCOUNT_ENTITY";
+    private static final String SELECT_ACCOUNTS_BY_EMAIL = "SELECT * FROM ACCOUNT_ENTITY WHERE ACCOUNT_EMAIL = ?";
 
     private final JDBCClient client;
 
@@ -79,7 +79,7 @@ public class MySQLStore implements Store {
         return conn.rxSetAutoCommit(false)
                 .flatMap(x -> conn.rxUpdateWithParams(INSERT_ACCOUNT, makeInsertParams(request)))
                 .map(UpdateResult::getUpdated)
-                .map(result -> new InsertAccountResponse(request.getUuid(), request.getRole(), result))
+                .map(result -> new InsertAccountResponse(request.getUuid(), request.getAuthorities(), result))
                 .doOnError(x -> conn.rxRollback().subscribe())
                 .doOnSuccess(x -> conn.rxCommit().subscribe())
                 .doAfterTerminate(() -> conn.rxClose().subscribe());
@@ -109,7 +109,7 @@ public class MySQLStore implements Store {
         return conn.rxSetAutoCommit(true)
                 .flatMap(x -> selectAccounts(conn, request))
                 .map(ResultSet::getRows)
-                .map(result -> result.stream().map(x -> x.getString("UUID")).collect(toList()))
+                .map(result -> result.stream().map(x -> x.getString("ACCOUNT_UUID")).collect(toList()))
                 .map(ListAccountsResponse::new)
                 .doAfterTerminate(() -> conn.rxClose().subscribe());
     }
@@ -123,9 +123,9 @@ public class MySQLStore implements Store {
     }
 
     private Account toAccount(JsonObject row) {
-        final String uuid = row.getString("UUID");
-        final String name = row.getString("NAME");
-        final String role = row.getString("ROLE");
+        final String uuid = row.getString("ACCOUNT_UUID");
+        final String name = row.getString("ACCOUNT_NAME");
+        final String role = row.getString("ACCOUNT_AUTHORITIES");
         return new Account(uuid, name, role);
     }
 
@@ -142,7 +142,7 @@ public class MySQLStore implements Store {
                 .add(request.getUuid().toString())
                 .add(request.getName())
                 .add(request.getEmail())
-                .add(request.getRole());
+                .add(request.getAuthorities());
     }
 
     private JsonArray makeDeleteParams(DeleteAccountRequest request) {

@@ -248,7 +248,7 @@ public class PactTests {
     }
 
     private static ProducerRecord<String, String> createKafkaRecord(Message message) {
-        return new ProducerRecord<>("designs-sse", message.getPartitionKey(), Json.encode(message));
+        return new ProducerRecord<>("design-event", message.getPartitionKey(), Json.encode(message));
     }
 
     private static Message createDesignChangedMessage(UUID messageId, UUID partitionKey, long timestamp, DesignChanged event) {

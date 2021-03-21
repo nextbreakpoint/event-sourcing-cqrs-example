@@ -1,6 +1,5 @@
 package com.nextbreakpoint.blueprint.common.vertx;
 
-import com.nextbreakpoint.blueprint.common.core.Headers;
 import io.vertx.core.Handler;
 import io.vertx.rxjava.ext.web.RoutingContext;
 import org.slf4j.MDC;
@@ -13,19 +12,19 @@ public class MDCHandler implements Handler<RoutingContext> {
     @Override
     public void handle(RoutingContext context) {
         try {
-            final String traceId = context.request().getHeader(Headers.X_TRACE_ID);
-            if (traceId != null) {
-                context.put("request-trace-id", traceId);
-                MDC.put("request-trace-id", traceId);
-            } else {
-                final String contextTraceId = context.get("request-trace-id");
-                if (contextTraceId != null) {
-                    MDC.put("request-trace-id", contextTraceId);
-                } else {
-                    context.put("request-trace-id", "n/a");
-                    MDC.put("request-trace-id", "n/a");
-                }
-            }
+//            final String traceId = context.request().getHeader(Headers.X_TRACE_ID);
+//            if (traceId != null) {
+//                context.put("request-trace-id", traceId);
+//                MDC.put("request-trace-id", traceId);
+//            } else {
+//                final String contextTraceId = context.get("request-trace-id");
+//                if (contextTraceId != null) {
+//                    MDC.put("request-trace-id", contextTraceId);
+//                } else {
+//                    context.put("request-trace-id", "n/a");
+//                    MDC.put("request-trace-id", "n/a");
+//                }
+//            }
             context.next();
         } finally {
             MDC.clear();

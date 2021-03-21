@@ -25,8 +25,8 @@ public class CassandraStore implements Store {
     private static final String ERROR_LOAD_DESIGN = "An error occurred while loading a design";
     private static final String ERROR_LIST_DESIGNS = "An error occurred while loading designs";
 
-    private static final String SELECT_DESIGN = "SELECT * FROM DESIGNS_VIEW WHERE DESIGN_UUID = ?";
-    private static final String SELECT_DESIGNS = "SELECT DESIGN_UUID, DESIGN_CHECKSUM, DESIGN_TIMESTAMP FROM DESIGNS_VIEW";
+    private static final String SELECT_DESIGN = "SELECT * FROM DESIGN_AGGREGATE WHERE DESIGN_UUID = ?";
+    private static final String SELECT_DESIGNS = "SELECT DESIGN_UUID, DESIGN_CHECKSUM, DESIGN_UPDATED FROM DESIGN_AGGREGATE";
 
     private static final int EXECUTE_TIMEOUT = 10;
 
@@ -108,16 +108,16 @@ public class CassandraStore implements Store {
 
     private DesignDocument getDesignDocument(Row row) {
         final String uuid = row.getUUID("DESIGN_UUID").toString();
-        final String json = new String(Base64.getDecoder().decode(row.getString("DESIGN_JSON").getBytes()));
+        final String json = row.getString("DESIGN_DATA");
         final String checksum = row.getString("DESIGN_CHECKSUM");
-        final Instant timestamp = row.getTimestamp("DESIGN_TIMESTAMP").toInstant();
+        final Instant timestamp = row.getTimestamp("DESIGN_UPDATED").toInstant();
         return new DesignDocument(uuid, json, checksum, formatDate(timestamp));
     }
 
     private DesignDocument getMinimalDesignDocument(Row row) {
         final String uuid = row.getUUID("DESIGN_UUID").toString();
         final String checksum = row.getString("DESIGN_CHECKSUM");
-        final Instant timestamp = row.getTimestamp("DESIGN_TIMESTAMP").toInstant();
+        final Instant timestamp = row.getTimestamp("DESIGN_UPDATED").toInstant();
         return new DesignDocument(uuid, null, checksum, formatDate(timestamp));
     }
 

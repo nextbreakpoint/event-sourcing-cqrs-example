@@ -110,7 +110,7 @@ public class Verticle extends AbstractVerticle {
 
             final Router mainRouter = Router.router(vertx);
 
-            final CorsHandler corsHandler = CorsHandlerFactory.createWithAll(originPattern, asList(COOKIE, AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN, X_MODIFIED, X_TRACE_ID), asList(COOKIE, CONTENT_TYPE, X_XSRF_TOKEN, X_MODIFIED, X_TRACE_ID));
+            final CorsHandler corsHandler = CorsHandlerFactory.createWithAll(originPattern, asList(COOKIE, AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN), asList(COOKIE, CONTENT_TYPE, X_XSRF_TOKEN));
 
             final Handler<RoutingContext> onAccessDenied = routingContext -> routingContext.fail(Failure.accessDenied("Authorisation failed"));
 
@@ -147,7 +147,7 @@ public class Verticle extends AbstractVerticle {
 
                         mainRouter.mountSubRouter("/v1", apiRouter);
 
-                        mainRouter.get("/v1/apidocs").handler(openapiHandler::handle);
+                        mainRouter.get("/v1/apidocs").handler(openapiHandler);
 
                         mainRouter.options("/*").handler(ResponseHelper::sendNoContent);
 
@@ -156,7 +156,7 @@ public class Verticle extends AbstractVerticle {
                         final HttpServerOptions options = ServerUtil.makeServerOptions(environment, config);
 
                         vertx.createHttpServer(options)
-                                .requestHandler(mainRouter::handle)
+                                .requestHandler(mainRouter)
                                 .rxListen(port)
                                 .doOnSuccess(result -> logger.info("Service listening on port " + port))
                                 .doOnError(err -> logger.error("Can't create server", err))

@@ -15,6 +15,7 @@ import io.vertx.rxjava.ext.jdbc.JDBCClient;
 import io.vertx.rxjava.ext.sql.SQLConnection;
 import rx.Single;
 
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
@@ -39,11 +40,11 @@ public class MySQLStore implements Store {
     private static final String ERROR_DELETE_DESIGN = "An error occurred while deleting a design";
     private static final String ERROR_LIST_DESIGNS = "An error occurred while loading designs";
 
-    private static final String INSERT_DESIGN = "INSERT INTO DESIGNS (UUID, JSON, CREATED, UPDATED, CHECKSUM) VALUES (?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, ?)";
-    private static final String UPDATE_DESIGN = "UPDATE DESIGNS SET JSON=?, CHECKSUM=?, UPDATED=CURRENT_TIMESTAMP WHERE UUID=?";
-    private static final String SELECT_DESIGN = "SELECT * FROM DESIGNS WHERE UUID = ?";
-    private static final String SELECT_DESIGNS = "SELECT * FROM DESIGNS";
-    private static final String DELETE_DESIGN = "DELETE FROM DESIGNS WHERE UUID = ?";
+    private static final String INSERT_DESIGN = "INSERT INTO DESIGN_ENTITY (DESIGN_UUID, DESIGN_DATA, DESIGN_CHECKSUM, DESIGN_CREATED, DESIGN_UPDATED) VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
+    private static final String UPDATE_DESIGN = "UPDATE DESIGN_ENTITY SET DESIGN_DATA=?, DESIGN_CHECKSUM=?, DESIGN_UPDATED=CURRENT_TIMESTAMP WHERE DESIGN_UUID=?";
+    private static final String SELECT_DESIGN = "SELECT * FROM DESIGN_ENTITY WHERE DESIGN_UUID = ?";
+    private static final String SELECT_DESIGNS = "SELECT * FROM DESIGN_ENTITY";
+    private static final String DELETE_DESIGN = "DELETE FROM DESIGN_ENTITY WHERE DESIGN_UUID = ?";
 
     private final JDBCClient client;
 
@@ -77,7 +78,7 @@ public class MySQLStore implements Store {
 
     public Single<ListDesignsResponse> listDesigns(ListDesignsRequest request) {
         return withConnection()
-                .flatMap(conn -> doListDesigns(conn))
+                .flatMap(conn -> doListDesigns(conn, request))
                 .doOnError(err -> handleError(ERROR_LIST_DESIGNS, err));
     }
 
@@ -127,7 +128,7 @@ public class MySQLStore implements Store {
                 .doAfterTerminate(() -> conn.rxClose().subscribe());
     }
 
-    private Single<ListDesignsResponse> doListDesigns(SQLConnection conn) {
+    private Single<ListDesignsResponse> doListDesigns(SQLConnection conn, ListDesignsRequest request) {
         return conn.rxSetAutoCommit(true)
                 .flatMap(x -> conn.rxQuery(SELECT_DESIGNS))
                 .map(ResultSet::getRows)
@@ -137,16 +138,16 @@ public class MySQLStore implements Store {
     }
 
     private DesignDocument toDocument(JsonObject row) {
-        final String uuid = row.getString("UUID");
-        final String json = row.getString("JSON");
-        final String updated = row.getString("UPDATED");
-        final String checksum = row.getString("CHECKSUM");
+        final String uuid = row.getString("DESIGN_UUID");
+        final String json = row.getString("DESIGN_DATA");
+        final String updated = row.getString("DESIGN_UPDATED");
+        final String checksum = row.getString("DESIGN_CHECKSUM");
         return new DesignDocument(uuid, json, checksum, formatDate(convertStringToInstant(updated)));
     }
 
     private DesignDocument toDocumentNoJSON(JsonObject row) {
-        final String uuid = row.getString("UUID");
-        final String checksum = row.getString("CHECKSUM");
+        final String uuid = row.getString("DESIGN_UUID");
+        final String checksum = row.getString("DESIGN_CHECKSUM");
         return new DesignDocument(uuid, null, checksum, null);
     }
 
@@ -172,7 +173,7 @@ public class MySQLStore implements Store {
 
     private String computeChecksum(String json) {
         try {
-            final byte[] bytes = json.getBytes("UTF-8");
+            final byte[] bytes = json.getBytes(StandardCharsets.UTF_8);
             final MessageDigest md = MessageDigest.getInstance("MD5");
             return Base64.getEncoder().encodeToString(md.digest(bytes));
         } catch (Exception e) {

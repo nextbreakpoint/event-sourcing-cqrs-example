@@ -27,5 +27,5 @@ data:
 
       "kafka_bootstrap_servers": "kafka:9092",
       "kafka_group_id": "designs-notification-dispatcher",
-      "sse_topic": "designs-sse"
+      "design_event_topic": "design-event"
     }

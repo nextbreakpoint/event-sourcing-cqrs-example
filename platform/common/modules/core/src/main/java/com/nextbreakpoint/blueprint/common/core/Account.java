@@ -5,12 +5,12 @@ import java.util.Objects;
 public class Account {
     private String uuid;
     private String name;
-    private String role;
+    private String authorities;
 
-    public Account(String uuid, String name, String role) {
+    public Account(String uuid, String name, String authorities) {
         this.uuid = Objects.requireNonNull(uuid);
         this.name = Objects.requireNonNull(name);
-        this.role = Objects.requireNonNull(role);
+        this.authorities = Objects.requireNonNull(authorities);
     }
 
     public String getUuid() {
@@ -21,7 +21,7 @@ public class Account {
         return name;
     }
 
-    public String getRole() {
-        return role;
+    public String getAuthorities() {
+        return authorities;
     }
 }

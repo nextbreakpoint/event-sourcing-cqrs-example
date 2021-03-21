@@ -42,6 +42,7 @@ import static com.nextbreakpoint.blueprint.common.core.Authority.*;
 import static com.nextbreakpoint.blueprint.common.core.Headers.*;
 import static com.nextbreakpoint.blueprint.designs.Factory.*;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 
 public class Verticle extends AbstractVerticle {
     private static final Logger logger = LoggerFactory.getLogger(Verticle.class.getName());
@@ -99,7 +100,7 @@ public class Verticle extends AbstractVerticle {
 
             final String originPattern = environment.resolve(config.getString("origin_pattern"));
 
-            final String sseTopic = environment.resolve(config.getString("sse_topic"));
+            final String eventTopic = environment.resolve(config.getString("design_event_topic"));
 
             final String messageSource = environment.resolve(config.getString("message_source"));
 
@@ -113,7 +114,7 @@ public class Verticle extends AbstractVerticle {
 
             final Router mainRouter = Router.router(vertx);
 
-            final CorsHandler corsHandler = CorsHandlerFactory.createWithAll(originPattern, asList(AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN, X_MODIFIED, X_TRACE_ID), asList(CONTENT_TYPE, X_XSRF_TOKEN, X_MODIFIED, X_TRACE_ID));
+            final CorsHandler corsHandler = CorsHandlerFactory.createWithAll(originPattern, asList(AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN), asList(CONTENT_TYPE, X_XSRF_TOKEN));
 
             final Handler<RoutingContext> onAccessDenied = routingContext -> routingContext.fail(Failure.accessDenied("Authorisation failed"));
 
@@ -123,11 +124,11 @@ public class Verticle extends AbstractVerticle {
 
             final Handler<RoutingContext>  loadDesignHandler = new AccessHandler(jwtProvider, createLoadDesignHandler(store), onAccessDenied, asList(ADMIN, GUEST, ANONYMOUS));
 
-            final Handler<RoutingContext>  insertDesignHandler = new AccessHandler(jwtProvider, createInsertDesignHandler(store, sseTopic, messageSource, producer), onAccessDenied, asList(ADMIN));
+            final Handler<RoutingContext>  insertDesignHandler = new AccessHandler(jwtProvider, createInsertDesignHandler(store, eventTopic, messageSource, producer), onAccessDenied, singletonList(ADMIN));
 
-            final Handler<RoutingContext>  updateDesignHandler = new AccessHandler(jwtProvider, createUpdateDesignHandler(store, sseTopic, messageSource, producer), onAccessDenied, asList(ADMIN));
+            final Handler<RoutingContext>  updateDesignHandler = new AccessHandler(jwtProvider, createUpdateDesignHandler(store, eventTopic, messageSource, producer), onAccessDenied, singletonList(ADMIN));
 
-            final Handler<RoutingContext>  deleteDesignHandler = new AccessHandler(jwtProvider, createDeleteDesignHandler(store, sseTopic, messageSource, producer), onAccessDenied, asList(ADMIN));
+            final Handler<RoutingContext>  deleteDesignHandler = new AccessHandler(jwtProvider, createDeleteDesignHandler(store, eventTopic, messageSource, producer), onAccessDenied, singletonList(ADMIN));
 
             final Handler<RoutingContext> openapiHandler = new OpenApiHandler(vertx.getDelegate(), executor, "openapi.yaml");
 
@@ -165,7 +166,7 @@ public class Verticle extends AbstractVerticle {
 
                         mainRouter.mountSubRouter("/v1", apiRouter);
 
-                        mainRouter.get("/v1/apidocs").handler(openapiHandler::handle);
+                        mainRouter.get("/v1/apidocs").handler(openapiHandler);
 
                         mainRouter.options("/*").handler(ResponseHelper::sendNoContent);
 
@@ -174,7 +175,7 @@ public class Verticle extends AbstractVerticle {
                         final HttpServerOptions options = ServerUtil.makeServerOptions(environment, config);
 
                         vertx.createHttpServer(options)
-                                .requestHandler(mainRouter::handle)
+                                .requestHandler(mainRouter)
                                 .rxListen(port)
                                 .doOnSuccess(result -> logger.info("Service listening on port " + port))
                                 .doOnError(err -> logger.error("Can't create server", err))

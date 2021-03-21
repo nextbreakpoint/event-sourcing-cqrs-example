@@ -64,7 +64,7 @@ public class PactTests {
 
         consumer = KafkaUtils.createConsumer(environment, scenario.createConsumerConfig("test"));
 
-        consumer.subscribe(Collections.singleton("designs-events"));
+        consumer.subscribe(Collections.singleton("design-command"));
 
         polling = createConsumerThread();
 

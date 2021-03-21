@@ -9,7 +9,6 @@ import java.net.MalformedURLException;
 import java.util.UUID;
 
 import static com.jayway.restassured.RestAssured.given;
-import static com.nextbreakpoint.blueprint.common.core.Headers.X_TRACE_ID;
 import static com.xebialabs.restito.builder.stub.StubHttp.whenHttp;
 import static com.xebialabs.restito.builder.verify.VerifyHttp.verifyHttp;
 import static com.xebialabs.restito.semantics.Action.*;
@@ -72,11 +71,11 @@ public class IntegrationTests {
               .then(status(HttpStatus.OK_200), stringContent("[{\"email\":\"test@localhost\", \"primary\":true}]"));
 
       whenHttp(scenario.getStubServer())
-              .match(get(ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"), withHeader(X_TRACE_ID, "n/a"))
+              .match(get(ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"))
               .then(status(HttpStatus.OK_200), stringContent("[]"));
 
       whenHttp(scenario.getStubServer())
-              .match(post(ACCOUNTS_PATH), withPostBody(), withHeader("Authorization"), withHeader(X_TRACE_ID, "n/a"))
+              .match(post(ACCOUNTS_PATH), withPostBody(), withHeader("Authorization"))
               .then(status(HttpStatus.CREATED_201), stringContent("{\"role\":\"guest\", \"uuid\":\"" + ACCOUNT_UUID + "\"}"));
 
       given().config(scenario.getRestAssuredConfig())
@@ -89,8 +88,8 @@ public class IntegrationTests {
       verifyHttp(scenario.getStubServer()).once(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
               .then().once(get(OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
               .then().once(get(OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"))
-//            .then().once(get(ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"), withHeader(X_TRACE_ID, "n/a"))
-              .then().once(post(ACCOUNTS_PATH), withPostBody(), withHeader("authorization"), withHeader(X_TRACE_ID, "n/a"));
+//            .then().once(get(ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"))
+              .then().once(post(ACCOUNTS_PATH), withPostBody(), withHeader("authorization"));
     }
 
     @Test
@@ -434,17 +433,16 @@ public class IntegrationTests {
               .then(status(HttpStatus.OK_200), stringContent("[{\"email\":\"test@localhost\", \"primary\":true}]"));
 
       whenHttp(scenario.getStubServer())
-              .match(get(ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"), withHeader(X_TRACE_ID, "xxx"))
+              .match(get(ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"))
               .then(status(HttpStatus.OK_200), stringContent("[]"));
 
       whenHttp(scenario.getStubServer())
-              .match(post(ACCOUNTS_PATH), withPostBody(), withHeader("Authorization"), withHeader(X_TRACE_ID, "xxx"))
+              .match(post(ACCOUNTS_PATH), withPostBody(), withHeader("Authorization"))
               .then(status(HttpStatus.CREATED_201), stringContent("{\"role\":\"guest\", \"uuid\":\"" + ACCOUNT_UUID + "\"}"));
 
       given().config(scenario.getRestAssuredConfig())
               .with().param("code", "xxx")
               .and().param("state", "/v1/auth/signin/content/designs")
-              .and().header(X_TRACE_ID, "xxx")
               .when().get(scenario.makeBaseURL("/v1/auth/callback"))
               .then().assertThat().statusCode(303)
               .and().header("Location", startsWith("https://" + scenario.getServiceHost() + ":" + scenario.getServicePort() + "/content/designs"));
@@ -452,8 +450,8 @@ public class IntegrationTests {
       verifyHttp(scenario.getStubServer()).once(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
               .then().once(get(OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
               .then().once(get(OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"))
-//            .then().once(get(ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"), withHeader(X_TRACE_ID, "xxx"))
-              .then().once(post(ACCOUNTS_PATH), withPostBody(), withHeader("authorization"), withHeader(X_TRACE_ID, "xxx"));
+//            .then().once(get(ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"))
+              .then().once(post(ACCOUNTS_PATH), withPostBody(), withHeader("authorization"));
     }
   }
 }

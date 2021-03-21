@@ -5,12 +5,12 @@ import java.util.UUID;
 
 public class InsertAccountResponse {
     private final UUID uuid;
-    private final String role;
+    private final String authorities;
     private final Integer result;
 
-    public InsertAccountResponse(UUID uuid, String role, Integer result) {
+    public InsertAccountResponse(UUID uuid, String authorities, Integer result) {
         this.uuid = Objects.requireNonNull(uuid);
-        this.role = Objects.requireNonNull(role);
+        this.authorities = Objects.requireNonNull(authorities);
         this.result = Objects.requireNonNull(result);
     }
 
@@ -22,7 +22,7 @@ public class InsertAccountResponse {
         return result;
     }
 
-    public String getRole() {
-        return role;
+    public String getAuthorities() {
+        return authorities;
     }
 }

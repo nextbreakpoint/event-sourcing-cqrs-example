@@ -44,7 +44,7 @@ public class IntegrationTests {
     @BeforeEach
     public void setup() throws SQLException {
       try (Connection connection = DriverManager.getConnection(scenario.getMySqlConnectionUrl("accounts"), "root", "password")) {
-        connection.prepareStatement("TRUNCATE ACCOUNTS;").execute();
+        connection.prepareStatement("TRUNCATE ACCOUNT_ENTITY;").execute();
       }
     }
 

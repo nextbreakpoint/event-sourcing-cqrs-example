@@ -36,5 +36,5 @@ data:
 
       "kafka_bootstrap_servers": "kafka:9092",
       "message_source": "service-designs",
-      "sse_topic": "designs-sse"
+      "design_event_topic": "design-event"
     }

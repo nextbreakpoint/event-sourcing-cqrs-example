@@ -3,8 +3,6 @@ package com.nextbreakpoint.blueprint.common.core;
 import java.util.Objects;
 
 public class Metadata {
-    public static final String MODIFIED = "Modified";
-
     private final String name;
     private final String value;
 

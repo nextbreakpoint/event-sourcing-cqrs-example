@@ -36,6 +36,6 @@ public class UpdateDesignInputMapper implements Mapper<RoutingContext, UpdateDes
                 .put("script", script)
                 .encode();
 
-        return new UpdateDesign(UUID.fromString(uuid), json, String.valueOf(System.currentTimeMillis()));
+        return new UpdateDesign(UUID.fromString(uuid), json, System.currentTimeMillis());
     }
 }

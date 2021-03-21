@@ -20,7 +20,7 @@
   "kafka_bootstrap_servers": "${KAFKA_HOST}:9093",
   "kafka_group_id": "designs-command-consumer",
   "message_source": "service-designs",
-  "events_topic": "designs-events",
-  "view_topic": "designs-view",
-  "sse_topic": "designs-sse"
+  "design_event_topic": "design-event",
+  "design_command_topic": "design-command",
+  "design_aggregate_topic": "design-aggregate"
 }

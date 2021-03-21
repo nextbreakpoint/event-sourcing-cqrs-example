@@ -61,7 +61,7 @@ public class IntegrationTests {
 
         consumer = KafkaUtils.createConsumer(environment, scenario.createConsumerConfig("test"));
 
-        consumer.subscribe(Collections.singleton("designs-sse"));
+        consumer.subscribe(Collections.singleton("design-event"));
 
         polling = createConsumerThread();
 
@@ -119,7 +119,7 @@ public class IntegrationTests {
 
             final UUID designId = UUID.randomUUID();
 
-            final InsertDesign insertDesignCommand = new InsertDesign(designId, JSON_1, String.valueOf(eventTimestamp));
+            final InsertDesign insertDesignCommand = new InsertDesign(designId, JSON_1, eventTimestamp);
 
             final long messageTimestamp = System.currentTimeMillis();
 
@@ -133,14 +133,14 @@ public class IntegrationTests {
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
                         try (Session session = cluster.connect("designs")) {
-                            final PreparedStatement statement = session.prepare("SELECT * FROM DESIGNS WHERE DESIGN_UUID = ? ORDER BY EVENT_TIMESTAMP ASC");
+                            final PreparedStatement statement = session.prepare("SELECT * FROM DESIGN_EVENT WHERE DESIGN_UUID = ? ORDER BY EVENT_TIMESTAMP ASC");
                             final List<Row> rows = session.execute(statement.bind(designId)).all();
                             assertThat(rows).hasSize(1);
                             rows.forEach(row -> {
-                                String actualJson = row.get("DESIGN_JSON", String.class);
+                                String actualJson = row.get("DESIGN_DATA", String.class);
                                 String actualStatus = row.get("DESIGN_STATUS", String.class);
                                 String actualChecksum = row.get("DESIGN_CHECKSUM", String.class);
-                                assertThat(new String(Base64.getDecoder().decode(actualJson))).isEqualTo(JSON_1);
+                                assertThat(actualJson).isEqualTo(JSON_1);
                                 assertThat(actualStatus).isEqualTo("CREATED");
                                 assertThat(actualChecksum).isNotNull();
                             });
@@ -151,13 +151,13 @@ public class IntegrationTests {
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
                         try (Session session = cluster.connect("designs")) {
-                            final PreparedStatement statement = session.prepare("SELECT * FROM DESIGNS_VIEW WHERE DESIGN_UUID = ?");
+                            final PreparedStatement statement = session.prepare("SELECT * FROM DESIGN_AGGREGATE WHERE DESIGN_UUID = ?");
                             final List<Row> rows = session.execute(statement.bind(designId)).all();
                             assertThat(rows).hasSize(1);
                             rows.forEach(row -> {
-                                String actualJson = row.get("DESIGN_JSON", String.class);
+                                String actualJson = row.get("DESIGN_DATA", String.class);
                                 String actualChecksum = row.get("DESIGN_CHECKSUM", String.class);
-                                assertThat(new String(Base64.getDecoder().decode(actualJson))).isEqualTo(JSON_1);
+                                assertThat(actualJson).isEqualTo(JSON_1);
                                 assertThat(actualChecksum).isNotNull();
                             });
                         }
@@ -190,9 +190,9 @@ public class IntegrationTests {
 
             final UUID designId = UUID.randomUUID();
 
-            final InsertDesign insertDesignCommand = new InsertDesign(designId, JSON_1, String.valueOf(eventTimestamp1));
+            final InsertDesign insertDesignCommand = new InsertDesign(designId, JSON_1, eventTimestamp1);
 
-            final UpdateDesign updateDesignCommand = new UpdateDesign(designId, JSON_2, String.valueOf(eventTimestamp2));
+            final UpdateDesign updateDesignCommand = new UpdateDesign(designId, JSON_2, eventTimestamp2);
 
             final long messageTimestamp = System.currentTimeMillis();
 
@@ -212,20 +212,20 @@ public class IntegrationTests {
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
                         try (Session session = cluster.connect("designs")) {
-                            final PreparedStatement statement = session.prepare("SELECT * FROM DESIGNS WHERE DESIGN_UUID = ? ORDER BY EVENT_TIMESTAMP ASC");
+                            final PreparedStatement statement = session.prepare("SELECT * FROM DESIGN_EVENT WHERE DESIGN_UUID = ? ORDER BY EVENT_TIMESTAMP ASC");
                             final List<Row> rows = session.execute(statement.bind(designId)).all();
                             assertThat(rows).hasSize(2);
                             final Set<UUID> uuids = rows.stream()
                                     .map(row -> row.getUUID("DESIGN_UUID"))
                                     .collect(Collectors.toSet());
                             assertThat(uuids).contains(designId);
-                            String actualJson1 = rows.get(0).get("DESIGN_JSON", String.class);
+                            String actualJson1 = rows.get(0).get("DESIGN_DATA", String.class);
                             String actualStatus1 = rows.get(0).get("DESIGN_STATUS", String.class);
-                            assertThat(new String(Base64.getDecoder().decode(actualJson1))).isEqualTo(JSON_1);
+                            assertThat(actualJson1).isEqualTo(JSON_1);
                             assertThat(actualStatus1).isEqualTo("CREATED");
-                            String actualJson2 = rows.get(1).get("DESIGN_JSON", String.class);
+                            String actualJson2 = rows.get(1).get("DESIGN_DATA", String.class);
                             String actualStatus2 = rows.get(1).get("DESIGN_STATUS", String.class);
-                            assertThat(new String(Base64.getDecoder().decode(actualJson2))).isEqualTo(JSON_2);
+                            assertThat(actualJson2).isEqualTo(JSON_2);
                             assertThat(actualStatus2).isEqualTo("UPDATED");
                         }
                     });
@@ -234,13 +234,13 @@ public class IntegrationTests {
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
                         try (Session session = cluster.connect("designs")) {
-                            final PreparedStatement statement = session.prepare("SELECT * FROM DESIGNS_VIEW WHERE DESIGN_UUID = ?");
+                            final PreparedStatement statement = session.prepare("SELECT * FROM DESIGN_AGGREGATE WHERE DESIGN_UUID = ?");
                             final List<Row> rows = session.execute(statement.bind(designId)).all();
                             assertThat(rows).hasSize(1);
                             rows.forEach(row -> {
-                                String actualJson = row.get("DESIGN_JSON", String.class);
+                                String actualJson = row.get("DESIGN_DATA", String.class);
                                 String actualChecksum = row.get("DESIGN_CHECKSUM", String.class);
-                                assertThat(new String(Base64.getDecoder().decode(actualJson))).isEqualTo(JSON_2);
+                                assertThat(actualJson).isEqualTo(JSON_2);
                                 assertThat(actualChecksum).isNotNull();
                             });
                         }
@@ -273,9 +273,9 @@ public class IntegrationTests {
 
             final UUID designId = UUID.randomUUID();
 
-            final InsertDesign insertDesignCommand = new InsertDesign(designId, JSON_1, String.valueOf(eventTimestamp1));
+            final InsertDesign insertDesignCommand = new InsertDesign(designId, JSON_1, eventTimestamp1);
 
-            final DeleteDesign deleteDesignCommand = new DeleteDesign(designId, String.valueOf(eventTimestamp2));
+            final DeleteDesign deleteDesignCommand = new DeleteDesign(designId, eventTimestamp2);
 
             final long messageTimestamp = System.currentTimeMillis();
 
@@ -295,18 +295,18 @@ public class IntegrationTests {
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
                         try (Session session = cluster.connect("designs")) {
-                            final PreparedStatement statement = session.prepare("SELECT * FROM DESIGNS WHERE DESIGN_UUID = ? ORDER BY EVENT_TIMESTAMP ASC");
+                            final PreparedStatement statement = session.prepare("SELECT * FROM DESIGN_EVENT WHERE DESIGN_UUID = ? ORDER BY EVENT_TIMESTAMP ASC");
                             final List<Row> rows = session.execute(statement.bind(designId)).all();
                             assertThat(rows).hasSize(2);
                             final Set<UUID> uuids = rows.stream()
                                     .map(row -> row.getUUID("DESIGN_UUID"))
                                     .collect(Collectors.toSet());
                             assertThat(uuids).contains(designId);
-                            String actualJson1 = rows.get(0).get("DESIGN_JSON", String.class);
+                            String actualJson1 = rows.get(0).get("DESIGN_DATA", String.class);
                             String actualStatus1 = rows.get(0).get("DESIGN_STATUS", String.class);
-                            assertThat(new String(Base64.getDecoder().decode(actualJson1))).isEqualTo(JSON_1);
+                            assertThat(actualJson1).isEqualTo(JSON_1);
                             assertThat(actualStatus1).isEqualTo("CREATED");
-                            String actualJson2 = rows.get(1).get("DESIGN_JSON", String.class);
+                            String actualJson2 = rows.get(1).get("DESIGN_DATA", String.class);
                             String actualStatus2 = rows.get(1).get("DESIGN_STATUS", String.class);
                             assertThat(actualJson2).isNull();
                             assertThat(actualStatus2).isEqualTo("DELETED");
@@ -317,7 +317,7 @@ public class IntegrationTests {
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
                         try (Session session = cluster.connect("designs")) {
-                            final PreparedStatement statement = session.prepare("SELECT * FROM DESIGNS_VIEW WHERE DESIGN_UUID = ?");
+                            final PreparedStatement statement = session.prepare("SELECT * FROM DESIGN_AGGREGATE WHERE DESIGN_UUID = ?");
                             final List<Row> rows = session.execute(statement.bind(designId)).all();
                             assertThat(rows).hasSize(0);
                         }
@@ -343,7 +343,7 @@ public class IntegrationTests {
     }
 
     private static ProducerRecord<String, String> createKafkaRecord(Message message) {
-        return new ProducerRecord<>("designs-events", message.getPartitionKey(), Json.encode(message));
+        return new ProducerRecord<>("design-command", message.getPartitionKey(), Json.encode(message));
     }
 
     private static Message createInsertDesignMessage(UUID messageId, UUID partitionKey, long timestamp, InsertDesign event) {

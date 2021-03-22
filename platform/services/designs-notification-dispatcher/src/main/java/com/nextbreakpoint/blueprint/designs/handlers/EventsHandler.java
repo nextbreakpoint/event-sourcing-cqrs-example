@@ -1,7 +1,7 @@
 package com.nextbreakpoint.blueprint.designs.handlers;
 
-import com.nextbreakpoint.blueprint.common.core.event.DesignChanged;
 import com.nextbreakpoint.blueprint.common.vertx.Failure;
+import com.nextbreakpoint.blueprint.designs.model.DesignChanged;
 import io.vertx.core.Handler;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;

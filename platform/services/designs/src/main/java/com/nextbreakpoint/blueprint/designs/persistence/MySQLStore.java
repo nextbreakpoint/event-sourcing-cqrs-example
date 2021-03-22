@@ -1,8 +1,17 @@
 package com.nextbreakpoint.blueprint.designs.persistence;
 
-import com.nextbreakpoint.blueprint.common.core.DesignDocument;
 import com.nextbreakpoint.blueprint.designs.Store;
-import com.nextbreakpoint.blueprint.designs.model.*;
+import com.nextbreakpoint.blueprint.designs.model.DesignDocument;
+import com.nextbreakpoint.blueprint.designs.operations.delete.DeleteDesignRequest;
+import com.nextbreakpoint.blueprint.designs.operations.delete.DeleteDesignResponse;
+import com.nextbreakpoint.blueprint.designs.operations.insert.InsertDesignRequest;
+import com.nextbreakpoint.blueprint.designs.operations.insert.InsertDesignResponse;
+import com.nextbreakpoint.blueprint.designs.operations.list.ListDesignsRequest;
+import com.nextbreakpoint.blueprint.designs.operations.list.ListDesignsResponse;
+import com.nextbreakpoint.blueprint.designs.operations.load.LoadDesignRequest;
+import com.nextbreakpoint.blueprint.designs.operations.load.LoadDesignResponse;
+import com.nextbreakpoint.blueprint.designs.operations.update.UpdateDesignRequest;
+import com.nextbreakpoint.blueprint.designs.operations.update.UpdateDesignResponse;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.JsonArray;
@@ -64,16 +73,16 @@ public class MySQLStore implements Store {
                 .doOnError(err -> handleError(ERROR_UPDATE_DESIGN, err));
     }
 
-    public Single<LoadDesignResponse> loadDesign(LoadDesignRequest request) {
-        return withConnection()
-                .flatMap(conn -> doLoadDesign(conn, request))
-                .doOnError(err -> handleError(ERROR_LOAD_DESIGN, err));
-    }
-
     public Single<DeleteDesignResponse> deleteDesign(DeleteDesignRequest request) {
         return withConnection()
                 .flatMap(conn -> doDeleteDesign(conn, request))
                 .doOnError(err -> handleError(ERROR_DELETE_DESIGN, err));
+    }
+
+    public Single<LoadDesignResponse> loadDesign(LoadDesignRequest request) {
+        return withConnection()
+                .flatMap(conn -> doLoadDesign(conn, request))
+                .doOnError(err -> handleError(ERROR_LOAD_DESIGN, err));
     }
 
     public Single<ListDesignsResponse> listDesigns(ListDesignsRequest request) {
@@ -108,16 +117,6 @@ public class MySQLStore implements Store {
                 .doAfterTerminate(() -> conn.rxClose().subscribe());
     }
 
-    private Single<LoadDesignResponse> doLoadDesign(SQLConnection conn, LoadDesignRequest request) {
-        return conn.rxSetAutoCommit(true)
-                .flatMap(x -> conn.rxQueryWithParams(SELECT_DESIGN, new JsonArray().add(request.getUuid().toString())))
-                .map(ResultSet::getRows)
-                .map(this::exactlyOne)
-                .map(result -> result.map(this::toDocument).orElse(null))
-                .map(document -> new LoadDesignResponse(UUID.fromString(document.getUuid()), document))
-                .doAfterTerminate(() -> conn.rxClose().subscribe());
-    }
-
     private Single<DeleteDesignResponse> doDeleteDesign(SQLConnection conn, DeleteDesignRequest request) {
         return conn.rxSetAutoCommit(false)
                 .flatMap(x -> conn.rxUpdateWithParams(DELETE_DESIGN, makeDeleteParams(request)))
@@ -128,11 +127,21 @@ public class MySQLStore implements Store {
                 .doAfterTerminate(() -> conn.rxClose().subscribe());
     }
 
+    private Single<LoadDesignResponse> doLoadDesign(SQLConnection conn, LoadDesignRequest request) {
+        return conn.rxSetAutoCommit(true)
+                .flatMap(x -> conn.rxQueryWithParams(SELECT_DESIGN, new JsonArray().add(request.getUuid().toString())))
+                .map(ResultSet::getRows)
+                .map(this::exactlyOne)
+                .map(result -> result.map(this::toDocument).orElse(null))
+                .map(document -> new LoadDesignResponse(UUID.fromString(document.getUuid()), document))
+                .doAfterTerminate(() -> conn.rxClose().subscribe());
+    }
+
     private Single<ListDesignsResponse> doListDesigns(SQLConnection conn, ListDesignsRequest request) {
         return conn.rxSetAutoCommit(true)
                 .flatMap(x -> conn.rxQuery(SELECT_DESIGNS))
                 .map(ResultSet::getRows)
-                .map(result -> result.stream().map(this::toDocumentNoJSON).collect(toList()))
+                .map(result -> result.stream().map(this::toDocumentWithoutData).collect(toList()))
                 .map(ListDesignsResponse::new)
                 .doAfterTerminate(() -> conn.rxClose().subscribe());
     }
@@ -145,10 +154,11 @@ public class MySQLStore implements Store {
         return new DesignDocument(uuid, json, checksum, formatDate(convertStringToInstant(updated)));
     }
 
-    private DesignDocument toDocumentNoJSON(JsonObject row) {
+    private DesignDocument toDocumentWithoutData(JsonObject row) {
         final String uuid = row.getString("DESIGN_UUID");
         final String checksum = row.getString("DESIGN_CHECKSUM");
-        return new DesignDocument(uuid, null, checksum, null);
+        final String updated = row.getString("DESIGN_UPDATED");
+        return new DesignDocument(uuid, null, checksum, formatDate(convertStringToInstant(updated)));
     }
 
     private Optional<JsonObject> exactlyOne(List<JsonObject> list) {

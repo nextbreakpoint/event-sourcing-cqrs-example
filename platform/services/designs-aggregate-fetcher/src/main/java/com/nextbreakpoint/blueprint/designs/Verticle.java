@@ -1,6 +1,5 @@
 package com.nextbreakpoint.blueprint.designs;
 
-import com.datastax.driver.core.Session;
 import com.nextbreakpoint.blueprint.common.core.Environment;
 import com.nextbreakpoint.blueprint.common.core.IOUtils;
 import com.nextbreakpoint.blueprint.common.vertx.*;
@@ -18,6 +17,7 @@ import io.vertx.ext.web.handler.LoggerFormat;
 import io.vertx.ext.web.openapi.RouterBuilder;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.VertxPrometheusOptions;
+import io.vertx.rxjava.cassandra.CassandraClient;
 import io.vertx.rxjava.core.AbstractVerticle;
 import io.vertx.rxjava.core.Promise;
 import io.vertx.rxjava.core.Vertx;
@@ -83,7 +83,9 @@ public class Verticle extends AbstractVerticle {
 
     @Override
     public Completable rxStart() {
-        return vertx.rxExecuteBlocking(this::initServer).toCompletable();
+        return vertx.rxExecuteBlocking(this::initServer)
+                .doOnError(err -> logger.error("Failed to start server", err))
+                .toCompletable();
     }
 
     private void initServer(Promise<Void> promise) {
@@ -104,7 +106,7 @@ public class Verticle extends AbstractVerticle {
 
             final JWTAuth jwtProvider = JWTProviderFactory.create(environment, vertx, config);
 
-            final Supplier<Session> supplier = () -> CassandraClusterFactory.create(environment, config).connect(keyspace);
+            final Supplier<CassandraClient> supplier = () -> CassandraClientFactory.create(environment, vertx, config);
 
             final Store store = new CassandraStore(supplier);
 

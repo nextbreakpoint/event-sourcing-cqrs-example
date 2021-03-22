@@ -4,77 +4,23 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <artifactId>com.nextbreakpoint.blueprint.designs-command-producer</artifactId>
+    <properties>
+        <mainClass>com.nextbreakpoint.blueprint.designs.Verticle</mainClass>
+    </properties>
     <parent>
         <groupId>com.nextbreakpoint</groupId>
-        <artifactId>com.nextbreakpoint.blueprint.bom</artifactId>
+        <artifactId>com.nextbreakpoint.blueprint.service</artifactId>
         <version>1.0.0</version>
     </parent>
     <repositories>
         <repository>
             <id>nexus</id>
             <name>Nexus</name>
-            <url>http://192.168.64.12:38081/repository/maven-internal</url>
+            <url>${nexus.url}/repository/maven-internal</url>
         </repository>
     </repositories>
     <build>
-        <resources>
-            <resource>
-                <directory>src/main/resources</directory>
-                <includes>
-                    <include>**/*.txt</include>
-                    <include>**/*.xml</include>
-                    <include>**/*.yaml</include>
-                </includes>
-            </resource>
-        </resources>
         <plugins>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>build-helper-maven-plugin</artifactId>
-                <version>${build-helper-maven-plugin.version}</version>
-                <executions>
-                    <execution>
-                        <id>reserve-network-port</id>
-                        <goals>
-                            <goal>reserve-network-port</goal>
-                        </goals>
-                        <phase>process-sources</phase>
-                        <configuration>
-                            <portNames>
-                                <portName>http.port</portName>
-                                <portName>kafka.port</portName>
-                            </portNames>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-failsafe-plugin</artifactId>
-                <version>${maven-failsafe-plugin.version}</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>integration-test</goal>
-                            <goal>verify</goal>
-                        </goals>
-                        <configuration>
-                            <includes>
-                                <include>**/IntegrationTests.java</include>
-                                <include>**/PactTests.java</include>
-                            </includes>
-                            <systemProperties>
-                                <pactbroker.host>${pactbroker.host}</pactbroker.host>
-                                <pactbroker.port>${pactbroker.port}</pactbroker.port>
-                                <build.version>${project.version}</build.version>
-                                <http.port>${http.port}</http.port>
-                                <stub.port>${kafka.port}</stub.port>
-                            </systemProperties>
-                            <useSystemClassLoader>false</useSystemClassLoader>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
@@ -84,62 +30,14 @@
                         <index>true</index>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>com.nextbreakpoint.blueprint.designs.Verticle</mainClass>
+                            <mainClass>${mainClass}</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
             </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <version>${maven-dependency-plugin.version}</version>
-                <executions>
-                    <execution>
-                        <id>copy-dependencies</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>copy-dependencies</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>${project.build.directory}/libs</outputDirectory>
-                            <overWriteReleases>false</overWriteReleases>
-                            <overWriteSnapshots>false</overWriteSnapshots>
-                            <overWriteIfNewer>true</overWriteIfNewer>
-                            <includeScope>runtime</includeScope>
-                            <excludeScope>test</excludeScope>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
         </plugins>
     </build>
     <dependencies>
-        <dependency>
-            <groupId>com.nextbreakpoint</groupId>
-            <artifactId>com.nextbreakpoint.blueprint.common.core</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.nextbreakpoint</groupId>
-            <artifactId>com.nextbreakpoint.blueprint.common.vertx</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.nextbreakpoint</groupId>
-            <artifactId>com.nextbreakpoint.blueprint.common.log4j</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.nextbreakpoint</groupId>
-            <artifactId>com.nextbreakpoint.blueprint.common.cassandra</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.nextbreakpoint</groupId>
-            <artifactId>com.nextbreakpoint.blueprint.common.test</artifactId>
-            <version>${project.version}</version>
-            <scope>test</scope>
-        </dependency>
         <dependency>
             <groupId>com.nextbreakpoint</groupId>
             <artifactId>com.nextbreakpoint.nextfractal.core</artifactId>
@@ -149,12 +47,8 @@
             <artifactId>com.nextbreakpoint.nextfractal.mandelbrot</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-kafka-client</artifactId>
         </dependency>
         <dependency>
             <groupId>au.com.dius.pact</groupId>
@@ -164,16 +58,6 @@
         <dependency>
             <groupId>au.com.dius.pact.provider</groupId>
             <artifactId>junit5</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.ktor</groupId>
-            <artifactId>ktor-server-netty</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.ktor</groupId>
-            <artifactId>ktor-network-tls-certificates</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

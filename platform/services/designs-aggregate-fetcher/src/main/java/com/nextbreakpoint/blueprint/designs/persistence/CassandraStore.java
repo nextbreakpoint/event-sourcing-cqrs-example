@@ -1,23 +1,23 @@
 package com.nextbreakpoint.blueprint.designs.persistence;
 
-import com.datastax.driver.core.*;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.nextbreakpoint.blueprint.common.core.DesignDocument;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.cql.Row;
 import com.nextbreakpoint.blueprint.designs.Store;
-import com.nextbreakpoint.blueprint.designs.model.ListDesignsRequest;
-import com.nextbreakpoint.blueprint.designs.model.ListDesignsResponse;
-import com.nextbreakpoint.blueprint.designs.model.LoadDesignRequest;
-import com.nextbreakpoint.blueprint.designs.model.LoadDesignResponse;
+import com.nextbreakpoint.blueprint.designs.model.*;
+import com.nextbreakpoint.blueprint.designs.operations.list.ListDesignsRequest;
+import com.nextbreakpoint.blueprint.designs.operations.list.ListDesignsResponse;
+import com.nextbreakpoint.blueprint.designs.operations.load.LoadDesignRequest;
+import com.nextbreakpoint.blueprint.designs.operations.load.LoadDesignResponse;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
+import io.vertx.rxjava.cassandra.CassandraClient;
 import rx.Single;
 
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 public class CassandraStore implements Store {
     private final Logger logger = LoggerFactory.getLogger(CassandraStore.class.getName());
@@ -25,19 +25,17 @@ public class CassandraStore implements Store {
     private static final String ERROR_LOAD_DESIGN = "An error occurred while loading a design";
     private static final String ERROR_LIST_DESIGNS = "An error occurred while loading designs";
 
-    private static final String SELECT_DESIGN = "SELECT * FROM DESIGN_AGGREGATE WHERE DESIGN_UUID = ?";
-    private static final String SELECT_DESIGNS = "SELECT DESIGN_UUID, DESIGN_CHECKSUM, DESIGN_UPDATED FROM DESIGN_AGGREGATE";
+    private static final String SELECT_DESIGN = "SELECT * FROM DESIGN_ENTITY WHERE DESIGN_UUID = ?";
+    private static final String SELECT_DESIGNS = "SELECT DESIGN_UUID, DESIGN_CHECKSUM, DESIGN_UPDATED FROM DESIGN_ENTITY";
 
-    private static final int EXECUTE_TIMEOUT = 10;
+    private final Supplier<CassandraClient> supplier;
 
-    private final Supplier<Session> supplier;
+    private CassandraClient session;
 
-    private Session session;
+    private Single<PreparedStatement> selectDesign;
+    private Single<PreparedStatement> selectDesigns;
 
-    private ListenableFuture<PreparedStatement> selectDesign;
-    private ListenableFuture<PreparedStatement> selectDesigns;
-
-    public CassandraStore(Supplier<Session> supplier) {
+    public CassandraStore(Supplier<CassandraClient> supplier) {
         this.supplier = Objects.requireNonNull(supplier);
     }
 
@@ -55,70 +53,47 @@ public class CassandraStore implements Store {
                 .doOnError(err -> handleError(ERROR_LIST_DESIGNS, err));
     }
 
-    private Single<Session> withSession() {
+    private Single<CassandraClient> withSession() {
         if (session == null) {
             session = supplier.get();
             if (session == null) {
                 return Single.error(new RuntimeException("Cannot create session"));
             }
-            selectDesign = session.prepareAsync(SELECT_DESIGN);
-            selectDesigns = session.prepareAsync(SELECT_DESIGNS);
+            selectDesign = session.rxPrepare(SELECT_DESIGN);
+            selectDesigns = session.rxPrepare(SELECT_DESIGNS);
         }
         return Single.just(session);
     }
 
-    private Single<ResultSet> getResultSet(ResultSetFuture rsf) {
-        return Single.fromCallable(() -> rsf.getUninterruptibly(EXECUTE_TIMEOUT, TimeUnit.SECONDS));
-    }
-
-    private Single<LoadDesignResponse> doLoadDesign(Session session, LoadDesignRequest request) {
-        return Single.from(selectDesign)
+    private Single<LoadDesignResponse> doLoadDesign(CassandraClient session, LoadDesignRequest request) {
+        return selectDesign
                 .map(pst -> pst.bind(makeLoadParams(request)))
-                .map(session::executeAsync)
-                .flatMap(this::getResultSet)
-                .map(rs -> toDesignDocuments(rs, 1, this::getDesignDocument))
-                .map(documents -> documents.stream().findFirst().orElse(null))
+                .flatMap(session::rxExecuteWithFullFetch)
+                .map(rows -> rows.stream().findFirst().map(this::toDesignDocument).orElse(null))
                 .map(document -> new LoadDesignResponse(request.getUuid(), document));
     }
 
-    private Single<ListDesignsResponse> doListDesigns(Session session, ListDesignsRequest request) {
-        return Single.from(selectDesigns)
+    private Single<ListDesignsResponse> doListDesigns(CassandraClient session, ListDesignsRequest request) {
+        return selectDesigns
                 .map(PreparedStatement::bind)
-                .map(session::executeAsync)
-                .flatMap(this::getResultSet)
-                .map(rs -> toDesignDocuments(rs, 0, this::getMinimalDesignDocument))
+                .flatMap(session::rxExecuteWithFullFetch)
+                .map(rows -> rows.stream().map(this::toDesignDocumentWithoutData).collect(Collectors.toList()))
                 .map(ListDesignsResponse::new);
     }
 
-    private List<DesignDocument> toDesignDocuments(ResultSet rs, int limit, Function<Row, DesignDocument> mapper) {
-        final List<DesignDocument> documents = new ArrayList<>();
-        final Iterator<Row> iter = rs.iterator();
-        while (iter.hasNext()) {
-            if (rs.getAvailableWithoutFetching() >= 100 && !rs.isFullyFetched()) {
-                rs.fetchMoreResults();
-            }
-            final Row row = iter.next();
-            documents.add(mapper.apply(row));
-            if (limit > 0 && documents.size() >= limit) {
-                break;
-            }
-        }
-        return documents;
-    }
-
-    private DesignDocument getDesignDocument(Row row) {
-        final String uuid = row.getUUID("DESIGN_UUID").toString();
+    private DesignDocument toDesignDocument(Row row) {
+        final UUID uuid = row.getUuid("DESIGN_UUID");
         final String json = row.getString("DESIGN_DATA");
         final String checksum = row.getString("DESIGN_CHECKSUM");
-        final Instant timestamp = row.getTimestamp("DESIGN_UPDATED").toInstant();
-        return new DesignDocument(uuid, json, checksum, formatDate(timestamp));
+        final Instant timestamp = row.getInstant("DESIGN_UPDATED");
+        return new DesignDocument(Objects.requireNonNull(uuid).toString(), json, checksum, formatDate(timestamp));
     }
 
-    private DesignDocument getMinimalDesignDocument(Row row) {
-        final String uuid = row.getUUID("DESIGN_UUID").toString();
+    private DesignDocument toDesignDocumentWithoutData(Row row) {
+        final UUID uuid = row.getUuid("DESIGN_UUID");
         final String checksum = row.getString("DESIGN_CHECKSUM");
-        final Instant timestamp = row.getTimestamp("DESIGN_UPDATED").toInstant();
-        return new DesignDocument(uuid, null, checksum, formatDate(timestamp));
+        final Instant timestamp = row.getInstant("DESIGN_UPDATED");
+        return new DesignDocument(Objects.requireNonNull(uuid).toString(), null, checksum, formatDate(timestamp));
     }
 
     private Object[] makeLoadParams(LoadDesignRequest request) {

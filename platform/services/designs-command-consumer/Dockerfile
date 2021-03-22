@@ -13,6 +13,7 @@ RUN mvn clean verify -s settings.xml -t toolchains.xml -DskipTests=true
 #COPY --from=native-image designs-command-consumer /designs-command-consumer
 FROM openjdk:11-jdk
 COPY --from=build /src/target/libs/* /libs/
+RUN rm /libs/jffi-*-native.jar
 COPY --from=build /src/target/com.nextbreakpoint.blueprint.designs-command-consumer-1.0.0.jar /libs/
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod u+x /entrypoint.sh

@@ -3,14 +3,14 @@ package com.nextbreakpoint.blueprint.designs;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.http.ContentType;
 import com.nextbreakpoint.blueprint.common.core.Authority;
-import com.nextbreakpoint.blueprint.common.core.Design;
 import com.nextbreakpoint.blueprint.common.core.Environment;
 import com.nextbreakpoint.blueprint.common.core.Message;
-import com.nextbreakpoint.blueprint.common.core.command.DeleteDesign;
-import com.nextbreakpoint.blueprint.common.core.command.InsertDesign;
-import com.nextbreakpoint.blueprint.common.core.command.UpdateDesign;
 import com.nextbreakpoint.blueprint.common.test.KafkaUtils;
+import com.nextbreakpoint.blueprint.designs.operations.delete.DeleteDesignCommand;
+import com.nextbreakpoint.blueprint.designs.operations.insert.InsertDesignCommand;
+import com.nextbreakpoint.blueprint.designs.operations.update.UpdateDesignCommand;
 import io.vertx.core.json.Json;
+import io.vertx.rxjava.core.Vertx;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -46,6 +46,8 @@ public class IntegrationTests {
     @BeforeAll
     public static void before() throws IOException, InterruptedException {
         scenario.before();
+
+        final Vertx vertx = new Vertx(io.vertx.core.Vertx.vertx());
 
         consumer = KafkaUtils.createConsumer(environment, scenario.createConsumerConfig("test"));
 
@@ -165,7 +167,7 @@ public class IntegrationTests {
                         assertThat(decodedMessage.getPartitionKey()).isNotNull();
                         assertThat(decodedMessage.getMessageSource()).isNotNull();
                         assertThat(decodedMessage.getTimestamp()).isGreaterThan(timestamp);
-                        InsertDesign decodedEvent = Json.decodeValue(decodedMessage.getMessageBody(), InsertDesign.class);
+                        InsertDesignCommand decodedEvent = Json.decodeValue(decodedMessage.getMessageBody(), InsertDesignCommand.class);
                         assertThat(decodedEvent.getUuid()).isNotNull();
                         assertThat(decodedMessage.getPartitionKey()).isEqualTo(decodedEvent.getUuid().toString());
                         Design decodedDesign = Json.decodeValue(decodedEvent.getJson(), Design.class);
@@ -201,7 +203,7 @@ public class IntegrationTests {
                         assertThat(decodedMessage.getPartitionKey()).isEqualTo(uuid);
                         assertThat(decodedMessage.getMessageSource()).isNotNull();
                         assertThat(decodedMessage.getTimestamp()).isGreaterThan(timestamp);
-                        UpdateDesign decodedEvent = Json.decodeValue(decodedMessage.getMessageBody(), UpdateDesign.class);
+                        UpdateDesignCommand decodedEvent = Json.decodeValue(decodedMessage.getMessageBody(), UpdateDesignCommand.class);
                         assertThat(decodedEvent.getUuid()).isNotNull();
                         assertThat(decodedEvent.getUuid().toString()).isEqualTo(uuid);
                         Design decodedDesign = Json.decodeValue(decodedEvent.getJson(), Design.class);
@@ -237,7 +239,7 @@ public class IntegrationTests {
                         assertThat(decodedMessage.getPartitionKey()).isEqualTo(uuid);
                         assertThat(decodedMessage.getMessageSource()).isNotNull();
                         assertThat(decodedMessage.getTimestamp()).isGreaterThan(timestamp);
-                        DeleteDesign decodedEvent = Json.decodeValue(decodedMessage.getMessageBody(), DeleteDesign.class);
+                        DeleteDesignCommand decodedEvent = Json.decodeValue(decodedMessage.getMessageBody(), DeleteDesignCommand.class);
                         assertThat(decodedEvent.getUuid()).isNotNull();
                         assertThat(decodedEvent.getUuid().toString()).isEqualTo(uuid);
                     });

@@ -2,7 +2,7 @@ package com.nextbreakpoint.blueprint.designs.handlers;
 
 import com.nextbreakpoint.blueprint.common.vertx.Failure;
 import com.nextbreakpoint.blueprint.designs.Store;
-import com.nextbreakpoint.blueprint.designs.model.LoadDesignRequest;
+import com.nextbreakpoint.blueprint.designs.operations.load.LoadDesignRequest;
 import com.nextbreakpoint.nextfractal.core.common.Bundle;
 import com.nextbreakpoint.nextfractal.core.common.TileGenerator;
 import com.nextbreakpoint.nextfractal.core.common.TileUtils;
@@ -36,18 +36,18 @@ public class TileHandler implements Handler<RoutingContext> {
     @Override
     public void handle(RoutingContext routingContext) {
         executor.<byte[]>rxExecuteBlocking(promise -> getTileAsync(routingContext, store, promise), false)
-                .subscribe(result -> emitResponse(routingContext, result), err -> routingContext.fail(err));
+                .subscribe(result -> emitResponse(routingContext, result), routingContext::fail);
     }
 
     private void getTileAsync(RoutingContext routingContext, Store store, Promise<byte[]> promise) {
         fromCallable(() -> makeTileParams(routingContext))
                 .flatMap(params -> store.loadDesign(new LoadDesignRequest(params.getUuid()))
-                        .map(response -> response.getDesign().orElseThrow(() -> Failure.notFound()))
+                        .map(response -> response.getDesign().orElseThrow(Failure::notFound))
                         .map(design -> new JsonObject(design.getJson()))
                         .flatMap(object -> fromCallable(() -> convertToBundle(object)))
                         .doOnEach(bundle -> routingContext.response().closeHandler(x -> Thread.currentThread().interrupt()))
                         .flatMap(bundle -> fromCallable(() -> getImage(bundle, params))))
-                .subscribe(bytes -> promise.complete(bytes), err -> promise.fail(err));
+                .subscribe(promise::complete, promise::fail);
     }
 
     private byte[] getImage(Bundle bundle, TileParams params) throws Exception {

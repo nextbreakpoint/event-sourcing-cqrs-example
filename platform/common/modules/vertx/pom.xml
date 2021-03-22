@@ -10,164 +10,6 @@
         <version>1.0.0</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-shade-plugin</artifactId>
-                <version>${maven-shade-plugin.version}</version>
-                <configuration>
-                    <transformers>
-                        <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                            <manifestEntries>
-                                <Automatic-Module-Name>com.nextbreakpoint.blueprint.common.vertx</Automatic-Module-Name>
-                            </manifestEntries>
-                        </transformer>
-                    </transformers>
-                    <artifactSet>
-                        <excludes>
-                            <exclude>org.slf4j:*</exclude>
-                        </excludes>
-                    </artifactSet>
-                </configuration>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>shade</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
-    <properties>
-        <micrometer.version>1.6.4</micrometer.version>
-        <gson.version>2.8.6</gson.version>
-    </properties>
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>io.vertx</groupId>
-                <artifactId>vertx-core</artifactId>
-                <version>${vertx.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>com.fasterxml.jackson.core</groupId>
-                        <artifactId>jackson-annotations</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>com.fasterxml.jackson.core</groupId>
-                        <artifactId>jackson-core</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>com.fasterxml.jackson.core</groupId>
-                        <artifactId>jackson-databind</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>io.vertx</groupId>
-                <artifactId>vertx-web</artifactId>
-                <version>${vertx.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.vertx</groupId>
-                <artifactId>vertx-web-common</artifactId>
-                <version>${vertx.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.vertx</groupId>
-                <artifactId>vertx-web-client</artifactId>
-                <version>${vertx.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.vertx</groupId>
-                <artifactId>vertx-web-templ-pebble</artifactId>
-                <version>${vertx.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.vertx</groupId>
-                <artifactId>vertx-web-openapi</artifactId>
-                <version>${vertx.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.vertx</groupId>
-                <artifactId>vertx-jdbc-client</artifactId>
-                <version>${vertx.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.vertx</groupId>
-                <artifactId>vertx-auth-oauth2</artifactId>
-                <version>${vertx.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.vertx</groupId>
-                <artifactId>vertx-auth-jwt</artifactId>
-                <version>${vertx.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.vertx</groupId>
-                <artifactId>vertx-rx-java</artifactId>
-                <version>${vertx.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.vertx</groupId>
-                <artifactId>vertx-zookeeper</artifactId>
-                <version>${vertx.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.vertx</groupId>
-                <artifactId>vertx-kafka-client</artifactId>
-                <version>${vertx.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.slf4j</groupId>
-                        <artifactId>slf4j-api</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.slf4j</groupId>
-                        <artifactId>slf4j-log4j12</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>log4j</groupId>
-                        <artifactId>log4j</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>io.vertx</groupId>
-                <artifactId>vertx-opentracing</artifactId>
-                <version>${vertx.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>com.google.code.gson</groupId>
-                        <artifactId>gson</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>io.vertx</groupId>
-                <artifactId>vertx-micrometer-metrics</artifactId>
-                <version>${vertx.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.vertx</groupId>
-                <artifactId>vertx-service-discovery-bridge-consul</artifactId>
-                <version>${vertx.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.micrometer</groupId>
-                <artifactId>micrometer-registry-prometheus</artifactId>
-                <version>${micrometer.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.google.code.gson</groupId>
-                <artifactId>gson</artifactId>
-                <version>${gson.version}</version>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
     <dependencies>
         <dependency>
             <groupId>com.nextbreakpoint</groupId>
@@ -176,74 +18,54 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>com.nextbreakpoint</groupId>
-            <artifactId>com.nextbreakpoint.blueprint.common.cassandra</artifactId>
-            <version>${project.version}</version>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-core</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>io.vertx</groupId>
-            <artifactId>vertx-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.vertx</groupId>
             <artifactId>vertx-web</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-web-common</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-web-client</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.vertx</groupId>
-            <artifactId>vertx-web-templ-pebble</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-web-openapi</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.vertx</groupId>
-            <artifactId>vertx-auth-oauth2</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-auth-jwt</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-rx-java</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-jdbc-client</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-kafka-client</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>io.vertx</groupId>
-            <artifactId>vertx-service-discovery-bridge-consul</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.vertx</groupId>
-            <artifactId>vertx-opentracing</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.vertx</groupId>
-            <artifactId>vertx-micrometer-metrics</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.micrometer</groupId>
-            <artifactId>micrometer-registry-prometheus</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.google.code.gson</groupId>
-            <artifactId>gson</artifactId>
+            <artifactId>vertx-cassandra-client</artifactId>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 </project>

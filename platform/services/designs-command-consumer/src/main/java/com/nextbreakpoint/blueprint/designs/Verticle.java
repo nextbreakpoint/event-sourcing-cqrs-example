@@ -1,15 +1,10 @@
 package com.nextbreakpoint.blueprint.designs;
 
-import com.datastax.driver.core.Session;
 import com.nextbreakpoint.blueprint.common.core.Environment;
 import com.nextbreakpoint.blueprint.common.core.IOUtils;
 import com.nextbreakpoint.blueprint.common.core.Message;
 import com.nextbreakpoint.blueprint.common.core.MessageType;
 import com.nextbreakpoint.blueprint.common.vertx.*;
-import com.nextbreakpoint.blueprint.designs.common.CommandFailureConsumer;
-import com.nextbreakpoint.blueprint.designs.common.CommandSuccessConsumer;
-import com.nextbreakpoint.blueprint.designs.common.ViewFailureConsumer;
-import com.nextbreakpoint.blueprint.designs.common.ViewSuccessConsumer;
 import com.nextbreakpoint.blueprint.designs.model.RecordAndMessage;
 import com.nextbreakpoint.blueprint.designs.persistence.CassandraStore;
 import io.vertx.core.DeploymentOptions;
@@ -25,6 +20,7 @@ import io.vertx.ext.web.handler.LoggerFormat;
 import io.vertx.ext.web.openapi.RouterBuilder;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.VertxPrometheusOptions;
+import io.vertx.rxjava.cassandra.CassandraClient;
 import io.vertx.rxjava.core.AbstractVerticle;
 import io.vertx.rxjava.core.Promise;
 import io.vertx.rxjava.core.Vertx;
@@ -92,7 +88,9 @@ public class Verticle extends AbstractVerticle {
 
     @Override
     public Completable rxStart() {
-        return vertx.rxExecuteBlocking(this::initServer).toCompletable();
+        return vertx.rxExecuteBlocking(this::initServer)
+                .doOnError(err -> logger.error("Failed to start server", err))
+                .toCompletable();
     }
 
     private void initServer(Promise<Void> promise) {
@@ -107,13 +105,9 @@ public class Verticle extends AbstractVerticle {
 
             final String originPattern = environment.resolve(config.getString("origin_pattern"));
 
-            final String keyspace = environment.resolve(config.getString("cassandra_keyspace"));
-
             final String eventTopic = environment.resolve(config.getString("design_event_topic"));
 
             final String commandTopic = environment.resolve(config.getString("design_command_topic"));
-
-            final String aggregateTopic = environment.resolve(config.getString("design_aggregate_topic"));
 
             final String messageSource = environment.resolve(config.getString("message_source"));
 
@@ -123,9 +117,7 @@ public class Verticle extends AbstractVerticle {
 
             final KafkaConsumer<String, String> commandConsumer = KafkaClientFactory.createConsumer(environment, vertx, config);
 
-            final KafkaConsumer<String, String> viewConsumer = KafkaClientFactory.createConsumer(environment, vertx, config);
-
-            final Supplier<Session> supplier = () -> CassandraClusterFactory.create(environment, config).connect(keyspace);
+            final Supplier<CassandraClient> supplier = () -> CassandraClientFactory.create(environment, vertx, config);
 
             final Store store = new CassandraStore(supplier);
 
@@ -135,21 +127,13 @@ public class Verticle extends AbstractVerticle {
 
             final Map<String, Handler<RecordAndMessage>> commandHandlers = new HashMap<>();
 
-            commandHandlers.put(MessageType.DESIGN_INSERT, createInsertDesignHandler(store, aggregateTopic, producer, messageSource, new CommandSuccessConsumer(commandConsumer), new CommandFailureConsumer(commandConsumer)));
-            commandHandlers.put(MessageType.DESIGN_UPDATE, createUpdateDesignHandler(store, aggregateTopic, producer, messageSource, new CommandSuccessConsumer(commandConsumer), new CommandFailureConsumer(commandConsumer)));
-            commandHandlers.put(MessageType.DESIGN_DELETE, createDeleteDesignHandler(store, aggregateTopic, producer, messageSource, new CommandSuccessConsumer(commandConsumer), new CommandFailureConsumer(commandConsumer)));
-
-            final Map<String, Handler<RecordAndMessage>> aggregateHandlers = new HashMap<>();
-
-            aggregateHandlers.put(MessageType.DESIGN_CHANGED, createDesignChangedHandler(store, eventTopic, producer, messageSource, new ViewSuccessConsumer(viewConsumer), new ViewFailureConsumer(viewConsumer)));
+            commandHandlers.put(MessageType.DESIGN_INSERT, createInsertDesignHandler(store, eventTopic, producer, messageSource));
+            commandHandlers.put(MessageType.DESIGN_UPDATE, createUpdateDesignHandler(store, eventTopic, producer, messageSource));
+            commandHandlers.put(MessageType.DESIGN_DELETE, createDeleteDesignHandler(store, eventTopic, producer, messageSource));
 
             commandConsumer.handler(record -> processRecord(commandHandlers, record))
                     .rxSubscribe(commandTopic)
-                    .doOnError(this::handleError)
-                    .subscribe();
-
-            viewConsumer.handler(record -> processRecord(aggregateHandlers, record))
-                    .rxSubscribe(aggregateTopic)
+                    .doOnEach(ignore -> commandConsumer.commit())
                     .doOnError(this::handleError)
                     .subscribe();
 

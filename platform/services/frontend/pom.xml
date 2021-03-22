@@ -6,66 +6,18 @@
     <artifactId>com.nextbreakpoint.blueprint.frontend</artifactId>
     <parent>
         <groupId>com.nextbreakpoint</groupId>
-        <artifactId>com.nextbreakpoint.blueprint.bom</artifactId>
+        <artifactId>com.nextbreakpoint.blueprint.service</artifactId>
         <version>1.0.0</version>
     </parent>
-    <packaging>jar</packaging>
     <repositories>
         <repository>
             <id>nexus</id>
             <name>Nexus</name>
-            <url>http://192.168.64.12:38081/repository/maven-internal</url>
+            <url>${nexus.url}/repository/maven-internal</url>
         </repository>
     </repositories>
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>build-helper-maven-plugin</artifactId>
-                <version>${build-helper-maven-plugin.version}</version>
-                <executions>
-                    <execution>
-                        <id>reserve-network-port</id>
-                        <goals>
-                            <goal>reserve-network-port</goal>
-                        </goals>
-                        <phase>process-sources</phase>
-                        <configuration>
-                            <portNames>
-                                <portName>http.port</portName>
-                                <portName>stub.port</portName>
-                            </portNames>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-failsafe-plugin</artifactId>
-                <version>${maven-failsafe-plugin.version}</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>integration-test</goal>
-                            <goal>verify</goal>
-                        </goals>
-                        <configuration>
-                            <includes>
-                                <include>**/IntegrationTests.java</include>
-                                <include>**/PactTests.java</include>
-                            </includes>
-                            <systemProperties>
-                                <pactbroker.host>${pactbroker.host}</pactbroker.host>
-                                <pactbroker.port>${pactbroker.port}</pactbroker.port>
-                                <build.version>${project.version}</build.version>
-                                <http.port>${http.port}</http.port>
-                                <stub.port>${stub.port}</stub.port>
-                            </systemProperties>
-                            <useSystemClassLoader>false</useSystemClassLoader>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
             <plugin>
                 <groupId>au.com.dius.pact.provider</groupId>
                 <artifactId>maven</artifactId>
@@ -102,15 +54,13 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.nextbreakpoint</groupId>
-            <artifactId>com.nextbreakpoint.blueprint.common.log4j</artifactId>
-            <version>${project.version}</version>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-rx-java</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.nextbreakpoint</groupId>
-            <artifactId>com.nextbreakpoint.blueprint.common.test</artifactId>
-            <version>${project.version}</version>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-web</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -121,16 +71,6 @@
         <dependency>
             <groupId>au.com.dius.pact.consumer</groupId>
             <artifactId>junit5</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.ktor</groupId>
-            <artifactId>ktor-server-netty</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.ktor</groupId>
-            <artifactId>ktor-network-tls-certificates</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

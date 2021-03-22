@@ -80,32 +80,42 @@ public class Scenario {
         consulPort = TestUtils.getVariable("CONSUL_PORT", System.getProperty("consul.port", "8400"));
         cassandraPort = TestUtils.getVariable("CASSANDRA_PORT", System.getProperty("cassandra.port", "9042"));
 
-        if (scenarioState.localhost) {
+        if (scenarioState.minikube) {
+            final String minikubeHost = KubeUtils.getMinikubeIp();
+            if (scenarioState.kubernetes) {
+                serviceHost = minikubeHost;
+                stubHost = serviceHost.substring(0, serviceHost.lastIndexOf(".")) + ".1";
+            } else {
+                serviceHost = "localhost";
+                stubHost = "localhost";
+            }
+            mysqlHost = minikubeHost;
+            kafkaHost = minikubeHost;
+            consulHost = minikubeHost;
+            cassandraHost = minikubeHost;
+        } else {
             serviceHost = "localhost";
             stubHost = "localhost";
             mysqlHost = "localhost";
             kafkaHost = "localhost";
             consulHost = "localhost";
             cassandraHost = "localhost";
-        } else {
-            serviceHost = KubeUtils.getMinikubeIp();
-            stubHost = serviceHost.substring(0, serviceHost.lastIndexOf(".")) + ".1";
-            mysqlHost = serviceHost;
-            kafkaHost = serviceHost;
-            consulHost = serviceHost;
-            cassandraHost = serviceHost;
         }
 
         printInfo();
 
         configureRestAssured();
 
-        buildDockerImages();
+        if (scenarioState.kubernetes) {
+            buildDockerImages();
+        }
 
-        deleteNamespace();
-        createNamespace();
+        if (scenarioState.kubernetes) {
+            deleteNamespace();
+            createNamespace();
+        }
 
-        if (scenarioState.minikube) {
+        if (scenarioState.kubernetes) {
             if (scenarioState.mysql) {
                 installMySQL();
                 waitForMySQL();
@@ -140,19 +150,25 @@ public class Scenario {
             stubServer = new StubServer(Integer.parseInt(stubPort)).run();
         }
 
-        createSecrets(scenarioState.serviceName, scenarioState.secretArgs);
+        if (scenarioState.kubernetes) {
+            createSecrets(scenarioState.serviceName, scenarioState.secretArgs);
 
-        installService(scenarioState.serviceName, scenarioState.helmArgs);
-        waitForService(scenarioState.serviceName);
-        exposeService(scenarioState.serviceName);
+            installService(scenarioState.serviceName, scenarioState.helmArgs);
+            waitForService(scenarioState.serviceName);
+            exposeService(scenarioState.serviceName);
+        }
     }
 
     public void destroy() throws IOException, InterruptedException {
         describeResources();
 
-        printLogs(scenarioState.serviceName);
+        if (scenarioState.kubernetes) {
+            printLogs(scenarioState.serviceName);
+        }
 
-        uninstallService(scenarioState.serviceName);
+        if (scenarioState.kubernetes) {
+            uninstallService(scenarioState.serviceName);
+        }
 
         if (scenarioState.stubServer) {
             if (stubServer != null) {
@@ -160,7 +176,7 @@ public class Scenario {
             }
         }
 
-        if (scenarioState.minikube) {
+        if (scenarioState.kubernetes) {
             if (scenarioState.mysql) {
                 uninstallMySQL();
             }
@@ -182,7 +198,9 @@ public class Scenario {
             }
         }
 
-        deleteNamespace();
+        if (scenarioState.kubernetes) {
+            deleteNamespace();
+        }
     }
 
     public static ScenarioBuilder builder() {
@@ -195,8 +213,9 @@ public class Scenario {
         public final boolean kafka;
         public final boolean zookeeper;
         public final boolean consul;
-        public final boolean localhost;
+        public final boolean kubernetes;
         public final boolean minikube;
+        public final boolean debug;
         public final String helmPath;
         public final String version;
         public final String namespace;
@@ -213,8 +232,9 @@ public class Scenario {
                 boolean kafka,
                 boolean zookeeper,
                 boolean consul,
-                boolean localhost,
+                boolean kubernetes,
                 boolean minikube,
+                boolean debug,
                 String helmPath,
                 String version,
                 String namespace,
@@ -230,8 +250,9 @@ public class Scenario {
             this.kafka = kafka;
             this.zookeeper = zookeeper;
             this.consul = consul;
-            this.localhost = localhost;
+            this.kubernetes = kubernetes;
             this.minikube = minikube;
+            this.debug = debug;
             this.helmPath = helmPath;
             this.version = version;
             this.namespace = namespace;
@@ -250,8 +271,9 @@ public class Scenario {
         private boolean kafka;
         private boolean zookeeper;
         private boolean consul;
-        private boolean localhost;
+        private boolean kubernetes;
         private boolean minikube;
+        private boolean debug;
         private String helmPath;
         private String version;
         private String namespace;
@@ -289,13 +311,18 @@ public class Scenario {
             return this;
         }
 
-        public ScenarioBuilder withLocalhost() {
-            localhost = true;
+        public ScenarioBuilder withKubernetes() {
+            kubernetes = true;
             return this;
         }
 
         public ScenarioBuilder withMinikube() {
             minikube = true;
+            return this;
+        }
+
+        public ScenarioBuilder withDebug() {
+            debug = true;
             return this;
         }
 
@@ -351,8 +378,9 @@ public class Scenario {
                     kafka,
                     zookeeper,
                     consul,
-                    localhost,
+                    kubernetes,
                     minikube,
+                    debug,
                     helmPath,
                     version,
                     namespace,
@@ -652,11 +680,12 @@ public class Scenario {
                 .until(condition);
     }
 
-    public JsonObject createCassandraConfig() {
+    public JsonObject createCassandraConfig(String datacenter, String keyspace) {
         final JsonObject config = new JsonObject();
         config.put("cassandra_contactPoints", cassandraHost);
         config.put("cassandra_port", cassandraPort);
-        config.put("cassandra_cluster", "cassandra");
+        config.put("cassandra_cluster", datacenter);
+        config.put("cassandra_keyspace", keyspace);
         config.put("cassandra_username", "admin");
         config.put("cassandra_password", "password");
         return config;

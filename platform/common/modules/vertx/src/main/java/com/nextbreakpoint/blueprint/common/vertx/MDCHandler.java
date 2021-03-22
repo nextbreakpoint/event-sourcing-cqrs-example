@@ -2,7 +2,6 @@ package com.nextbreakpoint.blueprint.common.vertx;
 
 import io.vertx.core.Handler;
 import io.vertx.rxjava.ext.web.RoutingContext;
-import org.slf4j.MDC;
 
 public class MDCHandler implements Handler<RoutingContext> {
     public static MDCHandler create() {
@@ -27,7 +26,7 @@ public class MDCHandler implements Handler<RoutingContext> {
 //            }
             context.next();
         } finally {
-            MDC.clear();
+//            MDC.clear();
         }
     }
 }

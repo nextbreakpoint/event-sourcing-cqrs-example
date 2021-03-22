@@ -1,8 +1,15 @@
 package com.nextbreakpoint.blueprint.accounts.persistence;
 
 import com.nextbreakpoint.blueprint.accounts.Store;
+import com.nextbreakpoint.blueprint.accounts.operations.delete.DeleteAccountRequest;
+import com.nextbreakpoint.blueprint.accounts.operations.delete.DeleteAccountResponse;
+import com.nextbreakpoint.blueprint.accounts.operations.insert.InsertAccountRequest;
+import com.nextbreakpoint.blueprint.accounts.operations.insert.InsertAccountResponse;
+import com.nextbreakpoint.blueprint.accounts.operations.list.ListAccountsRequest;
+import com.nextbreakpoint.blueprint.accounts.operations.list.ListAccountsResponse;
+import com.nextbreakpoint.blueprint.accounts.operations.load.LoadAccountRequest;
+import com.nextbreakpoint.blueprint.accounts.operations.load.LoadAccountResponse;
 import com.nextbreakpoint.blueprint.accounts.model.*;
-import com.nextbreakpoint.blueprint.common.core.Account;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.JsonArray;
@@ -51,16 +58,16 @@ public class MySQLStore implements Store {
                 .doOnError(err -> handleError(ERROR_INSERT_ACCOUNT, err));
     }
 
-    public Single<LoadAccountResponse> loadAccount(LoadAccountRequest request) {
-        return withConnection()
-                .flatMap(conn -> doLoadAccount(conn, request))
-                .doOnError(err -> handleError(ERROR_LOAD_ACCOUNT, err));
-    }
-
     public Single<DeleteAccountResponse> deleteAccount(DeleteAccountRequest request) {
         return withConnection()
                 .flatMap(conn -> doDeleteAccount(conn, request))
                 .doOnError(err -> handleError(ERROR_DELETE_ACCOUNT, err));
+    }
+
+    public Single<LoadAccountResponse> loadAccount(LoadAccountRequest request) {
+        return withConnection()
+                .flatMap(conn -> doLoadAccount(conn, request))
+                .doOnError(err -> handleError(ERROR_LOAD_ACCOUNT, err));
     }
 
     public Single<ListAccountsResponse> listAccounts(ListAccountsRequest request) {
@@ -85,16 +92,6 @@ public class MySQLStore implements Store {
                 .doAfterTerminate(() -> conn.rxClose().subscribe());
     }
 
-    private Single<LoadAccountResponse> doLoadAccount(SQLConnection conn, LoadAccountRequest request) {
-        return conn.rxSetAutoCommit(true)
-                .flatMap(x -> conn.rxQueryWithParams(SELECT_ACCOUNT, makeLoadParams(request)))
-                .map(ResultSet::getRows)
-                .map(this::exactlyOne)
-                .map(result -> result.map(this::toAccount).orElse(null))
-                .map(account -> new LoadAccountResponse(request.getUuid(), account))
-                .doAfterTerminate(() -> conn.rxClose().subscribe());
-    }
-
     private Single<DeleteAccountResponse> doDeleteAccount(SQLConnection conn, DeleteAccountRequest request) {
         return conn.rxSetAutoCommit(false)
                 .flatMap(x -> conn.rxUpdateWithParams(DELETE_ACCOUNT, makeDeleteParams(request)))
@@ -102,6 +99,16 @@ public class MySQLStore implements Store {
                 .map(result -> new DeleteAccountResponse(request.getUuid(), result))
                 .doOnError(x -> conn.rxRollback().subscribe())
                 .doOnSuccess(x -> conn.rxCommit().subscribe())
+                .doAfterTerminate(() -> conn.rxClose().subscribe());
+    }
+
+    private Single<LoadAccountResponse> doLoadAccount(SQLConnection conn, LoadAccountRequest request) {
+        return conn.rxSetAutoCommit(true)
+                .flatMap(x -> conn.rxQueryWithParams(SELECT_ACCOUNT, makeLoadParams(request)))
+                .map(ResultSet::getRows)
+                .map(this::exactlyOne)
+                .map(result -> result.map(this::toAccount).orElse(null))
+                .map(account -> new LoadAccountResponse(request.getUuid(), account))
                 .doAfterTerminate(() -> conn.rxClose().subscribe());
     }
 

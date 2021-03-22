@@ -76,7 +76,9 @@ public class Verticle extends AbstractVerticle {
 
     @Override
     public Completable rxStart() {
-        return vertx.rxExecuteBlocking(this::initServer).toCompletable();
+        return vertx.rxExecuteBlocking(this::initServer)
+                .doOnError(err -> logger.error("Failed to start server", err))
+                .toCompletable();
     }
 
     private void initServer(Promise<Void> promise) {
@@ -103,7 +105,6 @@ public class Verticle extends AbstractVerticle {
 
             final Router mainRouter = Router.router(vertx);
 
-            mainRouter.route().handler(TraceHandler.create());
             mainRouter.route().handler(MDCHandler.create());
             mainRouter.route().handler(LoggerHandler.create(true, LoggerFormat.DEFAULT));
             mainRouter.route().handler(TimeoutHandler.create(30000L));

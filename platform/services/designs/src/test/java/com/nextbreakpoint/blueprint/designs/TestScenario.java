@@ -51,6 +51,7 @@ public class TestScenario {
             .withSecretArgs(secretArgs)
             .withHelmPath("../../helm")
             .withHelmArgs(helmArgs)
+            .withKubernetes()
             .withMinikube()
             .withZookeeper()
             .withKafka()

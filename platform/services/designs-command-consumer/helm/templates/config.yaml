@@ -25,7 +25,7 @@ data:
 
       "origin_pattern": "https://{{ $root.Values.clientDomain | default "localhost" }}(:[0-9]+)?",
 
-      "cassandra_cluster": "test",
+      "cassandra_cluster": {{ $root.Values.datacenter | default "datacenter1" | quote }},
       "cassandra_keyspace": "designs",
       "cassandra_username": "${DATABASE_USERNAME}",
       "cassandra_password": "${DATABASE_PASSWORD}",

@@ -1,17 +1,18 @@
 package com.nextbreakpoint.blueprint.designs;
 
-import com.datastax.driver.core.Cluster;
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.Session;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.http.ContentType;
 import com.jayway.restassured.path.json.JsonPath;
 import com.nextbreakpoint.blueprint.common.core.Authority;
-import com.nextbreakpoint.blueprint.common.core.DesignDocument;
 import com.nextbreakpoint.blueprint.common.core.Environment;
-import com.nextbreakpoint.blueprint.common.vertx.CassandraClusterFactory;
+import com.nextbreakpoint.blueprint.common.vertx.CassandraClientFactory;
+import com.nextbreakpoint.blueprint.designs.model.DesignDocument;
 import io.vertx.core.json.JsonObject;
+import io.vertx.rxjava.cassandra.CassandraClient;
+import io.vertx.rxjava.core.Vertx;
 import org.junit.jupiter.api.*;
+import rx.Single;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -42,20 +43,22 @@ public class IntegrationTests {
 
   private static Environment environment = Environment.getDefaultEnvironment();
 
-  private static Cluster cluster;
+  private static CassandraClient session;
 
   @BeforeAll
   public static void before() throws IOException, InterruptedException {
     scenario.before();
 
-    cluster = CassandraClusterFactory.create(environment, scenario.createCassandraConfig());
+    final Vertx vertx = new Vertx(io.vertx.core.Vertx.vertx());
+
+    session = CassandraClientFactory.create(environment, vertx, scenario.createCassandraConfig());
   }
 
   @AfterAll
   public static void after() throws IOException, InterruptedException {
-    if (cluster != null) {
+    if (session != null) {
       try {
-        cluster.close();
+        session.close();
       } catch (Exception ignore) {
       }
     }
@@ -70,21 +73,48 @@ public class IntegrationTests {
   public class VerifyServiceApi {
     @BeforeEach
     public void setup() {
-      try (Session session = cluster.connect("designs")) {
-        final PreparedStatement statement1 = session.prepare("TRUNCATE DESIGN_AGGREGATE;");
-        session.execute(statement1.bind()).one();
-        final PreparedStatement statement2 = session.prepare("INSERT INTO DESIGN_AGGREGATE (DESIGN_UUID, DESIGN_DATA, DESIGN_CHECKSUM, DESIGN_CREATED, DESIGN_UPDATED) VALUES (?,?,?,toTimeStamp(now()),toTimeStamp(now()));");
-        String json1 = new JsonObject(createPostData(MANIFEST, METADATA, SCRIPT1)).toString();
-        session.execute(statement2.bind(DESIGN_UUID_1, json1, "1")).one();
-        String json2 = new JsonObject(createPostData(MANIFEST, METADATA, SCRIPT2)).toString();
-        session.execute(statement2.bind(DESIGN_UUID_2, json2, "2")).one();
-        String json3 = new JsonObject(createPostData(MANIFEST, METADATA, SCRIPT3)).toString();
-        session.execute(statement2.bind(DESIGN_UUID_3, json2, "3")).one();
-        String json4 = new JsonObject(createPostData(MANIFEST, METADATA, SCRIPT3)).toString();
-        session.execute(statement2.bind(DESIGN_UUID_4, json2, "4")).one();
-        final PreparedStatement statement3 = session.prepare("DELETE FROM DESIGN_AGGREGATE WHERE DESIGN_UUID=?");
-        session.execute(statement3.bind(DESIGN_UUID_4)).one();
-      }
+      session.rxPrepare("TRUNCATE DESIGN_ENTITY")
+              .map(PreparedStatement::bind)
+              .flatMap(session::rxExecute)
+              .toBlocking()
+              .value();
+
+      final String json1 = new JsonObject(createPostData(MANIFEST, METADATA, SCRIPT1)).toString();
+      final String json2 = new JsonObject(createPostData(MANIFEST, METADATA, SCRIPT2)).toString();
+      final String json3 = new JsonObject(createPostData(MANIFEST, METADATA, SCRIPT3)).toString();
+      final String json4 = new JsonObject(createPostData(MANIFEST, METADATA, SCRIPT3)).toString();
+
+      final Single<PreparedStatement> preparedStatementSingle = session.rxPrepare("INSERT INTO DESIGN_ENTITY (DESIGN_UUID, DESIGN_DATA, DESIGN_CHECKSUM, DESIGN_CREATED, DESIGN_UPDATED) VALUES (?,?,?,toTimeStamp(now()),toTimeStamp(now()))");
+
+      preparedStatementSingle
+              .map(stmt -> stmt.bind(DESIGN_UUID_1, json1, "1"))
+              .flatMap(session::rxExecute)
+              .toBlocking()
+              .value();
+
+      preparedStatementSingle
+              .map(stmt -> stmt.bind(DESIGN_UUID_2, json2, "2"))
+              .flatMap(session::rxExecute)
+              .toBlocking()
+              .value();
+
+      preparedStatementSingle
+              .map(stmt -> stmt.bind(DESIGN_UUID_3, json3, "3"))
+              .flatMap(session::rxExecute)
+              .toBlocking()
+              .value();
+
+      preparedStatementSingle
+              .map(stmt -> stmt.bind(DESIGN_UUID_4, json4, "4"))
+              .flatMap(session::rxExecute)
+              .toBlocking()
+              .value();
+
+      session.rxPrepare("DELETE FROM DESIGN_ENTITY WHERE DESIGN_UUID=?")
+              .map(stmt -> stmt.bind(DESIGN_UUID_4))
+              .flatMap(session::rxExecute)
+              .toBlocking()
+              .value();
     }
 
     @AfterEach

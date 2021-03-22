@@ -7,17 +7,18 @@ import au.com.dius.pact.provider.junitsupport.Consumer;
 import au.com.dius.pact.provider.junitsupport.Provider;
 import au.com.dius.pact.provider.junitsupport.State;
 import au.com.dius.pact.provider.junitsupport.loader.PactBroker;
-import com.datastax.driver.core.Cluster;
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.Session;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.nextbreakpoint.blueprint.common.core.Authority;
 import com.nextbreakpoint.blueprint.common.core.Environment;
 import com.nextbreakpoint.blueprint.common.core.Headers;
-import com.nextbreakpoint.blueprint.common.vertx.CassandraClusterFactory;
+import com.nextbreakpoint.blueprint.common.vertx.CassandraClientFactory;
 import io.vertx.core.json.JsonObject;
+import io.vertx.rxjava.cassandra.CassandraClient;
+import io.vertx.rxjava.core.Vertx;
 import org.apache.http.HttpRequest;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
+import rx.Single;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -36,7 +37,7 @@ public class PactTests {
 
   private static Environment environment = Environment.getDefaultEnvironment();
 
-  private static Cluster cluster;
+  private static CassandraClient session;
 
   @BeforeAll
   public static void before() throws IOException, InterruptedException {
@@ -45,14 +46,16 @@ public class PactTests {
     System.setProperty("pact.verifier.publishResults", "true");
     System.setProperty("pact.provider.version", scenario.getVersion());
 
-    cluster = CassandraClusterFactory.create(environment, scenario.createCassandraConfig());
+    final Vertx vertx = new Vertx(io.vertx.core.Vertx.vertx());
+
+    session = CassandraClientFactory.create(environment, vertx, scenario.createCassandraConfig());
   }
 
   @AfterAll
   public static void after() throws IOException, InterruptedException {
-    if (cluster != null) {
+    if (session != null) {
       try {
-        cluster.close();
+        session.close();
       } catch (Exception ignore) {
       }
     }
@@ -84,26 +87,47 @@ public class PactTests {
 
     @State("there are some designs")
     public void designsExist() {
-      try (Session session = cluster.connect("designs")) {
-        final PreparedStatement statement1 = session.prepare("TRUNCATE DESIGN_AGGREGATE;");
-        session.execute(statement1.bind()).one();
-        final PreparedStatement statement2 = session.prepare("INSERT INTO DESIGN_AGGREGATE (DESIGN_UUID, DESIGN_DATA, DESIGN_CHECKSUM, DESIGN_CREATED, DESIGN_UPDATED) VALUES (?,?,?,toTimeStamp(now()),toTimeStamp(now()));");
-        String json1 = new JsonObject(createPostData(MANIFEST, METADATA, SCRIPT1)).toString();
-        session.execute(statement2.bind(DESIGN_UUID_1, json1, "1")).one();
-        String json2 = new JsonObject(createPostData(MANIFEST, METADATA, SCRIPT2)).toString();
-        session.execute(statement2.bind(DESIGN_UUID_2, json2, "2")).one();
-      }
+      session.rxPrepare("TRUNCATE DESIGN_ENTITY")
+              .map(PreparedStatement::bind)
+              .flatMap(session::rxExecute)
+              .toBlocking()
+              .value();
+
+      final String json1 = new JsonObject(createPostData(MANIFEST, METADATA, SCRIPT1)).toString();
+      final String json2 = new JsonObject(createPostData(MANIFEST, METADATA, SCRIPT2)).toString();
+
+      final Single<PreparedStatement> preparedStatementSingle = session.rxPrepare("INSERT INTO DESIGN_ENTITY (DESIGN_UUID, DESIGN_DATA, DESIGN_CHECKSUM, DESIGN_CREATED, DESIGN_UPDATED) VALUES (?,?,?,toTimeStamp(now()),toTimeStamp(now()))");
+
+      preparedStatementSingle
+              .map(stmt -> stmt.bind(DESIGN_UUID_1, json1, "1"))
+              .flatMap(session::rxExecute)
+              .toBlocking()
+              .value();
+
+      preparedStatementSingle
+              .map(stmt -> stmt.bind(DESIGN_UUID_2, json2, "1"))
+              .flatMap(session::rxExecute)
+              .toBlocking()
+              .value();
     }
 
     @State("design exists for uuid")
     public void designExistsForUuid() {
-      try (Session session = cluster.connect("designs")) {
-        final PreparedStatement statement1 = session.prepare("TRUNCATE DESIGN_AGGREGATE;");
-        session.execute(statement1.bind()).one();
-        final PreparedStatement statement2 = session.prepare("INSERT INTO DESIGN_AGGREGATE (DESIGN_UUID, DESIGN_DATA, DESIGN_CHECKSUM, DESIGN_CREATED, DESIGN_UPDATED) VALUES (?,?,?,toTimeStamp(now()),toTimeStamp(now()));");
-        String json1 = new JsonObject(createPostData(MANIFEST, METADATA, SCRIPT1)).toString();
-        session.execute(statement2.bind(DESIGN_UUID_1, json1, "1")).one();
-      }
+      session.rxPrepare("TRUNCATE DESIGN_ENTITY")
+              .map(PreparedStatement::bind)
+              .flatMap(session::rxExecute)
+              .toBlocking()
+              .value();
+
+      final String json1 = new JsonObject(createPostData(MANIFEST, METADATA, SCRIPT1)).toString();
+
+      final Single<PreparedStatement> preparedStatementSingle = session.rxPrepare("INSERT INTO DESIGN_ENTITY (DESIGN_UUID, DESIGN_DATA, DESIGN_CHECKSUM, DESIGN_CREATED, DESIGN_UPDATED) VALUES (?,?,?,toTimeStamp(now()),toTimeStamp(now()))");
+
+      preparedStatementSingle
+              .map(stmt -> stmt.bind(DESIGN_UUID_1, json1, "1"))
+              .flatMap(session::rxExecute)
+              .toBlocking()
+              .value();
     }
   }
 

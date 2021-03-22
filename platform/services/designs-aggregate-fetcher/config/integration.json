@@ -10,7 +10,7 @@
 
   "origin_pattern": "https://localhost(:[0-9]+)?",
 
-  "cassandra_cluster": "test",
+  "cassandra_cluster": "datacenter1",
   "cassandra_keyspace": "designs",
   "cassandra_username": "${DATABASE_USERNAME}",
   "cassandra_password": "${DATABASE_PASSWORD}",

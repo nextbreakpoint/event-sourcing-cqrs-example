@@ -83,7 +83,9 @@ public class Verticle extends AbstractVerticle {
 
     @Override
     public Completable rxStart() {
-        return vertx.rxExecuteBlocking(this::initServer).toCompletable();
+        return vertx.rxExecuteBlocking(this::initServer)
+                .doOnError(err -> logger.error("Failed to start server", err))
+                .toCompletable();
     }
 
     private void initServer(Promise<Void> promise) {

@@ -12,11 +12,8 @@
     </parent>
     <modules>
         <module>modules/core</module>
-        <module>modules/test</module>
         <module>modules/vertx</module>
-        <module>modules/log4j</module>
-        <module>modules/mysql</module>
-        <module>modules/cassandra</module>
+        <module>modules/test</module>
     </modules>
     <profiles>
         <profile>
@@ -31,9 +28,18 @@
                 <repository>
                     <id>nexus</id>
                     <name>Nexus</name>
-                    <url>http://192.168.64.12:38081/repository/maven-internal/</url>
+                    <url>${nexus.url}/repository/maven-internal/</url>
                 </repository>
             </distributionManagement>
         </profile>
     </profiles>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>${maven-jar-plugin.version}</version>
+            </plugin>
+        </plugins>
+    </build>
 </project>

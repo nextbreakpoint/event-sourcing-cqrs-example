@@ -15,20 +15,19 @@ import au.com.dius.pact.provider.junitsupport.Consumer;
 import au.com.dius.pact.provider.junitsupport.Provider;
 import au.com.dius.pact.provider.junitsupport.State;
 import au.com.dius.pact.provider.junitsupport.loader.PactBroker;
-import com.datastax.driver.core.Cluster;
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.Row;
-import com.datastax.driver.core.Session;
+import com.datastax.oss.driver.api.core.cql.Row;
 import com.nextbreakpoint.blueprint.common.core.Environment;
 import com.nextbreakpoint.blueprint.common.core.Message;
 import com.nextbreakpoint.blueprint.common.core.MessageType;
-import com.nextbreakpoint.blueprint.common.core.command.DeleteDesign;
-import com.nextbreakpoint.blueprint.common.core.command.InsertDesign;
-import com.nextbreakpoint.blueprint.common.core.command.UpdateDesign;
-import com.nextbreakpoint.blueprint.common.core.event.DesignChanged;
 import com.nextbreakpoint.blueprint.common.test.KafkaUtils;
-import com.nextbreakpoint.blueprint.common.vertx.CassandraClusterFactory;
+import com.nextbreakpoint.blueprint.common.vertx.CassandraClientFactory;
+import com.nextbreakpoint.blueprint.designs.model.DesignChanged;
+import com.nextbreakpoint.blueprint.designs.operations.delete.DeleteDesignCommand;
+import com.nextbreakpoint.blueprint.designs.operations.insert.InsertDesignCommand;
+import com.nextbreakpoint.blueprint.designs.operations.update.UpdateDesignCommand;
 import io.vertx.core.json.Json;
+import io.vertx.rxjava.cassandra.CassandraClient;
+import io.vertx.rxjava.core.Vertx;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -63,7 +62,7 @@ public class PactTests {
     private static final List<ConsumerRecord<String, String>> records = new ArrayList<>();
     private static KafkaConsumer<String, String> consumer;
     private static KafkaProducer<String, String> producer;
-    private static Cluster cluster;
+    private static CassandraClient session;
     private static Thread polling;
 
     @BeforeAll
@@ -73,7 +72,9 @@ public class PactTests {
         System.setProperty("pact.verifier.publishResults", "true");
         System.setProperty("pact.provider.version", scenario.getVersion());
 
-        cluster = CassandraClusterFactory.create(environment, scenario.createCassandraConfig());
+        final Vertx vertx = new Vertx(io.vertx.core.Vertx.vertx());
+
+        session = CassandraClientFactory.create(environment, vertx, scenario.createCassandraConfig());
 
         producer = KafkaUtils.createProducer(environment, scenario.createProducerConfig());
 
@@ -110,9 +111,9 @@ public class PactTests {
             }
         }
 
-        if (cluster != null) {
+        if (session != null) {
             try {
-                cluster.close();
+                session.close();
             } catch (Exception ignore) {
             }
         }
@@ -223,7 +224,7 @@ public class PactTests {
         public void shouldInsertDesign(MessagePact messagePact) {
             final Message insertDesignMessage = Json.decodeValue(messagePact.getMessages().get(0).contentsAsString(), Message.class);
 
-            final InsertDesign command = Json.decodeValue(insertDesignMessage.getMessageBody(), InsertDesign.class);
+            final InsertDesignCommand command = Json.decodeValue(insertDesignMessage.getMessageBody(), InsertDesignCommand.class);
 
             final UUID designId = command.getUuid();
 
@@ -234,35 +235,37 @@ public class PactTests {
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        try (Session session = cluster.connect("designs")) {
-                            final PreparedStatement statement = session.prepare("SELECT * FROM DESIGN_EVENT WHERE DESIGN_UUID = ? ORDER BY EVENT_TIMESTAMP ASC");
-                            final List<Row> rows = session.execute(statement.bind(designId)).all();
-                            assertThat(rows).hasSize(1);
-                            rows.forEach(row -> {
-                                String actualJson = row.get("DESIGN_DATA", String.class);
-                                String actualStatus = row.get("DESIGN_STATUS", String.class);
-                                String actualChecksum = row.get("DESIGN_CHECKSUM", String.class);
-                                assertThat(actualJson).isEqualTo(JSON_1);
-                                assertThat(actualStatus).isEqualTo("CREATED");
-                                assertThat(actualChecksum).isNotNull();
-                            });
-                        }
+                        final List<Row> rows = session.rxPrepare("SELECT * FROM DESIGN_EVENT WHERE DESIGN_UUID = ?")
+                                .map(stmt -> stmt.bind(designId))
+                                .flatMap(session::rxExecuteWithFullFetch)
+                                .toBlocking()
+                                .value();
+                        assertThat(rows).hasSize(1);
+                        rows.forEach(row -> {
+                            String actualJson = row.get("DESIGN_DATA", String.class);
+                            String actualStatus = row.get("DESIGN_STATUS", String.class);
+                            String actualChecksum = row.get("DESIGN_CHECKSUM", String.class);
+                            assertThat(actualJson).isEqualTo(JSON_1);
+                            assertThat(actualStatus).isEqualTo("CREATED");
+                            assertThat(actualChecksum).isNotNull();
+                        });
                     });
 
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        try (Session session = cluster.connect("designs")) {
-                            final PreparedStatement statement = session.prepare("SELECT * FROM DESIGN_AGGREGATE WHERE DESIGN_UUID = ?");
-                            final List<Row> rows = session.execute(statement.bind(designId)).all();
-                            assertThat(rows).hasSize(1);
-                            rows.forEach(row -> {
-                                String actualJson = row.get("DESIGN_DATA", String.class);
-                                String actualChecksum = row.get("DESIGN_CHECKSUM", String.class);
-                                assertThat(actualJson).isEqualTo(JSON_1);
-                                assertThat(actualChecksum).isNotNull();
-                            });
-                        }
+                        final List<Row> rows = session.rxPrepare("SELECT * FROM DESIGN_ENTITY WHERE DESIGN_UUID = ?")
+                                .map(stmt -> stmt.bind(designId))
+                                .flatMap(session::rxExecuteWithFullFetch)
+                                .toBlocking()
+                                .value();
+                        assertThat(rows).hasSize(1);
+                        rows.forEach(row -> {
+                            String actualJson = row.get("DESIGN_DATA", String.class);
+                            String actualChecksum = row.get("DESIGN_CHECKSUM", String.class);
+                            assertThat(actualJson).isEqualTo(JSON_1);
+                            assertThat(actualChecksum).isNotNull();
+                        });
                     });
 
             await().atMost(TEN_SECONDS)
@@ -289,7 +292,7 @@ public class PactTests {
 
             final Message updateDesignMessage = Json.decodeValue(messagePact.getMessages().get(1).contentsAsString(), Message.class);
 
-            final InsertDesign command = Json.decodeValue(insertDesignMessage.getMessageBody(), InsertDesign.class);
+            final InsertDesignCommand command = Json.decodeValue(insertDesignMessage.getMessageBody(), InsertDesignCommand.class);
 
             final UUID designId = command.getUuid();
 
@@ -304,39 +307,41 @@ public class PactTests {
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        try (Session session = cluster.connect("designs")) {
-                            final PreparedStatement statement = session.prepare("SELECT * FROM DESIGN_EVENT WHERE DESIGN_UUID = ? ORDER BY EVENT_TIMESTAMP ASC");
-                            final List<Row> rows = session.execute(statement.bind(designId)).all();
-                            assertThat(rows).hasSize(2);
-                            final Set<UUID> uuids = rows.stream()
-                                    .map(row -> row.getUUID("DESIGN_UUID"))
-                                    .collect(Collectors.toSet());
-                            assertThat(uuids).contains(designId);
-                            String actualJson1 = rows.get(0).get("DESIGN_DATA", String.class);
-                            String actualStatus1 = rows.get(0).get("DESIGN_STATUS", String.class);
-                            assertThat(actualJson1).isEqualTo(JSON_1);
-                            assertThat(actualStatus1).isEqualTo("CREATED");
-                            String actualJson2 = rows.get(1).get("DESIGN_DATA", String.class);
-                            String actualStatus2 = rows.get(1).get("DESIGN_STATUS", String.class);
-                            assertThat(actualJson2).isEqualTo(JSON_2);
-                            assertThat(actualStatus2).isEqualTo("UPDATED");
-                        }
+                        final List<Row> rows = session.rxPrepare("SELECT * FROM DESIGN_EVENT WHERE DESIGN_UUID = ?")
+                                .map(stmt -> stmt.bind(designId))
+                                .flatMap(session::rxExecuteWithFullFetch)
+                                .toBlocking()
+                                .value();
+                        assertThat(rows).hasSize(2);
+                        final Set<UUID> uuids = rows.stream()
+                                .map(row -> row.getUuid("DESIGN_UUID"))
+                                .collect(Collectors.toSet());
+                        assertThat(uuids).contains(designId);
+                        String actualJson1 = rows.get(0).get("DESIGN_DATA", String.class);
+                        String actualStatus1 = rows.get(0).get("DESIGN_STATUS", String.class);
+                        assertThat(actualJson1).isEqualTo(JSON_1);
+                        assertThat(actualStatus1).isEqualTo("CREATED");
+                        String actualJson2 = rows.get(1).get("DESIGN_DATA", String.class);
+                        String actualStatus2 = rows.get(1).get("DESIGN_STATUS", String.class);
+                        assertThat(actualJson2).isEqualTo(JSON_2);
+                        assertThat(actualStatus2).isEqualTo("UPDATED");
                     });
 
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        try (Session session = cluster.connect("designs")) {
-                            final PreparedStatement statement = session.prepare("SELECT * FROM DESIGN_AGGREGATE WHERE DESIGN_UUID = ?");
-                            final List<Row> rows = session.execute(statement.bind(designId)).all();
-                            assertThat(rows).hasSize(1);
-                            rows.forEach(row -> {
-                                String actualJson = row.get("DESIGN_DATA", String.class);
-                                String actualChecksum = row.get("DESIGN_CHECKSUM", String.class);
-                                assertThat(actualJson).isEqualTo(JSON_2);
-                                assertThat(actualChecksum).isNotNull();
-                            });
-                        }
+                        final List<Row> rows = session.rxPrepare("SELECT * FROM DESIGN_ENTITY WHERE DESIGN_UUID = ?")
+                                .map(stmt -> stmt.bind(designId))
+                                .flatMap(session::rxExecuteWithFullFetch)
+                                .toBlocking()
+                                .value();
+                        assertThat(rows).hasSize(1);
+                        rows.forEach(row -> {
+                            String actualJson = row.get("DESIGN_DATA", String.class);
+                            String actualChecksum = row.get("DESIGN_CHECKSUM", String.class);
+                            assertThat(actualJson).isEqualTo(JSON_2);
+                            assertThat(actualChecksum).isNotNull();
+                        });
                     });
 
             await().atMost(TEN_SECONDS)
@@ -363,7 +368,7 @@ public class PactTests {
 
             final Message deleteDesignMessage = Json.decodeValue(messagePact.getMessages().get(1).contentsAsString(), Message.class);
 
-            final InsertDesign command = Json.decodeValue(insertDesignMessage.getMessageBody(), InsertDesign.class);
+            final InsertDesignCommand command = Json.decodeValue(insertDesignMessage.getMessageBody(), InsertDesignCommand.class);
 
             final UUID designId = command.getUuid();
 
@@ -378,33 +383,35 @@ public class PactTests {
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        try (Session session = cluster.connect("designs")) {
-                            final PreparedStatement statement = session.prepare("SELECT * FROM DESIGN_EVENT WHERE DESIGN_UUID = ? ORDER BY EVENT_TIMESTAMP ASC");
-                            final List<Row> rows = session.execute(statement.bind(designId)).all();
-                            assertThat(rows).hasSize(2);
-                            final Set<UUID> uuids = rows.stream()
-                                    .map(row -> row.getUUID("DESIGN_UUID"))
-                                    .collect(Collectors.toSet());
-                            assertThat(uuids).contains(designId);
-                            String actualJson1 = rows.get(0).get("DESIGN_DATA", String.class);
-                            String actualStatus1 = rows.get(0).get("DESIGN_STATUS", String.class);
-                            assertThat(actualJson1).isEqualTo(JSON_1);
-                            assertThat(actualStatus1).isEqualTo("CREATED");
-                            String actualJson2 = rows.get(1).get("DESIGN_DATA", String.class);
-                            String actualStatus2 = rows.get(1).get("DESIGN_STATUS", String.class);
-                            assertThat(actualJson2).isNull();
-                            assertThat(actualStatus2).isEqualTo("DELETED");
-                        }
+                        final List<Row> rows = session.rxPrepare("SELECT * FROM DESIGN_EVENT WHERE DESIGN_UUID = ?")
+                                .map(stmt -> stmt.bind(designId))
+                                .flatMap(session::rxExecuteWithFullFetch)
+                                .toBlocking()
+                                .value();
+                        assertThat(rows).hasSize(2);
+                        final Set<UUID> uuids = rows.stream()
+                                .map(row -> row.getUuid("DESIGN_UUID"))
+                                .collect(Collectors.toSet());
+                        assertThat(uuids).contains(designId);
+                        String actualJson1 = rows.get(0).get("DESIGN_DATA", String.class);
+                        String actualStatus1 = rows.get(0).get("DESIGN_STATUS", String.class);
+                        assertThat(actualJson1).isEqualTo(JSON_1);
+                        assertThat(actualStatus1).isEqualTo("CREATED");
+                        String actualJson2 = rows.get(1).get("DESIGN_DATA", String.class);
+                        String actualStatus2 = rows.get(1).get("DESIGN_STATUS", String.class);
+                        assertThat(actualJson2).isNull();
+                        assertThat(actualStatus2).isEqualTo("DELETED");
                     });
 
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        try (Session session = cluster.connect("designs")) {
-                            final PreparedStatement statement = session.prepare("SELECT * FROM DESIGN_AGGREGATE WHERE DESIGN_UUID = ?");
-                            final List<Row> rows = session.execute(statement.bind(designId)).all();
-                            assertThat(rows).hasSize(0);
-                        }
+                        final List<Row> rows = session.rxPrepare("SELECT * FROM DESIGN_ENTITY WHERE DESIGN_UUID = ?")
+                                .map(stmt -> stmt.bind(designId))
+                                .flatMap(session::rxExecuteWithFullFetch)
+                                .toBlocking()
+                                .value();
+                        assertThat(rows).hasSize(0);
                     });
 
             await().atMost(TEN_SECONDS)
@@ -453,7 +460,7 @@ public class PactTests {
 
             final UUID designId = DESIGN_UUID_1;
 
-            final InsertDesign insertDesignCommand = new InsertDesign(designId, JSON_1, eventTimestamp);
+            final InsertDesignCommand insertDesignCommand = new InsertDesignCommand(designId, JSON_1, eventTimestamp);
 
             final long messageTimestamp = System.currentTimeMillis();
 
@@ -492,7 +499,7 @@ public class PactTests {
 
             final UUID designId = DESIGN_UUID_2;
 
-            final InsertDesign insertDesignCommand = new InsertDesign(designId, JSON_1, eventTimestamp);
+            final InsertDesignCommand insertDesignCommand = new InsertDesignCommand(designId, JSON_1, eventTimestamp);
 
             final long messageTimestamp = System.currentTimeMillis();
 
@@ -530,15 +537,15 @@ public class PactTests {
         return new ProducerRecord<>("design-command", message.getPartitionKey(), Json.encode(message));
     }
 
-    private static Message createInsertDesignMessage(UUID messageId, UUID partitionKey, long timestamp, InsertDesign event) {
+    private static Message createInsertDesignMessage(UUID messageId, UUID partitionKey, long timestamp, InsertDesignCommand event) {
         return new Message(messageId.toString(), MessageType.DESIGN_INSERT, Json.encode(event), "test", partitionKey.toString(), timestamp);
     }
 
-    private static Message createUpdateDesignMessage(UUID messageId, UUID partitionKey, long timestamp, UpdateDesign event) {
+    private static Message createUpdateDesignMessage(UUID messageId, UUID partitionKey, long timestamp, UpdateDesignCommand event) {
         return new Message(messageId.toString(), MessageType.DESIGN_UPDATE, Json.encode(event), "test", partitionKey.toString(), timestamp);
     }
 
-    private static Message createDeleteDesignMessage(UUID messageId, UUID partitionKey, long timestamp, DeleteDesign event) {
+    private static Message createDeleteDesignMessage(UUID messageId, UUID partitionKey, long timestamp, DeleteDesignCommand event) {
         return new Message(messageId.toString(), MessageType.DESIGN_DELETE, Json.encode(event), "test", partitionKey.toString(), timestamp);
     }
 

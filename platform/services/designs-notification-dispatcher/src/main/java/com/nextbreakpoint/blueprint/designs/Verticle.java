@@ -5,7 +5,7 @@ import com.nextbreakpoint.blueprint.common.core.IOUtils;
 import com.nextbreakpoint.blueprint.common.core.Message;
 import com.nextbreakpoint.blueprint.common.core.MessageType;
 import com.nextbreakpoint.blueprint.common.vertx.*;
-import com.nextbreakpoint.blueprint.designs.controllers.DesignChangedController;
+import com.nextbreakpoint.blueprint.designs.operations.DesignChangedController;
 import com.nextbreakpoint.blueprint.designs.handlers.EventsHandler;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Handler;
@@ -83,7 +83,9 @@ public class Verticle extends AbstractVerticle {
 
     @Override
     public Completable rxStart() {
-        return vertx.rxExecuteBlocking(this::initServer).toCompletable();
+        return vertx.rxExecuteBlocking(this::initServer)
+                .doOnError(err -> logger.error("Failed to start server", err))
+                .toCompletable();
     }
 
     private void initServer(Promise<Void> promise) {
@@ -118,6 +120,7 @@ public class Verticle extends AbstractVerticle {
 
             consumer.handler(record -> processRecord(handlers, record))
                     .rxSubscribe(eventTopic)
+                    .doOnEach(ignore -> consumer.commit())
                     .doOnError(this::handleError)
                     .subscribe();
 

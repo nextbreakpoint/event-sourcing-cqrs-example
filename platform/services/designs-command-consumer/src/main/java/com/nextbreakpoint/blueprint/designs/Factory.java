@@ -1,66 +1,52 @@
 package com.nextbreakpoint.blueprint.designs;
 
-import com.nextbreakpoint.blueprint.common.core.command.DeleteDesign;
-import com.nextbreakpoint.blueprint.common.core.command.InsertDesign;
-import com.nextbreakpoint.blueprint.common.core.command.UpdateDesign;
-import com.nextbreakpoint.blueprint.common.core.event.DesignChanged;
-import com.nextbreakpoint.blueprint.common.vertx.DesignChangedMapper;
 import com.nextbreakpoint.blueprint.common.vertx.TemplateHandler;
-import com.nextbreakpoint.blueprint.designs.controllers.change.DesignChangeInputMapper;
-import com.nextbreakpoint.blueprint.designs.controllers.change.DesignChangedController;
-import com.nextbreakpoint.blueprint.designs.controllers.delete.DeleteDesignController;
-import com.nextbreakpoint.blueprint.designs.controllers.delete.DeleteDesignInputMapper;
-import com.nextbreakpoint.blueprint.designs.controllers.insert.InsertDesignController;
-import com.nextbreakpoint.blueprint.designs.controllers.insert.InsertDesignInputMapper;
-import com.nextbreakpoint.blueprint.designs.controllers.update.UpdateDesignController;
-import com.nextbreakpoint.blueprint.designs.controllers.update.UpdateDesignInputMapper;
-import com.nextbreakpoint.blueprint.designs.model.CommandOutput;
+import com.nextbreakpoint.blueprint.designs.common.*;
+import com.nextbreakpoint.blueprint.designs.operations.delete.DeleteDesignCommand;
+import com.nextbreakpoint.blueprint.designs.operations.delete.DeleteDesignController;
+import com.nextbreakpoint.blueprint.designs.operations.delete.DeleteDesignInputMapper;
+import com.nextbreakpoint.blueprint.designs.operations.insert.InsertDesignCommand;
+import com.nextbreakpoint.blueprint.designs.operations.insert.InsertDesignController;
+import com.nextbreakpoint.blueprint.designs.operations.insert.InsertDesignInputMapper;
+import com.nextbreakpoint.blueprint.designs.operations.update.UpdateDesignCommand;
+import com.nextbreakpoint.blueprint.designs.operations.update.UpdateDesignController;
+import com.nextbreakpoint.blueprint.designs.operations.update.UpdateDesignInputMapper;
 import com.nextbreakpoint.blueprint.designs.model.RecordAndMessage;
+import com.nextbreakpoint.blueprint.designs.model.ControllerResult;
 import io.vertx.core.Handler;
+import io.vertx.core.json.JsonObject;
 import io.vertx.rxjava.kafka.client.producer.KafkaProducer;
-
-import java.util.function.BiConsumer;
 
 public class Factory {
     private Factory() {}
 
-    public static Handler<RecordAndMessage> createInsertDesignHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource, BiConsumer<RecordAndMessage, CommandOutput> onSuccess, BiConsumer<RecordAndMessage, Throwable> onFailure) {
-        return TemplateHandler.<RecordAndMessage, InsertDesign, DesignChanged, CommandOutput>builder()
+    public static Handler<RecordAndMessage> createInsertDesignHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
+        return TemplateHandler.<RecordAndMessage, InsertDesignCommand, ControllerResult, JsonObject>builder()
                 .withInputMapper(new InsertDesignInputMapper())
-                .withOutputMapper(event -> new CommandOutput(event))
-                .withController(new InsertDesignController(store, topic, producer, new DesignChangedMapper(messageSource)))
-                .onSuccess(onSuccess)
-                .onFailure(onFailure)
+                .withController(new InsertDesignController(store, topic, producer, new DesignChangedMessageMapper(messageSource)))
+                .withOutputMapper(event -> new JsonObject())
+                .onSuccess(new MessaggeSuccessConsumer())
+                .onFailure(new MessaggeFailureConsumer())
                 .build();
     }
 
-    public static Handler<RecordAndMessage> createUpdateDesignHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource, BiConsumer<RecordAndMessage, CommandOutput> onSuccess, BiConsumer<RecordAndMessage, Throwable> onFailure) {
-        return TemplateHandler.<RecordAndMessage, UpdateDesign, DesignChanged, CommandOutput>builder()
+    public static Handler<RecordAndMessage> createUpdateDesignHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
+        return TemplateHandler.<RecordAndMessage, UpdateDesignCommand, ControllerResult, JsonObject>builder()
                 .withInputMapper(new UpdateDesignInputMapper())
-                .withOutputMapper(event -> new CommandOutput(event))
-                .withController(new UpdateDesignController(store, topic, producer, new DesignChangedMapper(messageSource)))
-                .onSuccess(onSuccess)
-                .onFailure(onFailure)
+                .withController(new UpdateDesignController(store, topic, producer, new DesignChangedMessageMapper(messageSource)))
+                .withOutputMapper(event -> new JsonObject())
+                .onSuccess(new MessaggeSuccessConsumer())
+                .onFailure(new MessaggeFailureConsumer())
                 .build();
     }
 
-    public static Handler<RecordAndMessage> createDeleteDesignHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource, BiConsumer<RecordAndMessage, CommandOutput> onSuccess, BiConsumer<RecordAndMessage, Throwable> onFailure) {
-        return TemplateHandler.<RecordAndMessage, DeleteDesign, DesignChanged, CommandOutput>builder()
+    public static Handler<RecordAndMessage> createDeleteDesignHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
+        return TemplateHandler.<RecordAndMessage, DeleteDesignCommand, ControllerResult, JsonObject>builder()
                 .withInputMapper(new DeleteDesignInputMapper())
-                .withOutputMapper(event -> new CommandOutput(event))
-                .withController(new DeleteDesignController(store, topic, producer, new DesignChangedMapper(messageSource)))
-                .onSuccess(onSuccess)
-                .onFailure(onFailure)
-                .build();
-    }
-
-    public static Handler<RecordAndMessage> createDesignChangedHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource, BiConsumer<RecordAndMessage, DesignChanged> onSuccess, BiConsumer<RecordAndMessage, Throwable> onFailure) {
-        return TemplateHandler.<RecordAndMessage, DesignChanged, DesignChanged, DesignChanged>builder()
-                .withInputMapper(new DesignChangeInputMapper())
-                .withOutputMapper(event -> event)
-                .withController(new DesignChangedController(store, topic, producer, new DesignChangedMapper(messageSource)))
-                .onSuccess(onSuccess)
-                .onFailure(onFailure)
+                .withController(new DeleteDesignController(store, topic, producer, new DesignChangedMessageMapper(messageSource)))
+                .withOutputMapper(event -> new JsonObject())
+                .onSuccess(new MessaggeSuccessConsumer())
+                .onFailure(new MessaggeFailureConsumer())
                 .build();
     }
 }

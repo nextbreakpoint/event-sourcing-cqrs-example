@@ -11,7 +11,6 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.rxjava.core.Vertx;
 import io.vertx.rxjava.core.buffer.Buffer;
 import io.vertx.rxjava.core.http.HttpClient;
-import io.vertx.rxjava.core.http.HttpClientRequest;
 
 import java.net.MalformedURLException;
 import java.util.HashMap;

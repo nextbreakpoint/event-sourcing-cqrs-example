@@ -51,6 +51,7 @@ public class TestScenario {
             .withSecretArgs(secretArgs)
             .withHelmPath("../../helm")
             .withHelmArgs(helmArgs)
+            .withKubernetes()
             .withMinikube()
             .withCassandra()
             .build();
@@ -103,6 +104,6 @@ public class TestScenario {
   }
 
   public JsonObject createCassandraConfig() {
-    return scenario.createCassandraConfig();
+    return scenario.createCassandraConfig("datacenter1", "designs");
   }
 }

@@ -81,7 +81,7 @@ public class Authentication {
     public static Single<User> getUser(JWTAuth jwtProvider, RoutingContext routingContext) {
         return fromCallable(() -> getToken(routingContext))
                 .flatMap(authorization -> makeAuthInfo(jwtProvider, authorization))
-                .flatMap(json -> jwtProvider.rxAuthenticate(json));
+                .flatMap(jwtProvider::rxAuthenticate);
     }
 
     public static String getToken(RoutingContext routingContext) {
@@ -105,6 +105,6 @@ public class Authentication {
     }
 
     private static JsonObject makeJWT(String authorization) {
-        return new JsonObject().put("jwt", authorization);
+        return new JsonObject().put("token", authorization);
     }
 }

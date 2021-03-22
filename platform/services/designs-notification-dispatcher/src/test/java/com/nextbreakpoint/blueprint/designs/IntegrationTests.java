@@ -3,9 +3,9 @@ package com.nextbreakpoint.blueprint.designs;
 import com.nextbreakpoint.blueprint.common.core.Environment;
 import com.nextbreakpoint.blueprint.common.core.Message;
 import com.nextbreakpoint.blueprint.common.core.MessageType;
-import com.nextbreakpoint.blueprint.common.core.event.DesignChanged;
 import com.nextbreakpoint.blueprint.common.test.EventSource;
 import com.nextbreakpoint.blueprint.common.test.KafkaUtils;
+import com.nextbreakpoint.blueprint.designs.model.DesignChanged;
 import io.vertx.core.json.Json;
 import io.vertx.rxjava.core.Vertx;
 import org.apache.kafka.clients.producer.KafkaProducer;
@@ -33,9 +33,9 @@ public class IntegrationTests {
     public static void before() throws IOException, InterruptedException {
         scenario.before();
 
-        producer = KafkaUtils.createProducer(environment, scenario.createProducerConfig());
-
         final Vertx vertx = new Vertx(io.vertx.core.Vertx.vertx());
+
+        producer = KafkaUtils.createProducer(environment, scenario.createProducerConfig());
 
         eventSource = new EventSource(environment, vertx, "https://" + scenario.getServiceHost() + ":" + scenario.getServicePort(), scenario.getEventSourceConfig());
     }

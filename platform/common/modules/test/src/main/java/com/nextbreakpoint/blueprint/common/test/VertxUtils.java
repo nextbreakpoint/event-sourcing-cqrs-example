@@ -13,19 +13,22 @@ public class VertxUtils {
     private VertxUtils() {}
 
     public static String makeAuthorization(String user, List<String> authorities, String path) {
-        Vertx vertx = Vertx.vertx();
+        final Vertx vertx = Vertx.vertx();
 
         try {
             final JWTAuth jwtProvider = createJWTProvider(vertx, path);
 
             return "Bearer " + Authentication.generateToken(jwtProvider, user, authorities);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
         } finally {
             vertx.close();
         }
     }
 
     public static Cookie makeCookie(String user, List<String> authorities, String domain, String path) {
-        Vertx vertx = Vertx.vertx();
+        final Vertx vertx = Vertx.vertx();
 
         try {
             final JWTAuth jwtProvider = createJWTProvider(vertx, path);
@@ -33,6 +36,9 @@ public class VertxUtils {
             final Cookie cookie = Authentication.createCookie(Authentication.generateToken(jwtProvider, user, authorities), domain);
 
             return cookie;
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
         } finally {
             vertx.close();
         }

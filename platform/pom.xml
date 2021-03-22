@@ -21,10 +21,15 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <nextfractal.version>2.1.2</nextfractal.version>
-        <vertx.version>4.0.2</vertx.version>
+        <vertx.version>4.0.3</vertx.version>
         <jackson.version>2.12.2</jackson.version>
         <activation.version>1.1.1</activation.version>
         <jaxb-api.version>2.3.1</jaxb-api.version>
+        <cassandra-driver-core.version>3.10.2</cassandra-driver-core.version>
+        <mysql-connector.version>8.0.23</mysql-connector.version>
+        <micrometer.version>1.6.4</micrometer.version>
+        <log4j2.version>2.14.1</log4j2.version>
+        <gson.version>2.8.6</gson.version>
         <junit5jupiter.version>5.7.1</junit5jupiter.version>
         <junit5platform.version>1.7.1</junit5platform.version>
         <mockito.version>3.8.0</mockito.version>
@@ -52,10 +57,7 @@
         <maven.target.release>11</maven.target.release>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
-        <stub.host>localhost</stub.host>
-        <minikube.host>localhost</minikube.host>
-        <pactbroker.host>localhost</pactbroker.host>
-        <pactbroker.port>9292</pactbroker.port>
+        <nexus.url>http://192.168.64.12:38081</nexus.url>
     </properties>
     <build>
         <plugins>
@@ -125,7 +127,6 @@
                 <configuration>
                     <parallel>both</parallel>
                     <threadCount>5</threadCount>
-<!--                    <argLine>&#45;&#45;add-opens java.base/java.nio=ALL-UNNAMED &#45;&#45;add-opens java.base/sun.nio.ch=ALL-UNNAMED &#45;&#45;add-opens java.base/sun.net.dns=ALL-UNNAMED</argLine>-->
                     <includes>
                         <include>**/*Test.java</include>
                     </includes>
@@ -209,6 +210,182 @@
                 <groupId>javax.activation</groupId>
                 <artifactId>activation</artifactId>
                 <version>${activation.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.vertx</groupId>
+                <artifactId>vertx-core</artifactId>
+                <version>${vertx.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.fasterxml.jackson.core</groupId>
+                        <artifactId>jackson-annotations</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.fasterxml.jackson.core</groupId>
+                        <artifactId>jackson-core</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.fasterxml.jackson.core</groupId>
+                        <artifactId>jackson-databind</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>io.vertx</groupId>
+                <artifactId>vertx-web</artifactId>
+                <version>${vertx.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.vertx</groupId>
+                <artifactId>vertx-web-common</artifactId>
+                <version>${vertx.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.vertx</groupId>
+                <artifactId>vertx-web-client</artifactId>
+                <version>${vertx.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.vertx</groupId>
+                <artifactId>vertx-web-templ-pebble</artifactId>
+                <version>${vertx.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.vertx</groupId>
+                <artifactId>vertx-web-openapi</artifactId>
+                <version>${vertx.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.vertx</groupId>
+                <artifactId>vertx-jdbc-client</artifactId>
+                <version>${vertx.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.vertx</groupId>
+                <artifactId>vertx-cassandra-client</artifactId>
+                <version>${vertx.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>jcl-over-slf4j</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>io.vertx</groupId>
+                <artifactId>vertx-auth-oauth2</artifactId>
+                <version>${vertx.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.vertx</groupId>
+                <artifactId>vertx-auth-jwt</artifactId>
+                <version>${vertx.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.vertx</groupId>
+                <artifactId>vertx-rx-java</artifactId>
+                <version>${vertx.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.vertx</groupId>
+                <artifactId>vertx-zookeeper</artifactId>
+                <version>${vertx.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.vertx</groupId>
+                <artifactId>vertx-kafka-client</artifactId>
+                <version>${vertx.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>slf4j-api</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>slf4j-log4j12</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>log4j</groupId>
+                        <artifactId>log4j</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>io.vertx</groupId>
+                <artifactId>vertx-opentracing</artifactId>
+                <version>${vertx.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.google.code.gson</groupId>
+                        <artifactId>gson</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>io.vertx</groupId>
+                <artifactId>vertx-micrometer-metrics</artifactId>
+                <version>${vertx.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.vertx</groupId>
+                <artifactId>vertx-service-discovery-bridge-consul</artifactId>
+                <version>${vertx.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.micrometer</groupId>
+                <artifactId>micrometer-registry-prometheus</artifactId>
+                <version>${micrometer.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.code.gson</groupId>
+                <artifactId>gson</artifactId>
+                <version>${gson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-api</artifactId>
+                <version>${log4j2.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-core</artifactId>
+                <version>${log4j2.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-slf4j-impl</artifactId>
+                <version>${log4j2.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-1.2-api</artifactId>
+                <version>${log4j2.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-jcl</artifactId>
+                <version>${log4j2.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-jul</artifactId>
+                <version>${log4j2.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.datastax.cassandra</groupId>
+                <artifactId>cassandra-driver-core</artifactId>
+                <version>${cassandra-driver-core.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>io.netty</groupId>
+                        <artifactId>netty-codec</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>mysql</groupId>
+                <artifactId>mysql-connector-java</artifactId>
+                <version>${mysql-connector.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.junit.jupiter</groupId>
@@ -434,38 +611,20 @@
     </dependencies>
     <profiles>
         <profile>
-            <id>minikube</id>
+            <id>nexus</id>
             <activation>
                 <property>
-                    <name>minikube</name>
+                    <name>nexus</name>
                     <value>true</value>
                 </property>
             </activation>
-            <properties>
-                <stub.host>192.168.64.1</stub.host>
-                <minikube.host>192.168.64.12</minikube.host>
-                <pactbroker.host>192.168.64.12</pactbroker.host>
-            </properties>
-        </profile>
-        <profile>
-            <id>platform</id>
-            <activation>
-                <property>
-                    <name>platform</name>
-                    <value>true</value>
-                </property>
-            </activation>
-            <modules>
-                <module>services/frontend</module>
-                <module>services/gateway</module>
-                <module>services/authentication</module>
-                <module>services/accounts</module>
-                <module>services/designs</module>
-                <module>services/designs-aggregate-fetcher</module>
-                <module>services/designs-command-consumer</module>
-                <module>services/designs-command-producer</module>
-                <module>services/designs-notification-dispatcher</module>
-            </modules>
+            <distributionManagement>
+                <repository>
+                    <id>nexus</id>
+                    <name>Nexus</name>
+                    <url>${nexus.url}/repository/maven-internal/</url>
+                </repository>
+            </distributionManagement>
         </profile>
         <profile>
             <id>common</id>
@@ -480,20 +639,16 @@
             </modules>
         </profile>
         <profile>
-            <id>nexus</id>
+            <id>platform</id>
             <activation>
                 <property>
-                    <name>nexus</name>
+                    <name>platform</name>
                     <value>true</value>
                 </property>
             </activation>
-            <distributionManagement>
-                <repository>
-                    <id>nexus</id>
-                    <name>Nexus</name>
-                    <url>http://192.168.64.12:38081/repository/maven-internal/</url>
-                </repository>
-            </distributionManagement>
+            <modules>
+                <module>services</module>
+            </modules>
         </profile>
     </profiles>
 </project>

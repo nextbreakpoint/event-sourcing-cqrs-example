@@ -23,6 +23,6 @@
       "http-endpoint"
     ],
     "port": 8080,
-    "address": "192.168.64.12"
+    "address": "localhost"
   }]
 }

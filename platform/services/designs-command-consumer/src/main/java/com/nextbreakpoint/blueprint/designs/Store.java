@@ -1,18 +1,19 @@
 package com.nextbreakpoint.blueprint.designs;
 
-import com.nextbreakpoint.blueprint.common.core.command.DeleteDesign;
-import com.nextbreakpoint.blueprint.common.core.command.InsertDesign;
-import com.nextbreakpoint.blueprint.common.core.command.UpdateDesign;
-import com.nextbreakpoint.blueprint.common.core.event.DesignChanged;
+import com.nextbreakpoint.blueprint.designs.model.DesignChange;
 import com.nextbreakpoint.blueprint.designs.model.PersistenceResult;
 import rx.Single;
 
+import java.util.UUID;
+
 public interface Store {
-    Single<PersistenceResult> insertDesign(InsertDesign event);
+    Single<PersistenceResult<Void>> appendInsertDesignEvent(UUID uuid, UUID eventTimestamp, String json);
 
-    Single<PersistenceResult> updateDesign(UpdateDesign event);
+    Single<PersistenceResult<Void>> appendUpdateDesignEvent(UUID uuid, UUID eventTimestamp, String json);
 
-    Single<PersistenceResult> deleteDesign(DeleteDesign event);
+    Single<PersistenceResult<Void>> appendDeleteDesignEvent(UUID uuid, UUID eventTimestamp);
 
-    Single<PersistenceResult> updateDesign(DesignChanged event);
+    Single<PersistenceResult<DesignChange>> updateAggregate(UUID uuid, UUID eventTimestamp);
+
+    Single<PersistenceResult<Void>> publishEvent(UUID uuid, UUID eventTimestamp);
 }

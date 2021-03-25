@@ -26,25 +26,25 @@ public class CassandraStore implements Store {
     private static final String ERROR_INSERT_DESIGN = "An error occurred while inserting a design";
     private static final String ERROR_UPDATE_DESIGN = "An error occurred while updating a design";
     private static final String ERROR_DELETE_DESIGN = "An error occurred while deleting a design";
-    private static final String ERROR_UPDATE_DESIGN_STATUS = "An error occurred while updating the design status";
+    private static final String ERROR_PUBLISH_DESIGN = "An error occurred while publishing a design";
 
     private static final String INSERT_DESIGN_EVENT = "INSERT INTO DESIGN_EVENT (DESIGN_UUID, DESIGN_DATA, DESIGN_STATUS, DESIGN_CHECKSUM, EVENT_TIMESTAMP) VALUES (?, ?, ?, ?, ?)";
     private static final String SELECT_DESIGN_EVENTS = "SELECT * FROM DESIGN_EVENT WHERE DESIGN_UUID = ?";
     private static final String INSERT_DESIGN_ENTITY = "INSERT INTO DESIGN_ENTITY (DESIGN_UUID, DESIGN_DATA, DESIGN_CHECKSUM, DESIGN_UPDATED) VALUES (?, ?, ?, ?)";
-    private static final String UPDATE_DESIGN_ENTITY = "UPDATE DESIGN_ENTITY SET DESIGN_DATA=?, DESIGN_CHECKSUM=?, DESIGN_UPDATED=? WHERE DESIGN_UUID=?";
-    private static final String DELETE_DESIGN_ENTITY = "DELETE FROM DESIGN_ENTITY WHERE DESIGN_UUID=?";
-    private static final String UPDATE_DESIGN_STATUS = "UPDATE DESIGN_EVENT SET EVENT_PUBLISHED=? WHERE DESIGN_UUID=? AND EVENT_TIMESTAMP=?";
+    private static final String UPDATE_DESIGN_ENTITY = "UPDATE DESIGN_ENTITY SET DESIGN_DATA = ?, DESIGN_CHECKSUM = ?, DESIGN_UPDATED = ? WHERE DESIGN_UUID = ?";
+    private static final String DELETE_DESIGN_ENTITY = "DELETE FROM DESIGN_ENTITY WHERE DESIGN_UUID = ?";
+    private static final String UPDATE_DESIGN_EVENT = "UPDATE DESIGN_EVENT SET EVENT_PUBLISHED = ? WHERE DESIGN_UUID = ? AND EVENT_TIMESTAMP = ?";
 
     private final Supplier<CassandraClient> supplier;
 
     private CassandraClient session;
 
     private Single<PreparedStatement> insertDesign;
+    private Single<PreparedStatement> updateDesign;
     private Single<PreparedStatement> selectDesigns;
     private Single<PreparedStatement> insertDesignAggregate;
     private Single<PreparedStatement> updateDesignAggregate;
     private Single<PreparedStatement> deleteDesignAggregate;
-    private Single<PreparedStatement> updateDesignStatus;
 
     public CassandraStore(Supplier<CassandraClient> supplier) {
         this.supplier = Objects.requireNonNull(supplier);
@@ -82,7 +82,7 @@ public class CassandraStore implements Store {
     public Single<PersistenceResult<Void>> publishEvent(UUID uuid, UUID eventTimestamp) {
         return withSession()
                 .flatMap(session -> publishEvent(session, uuid, eventTimestamp))
-                .doOnError(err -> handleError(ERROR_UPDATE_DESIGN_STATUS, err));
+                .doOnError(err -> handleError(ERROR_PUBLISH_DESIGN, err));
     }
 
     private Single<CassandraClient> withSession() {
@@ -96,7 +96,7 @@ public class CassandraStore implements Store {
             insertDesignAggregate = session.rxPrepare(INSERT_DESIGN_ENTITY);
             updateDesignAggregate = session.rxPrepare(UPDATE_DESIGN_ENTITY);
             deleteDesignAggregate = session.rxPrepare(DELETE_DESIGN_ENTITY);
-            updateDesignStatus = session.rxPrepare(UPDATE_DESIGN_STATUS);
+            updateDesign = session.rxPrepare(UPDATE_DESIGN_EVENT);
         }
         return Single.just(session);
     }
@@ -145,7 +145,7 @@ public class CassandraStore implements Store {
     }
 
     private Single<PersistenceResult<Void>> publishEvent(CassandraClient session, UUID uuid, UUID eventTimestamp) {
-        return updateDesignStatus
+        return updateDesign
                 .map(pst -> pst.bind(Instant.now(), uuid, eventTimestamp))
                 .flatMap(session::rxExecute)
                 .map(rs -> new PersistenceResult<>(uuid, eventTimestamp, null));

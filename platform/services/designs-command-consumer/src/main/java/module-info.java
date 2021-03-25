@@ -13,6 +13,7 @@ module com.nextbreakpoint.blueprint.designscommandconsumer {
     requires com.fasterxml.jackson.databind;
     requires org.apache.logging.log4j;
     requires com.datastax.oss.driver.core;
+    requires java.sql;
     exports com.nextbreakpoint.blueprint.designs.operations.insert to com.fasterxml.jackson.databind;
     exports com.nextbreakpoint.blueprint.designs.operations.update to com.fasterxml.jackson.databind;
     exports com.nextbreakpoint.blueprint.designs.operations.delete to com.fasterxml.jackson.databind;

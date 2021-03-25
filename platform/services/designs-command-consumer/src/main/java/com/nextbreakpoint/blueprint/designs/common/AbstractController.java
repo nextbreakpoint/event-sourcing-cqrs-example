@@ -52,7 +52,7 @@ public abstract class AbstractController<T extends Command> implements Controlle
     private Single<ControllerResult> publishRecordOrFailQuietly(UUID uuid, UUID eventTimestamp, DesignChange change) {
         return createRecord(change)
                 .flatMap(this::publishRecord)
-                .doOnSuccess(record -> onRecordSent(uuid, eventTimestamp))
+                .flatMap(record -> onRecordSent(uuid, eventTimestamp))
                 .doOnError(err -> logger.error("Can't send message. The operation will be retried later", err))
                 .map(record -> new ControllerResult());
     }

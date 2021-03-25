@@ -38,6 +38,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -245,9 +246,11 @@ public class PactTests {
                             String actualJson = row.get("DESIGN_DATA", String.class);
                             String actualStatus = row.get("DESIGN_STATUS", String.class);
                             String actualChecksum = row.get("DESIGN_CHECKSUM", String.class);
+                            Instant actualPublished = row.getInstant("EVENT_PUBLISHED") ;
                             assertThat(actualJson).isEqualTo(JSON_1);
                             assertThat(actualStatus).isEqualTo("CREATED");
                             assertThat(actualChecksum).isNotNull();
+                            assertThat(actualPublished).isNotNull();
                         });
                     });
 
@@ -319,12 +322,16 @@ public class PactTests {
                         assertThat(uuids).contains(designId);
                         String actualJson1 = rows.get(0).get("DESIGN_DATA", String.class);
                         String actualStatus1 = rows.get(0).get("DESIGN_STATUS", String.class);
+                        Instant actualPublished1 = rows.get(0).getInstant("EVENT_PUBLISHED") ;
                         assertThat(actualJson1).isEqualTo(JSON_1);
                         assertThat(actualStatus1).isEqualTo("CREATED");
+                        assertThat(actualPublished1).isNotNull();
                         String actualJson2 = rows.get(1).get("DESIGN_DATA", String.class);
                         String actualStatus2 = rows.get(1).get("DESIGN_STATUS", String.class);
+                        Instant actualPublished2 = rows.get(1).getInstant("EVENT_PUBLISHED") ;
                         assertThat(actualJson2).isEqualTo(JSON_2);
                         assertThat(actualStatus2).isEqualTo("UPDATED");
+                        assertThat(actualPublished2).isNotNull();
                     });
 
             await().atMost(TEN_SECONDS)
@@ -395,12 +402,16 @@ public class PactTests {
                         assertThat(uuids).contains(designId);
                         String actualJson1 = rows.get(0).get("DESIGN_DATA", String.class);
                         String actualStatus1 = rows.get(0).get("DESIGN_STATUS", String.class);
+                        Instant actualPublished1 = rows.get(0).getInstant("EVENT_PUBLISHED") ;
                         assertThat(actualJson1).isEqualTo(JSON_1);
                         assertThat(actualStatus1).isEqualTo("CREATED");
+                        assertThat(actualPublished1).isNotNull();
                         String actualJson2 = rows.get(1).get("DESIGN_DATA", String.class);
                         String actualStatus2 = rows.get(1).get("DESIGN_STATUS", String.class);
+                        Instant actualPublished2 = rows.get(1).getInstant("EVENT_PUBLISHED") ;
                         assertThat(actualJson2).isNull();
                         assertThat(actualStatus2).isEqualTo("DELETED");
+                        assertThat(actualPublished2).isNotNull();
                     });
 
             await().atMost(TEN_SECONDS)

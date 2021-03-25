@@ -189,8 +189,46 @@ services:
         mode: host
     networks:
       - platform
+  minio:
+    restart: on-failure
+    image: minio/minio:latest
+    environment:
+      MINIO_ACCESS_KEY: admin
+      MINIO_SECRET_KEY: password
+    command:
+      - server
+      - /var/data
+    ports:
+      - target: 9000
+        published: 9000
+        protocol: tcp
+        mode: host
+    volumes:
+      - minio-data:/var/data
+    networks:
+      - platform
+#  minio-init:
+#    restart: on-failure
+#    image: minio/mc:latest
+#    depends_on:
+#      - minio
+#    environment:
+#      MINIO_ACCESS_KEY: admin
+#      MINIO_SECRET_KEY: password
+#    entrypoint: >
+#      /bin/sh -c "
+#      sleep 10;
+#      set -e
+#      mc config host add integration http://minio:9000 admin password;
+#      mc rm -r --force integration/tiles;
+#      mc mb integration/tiles;
+#      #mc policy download integration/tiles;
+#      exit 0;
+#      "
+#    networks:
+#      - platform
 volumes:
-  data:
+  minio-data:
 networks:
   platform:
     driver: bridge

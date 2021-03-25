@@ -15,6 +15,8 @@ export TEST="true"
 #mvn clean deploy -s settings.xml -Dnexus=true
 #popd
 
+export JAEGER_SERVICE_NAME=integration
+
 pushd services/frontend
 if [ "$BUILD" == "true" ]; then
   sh build.sh $REPOSITORY $VERSION
@@ -96,20 +98,20 @@ if [ "$TEST" == "true" ]; then
 fi
 popd
 
-#pushd services/designs-event-consumer
-#if [ "$BUILD" == "true" ]; then
-#  sh build.sh $REPOSITORY $VERSION
-#fi
-#if [ "$TEST" == "true" ]; then
-#  mvn clean verify -Dminikube=true
-#fi
-#popd
+pushd services/designs-event-consumer
+if [ "$BUILD" == "true" ]; then
+  sh build.sh $REPOSITORY $VERSION
+fi
+if [ "$TEST" == "true" ]; then
+  mvn clean verify -Dminikube=true
+fi
+popd
 
-#pushd services/designs-tile-renderer
-#if [ "$BUILD" == "true" ]; then
-#  sh build.sh $REPOSITORY $VERSION
-#fi
-#if [ "$TEST" == "true" ]; then
-#  mvn clean verify -Dminikube=true
-#fi
-#popd
+pushd services/designs-tile-renderer
+if [ "$BUILD" == "true" ]; then
+  sh build.sh $REPOSITORY $VERSION
+fi
+if [ "$TEST" == "true" ]; then
+  mvn clean verify -Dminikube=true
+fi
+popd

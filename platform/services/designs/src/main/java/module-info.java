@@ -15,7 +15,7 @@ module com.nextbreakpoint.blueprint.designs {
     requires com.fasterxml.jackson.databind;
     requires org.apache.logging.log4j;
     requires java.sql;
-    requires jdk.compiler;
     requires java.desktop;
+    requires jdk.compiler;
     opens com.nextbreakpoint.blueprint.designs.model to com.fasterxml.jackson.databind;
 }

@@ -29,6 +29,7 @@ public class Scenario {
     private String stubHost;
     private String mysqlHost;
     private String kafkaHost;
+    private String minioHost;
     private String consulHost;
     private String cassandraHost;
 
@@ -36,6 +37,7 @@ public class Scenario {
     private String stubPort;
     private String mysqlPort;
     private String kafkaPort;
+    private String minioPort;
     private String consulPort;
     private String cassandraPort;
 
@@ -77,6 +79,7 @@ public class Scenario {
         stubPort = TestUtils.getVariable("STUB_PORT", System.getProperty("stub.port", "9000"));
         mysqlPort = TestUtils.getVariable("MYSQL_PORT", System.getProperty("mysql.port", "3306"));
         kafkaPort = TestUtils.getVariable("KAFKA_PORT", System.getProperty("kafka.port", "9093"));
+        minioPort = TestUtils.getVariable("MINIO_PORT", System.getProperty("minio.port", "9000"));
         consulPort = TestUtils.getVariable("CONSUL_PORT", System.getProperty("consul.port", "8400"));
         cassandraPort = TestUtils.getVariable("CASSANDRA_PORT", System.getProperty("cassandra.port", "9042"));
 
@@ -91,6 +94,7 @@ public class Scenario {
             }
             mysqlHost = minikubeHost;
             kafkaHost = minikubeHost;
+            minioHost = minikubeHost;
             consulHost = minikubeHost;
             cassandraHost = minikubeHost;
         } else {
@@ -98,6 +102,7 @@ public class Scenario {
             stubHost = "localhost";
             mysqlHost = "localhost";
             kafkaHost = "localhost";
+            minioHost = "localhost";
             consulHost = "localhost";
             cassandraHost = "localhost";
         }
@@ -137,6 +142,12 @@ public class Scenario {
                 installKafka();
                 waitForKafka();
                 exposeKafka();
+            }
+
+            if (scenarioState.minio) {
+                installMinio();
+                waitForMinio();
+                exposeMinio();
             }
 
             if (scenarioState.consul) {
@@ -193,6 +204,10 @@ public class Scenario {
                 uninstallKafka();
             }
 
+            if (scenarioState.minio) {
+                uninstallMinio();
+            }
+
             if (scenarioState.consul) {
                 uninstallConsul();
             }
@@ -210,8 +225,9 @@ public class Scenario {
     private static class ScenarioState {
         public final boolean mysql;
         public final boolean cassandra;
-        public final boolean kafka;
         public final boolean zookeeper;
+        public final boolean kafka;
+        public final boolean minio;
         public final boolean consul;
         public final boolean kubernetes;
         public final boolean minikube;
@@ -229,8 +245,9 @@ public class Scenario {
         public ScenarioState(
                 boolean mysql,
                 boolean cassandra,
-                boolean kafka,
                 boolean zookeeper,
+                boolean kafka,
+                boolean minio,
                 boolean consul,
                 boolean kubernetes,
                 boolean minikube,
@@ -247,8 +264,9 @@ public class Scenario {
         ) {
             this.mysql = mysql;
             this.cassandra = cassandra;
-            this.kafka = kafka;
             this.zookeeper = zookeeper;
+            this.kafka = kafka;
+            this.minio = minio;
             this.consul = consul;
             this.kubernetes = kubernetes;
             this.minikube = minikube;
@@ -268,8 +286,9 @@ public class Scenario {
     public static class ScenarioBuilder {
         private boolean mysql;
         private boolean cassandra;
-        private boolean kafka;
         private boolean zookeeper;
+        private boolean kafka;
+        private boolean minio;
         private boolean consul;
         private boolean kubernetes;
         private boolean minikube;
@@ -296,13 +315,18 @@ public class Scenario {
             return this;
         }
 
+        public ScenarioBuilder withZookeeper() {
+            zookeeper = true;
+            return this;
+        }
+
         public ScenarioBuilder withKafka() {
             kafka = true;
             return this;
         }
 
-        public ScenarioBuilder withZookeeper() {
-            zookeeper = true;
+        public ScenarioBuilder withMinio() {
+            minio = true;
             return this;
         }
 
@@ -375,8 +399,9 @@ public class Scenario {
             return new Scenario(new ScenarioState(
                     mysql,
                     cassandra,
-                    kafka,
                     zookeeper,
+                    kafka,
+                    minio,
                     consul,
                     kubernetes,
                     minikube,
@@ -547,6 +572,44 @@ public class Scenario {
             throw new RuntimeException("Can't expose Kafka");
         }
         System.out.println("Kafka exposed");
+    }
+
+    private void installMinio() throws IOException, InterruptedException {
+        System.out.println("Installing Minio...");
+        final List<String> args = Arrays.asList("--set=replicas=1");
+        if (KubeUtils.installHelmChart(scenarioState.namespace, "integration-minio", scenarioState.helmPath + "/minio", args, true) != 0) {
+            if (KubeUtils.upgradeHelmChart(scenarioState.namespace, "integration-minio", scenarioState.helmPath + "/minio", args, true) != 0) {
+                throw new RuntimeException("Can't install or upgrade Helm chart");
+            }
+        }
+        System.out.println("Minio installed");
+    }
+
+    private void uninstallMinio() throws IOException, InterruptedException {
+        System.out.println("Uninstalling Minio...");
+        if (KubeUtils.uninstallHelmChart(scenarioState.namespace, "integration-minio") != 0) {
+            System.out.println("Can't uninstall Helm chart");
+        }
+        System.out.println("Minio uninstalled");
+    }
+
+    private void waitForMinio() {
+        awaitUntilCondition(30, 5, 5, () -> isMinioReady(scenarioState.namespace));
+    }
+
+    private static boolean isMinioReady(String namespace) throws IOException, InterruptedException {
+        String logs = KubeUtils.fetchLogs(namespace, "minio");
+        String[] lines = logs.split("\n");
+        boolean serverReady = Arrays.stream(lines).anyMatch(line -> line.contains("Object API (Amazon S3 compatible)"));
+        return serverReady;
+    }
+
+    private void exposeMinio() throws IOException, InterruptedException {
+        System.out.println("Exposing Minio...");
+        if (KubeUtils.exposeService(scenarioState.namespace, "minio", Integer.parseInt(minioPort), 9000) != 0) {
+            throw new RuntimeException("Can't expose Minio");
+        }
+        System.out.println("Minio exposed");
     }
 
     private void installCassandra() throws IOException, InterruptedException {
@@ -729,6 +792,10 @@ public class Scenario {
         return kafkaHost;
     }
 
+    public String getMinioHost() {
+        return minioHost;
+    }
+
     public String getConsulHost() {
         return consulHost;
     }
@@ -751,6 +818,10 @@ public class Scenario {
 
     public String getKafkaPort() {
         return kafkaPort;
+    }
+
+    public String getMinioPort() {
+        return minioPort;
     }
 
     public String getConsulPort() {

@@ -37,7 +37,7 @@ public class TestScenario {
             "--set=replicas=1",
             "--set=clientDomain=${serviceHost}",
             "--set=image.pullPolicy=Never",
-            "--set=image.repository=integration/designs-command-consumer",
+            "--set=image.repository=integration/designs-event-consumer",
             "--set=image.tag=${version}"
     );
 
@@ -45,12 +45,12 @@ public class TestScenario {
             .withNamespace("integration")
             .withVersion(version)
             .withTimestamp(System.currentTimeMillis())
-            .withServiceName("designs-command-consumer")
+            .withServiceName("designs-event-consumer")
             .withBuildImage(buildImages)
             .withSecretArgs(secretArgs)
             .withHelmPath("../../helm")
             .withHelmArgs(helmArgs)
-//            .withKubernetes()
+            .withKubernetes()
             .withMinikube()
             .withCassandra()
             .withZookeeper()

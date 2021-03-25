@@ -69,6 +69,14 @@ Check Consul:
 
     kubectl -n blueprint logs -f --tail=-1 -l app=consul
 
+Deploy Minio:
+
+    helm install integration-minio platform/helm/minio -n blueprint --set replicas=1
+
+Check Minio:
+
+    kubectl -n blueprint logs -f --tail=-1 -l app=minio
+
 Build services:
 
     ./build_services.sh
@@ -89,6 +97,8 @@ Deploy secrets for services:
     kubectl -n blueprint create secret generic designs-aggregate-fetcher --from-file keystore_server.jks=secrets/keystore_server.jks --from-file keystore_auth.jceks=secrets/keystore_auth.jceks --from-literal KEYSTORE_SECRET=secret --from-literal DATABASE_USERNAME=verticle --from-literal DATABASE_PASSWORD=password
     kubectl -n blueprint create secret generic designs-command-consumer --from-file keystore_server.jks=secrets/keystore_server.jks --from-file keystore_auth.jceks=secrets/keystore_auth.jceks --from-literal KEYSTORE_SECRET=secret --from-literal DATABASE_USERNAME=verticle --from-literal DATABASE_PASSWORD=password
     kubectl -n blueprint create secret generic designs-command-producer --from-file keystore_server.jks=secrets/keystore_server.jks --from-file keystore_auth.jceks=secrets/keystore_auth.jceks --from-literal KEYSTORE_SECRET=secret  
+    kubectl -n blueprint create secret generic designs-event-consumer --from-file keystore_server.jks=secrets/keystore_server.jks --from-file keystore_auth.jceks=secrets/keystore_auth.jceks --from-literal KEYSTORE_SECRET=secret --from-literal DATABASE_USERNAME=verticle --from-literal DATABASE_PASSWORD=password
+    kubectl -n blueprint create secret generic designs-tile-renderer --from-file keystore_server.jks=secrets/keystore_server.jks --from-file keystore_auth.jceks=secrets/keystore_auth.jceks --from-literal KEYSTORE_SECRET=secret --from-literal DATABASE_USERNAME=verticle --from-literal DATABASE_PASSWORD=password --from-literal AWS_ACCESS_KEY_ID=admin --from-literal AWS_SECRET_ACCESS_KEY=password
     kubectl -n blueprint create secret generic designs-notification-dispatcher --from-file keystore_server.jks=secrets/keystore_server.jks --from-file keystore_auth.jceks=secrets/keystore_auth.jceks --from-literal KEYSTORE_SECRET=secret  
 
     kubectl -n blueprint create secret generic gateway --from-file keystore_client.jks=secrets/keystore_client.jks --from-file truststore_client.jks=secrets/truststore_client.jks --from-file keystore_server.jks=secrets/keystore_server.jks --from-file keystore_auth.jceks=secrets/keystore_auth.jceks --from-literal KEYSTORE_SECRET=secret
@@ -103,6 +113,8 @@ Deploy services:
     helm install service-designs-aggregate-fetcher platform/services/designs-aggregate-fetcher/helm -n blueprint --set replicas=1,clientDomain=$(minikube ip)
     helm install service-designs-command-consumer platform/services/designs-command-consumer/helm -n blueprint --set replicas=1,clientDomain=$(minikube ip)
     helm install service-designs-command-producer platform/services/designs-command-producer/helm -n blueprint --set replicas=1,clientDomain=$(minikube ip)
+    helm install service-designs-event-consumer platform/services/designs-event-consumer/helm -n blueprint --set replicas=1,clientDomain=$(minikube ip)
+    helm install service-designs-tile-renderer platform/services/designs-tile-renderer/helm -n blueprint --set replicas=1,clientDomain=$(minikube ip)
     helm install service-designs-notification-dispatcher platform/services/designs-notification-dispatcher/helm -n blueprint --set replicas=1,clientDomain=$(minikube ip)
 
     helm install service-gateway platform/services/gateway/helm -n blueprint --set replicas=1,clientDomain=$(minikube ip)
@@ -117,6 +129,8 @@ Check services:
     kubectl -n blueprint logs -f --tail=-1 -l app=designs-aggregate-fetcher
     kubectl -n blueprint logs -f --tail=-1 -l app=designs-command-consumer
     kubectl -n blueprint logs -f --tail=-1 -l app=designs-command-producer
+    kubectl -n blueprint logs -f --tail=-1 -l app=designs-event-producer
+    kubectl -n blueprint logs -f --tail=-1 -l app=designs-tile-renderer
     kubectl -n blueprint logs -f --tail=-1 -l app=designs-notification-dispatcher
     kubectl -n blueprint logs -f --tail=-1 -l app=gateway
     kubectl -n blueprint logs -f --tail=-1 -l app=frontend
@@ -127,12 +141,16 @@ Forward ports:
 
     kubectl -n blueprint expose service/nginx --name nginx-external --port 443 --target-port 443 --type LoadBalancer --external-ip $(minikube ip)
 
+    kubectl -n blueprint expose service/minio --name minio-external --port 9000 --target-port 9000 --type LoadBalancer --external-ip $(minikube ip)
+
 Scale services:
 
     kubectl -n blueprint scale deployment authentication --replicas=2
     kubectl -n blueprint scale deployment accounts --replicas=2
     kubectl -n blueprint scale deployment designs --replicas=4
     kubectl -n blueprint scale deployment designs-command-producer --replicas=2
+    kubectl -n blueprint scale deployment designs-command-consumer --replicas=2
+    kubectl -n blueprint scale deployment designs-event-consumer --replicas=2
     kubectl -n blueprint scale deployment designs-aggregate-fetcher --replicas=4
     kubectl -n blueprint scale deployment frontend --replicas=2
     kubectl -n blueprint scale deployment gateway --replicas=2
@@ -148,3 +166,7 @@ export NEXUS_USERNAME=admin
 export NEXUS_PASSWORD=$(docker exec -it $(docker container ls -f name=platform_nexus -q) cat /nexus-data/admin.password)
 
 curl -u ${NEXUS_USERNAME}:${NEXUS_PASSWORD} -X POST "http://192.168.64.12:38081/service/rest/v1/repositories/maven/hosted" -H "accept: application/json" -H "Content-Type: application/json" -d "{ \"name\": \"maven-internal\", \"online\": true, \"storage\": { \"blobStoreName\": \"default\", \"strictContentTypeValidation\": true, \"writePolicy\": \"allow_once\" }, \"cleanup\": { \"policyNames\": [ \"string\" ] }, \"component\": { \"proprietaryComponents\": true }, \"maven\": { \"versionPolicy\": \"MIXED\", \"layoutPolicy\": \"STRICT\" }}"
+
+docker exec -it $(docker container ls -f name=platform_nexus -q) cat /nexus-data/admin.password
+
+docker run -it --network platform_platform -e MINIO_ACCESS_KEY=admin -e MINIO_SECRET_KEY=password --entrypoint sh minio/mc:latest -c "mc config host add integration http://minio:9000 admin password && mc rm -r --force integration/tiles && mc mb integration/tiles"

@@ -1,0 +1,70 @@
+{{- $fullname := include "service.fullname" . -}}
+  {{- $name := include "service.name" . -}}
+  {{- $chart := include "service.chart" . -}}
+  {{- $root := . }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $root.Values.name | default "minio" | quote }}
+  namespace: {{ $root.Release.Namespace | quote }}
+  labels:
+    app: {{ $root.Values.name | default "minio" | quote }}
+    chart: {{ $chart }}
+    release: {{ $root.Release.Name }}
+    heritage: {{ $root.Release.Service }}
+spec:
+  replicas: {{ $root.Values.replicas | default 0 }}
+  {{- if $root.Values.strategy }}
+  strategy:
+    {{ toYaml $root.Values.strategy | indent 4 | trim }}
+  {{- end}}
+  selector:
+    matchLabels:
+      app: {{ $root.Values.name | default "minio" | quote }}
+  template:
+    metadata:
+      {{- if $root.Values.annotations }}
+      annotations:
+        {{ toYaml $root.Values.annotations | indent 8 | trim }}
+      {{- end}}
+      labels:
+        app: {{ $root.Values.name | default "minio" | quote }}
+    spec:
+      serviceAccountName: {{ $root.Values.serviceAccount | default "minio" }}
+      {{- if $root.Values.image }}
+      {{- if $root.Values.image.pullSecrets }}
+      imagePullSecrets:
+        - name: {{ toYaml $root.Values.image.pullSecrets | indent 8 | trim }}
+      {{- end}}
+      {{- end}}
+      hostname: {{ $fullname }}
+      containers:
+        - name: {{ $root.Values.name | default "minio" | quote }}
+          image: "{{ $root.Values.image.registry }}{{ $root.Values.image.repository }}:{{ $root.Values.image.tag }}"
+          imagePullPolicy: {{ $root.Values.image.pullPolicy }}
+          command:
+            - sh
+          args:
+            - -c
+            - "mkdir -p /var/data && /usr/bin/minio server /var/data"
+          ports:
+            - name: http
+              containerPort: 9000
+              protocol: TCP
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: MINIO_ACCESS_KEY
+              value: "{{ $root.Values.credentials.accessKey }}"
+            - name: MINIO_SECRET_KEY
+              value: "{{ $root.Values.credentials.secretKey }}"
+          {{- if $root.Values.resources }}
+          resources:
+            {{ $root.Values.resources | toYaml | indent 12 | trim }}
+          {{- end}}

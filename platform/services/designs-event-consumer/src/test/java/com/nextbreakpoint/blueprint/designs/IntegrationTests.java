@@ -102,7 +102,7 @@ public class IntegrationTests {
     @Nested
     @Tag("slow")
     @Tag("integration")
-    @DisplayName("Verify behaviour of designs-command-consumer service")
+    @DisplayName("Verify behaviour of designs-event-consumer service")
     public class VerifyServiceApi {
         @AfterEach
         public void reset() {
@@ -110,8 +110,8 @@ public class IntegrationTests {
         }
 
         @Test
-        @DisplayName("Should insert a design after receiving a DesignInsert event")
-        public void shouldInsertDesignWhenReceivingAMessage() {
+        @DisplayName("Should create version, renders and tiles after receiving a design changed event")
+        public void shouldCreateVersionAndRendersAndTilesWhenReceivingAMessage() {
             final long eventTimestamp = System.currentTimeMillis();
 
             final UUID designId = UUID.randomUUID();

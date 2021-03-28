@@ -1,35 +1,29 @@
 package com.nextbreakpoint.blueprint.designs;
 
-import com.datastax.oss.driver.api.core.cql.PreparedStatement;
-import com.datastax.oss.driver.api.core.cql.Row;
 import com.jayway.restassured.RestAssured;
 import com.nextbreakpoint.blueprint.common.core.Environment;
 import com.nextbreakpoint.blueprint.common.core.Message;
 import com.nextbreakpoint.blueprint.common.core.MessageType;
 import com.nextbreakpoint.blueprint.common.test.KafkaUtils;
-import com.nextbreakpoint.blueprint.common.vertx.CassandraClientFactory;
 import com.nextbreakpoint.blueprint.designs.model.TileCompleted;
 import com.nextbreakpoint.blueprint.designs.model.TileCreated;
 import io.vertx.core.json.Json;
-import io.vertx.rxjava.cassandra.CassandraClient;
 import io.vertx.rxjava.core.Vertx;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.*;
-import rx.Single;
+import org.junit.jupiter.api.Tag;
 import software.amazon.awssdk.auth.credentials.*;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
+import software.amazon.awssdk.services.s3.model.*;
 
 import java.io.IOException;
 import java.net.URI;
 import java.time.Duration;
-import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -49,7 +43,6 @@ public class IntegrationTests {
     private static final List<ConsumerRecord<String, String>> records = new ArrayList<>();
     private static KafkaConsumer<String, String> consumer;
     private static KafkaProducer<String, String> producer;
-    private static CassandraClient session;
     private static Thread polling;
 
     @BeforeAll
@@ -57,8 +50,6 @@ public class IntegrationTests {
         scenario.before();
 
         final Vertx vertx = new Vertx(io.vertx.core.Vertx.vertx());
-
-        session = CassandraClientFactory.create(environment, vertx, scenario.createCassandraConfig());
 
         producer = KafkaUtils.createProducer(environment, scenario.createProducerConfig());
 
@@ -72,7 +63,12 @@ public class IntegrationTests {
 
         final S3Client s3Client = createS3Client();
 
-        s3Client.createBucket(CreateBucketRequest.builder().bucket("tiles").build());
+        final String bucket = "tiles";
+
+        s3Client.listObjectsV2Paginator(ListObjectsV2Request.builder().bucket(bucket).build())
+                .stream().forEach(response -> response.contents().forEach(object -> s3Client.deleteObject(DeleteObjectRequest.builder().bucket(bucket).key(object.key()).build())));
+        s3Client.deleteBucket(DeleteBucketRequest.builder().bucket(bucket).build());
+        s3Client.createBucket(CreateBucketRequest.builder().bucket(bucket).build());
     }
 
     @AfterAll
@@ -99,13 +95,6 @@ public class IntegrationTests {
             }
         }
 
-        if (session != null) {
-            try {
-                session.close();
-            } catch (Exception ignore) {
-            }
-        }
-
         scenario.after();
     }
 
@@ -122,12 +111,6 @@ public class IntegrationTests {
         @Test
         @DisplayName("Should render the tile's image after receiving a tile created event")
         public void shouldRenderImageWhenReceivingAMessage() {
-            session.rxPrepare("TRUNCATE TILE_ENTITY")
-                    .map(PreparedStatement::bind)
-                    .flatMap(session::rxExecute)
-                    .toBlocking()
-                    .value();
-
             final UUID versionId = UUID.randomUUID();
 
             final String checksum = UUID.randomUUID().toString();
@@ -136,16 +119,6 @@ public class IntegrationTests {
 
             final short x = (short) 0;
             final short y = (short) 0;
-
-            final Single<PreparedStatement> preparedStatementSingle = session.rxPrepare("INSERT INTO TILE_ENTITY (TILE_UUID, VERSION_UUID, TILE_LEVEL, TILE_ROW, TILE_COL, TILE_CREATED, TILE_UPDATED, TILE_PUBLISHED) VALUES (?,?,?,?,?,toTimeStamp(now()),toTimeStamp(now()),toTimeStamp(now()))");
-
-            final UUID tileId = UUID.randomUUID();
-
-            preparedStatementSingle
-                    .map(stmt -> stmt.bind(tileId, versionId, level, y, x))
-                    .flatMap(session::rxExecute)
-                    .toBlocking()
-                    .value();
 
             final TileCreated tileCreated = new TileCreated(versionId, JSON_1, checksum, level, x, y);
 
@@ -157,47 +130,10 @@ public class IntegrationTests {
 
             producer.send(createKafkaRecord(tileCreatedMessage));
 
-            UUID actualTileId = assertTileCompleted(versionId, level, x ,y);
-
-            assertThat(actualTileId).isEqualTo(tileId);
+            assertTileCompleted(versionId, level, x ,y);
         }
 
-        @NotNull
-        private UUID assertTileCompleted(UUID versionId, short level, short x, short y) {
-            await().atMost(Duration.of(30L, ChronoUnit.SECONDS))
-                    .pollInterval(ONE_SECOND)
-                    .untilAsserted(() -> {
-                        final List<Row> rows = session.rxPrepare("SELECT * FROM TILE_ENTITY WHERE VERSION_UUID = ? AND TILE_LEVEL = ? AND TILE_ROW = ? AND TILE_COL = ?")
-                                .map(stmt -> stmt.bind(versionId, level, y, x))
-                                .flatMap(session::rxExecuteWithFullFetch)
-                                .toBlocking()
-                                .value();
-                        assertThat(rows).hasSize(1);
-                        rows.forEach(row -> {
-                            UUID actualUuid = row.getUuid("VERSION_UUID");
-                            Instant actualCreated = row.getInstant("TILE_CREATED");
-                            Instant actualUpdated = row.getInstant("TILE_UPDATED");
-                            Instant actualPublished = row.getInstant("TILE_PUBLISHED");
-                            Instant actualCompleted = row.getInstant("TILE_COMPLETED");
-                            assertThat(actualUuid).isNotNull();
-                            assertThat(actualCreated).isNotNull();
-                            assertThat(actualUpdated).isNotNull();
-                            assertThat(actualPublished).isNotNull();
-                            assertThat(actualCompleted).isNotNull();
-                        });
-                    });
-
-            final List<Row> versions = session.rxPrepare("SELECT * FROM TILE_ENTITY WHERE VERSION_UUID = ? AND TILE_LEVEL = ? AND TILE_ROW = ? AND TILE_COL = ?")
-                    .map(stmt -> stmt.bind(versionId, level, y, x))
-                    .flatMap(session::rxExecuteWithFullFetch)
-                    .toBlocking()
-                    .value();
-
-            assertThat(versions).hasSize(1);
-
-            UUID tileId = versions.get(0).getUuid("TILE_UUID");
-            assertThat(tileId).isNotNull();
-
+        private void assertTileCompleted(UUID versionId, short level, short x, short y) {
             await().atMost(Duration.of(30L, ChronoUnit.SECONDS))
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
@@ -218,8 +154,6 @@ public class IntegrationTests {
                         assertThat(actualEvent.getX()).isEqualTo(x);
                         assertThat(actualEvent.getY()).isEqualTo(y);
                     });
-
-            return tileId;
         }
     }
 

@@ -13,6 +13,7 @@ public class TileDocument {
     private final Short y;
     private final String created;
     private final String updated;
+    private final String completed;
 
     @JsonCreator
     public TileDocument(
@@ -22,7 +23,8 @@ public class TileDocument {
             @JsonProperty("x") Short x,
             @JsonProperty("y") Short y,
             @JsonProperty("created") String created,
-            @JsonProperty("updated") String updated
+            @JsonProperty("updated") String updated,
+            @JsonProperty("completed") String completed
     ) {
         this.uuid = Objects.requireNonNull(uuid);
         this.version = Objects.requireNonNull(version);
@@ -31,6 +33,7 @@ public class TileDocument {
         this.y = Objects.requireNonNull(y);
         this.created = Objects.requireNonNull(created);
         this.updated = updated;
+        this.completed = completed;
     }
 
     public String getUuid() {
@@ -61,17 +64,21 @@ public class TileDocument {
         return updated;
     }
 
+    public String getCompleted() {
+        return completed;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         TileDocument that = (TileDocument) o;
-        return Objects.equals(getUuid(), that.getUuid()) && Objects.equals(getVersion(), that.getVersion()) && Objects.equals(getLevel(), that.getLevel()) && Objects.equals(getX(), that.getX()) && Objects.equals(getY(), that.getY()) && Objects.equals(getCreated(), that.getCreated()) && Objects.equals(getUpdated(), that.getUpdated());
+        return Objects.equals(getUuid(), that.getUuid()) && Objects.equals(getVersion(), that.getVersion()) && Objects.equals(getLevel(), that.getLevel()) && Objects.equals(getX(), that.getX()) && Objects.equals(getY(), that.getY()) && Objects.equals(getCreated(), that.getCreated()) && Objects.equals(getUpdated(), that.getUpdated()) && Objects.equals(getCompleted(), that.getCompleted());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getUuid(), getVersion(), getLevel(), getX(), getY(), getCreated(), getUpdated());
+        return Objects.hash(getUuid(), getVersion(), getLevel(), getX(), getY(), getCreated(), getUpdated(), getCompleted());
     }
 
     @Override
@@ -84,6 +91,7 @@ public class TileDocument {
                 ", y=" + y +
                 ", created='" + created + '\'' +
                 ", updated='" + updated + '\'' +
+                ", completed='" + completed + '\'' +
                 '}';
     }
 }

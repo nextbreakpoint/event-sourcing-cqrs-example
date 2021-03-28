@@ -7,6 +7,8 @@ import com.nextbreakpoint.blueprint.designs.operations.design.DesignChangeInputM
 import com.nextbreakpoint.blueprint.designs.operations.design.DesignChangedController;
 import com.nextbreakpoint.blueprint.designs.operations.render.RenderCreatedController;
 import com.nextbreakpoint.blueprint.designs.operations.render.RenderCreatedInputMapper;
+import com.nextbreakpoint.blueprint.designs.operations.tile.TileCompletedController;
+import com.nextbreakpoint.blueprint.designs.operations.tile.TileCompletedInputMapper;
 import com.nextbreakpoint.blueprint.designs.operations.version.VersionCreatedController;
 import com.nextbreakpoint.blueprint.designs.operations.version.VersionCreatedInputMapper;
 import io.vertx.core.Handler;
@@ -40,6 +42,16 @@ public class Factory {
         return TemplateHandler.<RecordAndMessage, RenderCreated, ControllerResult, JsonObject>builder()
                 .withInputMapper(new RenderCreatedInputMapper())
                 .withController(new RenderCreatedController(store, topic, producer, new TileCreatedMessageMapper(messageSource)))
+                .withOutputMapper(event -> new JsonObject())
+                .onSuccess(new MessaggeSuccessConsumer())
+                .onFailure(new MessaggeFailureConsumer())
+                .build();
+    }
+
+    public static Handler<RecordAndMessage> createTileCompletedHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
+        return TemplateHandler.<RecordAndMessage, TileCompleted, ControllerResult, JsonObject>builder()
+                .withInputMapper(new TileCompletedInputMapper())
+                .withController(new TileCompletedController(store, topic, producer, new RenderCompletedMessageMapper(messageSource)))
                 .withOutputMapper(event -> new JsonObject())
                 .onSuccess(new MessaggeSuccessConsumer())
                 .onFailure(new MessaggeFailureConsumer())

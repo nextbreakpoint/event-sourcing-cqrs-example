@@ -28,10 +28,6 @@ public class TestScenario {
             "--from-literal",
             "KEYSTORE_SECRET=secret",
             "--from-literal",
-            "DATABASE_USERNAME=verticle",
-            "--from-literal",
-            "DATABASE_PASSWORD=password",
-            "--from-literal",
             "AWS_ACCESS_KEY_ID=admin",
             "--from-literal",
             "AWS_SECRET_ACCESS_KEY=password"
@@ -54,9 +50,8 @@ public class TestScenario {
             .withSecretArgs(secretArgs)
             .withHelmPath("../../helm")
             .withHelmArgs(helmArgs)
-//            .withKubernetes()
+            .withKubernetes()
             .withMinikube()
-            .withCassandra()
             .withZookeeper()
             .withKafka()
             .withMinio()
@@ -98,10 +93,6 @@ public class TestScenario {
 
   public String makeAuthorization(String user, String role) {
     return VertxUtils.makeAuthorization(user, Collections.singletonList(role), "../../secrets/keystore_auth.jceks");
-  }
-
-  public JsonObject createCassandraConfig() {
-    return scenario.createCassandraConfig("datacenter1", "designs");
   }
 
   public JsonObject createConsumerConfig(String group) {

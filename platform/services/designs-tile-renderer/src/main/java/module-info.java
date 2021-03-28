@@ -8,14 +8,11 @@ module com.nextbreakpoint.blueprint.designstilerender {
     requires io.vertx.web.openapi;
     requires io.vertx.metrics.micrometer;
     requires io.vertx.tracing.opentracing;
-    requires io.vertx.client.cassandra;
     requires vertx.rx.java;
     requires rxjava;
     requires com.fasterxml.jackson.core;
     requires com.fasterxml.jackson.databind;
     requires org.apache.logging.log4j;
-    requires com.datastax.oss.driver.core;
-    requires java.sql;
     requires java.desktop;
     requires jdk.compiler;
     requires software.amazon.awssdk.core;
@@ -23,4 +20,5 @@ module com.nextbreakpoint.blueprint.designstilerender {
     requires software.amazon.awssdk.regions;
     requires software.amazon.awssdk.services.s3;
     opens com.nextbreakpoint.blueprint.designs.model to com.fasterxml.jackson.databind;
+    exports com.nextbreakpoint.blueprint.designs to com.fasterxml.jackson.databind;
 }

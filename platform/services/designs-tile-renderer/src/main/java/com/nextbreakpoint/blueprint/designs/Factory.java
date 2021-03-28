@@ -18,10 +18,10 @@ import software.amazon.awssdk.services.s3.S3AsyncClient;
 public class Factory {
     private Factory() {}
 
-    public static Handler<RecordAndMessage> createTileCreatedHandler(Store store, WorkerExecutor executor, S3AsyncClient s3AsyncClient, String bucket, String topic, KafkaProducer<String, String> producer, String messageSource) {
+    public static Handler<RecordAndMessage> createTileCreatedHandler(WorkerExecutor executor, S3AsyncClient s3AsyncClient, String bucket, String topic, KafkaProducer<String, String> producer, String messageSource) {
         return TemplateHandler.<RecordAndMessage, TileCreated, ControllerResult, JsonObject>builder()
                 .withInputMapper(new TileCreatedInputMapper())
-                .withController(new TileCreatedController(store, executor, s3AsyncClient, bucket, topic, producer, new TileCompletedMessageMapper(messageSource)))
+                .withController(new TileCreatedController(executor, s3AsyncClient, bucket, topic, producer, new TileCompletedMessageMapper(messageSource)))
                 .withOutputMapper(event -> new JsonObject())
                 .onSuccess(new MessaggeSuccessConsumer())
                 .onFailure(new MessaggeFailureConsumer())

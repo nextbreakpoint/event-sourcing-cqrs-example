@@ -51,9 +51,7 @@ public class RenderCreatedController implements Controller<RenderCreated, Contro
                 .flatMap(result -> {
                     if (result.getValue().isEmpty()) {
                         return Single.just(createTile(event, header.getX(), header.getY()))
-                                .flatMap(tile -> store.insertTile(tile)
-                                        .flatMap(versionResult -> publishRecordOrFailQuietly(tile))
-                                );
+                                .flatMap(tile -> store.insertTile(tile).flatMap(versionResult -> publishRecordOrFailQuietly(tile)));
                     }
                     return Single.just(new ControllerResult());
                 })
@@ -62,10 +60,11 @@ public class RenderCreatedController implements Controller<RenderCreated, Contro
     }
 
     private List<TileHeader> createTileHeaders(short level) {
-        return IntStream.range(0, 2 ^ level)
+        final int size = (int) Math.rint(Math.pow(2, level));
+        return IntStream.range(0, size)
                     .mapToObj(x -> (short) x)
                     .flatMap(x ->
-                            IntStream.range(0, 2 ^ level)
+                            IntStream.range(0, size)
                                     .mapToObj(y -> (short) y)
                                     .map(y -> new TileHeader(level, x, y))
                     )

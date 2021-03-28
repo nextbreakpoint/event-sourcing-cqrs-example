@@ -6,7 +6,6 @@ import com.nextbreakpoint.blueprint.common.core.Message;
 import com.nextbreakpoint.blueprint.common.core.MessageType;
 import com.nextbreakpoint.blueprint.common.vertx.*;
 import com.nextbreakpoint.blueprint.designs.model.RecordAndMessage;
-import com.nextbreakpoint.blueprint.designs.persistence.CassandraStore;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Handler;
 import io.vertx.core.VertxOptions;
@@ -40,7 +39,6 @@ import rx.Completable;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProviderChain;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
-import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3AsyncClient;
 
@@ -131,8 +129,6 @@ public class Verticle extends AbstractVerticle {
 
             final Supplier<CassandraClient> supplier = () -> CassandraClientFactory.create(environment, vertx, config);
 
-            final Store store = new CassandraStore(supplier);
-
             final AwsCredentialsProvider credentialsProvider = AwsCredentialsProviderChain.of(DefaultCredentialsProvider.create());
 
             final S3AsyncClient s3AsyncClient = S3AsyncClient.builder()
@@ -147,7 +143,7 @@ public class Verticle extends AbstractVerticle {
 
             final Map<String, Handler<RecordAndMessage>> eventHandlers = new HashMap<>();
 
-            eventHandlers.put(MessageType.DESIGN_TILE_CREATED, createTileCreatedHandler(store, workerExecutor, s3AsyncClient, imageBucket, eventTopic, producer, messageSource));
+            eventHandlers.put(MessageType.DESIGN_TILE_CREATED, createTileCreatedHandler(workerExecutor, s3AsyncClient, imageBucket, eventTopic, producer, messageSource));
 
             eventConsumer.handler(record -> processRecord(eventHandlers, record))
                     .rxSubscribe(eventTopic)

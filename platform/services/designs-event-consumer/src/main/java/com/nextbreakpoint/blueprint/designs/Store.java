@@ -3,6 +3,7 @@ package com.nextbreakpoint.blueprint.designs;
 import com.nextbreakpoint.blueprint.designs.model.*;
 import rx.Single;
 
+import java.util.List;
 import java.util.UUID;
 
 public interface Store {
@@ -25,4 +26,10 @@ public interface Store {
     Single<PersistenceResult<Void>> publishRender(UUID uuid, UUID version, short level);
 
     Single<PersistenceResult<Void>> publishTile(UUID uuid, UUID version, short level, short x, short y);
+
+    Single<PersistenceResult<Void>> completeRender(UUID uuid, UUID uuid1, short level);
+
+    Single<PersistenceResult<Void>> completeTile(UUID uuid, UUID version, short level, short x, short y);
+
+    Single<List<TileDocument>> selectTiles(UUID uuid, short level);
 }

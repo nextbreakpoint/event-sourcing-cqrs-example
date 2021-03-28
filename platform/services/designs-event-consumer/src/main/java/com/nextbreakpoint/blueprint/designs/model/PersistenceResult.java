@@ -1,6 +1,5 @@
 package com.nextbreakpoint.blueprint.designs.model;
 
-import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 

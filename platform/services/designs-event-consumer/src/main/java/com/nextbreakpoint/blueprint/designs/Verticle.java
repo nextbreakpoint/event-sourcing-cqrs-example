@@ -130,6 +130,7 @@ public class Verticle extends AbstractVerticle {
             eventHandlers.put(MessageType.DESIGN_CHANGED, createDesignChangedHandler(store, eventTopic, producer, messageSource));
             eventHandlers.put(MessageType.DESIGN_VERSION_CREATED, createVersionCreatedHandler(store, eventTopic, producer, messageSource));
             eventHandlers.put(MessageType.DESIGN_RENDER_CREATED, createRenderCreatedHandler(store, eventTopic, producer, messageSource));
+            eventHandlers.put(MessageType.DESIGN_TILE_COMPLETED, createTileCompletedHandler(store, eventTopic, producer, messageSource));
 
             eventConsumer.handler(record -> processRecord(eventHandlers, record))
                     .rxSubscribe(eventTopic)

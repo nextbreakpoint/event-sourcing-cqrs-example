@@ -35,15 +35,16 @@ public abstract class AbstractController<T extends Command> implements Controlle
 
     @Override
     public Single<ControllerResult> onNext(T command) {
-        return executeCommand(command, Uuids.timeBased())
+        final UUID eventTimestamp = Uuids.timeBased();
+        return executeCommand(command, eventTimestamp)
                 .doOnError(err -> logger.error("Can't insert design", err))
-                .flatMap(this::updateAggregateOrFailQuietly);
+                .flatMap(result -> updateAggregateOrFailQuietly(result, eventTimestamp));
     }
 
-    private Single<ControllerResult> updateAggregateOrFailQuietly(PersistenceResult<Void> result) {
-        return store.updateAggregate(result.getUuid(), result.getEventTimestamp())
+    private Single<ControllerResult> updateAggregateOrFailQuietly(PersistenceResult<Void> result, UUID eventTimestamp) {
+        return store.updateDesignAggregate(result.getUuid(), eventTimestamp)
                 .doOnError(err -> logger.error("Can't update aggregate. The operation will be retried later", err))
-                .flatMap(aggregateResult -> publishRecordOrFailQuietly(aggregateResult.getUuid(), aggregateResult.getEventTimestamp(), aggregateResult.getValue().orElseThrow()))
+                .flatMap(aggregateResult -> publishRecordOrFailQuietly(aggregateResult.getUuid(), eventTimestamp, aggregateResult.getValue().orElseThrow()))
                 .onErrorReturn(ControllerResult::new);
     }
 
@@ -74,7 +75,7 @@ public abstract class AbstractController<T extends Command> implements Controlle
     }
 
     private Single<PersistenceResult<Void>> onRecordSent(UUID uuid, UUID eventTimestamp) {
-        return store.publishEvent(uuid, eventTimestamp);
+        return store.publishDesign(uuid, eventTimestamp);
     }
 
     private DesignChanged createEvent(DesignChange change) {

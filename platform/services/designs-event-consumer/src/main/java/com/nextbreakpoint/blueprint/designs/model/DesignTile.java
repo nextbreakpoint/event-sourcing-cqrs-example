@@ -1,50 +1,61 @@
 package com.nextbreakpoint.blueprint.designs.model;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import java.util.Objects;
-import java.util.UUID;
 
 public class DesignTile {
-    private final UUID uuid;
-    private final Short level;
-    private final Short x;
-    private final Short y;
-    private final DesignVersion version;
+    private final String checksum;
+    private final short level;
+    private final short x;
+    private final short y;
 
-    @JsonCreator
     public DesignTile(
-            @JsonProperty("uuid") UUID uuid,
-            @JsonProperty("level") Short level,
-            @JsonProperty("level") Short x,
-            @JsonProperty("level") Short y,
-            @JsonProperty("version") DesignVersion version
+        String checksum,
+        short level,
+        short x,
+        short y
     ) {
-        this.uuid = Objects.requireNonNull(uuid);
-        this.level = Objects.requireNonNull(level);
-        this.x = Objects.requireNonNull(x);
-        this.y = Objects.requireNonNull(y);
-        this.version = Objects.requireNonNull(version);
+        this.checksum = Objects.requireNonNull(checksum);
+        this.level = level;
+        this.x = x;
+        this.y = y;
     }
 
-    public UUID getUuid() {
-        return uuid;
+    public String getChecksum() {
+        return checksum;
     }
 
-    public Short getLevel() {
+    public short getLevel() {
         return level;
     }
 
-    public Short getX() {
+    public short getX() {
         return x;
     }
 
-    public Short getY() {
+    public short getY() {
         return y;
     }
 
-    public DesignVersion getVersion() {
-        return version;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        DesignTile that = (DesignTile) o;
+        return getLevel() == that.getLevel() && getX() == that.getX() && getY() == that.getY() && Objects.equals(getChecksum(), that.getChecksum());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getChecksum(), getLevel(), getX(), getY());
+    }
+
+    @Override
+    public String toString() {
+        return "DesignTile{" +
+                "checksum='" + checksum + '\'' +
+                ", level=" + level +
+                ", x=" + x +
+                ", y=" + y +
+                '}';
     }
 }

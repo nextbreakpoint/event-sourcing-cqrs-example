@@ -6,8 +6,8 @@ import com.nextbreakpoint.blueprint.designs.common.MessaggeFailureConsumer;
 import com.nextbreakpoint.blueprint.designs.common.MessaggeSuccessConsumer;
 import com.nextbreakpoint.blueprint.designs.model.ControllerResult;
 import com.nextbreakpoint.blueprint.designs.model.TileCreated;
-import com.nextbreakpoint.blueprint.designs.operations.TileCreatedInputMapper;
-import com.nextbreakpoint.blueprint.designs.operations.TileCreatedController;
+import com.nextbreakpoint.blueprint.designs.operations.CreateTileInputMapper;
+import com.nextbreakpoint.blueprint.designs.operations.CreateTileController;
 import com.nextbreakpoint.blueprint.designs.model.RecordAndMessage;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
@@ -20,9 +20,9 @@ public class Factory {
 
     public static Handler<RecordAndMessage> createTileCreatedHandler(WorkerExecutor executor, S3AsyncClient s3AsyncClient, String bucket, String topic, KafkaProducer<String, String> producer, String messageSource) {
         return TemplateHandler.<RecordAndMessage, TileCreated, ControllerResult, JsonObject>builder()
-                .withInputMapper(new TileCreatedInputMapper())
-                .withController(new TileCreatedController(executor, s3AsyncClient, bucket, topic, producer, new TileCompletedMessageMapper(messageSource)))
-                .withOutputMapper(event -> new JsonObject())
+                .withInputMapper(new CreateTileInputMapper())
+                .withController(new CreateTileController(executor, s3AsyncClient, bucket, topic, producer, new TileCompletedMessageMapper(messageSource)))
+                .withOutputMapper(result -> new JsonObject())
                 .onSuccess(new MessaggeSuccessConsumer())
                 .onFailure(new MessaggeFailureConsumer())
                 .build();

@@ -13,14 +13,14 @@ public class UpdateDesignInputMapper implements Mapper<RecordAndMessage, UpdateD
 
     @Override
     public UpdateDesignCommand transform(RecordAndMessage input) {
-        if (!input.getMessage().getMessageType().equals(MessageType.DESIGN_UPDATE)) {
-            throw new IllegalArgumentException("message type must be " + MessageType.DESIGN_UPDATE);
+        if (!input.getMessage().getMessageType().equals(MessageType.DESIGN_UPDATE_REQUESTED)) {
+            throw new IllegalArgumentException("message type must be " + MessageType.DESIGN_UPDATE_REQUESTED);
         }
         try {
             return Json.decodeValue(input.getMessage().getMessageBody(), UpdateDesignCommand.class);
         } catch (DecodeException e) {
             logger.warn("Cannot decode message body: " + input.getMessage().getMessageBody(), e);
-            throw new IllegalArgumentException("message body cannot be decoded");
+            throw new IllegalArgumentException("Message body cannot be decoded");
         }
     }
 }

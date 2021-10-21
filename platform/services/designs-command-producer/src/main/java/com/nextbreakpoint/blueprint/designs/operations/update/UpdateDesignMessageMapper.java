@@ -17,6 +17,6 @@ public class UpdateDesignMessageMapper implements Mapper<UpdateDesignCommand, Me
 
     @Override
     public Message transform(UpdateDesignCommand command) {
-        return new Message(UUID.randomUUID().toString(), MessageType.DESIGN_UPDATE, Json.encode(command), messageSource, command.getUuid().toString(), System.currentTimeMillis());
+        return new Message(UUID.randomUUID().toString(), MessageType.DESIGN_UPDATE_REQUESTED, Json.encode(command), messageSource, command.getUuid().toString(), System.currentTimeMillis());
     }
 }

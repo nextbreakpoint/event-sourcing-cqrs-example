@@ -13,14 +13,14 @@ public class DeleteDesignInputMapper implements Mapper<RecordAndMessage, DeleteD
 
     @Override
     public DeleteDesignCommand transform(RecordAndMessage input) {
-        if (!input.getMessage().getMessageType().equals(MessageType.DESIGN_DELETE)) {
-            throw new IllegalArgumentException("message type must be " + MessageType.DESIGN_DELETE);
+        if (!input.getMessage().getMessageType().equals(MessageType.DESIGN_DELETE_REQUESTED)) {
+            throw new IllegalArgumentException("Unexpected message type: " + input.getMessage().getMessageType());
         }
         try {
             return Json.decodeValue(input.getMessage().getMessageBody(), DeleteDesignCommand.class);
         } catch (DecodeException e) {
             logger.warn("Cannot decode message body: " + input.getMessage().getMessageBody(), e);
-            throw new IllegalArgumentException("message body cannot be decoded");
+            throw new IllegalArgumentException("Message body cannot be decoded");
         }
     }
 }

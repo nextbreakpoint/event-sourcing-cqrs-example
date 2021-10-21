@@ -23,6 +23,6 @@ public class UpdateDesignController extends AbstractController<UpdateDesignComma
     @Override
     protected Single<PersistenceResult<Void>> executeCommand(UpdateDesignCommand command, UUID eventTimestamp) {
         logger.info("Processing update command: " + command.getUuid() + ":" + eventTimestamp);
-        return store.appendUpdateDesignEvent(command.getUuid(), eventTimestamp, command.getJson());
+        return store.updateDesign(command.getUuid(), eventTimestamp, command.getJson());
     }
 }

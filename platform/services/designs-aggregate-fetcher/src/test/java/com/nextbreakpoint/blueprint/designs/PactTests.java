@@ -87,7 +87,7 @@ public class PactTests {
 
     @State("there are some designs")
     public void designsExist() {
-      session.rxPrepare("TRUNCATE DESIGN_ENTITY")
+      session.rxPrepare("TRUNCATE DESIGN")
               .map(PreparedStatement::bind)
               .flatMap(session::rxExecute)
               .toBlocking()
@@ -96,7 +96,7 @@ public class PactTests {
       final String json1 = new JsonObject(createPostData(MANIFEST, METADATA, SCRIPT1)).toString();
       final String json2 = new JsonObject(createPostData(MANIFEST, METADATA, SCRIPT2)).toString();
 
-      final Single<PreparedStatement> preparedStatementSingle = session.rxPrepare("INSERT INTO DESIGN_ENTITY (DESIGN_UUID, DESIGN_DATA, DESIGN_CHECKSUM, DESIGN_CREATED, DESIGN_UPDATED) VALUES (?,?,?,toTimeStamp(now()),toTimeStamp(now()))");
+      final Single<PreparedStatement> preparedStatementSingle = session.rxPrepare("INSERT INTO DESIGN (DESIGN_UUID, DESIGN_DATA, DESIGN_CHECKSUM, DESIGN_CREATED, DESIGN_UPDATED) VALUES (?,?,?,toTimeStamp(now()),toTimeStamp(now()))");
 
       preparedStatementSingle
               .map(stmt -> stmt.bind(DESIGN_UUID_1, json1, "1"))
@@ -113,7 +113,7 @@ public class PactTests {
 
     @State("design exists for uuid")
     public void designExistsForUuid() {
-      session.rxPrepare("TRUNCATE DESIGN_ENTITY")
+      session.rxPrepare("TRUNCATE DESIGN")
               .map(PreparedStatement::bind)
               .flatMap(session::rxExecute)
               .toBlocking()
@@ -121,7 +121,7 @@ public class PactTests {
 
       final String json1 = new JsonObject(createPostData(MANIFEST, METADATA, SCRIPT1)).toString();
 
-      final Single<PreparedStatement> preparedStatementSingle = session.rxPrepare("INSERT INTO DESIGN_ENTITY (DESIGN_UUID, DESIGN_DATA, DESIGN_CHECKSUM, DESIGN_CREATED, DESIGN_UPDATED) VALUES (?,?,?,toTimeStamp(now()),toTimeStamp(now()))");
+      final Single<PreparedStatement> preparedStatementSingle = session.rxPrepare("INSERT INTO DESIGN (DESIGN_UUID, DESIGN_DATA, DESIGN_CHECKSUM, DESIGN_CREATED, DESIGN_UPDATED) VALUES (?,?,?,toTimeStamp(now()),toTimeStamp(now()))");
 
       preparedStatementSingle
               .map(stmt -> stmt.bind(DESIGN_UUID_1, json1, "1"))

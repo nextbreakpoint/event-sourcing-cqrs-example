@@ -5,7 +5,6 @@ import com.nextbreakpoint.blueprint.common.core.IOUtils;
 import com.nextbreakpoint.blueprint.common.core.Message;
 import com.nextbreakpoint.blueprint.common.core.MessageType;
 import com.nextbreakpoint.blueprint.common.vertx.*;
-import com.nextbreakpoint.blueprint.designs.model.RecordAndMessage;
 import com.nextbreakpoint.blueprint.designs.persistence.CassandraStore;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Handler;
@@ -18,13 +17,13 @@ import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.handler.LoggerFormat;
 import io.vertx.ext.web.openapi.RouterBuilder;
+import io.vertx.kafka.client.common.TopicPartition;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.VertxPrometheusOptions;
 import io.vertx.rxjava.cassandra.CassandraClient;
 import io.vertx.rxjava.core.AbstractVerticle;
 import io.vertx.rxjava.core.Promise;
 import io.vertx.rxjava.core.Vertx;
-import io.vertx.rxjava.ext.auth.jwt.JWTAuth;
 import io.vertx.rxjava.ext.web.Router;
 import io.vertx.rxjava.ext.web.RoutingContext;
 import io.vertx.rxjava.ext.web.handler.BodyHandler;
@@ -33,16 +32,22 @@ import io.vertx.rxjava.ext.web.handler.LoggerHandler;
 import io.vertx.rxjava.ext.web.handler.TimeoutHandler;
 import io.vertx.rxjava.kafka.client.consumer.KafkaConsumer;
 import io.vertx.rxjava.kafka.client.consumer.KafkaConsumerRecord;
+import io.vertx.rxjava.kafka.client.consumer.KafkaConsumerRecords;
 import io.vertx.rxjava.kafka.client.producer.KafkaProducer;
 import io.vertx.tracing.opentracing.OpenTracingOptions;
 import rx.Completable;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.URL;
+import java.time.Duration;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 import static com.nextbreakpoint.blueprint.common.core.Headers.*;
@@ -105,13 +110,9 @@ public class Verticle extends AbstractVerticle {
 
             final String originPattern = environment.resolve(config.getString("origin_pattern"));
 
-            final String keyspace = environment.resolve(config.getString("cassandra_keyspace"));
-
             final String eventTopic = environment.resolve(config.getString("design_event_topic"));
 
             final String messageSource = environment.resolve(config.getString("message_source"));
-
-            final JWTAuth jwtProvider = JWTProviderFactory.create(environment, vertx, config);
 
             final KafkaProducer<String, String> producer = KafkaClientFactory.createProducer(environment, vertx, config);
 
@@ -125,21 +126,27 @@ public class Verticle extends AbstractVerticle {
 
             final CorsHandler corsHandler = CorsHandlerFactory.createWithAll(originPattern, asList(AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN), asList(CONTENT_TYPE, X_XSRF_TOKEN));
 
-            final Map<String, Handler<RecordAndMessage>> eventHandlers = new HashMap<>();
+            final Map<String, EventHandler<RecordAndMessage>> eventHandlers = new HashMap<>();
 
-            eventHandlers.put(MessageType.DESIGN_CHANGED, createDesignChangedHandler(store, eventTopic, producer, messageSource));
-            eventHandlers.put(MessageType.DESIGN_VERSION_CREATED, createVersionCreatedHandler(store, eventTopic, producer, messageSource));
-            eventHandlers.put(MessageType.DESIGN_RENDER_CREATED, createRenderCreatedHandler(store, eventTopic, producer, messageSource));
-            eventHandlers.put(MessageType.DESIGN_TILE_COMPLETED, createTileCompletedHandler(store, eventTopic, producer, messageSource));
+            eventHandlers.put(MessageType.DESIGN_INSERT_REQUESTED, createDesignInsertRequestedHandler(store, eventTopic, producer, messageSource));
+            eventHandlers.put(MessageType.DESIGN_UPDATE_REQUESTED, createDesignUpdateRequestedHandler(store, eventTopic, producer, messageSource));
+            eventHandlers.put(MessageType.DESIGN_DELETE_REQUESTED, createDesignDeleteRequestedHandler(store, eventTopic, producer, messageSource));
 
-            eventConsumer.handler(record -> processRecord(eventHandlers, record))
-                    .rxSubscribe(eventTopic)
-                    .doOnError(this::handleError)
-                    .subscribe();
+            eventHandlers.put(MessageType.AGGREGATE_UPDATE_REQUESTED, createAggregateUpdateRequestedHandler(store, eventTopic, producer, messageSource));
+
+            eventHandlers.put(MessageType.TILE_RENDER_COMPLETED, createTileRenderCompletedHandler(store, eventTopic, producer, messageSource));
+
+            pollRecords(eventTopic, eventConsumer, eventHandlers);
 
             final Handler<RoutingContext> openapiHandler = new OpenApiHandler(vertx.getDelegate(), executor, "openapi.yaml");
 
-            final String url = RouterBuilder.class.getClassLoader().getResource("openapi.yaml").toURI().toString();
+            final URL resource = RouterBuilder.class.getClassLoader().getResource("openapi.yaml");
+
+            if (resource == null) {
+                throw new Exception("Cannot find resource openapi.yaml");
+            }
+
+            final String url = resource.toURI().toString();
 
             RouterBuilder.create(vertx.getDelegate(), url)
                     .onSuccess(routerBuilder -> {
@@ -180,18 +187,72 @@ public class Verticle extends AbstractVerticle {
         }
     }
 
-    private void handleError(Throwable err) {
-        logger.error("Cannot process message", err);
+    private void pollRecords(String eventTopic, KafkaConsumer<String, String> eventConsumer, Map<String, EventHandler<RecordAndMessage>> eventHandlers) {
+        eventConsumer.pollTimeout(Duration.ofSeconds(5))
+                .fetch(10)
+                .batchHandler(records -> processRecords(eventConsumer, eventHandlers, records))
+                .partitionsAssignedHandler(partitions -> {})
+                .partitionsRevokedHandler(partitions -> {})
+                .rxSubscribe(eventTopic)
+                .doOnError(err -> logger.error("Failed to consume records", err))
+                .subscribe();
     }
 
-    private void processRecord(Map<String, Handler<RecordAndMessage>> handlers, KafkaConsumerRecord<String, String> record) {
-        final Message message = Json.decodeValue(record.value(), Message.class);
-        final Handler<RecordAndMessage> handler = handlers.get(message.getMessageType());
-        if (handler != null) {
-            logger.info("Receive message of type: " + message.getMessageType());
-            handler.handle(new RecordAndMessage(record, message));
-        } else {
-            logger.info("Ignore message of type: " + message.getMessageType());
+    private void processRecords(KafkaConsumer<String, String> eventConsumer, Map<String, EventHandler<RecordAndMessage>> handlers, KafkaConsumerRecords<String, String> records) {
+        final Set<TopicPartition> suspendedPartitions = new HashSet<>();
+
+        for (int i = 0; i < records.size(); i++) {
+            final KafkaConsumerRecord<String, String> record = records.recordAt(i);
+
+            final TopicPartition topicPartition = new TopicPartition(record.topic(), record.partition());
+
+            if (suspendedPartitions.contains(topicPartition)) {
+                logger.debug("Skipping record of suspended partition (" + topicPartition + ")");
+
+                continue;
+            }
+
+            final Message message = Json.decodeValue(record.value(), Message.class);
+
+            logger.debug("Received message of type: " + message.getMessageType());
+
+            final EventHandler<RecordAndMessage> handler = handlers.get(message.getMessageType());
+
+            if (handler == null) {
+                logger.warn("Ignoring message of type: " + message.getMessageType());
+
+                continue;
+            }
+
+            handler.handle(new RecordAndMessage(record, message), (msg, err) -> handleError(eventConsumer, suspendedPartitions, msg));
         }
+
+//        vertx.getOrCreateContext().runOnContext(ignore -> commitOffsets(eventConsumer));
+        commitOffsets(eventConsumer);
+    }
+
+    private void handleError(KafkaConsumer<String, String> eventConsumer, Set<TopicPartition> suspendedPartitions, RecordAndMessage msg) {
+        final KafkaConsumerRecord<String, String> record = msg.getRecord();
+
+        final TopicPartition topicPartition = new TopicPartition(record.topic(), record.partition());
+
+        suspendedPartitions.add(topicPartition);
+
+        retryPartition(eventConsumer, record, topicPartition);
+    }
+
+    private void commitOffsets(KafkaConsumer<String, String> eventConsumer) {
+        eventConsumer.rxCommit()
+                .doOnError(err -> logger.error("Failed to commit offsets", err))
+                .subscribe();
+    }
+
+    private void retryPartition(KafkaConsumer<String, String> eventConsumer, KafkaConsumerRecord<String, String> record, TopicPartition topicPartition) {
+        eventConsumer.rxPause(topicPartition)
+                .flatMap(x -> eventConsumer.rxSeek(topicPartition, record.offset()))
+                .delay(5, TimeUnit.SECONDS)
+                .flatMap(x -> eventConsumer.rxResume(topicPartition))
+                .doOnError(err -> logger.error("Failed to resume partition (" + topicPartition + ")", err))
+                .subscribe();
     }
 }

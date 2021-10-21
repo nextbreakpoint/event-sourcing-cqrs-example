@@ -1,4 +1,8 @@
 FROM maven:3-openjdk-11 AS build
+ARG nexus_host
+ARG nexus_port
+ENV NEXUS_HOST $nexus_host
+ENV NEXUS_PORT $nexus_port
 ADD . /src
 WORKDIR /src
 RUN mvn clean verify -s settings.xml -t toolchains.xml -DskipTests=true

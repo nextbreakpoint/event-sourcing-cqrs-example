@@ -12,5 +12,6 @@ public class MessaggeSuccessConsumer implements BiConsumer<Message, JsonObject> 
 
     @Override
     public void accept(Message message, JsonObject object) {
+        logger.info("Message consumed " + message.getMessageId());
     }
 }

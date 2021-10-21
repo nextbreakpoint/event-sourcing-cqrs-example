@@ -24,7 +24,6 @@ import io.vertx.rxjava.cassandra.CassandraClient;
 import io.vertx.rxjava.core.AbstractVerticle;
 import io.vertx.rxjava.core.Promise;
 import io.vertx.rxjava.core.Vertx;
-import io.vertx.rxjava.ext.auth.jwt.JWTAuth;
 import io.vertx.rxjava.ext.web.Router;
 import io.vertx.rxjava.ext.web.RoutingContext;
 import io.vertx.rxjava.ext.web.handler.BodyHandler;
@@ -39,6 +38,7 @@ import rx.Completable;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executor;
@@ -111,8 +111,6 @@ public class Verticle extends AbstractVerticle {
 
             final String messageSource = environment.resolve(config.getString("message_source"));
 
-            final JWTAuth jwtProvider = JWTProviderFactory.create(environment, vertx, config);
-
             final KafkaProducer<String, String> producer = KafkaClientFactory.createProducer(environment, vertx, config);
 
             final KafkaConsumer<String, String> commandConsumer = KafkaClientFactory.createConsumer(environment, vertx, config);
@@ -127,9 +125,9 @@ public class Verticle extends AbstractVerticle {
 
             final Map<String, Handler<RecordAndMessage>> commandHandlers = new HashMap<>();
 
-            commandHandlers.put(MessageType.DESIGN_INSERT, createInsertDesignHandler(store, eventTopic, producer, messageSource));
-            commandHandlers.put(MessageType.DESIGN_UPDATE, createUpdateDesignHandler(store, eventTopic, producer, messageSource));
-            commandHandlers.put(MessageType.DESIGN_DELETE, createDeleteDesignHandler(store, eventTopic, producer, messageSource));
+            commandHandlers.put(MessageType.DESIGN_INSERT_REQUESTED, createInsertDesignHandler(store, eventTopic, producer, messageSource));
+            commandHandlers.put(MessageType.DESIGN_UPDATE_REQUESTED, createUpdateDesignHandler(store, eventTopic, producer, messageSource));
+            commandHandlers.put(MessageType.DESIGN_DELETE_REQUESTED, createDeleteDesignHandler(store, eventTopic, producer, messageSource));
 
             commandConsumer.handler(record -> processRecord(commandHandlers, record))
                     .rxSubscribe(commandTopic)
@@ -139,7 +137,13 @@ public class Verticle extends AbstractVerticle {
 
             final Handler<RoutingContext> openapiHandler = new OpenApiHandler(vertx.getDelegate(), executor, "openapi.yaml");
 
-            final String url = RouterBuilder.class.getClassLoader().getResource("openapi.yaml").toURI().toString();
+            final URL resource = RouterBuilder.class.getClassLoader().getResource("openapi.yaml");
+
+            if (resource == null) {
+                throw new Exception("Cannot find resource openapi.yaml");
+            }
+
+            final String url = resource.toURI().toString();
 
             RouterBuilder.create(vertx.getDelegate(), url)
                     .onSuccess(routerBuilder -> {

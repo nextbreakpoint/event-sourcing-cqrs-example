@@ -73,7 +73,7 @@ public class IntegrationTests {
   public class VerifyServiceApi {
     @BeforeEach
     public void setup() {
-      session.rxPrepare("TRUNCATE DESIGN_ENTITY")
+      session.rxPrepare("TRUNCATE DESIGN")
               .map(PreparedStatement::bind)
               .flatMap(session::rxExecute)
               .toBlocking()
@@ -84,7 +84,7 @@ public class IntegrationTests {
       final String json3 = new JsonObject(createPostData(MANIFEST, METADATA, SCRIPT3)).toString();
       final String json4 = new JsonObject(createPostData(MANIFEST, METADATA, SCRIPT3)).toString();
 
-      final Single<PreparedStatement> preparedStatementSingle = session.rxPrepare("INSERT INTO DESIGN_ENTITY (DESIGN_UUID, DESIGN_DATA, DESIGN_CHECKSUM, DESIGN_CREATED, DESIGN_UPDATED) VALUES (?,?,?,toTimeStamp(now()),toTimeStamp(now()))");
+      final Single<PreparedStatement> preparedStatementSingle = session.rxPrepare("INSERT INTO DESIGN (DESIGN_UUID, DESIGN_DATA, DESIGN_CHECKSUM, DESIGN_CREATED, DESIGN_UPDATED) VALUES (?,?,?,toTimeStamp(now()),toTimeStamp(now()))");
 
       preparedStatementSingle
               .map(stmt -> stmt.bind(DESIGN_UUID_1, json1, "1"))
@@ -110,7 +110,7 @@ public class IntegrationTests {
               .toBlocking()
               .value();
 
-      session.rxPrepare("DELETE FROM DESIGN_ENTITY WHERE DESIGN_UUID=?")
+      session.rxPrepare("DELETE FROM DESIGN WHERE DESIGN_UUID=?")
               .map(stmt -> stmt.bind(DESIGN_UUID_4))
               .flatMap(session::rxExecute)
               .toBlocking()

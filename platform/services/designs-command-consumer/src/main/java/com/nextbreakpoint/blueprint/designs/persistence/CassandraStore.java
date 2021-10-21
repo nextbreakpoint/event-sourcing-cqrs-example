@@ -28,12 +28,12 @@ public class CassandraStore implements Store {
     private static final String ERROR_DELETE_DESIGN = "An error occurred while deleting a design";
     private static final String ERROR_PUBLISH_DESIGN = "An error occurred while publishing a design";
 
-    private static final String INSERT_DESIGN_EVENT = "INSERT INTO DESIGN_EVENT (DESIGN_UUID, DESIGN_DATA, DESIGN_STATUS, DESIGN_CHECKSUM, EVENT_TIMESTAMP) VALUES (?, ?, ?, ?, ?)";
+    private static final String INSERT_DESIGN_EVENT = "INSERT INTO DESIGN_EVENT (DESIGN_UUID, DESIGN_DATA, DESIGN_STATUS, DESIGN_CHECKSUM, EVENT_UUID) VALUES (?, ?, ?, ?, ?)";
     private static final String SELECT_DESIGN_EVENTS = "SELECT * FROM DESIGN_EVENT WHERE DESIGN_UUID = ?";
-    private static final String INSERT_DESIGN_ENTITY = "INSERT INTO DESIGN_ENTITY (DESIGN_UUID, DESIGN_DATA, DESIGN_CHECKSUM, DESIGN_UPDATED) VALUES (?, ?, ?, ?)";
-    private static final String UPDATE_DESIGN_ENTITY = "UPDATE DESIGN_ENTITY SET DESIGN_DATA = ?, DESIGN_CHECKSUM = ?, DESIGN_UPDATED = ? WHERE DESIGN_UUID = ?";
-    private static final String DELETE_DESIGN_ENTITY = "DELETE FROM DESIGN_ENTITY WHERE DESIGN_UUID = ?";
-    private static final String UPDATE_DESIGN_EVENT = "UPDATE DESIGN_EVENT SET EVENT_PUBLISHED = ? WHERE DESIGN_UUID = ? AND EVENT_TIMESTAMP = ?";
+    private static final String INSERT_DESIGN = "INSERT INTO DESIGN (DESIGN_UUID, DESIGN_DATA, DESIGN_CHECKSUM, DESIGN_UPDATED) VALUES (?, ?, ?, ?)";
+    private static final String UPDATE_DESIGN = "UPDATE DESIGN SET DESIGN_DATA = ?, DESIGN_CHECKSUM = ?, DESIGN_UPDATED = ? WHERE DESIGN_UUID = ?";
+    private static final String DELETE_DESIGN = "DELETE FROM DESIGN WHERE DESIGN_UUID = ?";
+    private static final String UPDATE_DESIGN_EVENT = "UPDATE DESIGN_EVENT SET EVENT_PUBLISHED = ? WHERE DESIGN_UUID = ? AND EVENT_UUID = ?";
 
     private final Supplier<CassandraClient> supplier;
 
@@ -50,41 +50,6 @@ public class CassandraStore implements Store {
         this.supplier = Objects.requireNonNull(supplier);
     }
 
-    @Override
-    public Single<PersistenceResult<Void>> appendInsertDesignEvent(UUID uuid, UUID eventTimestamp, String json) {
-        return withSession()
-                .flatMap(session -> appendDesignEvent(session, uuid, eventTimestamp, makeInsertParams(uuid, eventTimestamp, json)))
-                .doOnError(err -> handleError(ERROR_INSERT_DESIGN, err));
-    }
-
-    @Override
-    public Single<PersistenceResult<Void>> appendUpdateDesignEvent(UUID uuid, UUID eventTimestamp, String json) {
-        return withSession()
-                .flatMap(session -> appendDesignEvent(session, uuid, eventTimestamp ,makeUpdateParams(uuid, eventTimestamp, json)))
-                .doOnError(err -> handleError(ERROR_UPDATE_DESIGN, err));
-    }
-
-    @Override
-    public Single<PersistenceResult<Void>> appendDeleteDesignEvent(UUID uuid, UUID eventTimestamp) {
-        return withSession()
-                .flatMap(session -> appendDesignEvent(session, uuid, eventTimestamp ,makeDeleteParams(uuid, eventTimestamp)))
-                .doOnError(err -> handleError(ERROR_DELETE_DESIGN, err));
-    }
-
-    @Override
-    public Single<PersistenceResult<DesignChange>> updateAggregate(UUID uuid, UUID eventTimestamp) {
-        return withSession()
-                .flatMap(session -> updateAggregate(session, uuid, eventTimestamp))
-                .doOnError(err -> handleError(ERROR_INSERT_DESIGN, err));
-    }
-
-    @Override
-    public Single<PersistenceResult<Void>> publishEvent(UUID uuid, UUID eventTimestamp) {
-        return withSession()
-                .flatMap(session -> publishEvent(session, uuid, eventTimestamp))
-                .doOnError(err -> handleError(ERROR_PUBLISH_DESIGN, err));
-    }
-
     private Single<CassandraClient> withSession() {
         if (session == null) {
             session = supplier.get();
@@ -93,22 +58,57 @@ public class CassandraStore implements Store {
             }
             insertDesign = session.rxPrepare(INSERT_DESIGN_EVENT);
             selectDesigns = session.rxPrepare(SELECT_DESIGN_EVENTS);
-            insertDesignAggregate = session.rxPrepare(INSERT_DESIGN_ENTITY);
-            updateDesignAggregate = session.rxPrepare(UPDATE_DESIGN_ENTITY);
-            deleteDesignAggregate = session.rxPrepare(DELETE_DESIGN_ENTITY);
+            insertDesignAggregate = session.rxPrepare(INSERT_DESIGN);
+            updateDesignAggregate = session.rxPrepare(UPDATE_DESIGN);
+            deleteDesignAggregate = session.rxPrepare(DELETE_DESIGN);
             updateDesign = session.rxPrepare(UPDATE_DESIGN_EVENT);
         }
         return Single.just(session);
     }
 
-    private Single<PersistenceResult<Void>> appendDesignEvent(CassandraClient session, UUID uuid, UUID eventTimestamp, Object[] values) {
+    @Override
+    public Single<PersistenceResult<Void>> insertDesign(UUID uuid, UUID eventTimestamp, String json) {
+        return withSession()
+                .flatMap(session -> insertDesignUpdate(session, uuid, makeInsertParams(uuid, eventTimestamp, json)))
+                .doOnError(err -> handleError(ERROR_INSERT_DESIGN, err));
+    }
+
+    @Override
+    public Single<PersistenceResult<Void>> updateDesign(UUID uuid, UUID eventTimestamp, String json) {
+        return withSession()
+                .flatMap(session -> insertDesignUpdate(session, uuid, makeUpdateParams(uuid, eventTimestamp, json)))
+                .doOnError(err -> handleError(ERROR_UPDATE_DESIGN, err));
+    }
+
+    @Override
+    public Single<PersistenceResult<Void>> deleteDesign(UUID uuid, UUID eventTimestamp) {
+        return withSession()
+                .flatMap(session -> insertDesignUpdate(session, uuid, makeDeleteParams(uuid, eventTimestamp)))
+                .doOnError(err -> handleError(ERROR_DELETE_DESIGN, err));
+    }
+
+    @Override
+    public Single<PersistenceResult<DesignChange>> updateDesignAggregate(UUID uuid, UUID eventTimestamp) {
+        return withSession()
+                .flatMap(session -> updateDesignAggregate(session, uuid, eventTimestamp))
+                .doOnError(err -> handleError(ERROR_INSERT_DESIGN, err));
+    }
+
+    @Override
+    public Single<PersistenceResult<Void>> publishDesign(UUID uuid, UUID eventTimestamp) {
+        return withSession()
+                .flatMap(session -> publishDesign(session, uuid, eventTimestamp))
+                .doOnError(err -> handleError(ERROR_PUBLISH_DESIGN, err));
+    }
+
+    private Single<PersistenceResult<Void>> insertDesignUpdate(CassandraClient session, UUID uuid, Object[] values) {
         return insertDesign
                 .map(pst -> pst.bind(values))
                 .flatMap(session::rxExecute)
-                .map(rs -> new PersistenceResult<>(uuid, eventTimestamp, null));
+                .map(rs -> new PersistenceResult<>(uuid, null));
     }
 
-    private Single<PersistenceResult<DesignChange>> updateAggregate(CassandraClient session, UUID uuid, UUID eventTimestamp) {
+    private Single<PersistenceResult<DesignChange>> updateDesignAggregate(CassandraClient session, UUID uuid, UUID eventTimestamp) {
         return selectDesigns
                 .map(pst -> pst.bind(uuid))
                 .flatMap(session::rxExecuteWithFullFetch)
@@ -117,38 +117,38 @@ public class CassandraStore implements Store {
     }
 
     private Single<PersistenceResult<DesignChange>> executeAggregate(CassandraClient session, UUID uuid, UUID eventTimestamp, DesignChange change) {
-        return doExecuteAggregate(session, uuid, eventTimestamp, change).map(result -> new PersistenceResult<>(uuid, eventTimestamp, change));
+        return doExecuteAggregate(session, uuid, change).map(result -> new PersistenceResult<>(uuid, change));
     }
 
-    private Single<PersistenceResult<Void>> doExecuteAggregate(CassandraClient session, UUID uuid, UUID eventTimestamp, DesignChange change) {
+    private Single<PersistenceResult<Void>> doExecuteAggregate(CassandraClient session, UUID uuid, DesignChange change) {
         switch (change.getStatus().toLowerCase()) {
             case "created": {
                 return insertDesignAggregate
                         .map(pst -> pst.bind(makeInsertAggregateParams(change)))
                         .flatMap(session::rxExecute)
-                        .map(rs -> new PersistenceResult<>(change.getUuid(), eventTimestamp, null));
+                        .map(rs -> new PersistenceResult<>(change.getUuid(), null));
             }
             case "updated": {
                 return updateDesignAggregate
                         .map(pst -> pst.bind(makeUpdateAggregateParams(change)))
                         .flatMap(session::rxExecute)
-                        .map(rs -> new PersistenceResult<>(change.getUuid(), eventTimestamp, null));
+                        .map(rs -> new PersistenceResult<>(change.getUuid(), null));
             }
             case "deleted": {
                 return deleteDesignAggregate
                         .map(pst -> pst.bind(makeDeleteAggregateParams(change)))
                         .flatMap(session::rxExecute)
-                        .map(rs -> new PersistenceResult<>(change.getUuid(), eventTimestamp, null));
+                        .map(rs -> new PersistenceResult<>(change.getUuid(), null));
             }
         }
         throw new IllegalStateException("Unknown status: " + change.getStatus());
     }
 
-    private Single<PersistenceResult<Void>> publishEvent(CassandraClient session, UUID uuid, UUID eventTimestamp) {
+    private Single<PersistenceResult<Void>> publishDesign(CassandraClient session, UUID uuid, UUID eventTimestamp) {
         return updateDesign
                 .map(pst -> pst.bind(Instant.now(), uuid, eventTimestamp))
                 .flatMap(session::rxExecute)
-                .map(rs -> new PersistenceResult<>(uuid, eventTimestamp, null));
+                .map(rs -> new PersistenceResult<>(uuid, null));
     }
 
     private DesignChange mergeChanges(DesignChange designDocument1, DesignChange designDocument2) {
@@ -164,7 +164,7 @@ public class CassandraStore implements Store {
         final String json = row.getString("DESIGN_DATA");
         final String status = row.getString("DESIGN_STATUS");
         final String checksum = row.getString("DESIGN_CHECKSUM");
-        final Date modified = new Date(Uuids.unixTimestamp(Objects.requireNonNull(row.getUuid("EVENT_TIMESTAMP"))));
+        final Date modified = new Date(Uuids.unixTimestamp(Objects.requireNonNull(row.getUuid("EVENT_UUID"))));
         return new DesignChange(uuid, json, status, checksum, modified);
     }
 

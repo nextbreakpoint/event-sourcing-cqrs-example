@@ -155,7 +155,7 @@ public class IntegrationTests {
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final List<Row> rows = session.rxPrepare("SELECT * FROM DESIGN_ENTITY WHERE DESIGN_UUID = ?")
+                        final List<Row> rows = session.rxPrepare("SELECT * FROM DESIGN WHERE DESIGN_UUID = ?")
                                 .map(stmt -> stmt.bind(designId))
                                 .flatMap(session::rxExecuteWithFullFetch)
                                 .toBlocking()
@@ -244,7 +244,7 @@ public class IntegrationTests {
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final List<Row> rows = session.rxPrepare("SELECT * FROM DESIGN_ENTITY WHERE DESIGN_UUID = ?")
+                        final List<Row> rows = session.rxPrepare("SELECT * FROM DESIGN WHERE DESIGN_UUID = ?")
                                 .map(stmt -> stmt.bind(designId))
                                 .flatMap(session::rxExecuteWithFullFetch)
                                 .toBlocking()
@@ -333,7 +333,7 @@ public class IntegrationTests {
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final List<Row> rows = session.rxPrepare("SELECT * FROM DESIGN_ENTITY WHERE DESIGN_UUID = ?")
+                        final List<Row> rows = session.rxPrepare("SELECT * FROM DESIGN WHERE DESIGN_UUID = ?")
                                 .map(stmt -> stmt.bind(designId))
                                 .flatMap(session::rxExecuteWithFullFetch)
                                 .toBlocking()
@@ -365,15 +365,15 @@ public class IntegrationTests {
     }
 
     private static Message createInsertDesignMessage(UUID messageId, UUID partitionKey, long timestamp, InsertDesignCommand event) {
-        return new Message(messageId.toString(), MessageType.DESIGN_INSERT, Json.encode(event), "test", partitionKey.toString(), timestamp);
+        return new Message(messageId.toString(), MessageType.DESIGN_INSERT_REQUESTED, Json.encode(event), "test", partitionKey.toString(), timestamp);
     }
 
     private static Message createUpdateDesignMessage(UUID messageId, UUID partitionKey, long timestamp, UpdateDesignCommand event) {
-        return new Message(messageId.toString(), MessageType.DESIGN_UPDATE, Json.encode(event), "test", partitionKey.toString(), timestamp);
+        return new Message(messageId.toString(), MessageType.DESIGN_UPDATE_REQUESTED, Json.encode(event), "test", partitionKey.toString(), timestamp);
     }
 
     private static Message createDeleteDesignMessage(UUID messageId, UUID partitionKey, long timestamp, DeleteDesignCommand event) {
-        return new Message(messageId.toString(), MessageType.DESIGN_DELETE, Json.encode(event), "test", partitionKey.toString(), timestamp);
+        return new Message(messageId.toString(), MessageType.DESIGN_DELETE_REQUESTED, Json.encode(event), "test", partitionKey.toString(), timestamp);
     }
 
     private static void pause(int millis) {

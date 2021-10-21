@@ -23,6 +23,6 @@ public class InsertDesignController extends AbstractController<InsertDesignComma
     @Override
     protected Single<PersistenceResult<Void>> executeCommand(InsertDesignCommand command, UUID eventTimestamp) {
         logger.info("Processing insert command: " + command.getUuid() + ":" + eventTimestamp);
-        return store.appendInsertDesignEvent(command.getUuid(), eventTimestamp, command.getJson());
+        return store.insertDesign(command.getUuid(), eventTimestamp, command.getJson());
     }
 }

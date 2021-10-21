@@ -58,7 +58,7 @@
         <maven.target.release>11</maven.target.release>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
-        <nexus.url>http://192.168.64.12:38081</nexus.url>
+        <nexus.url>http://${env.NEXUS_HOST}:${env.NEXUS_PORT}</nexus.url>
     </properties>
     <build>
         <plugins>

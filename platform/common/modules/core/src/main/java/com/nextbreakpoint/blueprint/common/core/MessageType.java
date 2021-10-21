@@ -1,13 +1,13 @@
 package com.nextbreakpoint.blueprint.common.core;
 
 public interface MessageType {
-    String DESIGN_INSERT = "design-insert";
-    String DESIGN_UPDATE = "design-update";
-    String DESIGN_DELETE = "design-delete";
+    String DESIGN_INSERT_REQUESTED = "design-insert-requested";
+    String DESIGN_UPDATE_REQUESTED = "design-update-requested";
+    String DESIGN_DELETE_REQUESTED = "design-delete-requested";
+    String AGGREGATE_UPDATE_REQUESTED = "aggregate-update-requested";
+    String AGGREGATE_UPDATE_COMPLETED = "aggregate-update-completed";
+    String TILE_RENDER_REQUESTED = "tile-render-requested";
+    String TILE_RENDER_COMPLETED = "tile-render-completed";
+    String TILE_RENDER_UPDATED = "tile-render-updated";
     String DESIGN_CHANGED = "design-changed";
-    String DESIGN_VERSION_CREATED = "design-version-created";
-    String DESIGN_RENDER_CREATED = "design-render-created";
-    String DESIGN_RENDER_COMPLETED = "design-render-completed";
-    String DESIGN_TILE_CREATED = "design-tile-created";
-    String DESIGN_TILE_COMPLETED = "design-tile-completed";
 }

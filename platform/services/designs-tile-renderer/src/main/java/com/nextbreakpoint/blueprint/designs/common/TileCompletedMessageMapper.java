@@ -18,6 +18,6 @@ public class TileCompletedMessageMapper implements Mapper<TileCompleted, Message
 
     @Override
     public Message transform(TileCompleted event) {
-        return new Message(UUID.randomUUID().toString(), MessageType.DESIGN_TILE_COMPLETED, Json.encode(event), messageSource, event.getUuid().toString(), System.currentTimeMillis());
+        return new Message(UUID.randomUUID().toString(), MessageType.TILE_RENDER_COMPLETED, Json.encode(event), messageSource, event.getUuid().toString(), System.currentTimeMillis());
     }
 }

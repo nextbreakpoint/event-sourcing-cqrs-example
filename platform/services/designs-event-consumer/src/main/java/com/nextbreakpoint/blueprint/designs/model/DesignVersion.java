@@ -1,36 +1,45 @@
 package com.nextbreakpoint.blueprint.designs.model;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import java.util.Objects;
-import java.util.UUID;
 
 public class DesignVersion {
-    private final UUID uuid;
-    private final String data;
     private final String checksum;
+    private final String data;
 
-    @JsonCreator
     public DesignVersion(
-            @JsonProperty("uuid") UUID uuid,
-            @JsonProperty("data") String data,
-            @JsonProperty("checksum") String checksum
+        String checksum,
+        String data
     ) {
-        this.uuid = Objects.requireNonNull(uuid);
-        this.data = Objects.requireNonNull(data);
         this.checksum = Objects.requireNonNull(checksum);
+        this.data = Objects.requireNonNull(data);
     }
 
-    public UUID getUuid() {
-        return uuid;
+    public String getChecksum() {
+        return checksum;
     }
 
     public String getData() {
         return data;
     }
 
-    public String getChecksum() {
-        return checksum;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        DesignVersion that = (DesignVersion) o;
+        return Objects.equals(getChecksum(), that.getChecksum()) && Objects.equals(getData(), that.getData());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getChecksum(), getData());
+    }
+
+    @Override
+    public String toString() {
+        return "DesignVersion{" +
+                "checksum='" + checksum + '\'' +
+                ", data='" + data + '\'' +
+                '}';
     }
 }

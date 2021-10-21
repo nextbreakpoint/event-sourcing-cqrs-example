@@ -14,6 +14,9 @@ module com.nextbreakpoint.blueprint.designseventconsumer {
     requires org.apache.logging.log4j;
     requires com.datastax.oss.driver.core;
     requires java.sql;
+    requires io.vertx.client.kafka;
     exports com.nextbreakpoint.blueprint.designs.model to com.fasterxml.jackson.databind;
     opens com.nextbreakpoint.blueprint.designs.model to com.fasterxml.jackson.databind;
+    exports com.nextbreakpoint.blueprint.designs.events to com.fasterxml.jackson.databind;
+    opens com.nextbreakpoint.blueprint.designs.events to com.fasterxml.jackson.databind;
 }

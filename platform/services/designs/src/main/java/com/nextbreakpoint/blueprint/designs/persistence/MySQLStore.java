@@ -49,11 +49,11 @@ public class MySQLStore implements Store {
     private static final String ERROR_DELETE_DESIGN = "An error occurred while deleting a design";
     private static final String ERROR_LIST_DESIGNS = "An error occurred while loading designs";
 
-    private static final String INSERT_DESIGN = "INSERT INTO DESIGN_ENTITY (DESIGN_UUID, DESIGN_DATA, DESIGN_CHECKSUM, DESIGN_CREATED, DESIGN_UPDATED) VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
-    private static final String UPDATE_DESIGN = "UPDATE DESIGN_ENTITY SET DESIGN_DATA=?, DESIGN_CHECKSUM=?, DESIGN_UPDATED=CURRENT_TIMESTAMP WHERE DESIGN_UUID=?";
-    private static final String SELECT_DESIGN = "SELECT * FROM DESIGN_ENTITY WHERE DESIGN_UUID = ?";
-    private static final String SELECT_DESIGNS = "SELECT * FROM DESIGN_ENTITY";
-    private static final String DELETE_DESIGN = "DELETE FROM DESIGN_ENTITY WHERE DESIGN_UUID = ?";
+    private static final String INSERT_DESIGN = "INSERT INTO DESIGN (DESIGN_UUID, DESIGN_DATA, DESIGN_CHECKSUM, DESIGN_CREATED, DESIGN_UPDATED) VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
+    private static final String UPDATE_DESIGN = "UPDATE DESIGN SET DESIGN_DATA=?, DESIGN_CHECKSUM=?, DESIGN_UPDATED=CURRENT_TIMESTAMP WHERE DESIGN_UUID=?";
+    private static final String SELECT_DESIGN = "SELECT * FROM DESIGN WHERE DESIGN_UUID = ?";
+    private static final String SELECT_DESIGNS = "SELECT * FROM DESIGN";
+    private static final String DELETE_DESIGN = "DELETE FROM DESIGN WHERE DESIGN_UUID = ?";
 
     private final JDBCClient client;
 

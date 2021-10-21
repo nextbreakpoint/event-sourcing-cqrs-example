@@ -35,6 +35,7 @@ import rx.Completable;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executor;
@@ -126,7 +127,13 @@ public class Verticle extends AbstractVerticle {
 
             final Handler<RoutingContext> openapiHandler = new OpenApiHandler(vertx.getDelegate(), executor, "openapi.yaml");
 
-            final String url = RouterBuilder.class.getClassLoader().getResource("openapi.yaml").toURI().toString();
+            final URL resource = RouterBuilder.class.getClassLoader().getResource("openapi.yaml");
+
+            if (resource == null) {
+                throw new Exception("Cannot find resource openapi.yaml");
+            }
+
+            final String url = resource.toURI().toString();
 
             RouterBuilder.create(vertx.getDelegate(), url)
                     .onSuccess(routerBuilder -> {

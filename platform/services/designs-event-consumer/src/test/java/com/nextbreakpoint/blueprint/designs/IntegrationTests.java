@@ -8,6 +8,10 @@ import com.nextbreakpoint.blueprint.common.core.MessageType;
 import com.nextbreakpoint.blueprint.common.test.KafkaUtils;
 import com.nextbreakpoint.blueprint.common.vertx.CassandraClientFactory;
 import com.nextbreakpoint.blueprint.designs.model.*;
+import com.nextbreakpoint.blueprint.designs.events.DesignDeleteRequested;
+import com.nextbreakpoint.blueprint.designs.events.DesignInsertRequested;
+import com.nextbreakpoint.blueprint.designs.events.DesignUpdateRequested;
+import com.nextbreakpoint.blueprint.designs.events.TileRenderCompleted;
 import io.vertx.core.json.Json;
 import io.vertx.rxjava.cassandra.CassandraClient;
 import io.vertx.rxjava.core.Vertx;
@@ -21,7 +25,6 @@ import org.junit.jupiter.api.*;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -99,7 +102,7 @@ public class IntegrationTests {
     @Nested
     @Tag("slow")
     @Tag("integration")
-    @DisplayName("Verify behaviour of designs-event-consumer service")
+    @DisplayName("Verify behaviour of designs-command-consumer service")
     public class VerifyServiceApi {
         @AfterEach
         public void reset() {
@@ -107,478 +110,750 @@ public class IntegrationTests {
         }
 
         @Test
-        @DisplayName("Should create version, renders and tiles after receiving a design changed event")
-        public void shouldCreateVersionAndRendersAndTilesWhenReceivingAMessage() {
+        @DisplayName("Should insert a design after receiving a DesignInsert event")
+        public void shouldInsertDesignWhenReceivingAMessage() {
             final long eventTimestamp = System.currentTimeMillis();
 
             final UUID designId = UUID.randomUUID();
 
-            final String checksum = UUID.randomUUID().toString();
-
-            final DesignChanged designChanged = new DesignChanged(designId, JSON_1, checksum, eventTimestamp);
+            final DesignInsertRequested designInsertEvent = new DesignInsertRequested(designId, JSON_1, eventTimestamp);
 
             final long messageTimestamp = System.currentTimeMillis();
 
-            final Message designChangedMessage = createDesignChangedMessage(UUID.randomUUID(), designId, messageTimestamp, designChanged);
+            final Message insertDesignMessage = createInsertDesignMessage(UUID.randomUUID(), designId, messageTimestamp, designInsertEvent);
 
             safelyClearMessages();
 
-            producer.send(createKafkaRecord(designChangedMessage));
+            producer.send(createKafkaRecord(insertDesignMessage));
 
-            final UUID versionId = assertVersionCreated(checksum, JSON_1);
+            await().atMost(TEN_SECONDS)
+                    .pollInterval(ONE_SECOND)
+                    .untilAsserted(() -> {
+                        final List<Row> rows = session.rxPrepare("SELECT * FROM DESIGN_EVENT WHERE DESIGN_UUID = ?")
+                                .map(stmt -> stmt.bind(designId))
+                                .flatMap(session::rxExecuteWithFullFetch)
+                                .toBlocking()
+                                .value();
+                        assertThat(rows).hasSize(1);
+                        rows.forEach(row -> {
+                            String actualJson = row.get("DESIGN_DATA", String.class);
+                            String actualStatus = row.get("DESIGN_STATUS", String.class);
+                            String actualChecksum = row.get("DESIGN_CHECKSUM", String.class);
+                            Instant actualPublished = row.getInstant("EVENT_PUBLISHED") ;
+                            assertThat(actualJson).isEqualTo(JSON_1);
+                            assertThat(actualStatus).isEqualTo("CREATED");
+                            assertThat(actualChecksum).isNotNull();
+                            assertThat(actualPublished).isNotNull();
+                        });
+                    });
 
-            assertLevelCreated(versionId, JSON_1, checksum, (short) 0);
-            assertLevelCreated(versionId, JSON_1, checksum, (short) 1);
-            assertLevelCreated(versionId, JSON_1, checksum, (short) 2);
+            await().atMost(TEN_SECONDS)
+                    .pollInterval(ONE_SECOND)
+                    .untilAsserted(() -> {
+                        final List<Row> rows = session.rxPrepare("SELECT * FROM DESIGN WHERE DESIGN_UUID = ?")
+                                .map(stmt -> stmt.bind(designId))
+                                .flatMap(session::rxExecuteWithFullFetch)
+                                .toBlocking()
+                                .value();
+                        assertThat(rows).hasSize(1);
+                        rows.forEach(row -> {
+                            String actualJson = row.get("DESIGN_DATA", String.class);
+                            String actualChecksum = row.get("DESIGN_CHECKSUM", String.class);
+                            assertThat(actualJson).isEqualTo(JSON_1);
+                            assertThat(actualChecksum).isNotNull();
+                        });
+                    });
 
-            assertTileCreated(versionId, JSON_1, checksum, (short) 0, (short) 0, (short) 0);
-
-            assertTileCreated(versionId, JSON_1, checksum, (short) 1, (short) 0, (short) 0);
-            assertTileCreated(versionId, JSON_1, checksum, (short) 1, (short) 0, (short) 1);
-            assertTileCreated(versionId, JSON_1, checksum, (short) 1, (short) 1, (short) 0);
-            assertTileCreated(versionId, JSON_1, checksum, (short) 1, (short) 1, (short) 1);
-
-            assertTileCreated(versionId, JSON_1, checksum, (short) 2, (short) 0, (short) 0);
-            assertTileCreated(versionId, JSON_1, checksum, (short) 2, (short) 0, (short) 1);
-            assertTileCreated(versionId, JSON_1, checksum, (short) 2, (short) 0, (short) 2);
-            assertTileCreated(versionId, JSON_1, checksum, (short) 2, (short) 0, (short) 3);
-            assertTileCreated(versionId, JSON_1, checksum, (short) 2, (short) 1, (short) 0);
-            assertTileCreated(versionId, JSON_1, checksum, (short) 2, (short) 1, (short) 1);
-            assertTileCreated(versionId, JSON_1, checksum, (short) 2, (short) 1, (short) 2);
-            assertTileCreated(versionId, JSON_1, checksum, (short) 2, (short) 1, (short) 3);
-            assertTileCreated(versionId, JSON_1, checksum, (short) 2, (short) 2, (short) 0);
-            assertTileCreated(versionId, JSON_1, checksum, (short) 2, (short) 2, (short) 1);
-            assertTileCreated(versionId, JSON_1, checksum, (short) 2, (short) 2, (short) 2);
-            assertTileCreated(versionId, JSON_1, checksum, (short) 2, (short) 2, (short) 3);
-            assertTileCreated(versionId, JSON_1, checksum, (short) 2, (short) 3, (short) 0);
-            assertTileCreated(versionId, JSON_1, checksum, (short) 2, (short) 3, (short) 1);
-            assertTileCreated(versionId, JSON_1, checksum, (short) 2, (short) 3, (short) 2);
-            assertTileCreated(versionId, JSON_1, checksum, (short) 2, (short) 3, (short) 3);
+            await().atMost(TEN_SECONDS)
+                    .pollInterval(ONE_SECOND)
+                    .untilAsserted(() -> {
+                        final List<Message> messages = safelyFindMessages(designId.toString());
+                        assertThat(messages).hasSize(1);
+                        final Message actualMessage = messages.get(messages.size() - 1);
+                        assertThat(actualMessage.getTimestamp()).isNotNull();
+                        assertThat(actualMessage.getMessageSource()).isEqualTo("service-designs");
+                        assertThat(actualMessage.getPartitionKey()).isEqualTo(designId.toString());
+                        assertThat(actualMessage.getMessageId()).isNotNull();
+                        assertThat(actualMessage.getMessageType()).isEqualTo("design-changed");
+                        DesignChangedEvent actualEvent = Json.decodeValue(actualMessage.getMessageBody(), DesignChangedEvent.class);
+                        assertThat(actualEvent.getUuid()).isEqualTo(designId);
+                        assertThat(actualEvent.getTimestamp()).isNotNull();
+                        assertThat(actualEvent.getTimestamp()).isGreaterThan(eventTimestamp);
+                    });
         }
 
         @Test
-        @DisplayName("Should complete tiles and render after receiving all tile completed messages")
-        public void shouldCompleteTileAndRenderWhenReceivingAMessage() {
-            final long eventTimestamp = System.currentTimeMillis();
+        @DisplayName("Should update a design after receiving a DesignUpdate event")
+        public void shouldUpdateDesignWhenReceivingAMessage() {
+            final long eventTimestamp1 = System.currentTimeMillis();
+
+            final long eventTimestamp2 = System.currentTimeMillis();
 
             final UUID designId = UUID.randomUUID();
 
-            final String checksum = UUID.randomUUID().toString();
+            final DesignInsertRequested designInsertEvent = new DesignInsertRequested(designId, JSON_1, eventTimestamp1);
 
-            final DesignChanged designChanged = new DesignChanged(designId, JSON_2, checksum, eventTimestamp);
+            final DesignUpdateRequested designUpdateEvent = new DesignUpdateRequested(designId, JSON_2, eventTimestamp2);
 
             final long messageTimestamp = System.currentTimeMillis();
 
-//            session.rxPrepare("TRUNCATE TILE_ENTITY")
-//                    .map(PreparedStatement::bind)
-//                    .flatMap(session::rxExecute)
-//                    .toBlocking()
-//                    .value();
+            final Message insertDesignMessage = createInsertDesignMessage(UUID.randomUUID(), designId, messageTimestamp, designInsertEvent);
 
-//            final Single<PreparedStatement> preparedStatementSingle = session.rxPrepare("INSERT INTO TILE_ENTITY (TILE_UUID, VERSION_UUID, TILE_LEVEL, TILE_ROW, TILE_COL, TILE_CREATED, TILE_UPDATED, TILE_PUBLISHED) VALUES (?,?,?,?,?,toTimeStamp(now()),toTimeStamp(now()),toTimeStamp(now()))");
-
-//            final UUID tileId = UUID.randomUUID();
-
-//            preparedStatementSingle
-//                    .map(stmt -> stmt.bind(tileId, versionId, level, y, x))
-//                    .flatMap(session::rxExecute)
-//                    .toBlocking()
-//                    .value();
-
-            final Message designChangedMessage = createDesignChangedMessage(UUID.randomUUID(), designId, messageTimestamp, designChanged);
+            final Message updateDesignMessage = createUpdateDesignMessage(UUID.randomUUID(), designId, messageTimestamp, designUpdateEvent);
 
             safelyClearMessages();
 
-            producer.send(createKafkaRecord(designChangedMessage));
+            producer.send(createKafkaRecord(insertDesignMessage));
 
-            final UUID versionId = assertVersionCreated(checksum, JSON_2);
+            pause(100);
 
-            assertLevelCreated(versionId, JSON_2, checksum, (short) 0);
-            assertLevelCreated(versionId, JSON_2, checksum, (short) 1);
-            assertLevelCreated(versionId, JSON_2, checksum, (short) 2);
+            producer.send(createKafkaRecord(updateDesignMessage));
 
-            assertTileCreated(versionId, JSON_2, checksum, (short) 0, (short) 0, (short) 0);
-
-            assertTileCreated(versionId, JSON_2, checksum, (short) 1, (short) 0, (short) 0);
-            assertTileCreated(versionId, JSON_2, checksum, (short) 1, (short) 0, (short) 1);
-            assertTileCreated(versionId, JSON_2, checksum, (short) 1, (short) 1, (short) 0);
-            assertTileCreated(versionId, JSON_2, checksum, (short) 1, (short) 1, (short) 1);
-
-            final TileCompleted tileCompleted0 = new TileCompleted(versionId, (short) 0, (short) 0, (short) 0);
-
-            final TileCompleted tileCompleted1 = new TileCompleted(versionId, (short) 1, (short) 0, (short) 0);
-            final TileCompleted tileCompleted2 = new TileCompleted(versionId, (short) 1, (short) 0, (short) 1);
-            final TileCompleted tileCompleted3 = new TileCompleted(versionId, (short) 1, (short) 1, (short) 0);
-            final TileCompleted tileCompleted4 = new TileCompleted(versionId, (short) 1, (short) 1, (short) 1);
-
-            final Message tileCompletedMessage0 = createTileCompletedMessage(UUID.randomUUID(), versionId, messageTimestamp, tileCompleted0);
-
-            final Message tileCompletedMessage1 = createTileCompletedMessage(UUID.randomUUID(), versionId, messageTimestamp, tileCompleted1);
-            final Message tileCompletedMessage2 = createTileCompletedMessage(UUID.randomUUID(), versionId, messageTimestamp, tileCompleted2);
-            final Message tileCompletedMessage3 = createTileCompletedMessage(UUID.randomUUID(), versionId, messageTimestamp, tileCompleted3);
-            final Message tileCompletedMessage4 = createTileCompletedMessage(UUID.randomUUID(), versionId, messageTimestamp, tileCompleted4);
-
-            safelyClearMessages();
-
-            producer.send(createKafkaRecord(tileCompletedMessage0));
-            producer.send(createKafkaRecord(tileCompletedMessage1));
-            producer.send(createKafkaRecord(tileCompletedMessage2));
-            producer.send(createKafkaRecord(tileCompletedMessage3));
-            producer.send(createKafkaRecord(tileCompletedMessage4));
-
-            assertTileCompleted(versionId, (short) 0, (short) 0, (short) 0);
-
-            assertLevelCompleted(versionId, (short) 0);
-
-            assertTileCompleted(versionId, (short) 1, (short) 0, (short) 0);
-            assertTileCompleted(versionId, (short) 1, (short) 0, (short) 1);
-            assertTileCompleted(versionId, (short) 1, (short) 1, (short) 0);
-            assertTileCompleted(versionId, (short) 1, (short) 1, (short) 1);
-
-            assertLevelCompleted(versionId, (short) 1);
-        }
-
-        private UUID assertVersionCreated(String checksum, String json) {
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final List<Row> rows = session.rxPrepare("SELECT * FROM VERSION_ENTITY WHERE DESIGN_CHECKSUM = ?")
-                                .map(stmt -> stmt.bind(checksum))
+                        final List<Row> rows = session.rxPrepare("SELECT * FROM DESIGN_EVENT WHERE DESIGN_UUID = ?")
+                                .map(stmt -> stmt.bind(designId))
+                                .flatMap(session::rxExecuteWithFullFetch)
+                                .toBlocking()
+                                .value();
+                        assertThat(rows).hasSize(2);
+                        final Set<UUID> uuids = rows.stream()
+                                .map(row -> row.getUuid("DESIGN_UUID"))
+                                .collect(Collectors.toSet());
+                        assertThat(uuids).contains(designId);
+                        String actualJson1 = rows.get(0).get("DESIGN_DATA", String.class);
+                        String actualStatus1 = rows.get(0).get("DESIGN_STATUS", String.class);
+                        Instant actualPublished1 = rows.get(0).getInstant("EVENT_PUBLISHED") ;
+                        assertThat(actualJson1).isEqualTo(JSON_1);
+                        assertThat(actualStatus1).isEqualTo("CREATED");
+                        assertThat(actualPublished1).isNotNull();
+                        String actualJson2 = rows.get(1).get("DESIGN_DATA", String.class);
+                        String actualStatus2 = rows.get(1).get("DESIGN_STATUS", String.class);
+                        Instant actualPublished2 = rows.get(1).getInstant("EVENT_PUBLISHED") ;
+                        assertThat(actualJson2).isEqualTo(JSON_2);
+                        assertThat(actualStatus2).isEqualTo("UPDATED");
+                        assertThat(actualPublished2).isNotNull();
+                    });
+
+            await().atMost(TEN_SECONDS)
+                    .pollInterval(ONE_SECOND)
+                    .untilAsserted(() -> {
+                        final List<Row> rows = session.rxPrepare("SELECT * FROM DESIGN WHERE DESIGN_UUID = ?")
+                                .map(stmt -> stmt.bind(designId))
                                 .flatMap(session::rxExecuteWithFullFetch)
                                 .toBlocking()
                                 .value();
                         assertThat(rows).hasSize(1);
                         rows.forEach(row -> {
-                            UUID actualUuid = row.getUuid("VERSION_UUID");
-                            Instant actualCreated = row.getInstant("VERSION_CREATED");
-                            Instant actualUpdated = row.getInstant("VERSION_UPDATED");
-                            Instant actualPublished = row.getInstant("VERSION_PUBLISHED");
                             String actualJson = row.get("DESIGN_DATA", String.class);
                             String actualChecksum = row.get("DESIGN_CHECKSUM", String.class);
-                            assertThat(actualUuid).isNotNull();
-                            assertThat(actualCreated).isNotNull();
-                            assertThat(actualUpdated).isNotNull();
-                            assertThat(actualPublished).isNotNull();
-                            assertThat(actualJson).isEqualTo(json);
-                            assertThat(actualChecksum).isEqualTo(checksum);
+                            assertThat(actualJson).isEqualTo(JSON_2);
+                            assertThat(actualChecksum).isNotNull();
                         });
                     });
-
-            final List<Row> versions = session.rxPrepare("SELECT * FROM VERSION_ENTITY WHERE DESIGN_CHECKSUM = ?")
-                    .map(stmt -> stmt.bind(checksum))
-                    .flatMap(session::rxExecuteWithFullFetch)
-                    .toBlocking()
-                    .value();
-
-            assertThat(versions).hasSize(1);
-
-            UUID versionId = versions.get(0).getUuid("VERSION_UUID");
-            assertThat(versionId).isNotNull();
 
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final List<Message> messages = safelyFindMessages(versionId.toString());
-                        assertThat(messages).isNotEmpty();
-                        final Message actualMessage = messages.stream()
-                                .filter(message -> message.getMessageType().equals("design-version-created"))
-                                .findFirst()
-                                .orElse(null);
-                        assertThat(actualMessage).isNotNull();
+                        final List<Message> messages = safelyFindMessages(designId.toString());
+                        assertThat(messages).hasSize(2);
+                        final Message actualMessage = messages.get(messages.size() - 1);
                         assertThat(actualMessage.getTimestamp()).isNotNull();
                         assertThat(actualMessage.getMessageSource()).isEqualTo("service-designs");
-                        assertThat(actualMessage.getPartitionKey()).isEqualTo(versionId.toString());
+                        assertThat(actualMessage.getPartitionKey()).isEqualTo(designId.toString());
                         assertThat(actualMessage.getMessageId()).isNotNull();
-                        assertThat(actualMessage.getMessageType()).isEqualTo("design-version-created");
-                        VersionCreated actualEvent = Json.decodeValue(actualMessage.getMessageBody(), VersionCreated.class);
-                        assertThat(actualEvent.getUuid()).isEqualTo(versionId);
+                        assertThat(actualMessage.getMessageType()).isEqualTo("design-changed");
+                        DesignChangedEvent actualEvent = Json.decodeValue(actualMessage.getMessageBody(), DesignChangedEvent.class);
+                        assertThat(actualEvent.getUuid()).isEqualTo(designId);
+                        assertThat(actualEvent.getTimestamp()).isNotNull();
+                        assertThat(actualEvent.getTimestamp()).isGreaterThan(eventTimestamp2);
                     });
-
-            return versionId;
         }
 
-        private UUID assertLevelCreated(UUID versionId, String json, String checksum, short level) {
+        @Test
+        @DisplayName("Should delete a design after receiving a DesignDelete event")
+        public void shouldDeleteDesignWhenReceivingAMessage() {
+            final long eventTimestamp1 = System.currentTimeMillis();
+
+            final long eventTimestamp2 = System.currentTimeMillis();
+
+            final UUID designId = UUID.randomUUID();
+
+            final DesignInsertRequested designInsertEvent = new DesignInsertRequested(designId, JSON_1, eventTimestamp1);
+
+            final DesignDeleteRequested designDeleteEvent = new DesignDeleteRequested(designId, eventTimestamp2);
+
+            final long messageTimestamp = System.currentTimeMillis();
+
+            final Message insertDesignMessage = createInsertDesignMessage(UUID.randomUUID(), designId, messageTimestamp, designInsertEvent);
+
+            final Message deleteDesignMessage = createDeleteDesignMessage(UUID.randomUUID(), designId, messageTimestamp, designDeleteEvent);
+
+            safelyClearMessages();
+
+            producer.send(createKafkaRecord(insertDesignMessage));
+
+            pause(100);
+
+            producer.send(createKafkaRecord(deleteDesignMessage));
+
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final List<Row> rows = session.rxPrepare("SELECT * FROM RENDER_ENTITY WHERE VERSION_UUID = ? AND RENDER_LEVEL = ?")
-                                .map(stmt -> stmt.bind(versionId, level))
+                        final List<Row> rows = session.rxPrepare("SELECT * FROM DESIGN_EVENT WHERE DESIGN_UUID = ?")
+                                .map(stmt -> stmt.bind(designId))
                                 .flatMap(session::rxExecuteWithFullFetch)
                                 .toBlocking()
                                 .value();
-                        assertThat(rows).hasSize(1);
-                        rows.forEach(row -> {
-                            UUID actualUuid = row.getUuid("RENDER_UUID");
-                            Instant actualCreated = row.getInstant("RENDER_CREATED");
-                            Instant actualUpdated = row.getInstant("RENDER_UPDATED");
-                            Instant actualPublished = row.getInstant("RENDER_PUBLISHED");
-                            Instant actualCompleted = row.getInstant("RENDER_COMPLETED");
-                            UUID actualVersionUuid = row.getUuid("VERSION_UUID");
-                            short actualLevel = row.getShort("RENDER_LEVEL");
-                            assertThat(actualUuid).isNotNull();
-                            assertThat(actualCreated).isNotNull();
-                            assertThat(actualUpdated).isNotNull();
-                            assertThat(actualPublished).isNotNull();
-                            assertThat(actualCompleted).isNull();
-                            assertThat(actualVersionUuid).isEqualTo(versionId);
-                            assertThat(actualLevel).isEqualTo(level);
-                        });
+                        assertThat(rows).hasSize(2);
+                        final Set<UUID> uuids = rows.stream()
+                                .map(row -> row.getUuid("DESIGN_UUID"))
+                                .collect(Collectors.toSet());
+                        assertThat(uuids).contains(designId);
+                        String actualJson1 = rows.get(0).get("DESIGN_DATA", String.class);
+                        String actualStatus1 = rows.get(0).get("DESIGN_STATUS", String.class);
+                        Instant actualPublished1 = rows.get(0).getInstant("EVENT_PUBLISHED") ;
+                        assertThat(actualJson1).isEqualTo(JSON_1);
+                        assertThat(actualStatus1).isEqualTo("CREATED");
+                        assertThat(actualPublished1).isNotNull();
+                        String actualJson2 = rows.get(1).get("DESIGN_DATA", String.class);
+                        String actualStatus2 = rows.get(1).get("DESIGN_STATUS", String.class);
+                        Instant actualPublished2 = rows.get(1).getInstant("EVENT_PUBLISHED") ;
+                        assertThat(actualJson2).isNull();
+                        assertThat(actualStatus2).isEqualTo("DELETED");
+                        assertThat(actualPublished2).isNotNull();
                     });
-
-            final List<Row> rows = session.rxPrepare("SELECT * FROM RENDER_ENTITY WHERE VERSION_UUID = ? AND RENDER_LEVEL = ?")
-                    .map(stmt -> stmt.bind(versionId, level))
-                    .flatMap(session::rxExecuteWithFullFetch)
-                    .toBlocking()
-                    .value();
-
-            assertThat(rows).hasSize(1);
-
-            UUID renderId = rows.get(0).getUuid("RENDER_UUID");
-            assertThat(renderId).isNotNull();
 
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final List<Message> messages = safelyFindMessages(versionId.toString());
-                        assertThat(messages).isNotEmpty();
-                        final List<Message> actualMessages = messages.stream()
-                                .filter(message -> message.getMessageType().equals("design-render-created"))
-                                .collect(Collectors.toList());
-                        assertThat(actualMessages).hasSize(3);
-                        actualMessages.forEach(actualMessage -> {
-                            assertThat(actualMessage.getTimestamp()).isNotNull();
-                            assertThat(actualMessage.getMessageSource()).isEqualTo("service-designs");
-                            assertThat(actualMessage.getPartitionKey()).isEqualTo(versionId.toString());
-                            assertThat(actualMessage.getMessageId()).isNotNull();
-                        });
-                        RenderCreated actualEvent = actualMessages.stream()
-                                .map(message -> Json.decodeValue(message.getMessageBody(), RenderCreated.class))
-                                .filter(event -> event.getLevel() == level)
-                                .findFirst()
-                                .orElse(null);
-                        assertThat(actualEvent).isNotNull();
-                        assertThat(actualEvent.getUuid()).isEqualTo(versionId);
-                        assertThat(actualEvent.getChecksum()).isEqualTo(checksum);
-                        assertThat(actualEvent.getData()).isEqualTo(json);
-                    });
-
-            return renderId;
-        }
-
-        private UUID assertLevelCompleted(UUID versionId, short level) {
-            await().atMost(ONE_MINUTE)
-                    .pollInterval(ONE_SECOND)
-                    .untilAsserted(() -> {
-                        final List<Row> rows = session.rxPrepare("SELECT * FROM RENDER_ENTITY WHERE VERSION_UUID = ? AND RENDER_LEVEL = ?")
-                                .map(stmt -> stmt.bind(versionId, level))
+                        final List<Row> rows = session.rxPrepare("SELECT * FROM DESIGN WHERE DESIGN_UUID = ?")
+                                .map(stmt -> stmt.bind(designId))
                                 .flatMap(session::rxExecuteWithFullFetch)
                                 .toBlocking()
                                 .value();
-                        assertThat(rows).hasSize(1);
-                        rows.forEach(row -> {
-                            UUID actualUuid = row.getUuid("RENDER_UUID");
-                            Instant actualCreated = row.getInstant("RENDER_CREATED");
-                            Instant actualUpdated = row.getInstant("RENDER_UPDATED");
-                            Instant actualPublished = row.getInstant("RENDER_PUBLISHED");
-                            Instant actualCompleted = row.getInstant("RENDER_COMPLETED");
-                            UUID actualVersionUuid = row.getUuid("VERSION_UUID");
-                            short actualLevel = row.getShort("RENDER_LEVEL");
-                            assertThat(actualUuid).isNotNull();
-                            assertThat(actualCreated).isNotNull();
-                            assertThat(actualUpdated).isNotNull();
-                            assertThat(actualPublished).isNotNull();
-                            assertThat(actualCompleted).isNotNull();
-                            assertThat(actualVersionUuid).isEqualTo(versionId);
-                            assertThat(actualLevel).isEqualTo(level);
-                        });
+                        assertThat(rows).hasSize(0);
                     });
-
-            final List<Row> rows = session.rxPrepare("SELECT * FROM RENDER_ENTITY WHERE VERSION_UUID = ? AND RENDER_LEVEL = ?")
-                    .map(stmt -> stmt.bind(versionId, level))
-                    .flatMap(session::rxExecuteWithFullFetch)
-                    .toBlocking()
-                    .value();
-
-            assertThat(rows).hasSize(1);
-
-            UUID renderId = rows.get(0).getUuid("RENDER_UUID");
-            assertThat(renderId).isNotNull();
 
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final List<Message> messages = safelyFindMessages(versionId.toString());
-                        assertThat(messages).isNotEmpty();
-                        final List<Message> actualMessages = messages.stream()
-                                .filter(message -> message.getMessageType().equals("design-render-completed"))
-                                .collect(Collectors.toList());
-                        assertThat(actualMessages).hasSize(2);
-                        actualMessages.forEach(actualMessage -> {
-                            assertThat(actualMessage.getTimestamp()).isNotNull();
-                            assertThat(actualMessage.getMessageSource()).isEqualTo("service-designs");
-                            assertThat(actualMessage.getPartitionKey()).isEqualTo(versionId.toString());
-                            assertThat(actualMessage.getMessageId()).isNotNull();
-                        });
-                        RenderCompleted actualEvent = actualMessages.stream()
-                                .map(message -> Json.decodeValue(message.getMessageBody(), RenderCompleted.class))
-                                .filter(event -> event.getLevel() == level)
-                                .findFirst()
-                                .orElse(null);
-                        assertThat(actualEvent).isNotNull();
-                        assertThat(actualEvent.getUuid()).isEqualTo(versionId);
+                        final List<Message> messages = safelyFindMessages(designId.toString());
+                        assertThat(messages).hasSize(2);
+                        final Message actualMessage = messages.get(messages.size() - 1);
+                        assertThat(actualMessage.getTimestamp()).isNotNull();
+                        assertThat(actualMessage.getMessageSource()).isEqualTo("service-designs");
+                        assertThat(actualMessage.getPartitionKey()).isEqualTo(designId.toString());
+                        assertThat(actualMessage.getMessageId()).isNotNull();
+                        assertThat(actualMessage.getMessageType()).isEqualTo("design-changed");
+                        DesignChangedEvent actualEvent = Json.decodeValue(actualMessage.getMessageBody(), DesignChangedEvent.class);
+                        assertThat(actualEvent.getUuid()).isEqualTo(designId);
+                        assertThat(actualEvent.getTimestamp()).isNotNull();
+                        assertThat(actualEvent.getTimestamp()).isGreaterThan(eventTimestamp2);
                     });
-
-            return renderId;
-        }
-
-        private UUID assertTileCreated(UUID versionId, String json, String checksum, short level, short x, short y) {
-            await().atMost(Duration.of(30L, ChronoUnit.SECONDS))
-                    .pollInterval(ONE_SECOND)
-                    .untilAsserted(() -> {
-                        final List<Row> rows = session.rxPrepare("SELECT * FROM TILE_ENTITY WHERE VERSION_UUID = ? AND TILE_LEVEL = ? AND TILE_ROW = ? AND TILE_COL = ?")
-                                .map(stmt -> stmt.bind(versionId, level, y, x))
-                                .flatMap(session::rxExecuteWithFullFetch)
-                                .toBlocking()
-                                .value();
-                        assertThat(rows).hasSize(1);
-                        rows.forEach(row -> {
-                            UUID actualUuid = row.getUuid("TILE_UUID");
-                            Instant actualCreated = row.getInstant("TILE_CREATED");
-                            Instant actualUpdated = row.getInstant("TILE_UPDATED");
-                            Instant actualPublished = row.getInstant("TILE_PUBLISHED");
-                            Instant actualCompleted = row.getInstant("TILE_COMPLETED");
-                            UUID actualVersionUuid = row.getUuid("VERSION_UUID");
-                            short actualLevel = row.getShort("TILE_LEVEL");
-                            assertThat(actualUuid).isNotNull();
-                            assertThat(actualCreated).isNotNull();
-                            assertThat(actualUpdated).isNotNull();
-                            assertThat(actualPublished).isNotNull();
-                            assertThat(actualCompleted).isNull();
-                            assertThat(actualVersionUuid).isEqualTo(versionId);
-                            assertThat(actualLevel).isEqualTo(level);
-                        });
-                    });
-
-            final List<Row> rows = session.rxPrepare("SELECT * FROM TILE_ENTITY WHERE VERSION_UUID = ? AND TILE_LEVEL = ? AND TILE_ROW = ? AND TILE_COL = ?")
-                    .map(stmt -> stmt.bind(versionId, level, y, x))
-                    .flatMap(session::rxExecuteWithFullFetch)
-                    .toBlocking()
-                    .value();
-
-            assertThat(rows).hasSize(1);
-
-            UUID tileId = rows.get(0).getUuid("TILE_UUID");
-            assertThat(tileId).isNotNull();
-
-            await().atMost(TEN_SECONDS)
-                    .pollInterval(ONE_SECOND)
-                    .untilAsserted(() -> {
-                        final List<Message> messages = safelyFindMessages(versionId.toString());
-                        assertThat(messages).isNotEmpty();
-                        final List<Message> actualMessages = messages.stream()
-                                .filter(message -> message.getMessageType().equals("design-tile-created"))
-                                .collect(Collectors.toList());
-                        assertThat(actualMessages).hasSize(21);
-                        actualMessages.forEach(actualMessage -> {
-                            assertThat(actualMessage.getTimestamp()).isNotNull();
-                            assertThat(actualMessage.getMessageSource()).isEqualTo("service-designs");
-                            assertThat(actualMessage.getPartitionKey()).isEqualTo(versionId.toString());
-                            assertThat(actualMessage.getMessageId()).isNotNull();
-                        });
-                        TileCreated actualEvent = actualMessages.stream()
-                                .map(message -> Json.decodeValue(message.getMessageBody(), TileCreated.class))
-                                .filter(event -> event.getLevel() == level)
-                                .filter(event -> event.getX() == x)
-                                .filter(event -> event.getY() == y)
-                                .findFirst()
-                                .orElse(null);
-                        assertThat(actualEvent).isNotNull();
-                        assertThat(actualEvent.getUuid()).isEqualTo(versionId);
-                        assertThat(actualEvent.getChecksum()).isEqualTo(checksum);
-                        assertThat(actualEvent.getData()).isEqualTo(json);
-                    });
-
-            return tileId;
-        }
-
-        private UUID assertTileCompleted(UUID versionId, short level, short x, short y) {
-            await().atMost(ONE_MINUTE)
-                    .pollInterval(ONE_SECOND)
-                    .untilAsserted(() -> {
-                        final List<Row> rows = session.rxPrepare("SELECT * FROM TILE_ENTITY WHERE VERSION_UUID = ? AND TILE_LEVEL = ? AND TILE_ROW = ? AND TILE_COL = ?")
-                                .map(stmt -> stmt.bind(versionId, level, y, x))
-                                .flatMap(session::rxExecuteWithFullFetch)
-                                .toBlocking()
-                                .value();
-                        assertThat(rows).hasSize(1);
-                        rows.forEach(row -> {
-                            UUID actualUuid = row.getUuid("TILE_UUID");
-                            Instant actualCreated = row.getInstant("TILE_CREATED");
-                            Instant actualUpdated = row.getInstant("TILE_UPDATED");
-                            Instant actualPublished = row.getInstant("TILE_PUBLISHED");
-                            Instant actualCompleted = row.getInstant("TILE_COMPLETED");
-                            UUID actualVersionUuid = row.getUuid("VERSION_UUID");
-                            short actualLevel = row.getShort("TILE_LEVEL");
-                            assertThat(actualUuid).isNotNull();
-                            assertThat(actualCreated).isNotNull();
-                            assertThat(actualUpdated).isNotNull();
-                            assertThat(actualPublished).isNotNull();
-                            assertThat(actualCompleted).isNotNull();
-                            assertThat(actualVersionUuid).isEqualTo(versionId);
-                            assertThat(actualLevel).isEqualTo(level);
-                        });
-                    });
-
-            final List<Row> rows = session.rxPrepare("SELECT * FROM TILE_ENTITY WHERE VERSION_UUID = ? AND TILE_LEVEL = ? AND TILE_ROW = ? AND TILE_COL = ?")
-                    .map(stmt -> stmt.bind(versionId, level, y, x))
-                    .flatMap(session::rxExecuteWithFullFetch)
-                    .toBlocking()
-                    .value();
-
-            assertThat(rows).hasSize(1);
-
-            UUID tileId = rows.get(0).getUuid("TILE_UUID");
-            assertThat(tileId).isNotNull();
-
-            await().atMost(TEN_SECONDS)
-                    .pollInterval(ONE_SECOND)
-                    .untilAsserted(() -> {
-                        final List<Message> messages = safelyFindMessages(versionId.toString());
-                        assertThat(messages).isNotEmpty();
-                        final List<Message> actualMessages = messages.stream()
-                                .filter(message -> message.getMessageType().equals("design-tile-completed"))
-                                .collect(Collectors.toList());
-                        assertThat(actualMessages).hasSize(5);
-                        actualMessages.forEach(actualMessage -> {
-                            assertThat(actualMessage.getTimestamp()).isNotNull();
-                            assertThat(actualMessage.getMessageSource()).isEqualTo("test");
-                            assertThat(actualMessage.getPartitionKey()).isEqualTo(versionId.toString());
-                            assertThat(actualMessage.getMessageId()).isNotNull();
-                        });
-                        TileCompleted actualEvent = actualMessages.stream()
-                                .map(message -> Json.decodeValue(message.getMessageBody(), TileCompleted.class))
-                                .filter(event -> event.getLevel() == level)
-                                .filter(event -> event.getX() == x)
-                                .filter(event -> event.getY() == y)
-                                .findFirst()
-                                .orElseThrow();
-                        assertThat(actualEvent.getUuid()).isEqualTo(versionId);
-                    });
-
-            return tileId;
         }
     }
+
+//    @Nested
+//    @Tag("slow")
+//    @Tag("integration")
+//    @DisplayName("Verify behaviour of designs-event-consumer service")
+//    public class VerifyServiceApi {
+//        @AfterEach
+//        public void reset() {
+//            RestAssured.reset();
+//        }
+//
+//        @Disabled
+//        @Test
+//        @DisplayName("Should create version and tiles after receiving an insert command")
+//        public void shouldCreateVersionAndRendersAndTilesWhenReceivingAMessage() {
+//            final long eventTimestamp = System.currentTimeMillis();
+//
+//            final UUID designId = UUID.randomUUID();
+//
+//            final String checksum = UUID.randomUUID().toString();
+//
+//            final DesignChangedEvent designChanged = new DesignChangedEvent(designId, JSON_1, checksum, eventTimestamp);
+//
+//            final long messageTimestamp = System.currentTimeMillis();
+//
+//            final Message designChangedMessage = createDesignChangedMessage(UUID.randomUUID(), designId, messageTimestamp, designChanged);
+//
+//            safelyClearMessages();
+//
+//            producer.send(createKafkaRecord(designChangedMessage));
+//
+//            final UUID versionId = assertVersionCreated(checksum, JSON_1);
+//
+//            assertLevelCreated(versionId, JSON_1, checksum, (short) 0);
+//            assertLevelCreated(versionId, JSON_1, checksum, (short) 1);
+//            assertLevelCreated(versionId, JSON_1, checksum, (short) 2);
+//
+//            assertTileCreated(versionId, JSON_1, checksum, (short) 0, (short) 0, (short) 0);
+//
+//            assertTileCreated(versionId, JSON_1, checksum, (short) 1, (short) 0, (short) 0);
+//            assertTileCreated(versionId, JSON_1, checksum, (short) 1, (short) 0, (short) 1);
+//            assertTileCreated(versionId, JSON_1, checksum, (short) 1, (short) 1, (short) 0);
+//            assertTileCreated(versionId, JSON_1, checksum, (short) 1, (short) 1, (short) 1);
+//
+//            assertTileCreated(versionId, JSON_1, checksum, (short) 2, (short) 0, (short) 0);
+//            assertTileCreated(versionId, JSON_1, checksum, (short) 2, (short) 0, (short) 1);
+//            assertTileCreated(versionId, JSON_1, checksum, (short) 2, (short) 0, (short) 2);
+//            assertTileCreated(versionId, JSON_1, checksum, (short) 2, (short) 0, (short) 3);
+//            assertTileCreated(versionId, JSON_1, checksum, (short) 2, (short) 1, (short) 0);
+//            assertTileCreated(versionId, JSON_1, checksum, (short) 2, (short) 1, (short) 1);
+//            assertTileCreated(versionId, JSON_1, checksum, (short) 2, (short) 1, (short) 2);
+//            assertTileCreated(versionId, JSON_1, checksum, (short) 2, (short) 1, (short) 3);
+//            assertTileCreated(versionId, JSON_1, checksum, (short) 2, (short) 2, (short) 0);
+//            assertTileCreated(versionId, JSON_1, checksum, (short) 2, (short) 2, (short) 1);
+//            assertTileCreated(versionId, JSON_1, checksum, (short) 2, (short) 2, (short) 2);
+//            assertTileCreated(versionId, JSON_1, checksum, (short) 2, (short) 2, (short) 3);
+//            assertTileCreated(versionId, JSON_1, checksum, (short) 2, (short) 3, (short) 0);
+//            assertTileCreated(versionId, JSON_1, checksum, (short) 2, (short) 3, (short) 1);
+//            assertTileCreated(versionId, JSON_1, checksum, (short) 2, (short) 3, (short) 2);
+//            assertTileCreated(versionId, JSON_1, checksum, (short) 2, (short) 3, (short) 3);
+//        }
+//
+//        @Test
+//        @DisplayName("Should complete tiles and render after receiving all tile completed messages")
+//        public void shouldCompleteTileAndRenderWhenReceivingAMessage() {
+//            final long eventTimestamp = System.currentTimeMillis();
+//
+//            final UUID designId = UUID.randomUUID();
+//
+//            final String checksum = UUID.randomUUID().toString();
+//
+//            final DesignChangedEvent designChanged = new DesignChangedEvent(designId, JSON_2, checksum, eventTimestamp);
+//
+//            final long messageTimestamp = System.currentTimeMillis();
+//
+////            session.rxPrepare("TRUNCATE TILE")
+////                    .map(PreparedStatement::bind)
+////                    .flatMap(session::rxExecute)
+////                    .toBlocking()
+////                    .value();
+//
+////            final Single<PreparedStatement> preparedStatementSingle = session.rxPrepare("INSERT INTO TILE (DESIGN_UUID, VERSION_UUID, TILE_LEVEL, TILE_ROW, TILE_COL, TILE_CREATED, TILE_UPDATED, TILE_PUBLISHED) VALUES (?,?,?,?,?,toTimeStamp(now()),toTimeStamp(now()),toTimeStamp(now()))");
+//
+////            final UUID tileId = UUID.randomUUID();
+//
+////            preparedStatementSingle
+////                    .map(stmt -> stmt.bind(tileId, versionId, level, y, x))
+////                    .flatMap(session::rxExecute)
+////                    .toBlocking()
+////                    .value();
+//
+//            final Message designChangedMessage = createDesignChangedMessage(UUID.randomUUID(), designId, messageTimestamp, designChanged);
+//
+//            safelyClearMessages();
+//
+//            producer.send(createKafkaRecord(designChangedMessage));
+//
+//            final UUID versionId = assertVersionCreated(checksum, JSON_2);
+//
+//            assertLevelCreated(versionId, JSON_2, checksum, (short) 0);
+//            assertLevelCreated(versionId, JSON_2, checksum, (short) 1);
+//            assertLevelCreated(versionId, JSON_2, checksum, (short) 2);
+//
+//            assertTileCreated(versionId, JSON_2, checksum, (short) 0, (short) 0, (short) 0);
+//
+//            assertTileCreated(versionId, JSON_2, checksum, (short) 1, (short) 0, (short) 0);
+//            assertTileCreated(versionId, JSON_2, checksum, (short) 1, (short) 0, (short) 1);
+//            assertTileCreated(versionId, JSON_2, checksum, (short) 1, (short) 1, (short) 0);
+//            assertTileCreated(versionId, JSON_2, checksum, (short) 1, (short) 1, (short) 1);
+//
+//            final TileCompletedEvent tileCompleted0 = new TileCompletedEvent(versionId, "", (short) 0, (short) 0, (short) 0);
+//
+//            final TileCompletedEvent tileCompleted1 = new TileCompletedEvent(versionId, "", (short) 1, (short) 0, (short) 0);
+//            final TileCompletedEvent tileCompleted2 = new TileCompletedEvent(versionId, "", (short) 1, (short) 0, (short) 1);
+//            final TileCompletedEvent tileCompleted3 = new TileCompletedEvent(versionId, "", (short) 1, (short) 1, (short) 0);
+//            final TileCompletedEvent tileCompleted4 = new TileCompletedEvent(versionId, "", (short) 1, (short) 1, (short) 1);
+//
+//            final Message tileCompletedMessage0 = createTileCompletedMessage(UUID.randomUUID(), versionId, messageTimestamp, tileCompleted0);
+//
+//            final Message tileCompletedMessage1 = createTileCompletedMessage(UUID.randomUUID(), versionId, messageTimestamp, tileCompleted1);
+//            final Message tileCompletedMessage2 = createTileCompletedMessage(UUID.randomUUID(), versionId, messageTimestamp, tileCompleted2);
+//            final Message tileCompletedMessage3 = createTileCompletedMessage(UUID.randomUUID(), versionId, messageTimestamp, tileCompleted3);
+//            final Message tileCompletedMessage4 = createTileCompletedMessage(UUID.randomUUID(), versionId, messageTimestamp, tileCompleted4);
+//
+//            safelyClearMessages();
+//
+//            producer.send(createKafkaRecord(tileCompletedMessage0));
+//            producer.send(createKafkaRecord(tileCompletedMessage1));
+//            producer.send(createKafkaRecord(tileCompletedMessage2));
+//            producer.send(createKafkaRecord(tileCompletedMessage3));
+//            producer.send(createKafkaRecord(tileCompletedMessage4));
+//
+//            assertTileCompleted(versionId, (short) 0, (short) 0, (short) 0);
+//
+//            assertLevelCompleted(versionId, (short) 0);
+//
+//            assertTileCompleted(versionId, (short) 1, (short) 0, (short) 0);
+//            assertTileCompleted(versionId, (short) 1, (short) 0, (short) 1);
+//            assertTileCompleted(versionId, (short) 1, (short) 1, (short) 0);
+//            assertTileCompleted(versionId, (short) 1, (short) 1, (short) 1);
+//
+//            assertLevelCompleted(versionId, (short) 1);
+//        }
+//
+//        private UUID assertVersionCreated(String checksum, String json) {
+//            await().atMost(TEN_SECONDS)
+//                    .pollInterval(ONE_SECOND)
+//                    .untilAsserted(() -> {
+//                        final List<Row> rows = session.rxPrepare("SELECT * FROM VERSION WHERE DESIGN_CHECKSUM = ?")
+//                                .map(stmt -> stmt.bind(checksum))
+//                                .flatMap(session::rxExecuteWithFullFetch)
+//                                .toBlocking()
+//                                .value();
+//                        assertThat(rows).hasSize(1);
+//                        rows.forEach(row -> {
+//                            UUID actualUuid = row.getUuid("VERSION_UUID");
+//                            Instant actualCreated = row.getInstant("VERSION_CREATED");
+//                            Instant actualUpdated = row.getInstant("VERSION_UPDATED");
+//                            Instant actualPublished = row.getInstant("VERSION_PUBLISHED");
+//                            String actualJson = row.get("DESIGN_DATA", String.class);
+//                            String actualChecksum = row.get("DESIGN_CHECKSUM", String.class);
+//                            assertThat(actualUuid).isNotNull();
+//                            assertThat(actualCreated).isNotNull();
+//                            assertThat(actualUpdated).isNotNull();
+//                            assertThat(actualPublished).isNotNull();
+//                            assertThat(actualJson).isEqualTo(json);
+//                            assertThat(actualChecksum).isEqualTo(checksum);
+//                        });
+//                    });
+//
+//            final List<Row> versions = session.rxPrepare("SELECT * FROM VERSION WHERE DESIGN_CHECKSUM = ?")
+//                    .map(stmt -> stmt.bind(checksum))
+//                    .flatMap(session::rxExecuteWithFullFetch)
+//                    .toBlocking()
+//                    .value();
+//
+//            assertThat(versions).hasSize(1);
+//
+//            UUID versionId = versions.get(0).getUuid("VERSION_UUID");
+//            assertThat(versionId).isNotNull();
+//
+//            await().atMost(TEN_SECONDS)
+//                    .pollInterval(ONE_SECOND)
+//                    .untilAsserted(() -> {
+//                        final List<Message> messages = safelyFindMessages(versionId.toString());
+//                        assertThat(messages).isNotEmpty();
+//                        final Message actualMessage = messages.stream()
+//                                .filter(message -> message.getMessageType().equals("design-version-created"))
+//                                .findFirst()
+//                                .orElse(null);
+//                        assertThat(actualMessage).isNotNull();
+//                        assertThat(actualMessage.getTimestamp()).isNotNull();
+//                        assertThat(actualMessage.getMessageSource()).isEqualTo("service-designs");
+//                        assertThat(actualMessage.getPartitionKey()).isEqualTo(versionId.toString());
+//                        assertThat(actualMessage.getMessageId()).isNotNull();
+//                        assertThat(actualMessage.getMessageType()).isEqualTo("design-version-created");
+//                        VersionCreated actualEvent = Json.decodeValue(actualMessage.getMessageBody(), VersionCreated.class);
+//                        assertThat(actualEvent.getUuid()).isEqualTo(versionId);
+//                    });
+//
+//            return versionId;
+//        }
+//
+//        private UUID assertLevelCreated(UUID versionId, String json, String checksum, short level) {
+//            await().atMost(TEN_SECONDS)
+//                    .pollInterval(ONE_SECOND)
+//                    .untilAsserted(() -> {
+//                        final List<Row> rows = session.rxPrepare("SELECT * FROM RENDER WHERE VERSION_UUID = ? AND RENDER_LEVEL = ?")
+//                                .map(stmt -> stmt.bind(versionId, level))
+//                                .flatMap(session::rxExecuteWithFullFetch)
+//                                .toBlocking()
+//                                .value();
+//                        assertThat(rows).hasSize(1);
+//                        rows.forEach(row -> {
+//                            UUID actualUuid = row.getUuid("RENDER_UUID");
+//                            Instant actualCreated = row.getInstant("RENDER_CREATED");
+//                            Instant actualUpdated = row.getInstant("RENDER_UPDATED");
+//                            Instant actualPublished = row.getInstant("RENDER_PUBLISHED");
+//                            UUID actualVersionUuid = row.getUuid("VERSION_UUID");
+//                            short actualLevel = row.getShort("RENDER_LEVEL");
+//                            assertThat(actualUuid).isNotNull();
+//                            assertThat(actualCreated).isNotNull();
+//                            assertThat(actualUpdated).isNotNull();
+//                            assertThat(actualPublished).isNotNull();
+//                            assertThat(actualVersionUuid).isEqualTo(versionId);
+//                            assertThat(actualLevel).isEqualTo(level);
+//                        });
+//                    });
+//
+//            final List<Row> rows = session.rxPrepare("SELECT * FROM RENDER WHERE VERSION_UUID = ? AND RENDER_LEVEL = ?")
+//                    .map(stmt -> stmt.bind(versionId, level))
+//                    .flatMap(session::rxExecuteWithFullFetch)
+//                    .toBlocking()
+//                    .value();
+//
+//            assertThat(rows).hasSize(1);
+//
+//            UUID renderId = rows.get(0).getUuid("RENDER_UUID");
+//            assertThat(renderId).isNotNull();
+//
+//            await().atMost(TEN_SECONDS)
+//                    .pollInterval(ONE_SECOND)
+//                    .untilAsserted(() -> {
+//                        final List<Message> messages = safelyFindMessages(versionId.toString());
+//                        assertThat(messages).isNotEmpty();
+//                        final List<Message> actualMessages = messages.stream()
+//                                .filter(message -> message.getMessageType().equals("design-render-created"))
+//                                .collect(Collectors.toList());
+//                        assertThat(actualMessages).hasSize(3);
+//                        actualMessages.forEach(actualMessage -> {
+//                            assertThat(actualMessage.getTimestamp()).isNotNull();
+//                            assertThat(actualMessage.getMessageSource()).isEqualTo("service-designs");
+//                            assertThat(actualMessage.getPartitionKey()).isEqualTo(versionId.toString());
+//                            assertThat(actualMessage.getMessageId()).isNotNull();
+//                        });
+//                        RenderCreated actualEvent = actualMessages.stream()
+//                                .map(message -> Json.decodeValue(message.getMessageBody(), RenderCreated.class))
+//                                .filter(event -> event.getLevel() == level)
+//                                .findFirst()
+//                                .orElse(null);
+//                        assertThat(actualEvent).isNotNull();
+//                        assertThat(actualEvent.getUuid()).isEqualTo(versionId);
+//                        assertThat(actualEvent.getChecksum()).isEqualTo(checksum);
+//                        assertThat(actualEvent.getData()).isEqualTo(json);
+//                    });
+//
+//            return renderId;
+//        }
+//
+//        private UUID assertLevelCompleted(UUID versionId, short level) {
+//            await().atMost(ONE_MINUTE)
+//                    .pollInterval(ONE_SECOND)
+//                    .untilAsserted(() -> {
+//                        final List<Row> rows = session.rxPrepare("SELECT * FROM RENDER WHERE VERSION_UUID = ? AND RENDER_LEVEL = ?")
+//                                .map(stmt -> stmt.bind(versionId, level))
+//                                .flatMap(session::rxExecuteWithFullFetch)
+//                                .toBlocking()
+//                                .value();
+//                        assertThat(rows).hasSize(1);
+//                        rows.forEach(row -> {
+//                            UUID actualUuid = row.getUuid("RENDER_UUID");
+//                            Instant actualCreated = row.getInstant("RENDER_CREATED");
+//                            Instant actualUpdated = row.getInstant("RENDER_UPDATED");
+//                            Instant actualPublished = row.getInstant("RENDER_PUBLISHED");
+//                            UUID actualVersionUuid = row.getUuid("VERSION_UUID");
+//                            short actualLevel = row.getShort("RENDER_LEVEL");
+//                            assertThat(actualUuid).isNotNull();
+//                            assertThat(actualCreated).isNotNull();
+//                            assertThat(actualUpdated).isNotNull();
+//                            assertThat(actualPublished).isNotNull();
+//                            assertThat(actualVersionUuid).isEqualTo(versionId);
+//                            assertThat(actualLevel).isEqualTo(level);
+//                        });
+//                    });
+//
+//            final List<Row> rows = session.rxPrepare("SELECT * FROM RENDER WHERE VERSION_UUID = ? AND RENDER_LEVEL = ?")
+//                    .map(stmt -> stmt.bind(versionId, level))
+//                    .flatMap(session::rxExecuteWithFullFetch)
+//                    .toBlocking()
+//                    .value();
+//
+//            assertThat(rows).hasSize(1);
+//
+//            UUID renderId = rows.get(0).getUuid("RENDER_UUID");
+//            assertThat(renderId).isNotNull();
+//
+//            await().atMost(TEN_SECONDS)
+//                    .pollInterval(ONE_SECOND)
+//                    .untilAsserted(() -> {
+//                        final List<Message> messages = safelyFindMessages(versionId.toString());
+//                        assertThat(messages).isNotEmpty();
+//                        final List<Message> actualMessages = messages.stream()
+//                                .filter(message -> message.getMessageType().equals("design-render-completed"))
+//                                .collect(Collectors.toList());
+//                        assertThat(actualMessages).hasSize(2);
+//                        actualMessages.forEach(actualMessage -> {
+//                            assertThat(actualMessage.getTimestamp()).isNotNull();
+//                            assertThat(actualMessage.getMessageSource()).isEqualTo("service-designs");
+//                            assertThat(actualMessage.getPartitionKey()).isEqualTo(versionId.toString());
+//                            assertThat(actualMessage.getMessageId()).isNotNull();
+//                        });
+//                        RenderCompleted actualEvent = actualMessages.stream()
+//                                .map(message -> Json.decodeValue(message.getMessageBody(), RenderCompleted.class))
+//                                .filter(event -> event.getLevel() == level)
+//                                .findFirst()
+//                                .orElse(null);
+//                        assertThat(actualEvent).isNotNull();
+//                        assertThat(actualEvent.getUuid()).isEqualTo(versionId);
+//                    });
+//
+//            return renderId;
+//        }
+//
+//        private UUID assertTileCreated(UUID versionId, String json, String checksum, short level, short x, short y) {
+//            await().atMost(Duration.of(30L, ChronoUnit.SECONDS))
+//                    .pollInterval(ONE_SECOND)
+//                    .untilAsserted(() -> {
+//                        final List<Row> rows = session.rxPrepare("SELECT * FROM TILE WHERE VERSION_UUID = ? AND TILE_LEVEL = ? AND TILE_ROW = ? AND TILE_COL = ?")
+//                                .map(stmt -> stmt.bind(versionId, level, y, x))
+//                                .flatMap(session::rxExecuteWithFullFetch)
+//                                .toBlocking()
+//                                .value();
+//                        assertThat(rows).hasSize(1);
+//                        rows.forEach(row -> {
+//                            UUID actualUuid = row.getUuid("DESIGN_UUID");
+//                            Instant actualCreated = row.getInstant("TILE_CREATED");
+//                            Instant actualUpdated = row.getInstant("TILE_UPDATED");
+//                            Instant actualPublished = row.getInstant("TILE_PUBLISHED");
+//                            Instant actualCompleted = row.getInstant("TILE_COMPLETED");
+//                            UUID actualVersionUuid = row.getUuid("VERSION_UUID");
+//                            short actualLevel = row.getShort("TILE_LEVEL");
+//                            assertThat(actualUuid).isNotNull();
+//                            assertThat(actualCreated).isNotNull();
+//                            assertThat(actualUpdated).isNotNull();
+//                            assertThat(actualPublished).isNotNull();
+//                            assertThat(actualCompleted).isNull();
+//                            assertThat(actualVersionUuid).isEqualTo(versionId);
+//                            assertThat(actualLevel).isEqualTo(level);
+//                        });
+//                    });
+//
+//            final List<Row> rows = session.rxPrepare("SELECT * FROM TILE WHERE VERSION_UUID = ? AND TILE_LEVEL = ? AND TILE_ROW = ? AND TILE_COL = ?")
+//                    .map(stmt -> stmt.bind(versionId, level, y, x))
+//                    .flatMap(session::rxExecuteWithFullFetch)
+//                    .toBlocking()
+//                    .value();
+//
+//            assertThat(rows).hasSize(1);
+//
+//            UUID tileId = rows.get(0).getUuid("DESIGN_UUID");
+//            assertThat(tileId).isNotNull();
+//
+//            await().atMost(TEN_SECONDS)
+//                    .pollInterval(ONE_SECOND)
+//                    .untilAsserted(() -> {
+//                        final List<Message> messages = safelyFindMessages(versionId.toString());
+//                        assertThat(messages).isNotEmpty();
+//                        final List<Message> actualMessages = messages.stream()
+//                                .filter(message -> message.getMessageType().equals("design-tile-created"))
+//                                .collect(Collectors.toList());
+//                        assertThat(actualMessages).hasSize(21);
+//                        actualMessages.forEach(actualMessage -> {
+//                            assertThat(actualMessage.getTimestamp()).isNotNull();
+//                            assertThat(actualMessage.getMessageSource()).isEqualTo("service-designs");
+//                            assertThat(actualMessage.getPartitionKey()).isEqualTo(versionId.toString());
+//                            assertThat(actualMessage.getMessageId()).isNotNull();
+//                        });
+//                        TileCreatedEvent actualEvent = actualMessages.stream()
+//                                .map(message -> Json.decodeValue(message.getMessageBody(), TileCreatedEvent.class))
+//                                .filter(event -> event.getLevel() == level)
+//                                .filter(event -> event.getX() == x)
+//                                .filter(event -> event.getY() == y)
+//                                .findFirst()
+//                                .orElse(null);
+//                        assertThat(actualEvent).isNotNull();
+//                        assertThat(actualEvent.getUuid()).isEqualTo(versionId);
+//                        assertThat(actualEvent.getChecksum()).isEqualTo(checksum);
+//                        assertThat(actualEvent.getData()).isEqualTo(json);
+//                    });
+//
+//            return tileId;
+//        }
+//
+//        private UUID assertTileCompleted(UUID versionId, short level, short x, short y) {
+//            await().atMost(ONE_MINUTE)
+//                    .pollInterval(ONE_SECOND)
+//                    .untilAsserted(() -> {
+//                        final List<Row> rows = session.rxPrepare("SELECT * FROM TILE WHERE VERSION_UUID = ? AND TILE_LEVEL = ? AND TILE_ROW = ? AND TILE_COL = ?")
+//                                .map(stmt -> stmt.bind(versionId, level, y, x))
+//                                .flatMap(session::rxExecuteWithFullFetch)
+//                                .toBlocking()
+//                                .value();
+//                        assertThat(rows).hasSize(1);
+//                        rows.forEach(row -> {
+//                            UUID actualUuid = row.getUuid("DESIGN_UUID");
+//                            Instant actualCreated = row.getInstant("TILE_CREATED");
+//                            Instant actualUpdated = row.getInstant("TILE_UPDATED");
+//                            Instant actualPublished = row.getInstant("TILE_PUBLISHED");
+//                            Instant actualCompleted = row.getInstant("TILE_COMPLETED");
+//                            UUID actualVersionUuid = row.getUuid("VERSION_UUID");
+//                            short actualLevel = row.getShort("TILE_LEVEL");
+//                            assertThat(actualUuid).isNotNull();
+//                            assertThat(actualCreated).isNotNull();
+//                            assertThat(actualUpdated).isNotNull();
+//                            assertThat(actualPublished).isNotNull();
+//                            assertThat(actualCompleted).isNotNull();
+//                            assertThat(actualVersionUuid).isEqualTo(versionId);
+//                            assertThat(actualLevel).isEqualTo(level);
+//                        });
+//                    });
+//
+//            final List<Row> rows = session.rxPrepare("SELECT * FROM TILE WHERE VERSION_UUID = ? AND TILE_LEVEL = ? AND TILE_ROW = ? AND TILE_COL = ?")
+//                    .map(stmt -> stmt.bind(versionId, level, y, x))
+//                    .flatMap(session::rxExecuteWithFullFetch)
+//                    .toBlocking()
+//                    .value();
+//
+//            assertThat(rows).hasSize(1);
+//
+//            UUID tileId = rows.get(0).getUuid("DESIGN_UUID");
+//            assertThat(tileId).isNotNull();
+//
+//            await().atMost(TEN_SECONDS)
+//                    .pollInterval(ONE_SECOND)
+//                    .untilAsserted(() -> {
+//                        final List<Message> messages = safelyFindMessages(versionId.toString());
+//                        assertThat(messages).isNotEmpty();
+//                        final List<Message> actualMessages = messages.stream()
+//                                .filter(message -> message.getMessageType().equals("design-tile-completed"))
+//                                .collect(Collectors.toList());
+//                        assertThat(actualMessages).hasSize(5);
+//                        actualMessages.forEach(actualMessage -> {
+//                            assertThat(actualMessage.getTimestamp()).isNotNull();
+//                            assertThat(actualMessage.getMessageSource()).isEqualTo("test");
+//                            assertThat(actualMessage.getPartitionKey()).isEqualTo(versionId.toString());
+//                            assertThat(actualMessage.getMessageId()).isNotNull();
+//                        });
+//                        TileCompletedEvent actualEvent = actualMessages.stream()
+//                                .map(message -> Json.decodeValue(message.getMessageBody(), TileCompletedEvent.class))
+//                                .filter(event -> event.getLevel() == level)
+//                                .filter(event -> event.getX() == x)
+//                                .filter(event -> event.getY() == y)
+//                                .findFirst()
+//                                .orElseThrow();
+//                        assertThat(actualEvent.getUuid()).isEqualTo(versionId);
+//                    });
+//
+//            return tileId;
+//        }
+//    }
 
     private static ProducerRecord<String, String> createKafkaRecord(Message message) {
         return new ProducerRecord<>("design-event", message.getPartitionKey(), Json.encode(message));
     }
 
-    private static Message createDesignChangedMessage(UUID messageId, UUID partitionKey, long timestamp, DesignChanged event) {
+    private static Message createInsertDesignMessage(UUID messageId, UUID partitionKey, long timestamp, DesignInsertRequested event) {
+        return new Message(messageId.toString(), MessageType.DESIGN_INSERT_REQUESTED, Json.encode(event), "test", partitionKey.toString(), timestamp);
+    }
+
+    private static Message createUpdateDesignMessage(UUID messageId, UUID partitionKey, long timestamp, DesignUpdateRequested event) {
+        return new Message(messageId.toString(), MessageType.DESIGN_UPDATE_REQUESTED, Json.encode(event), "test", partitionKey.toString(), timestamp);
+    }
+
+    private static Message createDeleteDesignMessage(UUID messageId, UUID partitionKey, long timestamp, DesignDeleteRequested event) {
+        return new Message(messageId.toString(), MessageType.DESIGN_DELETE_REQUESTED, Json.encode(event), "test", partitionKey.toString(), timestamp);
+    }
+
+    private static Message createDesignChangedMessage(UUID messageId, UUID partitionKey, long timestamp, DesignChangedEvent event) {
         return new Message(messageId.toString(), MessageType.DESIGN_CHANGED, Json.encode(event), "test", partitionKey.toString(), timestamp);
     }
 
-    private static Message createTileCompletedMessage(UUID messageId, UUID partitionKey, long timestamp, TileCompleted event) {
-        return new Message(messageId.toString(), MessageType.DESIGN_TILE_COMPLETED, Json.encode(event), "test", partitionKey.toString(), timestamp);
+    private static Message createTileCompletedMessage(UUID messageId, UUID partitionKey, long timestamp, TileRenderCompleted event) {
+        return new Message(messageId.toString(), MessageType.TILE_RENDER_COMPLETED, Json.encode(event), "test", partitionKey.toString(), timestamp);
+    }
+
+    private static void pause(int millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException ignored) {
+        }
     }
 
     private static List<Message> safelyFindMessages(String versionUuid) {

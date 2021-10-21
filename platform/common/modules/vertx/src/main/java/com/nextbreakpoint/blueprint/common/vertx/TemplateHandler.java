@@ -7,7 +7,7 @@ import rx.Single;
 import java.util.Objects;
 import java.util.function.BiConsumer;
 
-public class TemplateHandler<T, I, O, R> implements Handler<T> {
+public class TemplateHandler<T, I, O, R> implements Handler<T>, EventHandler<T> {
     private final Mapper<T, I> inputMapper;
     private final Mapper<O, R> outputMapper;
     private final Controller<I, O> controller;
@@ -29,6 +29,15 @@ public class TemplateHandler<T, I, O, R> implements Handler<T> {
                 .flatMap(controller::onNext)
                 .map(outputMapper::transform)
                 .subscribe(result -> successHandler.accept(message, result), err -> failureHandler.accept(message, err));
+    }
+
+    @Override
+    public void handle(T message, BiConsumer<T, Throwable> errorHandler) {
+        Single.just(message)
+                .map(inputMapper::transform)
+                .flatMap(controller::onNext)
+                .map(outputMapper::transform)
+                .subscribe(result -> successHandler.accept(message, result), err -> failureHandler.andThen(errorHandler).accept(message, err));
     }
 
     public static <T, I, O, R> Builder<T, I, O, R> builder() {

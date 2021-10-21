@@ -71,9 +71,9 @@ public class EventsHandler implements Handler<RoutingContext> {
 
         routingContext.response().write(makeEvent("open", 0L, "{\"session\":\"" + sessionId + "\"}"));
 
-        final MessageConsumer consumer = vertx.eventBus().consumer("events.handler.output." + sessionId, msg -> {
+        final MessageConsumer<JsonObject> consumer = vertx.eventBus().consumer("events.handler.output." + sessionId, msg -> {
             try {
-                final JsonObject message = (JsonObject) msg.body();
+                final JsonObject message = msg.body();
 
                 final JsonObject data = new JsonObject();
 
@@ -178,7 +178,7 @@ public class EventsHandler implements Handler<RoutingContext> {
         }
     }
 
-    private class Watcher {
+    private static class Watcher {
         private final String sessionId;
         private final String watchKey;
         private Long offset;

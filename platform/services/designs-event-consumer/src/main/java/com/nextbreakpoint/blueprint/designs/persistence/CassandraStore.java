@@ -2,6 +2,7 @@ package com.nextbreakpoint.blueprint.designs.persistence;
 
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.Row;
+import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.nextbreakpoint.blueprint.designs.Store;
 import com.nextbreakpoint.blueprint.designs.model.*;
 import io.vertx.core.impl.logging.Logger;
@@ -9,154 +10,97 @@ import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.rxjava.cassandra.CassandraClient;
 import rx.Single;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 public class CassandraStore implements Store {
     private final Logger logger = LoggerFactory.getLogger(CassandraStore.class.getName());
 
-    private static final String ERROR_SELECT_DESIGN = "An error occurred while fetching a design";
-    private static final String ERROR_SELECT_VERSION = "An error occurred while fetching a version";
-    private static final String ERROR_SELECT_RENDER = "An error occurred while fetching a render";
-    private static final String ERROR_SELECT_TILE = "An error occurred while fetching a tile";
-    private static final String ERROR_SELECT_TILES = "An error occurred while fetching tiles";
+    private static final String ERROR_INSERT_DESIGN = "An error occurred while inserting a design";
+    private static final String ERROR_UPDATE_DESIGN = "An error occurred while updating a design";
+    private static final String ERROR_DELETE_DESIGN = "An error occurred while deleting a design";
+    private static final String ERROR_UPDATE_AGGREGATE = "An error occurred while updating an aggregate";
     private static final String ERROR_INSERT_VERSION = "An error occurred while inserting a version";
-    private static final String ERROR_INSERT_RENDER = "An error occurred while inserting a render";
     private static final String ERROR_INSERT_TILE = "An error occurred while inserting a tile";
-    private static final String ERROR_PUBLISH_VERSION = "An error occurred while publishing a version";
-    private static final String ERROR_PUBLISH_RENDER = "An error occurred while publishing a render";
-    private static final String ERROR_COMPLETE_RENDER = "An error occurred while completing a render";
-    private static final String ERROR_PUBLISH_TILE = "An error occurred while publishing a tile";
-    private static final String ERROR_COMPLETE_TILE = "An error occurred while completing a tile";
+    private static final String ERROR_UPDATE_TILE = "An error occurred while updating a tile";
 
-    private static final String SELECT_DESIGN = "SELECT * FROM DESIGN_ENTITY WHERE DESIGN_UUID = ?";
-    private static final String SELECT_VERSION = "SELECT * FROM VERSION_ENTITY WHERE DESIGN_CHECKSUM = ?";
-    private static final String SELECT_RENDER = "SELECT * FROM RENDER_ENTITY WHERE VERSION_UUID = ? AND RENDER_LEVEL = ?";
-    private static final String SELECT_TILE = "SELECT * FROM TILE_ENTITY WHERE VERSION_UUID = ? AND TILE_LEVEL = ? AND TILE_ROW = ? AND TILE_COL = ?";
-    private static final String SELECT_TILES = "SELECT * FROM TILE_ENTITY WHERE VERSION_UUID = ? AND TILE_LEVEL = ?";
-    private static final String INSERT_VERSION = "INSERT INTO VERSION_ENTITY (VERSION_UUID, VERSION_CREATED, VERSION_UPDATED, DESIGN_DATA, DESIGN_CHECKSUM) VALUES (?, toTimeStamp(now()), toTimeStamp(now()), ?, ?)";
-    private static final String INSERT_RENDER = "INSERT INTO RENDER_ENTITY (RENDER_UUID, RENDER_LEVEL, RENDER_CREATED, RENDER_UPDATED, VERSION_UUID) VALUES (?, ?, toTimeStamp(now()), toTimeStamp(now()), ?)";
-    private static final String INSERT_TILE = "INSERT INTO TILE_ENTITY (TILE_UUID, TILE_LEVEL, TILE_ROW, TILE_COL, TILE_CREATED, TILE_UPDATED, VERSION_UUID) VALUES (?, ?, ?, ?, toTimeStamp(now()), toTimeStamp(now()), ?)";
-    private static final String UPDATE_VERSION = "UPDATE VERSION_ENTITY SET VERSION_PUBLISHED = ? WHERE DESIGN_CHECKSUM = ?";
-    private static final String UPDATE_RENDER_PUBLISHED = "UPDATE RENDER_ENTITY SET RENDER_PUBLISHED = ? WHERE VERSION_UUID = ? AND RENDER_LEVEL = ?";
-    private static final String UPDATE_RENDER_COMPLETED = "UPDATE RENDER_ENTITY SET RENDER_COMPLETED = ? WHERE VERSION_UUID = ? AND RENDER_LEVEL = ?";
-    private static final String UPDATE_TILE_PUBLISHED = "UPDATE TILE_ENTITY SET TILE_PUBLISHED = ? WHERE VERSION_UUID = ? AND TILE_LEVEL = ? AND TILE_ROW = ? AND TILE_COL = ?";
-    private static final String UPDATE_TILE_COMPLETED = "UPDATE TILE_ENTITY SET TILE_COMPLETED = ? WHERE VERSION_UUID = ? AND TILE_LEVEL = ? AND TILE_ROW = ? AND TILE_COL = ?";
+    private static final String INSERT_DESIGN_EVENT = "INSERT INTO DESIGN_EVENT (DESIGN_UUID, DESIGN_DATA, DESIGN_STATUS, DESIGN_CHECKSUM, EVENT_UUID) VALUES (?, ?, ?, ?, ?)";
+    private static final String SELECT_DESIGN_EVENTS = "SELECT * FROM DESIGN_EVENT WHERE DESIGN_UUID = ?";
+    private static final String INSERT_DESIGN_AGGREGATE = "INSERT INTO DESIGN_AGGREGATE (DESIGN_UUID, DESIGN_DATA, DESIGN_CHECKSUM, DESIGN_UPDATED) VALUES (?, ?, ?, ?)";
+    private static final String UPDATE_DESIGN_AGGREGATE = "UPDATE DESIGN_AGGREGATE SET DESIGN_DATA = ?, DESIGN_CHECKSUM = ?, DESIGN_UPDATED = ? WHERE DESIGN_UUID = ?";
+    private static final String DELETE_DESIGN_AGGREGATE = "DELETE FROM DESIGN_AGGREGATE WHERE DESIGN_UUID = ?";
+    private static final String INSERT_DESIGN_VERSION = "INSERT INTO DESIGN_VERSION (DESIGN_CHECKSUM, DESIGN_DATA, VERSION_CREATED) VALUES (?, ?, ?, toTimeStamp(now()))";
+    private static final String INSERT_DESIGN_TILE = "INSERT INTO DESIGN_TILE (DESIGN_CHECKSUM, TILE_LEVEL, TILE_ROW, TILE_COL, TILE_STATUS, TILE_CREATED, TILE_UPDATED) VALUES (?, ?, ?, ?, ?, ?, 'PENDING', toTimeStamp(now()), toTimeStamp(now()))";
+    private static final String UPDATE_DESIGN_TILE = "UPDATE DESIGN_TILE SET TILE_UPDATED = toTimeStamp(now()), TILE_STATUS = ? WHERE DESIGN_CHECKSUM = ? AND TILE_LEVEL = ? AND TILE_ROW = ? AND TILE_COL = ?";
 
     private final Supplier<CassandraClient> supplier;
 
     private CassandraClient session;
 
-    private Single<PreparedStatement> selectDesign;
-    private Single<PreparedStatement> selectVersion;
-    private Single<PreparedStatement> selectRender;
-    private Single<PreparedStatement> selectTile;
-    private Single<PreparedStatement> selectTiles;
-    private Single<PreparedStatement> insertVersion;
-    private Single<PreparedStatement> insertRender;
-    private Single<PreparedStatement> insertTile;
-    private Single<PreparedStatement> updateVersion;
-    private Single<PreparedStatement> updateRenderPublished;
-    private Single<PreparedStatement> updateRenderCompleted;
-    private Single<PreparedStatement> updateTilePublished;
-    private Single<PreparedStatement> updateTileCompleted;
+    private Single<PreparedStatement> insertDesignEvent;
+    private Single<PreparedStatement> selectDesignEvents;
+    private Single<PreparedStatement> insertDesignAggregate;
+    private Single<PreparedStatement> updateDesignAggregate;
+    private Single<PreparedStatement> deleteDesignAggregate;
+    private Single<PreparedStatement> insertDesignVersion;
+    private Single<PreparedStatement> insertDesignTile;
+    private Single<PreparedStatement> updateDesignTile;
 
     public CassandraStore(Supplier<CassandraClient> supplier) {
         this.supplier = Objects.requireNonNull(supplier);
     }
 
     @Override
-    public Single<PersistenceResult<DesignDocument>> selectDesign(UUID designUuid) {
+    public Single<Void> insertDesign(UUID timeuuid, UUID designUuid, String json) {
         return withSession()
-                .flatMap(session -> selectDesign(session, designUuid))
-                .doOnError(err -> handleError(ERROR_SELECT_DESIGN, err));
+                .flatMap(session -> appendDesignEvent(session, makeDesignInsertParams(designUuid, timeuuid, json)))
+                .doOnError(err -> handleError(ERROR_INSERT_DESIGN, err));
     }
 
     @Override
-    public Single<PersistenceResult<VersionDocument>> selectVersion(String checksum) {
+    public Single<Void> updateDesign(UUID timeuuid, UUID designUuid, String json) {
         return withSession()
-                .flatMap(session -> selectVersion(session, checksum))
-                .doOnError(err -> handleError(ERROR_SELECT_VERSION, err));
+                .flatMap(session -> appendDesignEvent(session, makeDesignUpdateParams(designUuid, timeuuid, json)))
+                .doOnError(err -> handleError(ERROR_UPDATE_DESIGN, err));
     }
 
     @Override
-    public Single<PersistenceResult<RenderDocument>> selectRender(UUID versionUuid, short level) {
+    public Single<Void> deleteDesign(UUID timeuuid, UUID designUuid) {
         return withSession()
-                .flatMap(session -> selectRender(session, versionUuid, level))
-                .doOnError(err -> handleError(ERROR_SELECT_RENDER, err));
+                .flatMap(session -> appendDesignEvent(session, makeDesignDeleteParams(designUuid, timeuuid)))
+                .doOnError(err -> handleError(ERROR_DELETE_DESIGN, err));
     }
 
     @Override
-    public Single<PersistenceResult<TileDocument>> selectTile(UUID versionUuid, short level, short x, short y) {
+    public Single<Optional<DesignChange>> updateDesignAggregate(UUID designUuid) {
         return withSession()
-                .flatMap(session -> selectTile(session, versionUuid, level, x, y))
-                .doOnError(err -> handleError(ERROR_SELECT_TILE, err));
+                .flatMap(session -> updateAggregate(session, designUuid))
+                .doOnError(err -> handleError(ERROR_UPDATE_AGGREGATE, err));
     }
 
     @Override
-    public Single<List<TileDocument>> selectTiles(UUID versionUuid, short level) {
+    public Single<Void> insertDesignVersion(DesignVersion version) {
         return withSession()
-                .flatMap(session -> selectTiles(session, versionUuid, level))
-                .doOnError(err -> handleError(ERROR_SELECT_TILES, err));
-    }
-
-    @Override
-    public Single<PersistenceResult<Void>> insertVersion(DesignVersion version) {
-        return withSession()
-                .flatMap(session -> insertVersion(session, version.getUuid(), makeInsertParams(version)))
+                .flatMap(session -> insertVersion(session, makeInsertParams(version)))
                 .doOnError(err -> handleError(ERROR_INSERT_VERSION, err));
     }
 
     @Override
-    public Single<PersistenceResult<Void>> insertRender(DesignRender render) {
+    public Single<Void> insertDesignTile(DesignTile tile) {
         return withSession()
-                .flatMap(session -> insertRender(session, render.getUuid(), makeInsertParams(render)))
-                .doOnError(err -> handleError(ERROR_INSERT_RENDER, err));
-    }
-
-    @Override
-    public Single<PersistenceResult<Void>> insertTile(DesignTile tile) {
-        return withSession()
-                .flatMap(session -> insertTile(session, tile.getUuid(), makeInsertParams(tile)))
+                .flatMap(session -> insertTile(session, makeInsertParams(tile)))
                 .doOnError(err -> handleError(ERROR_INSERT_TILE, err));
     }
 
     @Override
-    public Single<PersistenceResult<Void>> publishVersion(UUID uuid, String checksum) {
+    public Single<Void> updateDesignTile(DesignTile tile, String status) {
         return withSession()
-                .flatMap(session -> publishVersion(session, uuid, checksum))
-                .doOnError(err -> handleError(ERROR_PUBLISH_VERSION, err));
-    }
-
-    @Override
-    public Single<PersistenceResult<Void>> publishRender(UUID uuid, UUID version, short level) {
-        return withSession()
-                .flatMap(session -> publishRender(session, uuid, version, level))
-                .doOnError(err -> handleError(ERROR_PUBLISH_RENDER, err));
-    }
-
-    @Override
-    public Single<PersistenceResult<Void>> publishTile(UUID uuid, UUID version, short level, short x, short y) {
-        return withSession()
-                .flatMap(session -> publishTile(session, uuid, version, level, x, y))
-                .doOnError(err -> handleError(ERROR_PUBLISH_TILE, err));
-    }
-
-    @Override
-    public Single<PersistenceResult<Void>> completeRender(UUID uuid, UUID version, short level) {
-        return withSession()
-                .flatMap(session -> completeRender(session, uuid, version, level))
-                .doOnError(err -> handleError(ERROR_COMPLETE_RENDER, err));
-    }
-
-    @Override
-    public Single<PersistenceResult<Void>> completeTile(UUID uuid, UUID version, short level, short x, short y) {
-        return withSession()
-                .flatMap(session -> completeTile(session, uuid, version, level, x, y))
-                .doOnError(err -> handleError(ERROR_COMPLETE_TILE, err));
+                .flatMap(session -> updateTile(session, makeUpdateParams(tile, status)))
+                .doOnError(err -> handleError(ERROR_UPDATE_TILE, err));
     }
 
     private Single<CassandraClient> withSession() {
@@ -165,163 +109,151 @@ public class CassandraStore implements Store {
             if (session == null) {
                 return Single.error(new RuntimeException("Cannot create session"));
             }
-            selectDesign = session.rxPrepare(SELECT_DESIGN);
-            selectVersion = session.rxPrepare(SELECT_VERSION);
-            selectRender = session.rxPrepare(SELECT_RENDER);
-            selectTile = session.rxPrepare(SELECT_TILE);
-            selectTiles = session.rxPrepare(SELECT_TILES);
-            insertVersion = session.rxPrepare(INSERT_VERSION);
-            insertRender = session.rxPrepare(INSERT_RENDER);
-            insertTile = session.rxPrepare(INSERT_TILE);
-            updateVersion = session.rxPrepare(UPDATE_VERSION);
-            updateRenderPublished = session.rxPrepare(UPDATE_RENDER_PUBLISHED);
-            updateRenderCompleted = session.rxPrepare(UPDATE_RENDER_COMPLETED);
-            updateTilePublished = session.rxPrepare(UPDATE_TILE_PUBLISHED);
-            updateTileCompleted = session.rxPrepare(UPDATE_TILE_COMPLETED);
+            insertDesignEvent = session.rxPrepare(INSERT_DESIGN_EVENT);
+            selectDesignEvents = session.rxPrepare(SELECT_DESIGN_EVENTS);
+            insertDesignAggregate = session.rxPrepare(INSERT_DESIGN_AGGREGATE);
+            updateDesignAggregate = session.rxPrepare(UPDATE_DESIGN_AGGREGATE);
+            deleteDesignAggregate = session.rxPrepare(DELETE_DESIGN_AGGREGATE);
+            insertDesignVersion = session.rxPrepare(INSERT_DESIGN_VERSION);
+            insertDesignTile = session.rxPrepare(INSERT_DESIGN_TILE);
+            updateDesignTile = session.rxPrepare(UPDATE_DESIGN_TILE);
         }
         return Single.just(session);
     }
 
-    private Single<PersistenceResult<DesignDocument>> selectDesign(CassandraClient session, UUID uuid) {
-        return selectDesign
-                .map(pst -> pst.bind(uuid))
-                .flatMap(session::rxExecuteWithFullFetch)
-                .map(rows -> rows.stream().findFirst().map(this::toDesignDocument).map(document -> new PersistenceResult<>(UUID.fromString(document.getUuid()), document)).orElseGet(() -> new PersistenceResult<>(uuid, null)));
-    }
-
-    private Single<PersistenceResult<VersionDocument>> selectVersion(CassandraClient session, String checksum) {
-        return selectVersion
-                .map(pst -> pst.bind(checksum))
-                .flatMap(session::rxExecuteWithFullFetch)
-                .map(rows -> rows.stream().findFirst().map(this::toVersionDocument).map(document -> new PersistenceResult<>(UUID.fromString(document.getUuid()), document)).orElseGet(() -> new PersistenceResult<>(null, null)));
-    }
-
-    private Single<PersistenceResult<RenderDocument>> selectRender(CassandraClient session, UUID uuid, short level) {
-        return selectRender
-                .map(pst -> pst.bind(uuid, level))
-                .flatMap(session::rxExecuteWithFullFetch)
-                .map(rows -> rows.stream().findFirst().map(this::toRenderDocument).map(document -> new PersistenceResult<>(UUID.fromString(document.getUuid()), document)).orElseGet(() -> new PersistenceResult<>(null, null)));
-    }
-
-    private Single<PersistenceResult<TileDocument>> selectTile(CassandraClient session, UUID uuid, short level, short x, short y) {
-        return selectTile
-                .map(pst -> pst.bind(uuid, level, y, x))
-                .flatMap(session::rxExecuteWithFullFetch)
-                .map(rows -> rows.stream().findFirst().map(this::toTileDocument).map(document -> new PersistenceResult<>(UUID.fromString(document.getUuid()), document)).orElseGet(() -> new PersistenceResult<>(null, null)));
-    }
-
-    private Single<List<TileDocument>> selectTiles(CassandraClient session, UUID uuid, short level) {
-        return selectTiles
-                .map(pst -> pst.bind(uuid, level))
-                .flatMap(session::rxExecuteWithFullFetch)
-                .map(rows -> rows.stream().map(this::toTileDocument).collect(Collectors.toList()));
-    }
-
-    private DesignDocument toDesignDocument(Row row) {
-        final UUID uuid = row.getUuid("DESIGN_UUID");
-        final String json = row.getString("DESIGN_DATA");
-        final String checksum = row.getString("DESIGN_CHECKSUM");
-        final Instant timestamp = row.getInstant("DESIGN_UPDATED");
-        return new DesignDocument(Objects.requireNonNull(uuid).toString(), json, checksum, formatDate(timestamp));
-    }
-
-    private VersionDocument toVersionDocument(Row row) {
-        final UUID uuid = row.getUuid("VERSION_UUID");
-        final Instant created = row.getInstant("VERSION_CREATED");
-        final Instant updated = row.getInstant("VERSION_UPDATED");
-        final String json = row.getString("DESIGN_DATA");
-        final String checksum = row.getString("DESIGN_CHECKSUM");
-        return new VersionDocument(Objects.requireNonNull(uuid).toString(), json, checksum, formatDate(created), formatDate(updated));
-    }
-
-    private RenderDocument toRenderDocument(Row row) {
-        final UUID uuid = row.getUuid("RENDER_UUID");
-        final short level = row.getShort("RENDER_LEVEL");
-        final Instant created = row.getInstant("RENDER_CREATED");
-        final Instant updated = row.getInstant("RENDER_UPDATED");
-        final Instant completed = row.getInstant("RENDER_COMPLETED");
-        final UUID version = row.getUuid("VERSION_UUID");
-        return new RenderDocument(Objects.requireNonNull(uuid).toString(), Objects.requireNonNull(version).toString(), level, formatDate(created), formatDate(updated), completed != null ? formatDate(completed) : null);
-    }
-
-    private TileDocument toTileDocument(Row row) {
-        final UUID uuid = row.getUuid("TILE_UUID");
-        final short level = row.getShort("TILE_LEVEL");
-        final short x = row.getShort("TILE_COL");
-        final short y = row.getShort("TILE_ROW");
-        final Instant created = row.getInstant("TILE_CREATED");
-        final Instant updated = row.getInstant("TILE_UPDATED");
-        final Instant completed = row.getInstant("TILE_COMPLETED");
-        final UUID version = row.getUuid("VERSION_UUID");
-        return new TileDocument(Objects.requireNonNull(uuid).toString(), Objects.requireNonNull(version).toString(), level, x, y, formatDate(created), formatDate(updated), completed != null ? formatDate(completed) : null);
-    }
-
-    private Single<PersistenceResult<Void>> insertVersion(CassandraClient session, UUID uuid, Object[] values) {
-        return insertVersion
+    private Single<Void> appendDesignEvent(CassandraClient session, Object[] values) {
+        return insertDesignEvent
                 .map(pst -> pst.bind(values))
                 .flatMap(session::rxExecute)
-                .map(rs -> new PersistenceResult<>(uuid, null));
+                .map(rs -> null);
     }
 
-    private Single<PersistenceResult<Void>> insertRender(CassandraClient session, UUID uuid, Object[] values) {
-        return insertRender
+    private Single<Optional<DesignChange>> updateAggregate(CassandraClient session, UUID designUuid) {
+        return selectDesignEvents
+                .map(pst -> pst.bind(designUuid))
+                .flatMap(session::rxExecuteWithFullFetch)
+                .map(this::mergeEvents)
+                .flatMap(change -> doExecuteAggregate(session, change));
+    }
+
+    private DesignChange mergeEvents(List<Row> rows) {
+        return rows.stream()
+                .map(this::toDesignChange)
+                .reduce(this::mergeChanges)
+                .orElse(null);
+    }
+
+    private Single<Optional<DesignChange>> doExecuteAggregate(CassandraClient session, DesignChange change) {
+        if (change == null) {
+            return Single.just(Optional.ofNullable(null));
+        }
+        switch (change.getStatus().toLowerCase()) {
+            case "created": {
+                return insertDesignAggregate
+                        .map(pst -> pst.bind(makeAggregateInsertParams(change)))
+                        .flatMap(session::rxExecute)
+                        .map(rs -> Optional.of(change));
+            }
+            case "updated": {
+                return updateDesignAggregate
+                        .map(pst -> pst.bind(makeAggregateUpdateParams(change)))
+                        .flatMap(session::rxExecute)
+                        .map(rs -> Optional.of(change));
+            }
+            case "deleted": {
+                return deleteDesignAggregate
+                        .map(pst -> pst.bind(makeAggregateDeleteParams(change)))
+                        .flatMap(session::rxExecute)
+                        .map(rs -> Optional.of(change));
+            }
+            default: {
+                return Single.just(Optional.ofNullable(null));
+            }
+        }
+    }
+
+    private DesignChange mergeChanges(DesignChange designDocument1, DesignChange designDocument2) {
+        if (designDocument2.getStatus().equalsIgnoreCase("deleted")) {
+            return new DesignChange(designDocument1.getUuid(), designDocument1.getJson(), designDocument2.getStatus(), designDocument1.getChecksum(), designDocument2.getModified());
+        } else {
+            return new DesignChange(designDocument1.getUuid(), designDocument2.getJson(), designDocument2.getStatus(), designDocument2.getChecksum(), designDocument2.getModified());
+        }
+    }
+
+    private Object[] makeDesignInsertParams(UUID uuid, UUID eventTimestamp, String json) {
+        return new Object[] { uuid, json, "CREATED", computeChecksum(json), eventTimestamp};
+    }
+
+    private Object[] makeDesignUpdateParams(UUID uuid, UUID eventTimestamp, String json) {
+        return new Object[] { uuid, json, "UPDATED", computeChecksum(json), eventTimestamp};
+    }
+
+    private Object[] makeDesignDeleteParams(UUID uuid, UUID eventTimestamp) {
+        return new Object[] { uuid, null, "DELETED", null, eventTimestamp};
+    }
+
+    private Object[] makeAggregateInsertParams(DesignChange change) {
+        return new Object[] { change.getUuid(), change.getJson(), computeChecksum(change.getJson()), change.getModified().toInstant() };
+    }
+
+    private Object[] makeAggregateUpdateParams(DesignChange change) {
+        return new Object[] { change.getJson(), computeChecksum(change.getJson()), change.getModified().toInstant(), change.getUuid() };
+    }
+
+    private Object[] makeAggregateDeleteParams(DesignChange change) {
+        return new Object[] { change.getUuid() };
+    }
+
+    private Single<Void> insertVersion(CassandraClient session, Object[] values) {
+        return insertDesignVersion
                 .map(pst -> pst.bind(values))
                 .flatMap(session::rxExecute)
-                .map(rs -> new PersistenceResult<>(uuid, null));
+                .map(rs -> null);
     }
 
-    private Single<PersistenceResult<Void>> insertTile(CassandraClient session, UUID uuid, Object[] values) {
-        return insertTile
+    private Single<Void> insertTile(CassandraClient session, Object[] values) {
+        return insertDesignTile
                 .map(pst -> pst.bind(values))
                 .flatMap(session::rxExecute)
-                .map(rs -> new PersistenceResult<>(uuid, null));
+                .map(rs -> null);
     }
 
-    private Single<PersistenceResult<Void>> publishVersion(CassandraClient session, UUID uuid, String checksum) {
-        return updateVersion
-                .map(pst -> pst.bind(Instant.now(), checksum))
+    private Single<Void> updateTile(CassandraClient session, Object[] values) {
+        return updateDesignTile
+                .map(pst -> pst.bind(values))
                 .flatMap(session::rxExecute)
-                .map(rs -> new PersistenceResult<>(uuid, null));
-    }
-
-    private Single<PersistenceResult<Void>> publishRender(CassandraClient session, UUID uuid, UUID version, short level) {
-        return updateRenderPublished
-                .map(pst -> pst.bind(Instant.now(), version, level))
-                .flatMap(session::rxExecute)
-                .map(rs -> new PersistenceResult<>(uuid, null));
-    }
-
-    private Single<PersistenceResult<Void>> publishTile(CassandraClient session, UUID uuid, UUID version, short level, short x, short y) {
-        return updateTilePublished
-                .map(pst -> pst.bind(Instant.now(), version, level, y, x))
-                .flatMap(session::rxExecute)
-                .map(rs -> new PersistenceResult<>(uuid, null));
-    }
-
-    private Single<PersistenceResult<Void>> completeRender(CassandraClient session, UUID uuid, UUID version, short level) {
-        return updateRenderCompleted
-                .map(pst -> pst.bind(Instant.now(), version, level))
-                .flatMap(session::rxExecute)
-                .map(rs -> new PersistenceResult<>(uuid, null));
-    }
-
-    private Single<PersistenceResult<Void>> completeTile(CassandraClient session, UUID uuid, UUID version, short level, short x, short y) {
-        return updateTileCompleted
-                .map(pst -> pst.bind(Instant.now(), version, level, y, x))
-                .flatMap(session::rxExecute)
-                .map(rs -> new PersistenceResult<>(uuid, null));
+                .map(rs -> null);
     }
 
     private Object[] makeInsertParams(DesignVersion version) {
-        return new Object[] { version.getUuid(), version.getData(), version.getChecksum() };
-    }
-
-    private Object[] makeInsertParams(DesignRender render) {
-        return new Object[] { render.getUuid(), render.getLevel(), render.getVersion().getUuid() };
+        return new Object[] { version.getChecksum(), version.getData() };
     }
 
     private Object[] makeInsertParams(DesignTile tile) {
-        return new Object[] { tile.getUuid(), tile.getLevel(), tile.getY(), tile.getX(), tile.getVersion().getUuid() };
+        return new Object[] { tile.getChecksum(), tile.getLevel(), tile.getY(), tile.getX() };
+    }
+
+    private Object[] makeUpdateParams(DesignTile tile, String status) {
+        return new Object[] { status, tile.getChecksum(), tile.getLevel(), tile.getY(), tile.getX() };
+    }
+
+    private DesignChange toDesignChange(Row row) {
+        final UUID uuid = row.getUuid("DESIGN_UUID");
+        final String json = row.getString("DESIGN_DATA");
+        final String status = row.getString("DESIGN_STATUS");
+        final String checksum = row.getString("DESIGN_CHECKSUM");
+        final Date modified = new Date(Uuids.unixTimestamp(Objects.requireNonNull(row.getUuid("EVENT_UUID"))));
+        return new DesignChange(uuid, json, status, checksum, modified);
+    }
+
+    private String computeChecksum(String json) {
+        try {
+            final byte[] bytes = json.getBytes(StandardCharsets.UTF_8);
+            final MessageDigest md = MessageDigest.getInstance("MD5");
+            return Base64.getEncoder().encodeToString(md.digest(bytes));
+        } catch (Exception e) {
+            throw new RuntimeException("Cannot compute checksum", e);
+        }
     }
 
     private void handleError(String message, Throwable err) {

@@ -1,8 +1,26 @@
 # event-sourcing-cqrs-example
 
+Start services
+
+    docker compose -f docker-compose-services.yaml up -d
+    docker compose -f docker-compose-pipeline.yaml up -d
+
+Stop services
+
+    docker compose -f docker-compose-services.yaml down
+    docker compose -f docker-compose-pipeline.yaml down
+
 Generate secrets:
 
     ./scripts/secrets.sh
+
+Setup Minikube
+
+    minikube start --vm-driver=hyperkit --cpus 8 --memory 32768 —disk-size 100g --kubernetes-version v1.22.2
+
+    minikube addons enable metrics-server
+    minikube addons enable dashboard
+    minikube addons enable registry
 
 Create namespace:
 
@@ -160,12 +178,12 @@ Only one replica per partition is allowed for designs-command-consumer.
 Only one replica per node is allowed for designs-notification-dispatcher.
 
 
-docker exec -it $(docker container ls -f name=platform_nexus -q) cat /nexus-data/admin.password
-
+export NEXUS_HOST=localhost
+export NEXUS_PORT=38081
 export NEXUS_USERNAME=admin
 export NEXUS_PASSWORD=$(docker exec -it $(docker container ls -f name=platform_nexus -q) cat /nexus-data/admin.password)
 
-curl -u ${NEXUS_USERNAME}:${NEXUS_PASSWORD} -X POST "http://192.168.64.12:38081/service/rest/v1/repositories/maven/hosted" -H "accept: application/json" -H "Content-Type: application/json" -d "{ \"name\": \"maven-internal\", \"online\": true, \"storage\": { \"blobStoreName\": \"default\", \"strictContentTypeValidation\": true, \"writePolicy\": \"allow_once\" }, \"cleanup\": { \"policyNames\": [ \"string\" ] }, \"component\": { \"proprietaryComponents\": true }, \"maven\": { \"versionPolicy\": \"MIXED\", \"layoutPolicy\": \"STRICT\" }}"
+curl -u ${NEXUS_USERNAME}:${NEXUS_PASSWORD} -X POST "http://${NEXUS_HOST}:${NEXUS_PORT}/service/rest/v1/repositories/maven/hosted" -H "accept: application/json" -H "Content-Type: application/json" -d "{ \"name\": \"maven-internal\", \"online\": true, \"storage\": { \"blobStoreName\": \"default\", \"strictContentTypeValidation\": true, \"writePolicy\": \"allow_once\" }, \"cleanup\": { \"policyNames\": [ \"string\" ] }, \"component\": { \"proprietaryComponents\": true }, \"maven\": { \"versionPolicy\": \"MIXED\", \"layoutPolicy\": \"STRICT\" }}"
 
 docker exec -it $(docker container ls -f name=platform_nexus -q) cat /nexus-data/admin.password
 

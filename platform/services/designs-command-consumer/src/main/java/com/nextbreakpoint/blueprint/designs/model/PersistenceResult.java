@@ -6,21 +6,15 @@ import java.util.UUID;
 
 public class PersistenceResult<T> {
     private final UUID uuid;
-    private final UUID eventTimestamp;
     private final T value;
 
-    public PersistenceResult(UUID uuid, UUID eventTimestamp, T value) {
+    public PersistenceResult(UUID uuid, T value) {
         this.uuid = Objects.requireNonNull(uuid);
-        this.eventTimestamp = Objects.requireNonNull(eventTimestamp);
         this.value = value;
     }
 
     public UUID getUuid() {
         return uuid;
-    }
-
-    public UUID getEventTimestamp() {
-        return eventTimestamp;
     }
 
     public Optional<T> getValue() {

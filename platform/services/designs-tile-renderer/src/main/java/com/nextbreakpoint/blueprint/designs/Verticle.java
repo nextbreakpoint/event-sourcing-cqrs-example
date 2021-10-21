@@ -19,12 +19,10 @@ import io.vertx.ext.web.handler.LoggerFormat;
 import io.vertx.ext.web.openapi.RouterBuilder;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.VertxPrometheusOptions;
-import io.vertx.rxjava.cassandra.CassandraClient;
 import io.vertx.rxjava.core.AbstractVerticle;
 import io.vertx.rxjava.core.Promise;
 import io.vertx.rxjava.core.Vertx;
 import io.vertx.rxjava.core.WorkerExecutor;
-import io.vertx.rxjava.ext.auth.jwt.JWTAuth;
 import io.vertx.rxjava.ext.web.Router;
 import io.vertx.rxjava.ext.web.RoutingContext;
 import io.vertx.rxjava.ext.web.handler.BodyHandler;
@@ -45,11 +43,11 @@ import software.amazon.awssdk.services.s3.S3AsyncClient;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URI;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
-import java.util.function.Supplier;
 
 import static com.nextbreakpoint.blueprint.common.core.Headers.*;
 import static com.nextbreakpoint.blueprint.designs.Factory.*;
@@ -121,13 +119,9 @@ public class Verticle extends AbstractVerticle {
 
             final String s3Endpoint = environment.resolve(config.getString("s3_endpoint"));
 
-            final JWTAuth jwtProvider = JWTProviderFactory.create(environment, vertx, config);
-
             final KafkaProducer<String, String> producer = KafkaClientFactory.createProducer(environment, vertx, config);
 
             final KafkaConsumer<String, String> eventConsumer = KafkaClientFactory.createConsumer(environment, vertx, config);
-
-            final Supplier<CassandraClient> supplier = () -> CassandraClientFactory.create(environment, vertx, config);
 
             final AwsCredentialsProvider credentialsProvider = AwsCredentialsProviderChain.of(DefaultCredentialsProvider.create());
 
@@ -143,7 +137,7 @@ public class Verticle extends AbstractVerticle {
 
             final Map<String, Handler<RecordAndMessage>> eventHandlers = new HashMap<>();
 
-            eventHandlers.put(MessageType.DESIGN_TILE_CREATED, createTileCreatedHandler(workerExecutor, s3AsyncClient, imageBucket, eventTopic, producer, messageSource));
+            eventHandlers.put(MessageType.TILE_RENDER_REQUESTED, createTileCreatedHandler(workerExecutor, s3AsyncClient, imageBucket, eventTopic, producer, messageSource));
 
             eventConsumer.handler(record -> processRecord(eventHandlers, record))
                     .rxSubscribe(eventTopic)
@@ -152,7 +146,13 @@ public class Verticle extends AbstractVerticle {
 
             final Handler<RoutingContext> openapiHandler = new OpenApiHandler(vertx.getDelegate(), executor, "openapi.yaml");
 
-            final String url = RouterBuilder.class.getClassLoader().getResource("openapi.yaml").toURI().toString();
+            final URL resource = RouterBuilder.class.getClassLoader().getResource("openapi.yaml");
+
+            if (resource == null) {
+                throw new Exception("Cannot find resource openapi.yaml");
+            }
+
+            final String url = resource.toURI().toString();
 
             RouterBuilder.create(vertx.getDelegate(), url)
                     .onSuccess(routerBuilder -> {

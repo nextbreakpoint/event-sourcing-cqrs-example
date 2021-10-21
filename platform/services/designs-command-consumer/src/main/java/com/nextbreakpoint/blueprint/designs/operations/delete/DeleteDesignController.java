@@ -23,6 +23,6 @@ public class DeleteDesignController extends AbstractController<DeleteDesignComma
     @Override
     protected Single<PersistenceResult<Void>> executeCommand(DeleteDesignCommand command, UUID eventTimestamp) {
         logger.info("Processing delete command: " + command.getUuid() + ":" + eventTimestamp);
-        return store.appendDeleteDesignEvent(command.getUuid(), eventTimestamp);
+        return store.deleteDesign(command.getUuid(), eventTimestamp);
     }
 }

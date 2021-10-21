@@ -106,15 +106,15 @@ public class PactTests {
     @State("there are no designs")
     public void designsTableExists() throws SQLException {
       try (Connection connection = DriverManager.getConnection(scenario.getMySqlConnectionUrl("designs"), "root", "password")) {
-        connection.prepareStatement("TRUNCATE DESIGN_ENTITY;").execute();
+        connection.prepareStatement("TRUNCATE DESIGN;").execute();
       }
     }
 
     @State("there are some designs")
     public void designsExist() throws SQLException {
       try (Connection connection = DriverManager.getConnection(scenario.getMySqlConnectionUrl("designs"), "root", "password")) {
-        connection.prepareStatement("TRUNCATE DESIGN_ENTITY;").execute();
-        PreparedStatement statement = connection.prepareStatement("INSERT INTO DESIGN_ENTITY (DESIGN_UUID,DESIGN_DATA,DESIGN_CHECKSUM,DESIGN_CREATED,DESIGN_UPDATED) VALUES (?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);");
+        connection.prepareStatement("TRUNCATE DESIGN;").execute();
+        PreparedStatement statement = connection.prepareStatement("INSERT INTO DESIGN (DESIGN_UUID,DESIGN_DATA,DESIGN_CHECKSUM,DESIGN_CREATED,DESIGN_UPDATED) VALUES (?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);");
         String json1 = new JsonObject(createPostData(MANIFEST, METADATA, SCRIPT1)).toString();
         statement.setString(1, DESIGN_UUID_1.toString());
         statement.setString(2, json1);
@@ -131,8 +131,8 @@ public class PactTests {
     @State("design exists for uuid")
     public void designExistsForUuid() throws SQLException {
       try (Connection connection = DriverManager.getConnection(scenario.getMySqlConnectionUrl("designs"), "root", "password")) {
-        connection.prepareStatement("TRUNCATE DESIGN_ENTITY;").execute();
-        PreparedStatement statement = connection.prepareStatement("INSERT INTO DESIGN_ENTITY (DESIGN_UUID,DESIGN_DATA,DESIGN_CHECKSUM,DESIGN_CREATED,DESIGN_UPDATED) VALUES (?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);");
+        connection.prepareStatement("TRUNCATE DESIGN;").execute();
+        PreparedStatement statement = connection.prepareStatement("INSERT INTO DESIGN (DESIGN_UUID,DESIGN_DATA,DESIGN_CHECKSUM,DESIGN_CREATED,DESIGN_UPDATED) VALUES (?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);");
         String json1 = new JsonObject(createPostData(MANIFEST, METADATA, SCRIPT1)).toString();
         statement.setString(1, DESIGN_UUID_1.toString());
         statement.setString(2, json1);

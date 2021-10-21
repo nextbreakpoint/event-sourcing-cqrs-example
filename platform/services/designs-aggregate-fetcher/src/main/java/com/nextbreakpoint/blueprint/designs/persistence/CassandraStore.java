@@ -25,8 +25,8 @@ public class CassandraStore implements Store {
     private static final String ERROR_LOAD_DESIGN = "An error occurred while loading a design";
     private static final String ERROR_LIST_DESIGNS = "An error occurred while loading designs";
 
-    private static final String SELECT_DESIGN = "SELECT * FROM DESIGN_ENTITY WHERE DESIGN_UUID = ?";
-    private static final String SELECT_DESIGNS = "SELECT DESIGN_UUID, DESIGN_CHECKSUM, DESIGN_UPDATED FROM DESIGN_ENTITY";
+    private static final String SELECT_DESIGN = "SELECT * FROM DESIGN WHERE DESIGN_UUID = ?";
+    private static final String SELECT_DESIGNS = "SELECT DESIGN_UUID, DESIGN_CHECKSUM, DESIGN_UPDATED FROM DESIGN";
 
     private final Supplier<CassandraClient> supplier;
 

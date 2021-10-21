@@ -66,7 +66,9 @@ public class IntegrationTests {
         final String bucket = "tiles";
 
         s3Client.listObjectsV2Paginator(ListObjectsV2Request.builder().bucket(bucket).build())
-                .stream().forEach(response -> response.contents().forEach(object -> s3Client.deleteObject(DeleteObjectRequest.builder().bucket(bucket).key(object.key()).build())));
+                .stream()
+                .forEach(response -> deleteObjects(s3Client, bucket, response.contents()));
+
         s3Client.deleteBucket(DeleteBucketRequest.builder().bucket(bucket).build());
         s3Client.createBucket(CreateBucketRequest.builder().bucket(bucket).build());
     }
@@ -162,7 +164,7 @@ public class IntegrationTests {
     }
 
     private static Message createTileCreatedMessage(UUID messageId, UUID partitionKey, long timestamp, TileCreated event) {
-        return new Message(messageId.toString(), MessageType.DESIGN_TILE_CREATED, Json.encode(event), "test", partitionKey.toString(), timestamp);
+        return new Message(messageId.toString(), MessageType.TILE_RENDER_REQUESTED, Json.encode(event), "test", partitionKey.toString(), timestamp);
     }
 
     private static List<Message> safelyFindMessages(String versionUuid) {
@@ -207,5 +209,13 @@ public class IntegrationTests {
                 .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create("admin", "password")))
                 .endpointOverride(URI.create("http://" + scenario.getMinioHost() + ":" + scenario.getMinioPort()))
                 .build();
+    }
+
+    private static void deleteObjects(S3Client s3Client, String bucket, List<S3Object> objects) {
+        objects.forEach(object -> deleteObject(s3Client, bucket, object));
+    }
+
+    private static DeleteObjectResponse deleteObject(S3Client s3Client, String bucket, S3Object object) {
+        return s3Client.deleteObject(DeleteObjectRequest.builder().bucket(bucket).key(object.key()).build());
     }
 }

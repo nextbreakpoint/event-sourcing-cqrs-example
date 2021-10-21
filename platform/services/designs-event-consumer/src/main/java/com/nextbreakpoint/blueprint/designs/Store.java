@@ -3,33 +3,21 @@ package com.nextbreakpoint.blueprint.designs;
 import com.nextbreakpoint.blueprint.designs.model.*;
 import rx.Single;
 
-import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface Store {
-    Single<PersistenceResult<DesignDocument>> selectDesign(UUID designUuid);
+    Single<Void> insertDesign(UUID timeuuid, UUID uuid, String json);
 
-    Single<PersistenceResult<VersionDocument>> selectVersion(String checksum);
+    Single<Void> updateDesign(UUID timeuuid, UUID uuid, String json);
 
-    Single<PersistenceResult<RenderDocument>> selectRender(UUID versionUuid, short level);
+    Single<Void> deleteDesign(UUID timeuuid, UUID uuid);
 
-    Single<PersistenceResult<TileDocument>> selectTile(UUID versionUuid, short level, short x, short y);
+    Single<Optional<DesignChange>> updateDesignAggregate(UUID uuid);
 
-    Single<PersistenceResult<Void>> insertVersion(DesignVersion version);
+    Single<Void> insertDesignVersion(DesignVersion version);
 
-    Single<PersistenceResult<Void>> insertRender(DesignRender render);
+    Single<Void> insertDesignTile(DesignTile tile);
 
-    Single<PersistenceResult<Void>> insertTile(DesignTile tile);
-
-    Single<PersistenceResult<Void>> publishVersion(UUID uuid, String checksum);
-
-    Single<PersistenceResult<Void>> publishRender(UUID uuid, UUID version, short level);
-
-    Single<PersistenceResult<Void>> publishTile(UUID uuid, UUID version, short level, short x, short y);
-
-    Single<PersistenceResult<Void>> completeRender(UUID uuid, UUID uuid1, short level);
-
-    Single<PersistenceResult<Void>> completeTile(UUID uuid, UUID version, short level, short x, short y);
-
-    Single<List<TileDocument>> selectTiles(UUID uuid, short level);
+    Single<Void> updateDesignTile(DesignTile tile, String status);
 }

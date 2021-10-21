@@ -17,6 +17,6 @@ public class DeleteDesignMessageMapper implements Mapper<DeleteDesignCommand, Me
 
     @Override
     public Message transform(DeleteDesignCommand command) {
-        return new Message(UUID.randomUUID().toString(), MessageType.DESIGN_DELETE, Json.encode(command), messageSource, command.getUuid().toString(), System.currentTimeMillis());
+        return new Message(UUID.randomUUID().toString(), MessageType.DESIGN_DELETE_REQUESTED, Json.encode(command), messageSource, command.getUuid().toString(), System.currentTimeMillis());
     }
 }

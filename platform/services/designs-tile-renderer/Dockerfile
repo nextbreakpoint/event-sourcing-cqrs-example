@@ -1,4 +1,8 @@
 FROM maven:3-openjdk-11 AS build
+ARG nexus_host
+ARG nexus_port
+ENV NEXUS_HOST $nexus_host
+ENV NEXUS_PORT $nexus_port
 ADD . /src
 WORKDIR /src
 RUN mvn clean verify -s settings.xml -t toolchains.xml -DskipTests=true
@@ -13,7 +17,6 @@ RUN mvn clean verify -s settings.xml -t toolchains.xml -DskipTests=true
 #COPY --from=native-image designs-tile-renderer /designs-tile-renderer
 FROM openjdk:11-jdk
 COPY --from=build /src/target/libs/* /libs/
-RUN rm /libs/jffi-*-native.jar
 COPY --from=build /src/target/com.nextbreakpoint.blueprint.designs-tile-renderer-1.0.0.jar /libs/
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod u+x /entrypoint.sh

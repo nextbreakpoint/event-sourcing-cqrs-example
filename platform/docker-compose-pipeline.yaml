@@ -1,0 +1,56 @@
+version: '3.8'
+services:
+  nexus:
+    restart: unless-stopped
+    image: sonatype/nexus3:latest
+    environment:
+      NEXUS_CONTEXT: "/"
+      INSTALL4J_ADD_VM_PARAMS: "-Xms2g -Xmx2g -XX:MaxDirectMemorySize=3g -Djava.util.prefs.userRoot=/nexus-data/javaPrefs"
+    ports:
+      - target: 8081
+        published: 38081
+        protocol: tcp
+        mode: host
+    networks:
+      - pipeline
+    volumes:
+      - nexus-data:/nexus-data
+  pact-server:
+    restart: unless-stopped
+    image: pactfoundation/pact-broker:2.79.0.1
+    environment:
+      PACT_BROKER_DATABASE_USERNAME: 'pactbrokeruser'
+      PACT_BROKER_DATABASE_PASSWORD: 'password'
+      PACT_BROKER_DATABASE_HOST: 'postgres'
+      PACT_BROKER_DATABASE_NAME: 'pactbroker'
+    ports:
+      - target: 9292
+        published: 9292
+        protocol: tcp
+        mode: host
+      # - 20000-20010:20000-20010/tcp
+    networks:
+      - pipeline
+  postgres:
+    restart: unless-stopped
+    image: postgres:9.6.21-alpine
+    environment:
+      POSTGRES_USER: 'admin'
+      POSTGRES_PASSWORD: 'password'
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - target: 5432
+        published: 5432
+        protocol: tcp
+        mode: host
+    networks:
+      - pipeline
+    volumes:
+      - ./scripts/pactbrocker.sql:/docker-entrypoint-initdb.d/pactbrocker.sql:ro
+      - pact-data:/var/lib/postgresql/data/pgdata
+volumes:
+  nexus-data:
+  pact-data:
+networks:
+  pipeline:
+    driver: bridge

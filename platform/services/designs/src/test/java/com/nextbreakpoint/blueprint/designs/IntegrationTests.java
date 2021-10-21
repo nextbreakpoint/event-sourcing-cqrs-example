@@ -91,7 +91,7 @@ public class IntegrationTests {
     @BeforeEach
     public void setup() throws SQLException {
       try (Connection connection = DriverManager.getConnection(scenario.getMySqlConnectionUrl("designs"), "root", "password")) {
-        connection.prepareStatement("TRUNCATE DESIGN_ENTITY;").execute();
+        connection.prepareStatement("TRUNCATE DESIGN;").execute();
       }
     }
 

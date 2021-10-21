@@ -1,27 +1,25 @@
 package com.nextbreakpoint.blueprint.designs.model;
 
-import java.util.Objects;
-
 public class TileHeader {
-    private final Short level;
-    private final Short x;
-    private final Short y;
+    private final short level;
+    private final short x;
+    private final short y;
 
-    public TileHeader(Short level, Short x, Short y) {
-        this.level = Objects.requireNonNull(level);
-        this.x = Objects.requireNonNull(x);
-        this.y = Objects.requireNonNull(y);
+    public TileHeader(short level, short x, short y) {
+        this.level = level;
+        this.x = x;
+        this.y = y;
     }
 
-    public Short getLevel() {
+    public short getLevel() {
         return level;
     }
 
-    public Short getX() {
+    public short getX() {
         return x;
     }
 
-    public Short getY() {
+    public short getY() {
         return y;
     }
 }

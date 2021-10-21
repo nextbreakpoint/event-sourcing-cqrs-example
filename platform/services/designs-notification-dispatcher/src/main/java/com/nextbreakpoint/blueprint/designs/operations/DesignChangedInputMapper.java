@@ -11,12 +11,12 @@ public class DesignChangedInputMapper implements Mapper<Message, DesignChanged> 
     @Override
     public DesignChanged transform(Message message) {
         if (!message.getMessageType().equals(MessageType.DESIGN_CHANGED)) {
-            throw new IllegalArgumentException("message type must be " + MessageType.DESIGN_CHANGED);
+            throw new IllegalArgumentException("Unexpected message type: " + message.getMessageType());
         }
         try {
             return Json.decodeValue(message.getMessageBody(), DesignChanged.class);
         } catch (DecodeException e) {
-            throw new IllegalArgumentException("message body cannot be decoded");
+            throw new IllegalArgumentException("Message body cannot be decoded");
         }
     }
 }

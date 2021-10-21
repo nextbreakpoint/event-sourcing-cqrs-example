@@ -34,6 +34,7 @@ import rx.Completable;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.URL;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.function.Supplier;
@@ -102,8 +103,6 @@ public class Verticle extends AbstractVerticle {
 
             final String originPattern = environment.resolve(config.getString("origin_pattern"));
 
-            final String keyspace = environment.resolve(config.getString("cassandra_keyspace"));
-
             final JWTAuth jwtProvider = JWTProviderFactory.create(environment, vertx, config);
 
             final Supplier<CassandraClient> supplier = () -> CassandraClientFactory.create(environment, vertx, config);
@@ -124,7 +123,13 @@ public class Verticle extends AbstractVerticle {
 
             final Handler<RoutingContext> openapiHandler = new OpenApiHandler(vertx.getDelegate(), executor, "openapi.yaml");
 
-            final String url = RouterBuilder.class.getClassLoader().getResource("openapi.yaml").toURI().toString();
+            final URL resource = RouterBuilder.class.getClassLoader().getResource("openapi.yaml");
+
+            if (resource == null) {
+                throw new Exception("Cannot find resource openapi.yaml");
+            }
+
+            final String url = resource.toURI().toString();
 
             RouterBuilder.create(vertx.getDelegate(), url)
                     .onSuccess(routerBuilder -> {

@@ -17,6 +17,6 @@ public class InsertDesignMessageMapper implements Mapper<InsertDesignCommand, Me
 
     @Override
     public Message transform(InsertDesignCommand command) {
-        return new Message(UUID.randomUUID().toString(), MessageType.DESIGN_INSERT, Json.encode(command), messageSource, command.getUuid().toString(), System.currentTimeMillis());
+        return new Message(UUID.randomUUID().toString(), MessageType.DESIGN_INSERT_REQUESTED, Json.encode(command), messageSource, command.getUuid().toString(), System.currentTimeMillis());
     }
 }

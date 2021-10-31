@@ -2,24 +2,23 @@ package com.nextbreakpoint.blueprint.designs;
 
 import com.datastax.oss.driver.api.core.cql.Row;
 import com.jayway.restassured.RestAssured;
+import com.nextbreakpoint.blueprint.common.core.Checksum;
 import com.nextbreakpoint.blueprint.common.core.Environment;
 import com.nextbreakpoint.blueprint.common.core.Message;
 import com.nextbreakpoint.blueprint.common.core.MessageType;
-import com.nextbreakpoint.blueprint.common.test.KafkaUtils;
 import com.nextbreakpoint.blueprint.common.vertx.CassandraClientFactory;
+import com.nextbreakpoint.blueprint.common.vertx.KafkaClientFactory;
+import com.nextbreakpoint.blueprint.designs.events.*;
 import com.nextbreakpoint.blueprint.designs.model.*;
-import com.nextbreakpoint.blueprint.designs.events.DesignDeleteRequested;
-import com.nextbreakpoint.blueprint.designs.events.DesignInsertRequested;
-import com.nextbreakpoint.blueprint.designs.events.DesignUpdateRequested;
-import com.nextbreakpoint.blueprint.designs.events.TileRenderCompleted;
 import io.vertx.core.json.Json;
 import io.vertx.rxjava.cassandra.CassandraClient;
 import io.vertx.rxjava.core.Vertx;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.kafka.clients.producer.KafkaProducer;
-import org.apache.kafka.clients.producer.ProducerRecord;
+import io.vertx.rxjava.kafka.client.consumer.KafkaConsumer;
+import io.vertx.rxjava.kafka.client.consumer.KafkaConsumerRecord;
+import io.vertx.rxjava.kafka.client.consumer.KafkaConsumerRecords;
+import io.vertx.rxjava.kafka.client.producer.KafkaProducer;
+import io.vertx.rxjava.kafka.client.producer.KafkaProducerRecord;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.*;
 
 import java.io.IOException;
@@ -27,6 +26,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
@@ -35,65 +35,49 @@ import static org.awaitility.Durations.*;
 public class IntegrationTests {
     private static final String JSON_1 = "{\"metadata\":\"{\\\"translation\\\":{\\\"x\\\":0.0,\\\"y\\\":0.0,\\\"z\\\":1.0,\\\"w\\\":0.0},\\\"rotation\\\":{\\\"x\\\":0.0,\\\"y\\\":0.0,\\\"z\\\":0.0,\\\"w\\\":0.0},\\\"scale\\\":{\\\"x\\\":1.0,\\\"y\\\":1.0,\\\"z\\\":1.0,\\\"w\\\":1.0},\\\"point\\\":{\\\"x\\\":0.0,\\\"y\\\":0.0},\\\"julia\\\":false,\\\"options\\\":{\\\"showPreview\\\":false,\\\"showTraps\\\":false,\\\"showOrbit\\\":false,\\\"showPoint\\\":false,\\\"previewOrigin\\\":{\\\"x\\\":0.0,\\\"y\\\":0.0},\\\"previewSize\\\":{\\\"x\\\":0.25,\\\"y\\\":0.25}}}\",\"manifest\":\"{\\\"pluginId\\\":\\\"Mandelbrot\\\"}\",\"script\":\"fractal {\\norbit [-2.0 - 2.0i,+2.0 + 2.0i] [x,n] {\\nloop [0, 200] (mod2(x) > 40) {\\nx = x * x + w;\\n}\\n}\\ncolor [#FF000000] {\\npalette gradient {\\n[#FFFFFFFF > #FF000000, 100];\\n[#FF000000 > #FFFFFFFF, 100];\\n}\\ninit {\\nm = 100 * (1 + sin(mod(x) * 0.2 / pi));\\n}\\nrule (n > 0) [1] {\\ngradient[m - 1]\\n}\\n}\\n}\\n\"}";
     private static final String JSON_2 = "{\"metadata\":\"{\\\"translation\\\":{\\\"x\\\":0.0,\\\"y\\\":0.0,\\\"z\\\":1.0,\\\"w\\\":0.0},\\\"rotation\\\":{\\\"x\\\":0.0,\\\"y\\\":0.0,\\\"z\\\":0.0,\\\"w\\\":0.0},\\\"scale\\\":{\\\"x\\\":1.0,\\\"y\\\":1.0,\\\"z\\\":1.0,\\\"w\\\":1.0},\\\"point\\\":{\\\"x\\\":0.0,\\\"y\\\":0.0},\\\"julia\\\":false,\\\"options\\\":{\\\"showPreview\\\":false,\\\"showTraps\\\":false,\\\"showOrbit\\\":false,\\\"showPoint\\\":false,\\\"previewOrigin\\\":{\\\"x\\\":0.0,\\\"y\\\":0.0},\\\"previewSize\\\":{\\\"x\\\":0.25,\\\"y\\\":0.25}}}\",\"manifest\":\"{\\\"pluginId\\\":\\\"Mandelbrot\\\"}\",\"script\":\"fractal {\\norbit [-2.0 - 2.0i,+2.0 + 2.0i] [x,n] {\\nloop [0, 100] (mod2(x) > 40) {\\nx = x * x + w;\\n}\\n}\\ncolor [#FF000000] {\\npalette gradient {\\n[#FFFFFFFF > #FF000000, 100];\\n[#FF000000 > #FFFFFFFF, 100];\\n}\\ninit {\\nm = 100 * (1 + sin(mod(x) * 0.2 / pi));\\n}\\nrule (n > 0) [1] {\\ngradient[m - 1]\\n}\\n}\\n}\\n\"}";
+    private static final String AGGREGATE_UPDATE_REQUESTED = "aggregate-update-requested";
+    private static final String AGGREGATE_UPDATE_COMPLETED = "aggregate-update-completed";
+    private static final String VERSION_CREATED = "version-created";
+    private static final String TILE_UPDATE_REQUESTED = "tile-update-requested";
+    private static final String TILE_UPDATE_COMPLETED = "tile-update-completed";
+    private static final String MESSAGE_SOURCE = "service-designs";
+    private static final String TOPIC_NAME = "design-event";
+
+    private static final Environment environment = Environment.getDefaultEnvironment();
+
+    private static final Vertx vertx = new Vertx(io.vertx.core.Vertx.vertx());
 
     private static final TestScenario scenario = new TestScenario();
 
-    private static Environment environment = Environment.getDefaultEnvironment();
+    private static final List<KafkaConsumerRecord<String, String>> records = new ArrayList<>();
 
-    private static final List<ConsumerRecord<String, String>> records = new ArrayList<>();
     private static KafkaConsumer<String, String> consumer;
     private static KafkaProducer<String, String> producer;
     private static CassandraClient session;
-    private static Thread polling;
 
     @BeforeAll
     public static void before() throws IOException, InterruptedException {
         scenario.before();
 
-        final Vertx vertx = new Vertx(io.vertx.core.Vertx.vertx());
-
         session = CassandraClientFactory.create(environment, vertx, scenario.createCassandraConfig());
 
-        producer = KafkaUtils.createProducer(environment, scenario.createProducerConfig());
+        producer = KafkaClientFactory.createProducer(environment, vertx, scenario.createProducerConfig());
 
-        consumer = KafkaUtils.createConsumer(environment, scenario.createConsumerConfig("test"));
+        consumer = KafkaClientFactory.createConsumer(environment, vertx, scenario.createConsumerConfig("test"));
 
-        consumer.subscribe(Collections.singleton("design-event"));
+        consumer.subscribe(Collections.singleton(TOPIC_NAME));
 
-        polling = createConsumerThread();
-
-        polling.start();
+        pollRecords();
     }
 
     @AfterAll
     public static void after() throws IOException, InterruptedException {
-        if (polling != null) {
-            try {
-                polling.interrupt();
-                polling.join();
-            } catch (Exception ignore) {
-            }
-        }
-
-        if (consumer != null) {
-            try {
-                consumer.close();
-            } catch (Exception ignore) {
-            }
-        }
-
-        if (producer != null) {
-            try {
-                producer.close();
-            } catch (Exception ignore) {
-            }
-        }
-
-        if (session != null) {
-            try {
-                session.close();
-            } catch (Exception ignore) {
-            }
+        try {
+            vertx.rxClose()
+                    .doOnError(Throwable::printStackTrace)
+                    .toBlocking()
+                    .value();
+        } catch (Exception ignore) {
         }
 
         scenario.after();
@@ -102,7 +86,7 @@ public class IntegrationTests {
     @Nested
     @Tag("slow")
     @Tag("integration")
-    @DisplayName("Verify behaviour of designs-command-consumer service")
+    @DisplayName("Verify behaviour of designs-event-consumer service")
     public class VerifyServiceApi {
         @AfterEach
         public void reset() {
@@ -110,250 +94,230 @@ public class IntegrationTests {
         }
 
         @Test
-        @DisplayName("Should insert a design after receiving a DesignInsert event")
+        @DisplayName("Should insert a design after receiving a DesignInsertRequested event")
         public void shouldInsertDesignWhenReceivingAMessage() {
-            final long eventTimestamp = System.currentTimeMillis();
-
             final UUID designId = UUID.randomUUID();
 
-            final DesignInsertRequested designInsertEvent = new DesignInsertRequested(designId, JSON_1, eventTimestamp);
+            final long eventTimestamp = System.currentTimeMillis() - 200;
 
-            final long messageTimestamp = System.currentTimeMillis();
+            final DesignInsertRequested designInsertRequested = new DesignInsertRequested(designId, JSON_1, eventTimestamp);
 
-            final Message insertDesignMessage = createInsertDesignMessage(UUID.randomUUID(), designId, messageTimestamp, designInsertEvent);
+            final Message designInsertRequestedMessage = createDesignInsertRequestedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), designInsertRequested);
 
             safelyClearMessages();
 
-            producer.send(createKafkaRecord(insertDesignMessage));
+            producer.rxSend(createKafkaRecord(designInsertRequestedMessage))
+                    .doOnError(Throwable::printStackTrace)
+                    .toBlocking()
+                    .value();
+
+            final String checksum = Checksum.of(JSON_1);
 
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final List<Row> rows = session.rxPrepare("SELECT * FROM DESIGN_EVENT WHERE DESIGN_UUID = ?")
-                                .map(stmt -> stmt.bind(designId))
-                                .flatMap(session::rxExecuteWithFullFetch)
-                                .toBlocking()
-                                .value();
+                        final List<Row> rows = fetchDesignEvents(designId);
                         assertThat(rows).hasSize(1);
-                        rows.forEach(row -> {
-                            String actualJson = row.get("DESIGN_DATA", String.class);
-                            String actualStatus = row.get("DESIGN_STATUS", String.class);
-                            String actualChecksum = row.get("DESIGN_CHECKSUM", String.class);
-                            Instant actualPublished = row.getInstant("EVENT_PUBLISHED") ;
-                            assertThat(actualJson).isEqualTo(JSON_1);
-                            assertThat(actualStatus).isEqualTo("CREATED");
-                            assertThat(actualChecksum).isNotNull();
-                            assertThat(actualPublished).isNotNull();
-                        });
+                        assertExpectedDesignEvent(rows.get(0), JSON_1, "CREATED");
                     });
 
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final List<Row> rows = session.rxPrepare("SELECT * FROM DESIGN WHERE DESIGN_UUID = ?")
-                                .map(stmt -> stmt.bind(designId))
-                                .flatMap(session::rxExecuteWithFullFetch)
-                                .toBlocking()
-                                .value();
+                        final List<Row> rows = fetchDesignAggregate(designId);
                         assertThat(rows).hasSize(1);
-                        rows.forEach(row -> {
-                            String actualJson = row.get("DESIGN_DATA", String.class);
-                            String actualChecksum = row.get("DESIGN_CHECKSUM", String.class);
-                            assertThat(actualJson).isEqualTo(JSON_1);
-                            assertThat(actualChecksum).isNotNull();
-                        });
+                        assertExpectedDesignAggregate(rows.get(0), JSON_1);
                     });
 
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final List<Message> messages = safelyFindMessages(designId.toString());
+                        final List<Message> messages = safelyFindMessages(designId.toString(), MESSAGE_SOURCE, AGGREGATE_UPDATE_REQUESTED);
                         assertThat(messages).hasSize(1);
-                        final Message actualMessage = messages.get(messages.size() - 1);
-                        assertThat(actualMessage.getTimestamp()).isNotNull();
-                        assertThat(actualMessage.getMessageSource()).isEqualTo("service-designs");
-                        assertThat(actualMessage.getPartitionKey()).isEqualTo(designId.toString());
-                        assertThat(actualMessage.getMessageId()).isNotNull();
-                        assertThat(actualMessage.getMessageType()).isEqualTo("design-changed");
-                        DesignChangedEvent actualEvent = Json.decodeValue(actualMessage.getMessageBody(), DesignChangedEvent.class);
-                        assertThat(actualEvent.getUuid()).isEqualTo(designId);
-                        assertThat(actualEvent.getTimestamp()).isNotNull();
-                        assertThat(actualEvent.getTimestamp()).isGreaterThan(eventTimestamp);
+                        assertExpectedAggregateUpdateRequestedEvent(designId, eventTimestamp, messages.get(0));
                     });
+
+            await().atMost(TEN_SECONDS)
+                    .pollInterval(ONE_SECOND)
+                    .untilAsserted(() -> {
+                        final List<Message> messages = safelyFindMessages(designId.toString(), MESSAGE_SOURCE, AGGREGATE_UPDATE_COMPLETED);
+                        assertThat(messages).hasSize(1);
+                        assertExpectedAggregateUpdateCompletedEvent(designId, eventTimestamp, messages.get(0), JSON_1, checksum);
+                    });
+//
+//            await().atMost(TEN_SECONDS)
+//                    .pollInterval(ONE_SECOND)
+//                    .untilAsserted(() -> {
+//                        final List<Message> messages = safelyFindMessages(checksum, MESSAGE_SOURCE, VERSION_CREATED);
+//                        assertThat(messages).hasSize(1);
+//                        assertExpectedVersionCreatedEvent(designId, eventTimestamp, messages.get(0), JSON_1, checksum);
+//                    });
         }
 
         @Test
-        @DisplayName("Should update a design after receiving a DesignUpdate event")
+        @DisplayName("Should update a design after receiving a DesignUpdateRequested event")
         public void shouldUpdateDesignWhenReceivingAMessage() {
-            final long eventTimestamp1 = System.currentTimeMillis();
-
-            final long eventTimestamp2 = System.currentTimeMillis();
-
             final UUID designId = UUID.randomUUID();
 
-            final DesignInsertRequested designInsertEvent = new DesignInsertRequested(designId, JSON_1, eventTimestamp1);
+            final long eventTimestamp1 = System.currentTimeMillis() - 200;
 
-            final DesignUpdateRequested designUpdateEvent = new DesignUpdateRequested(designId, JSON_2, eventTimestamp2);
+            final DesignInsertRequested designInsertRequested = new DesignInsertRequested(designId, JSON_1, eventTimestamp1);
 
-            final long messageTimestamp = System.currentTimeMillis();
+            final long eventTimestamp2 = System.currentTimeMillis() - 100;
 
-            final Message insertDesignMessage = createInsertDesignMessage(UUID.randomUUID(), designId, messageTimestamp, designInsertEvent);
+            final DesignUpdateRequested designUpdateRequested = new DesignUpdateRequested(designId, JSON_2, eventTimestamp2);
 
-            final Message updateDesignMessage = createUpdateDesignMessage(UUID.randomUUID(), designId, messageTimestamp, designUpdateEvent);
+            final Message designInsertRequestedMessage = createDesignInsertRequestedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), designInsertRequested);
+
+            final Message designUpdateRequestedMessage = createDesignUpdateRequestedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), designUpdateRequested);
 
             safelyClearMessages();
 
-            producer.send(createKafkaRecord(insertDesignMessage));
+            producer.rxSend(createKafkaRecord(designInsertRequestedMessage))
+                    .doOnError(Throwable::printStackTrace)
+                    .toBlocking()
+                    .value();
 
-            pause(100);
+            producer.rxSend(createKafkaRecord(designUpdateRequestedMessage))
+                    .doOnError(Throwable::printStackTrace)
+                    .toBlocking()
+                    .value();
 
-            producer.send(createKafkaRecord(updateDesignMessage));
+            final String checksum1 = Checksum.of(JSON_1);
+            final String checksum2 = Checksum.of(JSON_2);
 
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final List<Row> rows = session.rxPrepare("SELECT * FROM DESIGN_EVENT WHERE DESIGN_UUID = ?")
-                                .map(stmt -> stmt.bind(designId))
-                                .flatMap(session::rxExecuteWithFullFetch)
-                                .toBlocking()
-                                .value();
+                        final List<Row> rows = fetchDesignEvents(designId);
                         assertThat(rows).hasSize(2);
-                        final Set<UUID> uuids = rows.stream()
-                                .map(row -> row.getUuid("DESIGN_UUID"))
-                                .collect(Collectors.toSet());
+                        final Set<UUID> uuids = extractUuids(rows);
                         assertThat(uuids).contains(designId);
-                        String actualJson1 = rows.get(0).get("DESIGN_DATA", String.class);
-                        String actualStatus1 = rows.get(0).get("DESIGN_STATUS", String.class);
-                        Instant actualPublished1 = rows.get(0).getInstant("EVENT_PUBLISHED") ;
-                        assertThat(actualJson1).isEqualTo(JSON_1);
-                        assertThat(actualStatus1).isEqualTo("CREATED");
-                        assertThat(actualPublished1).isNotNull();
-                        String actualJson2 = rows.get(1).get("DESIGN_DATA", String.class);
-                        String actualStatus2 = rows.get(1).get("DESIGN_STATUS", String.class);
-                        Instant actualPublished2 = rows.get(1).getInstant("EVENT_PUBLISHED") ;
-                        assertThat(actualJson2).isEqualTo(JSON_2);
-                        assertThat(actualStatus2).isEqualTo("UPDATED");
-                        assertThat(actualPublished2).isNotNull();
+                        assertExpectedDesignEvent(rows.get(0), JSON_1, "CREATED");
+                        assertExpectedDesignEvent(rows.get(1), JSON_2, "UPDATED");
                     });
 
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final List<Row> rows = session.rxPrepare("SELECT * FROM DESIGN WHERE DESIGN_UUID = ?")
-                                .map(stmt -> stmt.bind(designId))
-                                .flatMap(session::rxExecuteWithFullFetch)
-                                .toBlocking()
-                                .value();
+                        final List<Row> rows = fetchDesignAggregate(designId);
                         assertThat(rows).hasSize(1);
-                        rows.forEach(row -> {
-                            String actualJson = row.get("DESIGN_DATA", String.class);
-                            String actualChecksum = row.get("DESIGN_CHECKSUM", String.class);
-                            assertThat(actualJson).isEqualTo(JSON_2);
-                            assertThat(actualChecksum).isNotNull();
-                        });
+                        assertExpectedDesignAggregate(rows.get(0), JSON_2);
                     });
 
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final List<Message> messages = safelyFindMessages(designId.toString());
+                        final List<Message> messages = safelyFindMessages(designId.toString(), MESSAGE_SOURCE, AGGREGATE_UPDATE_REQUESTED);
                         assertThat(messages).hasSize(2);
-                        final Message actualMessage = messages.get(messages.size() - 1);
-                        assertThat(actualMessage.getTimestamp()).isNotNull();
-                        assertThat(actualMessage.getMessageSource()).isEqualTo("service-designs");
-                        assertThat(actualMessage.getPartitionKey()).isEqualTo(designId.toString());
-                        assertThat(actualMessage.getMessageId()).isNotNull();
-                        assertThat(actualMessage.getMessageType()).isEqualTo("design-changed");
-                        DesignChangedEvent actualEvent = Json.decodeValue(actualMessage.getMessageBody(), DesignChangedEvent.class);
-                        assertThat(actualEvent.getUuid()).isEqualTo(designId);
-                        assertThat(actualEvent.getTimestamp()).isNotNull();
-                        assertThat(actualEvent.getTimestamp()).isGreaterThan(eventTimestamp2);
+                        assertExpectedAggregateUpdateRequestedEvent(designId, eventTimestamp1, messages.get(0));
+                        assertExpectedAggregateUpdateRequestedEvent(designId, eventTimestamp2, messages.get(1));
                     });
+
+            await().atMost(TEN_SECONDS)
+                    .pollInterval(ONE_SECOND)
+                    .untilAsserted(() -> {
+                        final List<Message> messages = safelyFindMessages(designId.toString(), MESSAGE_SOURCE, AGGREGATE_UPDATE_COMPLETED);
+                        assertThat(messages).hasSize(2);
+//                        assertExpectedAggregateUpdateCompletedEvent(designId, eventTimestamp1, messages.get(0), JSON_1, checksum1);
+                        assertExpectedAggregateUpdateCompletedEvent(designId, eventTimestamp2, messages.get(1), JSON_2, checksum2);
+                    });
+
+//            await().atMost(TEN_SECONDS)
+//                    .pollInterval(ONE_SECOND)
+//                    .untilAsserted(() -> {
+//                        final List<Message> messages = safelyFindMessages(checksum1, MESSAGE_SOURCE, VERSION_CREATED);
+//                        assertThat(messages).hasSize(1);
+//                        assertExpectedVersionCreatedEvent(designId, eventTimestamp1, messages.get(0), JSON_1, checksum1);
+//                    });
+//
+//            await().atMost(TEN_SECONDS)
+//                    .pollInterval(ONE_SECOND)
+//                    .untilAsserted(() -> {
+//                        final List<Message> messages = safelyFindMessages(checksum2, MESSAGE_SOURCE, VERSION_CREATED);
+//                        assertThat(messages).hasSize(1);
+//                        assertExpectedVersionCreatedEvent(designId, eventTimestamp2, messages.get(0), JSON_2, checksum2);
+//                    });
         }
 
         @Test
-        @DisplayName("Should delete a design after receiving a DesignDelete event")
+        @DisplayName("Should delete a design after receiving a DesignDeleteRequested event")
         public void shouldDeleteDesignWhenReceivingAMessage() {
-            final long eventTimestamp1 = System.currentTimeMillis();
-
-            final long eventTimestamp2 = System.currentTimeMillis();
-
             final UUID designId = UUID.randomUUID();
 
-            final DesignInsertRequested designInsertEvent = new DesignInsertRequested(designId, JSON_1, eventTimestamp1);
+            final long eventTimestamp1 = System.currentTimeMillis() - 200;
 
-            final DesignDeleteRequested designDeleteEvent = new DesignDeleteRequested(designId, eventTimestamp2);
+            final DesignInsertRequested designInsertRequested = new DesignInsertRequested(designId, JSON_1, eventTimestamp1);
 
-            final long messageTimestamp = System.currentTimeMillis();
+            final long eventTimestamp2 = System.currentTimeMillis() - 100;
 
-            final Message insertDesignMessage = createInsertDesignMessage(UUID.randomUUID(), designId, messageTimestamp, designInsertEvent);
+            final DesignDeleteRequested designDeleteRequested = new DesignDeleteRequested(designId, eventTimestamp2);
 
-            final Message deleteDesignMessage = createDeleteDesignMessage(UUID.randomUUID(), designId, messageTimestamp, designDeleteEvent);
+            final Message designInsertRequestedMessage = createDesignInsertRequestedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), designInsertRequested);
+
+            final Message designDeleteRequestedMessage = createDesignDeleteRequestedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), designDeleteRequested);
 
             safelyClearMessages();
 
-            producer.send(createKafkaRecord(insertDesignMessage));
+            producer.rxSend(createKafkaRecord(designInsertRequestedMessage))
+                    .doOnError(Throwable::printStackTrace)
+                    .toBlocking()
+                    .value();
 
-            pause(100);
+            producer.rxSend(createKafkaRecord(designDeleteRequestedMessage))
+                    .doOnError(Throwable::printStackTrace)
+                    .toBlocking()
+                    .value();
 
-            producer.send(createKafkaRecord(deleteDesignMessage));
+            final String checksum1 = Checksum.of(JSON_1);
+            final String checksum2 = Checksum.of(JSON_1);
 
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final List<Row> rows = session.rxPrepare("SELECT * FROM DESIGN_EVENT WHERE DESIGN_UUID = ?")
-                                .map(stmt -> stmt.bind(designId))
-                                .flatMap(session::rxExecuteWithFullFetch)
-                                .toBlocking()
-                                .value();
+                        final List<Row> rows = fetchDesignEvents(designId);
                         assertThat(rows).hasSize(2);
-                        final Set<UUID> uuids = rows.stream()
-                                .map(row -> row.getUuid("DESIGN_UUID"))
-                                .collect(Collectors.toSet());
+                        final Set<UUID> uuids = extractUuids(rows);
                         assertThat(uuids).contains(designId);
-                        String actualJson1 = rows.get(0).get("DESIGN_DATA", String.class);
-                        String actualStatus1 = rows.get(0).get("DESIGN_STATUS", String.class);
-                        Instant actualPublished1 = rows.get(0).getInstant("EVENT_PUBLISHED") ;
-                        assertThat(actualJson1).isEqualTo(JSON_1);
-                        assertThat(actualStatus1).isEqualTo("CREATED");
-                        assertThat(actualPublished1).isNotNull();
-                        String actualJson2 = rows.get(1).get("DESIGN_DATA", String.class);
-                        String actualStatus2 = rows.get(1).get("DESIGN_STATUS", String.class);
-                        Instant actualPublished2 = rows.get(1).getInstant("EVENT_PUBLISHED") ;
-                        assertThat(actualJson2).isNull();
-                        assertThat(actualStatus2).isEqualTo("DELETED");
-                        assertThat(actualPublished2).isNotNull();
+                        assertExpectedDesignEvent(rows.get(0), JSON_1, "CREATED");
+                        assertExpectedDesignEvent(rows.get(1), null, "DELETED");
                     });
 
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final List<Row> rows = session.rxPrepare("SELECT * FROM DESIGN WHERE DESIGN_UUID = ?")
-                                .map(stmt -> stmt.bind(designId))
-                                .flatMap(session::rxExecuteWithFullFetch)
-                                .toBlocking()
-                                .value();
+                        final List<Row> rows = fetchDesignAggregate(designId);
                         assertThat(rows).hasSize(0);
                     });
 
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final List<Message> messages = safelyFindMessages(designId.toString());
+                        final List<Message> messages = safelyFindMessages(designId.toString(), MESSAGE_SOURCE, AGGREGATE_UPDATE_REQUESTED);
                         assertThat(messages).hasSize(2);
-                        final Message actualMessage = messages.get(messages.size() - 1);
-                        assertThat(actualMessage.getTimestamp()).isNotNull();
-                        assertThat(actualMessage.getMessageSource()).isEqualTo("service-designs");
-                        assertThat(actualMessage.getPartitionKey()).isEqualTo(designId.toString());
-                        assertThat(actualMessage.getMessageId()).isNotNull();
-                        assertThat(actualMessage.getMessageType()).isEqualTo("design-changed");
-                        DesignChangedEvent actualEvent = Json.decodeValue(actualMessage.getMessageBody(), DesignChangedEvent.class);
-                        assertThat(actualEvent.getUuid()).isEqualTo(designId);
-                        assertThat(actualEvent.getTimestamp()).isNotNull();
-                        assertThat(actualEvent.getTimestamp()).isGreaterThan(eventTimestamp2);
+                        assertExpectedAggregateUpdateRequestedEvent(designId, eventTimestamp1, messages.get(0));
+                        assertExpectedAggregateUpdateRequestedEvent(designId, eventTimestamp2, messages.get(1));
                     });
+
+            await().atMost(TEN_SECONDS)
+                    .pollInterval(ONE_SECOND)
+                    .untilAsserted(() -> {
+                        final List<Message> messages = safelyFindMessages(designId.toString(), MESSAGE_SOURCE, AGGREGATE_UPDATE_COMPLETED);
+                        assertThat(messages).hasSize(2);
+//                        assertExpectedAggregateUpdateCompletedEvent(designId, eventTimestamp1, messages.get(0), JSON_1, checksum1);
+                        assertExpectedAggregateUpdateCompletedEvent(designId, eventTimestamp2, messages.get(1), JSON_1, checksum2);
+                    });
+
+//            await().atMost(TEN_SECONDS)
+//                    .pollInterval(ONE_SECOND)
+//                    .untilAsserted(() -> {
+//                        final List<Message> messages = safelyFindMessages(checksum1, MESSAGE_SOURCE, VERSION_CREATED);
+//                        assertThat(messages).hasSize(2);
+//                        assertExpectedVersionCreatedEvent(designId, eventTimestamp1, messages.get(0), JSON_1, checksum1);
+//                        assertExpectedVersionCreatedEvent(designId, eventTimestamp1, messages.get(1), JSON_1, checksum1);
+//                    });
         }
-    }
+   }
 
 //    @Nested
 //    @Tag("slow")
@@ -435,7 +399,7 @@ public class IntegrationTests {
 ////                    .toBlocking()
 ////                    .value();
 //
-////            final Single<PreparedStatement> preparedStatementSingle = session.rxPrepare("INSERT INTO TILE (DESIGN_UUID, VERSION_UUID, TILE_LEVEL, TILE_ROW, TILE_COL, TILE_CREATED, TILE_UPDATED, TILE_PUBLISHED) VALUES (?,?,?,?,?,toTimeStamp(now()),toTimeStamp(now()),toTimeStamp(now()))");
+////            final Single<PreparedStatement> preparedStatementSingle = session.rxPrepare("INSERT INTO DESIGN_TILE (DESIGN_UUID, VERSION_UUID, TILE_LEVEL, TILE_ROW, TILE_COL, TILE_PUBLISHED) VALUES (?,?,?,?,?,toTimeStamp(now()))");
 //
 ////            final UUID tileId = UUID.randomUUID();
 //
@@ -825,27 +789,43 @@ public class IntegrationTests {
 //        }
 //    }
 
-    private static ProducerRecord<String, String> createKafkaRecord(Message message) {
-        return new ProducerRecord<>("design-event", message.getPartitionKey(), Json.encode(message));
+    @NotNull
+    private static KafkaProducerRecord<String, String> createKafkaRecord(Message message) {
+        return KafkaProducerRecord.create(TOPIC_NAME, message.getPartitionKey(), Json.encode(message));
     }
 
-    private static Message createInsertDesignMessage(UUID messageId, UUID partitionKey, long timestamp, DesignInsertRequested event) {
+    @NotNull
+    private static Message createDesignInsertRequestedMessage(UUID messageId, UUID partitionKey, long timestamp, DesignInsertRequested event) {
         return new Message(messageId.toString(), MessageType.DESIGN_INSERT_REQUESTED, Json.encode(event), "test", partitionKey.toString(), timestamp);
     }
 
-    private static Message createUpdateDesignMessage(UUID messageId, UUID partitionKey, long timestamp, DesignUpdateRequested event) {
+    @NotNull
+    private static Message createDesignUpdateRequestedMessage(UUID messageId, UUID partitionKey, long timestamp, DesignUpdateRequested event) {
         return new Message(messageId.toString(), MessageType.DESIGN_UPDATE_REQUESTED, Json.encode(event), "test", partitionKey.toString(), timestamp);
     }
 
-    private static Message createDeleteDesignMessage(UUID messageId, UUID partitionKey, long timestamp, DesignDeleteRequested event) {
+    @NotNull
+    private static Message createDesignDeleteRequestedMessage(UUID messageId, UUID partitionKey, long timestamp, DesignDeleteRequested event) {
         return new Message(messageId.toString(), MessageType.DESIGN_DELETE_REQUESTED, Json.encode(event), "test", partitionKey.toString(), timestamp);
     }
 
-    private static Message createDesignChangedMessage(UUID messageId, UUID partitionKey, long timestamp, DesignChangedEvent event) {
-        return new Message(messageId.toString(), MessageType.DESIGN_CHANGED, Json.encode(event), "test", partitionKey.toString(), timestamp);
+    @NotNull
+    private static Message createDesignAggregateUpdateRequestedMessage(UUID messageId, UUID partitionKey, long timestamp, DesignChangedEvent event) {
+        return new Message(messageId.toString(), MessageType.AGGREGATE_UPDATE_REQUESTED, Json.encode(event), "test", partitionKey.toString(), timestamp);
     }
 
-    private static Message createTileCompletedMessage(UUID messageId, UUID partitionKey, long timestamp, TileRenderCompleted event) {
+    @NotNull
+    private static Message createDesignAggregateUpdateCompletedMessage(UUID messageId, UUID partitionKey, long timestamp, DesignChangedEvent event) {
+        return new Message(messageId.toString(), MessageType.AGGREGATE_UPDATE_COMPLETED, Json.encode(event), "test", partitionKey.toString(), timestamp);
+    }
+
+    @NotNull
+    private static Message createTileRenderRequestedMessage(UUID messageId, UUID partitionKey, long timestamp, TileRenderCompleted event) {
+        return new Message(messageId.toString(), MessageType.TILE_RENDER_REQUESTED, Json.encode(event), "test", partitionKey.toString(), timestamp);
+    }
+
+    @NotNull
+    private static Message createTileRenderCompletedMessage(UUID messageId, UUID partitionKey, long timestamp, TileRenderCompleted event) {
         return new Message(messageId.toString(), MessageType.TILE_RENDER_COMPLETED, Json.encode(event), "test", partitionKey.toString(), timestamp);
     }
 
@@ -856,11 +836,15 @@ public class IntegrationTests {
         }
     }
 
-    private static List<Message> safelyFindMessages(String versionUuid) {
+    @NotNull
+    private static List<Message> safelyFindMessages(String partitionKey, String messageSource, String messageType) {
         synchronized (records) {
             return records.stream()
                     .map(record -> Json.decodeValue(record.value(), Message.class))
-                    .filter(value -> value.getPartitionKey().equals(versionUuid))
+                    .filter(message -> message.getPartitionKey().equals(partitionKey))
+                    .filter(message -> message.getMessageSource().equals(messageSource))
+                    .filter(message -> message.getMessageType().equals(messageType))
+//                    .sorted(Comparator.comparing(Message::getTimestamp))
                     .collect(Collectors.toList());
         }
     }
@@ -871,24 +855,110 @@ public class IntegrationTests {
         }
     }
 
-    private static void safelyAppendRecord(ConsumerRecord<String, String> record) {
+    private static void safelyAppendRecord(KafkaConsumerRecord<String, String> record) {
         synchronized (records) {
             records.add(record);
         }
     }
 
-    private static Thread createConsumerThread() {
-        return new Thread(() -> {
-            try {
-                while (!Thread.interrupted()) {
-                    ConsumerRecords<String, String> consumerRecords = consumer.poll(Duration.ofSeconds(5));
-                    System.out.println("Received " + consumerRecords.count() + " messages");
-                    consumerRecords.forEach(IntegrationTests::safelyAppendRecord);
-                    consumer.commitSync();
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
+    private static void consumeRecords(KafkaConsumerRecords<String, String> consumerRecords) {
+        System.out.println("Received " + consumerRecords.size() + " messages");
+
+        IntStream.range(0, consumerRecords.size())
+                .forEach(index -> safelyAppendRecord(consumerRecords.recordAt(index)));
+
+        pollRecords();
+        commitOffsets();
+    }
+
+    private static void pollRecords() {
+        consumer.rxPoll(Duration.ofSeconds(5))
+                .doOnSuccess(IntegrationTests::consumeRecords)
+                .doOnError(Throwable::printStackTrace)
+                .subscribe();
+    }
+
+    private static void commitOffsets() {
+        consumer.rxCommit()
+                .doOnError(Throwable::printStackTrace)
+                .subscribe();
+    }
+
+    @NotNull
+    private Set<UUID> extractUuids(List<Row> rows) {
+        return rows.stream()
+                .map(row -> row.getUuid("DESIGN_UUID"))
+                .collect(Collectors.toSet());
+    }
+
+    @NotNull
+    private List<Row> fetchDesignEvents(UUID designId) {
+        return session.rxPrepare("SELECT * FROM DESIGN_EVENT WHERE DESIGN_UUID = ?")
+                .map(stmt -> stmt.bind(designId))
+                .flatMap(session::rxExecuteWithFullFetch)
+                .toBlocking()
+                .value();
+    }
+
+    @NotNull
+    private List<Row> fetchDesignAggregate(UUID designId) {
+        return session.rxPrepare("SELECT * FROM DESIGN_AGGREGATE WHERE DESIGN_UUID = ?")
+                .map(stmt -> stmt.bind(designId))
+                .flatMap(session::rxExecuteWithFullFetch)
+                .toBlocking()
+                .value();
+    }
+
+    private void assertExpectedDesignEvent(Row row, String data, String status) {
+        String actualJson = row.get("DESIGN_DATA", String.class);
+        String actualStatus = row.get("DESIGN_STATUS", String.class);
+        String actualChecksum = row.get("DESIGN_CHECKSUM", String.class);
+        Instant actualDesignModified = row.getInstant("DESIGN_UPDATED") ;
+        assertThat(actualJson).isEqualTo(data);
+        assertThat(actualStatus).isEqualTo(status);
+        assertThat(actualChecksum).isEqualTo(Checksum.of(data));
+        assertThat(actualDesignModified).isNotNull();
+    }
+
+    private void assertExpectedDesignAggregate(Row row, String data) {
+        String actualJson = row.get("DESIGN_DATA", String.class);
+        String actualChecksum = row.get("DESIGN_CHECKSUM", String.class);
+        assertThat(actualJson).isEqualTo(data);
+        assertThat(actualChecksum).isNotNull();
+    }
+
+    private void assertExpectedAggregateUpdateRequestedEvent(UUID designId, long eventTimestamp, Message actualMessage) {
+        assertThat(actualMessage.getTimestamp()).isNotNull();
+        assertThat(actualMessage.getMessageSource()).isEqualTo(MESSAGE_SOURCE);
+        assertThat(actualMessage.getPartitionKey()).isEqualTo(designId.toString());
+        assertThat(actualMessage.getMessageId()).isNotNull();
+        assertThat(actualMessage.getMessageType()).isEqualTo(AGGREGATE_UPDATE_REQUESTED);
+        AggregateUpdateRequested actualEvent = Json.decodeValue(actualMessage.getMessageBody(), AggregateUpdateRequested.class);
+        assertThat(actualEvent.getUuid()).isEqualTo(designId);
+        assertThat(actualEvent.getTimestamp()).isNotNull();
+        assertThat(actualEvent.getTimestamp()).isEqualTo(eventTimestamp);
+    }
+
+    private void assertExpectedAggregateUpdateCompletedEvent(UUID designId, long eventTimestamp, Message actualMessage, String data, String checksum) {
+        assertThat(actualMessage.getTimestamp()).isNotNull();
+        assertThat(actualMessage.getMessageSource()).isEqualTo(MESSAGE_SOURCE);
+        assertThat(actualMessage.getPartitionKey()).isEqualTo(designId.toString());
+        assertThat(actualMessage.getMessageId()).isNotNull();
+        assertThat(actualMessage.getMessageType()).isEqualTo(AGGREGATE_UPDATE_COMPLETED);
+        AggregateUpdateCompleted actualEvent = Json.decodeValue(actualMessage.getMessageBody(), AggregateUpdateCompleted.class);
+        assertThat(actualEvent.getUuid()).isEqualTo(designId);
+        assertThat(actualEvent.getData()).isEqualTo(data);
+        assertThat(actualEvent.getChecksum()).isEqualTo(checksum);
+    }
+
+    private void assertExpectedVersionCreatedEvent(UUID designId, long eventTimestamp, Message actualMessage, String data, String checksum) {
+        assertThat(actualMessage.getTimestamp()).isNotNull();
+        assertThat(actualMessage.getMessageSource()).isEqualTo(MESSAGE_SOURCE);
+        assertThat(actualMessage.getPartitionKey()).isEqualTo(designId.toString());
+        assertThat(actualMessage.getMessageId()).isNotNull();
+        assertThat(actualMessage.getMessageType()).isEqualTo(VERSION_CREATED);
+        VersionCreated actualEvent = Json.decodeValue(actualMessage.getMessageBody(), VersionCreated.class);
+        assertThat(actualEvent.getData()).isEqualTo(data);
+        assertThat(actualEvent.getChecksum()).isEqualTo(checksum);
     }
 }

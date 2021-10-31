@@ -28,7 +28,7 @@ public class AggregateUpdateCompletedController<T extends RecordAndEvent<Aggrega
 
     @Override
     public Single<Void> onNext(T object) {
-        return Single.fromCallable(() -> new EventMetadata(object.getRecord(), Uuids.timeBased()))
+        return Single.just(new EventMetadata(object.getRecord(), Uuids.timeBased()))
                 .flatMap(metadata -> updateVersion(object.getEvent()))
                 .map(mapper::transform)
                 .flatMap(emitter::onNext);

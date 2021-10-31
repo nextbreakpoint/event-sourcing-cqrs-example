@@ -1,14 +1,8 @@
 # event-sourcing-cqrs-example
 
-Start services
+TODO
 
-    docker compose -f docker-compose-services.yaml up -d
-    docker compose -f docker-compose-pipeline.yaml up -d
-
-Stop services
-
-    docker compose -f docker-compose-services.yaml down
-    docker compose -f docker-compose-pipeline.yaml down
+## Requirements
 
 Generate secrets:
 
@@ -16,11 +10,50 @@ Generate secrets:
 
 Setup Minikube
 
-    minikube start --vm-driver=hyperkit --cpus 8 --memory 32768 —disk-size 100g --kubernetes-version v1.22.2
+    minikube start --vm-driver=hyperkit --cpus 8 --memory 32768m —disk-size 100g --kubernetes-version v1.22.2
+
+    minikube start --mount-string "$(pwd)/scripts:/var/docker/scripts" --mount
 
     minikube addons enable metrics-server
     minikube addons enable dashboard
     minikube addons enable registry
+
+## Build
+
+Configure Docker:
+
+    eval $(minikube docker-env)
+
+Export Kafka host
+
+    export KAFKA_HOST=localhost
+
+Start services
+
+    docker compose -f docker-compose-services.yaml -p services up -d
+    docker compose -f docker-compose-pipeline.yaml -p pipeline up -d
+
+Stop services
+
+    docker compose -f docker-compose-services.yaml -p services down
+    docker compose -f docker-compose-pipeline.yaml -p pipeline down
+
+Export variables
+
+    export NEXUS_HOST=localhost
+    export NEXUS_PORT=38081
+    export NEXUS_USERNAME=admin
+    export NEXUS_PASSWORD=$(docker exec -it $(docker container ls -f name=pipeline-nexus-1 -q) cat /nexus-data/admin.password)
+
+Create Maven repository
+
+    curl -u ${NEXUS_USERNAME}:${NEXUS_PASSWORD} -X POST "http://${NEXUS_HOST}:${NEXUS_PORT}/service/rest/v1/repositories/maven/hosted" -H "accept: application/json" -H "Content-Type: application/json" -d "{ \"name\": \"maven-internal\", \"online\": true, \"storage\": { \"blobStoreName\": \"default\", \"strictContentTypeValidation\": true, \"writePolicy\": \"allow_once\" }, \"cleanup\": { \"policyNames\": [ \"string\" ] }, \"component\": { \"proprietaryComponents\": true }, \"maven\": { \"versionPolicy\": \"MIXED\", \"layoutPolicy\": \"STRICT\" }}"
+
+Build services
+
+    ./scripts/build.sh integration 1.0.0
+
+## Install
 
 Create namespace:
 
@@ -178,13 +211,11 @@ Only one replica per partition is allowed for designs-command-consumer.
 Only one replica per node is allowed for designs-notification-dispatcher.
 
 
-export NEXUS_HOST=localhost
-export NEXUS_PORT=38081
-export NEXUS_USERNAME=admin
-export NEXUS_PASSWORD=$(docker exec -it $(docker container ls -f name=platform_nexus -q) cat /nexus-data/admin.password)
 
-curl -u ${NEXUS_USERNAME}:${NEXUS_PASSWORD} -X POST "http://${NEXUS_HOST}:${NEXUS_PORT}/service/rest/v1/repositories/maven/hosted" -H "accept: application/json" -H "Content-Type: application/json" -d "{ \"name\": \"maven-internal\", \"online\": true, \"storage\": { \"blobStoreName\": \"default\", \"strictContentTypeValidation\": true, \"writePolicy\": \"allow_once\" }, \"cleanup\": { \"policyNames\": [ \"string\" ] }, \"component\": { \"proprietaryComponents\": true }, \"maven\": { \"versionPolicy\": \"MIXED\", \"layoutPolicy\": \"STRICT\" }}"
+/////////////////
 
-docker exec -it $(docker container ls -f name=platform_nexus -q) cat /nexus-data/admin.password
+docker exec -it $(docker container ls -f name=pipeline-nexus-1 -q) cat /nexus-data/admin.password
 
-docker run -it --network platform_platform -e MINIO_ACCESS_KEY=admin -e MINIO_SECRET_KEY=password --entrypoint sh minio/mc:latest -c "mc config host add integration http://minio:9000 admin password && mc rm -r --force integration/tiles && mc mb integration/tiles"
+docker run -it --network platform_services -e MINIO_ACCESS_KEY=admin -e MINIO_SECRET_KEY=password --entrypoint sh minio/mc:latest -c "mc config host add integration http://minio:9000 admin password && mc rm -r --force integration/tiles && mc mb integration/tiles"
+
+docker run -it --network platform_services -e MINIO_ACCESS_KEY=admin -e MINIO_SECRET_KEY=password --entrypoint sh minio/mc:latest -c "mc config host add integration http://minio:9000 admin password && mc mb integration/tiles"

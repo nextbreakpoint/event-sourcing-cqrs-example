@@ -19,7 +19,7 @@ import io.vertx.rxjava.kafka.client.producer.KafkaProducer;
 public class Factory {
     private Factory() {}
 
-    public static EventHandler<RecordAndMessage> createDesignInsertRequestedHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
+    public static EventHandler<RecordAndMessage, JsonObject> createDesignInsertRequestedHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
         return TemplateHandler.<RecordAndMessage, RecordAndEvent<DesignInsertRequested>, Void, JsonObject>builder()
                 .withInputMapper(new DesignInsertRequestedInputMapper())
                 .withOutputMapper(ignore -> new JsonObject())
@@ -33,7 +33,7 @@ public class Factory {
                 .build();
     }
 
-    public static EventHandler<RecordAndMessage> createDesignUpdateRequestedHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
+    public static EventHandler<RecordAndMessage, JsonObject> createDesignUpdateRequestedHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
         return TemplateHandler.<RecordAndMessage, RecordAndEvent<DesignUpdateRequested>, Void, JsonObject>builder()
                 .withInputMapper(new DesignUpdateRequestedInputMapper())
                 .withOutputMapper(ignore -> new JsonObject())
@@ -47,7 +47,7 @@ public class Factory {
                 .build();
     }
 
-    public static EventHandler<RecordAndMessage> createDesignDeleteRequestedHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
+    public static EventHandler<RecordAndMessage, JsonObject> createDesignDeleteRequestedHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
         return TemplateHandler.<RecordAndMessage, RecordAndEvent<DesignDeleteRequested>, Void, JsonObject>builder()
                 .withInputMapper(new DesignDeleteRequestedInputMapper())
                 .withOutputMapper(ignore -> new JsonObject())
@@ -61,7 +61,7 @@ public class Factory {
                 .build();
     }
 
-    public static EventHandler<RecordAndMessage> createAggregateUpdateRequestedHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
+    public static EventHandler<RecordAndMessage, JsonObject> createAggregateUpdateRequestedHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
         return TemplateHandler.<RecordAndMessage, RecordAndEvent<AggregateUpdateRequested>, Void, JsonObject>builder()
                 .withInputMapper(new AggregateUpdateRequestedInputMapper())
                 .withOutputMapper(ignore -> new JsonObject())
@@ -75,7 +75,7 @@ public class Factory {
                 .build();
     }
 
-    public static EventHandler<RecordAndMessage> createTileRenderCompletedHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
+    public static EventHandler<RecordAndMessage, JsonObject> createTileRenderCompletedHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
         return TemplateHandler.<RecordAndMessage, RecordAndEvent<TileRenderCompleted>, Void, JsonObject>builder()
                 .withInputMapper(new TileRenderCompletedInputMapper())
                 .withOutputMapper(event -> new JsonObject())

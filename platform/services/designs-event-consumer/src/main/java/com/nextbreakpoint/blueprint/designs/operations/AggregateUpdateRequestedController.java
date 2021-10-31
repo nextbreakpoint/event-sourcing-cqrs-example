@@ -29,7 +29,7 @@ public class AggregateUpdateRequestedController implements Controller<RecordAndE
 
     @Override
     public Single<Void> onNext(RecordAndEvent<AggregateUpdateRequested> object) {
-        return Single.fromCallable(() -> new EventMetadata(object.getRecord(), Uuids.timeBased()))
+        return Single.just(new EventMetadata(object.getRecord(), Uuids.timeBased()))
                 .flatMap(metadata -> updateAggregate(object.getEvent()))
                 .map(mapper::transform)
                 .flatMap(emitter::onNext);

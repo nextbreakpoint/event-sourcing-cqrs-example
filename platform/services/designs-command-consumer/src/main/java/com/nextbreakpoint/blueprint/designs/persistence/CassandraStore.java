@@ -28,12 +28,12 @@ public class CassandraStore implements Store {
     private static final String ERROR_DELETE_DESIGN = "An error occurred while deleting a design";
     private static final String ERROR_PUBLISH_DESIGN = "An error occurred while publishing a design";
 
-    private static final String INSERT_DESIGN_EVENT = "INSERT INTO DESIGN_EVENT (DESIGN_UUID, DESIGN_DATA, DESIGN_STATUS, DESIGN_CHECKSUM, EVENT_UUID) VALUES (?, ?, ?, ?, ?)";
+    private static final String INSERT_DESIGN_EVENT = "INSERT INTO DESIGN_EVENT (DESIGN_UUID, DESIGN_DATA, DESIGN_STATUS, DESIGN_CHECKSUM, DESIGN_EVID) VALUES (?, ?, ?, ?, ?)";
     private static final String SELECT_DESIGN_EVENTS = "SELECT * FROM DESIGN_EVENT WHERE DESIGN_UUID = ?";
     private static final String INSERT_DESIGN = "INSERT INTO DESIGN (DESIGN_UUID, DESIGN_DATA, DESIGN_CHECKSUM, DESIGN_UPDATED) VALUES (?, ?, ?, ?)";
     private static final String UPDATE_DESIGN = "UPDATE DESIGN SET DESIGN_DATA = ?, DESIGN_CHECKSUM = ?, DESIGN_UPDATED = ? WHERE DESIGN_UUID = ?";
     private static final String DELETE_DESIGN = "DELETE FROM DESIGN WHERE DESIGN_UUID = ?";
-    private static final String UPDATE_DESIGN_EVENT = "UPDATE DESIGN_EVENT SET EVENT_PUBLISHED = ? WHERE DESIGN_UUID = ? AND EVENT_UUID = ?";
+    private static final String UPDATE_DESIGN_EVENT = "UPDATE DESIGN_EVENT SET EVENT_PUBLISHED = ? WHERE DESIGN_UUID = ? AND DESIGN_EVID = ?";
 
     private final Supplier<CassandraClient> supplier;
 
@@ -164,7 +164,7 @@ public class CassandraStore implements Store {
         final String json = row.getString("DESIGN_DATA");
         final String status = row.getString("DESIGN_STATUS");
         final String checksum = row.getString("DESIGN_CHECKSUM");
-        final Date modified = new Date(Uuids.unixTimestamp(Objects.requireNonNull(row.getUuid("EVENT_UUID"))));
+        final Date modified = new Date(Uuids.unixTimestamp(Objects.requireNonNull(row.getUuid("DESIGN_EVID"))));
         return new DesignChange(uuid, json, status, checksum, modified);
     }
 

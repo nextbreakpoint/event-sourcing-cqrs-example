@@ -27,7 +27,7 @@ public class TileRenderCompletedController implements Controller<RecordAndEvent<
 
     @Override
     public Single<Void> onNext(RecordAndEvent<TileRenderCompleted> object) {
-        return Single.fromCallable(() -> new EventMetadata(object.getRecord(), Uuids.timeBased()))
+        return Single.just(new EventMetadata(object.getRecord(), Uuids.timeBased()))
                 .flatMap(metadata -> updateTile(object.getEvent()))
                 .map(mapper::transform)
                 .flatMap(emitter::onNext);

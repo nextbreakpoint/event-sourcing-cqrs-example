@@ -31,7 +31,7 @@ public class VersionCreatedController<T extends RecordAndEvent<VersionCreated>> 
 
     @Override
     public Single<Void> onNext(T object) {
-        return Observable.fromCallable(() -> new EventMetadata(object.getRecord(), Uuids.timeBased()))
+        return Observable.just(new EventMetadata(object.getRecord(), Uuids.timeBased()))
                 .flatMap(metadata ->
                     Observable.merge(
                         createTiles(object.getEvent(), (short) 0),
@@ -49,7 +49,7 @@ public class VersionCreatedController<T extends RecordAndEvent<VersionCreated>> 
     }
 
     private Observable<TileRenderRequested> insertTile(VersionCreated event, TileHeader header) {
-        return Observable.fromCallable(() -> new DesignTile(event.getChecksum(), header.getLevel(), header.getX(), header.getY()))
+        return Observable.just(new DesignTile(event.getChecksum(), header.getLevel(), header.getX(), header.getY()))
                 .flatMapSingle(store::insertDesignTile)
                 .map(result -> new TileRenderRequested(event.getChecksum(), header.getLevel(), header.getX(), header.getY(), event.getData()));
     }

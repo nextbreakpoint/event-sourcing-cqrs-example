@@ -208,7 +208,7 @@
         </plugins>
     </build>
     <profiles>
-        <profile>
+        <!-- <profile>
             <id>minikube</id>
             <activation>
                 <property>
@@ -221,7 +221,7 @@
                 <minikube.host>192.168.64.12</minikube.host>
                 <pactbroker.host>192.168.64.12</pactbroker.host>
             </properties>
-        </profile>
+        </profile> -->
         <profile>
             <id>nexus</id>
             <activation>

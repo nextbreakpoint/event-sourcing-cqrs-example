@@ -171,7 +171,9 @@ public class Scenario {
     }
 
     public void destroy() throws IOException, InterruptedException {
-        describeResources();
+        if (scenarioState.kubernetes) {
+            describeResources();
+        }
 
         if (scenarioState.kubernetes) {
             printLogs(scenarioState.serviceName);

@@ -30,7 +30,7 @@ public class DesignUpdateRequestedController<V extends GenericEvent, T extends R
 
     @Override
     public Single<Void> onNext(T object) {
-        return Single.fromCallable(() -> new EventMetadata(object.getRecord(), Uuids.timeBased()))
+        return Single.just(new EventMetadata(object.getRecord(), Uuids.timeBased()))
                 .flatMap(metadata -> handler.apply(metadata, object.getEvent()))
                 .map(mapper::transform)
                 .flatMap(emitter::onNext);

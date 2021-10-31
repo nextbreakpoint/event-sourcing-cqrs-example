@@ -51,4 +51,16 @@ public class Message {
     public Long getTimestamp() {
         return timestamp;
     }
+
+    @Override
+    public String toString() {
+        return "Message{" +
+                "messageId='" + messageId + '\'' +
+                ", messageType='" + messageType + '\'' +
+                ", messageBody='" + messageBody + '\'' +
+                ", messageSource='" + messageSource + '\'' +
+                ", partitionKey='" + partitionKey + '\'' +
+                ", timestamp=" + timestamp +
+                '}';
+    }
 }

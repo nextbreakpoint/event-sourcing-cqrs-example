@@ -1,5 +1,5 @@
 {
-  "host_port": "8080",
+  "host_port": "${AUTHENTICATION_PORT}",
 
   "server_keystore_path": "../../secrets/keystore_server.jks",
   "server_keystore_secret": "${KEYSTORE_SECRET}",

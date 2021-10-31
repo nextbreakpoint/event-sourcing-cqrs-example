@@ -18,8 +18,8 @@ public class AggregateUpdateCompleted {
         @JsonProperty("checksum") String checksum
     ) {
         this.uuid = Objects.requireNonNull(uuid);
-        this.data = Objects.requireNonNull(data);
-        this.checksum = Objects.requireNonNull(checksum);
+        this.data = data != null ? data : "";
+        this.checksum = checksum != null ? checksum : "";;
     }
 
     public UUID getUuid() {

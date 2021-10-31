@@ -47,6 +47,7 @@ import static org.awaitility.Awaitility.await;
 import static org.awaitility.Durations.ONE_SECOND;
 import static org.awaitility.Durations.TEN_SECONDS;
 
+@Disabled
 public class PactTests {
     private static final String UUID_REGEXP = "[0-9a-f]{8}-[0-9a-f]{4}-[5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}";
 
@@ -246,7 +247,7 @@ public class PactTests {
                             String actualJson = row.get("DESIGN_DATA", String.class);
                             String actualStatus = row.get("DESIGN_STATUS", String.class);
                             String actualChecksum = row.get("DESIGN_CHECKSUM", String.class);
-                            Instant actualPublished = row.getInstant("EVENT_PUBLISHED") ;
+                            Instant actualPublished = row.getInstant("DESIGN_UPDATED") ;
                             assertThat(actualJson).isEqualTo(JSON_1);
                             assertThat(actualStatus).isEqualTo("CREATED");
                             assertThat(actualChecksum).isNotNull();
@@ -257,7 +258,7 @@ public class PactTests {
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final List<Row> rows = session.rxPrepare("SELECT * FROM DESIGN WHERE DESIGN_UUID = ?")
+                        final List<Row> rows = session.rxPrepare("SELECT * FROM DESIGN_AGGREGATE WHERE DESIGN_UUID = ?")
                                 .map(stmt -> stmt.bind(designId))
                                 .flatMap(session::rxExecuteWithFullFetch)
                                 .toBlocking()
@@ -322,13 +323,13 @@ public class PactTests {
                         assertThat(uuids).contains(designId);
                         String actualJson1 = rows.get(0).get("DESIGN_DATA", String.class);
                         String actualStatus1 = rows.get(0).get("DESIGN_STATUS", String.class);
-                        Instant actualPublished1 = rows.get(0).getInstant("EVENT_PUBLISHED") ;
+                        Instant actualPublished1 = rows.get(0).getInstant("DESIGN_UPDATED") ;
                         assertThat(actualJson1).isEqualTo(JSON_1);
                         assertThat(actualStatus1).isEqualTo("CREATED");
                         assertThat(actualPublished1).isNotNull();
                         String actualJson2 = rows.get(1).get("DESIGN_DATA", String.class);
                         String actualStatus2 = rows.get(1).get("DESIGN_STATUS", String.class);
-                        Instant actualPublished2 = rows.get(1).getInstant("EVENT_PUBLISHED") ;
+                        Instant actualPublished2 = rows.get(1).getInstant("DESIGN_UPDATED") ;
                         assertThat(actualJson2).isEqualTo(JSON_2);
                         assertThat(actualStatus2).isEqualTo("UPDATED");
                         assertThat(actualPublished2).isNotNull();
@@ -337,7 +338,7 @@ public class PactTests {
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final List<Row> rows = session.rxPrepare("SELECT * FROM DESIGN WHERE DESIGN_UUID = ?")
+                        final List<Row> rows = session.rxPrepare("SELECT * FROM DESIGN_AGGREGATE WHERE DESIGN_UUID = ?")
                                 .map(stmt -> stmt.bind(designId))
                                 .flatMap(session::rxExecuteWithFullFetch)
                                 .toBlocking()
@@ -402,13 +403,13 @@ public class PactTests {
                         assertThat(uuids).contains(designId);
                         String actualJson1 = rows.get(0).get("DESIGN_DATA", String.class);
                         String actualStatus1 = rows.get(0).get("DESIGN_STATUS", String.class);
-                        Instant actualPublished1 = rows.get(0).getInstant("EVENT_PUBLISHED") ;
+                        Instant actualPublished1 = rows.get(0).getInstant("DESIGN_UPDATED") ;
                         assertThat(actualJson1).isEqualTo(JSON_1);
                         assertThat(actualStatus1).isEqualTo("CREATED");
                         assertThat(actualPublished1).isNotNull();
                         String actualJson2 = rows.get(1).get("DESIGN_DATA", String.class);
                         String actualStatus2 = rows.get(1).get("DESIGN_STATUS", String.class);
-                        Instant actualPublished2 = rows.get(1).getInstant("EVENT_PUBLISHED") ;
+                        Instant actualPublished2 = rows.get(1).getInstant("DESIGN_UPDATED") ;
                         assertThat(actualJson2).isNull();
                         assertThat(actualStatus2).isEqualTo("DELETED");
                         assertThat(actualPublished2).isNotNull();
@@ -417,7 +418,7 @@ public class PactTests {
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final List<Row> rows = session.rxPrepare("SELECT * FROM DESIGN WHERE DESIGN_UUID = ?")
+                        final List<Row> rows = session.rxPrepare("SELECT * FROM DESIGN_AGGREGATE WHERE DESIGN_UUID = ?")
                                 .map(stmt -> stmt.bind(designId))
                                 .flatMap(session::rxExecuteWithFullFetch)
                                 .toBlocking()

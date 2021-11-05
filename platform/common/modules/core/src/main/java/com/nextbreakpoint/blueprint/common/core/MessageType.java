@@ -8,6 +8,5 @@ public interface MessageType {
     String AGGREGATE_UPDATE_COMPLETED = "aggregate-update-completed";
     String TILE_RENDER_REQUESTED = "tile-render-requested";
     String TILE_RENDER_COMPLETED = "tile-render-completed";
-    String TILE_RENDER_UPDATED = "tile-render-updated";
     String DESIGN_CHANGED = "design-changed";
 }

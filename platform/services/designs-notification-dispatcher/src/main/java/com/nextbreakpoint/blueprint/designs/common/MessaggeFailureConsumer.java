@@ -11,6 +11,6 @@ public class MessaggeFailureConsumer implements BiConsumer<Message, Throwable> {
 
     @Override
     public void accept(Message message, Throwable error) {
-        logger.error("An error occurred while consuming message " + message.getMessageId(), error);
+        logger.error("An error occurred while consuming message " + message.getUuid(), error);
     }
 }

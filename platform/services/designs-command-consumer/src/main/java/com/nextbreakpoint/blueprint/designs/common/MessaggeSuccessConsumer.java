@@ -13,6 +13,6 @@ public class MessaggeSuccessConsumer implements BiConsumer<RecordAndMessage, Jso
 
     @Override
     public void accept(RecordAndMessage message, JsonObject object) {
-        logger.info("Message consumed " + message.getMessage().getMessageId());
+        logger.info("Message consumed " + message.getMessage().getUuid());
     }
 }

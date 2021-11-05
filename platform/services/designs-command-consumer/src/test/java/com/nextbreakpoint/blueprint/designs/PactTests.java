@@ -225,7 +225,7 @@ public class PactTests {
         public void shouldInsertDesign(MessagePact messagePact) {
             final Message insertDesignMessage = Json.decodeValue(messagePact.getMessages().get(0).contentsAsString(), Message.class);
 
-            final InsertDesignCommand command = Json.decodeValue(insertDesignMessage.getMessageBody(), InsertDesignCommand.class);
+            final InsertDesignCommand command = Json.decodeValue(insertDesignMessage.getBody(), InsertDesignCommand.class);
 
             final UUID designId = command.getUuid();
 
@@ -278,11 +278,11 @@ public class PactTests {
                         assertThat(messages).hasSize(1);
                         final Message actualMessage = messages.get(messages.size() - 1);
                         assertThat(actualMessage.getTimestamp()).isNotNull();
-                        assertThat(actualMessage.getMessageSource()).isEqualTo("service-designs");
+                        assertThat(actualMessage.getSource()).isEqualTo("service-designs");
                         assertThat(actualMessage.getPartitionKey()).isEqualTo(designId.toString());
-                        assertThat(actualMessage.getMessageId()).isNotNull();
-                        assertThat(actualMessage.getMessageType()).isEqualTo("design-changed");
-                        DesignChanged actualEvent = Json.decodeValue(actualMessage.getMessageBody(), DesignChanged.class);
+                        assertThat(actualMessage.getUuid()).isNotNull();
+                        assertThat(actualMessage.getType()).isEqualTo("design-changed");
+                        DesignChanged actualEvent = Json.decodeValue(actualMessage.getBody(), DesignChanged.class);
                         assertThat(actualEvent.getUuid()).isEqualTo(designId);
                         assertThat(actualEvent.getTimestamp()).isNotNull();
                     });
@@ -295,7 +295,7 @@ public class PactTests {
 
             final Message updateDesignMessage = Json.decodeValue(messagePact.getMessages().get(1).contentsAsString(), Message.class);
 
-            final InsertDesignCommand command = Json.decodeValue(insertDesignMessage.getMessageBody(), InsertDesignCommand.class);
+            final InsertDesignCommand command = Json.decodeValue(insertDesignMessage.getBody(), InsertDesignCommand.class);
 
             final UUID designId = command.getUuid();
 
@@ -358,11 +358,11 @@ public class PactTests {
                         assertThat(messages).hasSize(2);
                         final Message actualMessage = messages.get(messages.size() - 1);
                         assertThat(actualMessage.getTimestamp()).isNotNull();
-                        assertThat(actualMessage.getMessageSource()).isEqualTo("service-designs");
+                        assertThat(actualMessage.getSource()).isEqualTo("service-designs");
                         assertThat(actualMessage.getPartitionKey()).isEqualTo(designId.toString());
-                        assertThat(actualMessage.getMessageId()).isNotNull();
-                        assertThat(actualMessage.getMessageType()).isEqualTo("design-changed");
-                        DesignChanged actualEvent = Json.decodeValue(actualMessage.getMessageBody(), DesignChanged.class);
+                        assertThat(actualMessage.getUuid()).isNotNull();
+                        assertThat(actualMessage.getType()).isEqualTo("design-changed");
+                        DesignChanged actualEvent = Json.decodeValue(actualMessage.getBody(), DesignChanged.class);
                         assertThat(actualEvent.getUuid()).isEqualTo(designId);
                         assertThat(actualEvent.getTimestamp()).isNotNull();
                     });
@@ -375,7 +375,7 @@ public class PactTests {
 
             final Message deleteDesignMessage = Json.decodeValue(messagePact.getMessages().get(1).contentsAsString(), Message.class);
 
-            final InsertDesignCommand command = Json.decodeValue(insertDesignMessage.getMessageBody(), InsertDesignCommand.class);
+            final InsertDesignCommand command = Json.decodeValue(insertDesignMessage.getBody(), InsertDesignCommand.class);
 
             final UUID designId = command.getUuid();
 
@@ -432,11 +432,11 @@ public class PactTests {
                         assertThat(messages).hasSize(2);
                         final Message actualMessage = messages.get(messages.size() - 1);
                         assertThat(actualMessage.getTimestamp()).isNotNull();
-                        assertThat(actualMessage.getMessageSource()).isEqualTo("service-designs");
+                        assertThat(actualMessage.getSource()).isEqualTo("service-designs");
                         assertThat(actualMessage.getPartitionKey()).isEqualTo(designId.toString());
-                        assertThat(actualMessage.getMessageId()).isNotNull();
-                        assertThat(actualMessage.getMessageType()).isEqualTo("design-changed");
-                        DesignChanged actualEvent = Json.decodeValue(actualMessage.getMessageBody(), DesignChanged.class);
+                        assertThat(actualMessage.getUuid()).isNotNull();
+                        assertThat(actualMessage.getType()).isEqualTo("design-changed");
+                        DesignChanged actualEvent = Json.decodeValue(actualMessage.getBody(), DesignChanged.class);
                         assertThat(actualEvent.getUuid()).isEqualTo(designId);
                         assertThat(actualEvent.getTimestamp()).isNotNull();
                     });
@@ -488,11 +488,11 @@ public class PactTests {
                         assertThat(messages).hasSize(2);
                         final Message actualMessage = messages.get(messages.size() - 1);
                         assertThat(actualMessage.getTimestamp()).isNotNull();
-                        assertThat(actualMessage.getMessageSource()).isEqualTo("service-designs");
+                        assertThat(actualMessage.getSource()).isEqualTo("service-designs");
                         assertThat(actualMessage.getPartitionKey()).isEqualTo(designId.toString());
-                        assertThat(actualMessage.getMessageId()).isNotNull();
-                        assertThat(actualMessage.getMessageType()).isEqualTo("design-changed");
-                        DesignChanged actualEvent = Json.decodeValue(actualMessage.getMessageBody(), DesignChanged.class);
+                        assertThat(actualMessage.getUuid()).isNotNull();
+                        assertThat(actualMessage.getType()).isEqualTo("design-changed");
+                        DesignChanged actualEvent = Json.decodeValue(actualMessage.getBody(), DesignChanged.class);
                         assertThat(actualEvent.getUuid()).isEqualTo(designId);
                         assertThat(actualEvent.getTimestamp()).isNotNull();
                     });
@@ -527,11 +527,11 @@ public class PactTests {
                         assertThat(messages).hasSize(2);
                         final Message actualMessage = messages.get(messages.size() - 1);
                         assertThat(actualMessage.getTimestamp()).isNotNull();
-                        assertThat(actualMessage.getMessageSource()).isEqualTo("service-designs");
+                        assertThat(actualMessage.getSource()).isEqualTo("service-designs");
                         assertThat(actualMessage.getPartitionKey()).isEqualTo(designId.toString());
-                        assertThat(actualMessage.getMessageId()).isNotNull();
-                        assertThat(actualMessage.getMessageType()).isEqualTo("design-changed");
-                        DesignChanged actualEvent = Json.decodeValue(actualMessage.getMessageBody(), DesignChanged.class);
+                        assertThat(actualMessage.getUuid()).isNotNull();
+                        assertThat(actualMessage.getType()).isEqualTo("design-changed");
+                        DesignChanged actualEvent = Json.decodeValue(actualMessage.getBody(), DesignChanged.class);
                         assertThat(actualEvent.getUuid()).isEqualTo(designId);
                         assertThat(actualEvent.getTimestamp()).isNotNull();
                     });

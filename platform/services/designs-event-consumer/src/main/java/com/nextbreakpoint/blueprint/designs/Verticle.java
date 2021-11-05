@@ -47,7 +47,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 import static com.nextbreakpoint.blueprint.common.core.Headers.*;
@@ -136,7 +139,7 @@ public class Verticle extends AbstractVerticle {
 
             final CorsHandler corsHandler = CorsHandlerFactory.createWithAll(originPattern, asList(AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN), asList(CONTENT_TYPE, X_XSRF_TOKEN));
 
-            final Map<String, EventHandler<RecordAndMessage, JsonObject>> eventHandlers = new HashMap<>();
+            final Map<String, EventHandler<Message, Void>> eventHandlers = new HashMap<>();
 
             kafkaConsumer.subscribe(eventTopic);
 
@@ -145,9 +148,8 @@ public class Verticle extends AbstractVerticle {
             eventHandlers.put(MessageType.DESIGN_DELETE_REQUESTED, createDesignDeleteRequestedHandler(store, eventTopic, kafkaProducer, messageSource));
 
             eventHandlers.put(MessageType.AGGREGATE_UPDATE_REQUESTED, createAggregateUpdateRequestedHandler(store, eventTopic, kafkaProducer, messageSource));
-//            eventHandlers.put(MessageType.AGGREGATE_UPDATE_COMPLETED, createAggregateUpdateCompletedHandler(store, eventTopic, kafkaProducer, messageSource));
+            eventHandlers.put(MessageType.AGGREGATE_UPDATE_COMPLETED, createAggregateUpdateCompletedHandler(store, eventTopic, kafkaProducer, messageSource));
 
-//            eventHandlers.put(MessageType.TILE_RENDER_REQUESTED, createTileRenderRequestedHandler(store, eventTopic, kafkaProducer, messageSource));
             eventHandlers.put(MessageType.TILE_RENDER_COMPLETED, createTileRenderCompletedHandler(store, eventTopic, kafkaProducer, messageSource));
 
             Thread pollingThread = new Thread(() -> {
@@ -213,7 +215,7 @@ public class Verticle extends AbstractVerticle {
         }
     }
 
-    private void pollRecords(KafkaConsumer<String, String> eventConsumer, Map<String, EventHandler<RecordAndMessage, JsonObject>> eventHandlers) throws InterruptedException {
+    private void pollRecords(KafkaConsumer<String, String> eventConsumer, Map<String, EventHandler<Message, Void>> eventHandlers) throws InterruptedException {
         KafkaConsumerRecords<String, String> records = pollRecords(eventConsumer);
 
         processRecords(eventConsumer, eventHandlers, records);
@@ -221,7 +223,7 @@ public class Verticle extends AbstractVerticle {
         commitOffsets(eventConsumer);
     }
 
-    private void processRecords(KafkaConsumer<String, String> eventConsumer, Map<String, EventHandler<RecordAndMessage, JsonObject>> eventHandlers, KafkaConsumerRecords<String, String> records) throws InterruptedException {
+    private void processRecords(KafkaConsumer<String, String> eventConsumer, Map<String, EventHandler<Message, Void>> eventHandlers, KafkaConsumerRecords<String, String> records) throws InterruptedException {
         final Set<TopicPartition> suspendedPartitions = new HashSet<>();
 
         for (int i = 0; i < records.size(); i++) {
@@ -239,10 +241,10 @@ public class Verticle extends AbstractVerticle {
 
             logger.debug("Received message: " + message);
 
-            final EventHandler<RecordAndMessage, JsonObject> handler = eventHandlers.get(message.getMessageType());
+            final EventHandler<Message, Void> handler = eventHandlers.get(message.getType());
 
             if (handler == null) {
-                logger.warn("Ignoring message of type: " + message.getMessageType());
+                logger.warn("Ignoring message of type: " + message.getType());
 
                 continue;
             }
@@ -251,7 +253,7 @@ public class Verticle extends AbstractVerticle {
 
             Throwable[] error = new Throwable[] { null };
 
-            handler.handle(new RecordAndMessage(record, message), (recordAndMessage, result) -> latch.countDown(), (recordAndMessage, err) -> { error[0] = err; latch.countDown(); });
+            handler.handle(message, (recordAndMessage, result) -> latch.countDown(), (recordAndMessage, err) -> { error[0] = err; latch.countDown(); });
 
             try {
                 latch.await();

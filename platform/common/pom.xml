@@ -13,6 +13,7 @@
     <modules>
         <module>modules/core</module>
         <module>modules/vertx</module>
+        <module>modules/events</module>
         <module>modules/test</module>
     </modules>
     <profiles>

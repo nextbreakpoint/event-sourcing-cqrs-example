@@ -94,5 +94,11 @@
             <artifactId>junit5</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.datastax.oss</groupId>
+            <artifactId>java-driver-core</artifactId>
+            <version>4.9.0</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 </project>

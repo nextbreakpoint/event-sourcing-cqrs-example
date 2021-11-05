@@ -198,9 +198,15 @@ services:
     command:
       - server
       - /var/data
+      - --console-address
+      - :39090
     ports:
       - target: 9000
         published: 9000
+        protocol: tcp
+        mode: host
+      - target: 39090
+        published: 39090
         protocol: tcp
         mode: host
     volumes:

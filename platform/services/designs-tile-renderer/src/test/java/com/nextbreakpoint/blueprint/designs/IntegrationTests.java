@@ -1,22 +1,26 @@
 package com.nextbreakpoint.blueprint.designs;
 
+import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.jayway.restassured.RestAssured;
+import com.nextbreakpoint.blueprint.common.core.Checksum;
 import com.nextbreakpoint.blueprint.common.core.Environment;
 import com.nextbreakpoint.blueprint.common.core.Message;
 import com.nextbreakpoint.blueprint.common.core.MessageType;
-import com.nextbreakpoint.blueprint.common.test.KafkaUtils;
-import com.nextbreakpoint.blueprint.designs.model.TileCompleted;
-import com.nextbreakpoint.blueprint.designs.model.TileCreated;
+import com.nextbreakpoint.blueprint.common.events.TileRenderCompleted;
+import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
+import com.nextbreakpoint.blueprint.common.vertx.KafkaClientFactory;
 import io.vertx.core.json.Json;
 import io.vertx.rxjava.core.Vertx;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.kafka.clients.producer.KafkaProducer;
-import org.apache.kafka.clients.producer.ProducerRecord;
+import io.vertx.rxjava.kafka.client.consumer.KafkaConsumer;
+import io.vertx.rxjava.kafka.client.consumer.KafkaConsumerRecord;
+import io.vertx.rxjava.kafka.client.consumer.KafkaConsumerRecords;
+import io.vertx.rxjava.kafka.client.producer.KafkaProducer;
+import io.vertx.rxjava.kafka.client.producer.KafkaProducerRecord;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.Tag;
 import software.amazon.awssdk.auth.credentials.*;
+import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
@@ -27,6 +31,7 @@ import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
@@ -35,15 +40,22 @@ import static org.awaitility.Durations.ONE_SECOND;
 public class IntegrationTests {
     private static final String JSON_1 = "{\"metadata\":\"{\\\"translation\\\":{\\\"x\\\":0.0,\\\"y\\\":0.0,\\\"z\\\":1.0,\\\"w\\\":0.0},\\\"rotation\\\":{\\\"x\\\":0.0,\\\"y\\\":0.0,\\\"z\\\":0.0,\\\"w\\\":0.0},\\\"scale\\\":{\\\"x\\\":1.0,\\\"y\\\":1.0,\\\"z\\\":1.0,\\\"w\\\":1.0},\\\"point\\\":{\\\"x\\\":0.0,\\\"y\\\":0.0},\\\"julia\\\":false,\\\"options\\\":{\\\"showPreview\\\":false,\\\"showTraps\\\":false,\\\"showOrbit\\\":false,\\\"showPoint\\\":false,\\\"previewOrigin\\\":{\\\"x\\\":0.0,\\\"y\\\":0.0},\\\"previewSize\\\":{\\\"x\\\":0.25,\\\"y\\\":0.25}}}\",\"manifest\":\"{\\\"pluginId\\\":\\\"Mandelbrot\\\"}\",\"script\":\"fractal {\\norbit [-2.0 - 2.0i,+2.0 + 2.0i] [x,n] {\\nloop [0, 200] (mod2(x) > 40) {\\nx = x * x + w;\\n}\\n}\\ncolor [#FF000000] {\\npalette gradient {\\n[#FFFFFFFF > #FF000000, 100];\\n[#FF000000 > #FFFFFFFF, 100];\\n}\\ninit {\\nm = 100 * (1 + sin(mod(x) * 0.2 / pi));\\n}\\nrule (n > 0) [1] {\\ngradient[m - 1]\\n}\\n}\\n}\\n\"}";
     private static final String JSON_2 = "{\"metadata\":\"{\\\"translation\\\":{\\\"x\\\":0.0,\\\"y\\\":0.0,\\\"z\\\":1.0,\\\"w\\\":0.0},\\\"rotation\\\":{\\\"x\\\":0.0,\\\"y\\\":0.0,\\\"z\\\":0.0,\\\"w\\\":0.0},\\\"scale\\\":{\\\"x\\\":1.0,\\\"y\\\":1.0,\\\"z\\\":1.0,\\\"w\\\":1.0},\\\"point\\\":{\\\"x\\\":0.0,\\\"y\\\":0.0},\\\"julia\\\":false,\\\"options\\\":{\\\"showPreview\\\":false,\\\"showTraps\\\":false,\\\"showOrbit\\\":false,\\\"showPoint\\\":false,\\\"previewOrigin\\\":{\\\"x\\\":0.0,\\\"y\\\":0.0},\\\"previewSize\\\":{\\\"x\\\":0.25,\\\"y\\\":0.25}}}\",\"manifest\":\"{\\\"pluginId\\\":\\\"Mandelbrot\\\"}\",\"script\":\"fractal {\\norbit [-2.0 - 2.0i,+2.0 + 2.0i] [x,n] {\\nloop [0, 100] (mod2(x) > 40) {\\nx = x * x + w;\\n}\\n}\\ncolor [#FF000000] {\\npalette gradient {\\n[#FFFFFFFF > #FF000000, 100];\\n[#FF000000 > #FFFFFFFF, 100];\\n}\\ninit {\\nm = 100 * (1 + sin(mod(x) * 0.2 / pi));\\n}\\nrule (n > 0) [1] {\\ngradient[m - 1]\\n}\\n}\\n}\\n\"}";
+    private static final String TILE_RENDER_REQUESTED = "tile-render-requested";
+    private static final String TILE_RENDER_COMPLETED = "tile-render-completed";
+    private static final String MESSAGE_SOURCE = "service-designs";
+    private static final String TOPIC_NAME = "design-event";
+    private static final String BUCKET = "tiles";
 
     private static final TestScenario scenario = new TestScenario();
 
-    private static Environment environment = Environment.getDefaultEnvironment();
+    private static final Vertx vertx = new Vertx(io.vertx.core.Vertx.vertx());
 
-    private static final List<ConsumerRecord<String, String>> records = new ArrayList<>();
+    private static final Environment environment = Environment.getDefaultEnvironment();
+
+    private static final List<KafkaConsumerRecord<String, String>> records = new ArrayList<>();
+
     private static KafkaConsumer<String, String> consumer;
     private static KafkaProducer<String, String> producer;
-    private static Thread polling;
 
     @BeforeAll
     public static void before() throws IOException, InterruptedException {
@@ -51,50 +63,35 @@ public class IntegrationTests {
 
         final Vertx vertx = new Vertx(io.vertx.core.Vertx.vertx());
 
-        producer = KafkaUtils.createProducer(environment, scenario.createProducerConfig());
+        producer = KafkaClientFactory.createProducer(environment, vertx, scenario.createProducerConfig());
 
-        consumer = KafkaUtils.createConsumer(environment, scenario.createConsumerConfig("test"));
+        consumer = KafkaClientFactory.createConsumer(environment, vertx, scenario.createConsumerConfig("test"));
 
-        consumer.subscribe(Collections.singleton("design-event"));
+        consumer.rxSubscribe(Collections.singleton(TOPIC_NAME))
+                .doOnError(Throwable::printStackTrace)
+                .toBlocking()
+                .value();
 
-        polling = createConsumerThread();
-
-        polling.start();
+        pollRecords();
 
         final S3Client s3Client = createS3Client();
 
-        final String bucket = "tiles";
-
-        s3Client.listObjectsV2Paginator(ListObjectsV2Request.builder().bucket(bucket).build())
+        s3Client.listObjectsV2Paginator(ListObjectsV2Request.builder().bucket(BUCKET).build())
                 .stream()
-                .forEach(response -> deleteObjects(s3Client, bucket, response.contents()));
+                .forEach(response -> deleteObjects(s3Client, BUCKET, response.contents()));
 
-        s3Client.deleteBucket(DeleteBucketRequest.builder().bucket(bucket).build());
-        s3Client.createBucket(CreateBucketRequest.builder().bucket(bucket).build());
+        s3Client.deleteBucket(DeleteBucketRequest.builder().bucket(BUCKET).build());
+        s3Client.createBucket(CreateBucketRequest.builder().bucket(BUCKET).build());
     }
 
     @AfterAll
     public static void after() throws IOException, InterruptedException {
-        if (polling != null) {
-            try {
-                polling.interrupt();
-                polling.join();
-            } catch (Exception ignore) {
-            }
-        }
-
-        if (consumer != null) {
-            try {
-                consumer.close();
-            } catch (Exception ignore) {
-            }
-        }
-
-        if (producer != null) {
-            try {
-                producer.close();
-            } catch (Exception ignore) {
-            }
+        try {
+            vertx.rxClose()
+                    .doOnError(Throwable::printStackTrace)
+                    .toBlocking()
+                    .value();
+        } catch (Exception ignore) {
         }
 
         scenario.after();
@@ -113,65 +110,88 @@ public class IntegrationTests {
         @Test
         @DisplayName("Should render the tile's image after receiving a tile created event")
         public void shouldRenderImageWhenReceivingAMessage() {
-            final UUID versionId = UUID.randomUUID();
+            final UUID designId = UUID.randomUUID();
 
-            final String checksum = UUID.randomUUID().toString();
+            final TileRenderRequested tileRenderRequested1 = new TileRenderRequested(designId, Uuids.timeBased(), JSON_1, Checksum.of(JSON_1), 0, 0, 0);
 
-            final short level = (short) 0;
+            final Message tileRenderRequestedMessage1 = createTileRenderRequestedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), tileRenderRequested1);
 
-            final short x = (short) 0;
-            final short y = (short) 0;
+            producer.rxSend(createKafkaRecord(tileRenderRequestedMessage1))
+                    .doOnError(Throwable::printStackTrace)
+                    .toBlocking()
+                    .value();
 
-            final TileCreated tileCreated = new TileCreated(versionId, JSON_1, checksum, level, x, y);
+            final TileRenderRequested tileRenderRequested2 = new TileRenderRequested(designId, Uuids.timeBased(), JSON_2, Checksum.of(JSON_2), 1, 1, 2);
 
-            final long messageTimestamp = System.currentTimeMillis();
+            final Message tileRenderRequestedMessage2 = createTileRenderRequestedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), tileRenderRequested2);
 
-            final Message tileCreatedMessage = createTileCreatedMessage(UUID.randomUUID(), versionId, messageTimestamp, tileCreated);
+            producer.rxSend(createKafkaRecord(tileRenderRequestedMessage2))
+                    .doOnError(Throwable::printStackTrace)
+                    .toBlocking()
+                    .value();
 
             safelyClearMessages();
 
-            producer.send(createKafkaRecord(tileCreatedMessage));
-
-            assertTileCompleted(versionId, level, x ,y);
-        }
-
-        private void assertTileCompleted(UUID versionId, short level, short x, short y) {
             await().atMost(Duration.of(30L, ChronoUnit.SECONDS))
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final List<Message> messages = safelyFindMessages(versionId.toString());
-                        assertThat(messages).isNotEmpty();
-                        final Message actualMessage = messages.stream()
-                                .filter(message -> message.getMessageType().equals("design-tile-completed"))
-                                .findFirst()
-                                .orElseThrow();
-                        assertThat(actualMessage.getTimestamp()).isNotNull();
-                        assertThat(actualMessage.getMessageSource()).isEqualTo("service-designs");
-                        assertThat(actualMessage.getPartitionKey()).isEqualTo(versionId.toString());
-                        assertThat(actualMessage.getMessageId()).isNotNull();
-                        assertThat(actualMessage.getMessageType()).isEqualTo("design-tile-completed");
-                        TileCompleted actualEvent = Json.decodeValue(actualMessage.getMessageBody(), TileCompleted.class);
-                        assertThat(actualEvent.getUuid()).isEqualTo(versionId);
-                        assertThat(actualEvent.getLevel()).isEqualTo(level);
-                        assertThat(actualEvent.getX()).isEqualTo(x);
-                        assertThat(actualEvent.getY()).isEqualTo(y);
+                        final List<Message> messages = safelyFindMessages(designId.toString(), MESSAGE_SOURCE, TILE_RENDER_COMPLETED);
+                        assertThat(messages).hasSize(2);
+                        Message message1 = messages.get(0);
+                        Message message2 = messages.get(1);
+                        assertExpectedTileRenderCompletedMessage(tileRenderRequested1, message1);
+                        assertExpectedTileRenderCompletedMessage(tileRenderRequested2, message2);
                     });
+
+            final S3Client s3Client = createS3Client();
+
+            ResponseBytes<GetObjectResponse> response1 = getObject(s3Client, BUCKET, createBucketKey(tileRenderRequested1));
+            assertThat(response1.asByteArray()).isNotEmpty();
+
+            ResponseBytes<GetObjectResponse> response2 = getObject(s3Client, BUCKET, createBucketKey(tileRenderRequested2));
+            assertThat(response2.asByteArray()).isNotEmpty();
         }
     }
 
-    private static ProducerRecord<String, String> createKafkaRecord(Message message) {
-        return new ProducerRecord<>("design-event", message.getPartitionKey(), Json.encode(message));
+    private void assertExpectedTileRenderCompletedMessage(TileRenderRequested tileRenderRequested, Message actualMessage) {
+        assertThat(actualMessage.getTimestamp()).isNotNull();
+        assertThat(actualMessage.getSource()).isEqualTo(MESSAGE_SOURCE);
+        assertThat(actualMessage.getPartitionKey()).isEqualTo(tileRenderRequested.getUuid().toString());
+        assertThat(actualMessage.getUuid()).isNotNull();
+        assertThat(actualMessage.getType()).isEqualTo(TILE_RENDER_COMPLETED);
+        assertThat(actualMessage.getBody()).isNotNull();
+        TileRenderCompleted actualEvent = Json.decodeValue(actualMessage.getBody(), TileRenderCompleted.class);
+        assertThat(actualEvent.getUuid()).isEqualTo(tileRenderRequested.getUuid());
+        assertThat(actualEvent.getLevel()).isEqualTo(tileRenderRequested.getLevel());
+        assertThat(actualEvent.getRow()).isEqualTo(tileRenderRequested.getRow());
+        assertThat(actualEvent.getCol()).isEqualTo(tileRenderRequested.getCol());
     }
 
-    private static Message createTileCreatedMessage(UUID messageId, UUID partitionKey, long timestamp, TileCreated event) {
+    @NotNull
+    private static KafkaProducerRecord<String, String> createKafkaRecord(Message message) {
+        return KafkaProducerRecord.create(TOPIC_NAME, message.getPartitionKey(), Json.encode(message));
+    }
+
+    private static Message createTileRenderRequestedMessage(UUID messageId, UUID partitionKey, long timestamp, TileRenderRequested event) {
         return new Message(messageId.toString(), MessageType.TILE_RENDER_REQUESTED, Json.encode(event), "test", partitionKey.toString(), timestamp);
     }
 
-    private static List<Message> safelyFindMessages(String versionUuid) {
+    private static void pause(int millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException ignored) {
+        }
+    }
+
+    @NotNull
+    private static List<Message> safelyFindMessages(String partitionKey, String messageSource, String messageType) {
         synchronized (records) {
             return records.stream()
                     .map(record -> Json.decodeValue(record.value(), Message.class))
-                    .filter(value -> value.getPartitionKey().equals(versionUuid))
+                    .filter(message -> message.getPartitionKey().equals(partitionKey))
+                    .filter(message -> message.getSource().equals(messageSource))
+                    .filter(message -> message.getType().equals(messageType))
+//                    .sorted(Comparator.comparing(Message::getTimestamp))
                     .collect(Collectors.toList());
         }
     }
@@ -182,25 +202,33 @@ public class IntegrationTests {
         }
     }
 
-    private static void safelyAppendRecord(ConsumerRecord<String, String> record) {
+    private static void safelyAppendRecord(KafkaConsumerRecord<String, String> record) {
         synchronized (records) {
             records.add(record);
         }
     }
 
-    private static Thread createConsumerThread() {
-        return new Thread(() -> {
-            try {
-                while (!Thread.interrupted()) {
-                    ConsumerRecords<String, String> consumerRecords = consumer.poll(Duration.ofSeconds(5));
-                    System.out.println("Received " + consumerRecords.count() + " messages");
-                    consumerRecords.forEach(IntegrationTests::safelyAppendRecord);
-                    consumer.commitSync();
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
+    private static void consumeRecords(KafkaConsumerRecords<String, String> consumerRecords) {
+        System.out.println("Received " + consumerRecords.size() + " messages");
+
+        IntStream.range(0, consumerRecords.size())
+                .forEach(index -> safelyAppendRecord(consumerRecords.recordAt(index)));
+
+        pollRecords();
+        commitOffsets();
+    }
+
+    private static void pollRecords() {
+        consumer.rxPoll(Duration.ofSeconds(5))
+                .doOnSuccess(IntegrationTests::consumeRecords)
+                .doOnError(Throwable::printStackTrace)
+                .subscribe();
+    }
+
+    private static void commitOffsets() {
+        consumer.rxCommit()
+                .doOnError(Throwable::printStackTrace)
+                .subscribe();
     }
 
     private static S3Client createS3Client() {
@@ -212,10 +240,18 @@ public class IntegrationTests {
     }
 
     private static void deleteObjects(S3Client s3Client, String bucket, List<S3Object> objects) {
-        objects.forEach(object -> deleteObject(s3Client, bucket, object));
+        objects.forEach(object -> deleteObject(s3Client, bucket, object.key()));
     }
 
-    private static DeleteObjectResponse deleteObject(S3Client s3Client, String bucket, S3Object object) {
-        return s3Client.deleteObject(DeleteObjectRequest.builder().bucket(bucket).key(object.key()).build());
+    private static DeleteObjectResponse deleteObject(S3Client s3Client, String bucket, String key) {
+        return s3Client.deleteObject(DeleteObjectRequest.builder().bucket(bucket).key(key).build());
+    }
+
+    private static ResponseBytes<GetObjectResponse> getObject(S3Client s3Client, String bucket, String key) {
+        return s3Client.getObjectAsBytes(GetObjectRequest.builder().bucket(bucket).key(key).build());
+    }
+
+    private static String createBucketKey(TileRenderRequested event) {
+        return String.format("%s/%d/%04d%04d.png", event.getUuid().toString(), event.getLevel(), event.getRow(), event.getCol());
     }
 }

@@ -13,13 +13,13 @@ public class InsertDesignInputMapper implements Mapper<RecordAndMessage, InsertD
 
     @Override
     public InsertDesignCommand transform(RecordAndMessage input) {
-        if (!input.getMessage().getMessageType().equals(MessageType.DESIGN_INSERT_REQUESTED)) {
-            throw new IllegalArgumentException("Unexpected message type: " + input.getMessage().getMessageType());
+        if (!input.getMessage().getType().equals(MessageType.DESIGN_INSERT_REQUESTED)) {
+            throw new IllegalArgumentException("Unexpected message type: " + input.getMessage().getType());
         }
         try {
-            return Json.decodeValue(input.getMessage().getMessageBody(), InsertDesignCommand.class);
+            return Json.decodeValue(input.getMessage().getBody(), InsertDesignCommand.class);
         } catch (DecodeException e) {
-            logger.warn("Cannot decode message body: " + input.getMessage().getMessageBody(), e);
+            logger.warn("Cannot decode message body: " + input.getMessage().getBody(), e);
             throw new IllegalArgumentException("Message body cannot be decoded");
         }
     }

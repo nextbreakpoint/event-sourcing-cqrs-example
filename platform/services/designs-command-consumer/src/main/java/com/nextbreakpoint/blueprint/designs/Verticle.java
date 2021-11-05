@@ -190,12 +190,12 @@ public class Verticle extends AbstractVerticle {
 
     private void processRecord(Map<String, Handler<RecordAndMessage>> handlers, KafkaConsumerRecord<String, String> record) {
         final Message message = Json.decodeValue(record.value(), Message.class);
-        final Handler<RecordAndMessage> handler = handlers.get(message.getMessageType());
+        final Handler<RecordAndMessage> handler = handlers.get(message.getType());
         if (handler != null) {
-            logger.info("Receive message of type: " + message.getMessageType());
+            logger.info("Receive message of type: " + message.getType());
             handler.handle(new RecordAndMessage(record, message));
         } else {
-            logger.info("Ignore message of type: " + message.getMessageType());
+            logger.info("Ignore message of type: " + message.getType());
         }
     }
 }

@@ -1,91 +1,97 @@
 package com.nextbreakpoint.blueprint.designs;
 
-import com.nextbreakpoint.blueprint.common.vertx.EventHandler;
-import com.nextbreakpoint.blueprint.common.vertx.RecordAndEvent;
-import com.nextbreakpoint.blueprint.common.vertx.RecordAndMessage;
-import com.nextbreakpoint.blueprint.common.vertx.TemplateHandler;
-import com.nextbreakpoint.blueprint.designs.common.*;
-import com.nextbreakpoint.blueprint.designs.events.*;
-import com.nextbreakpoint.blueprint.designs.common.AggregateUpdateCompletedMessageMapper;
-import com.nextbreakpoint.blueprint.designs.operations.AggregateUpdateRequestedController;
-import com.nextbreakpoint.blueprint.designs.common.AggregateUpdateRequestedInputMapper;
-import com.nextbreakpoint.blueprint.designs.common.AggregateUpdateRequestedMessageMapper;
-import com.nextbreakpoint.blueprint.designs.operations.DesignUpdateRequestedController;
-import com.nextbreakpoint.blueprint.designs.operations.TileRenderCompletedController;
-import com.nextbreakpoint.blueprint.designs.common.TileRenderCompletedInputMapper;
-import io.vertx.core.json.JsonObject;
+import com.nextbreakpoint.blueprint.common.core.Message;
+import com.nextbreakpoint.blueprint.common.events.mappers.*;
+import com.nextbreakpoint.blueprint.common.vertx.*;
+import com.nextbreakpoint.blueprint.designs.controllers.*;
 import io.vertx.rxjava.kafka.client.producer.KafkaProducer;
 
 public class Factory {
     private Factory() {}
 
-    public static EventHandler<RecordAndMessage, JsonObject> createDesignInsertRequestedHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
-        return TemplateHandler.<RecordAndMessage, RecordAndEvent<DesignInsertRequested>, Void, JsonObject>builder()
-                .withInputMapper(new DesignInsertRequestedInputMapper())
-                .withOutputMapper(ignore -> new JsonObject())
-                .withController(new DesignUpdateRequestedController<>(
-                    new DesignInsertRequestedEventHandler(store),
-                    new AggregateUpdateRequestedMessageMapper(messageSource),
-                    new KafkaEmitter(producer, topic, 3)
-                ))
-                .onSuccess(new EventSuccessConsumer())
-                .onFailure(new EventFailureConsumer())
-                .build();
-    }
-
-    public static EventHandler<RecordAndMessage, JsonObject> createDesignUpdateRequestedHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
-        return TemplateHandler.<RecordAndMessage, RecordAndEvent<DesignUpdateRequested>, Void, JsonObject>builder()
-                .withInputMapper(new DesignUpdateRequestedInputMapper())
-                .withOutputMapper(ignore -> new JsonObject())
-                .withController(new DesignUpdateRequestedController<>(
-                    new DesignUpdateRequestedEventHandler(store),
-                    new AggregateUpdateRequestedMessageMapper(messageSource),
-                    new KafkaEmitter(producer, topic, 3)
-                ))
-                .onSuccess(new EventSuccessConsumer())
-                .onFailure(new EventFailureConsumer())
-                .build();
-    }
-
-    public static EventHandler<RecordAndMessage, JsonObject> createDesignDeleteRequestedHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
-        return TemplateHandler.<RecordAndMessage, RecordAndEvent<DesignDeleteRequested>, Void, JsonObject>builder()
-                .withInputMapper(new DesignDeleteRequestedInputMapper())
-                .withOutputMapper(ignore -> new JsonObject())
-                .withController(new DesignUpdateRequestedController<>(
-                    new DesignDeleteRequestedEventHandler(store),
-                    new AggregateUpdateRequestedMessageMapper(messageSource),
-                    new KafkaEmitter(producer, topic, 3)
-                ))
-                .onSuccess(new EventSuccessConsumer())
-                .onFailure(new EventFailureConsumer())
-                .build();
-    }
-
-    public static EventHandler<RecordAndMessage, JsonObject> createAggregateUpdateRequestedHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
-        return TemplateHandler.<RecordAndMessage, RecordAndEvent<AggregateUpdateRequested>, Void, JsonObject>builder()
-                .withInputMapper(new AggregateUpdateRequestedInputMapper())
-                .withOutputMapper(ignore -> new JsonObject())
-                .withController(new AggregateUpdateRequestedController(
+    public static EventHandler<Message, Void> createDesignInsertRequestedHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
+        return TemplateHandler.<Message, Message, Void, Void>builder()
+                .withInputMapper(input -> input)
+                .withOutputMapper(output -> output)
+                .withController(new MessageAppendController(
                     store,
+                    new AggregateUpdateRequestedMessageMapper(messageSource),
+                    new KafkaEmitter(producer, topic, 3)
+                ))
+                .onSuccess(new MessageSuccessConsumer())
+                .onFailure(new MessageFailureConsumer())
+                .build();
+    }
+
+    public static EventHandler<Message, Void> createDesignUpdateRequestedHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
+        return TemplateHandler.<Message, Message, Void, Void>builder()
+                .withInputMapper(input -> input)
+                .withOutputMapper(output -> output)
+                .withController(new MessageAppendController(
+                    store,
+                    new AggregateUpdateRequestedMessageMapper(messageSource),
+                    new KafkaEmitter(producer, topic, 3)
+                ))
+                .onSuccess(new MessageSuccessConsumer())
+                .onFailure(new MessageFailureConsumer())
+                .build();
+    }
+
+    public static EventHandler<Message, Void> createDesignDeleteRequestedHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
+        return TemplateHandler.<Message, Message, Void, Void>builder()
+                .withInputMapper(input -> input)
+                .withOutputMapper(output -> output)
+                .withController(new MessageAppendController(
+                    store,
+                    new AggregateUpdateRequestedMessageMapper(messageSource),
+                    new KafkaEmitter(producer, topic, 3)
+                ))
+                .onSuccess(new MessageSuccessConsumer())
+                .onFailure(new MessageFailureConsumer())
+                .build();
+    }
+
+    public static EventHandler<Message, Void> createAggregateUpdateRequestedHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
+        return TemplateHandler.<Message, Message, Void, Void>builder()
+                .withInputMapper(input -> input)
+                .withOutputMapper(output -> output)
+                .withController(new DesignAggregateUpdateRequestedController(
+                    store,
+                    new AggregateUpdateRequestedInputMapper(),
                     new AggregateUpdateCompletedMessageMapper(messageSource),
                     new KafkaEmitter(producer, topic, 3)
                 ))
-                .onSuccess(new EventSuccessConsumer())
-                .onFailure(new EventFailureConsumer())
+                .onSuccess(new MessageSuccessConsumer())
+                .onFailure(new MessageFailureConsumer())
                 .build();
     }
 
-    public static EventHandler<RecordAndMessage, JsonObject> createTileRenderCompletedHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
-        return TemplateHandler.<RecordAndMessage, RecordAndEvent<TileRenderCompleted>, Void, JsonObject>builder()
-                .withInputMapper(new TileRenderCompletedInputMapper())
-                .withOutputMapper(event -> new JsonObject())
-                .withController(new TileRenderCompletedController(
+    public static EventHandler<Message, Void> createAggregateUpdateCompletedHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
+        return TemplateHandler.<Message, Message, Void, Void>builder()
+                .withInputMapper(input -> input)
+                .withOutputMapper(output -> output)
+                .withController(new DesignAggregateUpdateCompletedController(
                         store,
-                        new TileRenderUpdatedMessageMapper(messageSource),
+                        new AggregateUpdateCompletedInputMapper(),
+                        new TileRenderRequestedMessageMapper(messageSource),
                         new KafkaEmitter(producer, topic, 3)
                 ))
-                .onSuccess(new EventSuccessConsumer())
-                .onFailure(new EventFailureConsumer())
+                .onSuccess(new MessageSuccessConsumer())
+                .onFailure(new MessageFailureConsumer())
+                .build();
+    }
+
+    public static EventHandler<Message, Void> createTileRenderCompletedHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
+        return TemplateHandler.<Message, Message, Void, Void>builder()
+                .withInputMapper(input -> input)
+                .withOutputMapper(output -> output)
+                .withController(new MessageAppendController(
+                        store,
+                        new AggregateUpdateRequestedMessageMapper(messageSource),
+                        new KafkaEmitter(producer, topic, 3)
+                ))
+                .onSuccess(new MessageSuccessConsumer())
+                .onFailure(new MessageFailureConsumer())
                 .build();
     }
 }

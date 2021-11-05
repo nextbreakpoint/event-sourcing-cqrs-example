@@ -6,9 +6,9 @@ import com.nextbreakpoint.blueprint.common.core.Checksum;
 import com.nextbreakpoint.blueprint.common.core.Environment;
 import com.nextbreakpoint.blueprint.common.core.Message;
 import com.nextbreakpoint.blueprint.common.core.MessageType;
+import com.nextbreakpoint.blueprint.common.events.*;
 import com.nextbreakpoint.blueprint.common.vertx.CassandraClientFactory;
 import com.nextbreakpoint.blueprint.common.vertx.KafkaClientFactory;
-import com.nextbreakpoint.blueprint.designs.events.*;
 import com.nextbreakpoint.blueprint.designs.model.*;
 import io.vertx.core.json.Json;
 import io.vertx.rxjava.cassandra.CassandraClient;
@@ -37,9 +37,8 @@ public class IntegrationTests {
     private static final String JSON_2 = "{\"metadata\":\"{\\\"translation\\\":{\\\"x\\\":0.0,\\\"y\\\":0.0,\\\"z\\\":1.0,\\\"w\\\":0.0},\\\"rotation\\\":{\\\"x\\\":0.0,\\\"y\\\":0.0,\\\"z\\\":0.0,\\\"w\\\":0.0},\\\"scale\\\":{\\\"x\\\":1.0,\\\"y\\\":1.0,\\\"z\\\":1.0,\\\"w\\\":1.0},\\\"point\\\":{\\\"x\\\":0.0,\\\"y\\\":0.0},\\\"julia\\\":false,\\\"options\\\":{\\\"showPreview\\\":false,\\\"showTraps\\\":false,\\\"showOrbit\\\":false,\\\"showPoint\\\":false,\\\"previewOrigin\\\":{\\\"x\\\":0.0,\\\"y\\\":0.0},\\\"previewSize\\\":{\\\"x\\\":0.25,\\\"y\\\":0.25}}}\",\"manifest\":\"{\\\"pluginId\\\":\\\"Mandelbrot\\\"}\",\"script\":\"fractal {\\norbit [-2.0 - 2.0i,+2.0 + 2.0i] [x,n] {\\nloop [0, 100] (mod2(x) > 40) {\\nx = x * x + w;\\n}\\n}\\ncolor [#FF000000] {\\npalette gradient {\\n[#FFFFFFFF > #FF000000, 100];\\n[#FF000000 > #FFFFFFFF, 100];\\n}\\ninit {\\nm = 100 * (1 + sin(mod(x) * 0.2 / pi));\\n}\\nrule (n > 0) [1] {\\ngradient[m - 1]\\n}\\n}\\n}\\n\"}";
     private static final String AGGREGATE_UPDATE_REQUESTED = "aggregate-update-requested";
     private static final String AGGREGATE_UPDATE_COMPLETED = "aggregate-update-completed";
-    private static final String VERSION_CREATED = "version-created";
-    private static final String TILE_UPDATE_REQUESTED = "tile-update-requested";
-    private static final String TILE_UPDATE_COMPLETED = "tile-update-completed";
+    private static final String TILE_RENDER_REQUESTED = "tile-render-requested";
+    private static final String TILE_RENDER_COMPLETED = "tile-render-completed";
     private static final String MESSAGE_SOURCE = "service-designs";
     private static final String TOPIC_NAME = "design-event";
 
@@ -65,7 +64,10 @@ public class IntegrationTests {
 
         consumer = KafkaClientFactory.createConsumer(environment, vertx, scenario.createConsumerConfig("test"));
 
-        consumer.subscribe(Collections.singleton(TOPIC_NAME));
+        consumer.rxSubscribe(Collections.singleton(TOPIC_NAME))
+                .doOnError(Throwable::printStackTrace)
+                .toBlocking()
+                .value();
 
         pollRecords();
     }
@@ -116,17 +118,17 @@ public class IntegrationTests {
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final List<Row> rows = fetchDesignEvents(designId);
+                        final List<Row> rows = fetchMessages(designId);
                         assertThat(rows).hasSize(1);
-                        assertExpectedDesignEvent(rows.get(0), JSON_1, "CREATED");
+                        assertExpectedMessage(rows.get(0), designInsertRequestedMessage);
                     });
 
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final List<Row> rows = fetchDesignAggregate(designId);
+                        final List<Row> rows = fetchDesign(designId);
                         assertThat(rows).hasSize(1);
-                        assertExpectedDesignAggregate(rows.get(0), JSON_1);
+                        assertExpectedDesign(rows.get(0), JSON_1, "CREATED");
                     });
 
             await().atMost(TEN_SECONDS)
@@ -134,7 +136,7 @@ public class IntegrationTests {
                     .untilAsserted(() -> {
                         final List<Message> messages = safelyFindMessages(designId.toString(), MESSAGE_SOURCE, AGGREGATE_UPDATE_REQUESTED);
                         assertThat(messages).hasSize(1);
-                        assertExpectedAggregateUpdateRequestedEvent(designId, eventTimestamp, messages.get(0));
+                        assertExpectedAggregateUpdateRequestedMessage(designId, designInsertRequestedMessage.getTimestamp(), messages.get(0));
                     });
 
             await().atMost(TEN_SECONDS)
@@ -142,16 +144,8 @@ public class IntegrationTests {
                     .untilAsserted(() -> {
                         final List<Message> messages = safelyFindMessages(designId.toString(), MESSAGE_SOURCE, AGGREGATE_UPDATE_COMPLETED);
                         assertThat(messages).hasSize(1);
-                        assertExpectedAggregateUpdateCompletedEvent(designId, eventTimestamp, messages.get(0), JSON_1, checksum);
+                        assertExpectedAggregateUpdateCompletedMessage(designId, designInsertRequestedMessage.getTimestamp(), messages.get(0), JSON_1, checksum);
                     });
-//
-//            await().atMost(TEN_SECONDS)
-//                    .pollInterval(ONE_SECOND)
-//                    .untilAsserted(() -> {
-//                        final List<Message> messages = safelyFindMessages(checksum, MESSAGE_SOURCE, VERSION_CREATED);
-//                        assertThat(messages).hasSize(1);
-//                        assertExpectedVersionCreatedEvent(designId, eventTimestamp, messages.get(0), JSON_1, checksum);
-//                    });
         }
 
         @Test
@@ -189,20 +183,20 @@ public class IntegrationTests {
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final List<Row> rows = fetchDesignEvents(designId);
+                        final List<Row> rows = fetchMessages(designId);
                         assertThat(rows).hasSize(2);
                         final Set<UUID> uuids = extractUuids(rows);
                         assertThat(uuids).contains(designId);
-                        assertExpectedDesignEvent(rows.get(0), JSON_1, "CREATED");
-                        assertExpectedDesignEvent(rows.get(1), JSON_2, "UPDATED");
+                        assertExpectedMessage(rows.get(0), designInsertRequestedMessage);
+                        assertExpectedMessage(rows.get(1), designUpdateRequestedMessage);
                     });
 
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final List<Row> rows = fetchDesignAggregate(designId);
+                        final List<Row> rows = fetchDesign(designId);
                         assertThat(rows).hasSize(1);
-                        assertExpectedDesignAggregate(rows.get(0), JSON_2);
+                        assertExpectedDesign(rows.get(0), JSON_2, "UPDATED");
                     });
 
             await().atMost(TEN_SECONDS)
@@ -210,8 +204,8 @@ public class IntegrationTests {
                     .untilAsserted(() -> {
                         final List<Message> messages = safelyFindMessages(designId.toString(), MESSAGE_SOURCE, AGGREGATE_UPDATE_REQUESTED);
                         assertThat(messages).hasSize(2);
-                        assertExpectedAggregateUpdateRequestedEvent(designId, eventTimestamp1, messages.get(0));
-                        assertExpectedAggregateUpdateRequestedEvent(designId, eventTimestamp2, messages.get(1));
+                        assertExpectedAggregateUpdateRequestedMessage(designId, designInsertRequestedMessage.getTimestamp(), messages.get(0));
+                        assertExpectedAggregateUpdateRequestedMessage(designId, designUpdateRequestedMessage.getTimestamp(), messages.get(1));
                     });
 
             await().atMost(TEN_SECONDS)
@@ -219,25 +213,9 @@ public class IntegrationTests {
                     .untilAsserted(() -> {
                         final List<Message> messages = safelyFindMessages(designId.toString(), MESSAGE_SOURCE, AGGREGATE_UPDATE_COMPLETED);
                         assertThat(messages).hasSize(2);
-//                        assertExpectedAggregateUpdateCompletedEvent(designId, eventTimestamp1, messages.get(0), JSON_1, checksum1);
-                        assertExpectedAggregateUpdateCompletedEvent(designId, eventTimestamp2, messages.get(1), JSON_2, checksum2);
+//                        assertExpectedAggregateUpdateCompletedEvent(designId, designInsertRequestedMessage.getTimestamp(), messages.get(0), JSON_1, checksum1);
+                        assertExpectedAggregateUpdateCompletedMessage(designId, designUpdateRequestedMessage.getTimestamp(), messages.get(1), JSON_2, checksum2);
                     });
-
-//            await().atMost(TEN_SECONDS)
-//                    .pollInterval(ONE_SECOND)
-//                    .untilAsserted(() -> {
-//                        final List<Message> messages = safelyFindMessages(checksum1, MESSAGE_SOURCE, VERSION_CREATED);
-//                        assertThat(messages).hasSize(1);
-//                        assertExpectedVersionCreatedEvent(designId, eventTimestamp1, messages.get(0), JSON_1, checksum1);
-//                    });
-//
-//            await().atMost(TEN_SECONDS)
-//                    .pollInterval(ONE_SECOND)
-//                    .untilAsserted(() -> {
-//                        final List<Message> messages = safelyFindMessages(checksum2, MESSAGE_SOURCE, VERSION_CREATED);
-//                        assertThat(messages).hasSize(1);
-//                        assertExpectedVersionCreatedEvent(designId, eventTimestamp2, messages.get(0), JSON_2, checksum2);
-//                    });
         }
 
         @Test
@@ -275,19 +253,20 @@ public class IntegrationTests {
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final List<Row> rows = fetchDesignEvents(designId);
+                        final List<Row> rows = fetchMessages(designId);
                         assertThat(rows).hasSize(2);
                         final Set<UUID> uuids = extractUuids(rows);
                         assertThat(uuids).contains(designId);
-                        assertExpectedDesignEvent(rows.get(0), JSON_1, "CREATED");
-                        assertExpectedDesignEvent(rows.get(1), null, "DELETED");
+                        assertExpectedMessage(rows.get(0), designInsertRequestedMessage);
+                        assertExpectedMessage(rows.get(1), designDeleteRequestedMessage);
                     });
 
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final List<Row> rows = fetchDesignAggregate(designId);
-                        assertThat(rows).hasSize(0);
+                        final List<Row> rows = fetchDesign(designId);
+                        assertThat(rows).hasSize(1);
+                        assertExpectedDesign(rows.get(0), JSON_1, "DELETED");
                     });
 
             await().atMost(TEN_SECONDS)
@@ -295,8 +274,8 @@ public class IntegrationTests {
                     .untilAsserted(() -> {
                         final List<Message> messages = safelyFindMessages(designId.toString(), MESSAGE_SOURCE, AGGREGATE_UPDATE_REQUESTED);
                         assertThat(messages).hasSize(2);
-                        assertExpectedAggregateUpdateRequestedEvent(designId, eventTimestamp1, messages.get(0));
-                        assertExpectedAggregateUpdateRequestedEvent(designId, eventTimestamp2, messages.get(1));
+                        assertExpectedAggregateUpdateRequestedMessage(designId, designInsertRequestedMessage.getTimestamp(), messages.get(0));
+                        assertExpectedAggregateUpdateRequestedMessage(designId, designDeleteRequestedMessage.getTimestamp(), messages.get(1));
                     });
 
             await().atMost(TEN_SECONDS)
@@ -304,18 +283,9 @@ public class IntegrationTests {
                     .untilAsserted(() -> {
                         final List<Message> messages = safelyFindMessages(designId.toString(), MESSAGE_SOURCE, AGGREGATE_UPDATE_COMPLETED);
                         assertThat(messages).hasSize(2);
-//                        assertExpectedAggregateUpdateCompletedEvent(designId, eventTimestamp1, messages.get(0), JSON_1, checksum1);
-                        assertExpectedAggregateUpdateCompletedEvent(designId, eventTimestamp2, messages.get(1), JSON_1, checksum2);
+//                        assertExpectedAggregateUpdateCompletedEvent(designId, designInsertRequestedMessage.getTimestamp(), messages.get(0), JSON_1, checksum1);
+                        assertExpectedAggregateUpdateCompletedMessage(designId, designDeleteRequestedMessage.getTimestamp(), messages.get(1), JSON_1, checksum2);
                     });
-
-//            await().atMost(TEN_SECONDS)
-//                    .pollInterval(ONE_SECOND)
-//                    .untilAsserted(() -> {
-//                        final List<Message> messages = safelyFindMessages(checksum1, MESSAGE_SOURCE, VERSION_CREATED);
-//                        assertThat(messages).hasSize(2);
-//                        assertExpectedVersionCreatedEvent(designId, eventTimestamp1, messages.get(0), JSON_1, checksum1);
-//                        assertExpectedVersionCreatedEvent(designId, eventTimestamp1, messages.get(1), JSON_1, checksum1);
-//                    });
         }
    }
 
@@ -842,8 +812,8 @@ public class IntegrationTests {
             return records.stream()
                     .map(record -> Json.decodeValue(record.value(), Message.class))
                     .filter(message -> message.getPartitionKey().equals(partitionKey))
-                    .filter(message -> message.getMessageSource().equals(messageSource))
-                    .filter(message -> message.getMessageType().equals(messageType))
+                    .filter(message -> message.getSource().equals(messageSource))
+                    .filter(message -> message.getType().equals(messageType))
 //                    .sorted(Comparator.comparing(Message::getTimestamp))
                     .collect(Collectors.toList());
         }
@@ -887,77 +857,75 @@ public class IntegrationTests {
     @NotNull
     private Set<UUID> extractUuids(List<Row> rows) {
         return rows.stream()
-                .map(row -> row.getUuid("DESIGN_UUID"))
+                .map(row -> row.getString("MESSAGE_PARTITIONKEY"))
+                .map(UUID::fromString)
                 .collect(Collectors.toSet());
     }
 
     @NotNull
-    private List<Row> fetchDesignEvents(UUID designId) {
-        return session.rxPrepare("SELECT * FROM DESIGN_EVENT WHERE DESIGN_UUID = ?")
-                .map(stmt -> stmt.bind(designId))
+    private List<Row> fetchMessages(UUID designId) {
+        return session.rxPrepare("SELECT * FROM MESSAGE WHERE MESSAGE_PARTITIONKEY = ?")
+                .map(stmt -> stmt.bind(designId.toString()))
                 .flatMap(session::rxExecuteWithFullFetch)
                 .toBlocking()
                 .value();
     }
 
     @NotNull
-    private List<Row> fetchDesignAggregate(UUID designId) {
-        return session.rxPrepare("SELECT * FROM DESIGN_AGGREGATE WHERE DESIGN_UUID = ?")
+    private List<Row> fetchDesign(UUID designId) {
+        return session.rxPrepare("SELECT * FROM DESIGN WHERE DESIGN_UUID = ?")
                 .map(stmt -> stmt.bind(designId))
                 .flatMap(session::rxExecuteWithFullFetch)
                 .toBlocking()
                 .value();
     }
 
-    private void assertExpectedDesignEvent(Row row, String data, String status) {
-        String actualJson = row.get("DESIGN_DATA", String.class);
-        String actualStatus = row.get("DESIGN_STATUS", String.class);
-        String actualChecksum = row.get("DESIGN_CHECKSUM", String.class);
-        Instant actualDesignModified = row.getInstant("DESIGN_UPDATED") ;
-        assertThat(actualJson).isEqualTo(data);
-        assertThat(actualStatus).isEqualTo(status);
-        assertThat(actualChecksum).isEqualTo(Checksum.of(data));
-        assertThat(actualDesignModified).isNotNull();
+    private void assertExpectedMessage(Row row, Message message) {
+        String actualType = row.getString("MESSAGE_TYPE");
+        String actualBody = row.getString("MESSAGE_BODY");
+        String actualUuid = row.getString("MESSAGE_UUID");
+        String actualSource = row.getString("MESSAGE_SOURCE");
+        String actualPartitionKey = row.getString("MESSAGE_PARTITIONKEY");
+        Instant actualTimestamp = row.getInstant("MESSAGE_TIMESTAMP");
+        UUID actualEvid = row.getUuid("MESSAGE_EVID");
+        assertThat(actualEvid).isNotNull();
+        assertThat(actualUuid).isEqualTo(message.getUuid());
+        assertThat(actualBody).isEqualTo(message.getBody());
+        assertThat(actualType).isEqualTo(message.getType());
+        assertThat(actualSource).isEqualTo(message.getSource());
+        assertThat(actualPartitionKey).isEqualTo(message.getPartitionKey());
+        assertThat(actualTimestamp).isEqualTo(Instant.ofEpochMilli(message.getTimestamp()));
     }
 
-    private void assertExpectedDesignAggregate(Row row, String data) {
-        String actualJson = row.get("DESIGN_DATA", String.class);
-        String actualChecksum = row.get("DESIGN_CHECKSUM", String.class);
+    private void assertExpectedDesign(Row row, String data, String status) {
+        String actualJson = row.getString("DESIGN_DATA");
+        String actualStatus = row.getString("DESIGN_STATUS");
+        String actualChecksum = row.getString("DESIGN_CHECKSUM");
         assertThat(actualJson).isEqualTo(data);
+        assertThat(actualStatus).isEqualTo(status);
         assertThat(actualChecksum).isNotNull();
     }
 
-    private void assertExpectedAggregateUpdateRequestedEvent(UUID designId, long eventTimestamp, Message actualMessage) {
+    private void assertExpectedAggregateUpdateRequestedMessage(UUID designId, long eventTimestamp, Message actualMessage) {
         assertThat(actualMessage.getTimestamp()).isNotNull();
-        assertThat(actualMessage.getMessageSource()).isEqualTo(MESSAGE_SOURCE);
+        assertThat(actualMessage.getSource()).isEqualTo(MESSAGE_SOURCE);
         assertThat(actualMessage.getPartitionKey()).isEqualTo(designId.toString());
-        assertThat(actualMessage.getMessageId()).isNotNull();
-        assertThat(actualMessage.getMessageType()).isEqualTo(AGGREGATE_UPDATE_REQUESTED);
-        AggregateUpdateRequested actualEvent = Json.decodeValue(actualMessage.getMessageBody(), AggregateUpdateRequested.class);
+        assertThat(actualMessage.getUuid()).isNotNull();
+        assertThat(actualMessage.getType()).isEqualTo(AGGREGATE_UPDATE_REQUESTED);
+        AggregateUpdateRequested actualEvent = Json.decodeValue(actualMessage.getBody(), AggregateUpdateRequested.class);
         assertThat(actualEvent.getUuid()).isEqualTo(designId);
         assertThat(actualEvent.getTimestamp()).isNotNull();
         assertThat(actualEvent.getTimestamp()).isEqualTo(eventTimestamp);
     }
 
-    private void assertExpectedAggregateUpdateCompletedEvent(UUID designId, long eventTimestamp, Message actualMessage, String data, String checksum) {
+    private void assertExpectedAggregateUpdateCompletedMessage(UUID designId, long eventTimestamp, Message actualMessage, String data, String checksum) {
         assertThat(actualMessage.getTimestamp()).isNotNull();
-        assertThat(actualMessage.getMessageSource()).isEqualTo(MESSAGE_SOURCE);
+        assertThat(actualMessage.getSource()).isEqualTo(MESSAGE_SOURCE);
         assertThat(actualMessage.getPartitionKey()).isEqualTo(designId.toString());
-        assertThat(actualMessage.getMessageId()).isNotNull();
-        assertThat(actualMessage.getMessageType()).isEqualTo(AGGREGATE_UPDATE_COMPLETED);
-        AggregateUpdateCompleted actualEvent = Json.decodeValue(actualMessage.getMessageBody(), AggregateUpdateCompleted.class);
+        assertThat(actualMessage.getUuid()).isNotNull();
+        assertThat(actualMessage.getType()).isEqualTo(AGGREGATE_UPDATE_COMPLETED);
+        AggregateUpdateCompleted actualEvent = Json.decodeValue(actualMessage.getBody(), AggregateUpdateCompleted.class);
         assertThat(actualEvent.getUuid()).isEqualTo(designId);
-        assertThat(actualEvent.getData()).isEqualTo(data);
-        assertThat(actualEvent.getChecksum()).isEqualTo(checksum);
-    }
-
-    private void assertExpectedVersionCreatedEvent(UUID designId, long eventTimestamp, Message actualMessage, String data, String checksum) {
-        assertThat(actualMessage.getTimestamp()).isNotNull();
-        assertThat(actualMessage.getMessageSource()).isEqualTo(MESSAGE_SOURCE);
-        assertThat(actualMessage.getPartitionKey()).isEqualTo(designId.toString());
-        assertThat(actualMessage.getMessageId()).isNotNull();
-        assertThat(actualMessage.getMessageType()).isEqualTo(VERSION_CREATED);
-        VersionCreated actualEvent = Json.decodeValue(actualMessage.getMessageBody(), VersionCreated.class);
         assertThat(actualEvent.getData()).isEqualTo(data);
         assertThat(actualEvent.getChecksum()).isEqualTo(checksum);
     }

@@ -118,9 +118,9 @@ public class PactTests {
 
                 final Message designChangedMessage2 = Json.decodeValue(messagePact.getMessages().get(1).contentsAsString(), Message.class);
 
-                final DesignChanged event1 = Json.decodeValue(designChangedMessage1.getMessageBody(), DesignChanged.class);
+                final DesignChanged event1 = Json.decodeValue(designChangedMessage1.getBody(), DesignChanged.class);
 
-                final DesignChanged event2 = Json.decodeValue(designChangedMessage2.getMessageBody(), DesignChanged.class);
+                final DesignChanged event2 = Json.decodeValue(designChangedMessage2.getBody(), DesignChanged.class);
 
                 long eventTimestamp1 = System.currentTimeMillis() - 2;
 
@@ -186,9 +186,9 @@ public class PactTests {
 
                 final Message designChangedMessage2 = Json.decodeValue(messagePact.getMessages().get(1).contentsAsString(), Message.class);
 
-                final DesignChanged event1 = Json.decodeValue(designChangedMessage1.getMessageBody(), DesignChanged.class);
+                final DesignChanged event1 = Json.decodeValue(designChangedMessage1.getBody(), DesignChanged.class);
 
-                final DesignChanged event2 = Json.decodeValue(designChangedMessage2.getMessageBody(), DesignChanged.class);
+                final DesignChanged event2 = Json.decodeValue(designChangedMessage2.getBody(), DesignChanged.class);
 
                 long eventTimestamp1 = System.currentTimeMillis() - 2;
 

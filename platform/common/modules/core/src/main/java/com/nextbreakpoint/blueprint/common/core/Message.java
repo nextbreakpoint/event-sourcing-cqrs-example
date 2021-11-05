@@ -6,42 +6,42 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Objects;
 
 public class Message {
-    private String messageId;
-    private String messageType;
-    private String messageBody;
-    private String messageSource;
+    private String uuid;
+    private String type;
+    private String body;
+    private String source;
     private String partitionKey;
     private Long timestamp;
 
     @JsonCreator
-    public Message(@JsonProperty("messageId") String messageId,
-                   @JsonProperty("messageType") String messageType,
-                   @JsonProperty("messageBody") String messageBody,
-                   @JsonProperty("messageSource") String messageSource,
+    public Message(@JsonProperty("uuid") String uuid,
+                   @JsonProperty("type") String type,
+                   @JsonProperty("body") String body,
+                   @JsonProperty("source") String source,
                    @JsonProperty("partitionKey") String partitionKey,
                    @JsonProperty("timestamp") Long timestamp) {
-        this.messageId = Objects.requireNonNull(messageId);
-        this.messageType = Objects.requireNonNull(messageType);
-        this.messageBody = Objects.requireNonNull(messageBody);
-        this.messageSource = Objects.requireNonNull(messageSource);
+        this.uuid = Objects.requireNonNull(uuid);
+        this.type = Objects.requireNonNull(type);
+        this.body = Objects.requireNonNull(body);
+        this.source = Objects.requireNonNull(source);
         this.partitionKey = Objects.requireNonNull(partitionKey);
         this.timestamp = Objects.requireNonNull(timestamp);
     }
 
-    public String getMessageId() {
-        return messageId;
+    public String getUuid() {
+        return uuid;
     }
 
-    public String getMessageType() {
-        return messageType;
+    public String getType() {
+        return type;
     }
 
-    public String getMessageBody() {
-        return messageBody;
+    public String getBody() {
+        return body;
     }
 
-    public String getMessageSource() {
-        return messageSource;
+    public String getSource() {
+        return source;
     }
 
     public String getPartitionKey() {
@@ -55,10 +55,10 @@ public class Message {
     @Override
     public String toString() {
         return "Message{" +
-                "messageId='" + messageId + '\'' +
-                ", messageType='" + messageType + '\'' +
-                ", messageBody='" + messageBody + '\'' +
-                ", messageSource='" + messageSource + '\'' +
+                "uuid='" + uuid + '\'' +
+                ", type='" + type + '\'' +
+                ", body='" + (body != null ? "[...]" : "") + '\'' +
+                ", source='" + source + '\'' +
                 ", partitionKey='" + partitionKey + '\'' +
                 ", timestamp=" + timestamp +
                 '}';

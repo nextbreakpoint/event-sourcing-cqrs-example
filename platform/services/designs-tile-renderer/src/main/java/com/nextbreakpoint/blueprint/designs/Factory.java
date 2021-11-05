@@ -5,7 +5,9 @@ import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
 import com.nextbreakpoint.blueprint.common.events.mappers.TileRenderCompletedMessageMapper;
 import com.nextbreakpoint.blueprint.common.events.mappers.TileRenderRequestedInputMapper;
 import com.nextbreakpoint.blueprint.common.vertx.*;
+import com.nextbreakpoint.blueprint.designs.common.S3Driver;
 import com.nextbreakpoint.blueprint.designs.controllers.TileRenderRequestedController;
+import com.nextbreakpoint.blueprint.designs.common.TileRenderer;
 import io.vertx.rxjava.core.WorkerExecutor;
 import io.vertx.rxjava.kafka.client.producer.KafkaProducer;
 import software.amazon.awssdk.services.s3.S3AsyncClient;
@@ -21,8 +23,8 @@ public class Factory {
                         new TileRenderCompletedMessageMapper(messageSource),
                         new KafkaEmitter(producer, topic, 3),
                         executor,
-                        s3AsyncClient,
-                        bucket
+                        new S3Driver(s3AsyncClient, bucket),
+                        new TileRenderer()
                 ))
                 .onSuccess(new MessageSuccessConsumer())
                 .onFailure(new MessageFailureConsumer())

@@ -5,7 +5,6 @@ import com.jayway.restassured.RestAssured;
 import com.nextbreakpoint.blueprint.common.core.Checksum;
 import com.nextbreakpoint.blueprint.common.core.Environment;
 import com.nextbreakpoint.blueprint.common.core.Message;
-import com.nextbreakpoint.blueprint.common.core.MessageType;
 import com.nextbreakpoint.blueprint.common.events.TileRenderCompleted;
 import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
 import com.nextbreakpoint.blueprint.common.vertx.KafkaClientFactory;
@@ -100,7 +99,7 @@ public class IntegrationTests {
     @Nested
     @Tag("slow")
     @Tag("integration")
-    @DisplayName("Verify behaviour of designs-command-consumer service")
+    @DisplayName("Verify behaviour of designs-tile-renderer service")
     public class VerifyServiceApi {
         @AfterEach
         public void reset() {
@@ -108,7 +107,7 @@ public class IntegrationTests {
         }
 
         @Test
-        @DisplayName("Should render the tile's image after receiving a tile created event")
+        @DisplayName("Should render the image after receiving a tile TileRenderRequested event")
         public void shouldRenderImageWhenReceivingAMessage() {
             final UUID designId = UUID.randomUUID();
 
@@ -173,7 +172,7 @@ public class IntegrationTests {
     }
 
     private static Message createTileRenderRequestedMessage(UUID messageId, UUID partitionKey, long timestamp, TileRenderRequested event) {
-        return new Message(messageId.toString(), MessageType.TILE_RENDER_REQUESTED, Json.encode(event), "test", partitionKey.toString(), timestamp);
+        return new Message(messageId.toString(), TILE_RENDER_REQUESTED, Json.encode(event), "test", partitionKey.toString(), timestamp);
     }
 
     private static void pause(int millis) {

@@ -85,8 +85,8 @@ public class Verticle extends AbstractVerticle {
             final Vertx vertx = Vertx.vertx(vertxOptions);
 
             RxJavaHooks.setOnComputationScheduler(s -> RxHelper.scheduler(vertx));
-            RxJavaHooks.setOnNewThreadScheduler(s -> RxHelper.blockingScheduler(vertx));
             RxJavaHooks.setOnIOScheduler(s -> RxHelper.blockingScheduler(vertx));
+            RxJavaHooks.setOnNewThreadScheduler(s -> RxHelper.blockingScheduler(vertx));
 
             DatabindCodec.mapper().configure(JsonParser.Feature.IGNORE_UNDEFINED, true);
 
@@ -111,8 +111,20 @@ public class Verticle extends AbstractVerticle {
 
     @Override
     public Completable rxStop() {
-        return Completable.complete();
+        return Completable.fromCallable(() -> {
+            if (pollingThread != null) {
+                try {
+                    pollingThread.interrupt();
+                    pollingThread.join();
+                } catch (InterruptedException e) {
+                    logger.warn("Can't stop polling thread", e);
+                }
+            }
+            return null;
+        });
     }
+
+    private Thread pollingThread;
 
     private void initServer(Promise<Void> promise) {
         try {
@@ -155,17 +167,7 @@ public class Verticle extends AbstractVerticle {
 
             eventHandlers.put(MessageType.TILE_RENDER_COMPLETED, createTileRenderCompletedHandler(store, eventTopic, kafkaProducer, messageSource));
 
-            Thread pollingThread = new Thread(() -> {
-                for (;;) {
-                    try {
-                        pollRecords(kafkaConsumer, eventHandlers);
-                    } catch (InterruptedException e) {
-                        break;
-                    } catch (Exception e) {
-                        logger.error("Error occurred while consuming messages", e);
-                    }
-                }
-            }, "kafka-records-poll");
+            pollingThread = new Thread(() -> pollRecordsLoop(kafkaConsumer, eventHandlers), "kafka-records-poll");
 
             pollingThread.start();
 
@@ -218,7 +220,17 @@ public class Verticle extends AbstractVerticle {
         }
     }
 
-    private void pollRecords(KafkaConsumer<String, String> eventConsumer, Map<String, EventHandler<Message, Void>> eventHandlers) throws InterruptedException {
+    private void pollRecordsLoop(KafkaConsumer<String, String> kafkaConsumer, Map<String, EventHandler<Message, Void>> eventHandlers) {
+        for (;;) {
+            try {
+                pollRecords(kafkaConsumer, eventHandlers);
+            } catch (Exception e) {
+                logger.error("Error occurred while consuming messages", e);
+            }
+        }
+    }
+
+    private void pollRecords(KafkaConsumer<String, String> eventConsumer, Map<String, EventHandler<Message, Void>> eventHandlers) {
         KafkaConsumerRecords<String, String> records = pollRecords(eventConsumer);
 
         processRecords(eventConsumer, eventHandlers, records);
@@ -226,7 +238,7 @@ public class Verticle extends AbstractVerticle {
         commitOffsets(eventConsumer);
     }
 
-    private void processRecords(KafkaConsumer<String, String> eventConsumer, Map<String, EventHandler<Message, Void>> eventHandlers, KafkaConsumerRecords<String, String> records) throws InterruptedException {
+    private void processRecords(KafkaConsumer<String, String> eventConsumer, Map<String, EventHandler<Message, Void>> eventHandlers, KafkaConsumerRecords<String, String> records) {
         final Set<TopicPartition> suspendedPartitions = new HashSet<>();
 
         for (int i = 0; i < records.size(); i++) {
@@ -272,8 +284,8 @@ public class Verticle extends AbstractVerticle {
     private void commitOffsets(KafkaConsumer<String, String> eventConsumer) {
         eventConsumer.rxCommit()
                 .doOnError(err -> logger.error("Failed to commit offsets", err))
-                .toBlocking()
-                .value();
+                .toCompletable()
+                .await();
     }
 
     private void retryPartition(KafkaConsumer<String, String> eventConsumer, KafkaConsumerRecord<String, String> record, TopicPartition topicPartition) {
@@ -282,7 +294,7 @@ public class Verticle extends AbstractVerticle {
                 .delay(5, TimeUnit.SECONDS)
                 .flatMap(x -> eventConsumer.rxResume(topicPartition))
                 .doOnError(err -> logger.error("Failed to resume partition (" + topicPartition + ")", err))
-                .toBlocking()
-                .value();
+                .toCompletable()
+                .await();
     }
 }

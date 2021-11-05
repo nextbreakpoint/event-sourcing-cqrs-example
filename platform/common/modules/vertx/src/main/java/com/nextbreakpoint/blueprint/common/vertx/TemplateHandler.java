@@ -44,10 +44,10 @@ public class TemplateHandler<T, I, O, R> implements Handler<T>, EventHandler<T, 
                 .flatMap(controller::onNext)
                 .map(outputMapper::transform)
                 .observeOn(Schedulers.immediate())
-                .doOnSuccess(result -> successHandler.accept(message, null))
+                .toCompletable()
+                .doOnCompleted(() -> successHandler.accept(message, null))
                 .doOnError(err -> failureHandler.accept(message, err))
-                .toBlocking()
-                .value();
+                .await();
     }
 
     public static <T, I, O, R> Builder<T, I, O, R> builder() {

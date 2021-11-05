@@ -2,7 +2,10 @@ package com.nextbreakpoint.blueprint.common.vertx;
 
 import com.nextbreakpoint.blueprint.common.core.Mapper;
 import io.vertx.core.Handler;
+import io.vertx.rxjava.core.RxHelper;
+import rx.Scheduler;
 import rx.Single;
+import rx.schedulers.Schedulers;
 
 import java.util.Objects;
 import java.util.function.BiConsumer;
@@ -25,19 +28,26 @@ public class TemplateHandler<T, I, O, R> implements Handler<T>, EventHandler<T, 
     @Override
     public void handle(T message) {
         Single.just(message)
+                .subscribeOn(Schedulers.computation())
                 .map(inputMapper::transform)
                 .flatMap(controller::onNext)
                 .map(outputMapper::transform)
+                .observeOn(Schedulers.immediate())
                 .subscribe(result -> successHandler.accept(message, result), err -> failureHandler.accept(message, err));
     }
 
     @Override
-    public void handle(T message, BiConsumer<T, R> successHandler, BiConsumer<T, Throwable> failureHandler) {
+    public void handleBlocking(T message) {
         Single.just(message)
+                .subscribeOn(Schedulers.computation())
                 .map(inputMapper::transform)
                 .flatMap(controller::onNext)
                 .map(outputMapper::transform)
-                .subscribe(result -> this.successHandler.andThen(successHandler).accept(message, result), err -> this.failureHandler.andThen(failureHandler).accept(message, err));
+                .observeOn(Schedulers.immediate())
+                .doOnSuccess(result -> successHandler.accept(message, null))
+                .doOnError(err -> failureHandler.accept(message, err))
+                .toBlocking()
+                .value();
     }
 
     public static <T, I, O, R> Builder<T, I, O, R> builder() {

@@ -48,7 +48,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -246,20 +245,12 @@ public class Verticle extends AbstractVerticle {
                 continue;
             }
 
-            CountDownLatch latch = new CountDownLatch(1);
-
-            Throwable[] error = new Throwable[] { null };
-
-            handler.handle(message, (recordAndMessage, result) -> latch.countDown(), (recordAndMessage, err) -> { error[0] = err; latch.countDown(); });
-
             try {
-                latch.await();
-            } finally {
-                if (error[0] != null) {
-                    suspendedPartitions.add(topicPartition);
+                handler.handleBlocking(message);
+            } catch (Exception e) {
+                suspendedPartitions.add(topicPartition);
 
-                    retryPartition(eventConsumer, record, topicPartition);
-                }
+                retryPartition(eventConsumer, record, topicPartition);
             }
         }
     }

@@ -119,6 +119,9 @@ public class CassandraStore implements Store {
     }
 
     private DesignAccumulator mergeElement(DesignAccumulator accumulator, DesignAccumulator element) {
+        if (element.getStatus() == null) {
+            return accumulator;
+        }
         if ("DELETED".equals(element.getStatus())) {
             return new DesignAccumulator(element.getUuid(), accumulator.getEvid(), accumulator.getJson(), "DELETED", accumulator.getChecksum(), element.getUpdated());
         } else {

@@ -115,7 +115,7 @@ public class IntegrationTests {
 
             final String checksum = Checksum.of(JSON_1);
 
-            await().atMost(TEN_SECONDS)
+            await().atMost(ONE_MINUTE)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
                         final List<Row> rows = fetchMessages(designId);
@@ -180,7 +180,7 @@ public class IntegrationTests {
             final String checksum1 = Checksum.of(JSON_1);
             final String checksum2 = Checksum.of(JSON_2);
 
-            await().atMost(TEN_SECONDS)
+            await().atMost(ONE_MINUTE)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
                         final List<Row> rows = fetchMessages(designId);
@@ -250,7 +250,7 @@ public class IntegrationTests {
             final String checksum1 = Checksum.of(JSON_1);
             final String checksum2 = Checksum.of(JSON_1);
 
-            await().atMost(TEN_SECONDS)
+            await().atMost(ONE_MINUTE)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
                         final List<Row> rows = fetchMessages(designId);

@@ -42,6 +42,6 @@ public class DesignAggregateUpdateRequestedController implements Controller<Mess
     private Single<AggregateUpdateCompleted> onEventReceived(AggregateUpdateRequested event) {
         return store.updateDesign(event.getUuid())
                 .map(result -> result.orElseThrow(() -> new RuntimeException("Design aggregate not found " + event.getUuid())))
-                .map(design -> new AggregateUpdateCompleted(design.getUuid(), design.getEvid(), design.getJson(), design.getChecksum()));
+                .map(design -> new AggregateUpdateCompleted(design.getUuid(), design.getEvid(), design.getJson(), design.getChecksum(), event.getStatus()));
     }
 }

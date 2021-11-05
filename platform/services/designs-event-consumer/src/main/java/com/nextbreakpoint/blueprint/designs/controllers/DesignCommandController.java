@@ -12,15 +12,17 @@ import rx.Single;
 import java.util.Objects;
 import java.util.UUID;
 
-public class MessageAppendController implements Controller<Message, Void> {
+public class DesignCommandController implements Controller<Message, Void> {
     private final Mapper<AggregateUpdateRequested, Message> mapper;
     private final KafkaEmitter emitter;
+    private final String status;
     private final Store store;
 
-    public MessageAppendController(Store store, Mapper<AggregateUpdateRequested, Message> mapper, KafkaEmitter emitter) {
+    public DesignCommandController(Store store, Mapper<AggregateUpdateRequested, Message> mapper, KafkaEmitter emitter, String status) {
         this.store = Objects.requireNonNull(store);
         this.mapper = Objects.requireNonNull(mapper);
         this.emitter = Objects.requireNonNull(emitter);
+        this.status = Objects.requireNonNull(status);
     }
 
     @Override
@@ -33,6 +35,6 @@ public class MessageAppendController implements Controller<Message, Void> {
 
     private Single<AggregateUpdateRequested> onEventReceived(Message message) {
         return store.appendMessage(Uuids.timeBased(), message)
-                .map(result -> new AggregateUpdateRequested(UUID.fromString(message.getPartitionKey()), message.getTimestamp()));
+                .map(result -> new AggregateUpdateRequested(UUID.fromString(message.getPartitionKey()), message.getTimestamp(), status));
     }
 }

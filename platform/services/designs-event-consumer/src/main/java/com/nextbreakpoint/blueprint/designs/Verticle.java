@@ -1,5 +1,6 @@
 package com.nextbreakpoint.blueprint.designs;
 
+import com.fasterxml.jackson.core.JsonParser;
 import com.nextbreakpoint.blueprint.common.core.Environment;
 import com.nextbreakpoint.blueprint.common.core.IOUtils;
 import com.nextbreakpoint.blueprint.common.core.Message;
@@ -15,6 +16,7 @@ import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.json.jackson.DatabindCodec;
 import io.vertx.ext.web.handler.LoggerFormat;
 import io.vertx.ext.web.openapi.RouterBuilder;
 import io.vertx.kafka.client.common.TopicPartition;
@@ -47,7 +49,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -86,6 +87,8 @@ public class Verticle extends AbstractVerticle {
             RxJavaHooks.setOnComputationScheduler(s -> RxHelper.scheduler(vertx));
             RxJavaHooks.setOnNewThreadScheduler(s -> RxHelper.blockingScheduler(vertx));
             RxJavaHooks.setOnIOScheduler(s -> RxHelper.blockingScheduler(vertx));
+
+            DatabindCodec.mapper().configure(JsonParser.Feature.IGNORE_UNDEFINED, true);
 
             vertx.deployVerticle(new Verticle(), new DeploymentOptions().setConfig(config));
         } catch (Exception e) {
@@ -249,20 +252,12 @@ public class Verticle extends AbstractVerticle {
                 continue;
             }
 
-            CountDownLatch latch = new CountDownLatch(1);
-
-            Throwable[] error = new Throwable[] { null };
-
-            handler.handle(message, (recordAndMessage, result) -> latch.countDown(), (recordAndMessage, err) -> { error[0] = err; latch.countDown(); });
-
             try {
-                latch.await();
-            } finally {
-                if (error[0] != null) {
-                    suspendedPartitions.add(topicPartition);
+                handler.handleBlocking(message);
+            } catch (Exception e) {
+                suspendedPartitions.add(topicPartition);
 
-                    retryPartition(eventConsumer, record, topicPartition);
-                }
+                retryPartition(eventConsumer, record, topicPartition);
             }
         }
     }

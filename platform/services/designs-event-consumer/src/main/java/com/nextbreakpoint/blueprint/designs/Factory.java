@@ -13,10 +13,11 @@ public class Factory {
         return TemplateHandler.<Message, Message, Void, Void>builder()
                 .withInputMapper(input -> input)
                 .withOutputMapper(output -> output)
-                .withController(new MessageAppendController(
+                .withController(new DesignCommandController(
                     store,
                     new AggregateUpdateRequestedMessageMapper(messageSource),
-                    new KafkaEmitter(producer, topic, 3)
+                    new KafkaEmitter(producer, topic, 3),
+                    ""
                 ))
                 .onSuccess(new MessageSuccessConsumer())
                 .onFailure(new MessageFailureConsumer())
@@ -27,10 +28,11 @@ public class Factory {
         return TemplateHandler.<Message, Message, Void, Void>builder()
                 .withInputMapper(input -> input)
                 .withOutputMapper(output -> output)
-                .withController(new MessageAppendController(
+                .withController(new DesignCommandController(
                     store,
                     new AggregateUpdateRequestedMessageMapper(messageSource),
-                    new KafkaEmitter(producer, topic, 3)
+                    new KafkaEmitter(producer, topic, 3),
+                        ""
                 ))
                 .onSuccess(new MessageSuccessConsumer())
                 .onFailure(new MessageFailureConsumer())
@@ -41,10 +43,11 @@ public class Factory {
         return TemplateHandler.<Message, Message, Void, Void>builder()
                 .withInputMapper(input -> input)
                 .withOutputMapper(output -> output)
-                .withController(new MessageAppendController(
+                .withController(new DesignCommandController(
                     store,
                     new AggregateUpdateRequestedMessageMapper(messageSource),
-                    new KafkaEmitter(producer, topic, 3)
+                    new KafkaEmitter(producer, topic, 3),
+                    ""
                 ))
                 .onSuccess(new MessageSuccessConsumer())
                 .onFailure(new MessageFailureConsumer())
@@ -85,10 +88,11 @@ public class Factory {
         return TemplateHandler.<Message, Message, Void, Void>builder()
                 .withInputMapper(input -> input)
                 .withOutputMapper(output -> output)
-                .withController(new MessageAppendController(
+                .withController(new DesignCommandController(
                         store,
                         new AggregateUpdateRequestedMessageMapper(messageSource),
-                        new KafkaEmitter(producer, topic, 3)
+                        new KafkaEmitter(producer, topic, 3),
+                        "SKIP_RENDERING"
                 ))
                 .onSuccess(new MessageSuccessConsumer())
                 .onFailure(new MessageFailureConsumer())

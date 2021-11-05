@@ -36,17 +36,23 @@ public class DesignAggregateUpdateCompletedController implements Controller<Mess
                 .flatMapObservable(this::onEventReceived)
                 .map(outputMapper::transform)
                 .flatMapSingle(emitter::onNext)
-                .reduce((r1, r2) -> null)
-                .toSingle();
+                .ignoreElements()
+                .toCompletable()
+                .toSingleDefault("")
+                .map(result -> null);
     }
 
     private Observable<TileRenderRequested> onEventReceived(AggregateUpdateCompleted event) {
-        return generateEvents(event, (short)0)
-                .concatWith(generateEvents(event, (short)1))
-                .concatWith(generateEvents(event, (short)2));
+        if ("SKIP_RENDERING".equalsIgnoreCase(event.getStatus())) {
+            return Observable.empty();
+        } else {
+            return generateEvents(event, 0)
+                    .concatWith(generateEvents(event, 1))
+                    .concatWith(generateEvents(event, 2));
+        }
     }
 
-    private Observable<TileRenderRequested> generateEvents(AggregateUpdateCompleted event, short level) {
+    private Observable<TileRenderRequested> generateEvents(AggregateUpdateCompleted event, int level) {
         return Observable.from(generateTiles(level))
                 .map(tile -> new TileRenderRequested(
                         event.getUuid(),

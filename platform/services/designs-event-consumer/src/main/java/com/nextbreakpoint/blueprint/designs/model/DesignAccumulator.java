@@ -1,8 +1,7 @@
 package com.nextbreakpoint.blueprint.designs.model;
 
-import java.util.Date;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class DesignAccumulator {
     private UUID uuid;
@@ -11,6 +10,7 @@ public class DesignAccumulator {
     private String status;
     private String checksum;
     private Date updated;
+    private Map<Integer, Tiles> tiles;
 
     public DesignAccumulator(
         UUID uuid,
@@ -18,7 +18,8 @@ public class DesignAccumulator {
         String json,
         String status,
         String checksum,
-        Date updated
+        Date updated,
+        Map<Integer, Tiles> tiles
     ) {
         this.uuid = uuid;
         this.evid = evid;
@@ -26,6 +27,7 @@ public class DesignAccumulator {
         this.status = status;
         this.checksum = checksum;
         this.updated = updated;
+        this.tiles = tiles;
     }
 
     public UUID getUuid() {
@@ -52,37 +54,14 @@ public class DesignAccumulator {
         return updated;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        DesignAccumulator that = (DesignAccumulator) o;
-        return Objects.equals(getUuid(), that.getUuid()) &&
-                Objects.equals(getEvid(), that.getEvid()) &&
-                Objects.equals(getJson(), that.getJson()) &&
-                Objects.equals(getStatus(), that.getStatus()) &&
-                Objects.equals(getChecksum(), that.getChecksum()) &&
-                Objects.equals(getUpdated(), that.getUpdated());
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(getUuid(), getEvid(), getJson(), getStatus(), getChecksum(), getUpdated());
-    }
-
-    @Override
-    public String toString() {
-        return "DesignChange{" +
-                "uuid='" + uuid + '\'' +
-                ", evid='" + evid + '\'' +
-                ", json='" + json + '\'' +
-                ", status='" + status + '\'' +
-                ", checksum='" + checksum + '\'' +
-                ", updated='" + updated + '\'' +
-                '}';
+    public Map<Integer, Tiles> getTiles() {
+        return tiles;
     }
 
     public Design toDesign() {
-        return new Design(uuid, evid, json, status, checksum, updated);
+        final List<Tiles> tiles = this.tiles.values().stream()
+                .sorted(Comparator.comparing(Tiles::getLevel))
+                .collect(Collectors.toList());
+        return new Design(uuid, evid, json, status, checksum, updated, tiles);
     }
 }

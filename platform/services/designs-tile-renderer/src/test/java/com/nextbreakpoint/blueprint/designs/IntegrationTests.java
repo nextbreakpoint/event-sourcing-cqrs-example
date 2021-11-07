@@ -251,6 +251,6 @@ public class IntegrationTests {
     }
 
     private static String createBucketKey(TileRenderRequested event) {
-        return String.format("%s/%d/%04d%04d.png", event.getUuid().toString(), event.getLevel(), event.getRow(), event.getCol());
+        return String.format("%s/%d/%04d%04d.png", event.getChecksum(), event.getLevel(), event.getRow(), event.getCol());
     }
 }

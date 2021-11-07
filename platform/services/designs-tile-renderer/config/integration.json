@@ -13,7 +13,7 @@
   "kafka_bootstrap_servers": "${KAFKA_HOST}:9093",
   "kafka_group_id": "designs-tile-renderer",
   "message_source": "service-designs",
-  "design_event_topic": "design-event",
+  "message_topic": "design-event",
 
   "max_execution_time_in_millis": "30000",
 

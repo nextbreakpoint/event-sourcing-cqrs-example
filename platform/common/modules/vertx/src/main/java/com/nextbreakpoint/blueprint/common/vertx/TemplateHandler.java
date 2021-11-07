@@ -2,15 +2,13 @@ package com.nextbreakpoint.blueprint.common.vertx;
 
 import com.nextbreakpoint.blueprint.common.core.Mapper;
 import io.vertx.core.Handler;
-import io.vertx.rxjava.core.RxHelper;
-import rx.Scheduler;
 import rx.Single;
 import rx.schedulers.Schedulers;
 
 import java.util.Objects;
 import java.util.function.BiConsumer;
 
-public class TemplateHandler<T, I, O, R> implements Handler<T>, EventHandler<T, R> {
+public class TemplateHandler<T, I, O, R> implements Handler<T>, MessageHandler<T, R> {
     private final Mapper<T, I> inputMapper;
     private final Mapper<O, R> outputMapper;
     private final Controller<I, O> controller;
@@ -32,7 +30,7 @@ public class TemplateHandler<T, I, O, R> implements Handler<T>, EventHandler<T, 
                 .map(inputMapper::transform)
                 .flatMap(controller::onNext)
                 .map(outputMapper::transform)
-                .observeOn(Schedulers.immediate())
+                .observeOn(Schedulers.io())
                 .subscribe(result -> successHandler.accept(message, result), err -> failureHandler.accept(message, err));
     }
 
@@ -43,7 +41,7 @@ public class TemplateHandler<T, I, O, R> implements Handler<T>, EventHandler<T, 
                 .map(inputMapper::transform)
                 .flatMap(controller::onNext)
                 .map(outputMapper::transform)
-                .observeOn(Schedulers.immediate())
+                .observeOn(Schedulers.io())
                 .toCompletable()
                 .doOnCompleted(() -> successHandler.accept(message, null))
                 .doOnError(err -> failureHandler.accept(message, err))

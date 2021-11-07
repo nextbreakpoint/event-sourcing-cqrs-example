@@ -35,5 +35,5 @@ data:
       "kafka_bootstrap_servers": "kafka:9092",
       "kafka_group_id": "designs-event-consumer",
       "message_source": "service-designs",
-      "design_event_topic": "design-event"
+      "message_topic": "design-event"
     }

@@ -1,6 +1,7 @@
 package com.nextbreakpoint.blueprint.designs.model;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -11,6 +12,7 @@ public class Design {
     private String status;
     private String checksum;
     private Date updated;
+    private List<Tiles> tiles;
 
     public Design(
         UUID uuid,
@@ -18,14 +20,16 @@ public class Design {
         String json,
         String status,
         String checksum,
-        Date updated
+        Date updated,
+        List<Tiles> tiles
     ) {
-        this.uuid = uuid;
-        this.evid = evid;
-        this.json = json;
-        this.status = status;
-        this.checksum = checksum;
-        this.updated = updated;
+        this.uuid = Objects.requireNonNull(uuid);
+        this.evid = Objects.requireNonNull(evid);
+        this.json = Objects.requireNonNull(json);
+        this.status = Objects.requireNonNull(status);
+        this.checksum = Objects.requireNonNull(checksum);
+        this.updated = Objects.requireNonNull(updated);
+        this.tiles = Objects.requireNonNull(tiles);
     }
 
     public UUID getUuid() {
@@ -52,33 +56,20 @@ public class Design {
         return updated;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Design that = (Design) o;
-        return Objects.equals(getUuid(), that.getUuid()) &&
-                Objects.equals(getEvid(), that.getEvid()) &&
-                Objects.equals(getJson(), that.getJson()) &&
-                Objects.equals(getStatus(), that.getStatus()) &&
-                Objects.equals(getChecksum(), that.getChecksum()) &&
-                Objects.equals(getUpdated(), that.getUpdated());
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(getUuid(), getEvid(), getJson(), getStatus(), getChecksum(), getUpdated());
+    public List<Tiles> getTiles() {
+        return tiles;
     }
 
     @Override
     public String toString() {
-        return "DesignChange{" +
+        return "Design{" +
                 "uuid='" + uuid + '\'' +
                 ", evid='" + evid + '\'' +
                 ", json='" + json + '\'' +
                 ", status='" + status + '\'' +
                 ", checksum='" + checksum + '\'' +
                 ", updated='" + updated + '\'' +
+                ", tiles='" + tiles + '\'' +
                 '}';
     }
 }

@@ -6,20 +6,17 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Objects;
 import java.util.UUID;
 
-public class AggregateUpdateRequested {
+public class TileAggregateUpdateRequested {
     private final UUID uuid;
     private final Long timestamp;
-    private final String status;
 
     @JsonCreator
-    public AggregateUpdateRequested(
+    public TileAggregateUpdateRequested(
         @JsonProperty("uuid") UUID uuid,
-        @JsonProperty("timestamp") Long timestamp,
-        @JsonProperty("status") String status
+        @JsonProperty("timestamp") Long timestamp
     ) {
         this.uuid = Objects.requireNonNull(uuid);
         this.timestamp = Objects.requireNonNull(timestamp);
-        this.status = status;
     }
 
     public UUID getUuid() {
@@ -28,9 +25,5 @@ public class AggregateUpdateRequested {
 
     public Long getTimestamp() {
         return timestamp;
-    }
-
-    public String getStatus() {
-        return status;
     }
 }

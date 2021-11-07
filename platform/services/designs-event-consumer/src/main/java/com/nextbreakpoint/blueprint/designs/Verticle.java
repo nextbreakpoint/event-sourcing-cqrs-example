@@ -14,12 +14,10 @@ import io.vertx.core.dns.AddressResolverOptions;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
-import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.json.jackson.DatabindCodec;
 import io.vertx.ext.web.handler.LoggerFormat;
 import io.vertx.ext.web.openapi.RouterBuilder;
-import io.vertx.kafka.client.common.TopicPartition;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.VertxPrometheusOptions;
 import io.vertx.rxjava.cassandra.CassandraClient;
@@ -34,8 +32,6 @@ import io.vertx.rxjava.ext.web.handler.CorsHandler;
 import io.vertx.rxjava.ext.web.handler.LoggerHandler;
 import io.vertx.rxjava.ext.web.handler.TimeoutHandler;
 import io.vertx.rxjava.kafka.client.consumer.KafkaConsumer;
-import io.vertx.rxjava.kafka.client.consumer.KafkaConsumerRecord;
-import io.vertx.rxjava.kafka.client.consumer.KafkaConsumerRecords;
 import io.vertx.rxjava.kafka.client.producer.KafkaProducer;
 import io.vertx.tracing.opentracing.OpenTracingOptions;
 import rx.Completable;
@@ -44,14 +40,10 @@ import rx.plugins.RxJavaHooks;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URL;
-import java.time.Duration;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 import static com.nextbreakpoint.blueprint.common.core.Headers.*;
@@ -120,11 +112,20 @@ public class Verticle extends AbstractVerticle {
                     logger.warn("Can't stop polling thread", e);
                 }
             }
+            if (pollingWihCompactionThread != null) {
+                try {
+                    pollingWihCompactionThread.interrupt();
+                    pollingWihCompactionThread.join();
+                } catch (InterruptedException e) {
+                    logger.warn("Can't stop polling thread with compaction", e);
+                }
+            }
             return null;
         });
     }
 
     private Thread pollingThread;
+    private Thread pollingWihCompactionThread;
 
     private void initServer(Promise<Void> promise) {
         try {
@@ -138,13 +139,19 @@ public class Verticle extends AbstractVerticle {
 
             final String originPattern = environment.resolve(config.getString("origin_pattern"));
 
-            final String eventTopic = environment.resolve(config.getString("design_event_topic"));
+            final String messageTopic = environment.resolve(config.getString("message_topic"));
 
             final String messageSource = environment.resolve(config.getString("message_source"));
 
             final KafkaProducer<String, String> kafkaProducer = KafkaClientFactory.createProducer(environment, vertx, config);
 
-            final KafkaConsumer<String, String> kafkaConsumer = KafkaClientFactory.createConsumer(environment, vertx, config);
+            final JsonObject consumerConfig1 = new JsonObject(config.getMap());
+            consumerConfig1.put("kafka_group_id", config.getValue("kafka_group_id", "test") + "-1");
+            final KafkaConsumer<String, String> kafkaConsumer1 = KafkaClientFactory.createConsumer(environment, vertx, consumerConfig1);
+
+            final JsonObject consumerConfig2 = new JsonObject(config.getMap());
+            consumerConfig2.put("kafka_group_id", config.getValue("kafka_group_id", "test") + "-2");
+            final KafkaConsumer<String, String> kafkaConsumer2 = KafkaClientFactory.createConsumer(environment, vertx, consumerConfig2);
 
             final Supplier<CassandraClient> supplier = () -> CassandraClientFactory.create(environment, vertx, config);
 
@@ -154,22 +161,38 @@ public class Verticle extends AbstractVerticle {
 
             final CorsHandler corsHandler = CorsHandlerFactory.createWithAll(originPattern, asList(AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN), asList(CONTENT_TYPE, X_XSRF_TOKEN));
 
-            final Map<String, EventHandler<Message, Void>> eventHandlers = new HashMap<>();
+            final Map<String, MessageHandler<Message, Void>> messageHandlers = new HashMap<>();
 
-            kafkaConsumer.subscribe(eventTopic);
+            final Map<String, MessageHandler<Message, Void>> messageWithCompactionHandlers = new HashMap<>();
 
-            eventHandlers.put(MessageType.DESIGN_INSERT_REQUESTED, createDesignInsertRequestedHandler(store, eventTopic, kafkaProducer, messageSource));
-            eventHandlers.put(MessageType.DESIGN_UPDATE_REQUESTED, createDesignUpdateRequestedHandler(store, eventTopic, kafkaProducer, messageSource));
-            eventHandlers.put(MessageType.DESIGN_DELETE_REQUESTED, createDesignDeleteRequestedHandler(store, eventTopic, kafkaProducer, messageSource));
+            final KafkaPolling kafkaPolling = new KafkaPolling();
 
-            eventHandlers.put(MessageType.AGGREGATE_UPDATE_REQUESTED, createAggregateUpdateRequestedHandler(store, eventTopic, kafkaProducer, messageSource));
-            eventHandlers.put(MessageType.AGGREGATE_UPDATE_COMPLETED, createAggregateUpdateCompletedHandler(store, eventTopic, kafkaProducer, messageSource));
+            kafkaConsumer1.subscribe(messageTopic);
 
-            eventHandlers.put(MessageType.TILE_RENDER_COMPLETED, createTileRenderCompletedHandler(store, eventTopic, kafkaProducer, messageSource));
+            kafkaConsumer2.subscribe(messageTopic);
 
-            pollingThread = new Thread(() -> pollRecordsLoop(kafkaConsumer, eventHandlers), "kafka-records-poll");
+            messageHandlers.put(MessageType.DESIGN_INSERT_REQUESTED, createDesignInsertRequestedHandler(store, messageTopic, kafkaProducer, messageSource));
+            messageHandlers.put(MessageType.DESIGN_UPDATE_REQUESTED, createDesignUpdateRequestedHandler(store, messageTopic, kafkaProducer, messageSource));
+            messageHandlers.put(MessageType.DESIGN_DELETE_REQUESTED, createDesignDeleteRequestedHandler(store, messageTopic, kafkaProducer, messageSource));
+
+            messageHandlers.put(MessageType.DESIGN_AGGREGATE_UPDATE_REQUESTED, createDesignAggregateUpdateRequestedHandler(store, messageTopic, kafkaProducer, messageSource));
+            messageHandlers.put(MessageType.DESIGN_AGGREGATE_UPDATE_COMPLETED, createDesignAggregateUpdateCompletedHandler(store, messageTopic, kafkaProducer, messageSource));
+
+            messageHandlers.put(MessageType.TILE_AGGREGATE_UPDATE_REQUESTED, createTileAggregateUpdateRequestedHandler(store, messageTopic, kafkaProducer, messageSource));
+//            messageHandlers.put(MessageType.TILE_AGGREGATE_UPDATE_COMPLETED, createTileAggregateUpdateCompletedHandler(store, messageTopic, kafkaProducer, messageSource));
+
+//            messageHandlers.put(MessageType.TILE_RENDER_REQUESTED, createTileRenderRequestedHandler(store, messageTopic, kafkaProducer, messageSource));
+            messageHandlers.put(MessageType.TILE_RENDER_COMPLETED, createTileRenderCompletedHandler(store, messageTopic, kafkaProducer, messageSource));
+
+            messageWithCompactionHandlers.put(MessageType.TILE_AGGREGATE_UPDATE_REQUIRED, createTileAggregateUpdateRequiredHandler(store, messageTopic, kafkaProducer, messageSource));
+
+            pollingThread = new Thread(() -> kafkaPolling.pollRecords(kafkaConsumer1, messageHandlers), "kafka-records-poll");
 
             pollingThread.start();
+
+            pollingWihCompactionThread = new Thread(() -> kafkaPolling.pollRecordsWithCompaction(kafkaConsumer2, messageWithCompactionHandlers), "kafka-records-poll-with-compaction");
+
+            pollingWihCompactionThread.start();
 
             final Handler<RoutingContext> openapiHandler = new OpenApiHandler(vertx.getDelegate(), executor, "openapi.yaml");
 
@@ -218,83 +241,5 @@ public class Verticle extends AbstractVerticle {
             logger.error("Failed to start server", e);
             promise.fail(e);
         }
-    }
-
-    private void pollRecordsLoop(KafkaConsumer<String, String> kafkaConsumer, Map<String, EventHandler<Message, Void>> eventHandlers) {
-        for (;;) {
-            try {
-                pollRecords(kafkaConsumer, eventHandlers);
-            } catch (Exception e) {
-                logger.error("Error occurred while consuming messages", e);
-            }
-        }
-    }
-
-    private void pollRecords(KafkaConsumer<String, String> eventConsumer, Map<String, EventHandler<Message, Void>> eventHandlers) {
-        KafkaConsumerRecords<String, String> records = pollRecords(eventConsumer);
-
-        processRecords(eventConsumer, eventHandlers, records);
-
-        commitOffsets(eventConsumer);
-    }
-
-    private void processRecords(KafkaConsumer<String, String> eventConsumer, Map<String, EventHandler<Message, Void>> eventHandlers, KafkaConsumerRecords<String, String> records) {
-        final Set<TopicPartition> suspendedPartitions = new HashSet<>();
-
-        for (int i = 0; i < records.size(); i++) {
-            final KafkaConsumerRecord<String, String> record = records.recordAt(i);
-
-            final TopicPartition topicPartition = new TopicPartition(record.topic(), record.partition());
-
-            if (suspendedPartitions.contains(topicPartition)) {
-                logger.debug("Skipping record of suspended partition (" + topicPartition + ")");
-
-                continue;
-            }
-
-            final Message message = Json.decodeValue(record.value(), Message.class);
-
-            logger.debug("Received message: " + message);
-
-            final EventHandler<Message, Void> handler = eventHandlers.get(message.getType());
-
-            if (handler == null) {
-                logger.warn("Ignoring message of type: " + message.getType());
-
-                continue;
-            }
-
-            try {
-                handler.handleBlocking(message);
-            } catch (Exception e) {
-                suspendedPartitions.add(topicPartition);
-
-                retryPartition(eventConsumer, record, topicPartition);
-            }
-        }
-    }
-
-    private KafkaConsumerRecords<String, String> pollRecords(KafkaConsumer<String, String> eventConsumer) {
-        return eventConsumer.rxPoll(Duration.ofSeconds(5))
-                .doOnError(err -> logger.error("Failed to consume records", err))
-                .toBlocking()
-                .value();
-    }
-
-    private void commitOffsets(KafkaConsumer<String, String> eventConsumer) {
-        eventConsumer.rxCommit()
-                .doOnError(err -> logger.error("Failed to commit offsets", err))
-                .toCompletable()
-                .await();
-    }
-
-    private void retryPartition(KafkaConsumer<String, String> eventConsumer, KafkaConsumerRecord<String, String> record, TopicPartition topicPartition) {
-        eventConsumer.rxPause(topicPartition)
-                .flatMap(x -> eventConsumer.rxSeek(topicPartition, record.offset()))
-                .delay(5, TimeUnit.SECONDS)
-                .flatMap(x -> eventConsumer.rxResume(topicPartition))
-                .doOnError(err -> logger.error("Failed to resume partition (" + topicPartition + ")", err))
-                .toCompletable()
-                .await();
     }
 }

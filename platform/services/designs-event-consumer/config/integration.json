@@ -20,5 +20,5 @@
   "kafka_bootstrap_servers": "${KAFKA_HOST}:9093",
   "kafka_group_id": "designs-event-consumer",
   "message_source": "service-designs",
-  "design_event_topic": "design-event"
+  "message_topic": "design-event"
 }

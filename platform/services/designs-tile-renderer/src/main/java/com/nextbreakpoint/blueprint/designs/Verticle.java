@@ -12,11 +12,9 @@ import io.vertx.core.dns.AddressResolverOptions;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
-import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.handler.LoggerFormat;
 import io.vertx.ext.web.openapi.RouterBuilder;
-import io.vertx.kafka.client.common.TopicPartition;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.VertxPrometheusOptions;
 import io.vertx.rxjava.core.*;
@@ -27,8 +25,6 @@ import io.vertx.rxjava.ext.web.handler.CorsHandler;
 import io.vertx.rxjava.ext.web.handler.LoggerHandler;
 import io.vertx.rxjava.ext.web.handler.TimeoutHandler;
 import io.vertx.rxjava.kafka.client.consumer.KafkaConsumer;
-import io.vertx.rxjava.kafka.client.consumer.KafkaConsumerRecord;
-import io.vertx.rxjava.kafka.client.consumer.KafkaConsumerRecords;
 import io.vertx.rxjava.kafka.client.producer.KafkaProducer;
 import io.vertx.tracing.opentracing.OpenTracingOptions;
 import rx.Completable;
@@ -43,14 +39,10 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
-import java.time.Duration;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 import static com.nextbreakpoint.blueprint.common.core.Headers.*;
 import static com.nextbreakpoint.blueprint.designs.Factory.createTileRenderRequestedHandler;
@@ -139,15 +131,13 @@ public class Verticle extends AbstractVerticle {
 
             final String s3Bucket = environment.resolve(config.getString("s3_bucket"));
 
-            final String eventTopic = environment.resolve(config.getString("design_event_topic"));
+            final String messageTopic = environment.resolve(config.getString("message_topic"));
 
             final String messageSource = environment.resolve(config.getString("message_source"));
 
             final KafkaProducer<String, String> kafkaProducer = KafkaClientFactory.createProducer(environment, vertx, config);
 
             final KafkaConsumer<String, String> kafkaConsumer = KafkaClientFactory.createConsumer(environment, vertx, config);
-
-            kafkaConsumer.subscribe(eventTopic);
 
             final AwsCredentialsProvider credentialsProvider = AwsCredentialsProviderChain.of(DefaultCredentialsProvider.create());
 
@@ -161,11 +151,15 @@ public class Verticle extends AbstractVerticle {
 
             final CorsHandler corsHandler = CorsHandlerFactory.createWithAll(originPattern, asList(AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN), asList(CONTENT_TYPE, X_XSRF_TOKEN));
 
-            final Map<String, EventHandler<Message, Void>> eventHandlers = new HashMap<>();
+            final Map<String, MessageHandler<Message, Void>> messageHandlers = new HashMap<>();
 
-            eventHandlers.put(MessageType.TILE_RENDER_REQUESTED, createTileRenderRequestedHandler(eventTopic, kafkaProducer, messageSource, workerExecutor, s3AsyncClient, s3Bucket));
+            messageHandlers.put(MessageType.TILE_RENDER_REQUESTED, createTileRenderRequestedHandler(messageTopic, kafkaProducer, messageSource, workerExecutor, s3AsyncClient, s3Bucket));
 
-            pollingThread = new Thread(() -> pollRecordsLoop(kafkaConsumer, eventHandlers), "kafka-records-poll");
+            kafkaConsumer.subscribe(messageTopic);
+
+            final KafkaPolling kafkaPolling = new KafkaPolling();
+
+            pollingThread = new Thread(() -> kafkaPolling.pollRecords(kafkaConsumer, messageHandlers), "kafka-records-poll");
 
             pollingThread.start();
 
@@ -216,84 +210,6 @@ public class Verticle extends AbstractVerticle {
             logger.error("Failed to start server", e);
             promise.fail(e);
         }
-    }
-
-    private void pollRecordsLoop(KafkaConsumer<String, String> kafkaConsumer, Map<String, EventHandler<Message, Void>> eventHandlers) {
-            for (;;) {
-                try {
-                    pollRecords(kafkaConsumer, eventHandlers);
-                } catch (Exception e) {
-                    logger.error("Error occurred while consuming messages", e);
-                }
-            }
-    }
-
-    private void pollRecords(KafkaConsumer<String, String> eventConsumer, Map<String, EventHandler<Message, Void>> eventHandlers) {
-        KafkaConsumerRecords<String, String> records = pollRecords(eventConsumer);
-
-        processRecords(eventConsumer, eventHandlers, records);
-
-        commitOffsets(eventConsumer);
-    }
-
-    private void processRecords(KafkaConsumer<String, String> eventConsumer, Map<String, EventHandler<Message, Void>> eventHandlers, KafkaConsumerRecords<String, String> records) {
-        final Set<TopicPartition> suspendedPartitions = new HashSet<>();
-
-        for (int i = 0; i < records.size(); i++) {
-            final KafkaConsumerRecord<String, String> record = records.recordAt(i);
-
-            final TopicPartition topicPartition = new TopicPartition(record.topic(), record.partition());
-
-            if (suspendedPartitions.contains(topicPartition)) {
-                logger.debug("Skipping record of suspended partition (" + topicPartition + ")");
-
-                continue;
-            }
-
-            final Message message = Json.decodeValue(record.value(), Message.class);
-
-            logger.debug("Received message: " + message);
-
-            final EventHandler<Message, Void> handler = eventHandlers.get(message.getType());
-
-            if (handler == null) {
-                logger.warn("Ignoring message of type: " + message.getType());
-
-                continue;
-            }
-
-            try {
-                handler.handleBlocking(message);
-            } catch (Exception e) {
-                suspendedPartitions.add(topicPartition);
-
-                retryPartition(eventConsumer, record, topicPartition);
-            }
-        }
-    }
-
-    private KafkaConsumerRecords<String, String> pollRecords(KafkaConsumer<String, String> eventConsumer) {
-        return eventConsumer.rxPoll(Duration.ofSeconds(5))
-                .doOnError(err -> logger.error("Failed to consume records", err))
-                .toBlocking()
-                .value();
-    }
-
-    private void commitOffsets(KafkaConsumer<String, String> eventConsumer) {
-        eventConsumer.rxCommit()
-                .doOnError(err -> logger.error("Failed to commit offsets", err))
-                .toCompletable()
-                .await();
-    }
-
-    private void retryPartition(KafkaConsumer<String, String> eventConsumer, KafkaConsumerRecord<String, String> record, TopicPartition topicPartition) {
-        eventConsumer.rxPause(topicPartition)
-                .flatMap(x -> eventConsumer.rxSeek(topicPartition, record.offset()))
-                .delay(5, TimeUnit.SECONDS)
-                .flatMap(x -> eventConsumer.rxResume(topicPartition))
-                .doOnError(err -> logger.error("Failed to resume partition (" + topicPartition + ")", err))
-                .toCompletable()
-                .await();
     }
 
     private WorkerExecutor createWorkerExecutor(Environment environment, JsonObject config) {

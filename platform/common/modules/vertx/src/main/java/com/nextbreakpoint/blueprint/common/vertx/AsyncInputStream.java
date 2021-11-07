@@ -1,9 +1,9 @@
 package com.nextbreakpoint.blueprint.common.vertx;
 
-import io.vertx.core.streams.ReadStream;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.streams.ReadStream;
 
 import java.io.IOException;
 import java.io.InputStream;

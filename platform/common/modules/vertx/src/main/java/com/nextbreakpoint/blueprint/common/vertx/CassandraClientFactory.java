@@ -1,9 +1,9 @@
 package com.nextbreakpoint.blueprint.common.vertx;
 
 import com.datastax.oss.driver.api.core.CqlSessionBuilder;
+import com.nextbreakpoint.blueprint.common.core.Environment;
 import io.vertx.cassandra.CassandraClientOptions;
 import io.vertx.core.json.JsonObject;
-import com.nextbreakpoint.blueprint.common.core.Environment;
 import io.vertx.rxjava.cassandra.CassandraClient;
 import io.vertx.rxjava.core.Vertx;
 

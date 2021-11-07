@@ -3,7 +3,7 @@ package com.nextbreakpoint.blueprint.designs.controllers;
 import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.Message;
-import com.nextbreakpoint.blueprint.common.events.AggregateUpdateRequested;
+import com.nextbreakpoint.blueprint.common.events.DesignAggregateUpdateRequested;
 import com.nextbreakpoint.blueprint.common.vertx.Controller;
 import com.nextbreakpoint.blueprint.common.vertx.KafkaEmitter;
 import com.nextbreakpoint.blueprint.designs.Store;
@@ -13,28 +13,26 @@ import java.util.Objects;
 import java.util.UUID;
 
 public class DesignCommandController implements Controller<Message, Void> {
-    private final Mapper<AggregateUpdateRequested, Message> mapper;
+    private final Mapper<DesignAggregateUpdateRequested, Message> mapper;
     private final KafkaEmitter emitter;
-    private final String status;
     private final Store store;
 
-    public DesignCommandController(Store store, Mapper<AggregateUpdateRequested, Message> mapper, KafkaEmitter emitter, String status) {
+    public DesignCommandController(Store store, Mapper<DesignAggregateUpdateRequested, Message> mapper, KafkaEmitter emitter) {
         this.store = Objects.requireNonNull(store);
         this.mapper = Objects.requireNonNull(mapper);
         this.emitter = Objects.requireNonNull(emitter);
-        this.status = Objects.requireNonNull(status);
     }
 
     @Override
     public Single<Void> onNext(Message message) {
         return Single.just(message)
-                .flatMap(this::onEventReceived)
+                .flatMap(this::onMessageReceived)
                 .map(mapper::transform)
                 .flatMap(emitter::onNext);
     }
 
-    private Single<AggregateUpdateRequested> onEventReceived(Message message) {
+    private Single<DesignAggregateUpdateRequested> onMessageReceived(Message message) {
         return store.appendMessage(Uuids.timeBased(), message)
-                .map(result -> new AggregateUpdateRequested(UUID.fromString(message.getPartitionKey()), message.getTimestamp(), status));
+                .map(result -> new DesignAggregateUpdateRequested(UUID.fromString(message.getPartitionKey()), message.getTimestamp()));
     }
 }

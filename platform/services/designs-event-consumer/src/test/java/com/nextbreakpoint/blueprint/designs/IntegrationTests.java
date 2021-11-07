@@ -10,7 +10,9 @@ import com.nextbreakpoint.blueprint.common.vertx.CassandraClientFactory;
 import com.nextbreakpoint.blueprint.common.vertx.KafkaClientFactory;
 import com.nextbreakpoint.blueprint.designs.model.DesignChangedEvent;
 import io.vertx.core.json.Json;
+import io.vertx.kafka.client.common.TopicPartition;
 import io.vertx.rxjava.cassandra.CassandraClient;
+import io.vertx.rxjava.core.RxHelper;
 import io.vertx.rxjava.core.Vertx;
 import io.vertx.rxjava.kafka.client.consumer.KafkaConsumer;
 import io.vertx.rxjava.kafka.client.consumer.KafkaConsumerRecord;
@@ -19,6 +21,8 @@ import io.vertx.rxjava.kafka.client.producer.KafkaProducer;
 import io.vertx.rxjava.kafka.client.producer.KafkaProducerRecord;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.*;
+import rx.plugins.RxJavaHooks;
+import rx.schedulers.Schedulers;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -37,8 +41,9 @@ public class IntegrationTests {
     private static final String DESIGN_INSERT_REQUESTED = "design-insert-requested";
     private static final String DESIGN_UPDATE_REQUESTED = "design-update-requested";
     private static final String DESIGN_DELETE_REQUESTED = "design-delete-requested";
-    private static final String AGGREGATE_UPDATE_REQUESTED = "aggregate-update-requested";
-    private static final String AGGREGATE_UPDATE_COMPLETED = "aggregate-update-completed";
+    private static final String AGGREGATE_UPDATE_REQUIRED = "design-aggregate-update-required";
+    private static final String AGGREGATE_UPDATE_REQUESTED = "design-aggregate-update-requested";
+    private static final String AGGREGATE_UPDATE_COMPLETED = "design-aggregate-update-completed";
     private static final String TILE_RENDER_REQUESTED = "tile-render-requested";
     private static final String TILE_RENDER_COMPLETED = "tile-render-completed";
     private static final String MESSAGE_SOURCE = "service-designs";
@@ -60,6 +65,10 @@ public class IntegrationTests {
     public static void before() throws IOException, InterruptedException {
         scenario.before();
 
+        RxJavaHooks.setOnComputationScheduler(s -> RxHelper.scheduler(vertx));
+        RxJavaHooks.setOnIOScheduler(s -> RxHelper.blockingScheduler(vertx));
+        RxJavaHooks.setOnNewThreadScheduler(s -> RxHelper.blockingScheduler(vertx));
+
         session = CassandraClientFactory.create(environment, vertx, scenario.createCassandraConfig());
 
         producer = KafkaClientFactory.createProducer(environment, vertx, scenario.createProducerConfig());
@@ -67,6 +76,25 @@ public class IntegrationTests {
         consumer = KafkaClientFactory.createConsumer(environment, vertx, scenario.createConsumerConfig("test"));
 
         consumer.rxSubscribe(Collections.singleton(TOPIC_NAME))
+                .subscribeOn(Schedulers.computation())
+                .doOnError(Throwable::printStackTrace)
+                .toBlocking()
+                .value();
+
+        consumer.rxPoll(Duration.ofSeconds(5))
+                .subscribeOn(Schedulers.computation())
+                .doOnError(Throwable::printStackTrace)
+                .toBlocking()
+                .value();
+
+        final Set<TopicPartition> partitions = consumer.rxAssignment()
+                .subscribeOn(Schedulers.computation())
+                .doOnError(Throwable::printStackTrace)
+                .toBlocking()
+                .value();
+
+        consumer.rxSeekToEnd(partitions)
+                .subscribeOn(Schedulers.computation())
                 .doOnError(Throwable::printStackTrace)
                 .toBlocking()
                 .value();
@@ -78,6 +106,7 @@ public class IntegrationTests {
     public static void after() throws IOException, InterruptedException {
         try {
             vertx.rxClose()
+                    .subscribeOn(Schedulers.computation())
                     .doOnError(Throwable::printStackTrace)
                     .toBlocking()
                     .value();
@@ -111,6 +140,7 @@ public class IntegrationTests {
             safelyClearMessages();
 
             producer.rxSend(createKafkaRecord(designInsertRequestedMessage))
+                    .subscribeOn(Schedulers.computation())
                     .doOnError(Throwable::printStackTrace)
                     .toBlocking()
                     .value();
@@ -151,7 +181,7 @@ public class IntegrationTests {
         }
 
         @Test
-        @Disabled
+//        @Disabled
         @DisplayName("Should update the design after receiving a DesignUpdateRequested event")
         public void shouldUpdateDesignWhenReceivingAMessage() {
             final UUID designId = UUID.randomUUID();
@@ -171,11 +201,13 @@ public class IntegrationTests {
             safelyClearMessages();
 
             producer.rxSend(createKafkaRecord(designInsertRequestedMessage))
+                    .subscribeOn(Schedulers.computation())
                     .doOnError(Throwable::printStackTrace)
                     .toBlocking()
                     .value();
 
             producer.rxSend(createKafkaRecord(designUpdateRequestedMessage))
+                    .subscribeOn(Schedulers.computation())
                     .doOnError(Throwable::printStackTrace)
                     .toBlocking()
                     .value();
@@ -222,7 +254,7 @@ public class IntegrationTests {
         }
 
         @Test
-        @Disabled
+//        @Disabled
         @DisplayName("Should delete the design after receiving a DesignDeleteRequested event")
         public void shouldDeleteDesignWhenReceivingAMessage() {
             final UUID designId = UUID.randomUUID();
@@ -242,11 +274,13 @@ public class IntegrationTests {
             safelyClearMessages();
 
             producer.rxSend(createKafkaRecord(designInsertRequestedMessage))
+                    .subscribeOn(Schedulers.computation())
                     .doOnError(Throwable::printStackTrace)
                     .toBlocking()
                     .value();
 
             producer.rxSend(createKafkaRecord(designDeleteRequestedMessage))
+                    .subscribeOn(Schedulers.computation())
                     .doOnError(Throwable::printStackTrace)
                     .toBlocking()
                     .value();
@@ -366,7 +400,7 @@ public class IntegrationTests {
     }
 
     private static void consumeRecords(KafkaConsumerRecords<String, String> consumerRecords) {
-        System.out.println("Received " + consumerRecords.size() + " messages");
+//        System.out.println("Received " + consumerRecords.size() + " messages");
 
         IntStream.range(0, consumerRecords.size())
                 .forEach(index -> safelyAppendRecord(consumerRecords.recordAt(index)));
@@ -377,6 +411,7 @@ public class IntegrationTests {
 
     private static void pollRecords() {
         consumer.rxPoll(Duration.ofSeconds(5))
+                .subscribeOn(Schedulers.computation())
                 .doOnSuccess(IntegrationTests::consumeRecords)
                 .doOnError(Throwable::printStackTrace)
                 .subscribe();
@@ -384,6 +419,7 @@ public class IntegrationTests {
 
     private static void commitOffsets() {
         consumer.rxCommit()
+                .subscribeOn(Schedulers.computation())
                 .doOnError(Throwable::printStackTrace)
                 .subscribe();
     }
@@ -399,6 +435,7 @@ public class IntegrationTests {
     @NotNull
     private List<Row> fetchMessages(UUID designId) {
         return session.rxPrepare("SELECT * FROM MESSAGE WHERE MESSAGE_PARTITIONKEY = ?")
+                .subscribeOn(Schedulers.computation())
                 .map(stmt -> stmt.bind(designId.toString()))
                 .flatMap(session::rxExecuteWithFullFetch)
                 .toBlocking()
@@ -408,6 +445,7 @@ public class IntegrationTests {
     @NotNull
     private List<Row> fetchDesign(UUID designId) {
         return session.rxPrepare("SELECT * FROM DESIGN WHERE DESIGN_UUID = ?")
+                .subscribeOn(Schedulers.computation())
                 .map(stmt -> stmt.bind(designId))
                 .flatMap(session::rxExecuteWithFullFetch)
                 .toBlocking()

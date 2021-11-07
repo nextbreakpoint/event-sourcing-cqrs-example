@@ -9,6 +9,8 @@ import com.nextbreakpoint.blueprint.common.events.TileRenderCompleted;
 import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
 import com.nextbreakpoint.blueprint.common.vertx.KafkaClientFactory;
 import io.vertx.core.json.Json;
+import io.vertx.kafka.client.common.TopicPartition;
+import io.vertx.rxjava.core.RxHelper;
 import io.vertx.rxjava.core.Vertx;
 import io.vertx.rxjava.kafka.client.consumer.KafkaConsumer;
 import io.vertx.rxjava.kafka.client.consumer.KafkaConsumerRecord;
@@ -18,6 +20,8 @@ import io.vertx.rxjava.kafka.client.producer.KafkaProducerRecord;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.Tag;
+import rx.plugins.RxJavaHooks;
+import rx.schedulers.Schedulers;
 import software.amazon.awssdk.auth.credentials.*;
 import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.regions.Region;
@@ -60,6 +64,10 @@ public class IntegrationTests {
     public static void before() throws IOException, InterruptedException {
         scenario.before();
 
+        RxJavaHooks.setOnComputationScheduler(s -> RxHelper.scheduler(vertx));
+        RxJavaHooks.setOnIOScheduler(s -> RxHelper.blockingScheduler(vertx));
+        RxJavaHooks.setOnNewThreadScheduler(s -> RxHelper.blockingScheduler(vertx));
+
         final Vertx vertx = new Vertx(io.vertx.core.Vertx.vertx());
 
         producer = KafkaClientFactory.createProducer(environment, vertx, scenario.createProducerConfig());
@@ -67,6 +75,19 @@ public class IntegrationTests {
         consumer = KafkaClientFactory.createConsumer(environment, vertx, scenario.createConsumerConfig("test"));
 
         consumer.rxSubscribe(Collections.singleton(TOPIC_NAME))
+                .subscribeOn(Schedulers.computation())
+                .doOnError(Throwable::printStackTrace)
+                .toBlocking()
+                .value();
+
+        final Set<TopicPartition> partitions = consumer.rxAssignment()
+                .subscribeOn(Schedulers.computation())
+                .doOnError(Throwable::printStackTrace)
+                .toBlocking()
+                .value();
+
+        consumer.rxSeekToEnd(partitions)
+                .subscribeOn(Schedulers.computation())
                 .doOnError(Throwable::printStackTrace)
                 .toBlocking()
                 .value();
@@ -75,18 +96,19 @@ public class IntegrationTests {
 
         final S3Client s3Client = createS3Client();
 
-        s3Client.listObjectsV2Paginator(ListObjectsV2Request.builder().bucket(BUCKET).build())
-                .stream()
-                .forEach(response -> deleteObjects(s3Client, BUCKET, response.contents()));
-
-        s3Client.deleteBucket(DeleteBucketRequest.builder().bucket(BUCKET).build());
-        s3Client.createBucket(CreateBucketRequest.builder().bucket(BUCKET).build());
+//        s3Client.listObjectsV2Paginator(ListObjectsV2Request.builder().bucket(BUCKET).build())
+//                .stream()
+//                .forEach(response -> deleteObjects(s3Client, BUCKET, response.contents()));
+//
+//        s3Client.deleteBucket(DeleteBucketRequest.builder().bucket(BUCKET).build());
+//        s3Client.createBucket(CreateBucketRequest.builder().bucket(BUCKET).build());
     }
 
     @AfterAll
     public static void after() throws IOException, InterruptedException {
         try {
             vertx.rxClose()
+                    .subscribeOn(Schedulers.computation())
                     .doOnError(Throwable::printStackTrace)
                     .toBlocking()
                     .value();
@@ -116,6 +138,7 @@ public class IntegrationTests {
             final Message tileRenderRequestedMessage1 = createTileRenderRequestedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), tileRenderRequested1);
 
             producer.rxSend(createKafkaRecord(tileRenderRequestedMessage1))
+                    .subscribeOn(Schedulers.computation())
                     .doOnError(Throwable::printStackTrace)
                     .toBlocking()
                     .value();
@@ -125,6 +148,7 @@ public class IntegrationTests {
             final Message tileRenderRequestedMessage2 = createTileRenderRequestedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), tileRenderRequested2);
 
             producer.rxSend(createKafkaRecord(tileRenderRequestedMessage2))
+                    .subscribeOn(Schedulers.computation())
                     .doOnError(Throwable::printStackTrace)
                     .toBlocking()
                     .value();
@@ -208,7 +232,7 @@ public class IntegrationTests {
     }
 
     private static void consumeRecords(KafkaConsumerRecords<String, String> consumerRecords) {
-        System.out.println("Received " + consumerRecords.size() + " messages");
+//        System.out.println("Received " + consumerRecords.size() + " messages");
 
         IntStream.range(0, consumerRecords.size())
                 .forEach(index -> safelyAppendRecord(consumerRecords.recordAt(index)));
@@ -219,6 +243,7 @@ public class IntegrationTests {
 
     private static void pollRecords() {
         consumer.rxPoll(Duration.ofSeconds(5))
+                .subscribeOn(Schedulers.computation())
                 .doOnSuccess(IntegrationTests::consumeRecords)
                 .doOnError(Throwable::printStackTrace)
                 .subscribe();
@@ -226,6 +251,7 @@ public class IntegrationTests {
 
     private static void commitOffsets() {
         consumer.rxCommit()
+                .subscribeOn(Schedulers.computation())
                 .doOnError(Throwable::printStackTrace)
                 .subscribe();
     }

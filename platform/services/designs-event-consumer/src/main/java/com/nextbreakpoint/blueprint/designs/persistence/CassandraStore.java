@@ -109,7 +109,7 @@ public class CassandraStore implements Store {
     }
 
     private Optional<DesignAccumulator> mergeEvents(List<Row> rows) {
-        return rows.stream().map(this::convertRow).reduce(this::mergeElement);
+        return rows.stream().map(this::convertRow).reduce(this::mergeElement).filter(accumulator -> accumulator.getStatus() != null);
     }
 
     private DesignAccumulator convertRow(Row row) {
@@ -186,6 +186,9 @@ public class CassandraStore implements Store {
     }
 
     private DesignAccumulator mergeElement(DesignAccumulator accumulator, DesignAccumulator element) {
+        if (accumulator.getStatus() == null) {
+            return accumulator;
+        }
         if (element.getStatus() == null && element.getTiles() == null) {
             return accumulator;
         }

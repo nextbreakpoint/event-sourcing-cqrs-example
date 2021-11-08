@@ -13,17 +13,20 @@ import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.rxjava.core.WorkerExecutor;
 import rx.Single;
+import rx.schedulers.Schedulers;
 
 import java.util.Objects;
+
+import static com.nextbreakpoint.blueprint.designs.common.Bucket.createBucketKey;
 
 public class TileRenderRequestedController implements Controller<TileRenderRequested, Void> {
     private final Logger logger = LoggerFactory.getLogger(TileRenderRequestedController.class.getName());
 
     private final Mapper<TileRenderCompleted, Message> mapper;
     private final KafkaEmitter emitter;
-    private final TileRenderer renderer;
     private final WorkerExecutor executor;
     private final S3Driver s3Driver;
+    private final TileRenderer renderer;
 
     public TileRenderRequestedController(Mapper<TileRenderCompleted, Message> mapper, KafkaEmitter emitter, WorkerExecutor executor, S3Driver s3Driver, TileRenderer renderer) {
         this.mapper = Objects.requireNonNull(mapper);
@@ -36,32 +39,27 @@ public class TileRenderRequestedController implements Controller<TileRenderReque
     @Override
     public Single<Void> onNext(TileRenderRequested event) {
         return Single.just(event)
+                .observeOn(Schedulers.computation())
                 .flatMap(this::onTileRenderRequested)
                 .map(mapper::transform)
                 .flatMap(emitter::onNext);
     }
 
     private Single<TileRenderCompleted> onTileRenderRequested(TileRenderRequested event) {
-        return renderImage(event)
-                .flatMap(result -> uploadImage(event, result))
-                .map(result -> createEvent(event, makeStatus(result)));
-    }
-
-    private String createBucketKey(TileRenderRequested event) {
-        return String.format("%s/%d/%04d%04d.png", event.getChecksum(), event.getLevel(), event.getRow(), event.getCol());
+        return renderImage(event).map(result -> createEvent(event, makeStatus(result)));
     }
 
     private String makeStatus(Result result) {
-        return result.getError().isPresent() ? "FAILED" : "COMPLETED";
+        return (result.getError().isPresent() || result.getImage().length == 0) ? "FAILED" : "COMPLETED";
     }
 
     private TileRenderCompleted createEvent(TileRenderRequested event, String status) {
-        return new TileRenderCompleted(event.getUuid(), event.getEvid(), event.getData(), event.getChecksum(), event.getLevel(), event.getRow(), event.getCol(), status);
+        return new TileRenderCompleted(event.getUuid(), event.getEvid(), event.getChecksum(), event.getLevel(), event.getRow(), event.getCol(), status);
     }
 
     private Single<Result> uploadImage(TileRenderRequested event, Result result) {
         return s3Driver.putObject(createBucketKey(event), result.getImage())
-                .doOnSuccess(response -> logger.info("Uploaded image " + createBucketKey(event)))
+                .doOnSuccess(response -> logger.info("Image uploaded " + createBucketKey(event)))
                 .map(response -> result);
     }
 
@@ -69,10 +67,14 @@ public class TileRenderRequestedController implements Controller<TileRenderReque
         return s3Driver.getObject(createBucketKey(event))
                 .doOnError(err -> logger.warn("Image not found " + createBucketKey(event)))
                 .map(image -> Result.of(image, null))
-                .onErrorResumeNext(err -> renderImageBlocking(event));
+                .doOnSuccess(result -> logger.info("Image cached " + createBucketKey(event)))
+                .onErrorResumeNext(err -> renderImageBlocking(event).flatMap(result -> uploadImage(event, result)));
     }
 
     private Single<Result> renderImageBlocking(TileRenderRequested event) {
-        return executor.rxExecuteBlocking(promise -> renderer.renderImage(event, promise), false);
+        return executor.rxExecuteBlocking(promise -> {
+            renderer.renderImage(event, promise);
+            logger.info("Image rendered " + createBucketKey(event));
+        }, false);
     }
 }

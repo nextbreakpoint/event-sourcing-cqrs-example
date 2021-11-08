@@ -11,6 +11,7 @@ import com.nextbreakpoint.blueprint.designs.Store;
 import rx.Single;
 
 import java.util.Objects;
+import java.util.UUID;
 
 public class TileRenderCompletedController implements Controller<Message, Void> {
     private final Mapper<Message, TileRenderCompleted> inputMapper;
@@ -29,18 +30,15 @@ public class TileRenderCompletedController implements Controller<Message, Void> 
     public Single<Void> onNext(Message message) {
         return Single.just(message)
                 .flatMap(this::onMessageReceived)
-                .map(inputMapper::transform)
-                .map(this::onTileRenderCompleted)
-                .map(outputMapper::transform)
                 .flatMap(emitter::onNext);
     }
 
     private Single<Message> onMessageReceived(Message message) {
-        return store.appendMessage(Uuids.timeBased(), message).map(result -> message);
-    }
+        final UUID evid = Uuids.timeBased();
+        return store.appendMessage(evid, message)
+                .map(result -> inputMapper.transform(message))
+                .map(event -> new TileAggregateUpdateRequired(event.getUuid(), evid, evid.timestamp()))
+                .map(outputMapper::transform);
 
-    private TileAggregateUpdateRequired onTileRenderCompleted(TileRenderCompleted event) {
-        //    Instant.ofEpochMilli(Uuids.unixTimestamp(evid))
-        return new TileAggregateUpdateRequired(event.getUuid(), event.getEvid().timestamp());
     }
 }

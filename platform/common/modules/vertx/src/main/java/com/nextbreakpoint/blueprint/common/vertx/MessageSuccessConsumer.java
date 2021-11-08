@@ -11,6 +11,6 @@ public class MessageSuccessConsumer implements BiConsumer<Message, Void> {
 
     @Override
     public void accept(Message message, Void ignore) {
-        logger.info("Message consumed " + message.getUuid());
+        logger.info("Message consumed " + message);
     }
 }

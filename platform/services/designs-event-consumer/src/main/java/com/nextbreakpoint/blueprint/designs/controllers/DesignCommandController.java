@@ -32,7 +32,8 @@ public class DesignCommandController implements Controller<Message, Void> {
     }
 
     private Single<DesignAggregateUpdateRequested> onMessageReceived(Message message) {
-        return store.appendMessage(Uuids.timeBased(), message)
-                .map(result -> new DesignAggregateUpdateRequested(UUID.fromString(message.getPartitionKey()), message.getTimestamp()));
+        final UUID evid = Uuids.timeBased();
+        return store.appendMessage(evid, message)
+                .map(result -> new DesignAggregateUpdateRequested(UUID.fromString(message.getPartitionKey()), evid, message.getTimestamp()));
     }
 }

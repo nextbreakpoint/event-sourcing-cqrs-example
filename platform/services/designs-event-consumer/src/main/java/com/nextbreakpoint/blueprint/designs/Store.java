@@ -10,5 +10,5 @@ import java.util.UUID;
 public interface Store {
     Single<Void> appendMessage(UUID uuid, Message message);
 
-    Single<Optional<Design>> updateDesign(UUID uuid);
+    Single<Optional<Design>> updateDesign(UUID uuid, UUID evid);
 }

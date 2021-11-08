@@ -1,47 +1,35 @@
 package com.nextbreakpoint.blueprint.common.events;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.Objects;
 import java.util.UUID;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class TileRenderCompleted {
+public class TileRenderAborted {
     private final UUID uuid;
-    private final UUID evid;
     private final String checksum;
     private final int level;
     private final int row;
     private final int col;
-    private final String status;
 
     @JsonCreator
-    public TileRenderCompleted(
-            @JsonProperty("uuid") UUID uuid,
-            @JsonProperty("evid") UUID evid,
-            @JsonProperty("checksum") String checksum,
-            @JsonProperty("level") int level,
-            @JsonProperty("row") int row,
-            @JsonProperty("col") int col,
-            @JsonProperty("status") String status
+    public TileRenderAborted(
+        @JsonProperty("uuid") UUID uuid,
+        @JsonProperty("checksum") String checksum,
+        @JsonProperty("level") int level,
+        @JsonProperty("row") int row,
+        @JsonProperty("col") int col
     ) {
         this.uuid = Objects.requireNonNull(uuid);
-        this.evid = Objects.requireNonNull(evid);
         this.checksum = Objects.requireNonNull(checksum);
         this.level = level;
         this.row = row;
         this.col = col;
-        this.status = Objects.requireNonNull(status);
     }
 
     public UUID getUuid() {
         return uuid;
-    }
-
-    public UUID getEvid() {
-        return evid;
     }
 
     public String getChecksum() {
@@ -58,9 +46,5 @@ public class TileRenderCompleted {
 
     public int getCol() {
         return col;
-    }
-
-    public String getStatus() {
-        return status;
     }
 }

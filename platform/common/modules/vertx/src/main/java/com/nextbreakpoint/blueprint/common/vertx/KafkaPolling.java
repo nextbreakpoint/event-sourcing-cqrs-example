@@ -86,7 +86,13 @@ public class KafkaPolling {
 
                 try {
                     if (suspendedPartitions.contains(topicPartition)) {
-                        logger.debug("Skipping record from suspended partition (" + topicPartition + ")");
+                        logger.debug("Skipping record " + record.key() + " from suspended partition (" + topicPartition + ")");
+
+                        continue;
+                    }
+
+                    if (record.value() == null) {
+                        logger.debug("Skipping tombstone record " + record.key() + " from partition (" + topicPartition + ")");
 
                         continue;
                     }
@@ -113,7 +119,7 @@ public class KafkaPolling {
 
             final long duration = System.currentTimeMillis() - timestamp;
 
-            if (duration > 30000) {
+            if (duration > 60000) {
                 break;
             }
         }
@@ -130,7 +136,13 @@ public class KafkaPolling {
 
         try {
             if (suspendedPartitions.contains(topicPartition)) {
-                logger.debug("Skipping record from suspended partition (" + topicPartition + ")");
+                logger.debug("Skipping record " + record.key() + " from suspended partition (" + topicPartition + ")");
+
+                return;
+            }
+
+            if (record.value() == null) {
+                logger.debug("Skipping tombstone record " + record.key() + " from partition (" + topicPartition + ")");
 
                 return;
             }
@@ -145,7 +157,7 @@ public class KafkaPolling {
                 return;
             }
 
-            logger.debug("Received message: " + message);
+//            logger.debug("Received message: " + message);
 
             handler.handleBlocking(message);
         } catch (Exception e) {

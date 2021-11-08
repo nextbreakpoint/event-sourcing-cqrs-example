@@ -34,6 +34,6 @@ public class TileAggregateUpdateRequiredController implements Controller<Message
     }
 
     private Single<TileAggregateUpdateRequested> onAggregateUpdateRequired(TileAggregateUpdateRequired event) {
-        return Single.just(new TileAggregateUpdateRequested(event.getUuid(), event.getTimestamp()));
+        return Single.just(new TileAggregateUpdateRequested(event.getUuid(), event.getEvid(), event.getTimestamp()));
     }
 }

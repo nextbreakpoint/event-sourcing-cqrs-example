@@ -30,18 +30,18 @@ public class TileAggregateUpdateRequestedController implements Controller<Messag
     public Single<Void> onNext(Message message) {
         return Single.just(message)
                 .map(inputMapper::transform)
-                .flatMapObservable(this::onAggregateUpdateRequested)
+                .flatMap(this::onAggregateUpdateRequested)
                 .map(outputMapper::transform)
-                .flatMapSingle(emitter::onNext)
-                .toCompletable()
-                .toSingleDefault("")
-                .map(result -> null);
+                .flatMap(emitter::onNext);
+//                .toCompletable()
+//                .toSingleDefault("")
+//                .map(result -> null);
     }
 
-    private Observable<TileAggregateUpdateCompleted> onAggregateUpdateRequested(TileAggregateUpdateRequested event) {
-        return store.updateDesign(event.getUuid())
-//                .map(result -> result.orElseThrow(() -> new RuntimeException("Design aggregate not found " + event.getUuid())))
-                .flatMapObservable(result -> Observable.from(result.map(Collections::singletonList).orElseGet(Collections::emptyList)))
-                .map(design -> new TileAggregateUpdateCompleted(design.getUuid(), event.getTimestamp()));
+    private Single<TileAggregateUpdateCompleted> onAggregateUpdateRequested(TileAggregateUpdateRequested event) {
+        return store.updateDesign(event.getUuid(), event.getEvid())
+                .map(result -> result.orElseThrow(() -> new RuntimeException("Design aggregate not found " + event.getUuid())))
+//                .flatMapObservable(result -> Observable.from(result.map(Collections::singletonList).orElseGet(Collections::emptyList)))
+                .map(design -> new TileAggregateUpdateCompleted(design.getUuid(), design.getEvid(), design.getUpdated().getTime()));
     }
 }

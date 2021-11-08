@@ -28,6 +28,11 @@ Export Kafka host
 
     export KAFKA_HOST=localhost
 
+Create Kafka topics
+
+     docker exec -it $(docker ps | grep kafka | awk '{print $1}') kafka-topics --bootstrap-server=localhost:9092 --create --topic design-event --config "retention.ms=604800000" --replication-factor=1 --partitions=16
+     docker exec -it $(docker ps | grep kafka | awk '{print $1}') kafka-topics --bootstrap-server=localhost:9092 --create --topic tiles-rendering-queue --config "cleanup.policy=compact" --config "delete.retention.ms=5000" --config "max.compaction.lag.ms=10000" --config "min.compaction.lag.ms=5000" --config "min.cleanable.dirty.ratio=0.1" --config "segment.ms=5000" --config "retention.ms=604800000" --replication-factor=1 --partitions=64
+
 Start services
 
     docker compose -f docker-compose-services.yaml -p services up -d

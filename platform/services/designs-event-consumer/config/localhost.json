@@ -20,5 +20,6 @@
   "kafka_bootstrap_servers": "${KAFKA_HOST}:9093",
   "kafka_group_id": "designs-event-consumer",
   "message_source": "service-designs",
-  "message_topic": "design-event"
+  "message_topic": "design-event",
+  "rendering_topic": "tiles-rendering-queue"
 }

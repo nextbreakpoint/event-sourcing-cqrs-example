@@ -131,9 +131,11 @@ public class Verticle extends AbstractVerticle {
 
             final String s3Bucket = environment.resolve(config.getString("s3_bucket"));
 
+            final String messageSource = environment.resolve(config.getString("message_source"));
+
             final String messageTopic = environment.resolve(config.getString("message_topic"));
 
-            final String messageSource = environment.resolve(config.getString("message_source"));
+            final String renderingTopic = environment.resolve(config.getString("rendering_topic"));
 
             final KafkaProducer<String, String> kafkaProducer = KafkaClientFactory.createProducer(environment, vertx, config);
 
@@ -155,7 +157,7 @@ public class Verticle extends AbstractVerticle {
 
             messageHandlers.put(MessageType.TILE_RENDER_REQUESTED, createTileRenderRequestedHandler(messageTopic, kafkaProducer, messageSource, workerExecutor, s3AsyncClient, s3Bucket));
 
-            kafkaConsumer.subscribe(messageTopic);
+            kafkaConsumer.subscribe(renderingTopic);
 
             final KafkaPolling kafkaPolling = new KafkaPolling();
 

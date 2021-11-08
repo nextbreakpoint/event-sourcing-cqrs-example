@@ -38,8 +38,9 @@ public class DesignAggregateUpdateRequestedController implements Controller<Mess
     }
 
     private Single<DesignAggregateUpdateCompleted> onAggregateUpdateRequested(DesignAggregateUpdateRequested event) {
-        return store.updateDesign(event.getUuid())
+        return store.updateDesign(event.getUuid(), event.getEvid())
                 .map(result -> result.orElseThrow(() -> new RuntimeException("Design aggregate not found " + event.getUuid())))
-                .map(design -> new DesignAggregateUpdateCompleted(design.getUuid(), event.getTimestamp(), design.getEvid(), design.getJson(), design.getChecksum(), design.getStatus()));
+//                .flatMapObservable(result -> Observable.from(result.map(Collections::singletonList).orElseGet(Collections::emptyList)))
+                .map(design -> new DesignAggregateUpdateCompleted(design.getUuid(), design.getUpdated().getTime(), design.getEvid(), design.getJson(), design.getChecksum(), design.getStatus()));
     }
 }

@@ -5,6 +5,7 @@ import com.jayway.restassured.RestAssured;
 import com.nextbreakpoint.blueprint.common.core.Checksum;
 import com.nextbreakpoint.blueprint.common.core.Environment;
 import com.nextbreakpoint.blueprint.common.core.Message;
+import com.nextbreakpoint.blueprint.common.events.DesignAbortRequested;
 import com.nextbreakpoint.blueprint.common.events.TileRenderCompleted;
 import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
 import com.nextbreakpoint.blueprint.common.vertx.KafkaClientFactory;
@@ -45,6 +46,7 @@ public class IntegrationTests {
     private static final String JSON_2 = "{\"metadata\":\"{\\\"translation\\\":{\\\"x\\\":0.0,\\\"y\\\":0.0,\\\"z\\\":1.0,\\\"w\\\":0.0},\\\"rotation\\\":{\\\"x\\\":0.0,\\\"y\\\":0.0,\\\"z\\\":0.0,\\\"w\\\":0.0},\\\"scale\\\":{\\\"x\\\":1.0,\\\"y\\\":1.0,\\\"z\\\":1.0,\\\"w\\\":1.0},\\\"point\\\":{\\\"x\\\":0.0,\\\"y\\\":0.0},\\\"julia\\\":false,\\\"options\\\":{\\\"showPreview\\\":false,\\\"showTraps\\\":false,\\\"showOrbit\\\":false,\\\"showPoint\\\":false,\\\"previewOrigin\\\":{\\\"x\\\":0.0,\\\"y\\\":0.0},\\\"previewSize\\\":{\\\"x\\\":0.25,\\\"y\\\":0.25}}}\",\"manifest\":\"{\\\"pluginId\\\":\\\"Mandelbrot\\\"}\",\"script\":\"fractal {\\norbit [-2.0 - 2.0i,+2.0 + 2.0i] [x,n] {\\nloop [0, 100] (mod2(x) > 40) {\\nx = x * x + w;\\n}\\n}\\ncolor [#FF000000] {\\npalette gradient {\\n[#FFFFFFFF > #FF000000, 100];\\n[#FF000000 > #FFFFFFFF, 100];\\n}\\ninit {\\nm = 100 * (1 + sin(mod(x) * 0.2 / pi));\\n}\\nrule (n > 0) [1] {\\ngradient[m - 1]\\n}\\n}\\n}\\n\"}";
     private static final String TILE_RENDER_REQUESTED = "tile-render-requested";
     private static final String TILE_RENDER_COMPLETED = "tile-render-completed";
+    private static final String DESIGN_ABORT_REQUESTED = "design-abort-requested";
     private static final String MESSAGE_SOURCE = "service-designs";
     private static final String TOPIC_NAME = "design-event";
     private static final String BUCKET = "tiles";
@@ -129,6 +131,7 @@ public class IntegrationTests {
         }
 
         @Test
+        @Disabled
         @DisplayName("Should render the image after receiving a tile TileRenderRequested event")
         public void shouldRenderImageWhenReceivingAMessage() {
             final UUID designId = UUID.randomUUID();
@@ -174,6 +177,34 @@ public class IntegrationTests {
             ResponseBytes<GetObjectResponse> response2 = getObject(s3Client, BUCKET, createBucketKey(tileRenderRequested2));
             assertThat(response2.asByteArray()).isNotEmpty();
         }
+
+        @Test
+        @DisplayName("Should abort design after receiving a tile DesignAbortRequested event")
+        public void shouldAbortRenderingWhenReceivingAMessage() {
+            final UUID designId = UUID.fromString("ea55b659-a6df-409c-9c5b-85ea067f0f38");
+
+            final DesignAbortRequested designAbortRequested1 = new DesignAbortRequested(designId, System.currentTimeMillis(), Checksum.of(JSON_1));
+
+            final Message designAbortRequestedMessage1 = createDesignAbortRequestedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), designAbortRequested1);
+
+            producer.rxSend(createKafkaRecord(designAbortRequestedMessage1))
+                    .subscribeOn(Schedulers.computation())
+                    .doOnError(Throwable::printStackTrace)
+                    .toBlocking()
+                    .value();
+
+//            final DesignAbortRequested designAbortRequested2 = new DesignAbortRequested(designId, System.currentTimeMillis(), Checksum.of(JSON_2));
+//
+//            final Message designAbortRequestedMessage2 = createDesignAbortRequestedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), designAbortRequested2);
+//
+//            producer.rxSend(createKafkaRecord(designAbortRequestedMessage2))
+//                    .subscribeOn(Schedulers.computation())
+//                    .doOnError(Throwable::printStackTrace)
+//                    .toBlocking()
+//                    .value();
+
+            safelyClearMessages();
+        }
     }
 
     private void assertExpectedTileRenderCompletedMessage(TileRenderRequested tileRenderRequested, Message actualMessage) {
@@ -197,6 +228,10 @@ public class IntegrationTests {
 
     private static Message createTileRenderRequestedMessage(UUID messageId, UUID partitionKey, long timestamp, TileRenderRequested event) {
         return new Message(messageId.toString(), TILE_RENDER_REQUESTED, Json.encode(event), "test", partitionKey.toString(), timestamp);
+    }
+
+    private static Message createDesignAbortRequestedMessage(UUID messageId, UUID partitionKey, long timestamp, DesignAbortRequested event) {
+        return new Message(messageId.toString(), DESIGN_ABORT_REQUESTED, Json.encode(event), "test", partitionKey.toString(), timestamp);
     }
 
     private static void pause(int millis) {

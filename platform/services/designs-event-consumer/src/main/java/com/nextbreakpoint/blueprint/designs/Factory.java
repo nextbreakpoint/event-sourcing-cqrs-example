@@ -4,6 +4,7 @@ import com.nextbreakpoint.blueprint.common.core.Message;
 import com.nextbreakpoint.blueprint.common.events.mappers.*;
 import com.nextbreakpoint.blueprint.common.vertx.*;
 import com.nextbreakpoint.blueprint.designs.controllers.*;
+import com.nextbreakpoint.blueprint.designs.common.Bucket;
 import io.vertx.rxjava.kafka.client.producer.KafkaProducer;
 
 public class Factory {
@@ -45,6 +46,20 @@ public class Factory {
                     store,
                     new DesignAggregateUpdateRequestedMessageMapper(messageSource),
                     new KafkaEmitter(producer, topic, 3)
+                ))
+                .onSuccess(new MessageSuccessConsumer())
+                .onFailure(new MessageFailureConsumer())
+                .build();
+    }
+
+    public static MessageHandler<Message, Void> createDesignAbortRequestedHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
+        return TemplateHandler.<Message, Message, Void, Void>builder()
+                .withInputMapper(input -> input)
+                .withOutputMapper(output -> output)
+                .withController(new DesignAbortRequestedController(
+                        new DesignAbortRequestedInputMapper(),
+                        new TileRenderAbortedMessageMapper(messageSource),
+                        new KafkaEmitter(producer, topic, 3)
                 ))
                 .onSuccess(new MessageSuccessConsumer())
                 .onFailure(new MessageFailureConsumer())
@@ -125,7 +140,11 @@ public class Factory {
         return TemplateHandler.<Message, Message, Void, Void>builder()
                 .withInputMapper(input -> input)
                 .withOutputMapper(output -> output)
-                .withController(new TileRenderRequestedController())
+                .withController(new TileRenderRequestedController(
+                        new TileRenderRequestedInputMapper(),
+                        new TileRenderRequestedMessageMapper(messageSource, Bucket::createBucketKey),
+                        new KafkaEmitter(producer, topic, 3)
+                ))
                 .onSuccess(new MessageSuccessConsumer())
                 .onFailure(new MessageFailureConsumer())
                 .build();
@@ -140,6 +159,19 @@ public class Factory {
                         new TileRenderCompletedInputMapper(),
                         new TileAggregateUpdateRequiredMessageMapper(messageSource),
                         new KafkaEmitter(producer, topic, 3)
+                ))
+                .onSuccess(new MessageSuccessConsumer())
+                .onFailure(new MessageFailureConsumer())
+                .build();
+    }
+
+    public static MessageHandler<Message, Void> createTileRenderAbortedHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
+        return TemplateHandler.<Message, Message, Void, Void>builder()
+                .withInputMapper(input -> input)
+                .withOutputMapper(output -> output)
+                .withController(new TileRenderAbortedController(
+                        new TileRenderAbortedInputMapper(),
+                        new TombstoneEmitter(producer, topic, 3)
                 ))
                 .onSuccess(new MessageSuccessConsumer())
                 .onFailure(new MessageFailureConsumer())

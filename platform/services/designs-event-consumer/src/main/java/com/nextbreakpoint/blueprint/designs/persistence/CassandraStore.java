@@ -38,7 +38,7 @@ public class CassandraStore implements Store {
 
     private static final String INSERT_DESIGN = "INSERT INTO DESIGN (DESIGN_UUID, DESIGN_EVID, DESIGN_DATA, DESIGN_STATUS, DESIGN_CHECKSUM, DESIGN_UPDATED, DESIGN_TILES) VALUES (?, ?, ?, ?, ?, ?, ?)";
     private static final String INSERT_MESSAGE = "INSERT INTO MESSAGE (MESSAGE_UUID, MESSAGE_EVID, MESSAGE_TYPE, MESSAGE_BODY, MESSAGE_SOURCE, MESSAGE_PARTITIONKEY, MESSAGE_TIMESTAMP) VALUES (?, ?, ?, ?, ?, ?, ?)";
-    private static final String SELECT_MESSAGES = "SELECT * FROM MESSAGE WHERE MESSAGE_PARTITIONKEY = ?";
+    private static final String SELECT_MESSAGES = "SELECT * FROM MESSAGE WHERE MESSAGE_PARTITIONKEY = ? AND MESSAGE_EVID <= ?";
 
     private Tiles TILES_EMPTY = new Tiles(0, 0, Collections.emptySet(), Collections.emptySet());
 
@@ -62,9 +62,9 @@ public class CassandraStore implements Store {
     }
 
     @Override
-    public Single<Optional<Design>> updateDesign(UUID uuid) {
+    public Single<Optional<Design>> updateDesign(UUID uuid, UUID evid) {
         return withSession()
-                .flatMap(session -> updateDesign(session, uuid))
+                .flatMap(session -> updateDesign(session, makeSelectMessagesParams(uuid, evid)))
                 .doOnError(err -> handleError(ERROR_INSERT_DESIGN, err));
     }
 
@@ -89,9 +89,9 @@ public class CassandraStore implements Store {
                 .map(rs -> null);
     }
 
-    private Single<Optional<Design>> updateDesign(CassandraClient session, UUID uuid) {
+    private Single<Optional<Design>> updateDesign(CassandraClient session, Object[] values) {
         return selectMessages
-                .map(pst -> pst.bind(uuid.toString()))
+                .map(pst -> pst.bind(values))
                 .flatMap(session::rxExecuteWithFullFetch)
                 .observeOn(Schedulers.io())
                 .map(this::mergeEvents)
@@ -196,14 +196,18 @@ public class CassandraStore implements Store {
             return new DesignAccumulator(accumulator.getUuid(), accumulator.getEvid(), accumulator.getJson(), accumulator.getStatus(), accumulator.getChecksum(), element.getUpdated(), createTilesMap(accumulator, element));
         }
         if ("DELETED".equals(element.getStatus())) {
-            return new DesignAccumulator(element.getUuid(), accumulator.getEvid(), accumulator.getJson(), "DELETED", accumulator.getChecksum(), element.getUpdated(), accumulator.getTiles());
+            return new DesignAccumulator(element.getUuid(), accumulator.getEvid(), accumulator.getJson(), element.getStatus(), accumulator.getChecksum(), element.getUpdated(), accumulator.getTiles());
         } else {
-            return new DesignAccumulator(element.getUuid(), accumulator.getEvid(), element.getJson(), "UPDATED", Checksum.of(element.getJson()), element.getUpdated(), accumulator.getTiles());
+            return new DesignAccumulator(element.getUuid(), accumulator.getEvid(), element.getJson(), element.getStatus(), Checksum.of(element.getJson()), element.getUpdated(), accumulator.getTiles());
         }
     }
 
     private Object[] makeAppendMessageParams(UUID evid, Message message) {
         return new Object[] { message.getUuid(), evid, message.getType(), message.getBody(), message.getSource(), message.getPartitionKey(), Instant.ofEpochMilli(message.getTimestamp()) };
+    }
+
+    private Object[] makeSelectMessagesParams(UUID uuid, UUID evid) {
+        return new Object[] { uuid.toString(), evid };
     }
 
     private Object[] makeDesignInsertParams(Design design, UserDefinedType levelType) {

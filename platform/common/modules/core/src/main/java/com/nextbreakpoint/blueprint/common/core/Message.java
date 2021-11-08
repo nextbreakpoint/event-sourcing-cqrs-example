@@ -54,13 +54,12 @@ public class Message {
 
     @Override
     public String toString() {
-        return "Message{" +
+        return "[ " +
                 "uuid='" + uuid + '\'' +
-                ", type='" + type + '\'' +
-                ", body='" + (body != null ? "[...]" : "") + '\'' +
-                ", source='" + source + '\'' +
                 ", partitionKey='" + partitionKey + '\'' +
                 ", timestamp=" + timestamp +
-                '}';
+                ", type='" + type + '\'' +
+                ", source='" + source + '\'' +
+                " ]";
     }
 }

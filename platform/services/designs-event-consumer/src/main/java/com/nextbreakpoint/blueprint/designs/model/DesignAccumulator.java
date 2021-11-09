@@ -9,6 +9,7 @@ public class DesignAccumulator {
     private String json;
     private String status;
     private String checksum;
+    private int levels;
     private Date updated;
     private Map<Integer, Tiles> tiles;
 
@@ -18,6 +19,7 @@ public class DesignAccumulator {
         String json,
         String status,
         String checksum,
+        int levels,
         Date updated,
         Map<Integer, Tiles> tiles
     ) {
@@ -26,6 +28,7 @@ public class DesignAccumulator {
         this.json = json;
         this.status = status;
         this.checksum = checksum;
+        this.levels = levels;
         this.updated = updated;
         this.tiles = tiles;
     }
@@ -50,6 +53,10 @@ public class DesignAccumulator {
         return checksum;
     }
 
+    public int getLevels() {
+        return levels;
+    }
+
     public Date getUpdated() {
         return updated;
     }
@@ -62,6 +69,6 @@ public class DesignAccumulator {
         final List<Tiles> tiles = this.tiles.values().stream()
                 .sorted(Comparator.comparing(Tiles::getLevel))
                 .collect(Collectors.toList());
-        return new Design(uuid, evid, json, status, checksum, updated, tiles);
+        return new Design(uuid, evid, json, status, checksum, levels, updated, tiles);
     }
 }

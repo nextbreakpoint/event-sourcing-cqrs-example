@@ -59,17 +59,21 @@ public class DesignAggregateUpdateCompletedController implements Controller<Mess
     }
 
     private Observable<TileRenderRequested> generateEvents(DesignAggregateUpdateCompleted event, int level) {
-        return Observable.from(generateTiles(level))
-                .map(tile -> new TileRenderRequested(
-                        Uuids.timeBased(),
-                        event.getUuid(),
-                        event.getEsid(),
-                        event.getData(),
-                        event.getChecksum(),
-                        tile.getLevel(),
-                        tile.getRow(),
-                        tile.getCol()
-                ));
+        if (event.getLevels() > level) {
+            return Observable.from(generateTiles(level))
+                    .map(tile -> new TileRenderRequested(
+                            Uuids.timeBased(),
+                            event.getUuid(),
+                            event.getEsid(),
+                            event.getData(),
+                            event.getChecksum(),
+                            tile.getLevel(),
+                            tile.getRow(),
+                            tile.getCol()
+                    ));
+        } else {
+            return Observable.empty();
+        }
     }
 
     private List<Tile> generateTiles(int level) {

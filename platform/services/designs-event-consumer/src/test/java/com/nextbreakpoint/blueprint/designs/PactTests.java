@@ -473,7 +473,7 @@ public class PactTests {
 
             final UUID designId = DESIGN_UUID_1;
 
-            final DesignInsertRequested designInsertEvent = new DesignInsertRequested(Uuids.timeBased(), designId, JSON_1);
+            final DesignInsertRequested designInsertEvent = new DesignInsertRequested(Uuids.timeBased(), designId, JSON_1, 3);
 
             final long messageTimestamp = System.currentTimeMillis();
 
@@ -512,7 +512,7 @@ public class PactTests {
 
             final UUID designId = DESIGN_UUID_2;
 
-            final DesignInsertRequested designInsertEvent = new DesignInsertRequested(Uuids.timeBased(), designId, JSON_1);
+            final DesignInsertRequested designInsertEvent = new DesignInsertRequested(Uuids.timeBased(), designId, JSON_1, 3);
 
             final long messageTimestamp = System.currentTimeMillis();
 

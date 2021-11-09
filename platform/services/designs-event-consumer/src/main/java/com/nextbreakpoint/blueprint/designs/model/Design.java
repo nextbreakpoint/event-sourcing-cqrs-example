@@ -6,13 +6,14 @@ import java.util.Objects;
 import java.util.UUID;
 
 public class Design {
-    private UUID uuid;
-    private UUID esid;
-    private String json;
-    private String status;
-    private String checksum;
-    private Date updated;
-    private List<Tiles> tiles;
+    private final UUID uuid;
+    private final UUID esid;
+    private final String json;
+    private final String status;
+    private final String checksum;
+    private final int levels;
+    private final Date updated;
+    private final List<Tiles> tiles;
 
     public Design(
         UUID uuid,
@@ -20,6 +21,7 @@ public class Design {
         String json,
         String status,
         String checksum,
+        int levels,
         Date updated,
         List<Tiles> tiles
     ) {
@@ -28,6 +30,7 @@ public class Design {
         this.json = Objects.requireNonNull(json);
         this.status = Objects.requireNonNull(status);
         this.checksum = Objects.requireNonNull(checksum);
+        this.levels = levels;
         this.updated = Objects.requireNonNull(updated);
         this.tiles = Objects.requireNonNull(tiles);
     }
@@ -52,6 +55,10 @@ public class Design {
         return checksum;
     }
 
+    public int getLevels() {
+        return levels;
+    }
+
     public Date getUpdated() {
         return updated;
     }
@@ -68,6 +75,7 @@ public class Design {
                 ", json='" + json + '\'' +
                 ", status='" + status + '\'' +
                 ", checksum='" + checksum + '\'' +
+                ", levels='" + levels + '\'' +
                 ", updated='" + updated + '\'' +
                 ", tiles='" + tiles + '\'' +
                 '}';

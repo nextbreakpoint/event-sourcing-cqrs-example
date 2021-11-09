@@ -12,6 +12,7 @@ public class DesignAggregateUpdateCompleted {
     private final UUID esid;
     private final String data;
     private final String checksum;
+    private final int levels;
     private final String status;
 
     @JsonCreator
@@ -21,6 +22,7 @@ public class DesignAggregateUpdateCompleted {
         @JsonProperty("esid") UUID esid,
         @JsonProperty("data") String data,
         @JsonProperty("checksum") String checksum,
+        @JsonProperty("levels") int levels,
         @JsonProperty("status") String status
     ) {
         this.evid = Objects.requireNonNull(evid);
@@ -28,6 +30,7 @@ public class DesignAggregateUpdateCompleted {
         this.esid = Objects.requireNonNull(esid);
         this.data = Objects.requireNonNull(data);
         this.checksum = Objects.requireNonNull(checksum);
+        this.levels = levels;
         this.status = status;
     }
 
@@ -49,6 +52,10 @@ public class DesignAggregateUpdateCompleted {
 
     public String getChecksum() {
         return checksum;
+    }
+
+    public int getLevels() {
+        return levels;
     }
 
     public String getStatus() {

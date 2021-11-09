@@ -10,16 +10,19 @@ public class DesignUpdateRequested {
     private final UUID evid;
     private final UUID uuid;
     private final String data;
+    private final int levels;
 
     @JsonCreator
     public DesignUpdateRequested(
         @JsonProperty("evid") UUID evid,
         @JsonProperty("uuid") UUID uuid,
-        @JsonProperty("data") String data
+        @JsonProperty("data") String data,
+        @JsonProperty("levels") int levels
     ) {
         this.evid = Objects.requireNonNull(evid);
         this.uuid = Objects.requireNonNull(uuid);
         this.data = Objects.requireNonNull(data);
+        this.levels = levels;
     }
 
     public UUID getEvid() {
@@ -32,5 +35,9 @@ public class DesignUpdateRequested {
 
     public String getData() {
         return data;
+    }
+
+    public int getLevels() {
+        return levels;
     }
 }

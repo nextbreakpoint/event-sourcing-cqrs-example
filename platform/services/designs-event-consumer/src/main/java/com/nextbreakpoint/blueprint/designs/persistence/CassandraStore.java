@@ -38,7 +38,7 @@ public class CassandraStore implements Store {
     private static final String ERROR_FIND_DESIGN = "An error occurred while fetching a design";
 
     private static final String SELECT_DESIGN = "SELECT * FROM DESIGN WHERE DESIGN_UUID = ?";
-    private static final String INSERT_DESIGN = "INSERT INTO DESIGN (DESIGN_UUID, DESIGN_ESID, DESIGN_DATA, DESIGN_STATUS, DESIGN_CHECKSUM, DESIGN_UPDATED, DESIGN_TILES) VALUES (?, ?, ?, ?, ?, ?, ?)";
+    private static final String INSERT_DESIGN = "INSERT INTO DESIGN (DESIGN_UUID, DESIGN_ESID, DESIGN_DATA, DESIGN_STATUS, DESIGN_CHECKSUM, DESIGN_LEVELS, DESIGN_UPDATED, DESIGN_TILES) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
     private static final String INSERT_MESSAGE = "INSERT INTO MESSAGE (MESSAGE_UUID, MESSAGE_ESID, MESSAGE_TYPE, MESSAGE_BODY, MESSAGE_SOURCE, MESSAGE_PARTITIONKEY, MESSAGE_TIMESTAMP) VALUES (?, ?, ?, ?, ?, ?, ?)";
     private static final String SELECT_MESSAGES = "SELECT * FROM MESSAGE WHERE MESSAGE_PARTITIONKEY = ? AND MESSAGE_ESID <= ?";
 
@@ -142,22 +142,22 @@ public class CassandraStore implements Store {
         switch (type) {
             case MessageType.DESIGN_INSERT_REQUESTED: {
                 DesignInsertRequested event = Json.decodeValue(body, DesignInsertRequested.class);
-                return new DesignAccumulator(event.getUuid(), esid, event.getData(), "CREATED", Checksum.of(event.getData()), new Date(esid.timestamp()), createTilesMap());
+                return new DesignAccumulator(event.getUuid(), esid, event.getData(), "CREATED", Checksum.of(event.getData()), event.getLevels(), new Date(esid.timestamp()), createTilesMap());
             }
             case MessageType.DESIGN_UPDATE_REQUESTED: {
                 DesignUpdateRequested event = Json.decodeValue(body, DesignUpdateRequested.class);
-                return new DesignAccumulator(event.getUuid(), esid, event.getData(), "UPDATED", Checksum.of(event.getData()), new Date(esid.timestamp()), null);
+                return new DesignAccumulator(event.getUuid(), esid, event.getData(), "UPDATED", Checksum.of(event.getData()), event.getLevels(), new Date(esid.timestamp()), null);
             }
             case MessageType.DESIGN_DELETE_REQUESTED: {
                 DesignDeleteRequested event = Json.decodeValue(body, DesignDeleteRequested.class);
-                return new DesignAccumulator(event.getUuid(), esid, null, "DELETED", null, new Date(esid.timestamp()), null);
+                return new DesignAccumulator(event.getUuid(), esid, null, "DELETED", null, 0, new Date(esid.timestamp()), null);
             }
             case MessageType.TILE_RENDER_COMPLETED: {
                 TileRenderCompleted event = Json.decodeValue(body, TileRenderCompleted.class);
-                return new DesignAccumulator(null, null, null, null, null, new Date(esid.timestamp()), createTilesMap(event));
+                return new DesignAccumulator(null, null, null, null, null, 0, new Date(esid.timestamp()), createTilesMap(event));
             }
             default: {
-                return new DesignAccumulator(null, null, null, null, null, null, null);
+                return new DesignAccumulator(null, null, null, null, null, 0, null, null);
             }
         }
     }
@@ -169,7 +169,12 @@ public class CassandraStore implements Store {
         final String status = row.getString("DESIGN_STATUS");
         final String checksum = row.getString("DESIGN_CHECKSUM");
         final Instant updated = row.getInstant("DESIGN_UPDATED");
-        return new Design(uuid, esid, data, status, checksum, new Date(updated.toEpochMilli()), new ArrayList<>());
+        final int levels = row.getInt("DESIGN_LEVELS");
+        return new Design(uuid, esid, data, status, checksum, levels, toDate(updated), new ArrayList<>());
+    }
+
+    private Date toDate(Instant instant) {
+        return new Date(instant != null ? instant.toEpochMilli() : 0L);
     }
 
     private Map<Integer, Tiles> createTilesMap() {
@@ -226,12 +231,12 @@ public class CassandraStore implements Store {
             return accumulator;
         }
         if (element.getStatus() == null) {
-            return new DesignAccumulator(accumulator.getUuid(), accumulator.getEvid(), accumulator.getJson(), accumulator.getStatus(), accumulator.getChecksum(), element.getUpdated(), createTilesMap(accumulator, element));
+            return new DesignAccumulator(accumulator.getUuid(), accumulator.getEvid(), accumulator.getJson(), accumulator.getStatus(), accumulator.getChecksum(), accumulator.getLevels(), element.getUpdated(), createTilesMap(accumulator, element));
         }
         if ("DELETED".equals(element.getStatus())) {
-            return new DesignAccumulator(element.getUuid(), accumulator.getEvid(), accumulator.getJson(), element.getStatus(), accumulator.getChecksum(), element.getUpdated(), accumulator.getTiles());
+            return new DesignAccumulator(element.getUuid(), accumulator.getEvid(), accumulator.getJson(), element.getStatus(), accumulator.getChecksum(), accumulator.getLevels(), element.getUpdated(), accumulator.getTiles());
         } else {
-            return new DesignAccumulator(element.getUuid(), accumulator.getEvid(), element.getJson(), element.getStatus(), Checksum.of(element.getJson()), element.getUpdated(), accumulator.getTiles());
+            return new DesignAccumulator(element.getUuid(), accumulator.getEvid(), element.getJson(), element.getStatus(), Checksum.of(element.getJson()), element.getLevels(), element.getUpdated(), accumulator.getTiles());
         }
     }
 
@@ -249,7 +254,7 @@ public class CassandraStore implements Store {
 
     private Object[] makeDesignInsertParams(Design design, UserDefinedType levelType) {
         final Map<Integer, UdtValue> tiles = design.getTiles().stream().collect(Collectors.toMap(Tiles::getLevel, x -> createLevel(levelType, x)));
-        return new Object[] { design.getUuid(), design.getEsid(), design.getJson(), design.getStatus(), Checksum.of(design.getJson()), design.getUpdated().toInstant(), tiles};
+        return new Object[] { design.getUuid(), design.getEsid(), design.getJson(), design.getStatus(), Checksum.of(design.getJson()), design.getLevels(), design.getUpdated().toInstant(), tiles};
     }
 
     private UdtValue createLevel(UserDefinedType levelType, Tiles tiles) {

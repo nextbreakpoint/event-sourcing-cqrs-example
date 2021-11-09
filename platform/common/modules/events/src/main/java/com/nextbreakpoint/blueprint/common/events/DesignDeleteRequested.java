@@ -7,23 +7,23 @@ import java.util.Objects;
 import java.util.UUID;
 
 public class DesignDeleteRequested {
+    private final UUID evid;
     private final UUID uuid;
-    private final Long timestamp;
 
     @JsonCreator
     public DesignDeleteRequested(
-        @JsonProperty("uuid") UUID uuid,
-        @JsonProperty("timestamp") Long timestamp
+        @JsonProperty("evid") UUID evid,
+        @JsonProperty("uuid") UUID uuid
     ) {
+        this.evid = Objects.requireNonNull(evid);
         this.uuid = Objects.requireNonNull(uuid);
-        this.timestamp = Objects.requireNonNull(timestamp);
+    }
+
+    public UUID getEvid() {
+        return evid;
     }
 
     public UUID getUuid() {
         return uuid;
-    }
-
-    public Long getTimestamp() {
-        return timestamp;
     }
 }

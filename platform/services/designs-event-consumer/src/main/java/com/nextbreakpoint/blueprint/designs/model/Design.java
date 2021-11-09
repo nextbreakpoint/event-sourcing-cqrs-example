@@ -7,7 +7,7 @@ import java.util.UUID;
 
 public class Design {
     private UUID uuid;
-    private UUID evid;
+    private UUID esid;
     private String json;
     private String status;
     private String checksum;
@@ -16,7 +16,7 @@ public class Design {
 
     public Design(
         UUID uuid,
-        UUID evid,
+        UUID esid,
         String json,
         String status,
         String checksum,
@@ -24,7 +24,7 @@ public class Design {
         List<Tiles> tiles
     ) {
         this.uuid = Objects.requireNonNull(uuid);
-        this.evid = Objects.requireNonNull(evid);
+        this.esid = Objects.requireNonNull(esid);
         this.json = Objects.requireNonNull(json);
         this.status = Objects.requireNonNull(status);
         this.checksum = Objects.requireNonNull(checksum);
@@ -36,8 +36,8 @@ public class Design {
         return uuid;
     }
 
-    public UUID getEvid() {
-        return evid;
+    public UUID getEsid() {
+        return esid;
     }
 
     public String getJson() {
@@ -64,7 +64,7 @@ public class Design {
     public String toString() {
         return "Design{" +
                 "uuid='" + uuid + '\'' +
-                ", evid='" + evid + '\'' +
+                ", esid='" + esid + '\'' +
                 ", json='" + json + '\'' +
                 ", status='" + status + '\'' +
                 ", checksum='" + checksum + '\'' +

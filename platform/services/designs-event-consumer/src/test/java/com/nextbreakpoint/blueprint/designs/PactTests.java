@@ -16,6 +16,7 @@ import au.com.dius.pact.provider.junitsupport.Provider;
 import au.com.dius.pact.provider.junitsupport.State;
 import au.com.dius.pact.provider.junitsupport.loader.PactBroker;
 import com.datastax.oss.driver.api.core.cql.Row;
+import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.nextbreakpoint.blueprint.common.core.Environment;
 import com.nextbreakpoint.blueprint.common.core.Message;
 import com.nextbreakpoint.blueprint.common.core.MessageType;
@@ -472,7 +473,7 @@ public class PactTests {
 
             final UUID designId = DESIGN_UUID_1;
 
-            final DesignInsertRequested designInsertEvent = new DesignInsertRequested(designId, JSON_1, eventTimestamp);
+            final DesignInsertRequested designInsertEvent = new DesignInsertRequested(Uuids.timeBased(), designId, JSON_1);
 
             final long messageTimestamp = System.currentTimeMillis();
 
@@ -511,7 +512,7 @@ public class PactTests {
 
             final UUID designId = DESIGN_UUID_2;
 
-            final DesignInsertRequested designInsertEvent = new DesignInsertRequested(designId, JSON_1, eventTimestamp);
+            final DesignInsertRequested designInsertEvent = new DesignInsertRequested(Uuids.timeBased(), designId, JSON_1);
 
             final long messageTimestamp = System.currentTimeMillis();
 

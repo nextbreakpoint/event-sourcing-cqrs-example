@@ -98,10 +98,10 @@ public class IntegrationTests {
 
         final S3Client s3Client = createS3Client();
 
-//        s3Client.listObjectsV2Paginator(ListObjectsV2Request.builder().bucket(BUCKET).build())
-//                .stream()
-//                .forEach(response -> deleteObjects(s3Client, BUCKET, response.contents()));
-//
+        s3Client.listObjectsV2Paginator(ListObjectsV2Request.builder().bucket(BUCKET).build())
+                .stream()
+                .forEach(response -> deleteObjects(s3Client, BUCKET, response.contents()));
+
 //        s3Client.deleteBucket(DeleteBucketRequest.builder().bucket(BUCKET).build());
 //        s3Client.createBucket(CreateBucketRequest.builder().bucket(BUCKET).build());
     }
@@ -131,12 +131,11 @@ public class IntegrationTests {
         }
 
         @Test
-        @Disabled
         @DisplayName("Should render the image after receiving a tile TileRenderRequested event")
         public void shouldRenderImageWhenReceivingAMessage() {
             final UUID designId = UUID.randomUUID();
 
-            final TileRenderRequested tileRenderRequested1 = new TileRenderRequested(designId, Uuids.timeBased(), JSON_1, Checksum.of(JSON_1), 0, 0, 0);
+            final TileRenderRequested tileRenderRequested1 = new TileRenderRequested(Uuids.timeBased(), designId, Uuids.timeBased(), JSON_1, Checksum.of(JSON_1), 0, 0, 0);
 
             final Message tileRenderRequestedMessage1 = createTileRenderRequestedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), tileRenderRequested1);
 
@@ -146,7 +145,7 @@ public class IntegrationTests {
                     .toBlocking()
                     .value();
 
-            final TileRenderRequested tileRenderRequested2 = new TileRenderRequested(designId, Uuids.timeBased(), JSON_2, Checksum.of(JSON_2), 1, 1, 2);
+            final TileRenderRequested tileRenderRequested2 = new TileRenderRequested(Uuids.timeBased(), designId, Uuids.timeBased(), JSON_2, Checksum.of(JSON_2), 1, 1, 2);
 
             final Message tileRenderRequestedMessage2 = createTileRenderRequestedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), tileRenderRequested2);
 
@@ -179,11 +178,12 @@ public class IntegrationTests {
         }
 
         @Test
+        @Disabled
         @DisplayName("Should abort design after receiving a tile DesignAbortRequested event")
         public void shouldAbortRenderingWhenReceivingAMessage() {
             final UUID designId = UUID.fromString("ea55b659-a6df-409c-9c5b-85ea067f0f38");
 
-            final DesignAbortRequested designAbortRequested1 = new DesignAbortRequested(designId, System.currentTimeMillis(), Checksum.of(JSON_1));
+            final DesignAbortRequested designAbortRequested1 = new DesignAbortRequested(Uuids.timeBased(), designId, Checksum.of(JSON_1));
 
             final Message designAbortRequestedMessage1 = createDesignAbortRequestedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), designAbortRequested1);
 

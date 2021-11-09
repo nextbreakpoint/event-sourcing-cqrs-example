@@ -14,6 +14,7 @@ module com.nextbreakpoint.blueprint.designstilerender {
     requires rxjava;
     requires com.fasterxml.jackson.core;
     requires com.fasterxml.jackson.databind;
+    requires com.datastax.oss.driver.core;
     requires org.apache.logging.log4j;
     requires java.desktop;
     requires jdk.compiler;

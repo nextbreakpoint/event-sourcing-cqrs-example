@@ -7,27 +7,27 @@ import java.util.Objects;
 import java.util.UUID;
 
 public class DesignAbortRequested {
+    private final UUID evid;
     private final UUID uuid;
-    private final Long timestamp;
     private final String checksum;
 
     @JsonCreator
     public DesignAbortRequested(
+        @JsonProperty("evid") UUID evid,
         @JsonProperty("uuid") UUID uuid,
-        @JsonProperty("timestamp") Long timestamp,
         @JsonProperty("checksum") String checksum
     ) {
+        this.evid = Objects.requireNonNull(evid);
         this.uuid = Objects.requireNonNull(uuid);
-        this.timestamp = Objects.requireNonNull(timestamp);
         this.checksum = Objects.requireNonNull(checksum);
+    }
+
+    public UUID getEvid() {
+        return evid;
     }
 
     public UUID getUuid() {
         return uuid;
-    }
-
-    public Long getTimestamp() {
-        return timestamp;
     }
 
     public String getChecksum() {

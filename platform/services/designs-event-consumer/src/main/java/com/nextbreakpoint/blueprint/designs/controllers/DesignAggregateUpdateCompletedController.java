@@ -1,5 +1,6 @@
 package com.nextbreakpoint.blueprint.designs.controllers;
 
+import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.Message;
 import com.nextbreakpoint.blueprint.common.events.DesignAggregateUpdateCompleted;
@@ -60,8 +61,9 @@ public class DesignAggregateUpdateCompletedController implements Controller<Mess
     private Observable<TileRenderRequested> generateEvents(DesignAggregateUpdateCompleted event, int level) {
         return Observable.from(generateTiles(level))
                 .map(tile -> new TileRenderRequested(
+                        Uuids.timeBased(),
                         event.getUuid(),
-                        event.getEvid(),
+                        event.getEsid(),
                         event.getData(),
                         event.getChecksum(),
                         tile.getLevel(),

@@ -7,30 +7,30 @@ import java.util.Objects;
 import java.util.UUID;
 
 public class TileAggregateUpdateCompleted {
-    private final UUID uuid;
     private final UUID evid;
-    private final Long timestamp;
+    private final UUID uuid;
+    private final UUID esid;
 
     @JsonCreator
     public TileAggregateUpdateCompleted(
-        @JsonProperty("uuid") UUID uuid,
         @JsonProperty("evid") UUID evid,
-        @JsonProperty("timestamp") Long timestamp
+        @JsonProperty("uuid") UUID uuid,
+        @JsonProperty("esid") UUID esid
     ) {
-        this.uuid = Objects.requireNonNull(uuid);
         this.evid = Objects.requireNonNull(evid);
-        this.timestamp = Objects.requireNonNull(timestamp);
-    }
-
-    public UUID getUuid() {
-        return uuid;
+        this.uuid = Objects.requireNonNull(uuid);
+        this.esid = Objects.requireNonNull(esid);
     }
 
     public UUID getEvid() {
         return evid;
     }
 
-    public Long getTimestamp() {
-        return timestamp;
+    public UUID getUuid() {
+        return uuid;
+    }
+
+    public UUID getEsid() {
+        return esid;
     }
 }

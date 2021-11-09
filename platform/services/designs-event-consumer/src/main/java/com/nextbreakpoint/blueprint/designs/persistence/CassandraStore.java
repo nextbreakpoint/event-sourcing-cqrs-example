@@ -35,10 +35,12 @@ public class CassandraStore implements Store {
 
     private static final String ERROR_INSERT_MESSAGE = "An error occurred while inserting a message";
     private static final String ERROR_INSERT_DESIGN = "An error occurred while inserting a design";
+    private static final String ERROR_FIND_DESIGN = "An error occurred while fetching a design";
 
-    private static final String INSERT_DESIGN = "INSERT INTO DESIGN (DESIGN_UUID, DESIGN_EVID, DESIGN_DATA, DESIGN_STATUS, DESIGN_CHECKSUM, DESIGN_UPDATED, DESIGN_TILES) VALUES (?, ?, ?, ?, ?, ?, ?)";
-    private static final String INSERT_MESSAGE = "INSERT INTO MESSAGE (MESSAGE_UUID, MESSAGE_EVID, MESSAGE_TYPE, MESSAGE_BODY, MESSAGE_SOURCE, MESSAGE_PARTITIONKEY, MESSAGE_TIMESTAMP) VALUES (?, ?, ?, ?, ?, ?, ?)";
-    private static final String SELECT_MESSAGES = "SELECT * FROM MESSAGE WHERE MESSAGE_PARTITIONKEY = ? AND MESSAGE_EVID <= ?";
+    private static final String SELECT_DESIGN = "SELECT * FROM DESIGN WHERE DESIGN_UUID = ?";
+    private static final String INSERT_DESIGN = "INSERT INTO DESIGN (DESIGN_UUID, DESIGN_ESID, DESIGN_DATA, DESIGN_STATUS, DESIGN_CHECKSUM, DESIGN_UPDATED, DESIGN_TILES) VALUES (?, ?, ?, ?, ?, ?, ?)";
+    private static final String INSERT_MESSAGE = "INSERT INTO MESSAGE (MESSAGE_UUID, MESSAGE_ESID, MESSAGE_TYPE, MESSAGE_BODY, MESSAGE_SOURCE, MESSAGE_PARTITIONKEY, MESSAGE_TIMESTAMP) VALUES (?, ?, ?, ?, ?, ?, ?)";
+    private static final String SELECT_MESSAGES = "SELECT * FROM MESSAGE WHERE MESSAGE_PARTITIONKEY = ? AND MESSAGE_ESID <= ?";
 
     private Tiles TILES_EMPTY = new Tiles(0, 0, Collections.emptySet(), Collections.emptySet());
 
@@ -46,6 +48,7 @@ public class CassandraStore implements Store {
 
     private CassandraClient session;
 
+    private Single<PreparedStatement> selectDesign;
     private Single<PreparedStatement> insertDesign;
     private Single<PreparedStatement> insertMessage;
     private Single<PreparedStatement> selectMessages;
@@ -55,17 +58,24 @@ public class CassandraStore implements Store {
         this.supplier = Objects.requireNonNull(supplier);
     }
 
-    public Single<Void> appendMessage(UUID evid, Message message) {
+    public Single<Void> appendMessage(UUID esid, Message message) {
         return withSession()
-                .flatMap(session -> appendMessage(session, makeAppendMessageParams(evid, message)))
+                .flatMap(session -> appendMessage(session, makeAppendMessageParams(esid, message)))
                 .doOnError(err -> handleError(ERROR_INSERT_MESSAGE, err));
     }
 
     @Override
-    public Single<Optional<Design>> updateDesign(UUID uuid, UUID evid) {
+    public Single<Optional<Design>> updateDesign(UUID uuid, UUID esid) {
         return withSession()
-                .flatMap(session -> updateDesign(session, makeSelectMessagesParams(uuid, evid)))
+                .flatMap(session -> updateDesign(session, makeSelectMessagesParams(uuid, esid)))
                 .doOnError(err -> handleError(ERROR_INSERT_DESIGN, err));
+    }
+
+    @Override
+    public Single<Optional<Design>> findDesign(UUID uuid) {
+        return withSession()
+                .flatMap(session -> findDesign(session, makeSelectDesignParams(uuid)))
+                .doOnError(err -> handleError(ERROR_FIND_DESIGN, err));
     }
 
     private Single<CassandraClient> withSession() {
@@ -75,6 +85,7 @@ public class CassandraStore implements Store {
                 return Single.error(new RuntimeException("Cannot create session"));
             }
             metadata = session.rxMetadata();
+            selectDesign = session.rxPrepare(SELECT_DESIGN);
             insertDesign = session.rxPrepare(INSERT_DESIGN);
             insertMessage = session.rxPrepare(INSERT_MESSAGE);
             selectMessages = session.rxPrepare(SELECT_MESSAGES);
@@ -99,6 +110,14 @@ public class CassandraStore implements Store {
                 .flatMap(result -> result.map(accumulator -> insertDesign(session, accumulator.toDesign())).orElseGet(() -> Single.just(Optional.empty())));
     }
 
+    private Single<Optional<Design>> findDesign(CassandraClient session, Object[] values) {
+        return selectDesign
+                .map(pst -> pst.bind(values))
+                .flatMap(session::rxExecuteWithFullFetch)
+                .observeOn(Schedulers.io())
+                .map(this::convert);
+    }
+
     private Single<Optional<Design>> insertDesign(CassandraClient session, Design design) {
         return metadata
                 .map(metadata -> metadata.getKeyspace("designs").orElseThrow())
@@ -109,34 +128,48 @@ public class CassandraStore implements Store {
     }
 
     private Optional<DesignAccumulator> mergeEvents(List<Row> rows) {
-        return rows.stream().map(this::convertRow).reduce(this::mergeElement).filter(accumulator -> accumulator.getStatus() != null);
+        return rows.stream().map(this::convertRowToAccumulator).reduce(this::mergeElement).filter(accumulator -> accumulator.getStatus() != null);
     }
 
-    private DesignAccumulator convertRow(Row row) {
-        final UUID evid = row.getUuid("MESSAGE_EVID");
+    private Optional<Design> convert(List<Row> rows) {
+        return rows.stream().findFirst().map(this::convertRowToDesign);
+    }
+
+    private DesignAccumulator convertRowToAccumulator(Row row) {
+        final UUID esid = row.getUuid("MESSAGE_ESID");
         final String type = row.getString("MESSAGE_TYPE");
         final String body = row.getString("MESSAGE_BODY");
         switch (type) {
             case MessageType.DESIGN_INSERT_REQUESTED: {
                 DesignInsertRequested event = Json.decodeValue(body, DesignInsertRequested.class);
-                return new DesignAccumulator(event.getUuid(), evid, event.getJson(), "CREATED", Checksum.of(event.getJson()), new Date(event.getTimestamp()), createTilesMap());
+                return new DesignAccumulator(event.getUuid(), esid, event.getData(), "CREATED", Checksum.of(event.getData()), new Date(esid.timestamp()), createTilesMap());
             }
             case MessageType.DESIGN_UPDATE_REQUESTED: {
                 DesignUpdateRequested event = Json.decodeValue(body, DesignUpdateRequested.class);
-                return new DesignAccumulator(event.getUuid(), evid, event.getJson(), "UPDATED", Checksum.of(event.getJson()), new Date(event.getTimestamp()), null);
+                return new DesignAccumulator(event.getUuid(), esid, event.getData(), "UPDATED", Checksum.of(event.getData()), new Date(esid.timestamp()), null);
             }
             case MessageType.DESIGN_DELETE_REQUESTED: {
                 DesignDeleteRequested event = Json.decodeValue(body, DesignDeleteRequested.class);
-                return new DesignAccumulator(event.getUuid(), evid, null, "DELETED", null, new Date(event.getTimestamp()), null);
+                return new DesignAccumulator(event.getUuid(), esid, null, "DELETED", null, new Date(esid.timestamp()), null);
             }
             case MessageType.TILE_RENDER_COMPLETED: {
                 TileRenderCompleted event = Json.decodeValue(body, TileRenderCompleted.class);
-                return new DesignAccumulator(null, null, null, null, null, new Date(event.getEvid().timestamp()), createTilesMap(event));
+                return new DesignAccumulator(null, null, null, null, null, new Date(esid.timestamp()), createTilesMap(event));
             }
             default: {
                 return new DesignAccumulator(null, null, null, null, null, null, null);
             }
         }
+    }
+
+    private Design convertRowToDesign(Row row) {
+        final UUID uuid = row.getUuid("DESIGN_UUID");
+        final UUID esid = row.getUuid("DESIGN_ESID");
+        final String data = row.getString("DESIGN_DATA");
+        final String status = row.getString("DESIGN_STATUS");
+        final String checksum = row.getString("DESIGN_CHECKSUM");
+        final Instant updated = row.getInstant("DESIGN_UPDATED");
+        return new Design(uuid, esid, data, status, checksum, new Date(updated.toEpochMilli()), new ArrayList<>());
     }
 
     private Map<Integer, Tiles> createTilesMap() {
@@ -202,17 +235,21 @@ public class CassandraStore implements Store {
         }
     }
 
-    private Object[] makeAppendMessageParams(UUID evid, Message message) {
-        return new Object[] { message.getUuid(), evid, message.getType(), message.getBody(), message.getSource(), message.getPartitionKey(), Instant.ofEpochMilli(message.getTimestamp()) };
+    private Object[] makeAppendMessageParams(UUID esid, Message message) {
+        return new Object[] { message.getUuid(), esid, message.getType(), message.getBody(), message.getSource(), message.getPartitionKey(), Instant.ofEpochMilli(message.getTimestamp()) };
     }
 
-    private Object[] makeSelectMessagesParams(UUID uuid, UUID evid) {
-        return new Object[] { uuid.toString(), evid };
+    private Object[] makeSelectMessagesParams(UUID uuid, UUID esid) {
+        return new Object[] { uuid.toString(), esid };
+    }
+
+    private Object[] makeSelectDesignParams(UUID uuid) {
+        return new Object[] { uuid };
     }
 
     private Object[] makeDesignInsertParams(Design design, UserDefinedType levelType) {
         final Map<Integer, UdtValue> tiles = design.getTiles().stream().collect(Collectors.toMap(Tiles::getLevel, x -> createLevel(levelType, x)));
-        return new Object[] { design.getUuid(), design.getEvid(), design.getJson(), design.getStatus(), Checksum.of(design.getJson()), design.getUpdated().toInstant(), tiles};
+        return new Object[] { design.getUuid(), design.getEsid(), design.getJson(), design.getStatus(), Checksum.of(design.getJson()), design.getUpdated().toInstant(), tiles};
     }
 
     private UdtValue createLevel(UserDefinedType levelType, Tiles tiles) {

@@ -1,5 +1,6 @@
 package com.nextbreakpoint.blueprint.designs.controllers;
 
+import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.Message;
 import com.nextbreakpoint.blueprint.common.events.TileAggregateUpdateCompleted;
@@ -7,10 +8,8 @@ import com.nextbreakpoint.blueprint.common.events.TileAggregateUpdateRequested;
 import com.nextbreakpoint.blueprint.common.vertx.Controller;
 import com.nextbreakpoint.blueprint.common.vertx.KafkaEmitter;
 import com.nextbreakpoint.blueprint.designs.Store;
-import rx.Observable;
 import rx.Single;
 
-import java.util.Collections;
 import java.util.Objects;
 
 public class TileAggregateUpdateRequestedController implements Controller<Message, Void> {
@@ -39,9 +38,9 @@ public class TileAggregateUpdateRequestedController implements Controller<Messag
     }
 
     private Single<TileAggregateUpdateCompleted> onAggregateUpdateRequested(TileAggregateUpdateRequested event) {
-        return store.updateDesign(event.getUuid(), event.getEvid())
+        return store.updateDesign(event.getUuid(), event.getEsid())
                 .map(result -> result.orElseThrow(() -> new RuntimeException("Design aggregate not found " + event.getUuid())))
 //                .flatMapObservable(result -> Observable.from(result.map(Collections::singletonList).orElseGet(Collections::emptyList)))
-                .map(design -> new TileAggregateUpdateCompleted(design.getUuid(), design.getEvid(), design.getUpdated().getTime()));
+                .map(design -> new TileAggregateUpdateCompleted(Uuids.timeBased(), design.getUuid(), design.getEsid()));
     }
 }

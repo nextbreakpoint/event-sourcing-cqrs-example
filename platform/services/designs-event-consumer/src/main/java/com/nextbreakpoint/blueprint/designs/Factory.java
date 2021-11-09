@@ -57,9 +57,10 @@ public class Factory {
                 .withInputMapper(input -> input)
                 .withOutputMapper(output -> output)
                 .withController(new DesignAbortRequestedController(
-                        new DesignAbortRequestedInputMapper(),
-                        new TileRenderAbortedMessageMapper(messageSource),
-                        new KafkaEmitter(producer, topic, 3)
+                    store,
+                    new DesignAbortRequestedInputMapper(),
+                    new TileRenderAbortedMessageMapper(messageSource),
+                    new KafkaEmitter(producer, topic, 3)
                 ))
                 .onSuccess(new MessageSuccessConsumer())
                 .onFailure(new MessageFailureConsumer())
@@ -86,10 +87,10 @@ public class Factory {
                 .withInputMapper(input -> input)
                 .withOutputMapper(output -> output)
                 .withController(new DesignAggregateUpdateCompletedController(
-                        store,
-                        new DesignAggregateUpdateCompletedInputMapper(),
-                        new TileRenderRequestedMessageMapper(messageSource),
-                        new KafkaEmitter(producer, topic, 3)
+                    store,
+                    new DesignAggregateUpdateCompletedInputMapper(),
+                    new TileRenderRequestedMessageMapper(messageSource),
+                    new KafkaEmitter(producer, topic, 3)
                 ))
                 .onSuccess(new MessageSuccessConsumer())
                 .onFailure(new MessageFailureConsumer())
@@ -101,10 +102,10 @@ public class Factory {
                 .withInputMapper(input -> input)
                 .withOutputMapper(output -> output)
                 .withController(new TileAggregateUpdateRequiredController(
-                        store,
-                        new TileAggregateUpdateRequiredInputMapper(),
-                        new TileAggregateUpdateRequestedMessageMapper(messageSource),
-                        new KafkaEmitter(producer, topic, 3)
+                    store,
+                    new TileAggregateUpdateRequiredInputMapper(),
+                    new TileAggregateUpdateRequestedMessageMapper(messageSource),
+                    new KafkaEmitter(producer, topic, 3)
                 ))
                 .onSuccess(new MessageSuccessConsumer())
                 .onFailure(new MessageFailureConsumer())
@@ -116,10 +117,10 @@ public class Factory {
                 .withInputMapper(input -> input)
                 .withOutputMapper(output -> output)
                 .withController(new TileAggregateUpdateRequestedController(
-                        store,
-                        new TileAggregateUpdateRequestedInputMapper(),
-                        new TileAggregateUpdateCompletedMessageMapper(messageSource),
-                        new KafkaEmitter(producer, topic, 3)
+                    store,
+                    new TileAggregateUpdateRequestedInputMapper(),
+                    new TileAggregateUpdateCompletedMessageMapper(messageSource),
+                    new KafkaEmitter(producer, topic, 3)
                 ))
                 .onSuccess(new MessageSuccessConsumer())
                 .onFailure(new MessageFailureConsumer())
@@ -141,9 +142,9 @@ public class Factory {
                 .withInputMapper(input -> input)
                 .withOutputMapper(output -> output)
                 .withController(new TileRenderRequestedController(
-                        new TileRenderRequestedInputMapper(),
-                        new TileRenderRequestedMessageMapper(messageSource, Bucket::createBucketKey),
-                        new KafkaEmitter(producer, topic, 3)
+                    new TileRenderRequestedInputMapper(),
+                    new TileRenderRequestedMessageMapper(messageSource, Bucket::createBucketKey),
+                    new KafkaEmitter(producer, topic, 3)
                 ))
                 .onSuccess(new MessageSuccessConsumer())
                 .onFailure(new MessageFailureConsumer())
@@ -155,10 +156,10 @@ public class Factory {
                 .withInputMapper(input -> input)
                 .withOutputMapper(output -> output)
                 .withController(new TileRenderCompletedController(
-                        store,
-                        new TileRenderCompletedInputMapper(),
-                        new TileAggregateUpdateRequiredMessageMapper(messageSource),
-                        new KafkaEmitter(producer, topic, 3)
+                    store,
+                    new TileRenderCompletedInputMapper(),
+                    new TileAggregateUpdateRequiredMessageMapper(messageSource),
+                    new KafkaEmitter(producer, topic, 3)
                 ))
                 .onSuccess(new MessageSuccessConsumer())
                 .onFailure(new MessageFailureConsumer())
@@ -170,8 +171,8 @@ public class Factory {
                 .withInputMapper(input -> input)
                 .withOutputMapper(output -> output)
                 .withController(new TileRenderAbortedController(
-                        new TileRenderAbortedInputMapper(),
-                        new TombstoneEmitter(producer, topic, 3)
+                    new TileRenderAbortedInputMapper(),
+                    new TombstoneEmitter(producer, topic, 3)
                 ))
                 .onSuccess(new MessageSuccessConsumer())
                 .onFailure(new MessageFailureConsumer())

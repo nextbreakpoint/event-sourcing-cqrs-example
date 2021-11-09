@@ -34,10 +34,10 @@ public class TileRenderCompletedController implements Controller<Message, Void> 
     }
 
     private Single<Message> onMessageReceived(Message message) {
-        final UUID evid = Uuids.timeBased();
-        return store.appendMessage(evid, message)
+        final UUID esid = Uuids.timeBased();
+        return store.appendMessage(esid, message)
                 .map(result -> inputMapper.transform(message))
-                .map(event -> new TileAggregateUpdateRequired(event.getUuid(), evid, evid.timestamp()))
+                .map(event -> new TileAggregateUpdateRequired(Uuids.timeBased(), event.getUuid(), esid))
                 .map(outputMapper::transform);
 
     }

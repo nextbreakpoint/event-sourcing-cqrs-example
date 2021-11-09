@@ -8,7 +8,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface Store {
-    Single<Void> appendMessage(UUID uuid, Message message);
+    Single<Void> appendMessage(UUID esid, Message message);
 
-    Single<Optional<Design>> updateDesign(UUID uuid, UUID evid);
+    Single<Optional<Design>> updateDesign(UUID uuid, UUID esid);
+
+    Single<Optional<Design>> findDesign(UUID uuid);
 }

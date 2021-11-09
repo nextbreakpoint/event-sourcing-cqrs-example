@@ -1,5 +1,6 @@
 package com.nextbreakpoint.blueprint.designs.controllers;
 
+import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.Message;
 import com.nextbreakpoint.blueprint.common.events.TileRenderCompleted;
@@ -54,7 +55,7 @@ public class TileRenderRequestedController implements Controller<TileRenderReque
     }
 
     private TileRenderCompleted createEvent(TileRenderRequested event, String status) {
-        return new TileRenderCompleted(event.getUuid(), event.getEvid(), event.getChecksum(), event.getLevel(), event.getRow(), event.getCol(), status);
+        return new TileRenderCompleted(Uuids.timeBased(), event.getUuid(), event.getEsid(), event.getChecksum(), event.getLevel(), event.getRow(), event.getCol(), status);
     }
 
     private Single<Result> uploadImage(TileRenderRequested event, Result result) {

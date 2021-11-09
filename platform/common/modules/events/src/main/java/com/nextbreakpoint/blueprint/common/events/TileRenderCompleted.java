@@ -9,8 +9,9 @@ import java.util.UUID;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class TileRenderCompleted {
-    private final UUID uuid;
     private final UUID evid;
+    private final UUID uuid;
+    private final UUID esid;
     private final String checksum;
     private final int level;
     private final int row;
@@ -19,16 +20,18 @@ public class TileRenderCompleted {
 
     @JsonCreator
     public TileRenderCompleted(
-            @JsonProperty("uuid") UUID uuid,
-            @JsonProperty("evid") UUID evid,
-            @JsonProperty("checksum") String checksum,
-            @JsonProperty("level") int level,
-            @JsonProperty("row") int row,
-            @JsonProperty("col") int col,
-            @JsonProperty("status") String status
+        @JsonProperty("evid") UUID evid,
+        @JsonProperty("uuid") UUID uuid,
+        @JsonProperty("esid") UUID esid,
+        @JsonProperty("checksum") String checksum,
+        @JsonProperty("level") int level,
+        @JsonProperty("row") int row,
+        @JsonProperty("col") int col,
+        @JsonProperty("status") String status
     ) {
-        this.uuid = Objects.requireNonNull(uuid);
         this.evid = Objects.requireNonNull(evid);
+        this.uuid = Objects.requireNonNull(uuid);
+        this.esid = Objects.requireNonNull(esid);
         this.checksum = Objects.requireNonNull(checksum);
         this.level = level;
         this.row = row;
@@ -36,12 +39,16 @@ public class TileRenderCompleted {
         this.status = Objects.requireNonNull(status);
     }
 
+    public UUID getEvid() {
+        return evid;
+    }
+
     public UUID getUuid() {
         return uuid;
     }
 
-    public UUID getEvid() {
-        return evid;
+    public UUID getEsid() {
+        return esid;
     }
 
     public String getChecksum() {

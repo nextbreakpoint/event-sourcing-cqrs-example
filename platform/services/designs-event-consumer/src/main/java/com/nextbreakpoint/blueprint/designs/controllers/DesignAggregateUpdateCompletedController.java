@@ -2,7 +2,8 @@ package com.nextbreakpoint.blueprint.designs.controllers;
 
 import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.nextbreakpoint.blueprint.common.core.Mapper;
-import com.nextbreakpoint.blueprint.common.core.Message;
+import com.nextbreakpoint.blueprint.common.core.InputMessage;
+import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.events.DesignAggregateUpdateCompleted;
 import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
 import com.nextbreakpoint.blueprint.common.vertx.Controller;
@@ -17,13 +18,13 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public class DesignAggregateUpdateCompletedController implements Controller<Message, Void> {
-    private final Mapper<Message, DesignAggregateUpdateCompleted> inputMapper;
-    private final Mapper<TileRenderRequested, Message> outputMapper;
+public class DesignAggregateUpdateCompletedController implements Controller<InputMessage, Void> {
+    private final Mapper<InputMessage, DesignAggregateUpdateCompleted> inputMapper;
+    private final Mapper<TileRenderRequested, OutputMessage> outputMapper;
     private final KafkaEmitter emitter;
     private final Store store;
 
-    public DesignAggregateUpdateCompletedController(Store store, Mapper<Message, DesignAggregateUpdateCompleted> inputMapper, Mapper<TileRenderRequested, Message> outputMapper, KafkaEmitter emitter) {
+    public DesignAggregateUpdateCompletedController(Store store, Mapper<InputMessage, DesignAggregateUpdateCompleted> inputMapper, Mapper<TileRenderRequested, OutputMessage> outputMapper, KafkaEmitter emitter) {
         this.store = Objects.requireNonNull(store);
         this.inputMapper = Objects.requireNonNull(inputMapper);
         this.outputMapper = Objects.requireNonNull(outputMapper);
@@ -31,7 +32,7 @@ public class DesignAggregateUpdateCompletedController implements Controller<Mess
     }
 
     @Override
-    public Single<Void> onNext(Message message) {
+    public Single<Void> onNext(InputMessage message) {
         return Single.just(message)
                 .map(inputMapper::transform)
                 .flatMapObservable(this::onAggregateUpdateCompleted)

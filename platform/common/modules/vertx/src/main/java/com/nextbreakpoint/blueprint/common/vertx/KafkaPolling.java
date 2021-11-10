@@ -1,6 +1,6 @@
 package com.nextbreakpoint.blueprint.common.vertx;
 
-import com.nextbreakpoint.blueprint.common.core.Message;
+import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.core.Payload;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
@@ -20,7 +20,7 @@ public class KafkaPolling {
 
     private int pollingInterval = 30000;
 
-    public void pollRecords(KafkaConsumer<String, String> kafkaConsumer, Map<String, MessageHandler<Message, Void>> messageHandlers) {
+    public void pollRecords(KafkaConsumer<String, String> kafkaConsumer, Map<String, MessageHandler<InputMessage, Void>> messageHandlers) {
         for (;;) {
             try {
                 processRecords(kafkaConsumer, messageHandlers);
@@ -37,7 +37,7 @@ public class KafkaPolling {
         }
     }
 
-    public void pollRecordsWithCompaction(KafkaConsumer<String, String> kafkaConsumer, Map<String, MessageHandler<Message, Void>> messageHandlers) {
+    public void pollRecordsWithCompaction(KafkaConsumer<String, String> kafkaConsumer, Map<String, MessageHandler<InputMessage, Void>> messageHandlers) {
         for (;;) {
             try {
                 processRecordsWithCompaction(kafkaConsumer, messageHandlers);
@@ -54,7 +54,7 @@ public class KafkaPolling {
         }
     }
 
-    private void processRecords(KafkaConsumer<String, String> kafkaConsumer, Map<String, MessageHandler<Message, Void>> messageHandlers) {
+    private void processRecords(KafkaConsumer<String, String> kafkaConsumer, Map<String, MessageHandler<InputMessage, Void>> messageHandlers) {
         final List<KafkaConsumerRecord<String, String>> buffer = new ArrayList<>();
 
         final KafkaConsumerRecords<String, String> records = pollRecords(kafkaConsumer);
@@ -72,7 +72,7 @@ public class KafkaPolling {
         commitOffsets(kafkaConsumer);
     }
 
-    private void processRecordsWithCompaction(KafkaConsumer<String, String> kafkaConsumer, Map<String, MessageHandler<Message, Void>> messageHandlers) {
+    private void processRecordsWithCompaction(KafkaConsumer<String, String> kafkaConsumer, Map<String, MessageHandler<InputMessage, Void>> messageHandlers) {
         final Set<TopicPartition> suspendedPartitions = new HashSet<>();
 
         final Map<String, KafkaConsumerRecord<String, String>> buffer = new HashMap<>();
@@ -102,9 +102,9 @@ public class KafkaPolling {
 
                     final Payload payload = Json.decodeValue(record.value(), Payload.class);
 
-                    final Message message = new Message(record.key(), record.offset(), record.timestamp(), payload);
+                    final InputMessage message = new InputMessage(record.key(), record.offset(), payload, record.timestamp());
 
-                    final MessageHandler<Message, Void> handler = messageHandlers.get(payload.getType());
+                    final MessageHandler<InputMessage, Void> handler = messageHandlers.get(payload.getType());
 
                     if (handler == null) {
 //                        logger.warn("Ignoring message of type: " + message.getType());
@@ -136,7 +136,7 @@ public class KafkaPolling {
         commitOffsets(kafkaConsumer);
     }
 
-    private void processRecord(KafkaConsumer<String, String> kafkaConsumer, Map<String, MessageHandler<Message, Void>> messageHandlers, Set<TopicPartition> suspendedPartitions, KafkaConsumerRecord<String, String> record) {
+    private void processRecord(KafkaConsumer<String, String> kafkaConsumer, Map<String, MessageHandler<InputMessage, Void>> messageHandlers, Set<TopicPartition> suspendedPartitions, KafkaConsumerRecord<String, String> record) {
         final TopicPartition topicPartition = new TopicPartition(record.topic(), record.partition());
 
         try {
@@ -154,9 +154,9 @@ public class KafkaPolling {
 
             final Payload payload = Json.decodeValue(record.value(), Payload.class);
 
-            final Message message = new Message(record.key(), record.offset(), record.timestamp(), payload);
+            final InputMessage message = new InputMessage(record.key(), record.offset(), payload, record.timestamp());
 
-            final MessageHandler<Message, Void> handler = messageHandlers.get(payload.getType());
+            final MessageHandler<InputMessage, Void> handler = messageHandlers.get(payload.getType());
 
             if (handler == null) {
 //                logger.warn("Ignoring message of type: " + message.getType());

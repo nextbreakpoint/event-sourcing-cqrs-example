@@ -2,7 +2,8 @@ package com.nextbreakpoint.blueprint.designs.controllers;
 
 import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.nextbreakpoint.blueprint.common.core.Mapper;
-import com.nextbreakpoint.blueprint.common.core.Message;
+import com.nextbreakpoint.blueprint.common.core.InputMessage;
+import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.events.DesignAbortRequested;
 import com.nextbreakpoint.blueprint.common.events.TileRenderAborted;
 import com.nextbreakpoint.blueprint.common.vertx.Controller;
@@ -18,13 +19,13 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public class DesignAbortRequestedController implements Controller<Message, Void> {
-    private final Mapper<Message, DesignAbortRequested> inputMapper;
-    private final Mapper<TileRenderAborted, Message> outputMapper;
+public class DesignAbortRequestedController implements Controller<InputMessage, Void> {
+    private final Mapper<InputMessage, DesignAbortRequested> inputMapper;
+    private final Mapper<TileRenderAborted, OutputMessage> outputMapper;
     private final KafkaEmitter emitter;
     private Store store;
 
-    public DesignAbortRequestedController(Store store, Mapper<Message, DesignAbortRequested> inputMapper, Mapper<TileRenderAborted, Message> outputMapper, KafkaEmitter emitter) {
+    public DesignAbortRequestedController(Store store, Mapper<InputMessage, DesignAbortRequested> inputMapper, Mapper<TileRenderAborted, OutputMessage> outputMapper, KafkaEmitter emitter) {
         this.store = Objects.requireNonNull(store);
         this.inputMapper = Objects.requireNonNull(inputMapper);
         this.outputMapper = Objects.requireNonNull(outputMapper);
@@ -32,7 +33,7 @@ public class DesignAbortRequestedController implements Controller<Message, Void>
     }
 
     @Override
-    public Single<Void> onNext(Message message) {
+    public Single<Void> onNext(InputMessage message) {
         return Single.just(message)
                 .map(inputMapper::transform)
                 .flatMapObservable(this::onTileRenderAborted)

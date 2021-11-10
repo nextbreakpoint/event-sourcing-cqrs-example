@@ -2,10 +2,7 @@ package com.nextbreakpoint.blueprint.designs;
 
 import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.jayway.restassured.RestAssured;
-import com.nextbreakpoint.blueprint.common.core.Checksum;
-import com.nextbreakpoint.blueprint.common.core.Environment;
-import com.nextbreakpoint.blueprint.common.core.Message;
-import com.nextbreakpoint.blueprint.common.core.Payload;
+import com.nextbreakpoint.blueprint.common.core.*;
 import com.nextbreakpoint.blueprint.common.events.DesignAbortRequested;
 import com.nextbreakpoint.blueprint.common.events.TileRenderCompleted;
 import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
@@ -130,7 +127,7 @@ public class IntegrationTests {
 
             final TileRenderRequested tileRenderRequested1 = new TileRenderRequested(Uuids.timeBased(), designId, 0, JSON_1, Checksum.of(JSON_1), 0, 0, 0);
 
-            final Message tileRenderRequestedMessage1 = createTileRenderRequestedMessage(UUID.randomUUID(), createBucketKey(tileRenderRequested1), System.currentTimeMillis(), tileRenderRequested1);
+            final OutputMessage tileRenderRequestedMessage1 = createTileRenderRequestedMessage(UUID.randomUUID(), createBucketKey(tileRenderRequested1), System.currentTimeMillis(), tileRenderRequested1);
 
             producer.rxSend(createKafkaRecord(tileRenderRequestedMessage1))
                     .doOnError(Throwable::printStackTrace)
@@ -140,7 +137,7 @@ public class IntegrationTests {
 
             final TileRenderRequested tileRenderRequested2 = new TileRenderRequested(Uuids.timeBased(), designId, 1, JSON_2, Checksum.of(JSON_2), 1, 1, 2);
 
-            final Message tileRenderRequestedMessage2 = createTileRenderRequestedMessage(UUID.randomUUID(), createBucketKey(tileRenderRequested1), System.currentTimeMillis(), tileRenderRequested2);
+            final OutputMessage tileRenderRequestedMessage2 = createTileRenderRequestedMessage(UUID.randomUUID(), createBucketKey(tileRenderRequested1), System.currentTimeMillis(), tileRenderRequested2);
 
             producer.rxSend(createKafkaRecord(tileRenderRequestedMessage2))
                     .doOnError(Throwable::printStackTrace)
@@ -153,10 +150,10 @@ public class IntegrationTests {
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final List<Message> messages = safelyFindMessages(designId.toString(), MESSAGE_SOURCE, TILE_RENDER_COMPLETED);
+                        final List<InputMessage> messages = safelyFindMessages(designId.toString(), MESSAGE_SOURCE, TILE_RENDER_COMPLETED);
                         assertThat(messages).hasSize(2);
-                        Message message1 = messages.get(0);
-                        Message message2 = messages.get(1);
+                        InputMessage message1 = messages.get(0);
+                        InputMessage message2 = messages.get(1);
                         assertExpectedTileRenderCompletedMessage(tileRenderRequested1, message1);
                         assertExpectedTileRenderCompletedMessage(tileRenderRequested2, message2);
                     });
@@ -178,7 +175,7 @@ public class IntegrationTests {
 
             final DesignAbortRequested designAbortRequested1 = new DesignAbortRequested(Uuids.timeBased(), designId, Checksum.of(JSON_1));
 
-            final Message designAbortRequestedMessage1 = createDesignAbortRequestedMessage(UUID.randomUUID(), designId.toString(), System.currentTimeMillis(), designAbortRequested1);
+            final OutputMessage designAbortRequestedMessage1 = createDesignAbortRequestedMessage(UUID.randomUUID(), designId.toString(), System.currentTimeMillis(), designAbortRequested1);
 
             producer.rxSend(createKafkaRecord(designAbortRequestedMessage1))
                     .doOnError(Throwable::printStackTrace)
@@ -188,7 +185,7 @@ public class IntegrationTests {
 
 //            final DesignAbortRequested designAbortRequested2 = new DesignAbortRequested(designId, System.currentTimeMillis(), Checksum.of(JSON_2));
 //
-//            final Message designAbortRequestedMessage2 = createDesignAbortRequestedMessage(UUID.randomUUID(), designId.toString(), System.currentTimeMillis(), designAbortRequested2);
+//            final OutputMessage designAbortRequestedMessage2 = createDesignAbortRequestedMessage(UUID.randomUUID(), designId.toString(), System.currentTimeMillis(), designAbortRequested2);
 //
 //            producer.rxSend(createKafkaRecord(designAbortRequestedMessage2))
 //                    .subscribeOn(Schedulers.computation())
@@ -200,14 +197,14 @@ public class IntegrationTests {
         }
     }
 
-    private void assertExpectedTileRenderCompletedMessage(TileRenderRequested tileRenderRequested, Message actualMessage) {
+    private void assertExpectedTileRenderCompletedMessage(TileRenderRequested tileRenderRequested, InputMessage actualMessage) {
         assertThat(actualMessage.getTimestamp()).isNotNull();
-        assertThat(actualMessage.getPayload().getSource()).isEqualTo(MESSAGE_SOURCE);
+        assertThat(actualMessage.getValue().getSource()).isEqualTo(MESSAGE_SOURCE);
         assertThat(actualMessage.getKey()).isEqualTo(tileRenderRequested.getUuid().toString());
-        assertThat(actualMessage.getPayload().getUuid()).isNotNull();
-        assertThat(actualMessage.getPayload().getType()).isEqualTo(TILE_RENDER_COMPLETED);
-        assertThat(actualMessage.getPayload()).isNotNull();
-        TileRenderCompleted actualEvent = Json.decodeValue(actualMessage.getPayload().getData(), TileRenderCompleted.class);
+        assertThat(actualMessage.getValue().getUuid()).isNotNull();
+        assertThat(actualMessage.getValue().getType()).isEqualTo(TILE_RENDER_COMPLETED);
+        assertThat(actualMessage.getValue()).isNotNull();
+        TileRenderCompleted actualEvent = Json.decodeValue(actualMessage.getValue().getData(), TileRenderCompleted.class);
         assertThat(actualEvent.getUuid()).isEqualTo(tileRenderRequested.getUuid());
         assertThat(actualEvent.getLevel()).isEqualTo(tileRenderRequested.getLevel());
         assertThat(actualEvent.getRow()).isEqualTo(tileRenderRequested.getRow());
@@ -215,16 +212,16 @@ public class IntegrationTests {
     }
 
     @NotNull
-    private static KafkaProducerRecord<String, String> createKafkaRecord(Message message) {
-        return KafkaProducerRecord.create(RENDERING_QUEUE_TOPIC_NAME, message.getKey(), Json.encode(message.getPayload()));
+    private static KafkaProducerRecord<String, String> createKafkaRecord(OutputMessage message) {
+        return KafkaProducerRecord.create(RENDERING_QUEUE_TOPIC_NAME, message.getKey(), Json.encode(message.getValue()));
     }
 
-    private static Message createTileRenderRequestedMessage(UUID messageId, String partitionKey, long timestamp, TileRenderRequested event) {
-        return new Message(partitionKey, 0, timestamp,  new Payload(messageId, TILE_RENDER_REQUESTED, Json.encode(event), "test"));
+    private static OutputMessage createTileRenderRequestedMessage(UUID messageId, String partitionKey, long timestamp, TileRenderRequested event) {
+        return new OutputMessage(partitionKey, new Payload(messageId, TILE_RENDER_REQUESTED, Json.encode(event), "test"));
     }
 
-    private static Message createDesignAbortRequestedMessage(UUID messageId, String partitionKey, long timestamp, DesignAbortRequested event) {
-        return new Message(partitionKey, 0, timestamp,  new Payload(messageId, DESIGN_ABORT_REQUESTED, Json.encode(event), "test"));
+    private static OutputMessage createDesignAbortRequestedMessage(UUID messageId, String partitionKey, long timestamp, DesignAbortRequested event) {
+        return new OutputMessage(partitionKey, new Payload(messageId, DESIGN_ABORT_REQUESTED, Json.encode(event), "test"));
     }
 
     private static void pause(int millis) {
@@ -235,13 +232,13 @@ public class IntegrationTests {
     }
 
     @NotNull
-    private static List<Message> safelyFindMessages(String partitionKey, String messageSource, String messageType) {
+    private static List<InputMessage> safelyFindMessages(String partitionKey, String messageSource, String messageType) {
         synchronized (records) {
             return records.stream()
-                    .map(record -> new Message(record.key(), record.offset(), record.timestamp(), Json.decodeValue(record.value(), Payload.class)))
+                    .map(record -> new InputMessage(record.key(), record.offset(), Json.decodeValue(record.value(), Payload.class), record.timestamp()))
                     .filter(message -> message.getKey().equals(partitionKey))
-                    .filter(message -> message.getPayload().getSource().equals(messageSource))
-                    .filter(message -> message.getPayload().getType().equals(messageType))
+                    .filter(message -> message.getValue().getSource().equals(messageSource))
+                    .filter(message -> message.getValue().getType().equals(messageType))
 //                    .sorted(Comparator.comparing(Message::getTimestamp))
                     .collect(Collectors.toList());
         }

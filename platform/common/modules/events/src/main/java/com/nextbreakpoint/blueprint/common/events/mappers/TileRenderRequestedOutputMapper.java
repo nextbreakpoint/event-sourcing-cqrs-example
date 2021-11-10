@@ -1,9 +1,6 @@
 package com.nextbreakpoint.blueprint.common.events.mappers;
 
-import com.nextbreakpoint.blueprint.common.core.Mapper;
-import com.nextbreakpoint.blueprint.common.core.Message;
-import com.nextbreakpoint.blueprint.common.core.MessageType;
-import com.nextbreakpoint.blueprint.common.core.Payload;
+import com.nextbreakpoint.blueprint.common.core.*;
 import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
 import io.vertx.core.json.Json;
 
@@ -11,25 +8,23 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Function;
 
-public class TileRenderRequestedMessageMapper implements Mapper<TileRenderRequested, Message> {
+public class TileRenderRequestedOutputMapper implements Mapper<TileRenderRequested, OutputMessage> {
     private final String messageSource;
     private final Function<TileRenderRequested, String> keyMapper;
 
-    public TileRenderRequestedMessageMapper(String messageSource, Function<TileRenderRequested, String> keyMapper) {
+    public TileRenderRequestedOutputMapper(String messageSource, Function<TileRenderRequested, String> keyMapper) {
         this.messageSource = Objects.requireNonNull(messageSource);
         this.keyMapper = Objects.requireNonNull(keyMapper);
     }
 
-    public TileRenderRequestedMessageMapper(String messageSource) {
+    public TileRenderRequestedOutputMapper(String messageSource) {
         this(messageSource, event -> event.getUuid().toString());
     }
 
     @Override
-    public Message transform(TileRenderRequested event) {
-        return new Message(
+    public OutputMessage transform(TileRenderRequested event) {
+        return new OutputMessage(
                 keyMapper.apply(event),
-                0,
-                System.currentTimeMillis(),
                 new Payload(
                         UUID.randomUUID(),
                         MessageType.TILE_RENDER_REQUESTED,

@@ -2,7 +2,8 @@ package com.nextbreakpoint.blueprint.designs.common;
 
 import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.nextbreakpoint.blueprint.common.core.Mapper;
-import com.nextbreakpoint.blueprint.common.core.Message;
+import com.nextbreakpoint.blueprint.common.core.InputMessage;
+import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.vertx.Controller;
 import com.nextbreakpoint.blueprint.designs.Store;
 import com.nextbreakpoint.blueprint.designs.model.*;
@@ -23,9 +24,9 @@ public abstract class AbstractController<T extends Command> implements Controlle
     protected final Store store;
     protected final String topic;
     protected final KafkaProducer<String, String> producer;
-    protected final Mapper<DesignChanged, Message> mapper;
+    protected final Mapper<DesignChanged, OutputMessage> mapper;
 
-    public AbstractController(Store store, String topic, KafkaProducer<String, String> producer, Mapper<DesignChanged, Message> mapper, int retries) {
+    public AbstractController(Store store, String topic, KafkaProducer<String, String> producer, Mapper<DesignChanged, OutputMessage> mapper, int retries) {
         this.retries = retries;
         this.store = Objects.requireNonNull(store);
         this.topic = Objects.requireNonNull(topic);

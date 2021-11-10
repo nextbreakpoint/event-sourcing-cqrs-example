@@ -2,7 +2,8 @@ package com.nextbreakpoint.blueprint.designs.controllers;
 
 import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.nextbreakpoint.blueprint.common.core.Mapper;
-import com.nextbreakpoint.blueprint.common.core.Message;
+import com.nextbreakpoint.blueprint.common.core.InputMessage;
+import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.events.TileAggregateUpdateCompleted;
 import com.nextbreakpoint.blueprint.common.events.TileAggregateUpdateRequested;
 import com.nextbreakpoint.blueprint.common.vertx.Controller;
@@ -12,13 +13,13 @@ import rx.Single;
 
 import java.util.Objects;
 
-public class TileAggregateUpdateRequestedController implements Controller<Message, Void> {
-    private final Mapper<Message, TileAggregateUpdateRequested> inputMapper;
-    private final Mapper<TileAggregateUpdateCompleted, Message> outputMapper;
+public class TileAggregateUpdateRequestedController implements Controller<InputMessage, Void> {
+    private final Mapper<InputMessage, TileAggregateUpdateRequested> inputMapper;
+    private final Mapper<TileAggregateUpdateCompleted, OutputMessage> outputMapper;
     private final KafkaEmitter emitter;
     private final Store store;
 
-    public TileAggregateUpdateRequestedController(Store store, Mapper<Message, TileAggregateUpdateRequested> inputMapper, Mapper<TileAggregateUpdateCompleted, Message> outputMapper, KafkaEmitter emitter) {
+    public TileAggregateUpdateRequestedController(Store store, Mapper<InputMessage, TileAggregateUpdateRequested> inputMapper, Mapper<TileAggregateUpdateCompleted, OutputMessage> outputMapper, KafkaEmitter emitter) {
         this.store = Objects.requireNonNull(store);
         this.inputMapper =  Objects.requireNonNull(inputMapper);
         this.outputMapper = Objects.requireNonNull(outputMapper);
@@ -26,7 +27,7 @@ public class TileAggregateUpdateRequestedController implements Controller<Messag
     }
 
     @Override
-    public Single<Void> onNext(Message message) {
+    public Single<Void> onNext(InputMessage message) {
         return Single.just(message)
                 .map(inputMapper::transform)
                 .flatMap(this::onAggregateUpdateRequested)

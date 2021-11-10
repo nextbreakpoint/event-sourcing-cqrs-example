@@ -5,7 +5,7 @@ import com.jayway.restassured.http.ContentType;
 import com.jayway.restassured.path.json.JsonPath;
 import com.nextbreakpoint.blueprint.common.core.Authority;
 import com.nextbreakpoint.blueprint.common.core.Environment;
-import com.nextbreakpoint.blueprint.common.core.Message;
+import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.test.KafkaUtils;
 import com.nextbreakpoint.blueprint.designs.model.DesignChanged;
 import com.nextbreakpoint.blueprint.designs.model.DesignDocument;
@@ -217,15 +217,15 @@ public class IntegrationTests {
       await().atMost(TEN_SECONDS)
               .pollInterval(ONE_SECOND)
               .untilAsserted(() -> {
-                final Optional<Message> message = safelyFindMessage(UUID.fromString(designId));
+                final Optional<InputMessage> message = safelyFindMessage(UUID.fromString(designId));
                 assertThat(message.isEmpty()).isFalse();
-                Message actualMessage = message.get();
+                InputMessage actualMessage = message.get();
                 assertThat(actualMessage.getTimestamp()).isNotNull();
-                assertThat(actualMessage.getPayload().getSource()).isEqualTo("service-designs");
+                assertThat(actualMessage.getValue().getSource()).isEqualTo("service-designs");
                 assertThat(actualMessage.getKey()).isEqualTo(designId);
-                assertThat(actualMessage.getPayload().getUuid()).isNotNull();
-                assertThat(actualMessage.getPayload().getType()).isEqualTo("design-changed");
-                DesignChanged actualEvent = Json.decodeValue(actualMessage.getPayload().getData(), DesignChanged.class);
+                assertThat(actualMessage.getValue().getUuid()).isNotNull();
+                assertThat(actualMessage.getValue().getType()).isEqualTo("design-changed");
+                DesignChanged actualEvent = Json.decodeValue(actualMessage.getValue().getData(), DesignChanged.class);
                 assertThat(actualEvent.getUuid()).isEqualTo(UUID.fromString(designId));
                 assertThat(actualEvent.getTimestamp()).isNotNull();
                 assertThat(actualEvent.getTimestamp()).isGreaterThan(eventTimestamp0);
@@ -259,15 +259,15 @@ public class IntegrationTests {
       await().atMost(TEN_SECONDS)
               .pollInterval(ONE_SECOND)
               .untilAsserted(() -> {
-                final Optional<Message> message = safelyFindMessage(UUID.fromString(designId));
+                final Optional<InputMessage> message = safelyFindMessage(UUID.fromString(designId));
                 assertThat(message.isEmpty()).isFalse();
-                Message actualMessage = message.get();
+                InputMessage actualMessage = message.get();
                 assertThat(actualMessage.getTimestamp()).isNotNull();
-                assertThat(actualMessage.getPayload().getSource()).isEqualTo("service-designs");
+                assertThat(actualMessage.getValue().getSource()).isEqualTo("service-designs");
                 assertThat(actualMessage.getKey()).isEqualTo(designId);
-                assertThat(actualMessage.getPayload().getUuid()).isNotNull();
-                assertThat(actualMessage.getPayload().getType()).isEqualTo("design-changed");
-                DesignChanged actualEvent = Json.decodeValue(actualMessage.getPayload().getData(), DesignChanged.class);
+                assertThat(actualMessage.getValue().getUuid()).isNotNull();
+                assertThat(actualMessage.getValue().getType()).isEqualTo("design-changed");
+                DesignChanged actualEvent = Json.decodeValue(actualMessage.getValue().getData(), DesignChanged.class);
                 assertThat(actualEvent.getUuid()).isEqualTo(UUID.fromString(designId));
                 assertThat(actualEvent.getTimestamp()).isNotNull();
                 assertThat(actualEvent.getTimestamp()).isGreaterThan(eventTimestamp1);
@@ -329,15 +329,15 @@ public class IntegrationTests {
       await().atMost(TEN_SECONDS)
               .pollInterval(ONE_SECOND)
               .untilAsserted(() -> {
-                final Optional<Message> message = safelyFindMessage(UUID.fromString(designId));
+                final Optional<InputMessage> message = safelyFindMessage(UUID.fromString(designId));
                 assertThat(message.isEmpty()).isFalse();
-                Message actualMessage = message.get();
+                InputMessage actualMessage = message.get();
                 assertThat(actualMessage.getTimestamp()).isNotNull();
-                assertThat(actualMessage.getPayload().getSource()).isEqualTo("service-designs");
+                assertThat(actualMessage.getValue().getSource()).isEqualTo("service-designs");
                 assertThat(actualMessage.getKey()).isEqualTo(designId);
-                assertThat(actualMessage.getPayload().getUuid()).isNotNull();
-                assertThat(actualMessage.getPayload().getType()).isEqualTo("design-changed");
-                DesignChanged actualEvent = Json.decodeValue(actualMessage.getPayload().getData(), DesignChanged.class);
+                assertThat(actualMessage.getValue().getUuid()).isNotNull();
+                assertThat(actualMessage.getValue().getType()).isEqualTo("design-changed");
+                DesignChanged actualEvent = Json.decodeValue(actualMessage.getValue().getData(), DesignChanged.class);
                 assertThat(actualEvent.getUuid()).isEqualTo(UUID.fromString(designId));
                 assertThat(actualEvent.getTimestamp()).isNotNull();
                 assertThat(actualEvent.getTimestamp()).isGreaterThan(eventTimestamp3);
@@ -363,10 +363,10 @@ public class IntegrationTests {
     }
   }
 
-  private static Optional<Message> safelyFindMessage(UUID designId) {
+  private static Optional<InputMessage> safelyFindMessage(UUID designId) {
     synchronized (records) {
       return records.stream()
-              .map(record -> Json.decodeValue(record.value(), Message.class))
+              .map(record -> Json.decodeValue(record.value(), InputMessage.class))
               .filter(value -> value.getKey().equals(designId.toString()))
               .findFirst();
     }

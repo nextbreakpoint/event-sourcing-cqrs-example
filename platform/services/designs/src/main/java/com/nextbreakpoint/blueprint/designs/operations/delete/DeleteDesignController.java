@@ -1,7 +1,7 @@
 package com.nextbreakpoint.blueprint.designs.operations.delete;
 
 import com.nextbreakpoint.blueprint.common.core.Mapper;
-import com.nextbreakpoint.blueprint.common.core.Message;
+import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.designs.Store;
 import com.nextbreakpoint.blueprint.designs.common.AbstractController;
 import com.nextbreakpoint.blueprint.designs.model.DesignChanged;
@@ -14,8 +14,8 @@ import rx.Single;
 public class DeleteDesignController extends AbstractController<DeleteDesignRequest, DeleteDesignResponse> {
     private Logger logger = LoggerFactory.getLogger(DeleteDesignController.class);
 
-    public DeleteDesignController(Store store, String topic, KafkaProducer<String, String> producer, Mapper<DesignChanged, Message> mapper) {
-        super(store ,topic, producer ,mapper);
+    public DeleteDesignController(Store store, String topic, KafkaProducer<String, String> producer, Mapper<DesignChanged, OutputMessage> mapper) {
+        super(store ,topic, producer, mapper);
     }
 
     @Override

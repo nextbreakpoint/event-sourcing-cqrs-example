@@ -7,10 +7,7 @@ import au.com.dius.pact.consumer.junit5.PactTestFor;
 import au.com.dius.pact.consumer.junit5.ProviderType;
 import au.com.dius.pact.core.model.annotations.Pact;
 import au.com.dius.pact.core.model.messaging.MessagePact;
-import com.nextbreakpoint.blueprint.common.core.Environment;
-import com.nextbreakpoint.blueprint.common.core.Message;
-import com.nextbreakpoint.blueprint.common.core.MessageType;
-import com.nextbreakpoint.blueprint.common.core.Payload;
+import com.nextbreakpoint.blueprint.common.core.*;
 import com.nextbreakpoint.blueprint.common.test.EventSource;
 import com.nextbreakpoint.blueprint.common.test.KafkaUtils;
 import com.nextbreakpoint.blueprint.designs.model.DesignChanged;
@@ -115,13 +112,13 @@ public class PactTests {
         @PactTestFor(providerName = "designs-command-consumer", port = "1111", pactMethod = "designChanged", providerType = ProviderType.ASYNCH)
         public void shouldProduceNotificationWhenADesignChanged(MessagePact messagePact) throws MalformedURLException {
             try {
-                final Message designChangedMessage1 = Json.decodeValue(messagePact.getMessages().get(0).contentsAsString(), Message.class);
+                final InputMessage designChangedMessage1 = Json.decodeValue(messagePact.getMessages().get(0).contentsAsString(), InputMessage.class);
 
-                final Message designChangedMessage2 = Json.decodeValue(messagePact.getMessages().get(1).contentsAsString(), Message.class);
+                final InputMessage designChangedMessage2 = Json.decodeValue(messagePact.getMessages().get(1).contentsAsString(), InputMessage.class);
 
-                final DesignChanged event1 = Json.decodeValue(designChangedMessage1.getPayload().getData(), DesignChanged.class);
+                final DesignChanged event1 = Json.decodeValue(designChangedMessage1.getValue().getData(), DesignChanged.class);
 
-                final DesignChanged event2 = Json.decodeValue(designChangedMessage2.getPayload().getData(), DesignChanged.class);
+                final DesignChanged event2 = Json.decodeValue(designChangedMessage2.getValue().getData(), DesignChanged.class);
 
                 long eventTimestamp1 = System.currentTimeMillis() - 2;
 
@@ -137,9 +134,9 @@ public class PactTests {
 
                 final long messageTimestamp = System.currentTimeMillis();
 
-                final Message newDesignChangedMessage1 = createDesignChangedMessage(UUID.randomUUID(), designId1, messageTimestamp, designChangedEvent1);
+                final OutputMessage newDesignChangedMessage1 = createDesignChangedMessage(UUID.randomUUID(), designId1, messageTimestamp, designChangedEvent1);
 
-                final Message newDesignChangedMessage2 = createDesignChangedMessage(UUID.randomUUID(), designId2, messageTimestamp, designChangedEvent2);
+                final OutputMessage newDesignChangedMessage2 = createDesignChangedMessage(UUID.randomUUID(), designId2, messageTimestamp, designChangedEvent2);
 
                 notifications.clear();
 
@@ -183,13 +180,13 @@ public class PactTests {
         @PactTestFor(providerName = "designs-command-consumer", port = "1112", pactMethod = "designChanged", providerType = ProviderType.ASYNCH)
         public void shouldProduceNotificationWhenAnyDesignChanged(MessagePact messagePact) throws MalformedURLException {
             try {
-                final Message designChangedMessage1 = Json.decodeValue(messagePact.getMessages().get(0).contentsAsString(), Message.class);
+                final InputMessage designChangedMessage1 = Json.decodeValue(messagePact.getMessages().get(0).contentsAsString(), InputMessage.class);
 
-                final Message designChangedMessage2 = Json.decodeValue(messagePact.getMessages().get(1).contentsAsString(), Message.class);
+                final InputMessage designChangedMessage2 = Json.decodeValue(messagePact.getMessages().get(1).contentsAsString(), InputMessage.class);
 
-                final DesignChanged event1 = Json.decodeValue(designChangedMessage1.getPayload().getData(), DesignChanged.class);
+                final DesignChanged event1 = Json.decodeValue(designChangedMessage1.getValue().getData(), DesignChanged.class);
 
-                final DesignChanged event2 = Json.decodeValue(designChangedMessage2.getPayload().getData(), DesignChanged.class);
+                final DesignChanged event2 = Json.decodeValue(designChangedMessage2.getValue().getData(), DesignChanged.class);
 
                 long eventTimestamp1 = System.currentTimeMillis() - 2;
 
@@ -205,9 +202,9 @@ public class PactTests {
 
                 final long messageTimestamp = System.currentTimeMillis();
 
-                final Message newDesignChangedMessage1 = createDesignChangedMessage(UUID.randomUUID(), designId1, messageTimestamp, designChangedEvent1);
+                final OutputMessage newDesignChangedMessage1 = createDesignChangedMessage(UUID.randomUUID(), designId1, messageTimestamp, designChangedEvent1);
 
-                final Message newDesignChangedMessage2 = createDesignChangedMessage(UUID.randomUUID(), designId2, messageTimestamp, designChangedEvent2);
+                final OutputMessage newDesignChangedMessage2 = createDesignChangedMessage(UUID.randomUUID(), designId2, messageTimestamp, designChangedEvent2);
 
                 notifications.clear();
 
@@ -248,12 +245,12 @@ public class PactTests {
         }
     }
 
-    private static ProducerRecord<String, String> createKafkaRecord(Message message) {
-        return new ProducerRecord<>("design-event", message.getKey(), Json.encode(message.getPayload()));
+    private static ProducerRecord<String, String> createKafkaRecord(OutputMessage message) {
+        return new ProducerRecord<>("design-event", message.getKey(), Json.encode(message.getValue()));
     }
 
-    private static Message createDesignChangedMessage(UUID messageId, UUID partitionKey, long timestamp, DesignChanged event) {
-        return new Message(partitionKey.toString(), 0, timestamp,  new Payload(messageId, MessageType.DESIGN_CHANGED, Json.encode(event), "test"));
+    private static OutputMessage createDesignChangedMessage(UUID messageId, UUID partitionKey, long timestamp, DesignChanged event) {
+        return new OutputMessage(partitionKey.toString(), new Payload(messageId, MessageType.DESIGN_CHANGED, Json.encode(event), "test"));
     }
 
     private static class SSENotification {

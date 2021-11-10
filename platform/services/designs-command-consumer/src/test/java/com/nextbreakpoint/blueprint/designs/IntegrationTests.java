@@ -2,10 +2,7 @@ package com.nextbreakpoint.blueprint.designs;
 
 import com.datastax.oss.driver.api.core.cql.Row;
 import com.jayway.restassured.RestAssured;
-import com.nextbreakpoint.blueprint.common.core.Environment;
-import com.nextbreakpoint.blueprint.common.core.Message;
-import com.nextbreakpoint.blueprint.common.core.MessageType;
-import com.nextbreakpoint.blueprint.common.core.Payload;
+import com.nextbreakpoint.blueprint.common.core.*;
 import com.nextbreakpoint.blueprint.common.test.KafkaUtils;
 import com.nextbreakpoint.blueprint.common.vertx.CassandraClientFactory;
 import com.nextbreakpoint.blueprint.designs.model.DesignChanged;
@@ -124,9 +121,7 @@ public class IntegrationTests {
 
             final InsertDesignCommand insertDesignCommand = new InsertDesignCommand(designId, JSON_1, eventTimestamp);
 
-            final long messageTimestamp = System.currentTimeMillis();
-
-            final Message insertDesignMessage = createInsertDesignMessage(UUID.randomUUID(), designId, messageTimestamp, insertDesignCommand);
+            final OutputMessage insertDesignMessage = createInsertDesignMessage(UUID.randomUUID(), designId, insertDesignCommand);
 
             safelyClearMessages();
 
@@ -173,15 +168,15 @@ public class IntegrationTests {
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final List<Message> messages = safelyFindMessages(designId.toString());
+                        final List<InputMessage> messages = safelyFindMessages(designId.toString());
                         assertThat(messages).hasSize(1);
-                        final Message actualMessage = messages.get(messages.size() - 1);
+                        final InputMessage actualMessage = messages.get(messages.size() - 1);
                         assertThat(actualMessage.getTimestamp()).isNotNull();
-                        assertThat(actualMessage.getPayload().getSource()).isEqualTo("service-designs");
+                        assertThat(actualMessage.getValue().getSource()).isEqualTo("service-designs");
                         assertThat(actualMessage.getKey()).isEqualTo(designId.toString());
-                        assertThat(actualMessage.getPayload().getUuid()).isNotNull();
-                        assertThat(actualMessage.getPayload().getType()).isEqualTo("design-changed");
-                        DesignChanged actualEvent = Json.decodeValue(actualMessage.getPayload().getData(), DesignChanged.class);
+                        assertThat(actualMessage.getValue().getUuid()).isNotNull();
+                        assertThat(actualMessage.getValue().getType()).isEqualTo("design-changed");
+                        DesignChanged actualEvent = Json.decodeValue(actualMessage.getValue().getData(), DesignChanged.class);
                         assertThat(actualEvent.getUuid()).isEqualTo(designId);
                         assertThat(actualEvent.getTimestamp()).isNotNull();
                         assertThat(actualEvent.getTimestamp()).isGreaterThan(eventTimestamp);
@@ -201,11 +196,9 @@ public class IntegrationTests {
 
             final UpdateDesignCommand updateDesignCommand = new UpdateDesignCommand(designId, JSON_2, eventTimestamp2);
 
-            final long messageTimestamp = System.currentTimeMillis();
+            final OutputMessage insertDesignMessage = createInsertDesignMessage(UUID.randomUUID(), designId, insertDesignCommand);
 
-            final Message insertDesignMessage = createInsertDesignMessage(UUID.randomUUID(), designId, messageTimestamp, insertDesignCommand);
-
-            final Message updateDesignMessage = createUpdateDesignMessage(UUID.randomUUID(), designId, messageTimestamp, updateDesignCommand);
+            final OutputMessage updateDesignMessage = createUpdateDesignMessage(UUID.randomUUID(), designId, updateDesignCommand);
 
             safelyClearMessages();
 
@@ -262,15 +255,15 @@ public class IntegrationTests {
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final List<Message> messages = safelyFindMessages(designId.toString());
+                        final List<InputMessage> messages = safelyFindMessages(designId.toString());
                         assertThat(messages).hasSize(2);
-                        final Message actualMessage = messages.get(messages.size() - 1);
+                        final InputMessage actualMessage = messages.get(messages.size() - 1);
                         assertThat(actualMessage.getTimestamp()).isNotNull();
-                        assertThat(actualMessage.getPayload().getSource()).isEqualTo("service-designs");
+                        assertThat(actualMessage.getValue().getSource()).isEqualTo("service-designs");
                         assertThat(actualMessage.getKey()).isEqualTo(designId.toString());
-                        assertThat(actualMessage.getPayload().getUuid()).isNotNull();
-                        assertThat(actualMessage.getPayload().getType()).isEqualTo("design-changed");
-                        DesignChanged actualEvent = Json.decodeValue(actualMessage.getPayload().getData(), DesignChanged.class);
+                        assertThat(actualMessage.getValue().getUuid()).isNotNull();
+                        assertThat(actualMessage.getValue().getType()).isEqualTo("design-changed");
+                        DesignChanged actualEvent = Json.decodeValue(actualMessage.getValue().getData(), DesignChanged.class);
                         assertThat(actualEvent.getUuid()).isEqualTo(designId);
                         assertThat(actualEvent.getTimestamp()).isNotNull();
                         assertThat(actualEvent.getTimestamp()).isGreaterThan(eventTimestamp2);
@@ -290,11 +283,9 @@ public class IntegrationTests {
 
             final DeleteDesignCommand deleteDesignCommand = new DeleteDesignCommand(designId, eventTimestamp2);
 
-            final long messageTimestamp = System.currentTimeMillis();
+            final OutputMessage insertDesignMessage = createInsertDesignMessage(UUID.randomUUID(), designId, insertDesignCommand);
 
-            final Message insertDesignMessage = createInsertDesignMessage(UUID.randomUUID(), designId, messageTimestamp, insertDesignCommand);
-
-            final Message deleteDesignMessage = createDeleteDesignMessage(UUID.randomUUID(), designId, messageTimestamp, deleteDesignCommand);
+            final OutputMessage deleteDesignMessage = createDeleteDesignMessage(UUID.randomUUID(), designId, deleteDesignCommand);
 
             safelyClearMessages();
 
@@ -345,15 +336,15 @@ public class IntegrationTests {
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final List<Message> messages = safelyFindMessages(designId.toString());
+                        final List<InputMessage> messages = safelyFindMessages(designId.toString());
                         assertThat(messages).hasSize(2);
-                        final Message actualMessage = messages.get(messages.size() - 1);
+                        final InputMessage actualMessage = messages.get(messages.size() - 1);
                         assertThat(actualMessage.getTimestamp()).isNotNull();
-                        assertThat(actualMessage.getPayload().getSource()).isEqualTo("service-designs");
+                        assertThat(actualMessage.getValue().getSource()).isEqualTo("service-designs");
                         assertThat(actualMessage.getKey()).isEqualTo(designId.toString());
-                        assertThat(actualMessage.getPayload().getUuid()).isNotNull();
-                        assertThat(actualMessage.getPayload().getType()).isEqualTo("design-changed");
-                        DesignChanged actualEvent = Json.decodeValue(actualMessage.getPayload().getData(), DesignChanged.class);
+                        assertThat(actualMessage.getValue().getUuid()).isNotNull();
+                        assertThat(actualMessage.getValue().getType()).isEqualTo("design-changed");
+                        DesignChanged actualEvent = Json.decodeValue(actualMessage.getValue().getData(), DesignChanged.class);
                         assertThat(actualEvent.getUuid()).isEqualTo(designId);
                         assertThat(actualEvent.getTimestamp()).isNotNull();
                         assertThat(actualEvent.getTimestamp()).isGreaterThan(eventTimestamp2);
@@ -361,20 +352,20 @@ public class IntegrationTests {
         }
     }
 
-    private static ProducerRecord<String, String> createKafkaRecord(Message message) {
-        return new ProducerRecord<>("design-command", message.getKey(), Json.encode(message.getPayload()));
+    private static ProducerRecord<String, String> createKafkaRecord(OutputMessage message) {
+        return new ProducerRecord<>("design-command", message.getKey(), Json.encode(message.getValue()));
     }
 
-    private static Message createInsertDesignMessage(UUID messageId, UUID partitionKey, long timestamp, InsertDesignCommand event) {
-        return new Message(partitionKey.toString(), 0, timestamp,  new Payload(messageId, MessageType.DESIGN_INSERT_REQUESTED, Json.encode(event), "test"));
+    private static OutputMessage createInsertDesignMessage(UUID messageId, UUID partitionKey, InsertDesignCommand event) {
+        return new OutputMessage(partitionKey.toString(), new Payload(messageId, MessageType.DESIGN_INSERT_REQUESTED, Json.encode(event), "test"));
     }
 
-    private static Message createUpdateDesignMessage(UUID messageId, UUID partitionKey, long timestamp, UpdateDesignCommand event) {
-        return new Message(partitionKey.toString(), 0, timestamp,  new Payload(messageId, MessageType.DESIGN_UPDATE_REQUESTED, Json.encode(event), "test"));
+    private static OutputMessage createUpdateDesignMessage(UUID messageId, UUID partitionKey, UpdateDesignCommand event) {
+        return new OutputMessage(partitionKey.toString(), new Payload(messageId, MessageType.DESIGN_UPDATE_REQUESTED, Json.encode(event), "test"));
     }
 
-    private static Message createDeleteDesignMessage(UUID messageId, UUID partitionKey, long timestamp, DeleteDesignCommand event) {
-        return new Message(partitionKey.toString(), 0, timestamp,  new Payload(messageId, MessageType.DESIGN_DELETE_REQUESTED, Json.encode(event), "test"));
+    private static OutputMessage createDeleteDesignMessage(UUID messageId, UUID partitionKey, DeleteDesignCommand event) {
+        return new OutputMessage(partitionKey.toString(), new Payload(messageId, MessageType.DESIGN_DELETE_REQUESTED, Json.encode(event), "test"));
     }
 
     private static void pause(int millis) {
@@ -384,10 +375,10 @@ public class IntegrationTests {
         }
     }
 
-    private static List<Message> safelyFindMessages(String designId) {
+    private static List<InputMessage> safelyFindMessages(String designId) {
         synchronized (records) {
             return records.stream()
-                    .map(record -> Json.decodeValue(record.value(), Message.class))
+                    .map(record -> Json.decodeValue(record.value(), InputMessage.class))
                     .filter(value -> value.getKey().equals(designId))
                     .collect(Collectors.toList());
         }

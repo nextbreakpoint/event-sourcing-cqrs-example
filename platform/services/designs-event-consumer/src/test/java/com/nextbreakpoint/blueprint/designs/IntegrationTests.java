@@ -5,10 +5,7 @@ import com.datastax.oss.driver.api.core.cql.Row;
 import com.datastax.oss.driver.api.core.data.UdtValue;
 import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.jayway.restassured.RestAssured;
-import com.nextbreakpoint.blueprint.common.core.Checksum;
-import com.nextbreakpoint.blueprint.common.core.Environment;
-import com.nextbreakpoint.blueprint.common.core.Message;
-import com.nextbreakpoint.blueprint.common.core.Payload;
+import com.nextbreakpoint.blueprint.common.core.*;
 import com.nextbreakpoint.blueprint.common.events.*;
 import com.nextbreakpoint.blueprint.common.vertx.CassandraClientFactory;
 import com.nextbreakpoint.blueprint.common.vertx.KafkaClientFactory;
@@ -146,7 +143,7 @@ public class IntegrationTests {
 
             final DesignInsertRequested designInsertRequested = new DesignInsertRequested(Uuids.timeBased(), designId, JSON_1, LEVELS);
 
-            final Message designInsertRequestedMessage = createDesignInsertRequestedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), designInsertRequested);
+            final OutputMessage designInsertRequestedMessage = createDesignInsertRequestedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), designInsertRequested);
 
             safelyClearEventMessages();
             safelyClearRenderMessages();
@@ -173,7 +170,7 @@ public class IntegrationTests {
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final List<Message> messages = safelyFindEventMessages(designId.toString(), MESSAGE_SOURCE, DESIGN_AGGREGATE_UPDATE_REQUESTED);
+                        final List<InputMessage> messages = safelyFindEventMessages(designId.toString(), MESSAGE_SOURCE, DESIGN_AGGREGATE_UPDATE_REQUESTED);
                         assertThat(messages).hasSize(1);
                         assertExpectedDesignAggregateUpdateRequestedMessage(designId, messages.get(0));
                     });
@@ -181,7 +178,7 @@ public class IntegrationTests {
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final List<Message> messages = safelyFindEventMessages(designId.toString(), MESSAGE_SOURCE, DESIGN_AGGREGATE_UPDATE_COMPLETED);
+                        final List<InputMessage> messages = safelyFindEventMessages(designId.toString(), MESSAGE_SOURCE, DESIGN_AGGREGATE_UPDATE_COMPLETED);
                         assertThat(messages).hasSize(1);
                         assertExpectedDesignAggregateUpdateCompletedMessage(designId, messages.get(0), JSON_1, CHECKSUM_1);
                     });
@@ -189,7 +186,7 @@ public class IntegrationTests {
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final List<Message> messages = safelyFindEventMessages(designId.toString(), MESSAGE_SOURCE, TILE_RENDER_REQUESTED);
+                        final List<InputMessage> messages = safelyFindEventMessages(designId.toString(), MESSAGE_SOURCE, TILE_RENDER_REQUESTED);
                         assertThat(messages).hasSize(totalTilesByLevels(LEVELS));
                         messages.forEach(message -> assertExpectedTileRenderRequestedMessage(message, designId.toString()));
                         List<TileRenderRequested> events = extractTileRenderRequestedEvents(messages, CHECKSUM_1);
@@ -200,7 +197,7 @@ public class IntegrationTests {
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final List<Message> messages = safelyFindRenderMessages(CHECKSUM_1, MESSAGE_SOURCE, TILE_RENDER_REQUESTED);
+                        final List<InputMessage> messages = safelyFindRenderMessages(CHECKSUM_1, MESSAGE_SOURCE, TILE_RENDER_REQUESTED);
                         assertThat(messages).hasSize(totalTilesByLevels(LEVELS));
                         List<TileRenderRequested> events = extractTileRenderRequestedEvents(messages, CHECKSUM_1);
                         assertThat(events).hasSize(messages.size());
@@ -220,9 +217,9 @@ public class IntegrationTests {
 
             final DesignUpdateRequested designUpdateRequested = new DesignUpdateRequested(Uuids.timeBased(), designId, JSON_2, LEVELS);
 
-            final Message designInsertRequestedMessage = createDesignInsertRequestedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), designInsertRequested);
+            final OutputMessage designInsertRequestedMessage = createDesignInsertRequestedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), designInsertRequested);
 
-            final Message designUpdateRequestedMessage = createDesignUpdateRequestedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), designUpdateRequested);
+            final OutputMessage designUpdateRequestedMessage = createDesignUpdateRequestedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), designUpdateRequested);
 
             safelyClearEventMessages();
             safelyClearRenderMessages();
@@ -253,7 +250,7 @@ public class IntegrationTests {
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final List<Message> messages = safelyFindEventMessages(designId.toString(), MESSAGE_SOURCE, DESIGN_AGGREGATE_UPDATE_REQUESTED);
+                        final List<InputMessage> messages = safelyFindEventMessages(designId.toString(), MESSAGE_SOURCE, DESIGN_AGGREGATE_UPDATE_REQUESTED);
                         assertThat(messages).hasSize(2);
                         assertExpectedDesignAggregateUpdateRequestedMessage(designId, messages.get(0));
                         assertExpectedDesignAggregateUpdateRequestedMessage(designId, messages.get(1));
@@ -262,7 +259,7 @@ public class IntegrationTests {
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final List<Message> messages = safelyFindEventMessages(designId.toString(), MESSAGE_SOURCE, DESIGN_AGGREGATE_UPDATE_COMPLETED);
+                        final List<InputMessage> messages = safelyFindEventMessages(designId.toString(), MESSAGE_SOURCE, DESIGN_AGGREGATE_UPDATE_COMPLETED);
                         assertThat(messages).hasSize(2);
                         assertExpectedDesignAggregateUpdateCompletedMessage(designId, messages.get(0), JSON_1, CHECKSUM_1);
                         assertExpectedDesignAggregateUpdateCompletedMessage(designId, messages.get(1), JSON_2, CHECKSUM_2);
@@ -271,7 +268,7 @@ public class IntegrationTests {
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final List<Message> messages = safelyFindEventMessages(designId.toString(), MESSAGE_SOURCE, TILE_RENDER_REQUESTED);
+                        final List<InputMessage> messages = safelyFindEventMessages(designId.toString(), MESSAGE_SOURCE, TILE_RENDER_REQUESTED);
                         assertThat(messages).hasSize(totalTilesByLevels(LEVELS) * 2);
                         messages.forEach(message -> assertExpectedTileRenderRequestedMessage(message, designId.toString()));
                         List<TileRenderRequested> events1 = extractTileRenderRequestedEvents(messages, CHECKSUM_1);
@@ -285,7 +282,7 @@ public class IntegrationTests {
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final List<Message> messages = safelyFindRenderMessages(CHECKSUM_2, MESSAGE_SOURCE, TILE_RENDER_REQUESTED);
+                        final List<InputMessage> messages = safelyFindRenderMessages(CHECKSUM_2, MESSAGE_SOURCE, TILE_RENDER_REQUESTED);
                         assertThat(messages).hasSize(totalTilesByLevels(LEVELS));
                         List<TileRenderRequested> events = extractTileRenderRequestedEvents(messages, CHECKSUM_2);
                         assertThat(events).hasSize(messages.size());
@@ -305,9 +302,9 @@ public class IntegrationTests {
 
             final DesignDeleteRequested designDeleteRequested = new DesignDeleteRequested(Uuids.timeBased(), designId);
 
-            final Message designInsertRequestedMessage = createDesignInsertRequestedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), designInsertRequested);
+            final OutputMessage designInsertRequestedMessage = createDesignInsertRequestedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), designInsertRequested);
 
-            final Message designDeleteRequestedMessage = createDesignDeleteRequestedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), designDeleteRequested);
+            final OutputMessage designDeleteRequestedMessage = createDesignDeleteRequestedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), designDeleteRequested);
 
             safelyClearEventMessages();
             safelyClearRenderMessages();
@@ -338,7 +335,7 @@ public class IntegrationTests {
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final List<Message> messages = safelyFindEventMessages(designId.toString(), MESSAGE_SOURCE, DESIGN_AGGREGATE_UPDATE_REQUESTED);
+                        final List<InputMessage> messages = safelyFindEventMessages(designId.toString(), MESSAGE_SOURCE, DESIGN_AGGREGATE_UPDATE_REQUESTED);
                         assertThat(messages).hasSize(2);
                         assertExpectedDesignAggregateUpdateRequestedMessage(designId, messages.get(0));
                         assertExpectedDesignAggregateUpdateRequestedMessage(designId, messages.get(1));
@@ -347,7 +344,7 @@ public class IntegrationTests {
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final List<Message> messages = safelyFindEventMessages(designId.toString(), MESSAGE_SOURCE, DESIGN_AGGREGATE_UPDATE_COMPLETED);
+                        final List<InputMessage> messages = safelyFindEventMessages(designId.toString(), MESSAGE_SOURCE, DESIGN_AGGREGATE_UPDATE_COMPLETED);
                         assertThat(messages).hasSize(2);
                         assertExpectedDesignAggregateUpdateCompletedMessage(designId, messages.get(1), JSON_1, CHECKSUM_1);
                     });
@@ -355,7 +352,7 @@ public class IntegrationTests {
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final List<Message> messages = safelyFindEventMessages(designId.toString(), MESSAGE_SOURCE, TILE_RENDER_REQUESTED);
+                        final List<InputMessage> messages = safelyFindEventMessages(designId.toString(), MESSAGE_SOURCE, TILE_RENDER_REQUESTED);
                         assertThat(messages).hasSize(totalTilesByLevels(LEVELS));
                         messages.forEach(message -> assertExpectedTileRenderRequestedMessage(message, designId.toString()));
                         List<TileRenderRequested> events = extractTileRenderRequestedEvents(messages, CHECKSUM_1);
@@ -366,7 +363,7 @@ public class IntegrationTests {
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final List<Message> messages = safelyFindRenderMessages(CHECKSUM_1, MESSAGE_SOURCE, TILE_RENDER_REQUESTED);
+                        final List<InputMessage> messages = safelyFindRenderMessages(CHECKSUM_1, MESSAGE_SOURCE, TILE_RENDER_REQUESTED);
                         assertThat(messages).hasSize(totalTilesByLevels(LEVELS));
                         List<TileRenderRequested> events = extractTileRenderRequestedEvents(messages, CHECKSUM_1);
                         assertThat(events).hasSize(messages.size());
@@ -384,7 +381,7 @@ public class IntegrationTests {
 
             final DesignInsertRequested designInsertRequested = new DesignInsertRequested(Uuids.timeBased(), designId, JSON_1, LEVELS);
 
-            final Message designInsertRequestedMessage = createDesignInsertRequestedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), designInsertRequested);
+            final OutputMessage designInsertRequestedMessage = createDesignInsertRequestedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), designInsertRequested);
 
             safelyClearEventMessages();
             safelyClearRenderMessages();
@@ -416,7 +413,7 @@ public class IntegrationTests {
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final List<Message> messages = safelyFindEventMessages(designId.toString(), MESSAGE_SOURCE, DESIGN_AGGREGATE_UPDATE_REQUESTED);
+                        final List<InputMessage> messages = safelyFindEventMessages(designId.toString(), MESSAGE_SOURCE, DESIGN_AGGREGATE_UPDATE_REQUESTED);
                         assertThat(messages).hasSize(1);
                         assertExpectedDesignAggregateUpdateRequestedMessage(designId, messages.get(0));
                     });
@@ -424,7 +421,7 @@ public class IntegrationTests {
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final List<Message> messages = safelyFindEventMessages(designId.toString(), MESSAGE_SOURCE, DESIGN_AGGREGATE_UPDATE_COMPLETED);
+                        final List<InputMessage> messages = safelyFindEventMessages(designId.toString(), MESSAGE_SOURCE, DESIGN_AGGREGATE_UPDATE_COMPLETED);
                         assertThat(messages).hasSize(1);
                         assertExpectedDesignAggregateUpdateCompletedMessage(designId, messages.get(0), JSON_1, CHECKSUM_1);
                     });
@@ -432,7 +429,7 @@ public class IntegrationTests {
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final List<Message> messages = safelyFindEventMessages(designId.toString(), MESSAGE_SOURCE, TILE_RENDER_REQUESTED);
+                        final List<InputMessage> messages = safelyFindEventMessages(designId.toString(), MESSAGE_SOURCE, TILE_RENDER_REQUESTED);
                         assertThat(messages).hasSize(totalTilesByLevels(LEVELS));
                         messages.forEach(message -> assertExpectedTileRenderRequestedMessage(message, designId.toString()));
                         List<TileRenderRequested> events = extractTileRenderRequestedEvents(messages, CHECKSUM_1);
@@ -443,7 +440,7 @@ public class IntegrationTests {
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final List<Message> messages = safelyFindRenderMessages(CHECKSUM_1, MESSAGE_SOURCE, TILE_RENDER_REQUESTED);
+                        final List<InputMessage> messages = safelyFindRenderMessages(CHECKSUM_1, MESSAGE_SOURCE, TILE_RENDER_REQUESTED);
                         assertThat(messages).hasSize(totalTilesByLevels(LEVELS));
                         List<TileRenderRequested> events = extractTileRenderRequestedEvents(messages, CHECKSUM_1);
                         assertThat(events).hasSize(messages.size());
@@ -458,11 +455,11 @@ public class IntegrationTests {
             final TileRenderCompleted tileRenderCompleted3 = new TileRenderCompleted(Uuids.timeBased(), designId, esid[0], CHECKSUM_1, 1, 2, 1, "COMPLETED");
             final TileRenderCompleted tileRenderCompleted4 = new TileRenderCompleted(Uuids.timeBased(), designId, esid[0], CHECKSUM_1, 1, LEVELS, 1, "COMPLETED");
 
-            final Message tileRenderCompletedMessage0 = createTileRenderCompletedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), tileRenderCompleted0);
-            final Message tileRenderCompletedMessage1 = createTileRenderCompletedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), tileRenderCompleted1);
-            final Message tileRenderCompletedMessage2 = createTileRenderCompletedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), tileRenderCompleted2);
-            final Message tileRenderCompletedMessage3 = createTileRenderCompletedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), tileRenderCompleted3);
-            final Message tileRenderCompletedMessage4 = createTileRenderCompletedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), tileRenderCompleted4);
+            final OutputMessage tileRenderCompletedMessage0 = createTileRenderCompletedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), tileRenderCompleted0);
+            final OutputMessage tileRenderCompletedMessage1 = createTileRenderCompletedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), tileRenderCompleted1);
+            final OutputMessage tileRenderCompletedMessage2 = createTileRenderCompletedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), tileRenderCompleted2);
+            final OutputMessage tileRenderCompletedMessage3 = createTileRenderCompletedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), tileRenderCompleted3);
+            final OutputMessage tileRenderCompletedMessage4 = createTileRenderCompletedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), tileRenderCompleted4);
 
             sendMessage(tileRenderCompletedMessage0);
             sendMessage(tileRenderCompletedMessage1);
@@ -473,13 +470,13 @@ public class IntegrationTests {
             await().atMost(ONE_MINUTE)
                     .pollInterval(TEN_SECONDS)
                     .untilAsserted(() -> {
-                        final List<Message> messages1 = safelyFindEventMessages(designId.toString(), MESSAGE_SOURCE, TILE_AGGREGATE_UPDATE_REQUIRED);
+                        final List<InputMessage> messages1 = safelyFindEventMessages(designId.toString(), MESSAGE_SOURCE, TILE_AGGREGATE_UPDATE_REQUIRED);
                         assertThat(messages1).hasSize(5);
                         messages1.forEach(message -> assertExpectedTileAggregateUpdateRequiredMessage(designId, message));
-                        final List<Message> messages2 = safelyFindEventMessages(designId.toString(), MESSAGE_SOURCE, TILE_AGGREGATE_UPDATE_REQUESTED);
+                        final List<InputMessage> messages2 = safelyFindEventMessages(designId.toString(), MESSAGE_SOURCE, TILE_AGGREGATE_UPDATE_REQUESTED);
                         assertThat(messages2).hasSize(1);
                         messages2.forEach(message -> assertExpectedTileAggregateUpdateRequestedMessage(designId, message));
-                        final List<Message> messages3 = safelyFindEventMessages(designId.toString(), MESSAGE_SOURCE, TILE_AGGREGATE_UPDATE_COMPLETED);
+                        final List<InputMessage> messages3 = safelyFindEventMessages(designId.toString(), MESSAGE_SOURCE, TILE_AGGREGATE_UPDATE_COMPLETED);
                         assertThat(messages3).hasSize(1);
                         messages3.forEach(message -> assertExpectedTileAggregateUpdateCompletedMessage(designId, message));
                     });
@@ -509,7 +506,7 @@ public class IntegrationTests {
         return IntStream.range(0, levels).map(level -> (int) Math.rint(Math.pow(2, level * 2))).sum();
     }
 
-    private void sendMessage(Message message) {
+    private void sendMessage(OutputMessage message) {
         producer.rxSend(createKafkaRecord(message))
                 .doOnError(Throwable::printStackTrace)
                 .subscribeOn(Schedulers.io())
@@ -518,74 +515,74 @@ public class IntegrationTests {
     }
 
     @NotNull
-    private List<TileRenderRequested> extractTileRenderRequestedEvents(List<Message> messages, String checksum) {
+    private List<TileRenderRequested> extractTileRenderRequestedEvents(List<InputMessage> messages, String checksum) {
         return messages.stream()
-                .map(message -> Json.decodeValue(message.getPayload().getData(), TileRenderRequested.class))
+                .map(message -> Json.decodeValue(message.getValue().getData(), TileRenderRequested.class))
                 .filter(event -> event.getChecksum().equals(checksum))
                 .collect(Collectors.toList());
     }
 
     @NotNull
-    private static KafkaProducerRecord<String, String> createKafkaRecord(Message message) {
-        return KafkaProducerRecord.create(EVENTS_TOPIC_NAME, message.getKey(), Json.encode(message.getPayload()));
+    private static KafkaProducerRecord<String, String> createKafkaRecord(OutputMessage message) {
+        return KafkaProducerRecord.create(EVENTS_TOPIC_NAME, message.getKey(), Json.encode(message.getValue()));
     }
 
     @NotNull
-    private static Message createDesignInsertRequestedMessage(UUID messageId, UUID partitionKey, long timestamp, DesignInsertRequested event) {
-        return new Message(partitionKey.toString(), 0, timestamp,  new Payload(messageId, DESIGN_INSERT_REQUESTED, Json.encode(event), "test"));
+    private static OutputMessage createDesignInsertRequestedMessage(UUID messageId, UUID partitionKey, long timestamp, DesignInsertRequested event) {
+        return new OutputMessage(partitionKey.toString(), new Payload(messageId, DESIGN_INSERT_REQUESTED, Json.encode(event), "test"));
     }
 
     @NotNull
-    private static Message createDesignUpdateRequestedMessage(UUID messageId, UUID partitionKey, long timestamp, DesignUpdateRequested event) {
-        return new Message(partitionKey.toString(), 0, timestamp,  new Payload(messageId, DESIGN_UPDATE_REQUESTED, Json.encode(event), "test"));
+    private static OutputMessage createDesignUpdateRequestedMessage(UUID messageId, UUID partitionKey, long timestamp, DesignUpdateRequested event) {
+        return new OutputMessage(partitionKey.toString(), new Payload(messageId, DESIGN_UPDATE_REQUESTED, Json.encode(event), "test"));
     }
 
     @NotNull
-    private static Message createDesignDeleteRequestedMessage(UUID messageId, UUID partitionKey, long timestamp, DesignDeleteRequested event) {
-        return new Message(partitionKey.toString(), 0, timestamp,  new Payload(messageId, DESIGN_DELETE_REQUESTED, Json.encode(event), "test"));
+    private static OutputMessage createDesignDeleteRequestedMessage(UUID messageId, UUID partitionKey, long timestamp, DesignDeleteRequested event) {
+        return new OutputMessage(partitionKey.toString(), new Payload(messageId, DESIGN_DELETE_REQUESTED, Json.encode(event), "test"));
     }
 
     @NotNull
-    private static Message createDesignAggregateUpdateRequestedMessage(UUID messageId, UUID partitionKey, long timestamp, DesignChangedEvent event) {
-        return new Message(partitionKey.toString(), 0, timestamp,  new Payload(messageId, DESIGN_AGGREGATE_UPDATE_REQUESTED, Json.encode(event), "test"));
+    private static OutputMessage createDesignAggregateUpdateRequestedMessage(UUID messageId, UUID partitionKey, long timestamp, DesignChangedEvent event) {
+        return new OutputMessage(partitionKey.toString(), new Payload(messageId, DESIGN_AGGREGATE_UPDATE_REQUESTED, Json.encode(event), "test"));
     }
 
     @NotNull
-    private static Message createDesignAggregateUpdateCompletedMessage(UUID messageId, UUID partitionKey, long timestamp, DesignChangedEvent event) {
-        return new Message(partitionKey.toString(), 0, timestamp,  new Payload(messageId, DESIGN_AGGREGATE_UPDATE_COMPLETED, Json.encode(event), "test"));
+    private static OutputMessage createDesignAggregateUpdateCompletedMessage(UUID messageId, UUID partitionKey, long timestamp, DesignChangedEvent event) {
+        return new OutputMessage(partitionKey.toString(), new Payload(messageId, DESIGN_AGGREGATE_UPDATE_COMPLETED, Json.encode(event), "test"));
     }
 
     @NotNull
-    private static Message createTileRenderRequestedMessage(UUID messageId, UUID partitionKey, long timestamp, TileRenderCompleted event) {
-        return new Message(partitionKey.toString(), 0, timestamp,  new Payload(messageId, TILE_RENDER_REQUESTED, Json.encode(event), "test"));
+    private static OutputMessage createTileRenderRequestedMessage(UUID messageId, UUID partitionKey, long timestamp, TileRenderCompleted event) {
+        return new OutputMessage(partitionKey.toString(), new Payload(messageId, TILE_RENDER_REQUESTED, Json.encode(event), "test"));
     }
 
     @NotNull
-    private static Message createTileRenderCompletedMessage(UUID messageId, UUID partitionKey, long timestamp, TileRenderCompleted event) {
-        return new Message(partitionKey.toString(), 0, timestamp,  new Payload(messageId, TILE_RENDER_COMPLETED, Json.encode(event), "test"));
+    private static OutputMessage createTileRenderCompletedMessage(UUID messageId, UUID partitionKey, long timestamp, TileRenderCompleted event) {
+        return new OutputMessage(partitionKey.toString(), new Payload(messageId, TILE_RENDER_COMPLETED, Json.encode(event), "test"));
     }
 
     @NotNull
-    private static List<Message> safelyFindEventMessages(String partitionKey, String messageSource, String messageType) {
+    private static List<InputMessage> safelyFindEventMessages(String partitionKey, String messageSource, String messageType) {
         synchronized (eventMessages) {
             return eventMessages.stream()
-                    .map(record -> new Message(record.key(), record.offset(), record.timestamp(), Json.decodeValue(record.value(), Payload.class)))
+                    .map(record -> new InputMessage(record.key(), record.offset(), Json.decodeValue(record.value(), Payload.class), record.timestamp()))
                     .filter(message -> message.getKey().equals(partitionKey))
-                    .filter(message -> message.getPayload().getSource().equals(messageSource))
-                    .filter(message -> message.getPayload().getType().equals(messageType))
+                    .filter(message -> message.getValue().getSource().equals(messageSource))
+                    .filter(message -> message.getValue().getType().equals(messageType))
 //                    .sorted(Comparator.comparing(Message::getTimestamp))
                     .collect(Collectors.toList());
         }
     }
 
     @NotNull
-    private static List<Message> safelyFindRenderMessages(String partitionKey, String messageSource, String messageType) {
+    private static List<InputMessage> safelyFindRenderMessages(String partitionKey, String messageSource, String messageType) {
         synchronized (renderMessages) {
             return renderMessages.stream()
-                    .map(record -> new Message(record.key(), record.offset(), record.timestamp(), Json.decodeValue(record.value(), Payload.class)))
+                    .map(record -> new InputMessage(record.key(), record.offset(), Json.decodeValue(record.value(), Payload.class), record.timestamp()))
                     .filter(message -> message.getKey().startsWith(partitionKey))
-                    .filter(message -> message.getPayload().getSource().equals(messageSource))
-                    .filter(message -> message.getPayload().getType().equals(messageType))
+                    .filter(message -> message.getValue().getSource().equals(messageSource))
+                    .filter(message -> message.getValue().getType().equals(messageType))
 //                    .sorted(Comparator.comparing(Message::getTimestamp))
                     .collect(Collectors.toList());
         }
@@ -674,7 +671,7 @@ public class IntegrationTests {
                 .value();
     }
 
-    private void assertExpectedMessage(Row row, Message message) {
+    private void assertExpectedMessage(Row row, OutputMessage message) {
         String actualType = row.getString("MESSAGE_TYPE");
         String actualValue = row.getString("MESSAGE_VALUE");
         UUID actualUuid = row.getUuid("MESSAGE_UUID");
@@ -683,12 +680,12 @@ public class IntegrationTests {
         Instant actualTimestamp = row.getInstant("MESSAGE_TIMESTAMP");
         Long actualOffset = row.getLong("MESSAGE_OFFSET");
         assertThat(actualOffset).isNotNull();
-        assertThat(actualUuid).isEqualTo(message.getPayload().getUuid());
-        assertThat(actualValue).isEqualTo(message.getPayload().getData());
-        assertThat(actualType).isEqualTo(message.getPayload().getType());
-        assertThat(actualSource).isEqualTo(message.getPayload().getSource());
+        assertThat(actualUuid).isEqualTo(message.getValue().getUuid());
+        assertThat(actualValue).isEqualTo(message.getValue().getData());
+        assertThat(actualType).isEqualTo(message.getValue().getType());
+        assertThat(actualSource).isEqualTo(message.getValue().getSource());
         assertThat(actualKey).isEqualTo(message.getKey());
-        assertThat(actualTimestamp).isAfterOrEqualTo(Instant.ofEpochMilli(message.getTimestamp()));
+        assertThat(actualTimestamp).isNotNull();
     }
 
     private void assertExpectedDesign(Row row, String data, String status, List<Tiles> tiles) {
@@ -707,37 +704,37 @@ public class IntegrationTests {
         assertThat(actualTiles).isEqualTo(tiles);
     }
 
-    private void assertExpectedDesignAggregateUpdateRequestedMessage(UUID designId, Message actualMessage) {
+    private void assertExpectedDesignAggregateUpdateRequestedMessage(UUID designId, InputMessage actualMessage) {
         assertThat(actualMessage.getTimestamp()).isNotNull();
-        assertThat(actualMessage.getPayload().getSource()).isEqualTo(MESSAGE_SOURCE);
+        assertThat(actualMessage.getValue().getSource()).isEqualTo(MESSAGE_SOURCE);
         assertThat(actualMessage.getKey()).isEqualTo(designId.toString());
-        assertThat(actualMessage.getPayload().getUuid()).isNotNull();
-        assertThat(actualMessage.getPayload().getType()).isEqualTo(DESIGN_AGGREGATE_UPDATE_REQUESTED);
-        DesignAggregateUpdateRequested actualEvent = Json.decodeValue(actualMessage.getPayload().getData(), DesignAggregateUpdateRequested.class);
+        assertThat(actualMessage.getValue().getUuid()).isNotNull();
+        assertThat(actualMessage.getValue().getType()).isEqualTo(DESIGN_AGGREGATE_UPDATE_REQUESTED);
+        DesignAggregateUpdateRequested actualEvent = Json.decodeValue(actualMessage.getValue().getData(), DesignAggregateUpdateRequested.class);
         assertThat(actualEvent.getUuid()).isEqualTo(designId);
         assertThat(actualEvent.getEsid()).isNotNull();
     }
 
-    private void assertExpectedDesignAggregateUpdateCompletedMessage(UUID designId, Message actualMessage, String data, String checksum) {
+    private void assertExpectedDesignAggregateUpdateCompletedMessage(UUID designId, InputMessage actualMessage, String data, String checksum) {
         assertThat(actualMessage.getTimestamp()).isNotNull();
-        assertThat(actualMessage.getPayload().getSource()).isEqualTo(MESSAGE_SOURCE);
+        assertThat(actualMessage.getValue().getSource()).isEqualTo(MESSAGE_SOURCE);
         assertThat(actualMessage.getKey()).isEqualTo(designId.toString());
-        assertThat(actualMessage.getPayload().getUuid()).isNotNull();
-        assertThat(actualMessage.getPayload().getType()).isEqualTo(DESIGN_AGGREGATE_UPDATE_COMPLETED);
-        DesignAggregateUpdateCompleted actualEvent = Json.decodeValue(actualMessage.getPayload().getData(), DesignAggregateUpdateCompleted.class);
+        assertThat(actualMessage.getValue().getUuid()).isNotNull();
+        assertThat(actualMessage.getValue().getType()).isEqualTo(DESIGN_AGGREGATE_UPDATE_COMPLETED);
+        DesignAggregateUpdateCompleted actualEvent = Json.decodeValue(actualMessage.getValue().getData(), DesignAggregateUpdateCompleted.class);
         assertThat(actualEvent.getUuid()).isEqualTo(designId);
         assertThat(actualEvent.getEsid()).isNotNull();
         assertThat(actualEvent.getData()).isEqualTo(data);
         assertThat(actualEvent.getChecksum()).isEqualTo(checksum);
     }
 
-    private void assertExpectedTileRenderRequestedMessage(Message actualMessage, String partitionKey) {
+    private void assertExpectedTileRenderRequestedMessage(InputMessage actualMessage, String partitionKey) {
         assertThat(actualMessage.getTimestamp()).isNotNull();
-        assertThat(actualMessage.getPayload().getSource()).isEqualTo(MESSAGE_SOURCE);
+        assertThat(actualMessage.getValue().getSource()).isEqualTo(MESSAGE_SOURCE);
         assertThat(actualMessage.getKey()).isEqualTo(partitionKey);
-        assertThat(actualMessage.getPayload().getUuid()).isNotNull();
-        assertThat(actualMessage.getPayload().getType()).isEqualTo(TILE_RENDER_REQUESTED);
-        assertThat(actualMessage.getPayload()).isNotNull();
+        assertThat(actualMessage.getValue().getUuid()).isNotNull();
+        assertThat(actualMessage.getValue().getType()).isEqualTo(TILE_RENDER_REQUESTED);
+        assertThat(actualMessage.getValue()).isNotNull();
     }
 
     private void assertExpectedTileRenderRequestedEvent(UUID designId, TileRenderRequested actualEvent, String data, String checksum) {
@@ -750,13 +747,13 @@ public class IntegrationTests {
         assertThat(actualEvent.getCol()).isNotNull();
     }
 
-    private void assertExpectedTileRenderCompletedMessage(UUID designId, Message actualMessage) {
+    private void assertExpectedTileRenderCompletedMessage(UUID designId, InputMessage actualMessage) {
         assertThat(actualMessage.getTimestamp()).isNotNull();
-        assertThat(actualMessage.getPayload().getSource()).isEqualTo(MESSAGE_SOURCE);
+        assertThat(actualMessage.getValue().getSource()).isEqualTo(MESSAGE_SOURCE);
         assertThat(actualMessage.getKey()).isEqualTo(designId.toString());
-        assertThat(actualMessage.getPayload().getUuid()).isNotNull();
-        assertThat(actualMessage.getPayload().getType()).isEqualTo(TILE_RENDER_COMPLETED);
-        assertThat(actualMessage.getPayload()).isNotNull();
+        assertThat(actualMessage.getValue().getUuid()).isNotNull();
+        assertThat(actualMessage.getValue().getType()).isEqualTo(TILE_RENDER_COMPLETED);
+        assertThat(actualMessage.getValue()).isNotNull();
     }
 
     private void assertExpectedTileRenderCompletedEvent(UUID designId, TileRenderCompleted actualEvent, String checksum) {
@@ -768,35 +765,35 @@ public class IntegrationTests {
         assertThat(actualEvent.getCol()).isNotNull();
     }
 
-    private void assertExpectedTileAggregateUpdateRequiredMessage(UUID designId, Message actualMessage) {
+    private void assertExpectedTileAggregateUpdateRequiredMessage(UUID designId, InputMessage actualMessage) {
         assertThat(actualMessage.getTimestamp()).isNotNull();
-        assertThat(actualMessage.getPayload().getSource()).isEqualTo(MESSAGE_SOURCE);
+        assertThat(actualMessage.getValue().getSource()).isEqualTo(MESSAGE_SOURCE);
         assertThat(actualMessage.getKey()).isEqualTo(designId.toString());
-        assertThat(actualMessage.getPayload().getUuid()).isNotNull();
-        assertThat(actualMessage.getPayload().getType()).isEqualTo(TILE_AGGREGATE_UPDATE_REQUIRED);
-        TileAggregateUpdateRequired actualEvent = Json.decodeValue(actualMessage.getPayload().getData(), TileAggregateUpdateRequired.class);
+        assertThat(actualMessage.getValue().getUuid()).isNotNull();
+        assertThat(actualMessage.getValue().getType()).isEqualTo(TILE_AGGREGATE_UPDATE_REQUIRED);
+        TileAggregateUpdateRequired actualEvent = Json.decodeValue(actualMessage.getValue().getData(), TileAggregateUpdateRequired.class);
         assertThat(actualEvent.getUuid()).isEqualTo(designId);
         assertThat(actualEvent.getEsid()).isNotNull();
     }
 
-    private void assertExpectedTileAggregateUpdateRequestedMessage(UUID designId, Message actualMessage) {
+    private void assertExpectedTileAggregateUpdateRequestedMessage(UUID designId, InputMessage actualMessage) {
         assertThat(actualMessage.getTimestamp()).isNotNull();
-        assertThat(actualMessage.getPayload().getSource()).isEqualTo(MESSAGE_SOURCE);
+        assertThat(actualMessage.getValue().getSource()).isEqualTo(MESSAGE_SOURCE);
         assertThat(actualMessage.getKey()).isEqualTo(designId.toString());
-        assertThat(actualMessage.getPayload().getUuid()).isNotNull();
-        assertThat(actualMessage.getPayload().getType()).isEqualTo(TILE_AGGREGATE_UPDATE_REQUESTED);
-        TileAggregateUpdateRequested actualEvent = Json.decodeValue(actualMessage.getPayload().getData(), TileAggregateUpdateRequested.class);
+        assertThat(actualMessage.getValue().getUuid()).isNotNull();
+        assertThat(actualMessage.getValue().getType()).isEqualTo(TILE_AGGREGATE_UPDATE_REQUESTED);
+        TileAggregateUpdateRequested actualEvent = Json.decodeValue(actualMessage.getValue().getData(), TileAggregateUpdateRequested.class);
         assertThat(actualEvent.getUuid()).isEqualTo(designId);
         assertThat(actualEvent.getEsid()).isNotNull();
     }
 
-    private void assertExpectedTileAggregateUpdateCompletedMessage(UUID designId, Message actualMessage) {
+    private void assertExpectedTileAggregateUpdateCompletedMessage(UUID designId, InputMessage actualMessage) {
         assertThat(actualMessage.getTimestamp()).isNotNull();
-        assertThat(actualMessage.getPayload().getSource()).isEqualTo(MESSAGE_SOURCE);
+        assertThat(actualMessage.getValue().getSource()).isEqualTo(MESSAGE_SOURCE);
         assertThat(actualMessage.getKey()).isEqualTo(designId.toString());
-        assertThat(actualMessage.getPayload().getUuid()).isNotNull();
-        assertThat(actualMessage.getPayload().getType()).isEqualTo(TILE_AGGREGATE_UPDATE_COMPLETED);
-        TileAggregateUpdateCompleted actualEvent = Json.decodeValue(actualMessage.getPayload().getData(), TileAggregateUpdateCompleted.class);
+        assertThat(actualMessage.getValue().getUuid()).isNotNull();
+        assertThat(actualMessage.getValue().getType()).isEqualTo(TILE_AGGREGATE_UPDATE_COMPLETED);
+        TileAggregateUpdateCompleted actualEvent = Json.decodeValue(actualMessage.getValue().getData(), TileAggregateUpdateCompleted.class);
         assertThat(actualEvent.getUuid()).isEqualTo(designId);
     }
 

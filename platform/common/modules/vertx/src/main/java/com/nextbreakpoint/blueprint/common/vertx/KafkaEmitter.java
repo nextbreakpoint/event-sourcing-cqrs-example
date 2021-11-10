@@ -1,6 +1,6 @@
 package com.nextbreakpoint.blueprint.common.vertx;
 
-import com.nextbreakpoint.blueprint.common.core.Message;
+import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.Json;
@@ -10,7 +10,7 @@ import rx.Single;
 
 import java.util.Objects;
 
-public class KafkaEmitter implements Controller<Message, Void> {
+public class KafkaEmitter implements Controller<OutputMessage, Void> {
     private final Logger logger = LoggerFactory.getLogger(KafkaEmitter.class.getName());
 
     private final KafkaProducer<String, String> producer;
@@ -24,7 +24,7 @@ public class KafkaEmitter implements Controller<Message, Void> {
     }
 
     @Override
-    public Single<Void> onNext(Message message) {
+    public Single<Void> onNext(OutputMessage message) {
         return Single.just(message)
 //                .doOnEach(action -> logger.debug("Sending message: " + action.getValue()))
                 .map(this::createKafkaRecord)
@@ -37,7 +37,7 @@ public class KafkaEmitter implements Controller<Message, Void> {
                 .retry(retries);
     }
 
-    private KafkaProducerRecord<String, String> createKafkaRecord(Message message) {
-        return KafkaProducerRecord.create(topic, message.getKey(), Json.encode(message.getPayload()));
+    private KafkaProducerRecord<String, String> createKafkaRecord(OutputMessage message) {
+        return KafkaProducerRecord.create(topic, message.getKey(), Json.encode(message.getValue()));
     }
 }

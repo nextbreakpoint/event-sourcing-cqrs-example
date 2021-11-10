@@ -5,30 +5,30 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.Objects;
 
-public class Message {
+public class InputMessage {
     private String key;
-    private long offset;
+    private Long offset;
     private Long timestamp;
-    private Payload payload;
+    private Payload value;
 
     @JsonCreator
-    public Message(
-        @JsonProperty("key") String key,
-        @JsonProperty("offset") long offset,
-        @JsonProperty("timestamp") Long timestamp,
-        @JsonProperty("payload") Payload payload
+    public InputMessage(
+            @JsonProperty("key") String key,
+            @JsonProperty("offset") Long offset,
+            @JsonProperty("value") Payload value,
+            @JsonProperty("timestamp") Long timestamp
     ) {
         this.key = Objects.requireNonNull(key);
-        this.offset = offset;
+        this.offset = Objects.requireNonNull(offset);;
+        this.value = Objects.requireNonNull(value);
         this.timestamp = Objects.requireNonNull(timestamp);
-        this.payload = Objects.requireNonNull(payload);
     }
 
     public String getKey() {
         return key;
     }
 
-    public long getOffset() {
+    public Long getOffset() {
         return offset;
     }
 
@@ -36,8 +36,8 @@ public class Message {
         return timestamp;
     }
 
-    public Payload getPayload() {
-        return payload;
+    public Payload getValue() {
+        return value;
     }
 
     @Override
@@ -45,8 +45,8 @@ public class Message {
         return "[" +
                 "key='" + key + '\'' +
                 ", offset=" + offset +
+                ", value=" + value +
                 ", timestamp=" + timestamp +
-                ", payload=" + payload +
                 "]";
     }
 }

@@ -10,7 +10,7 @@ import au.com.dius.pact.provider.junitsupport.loader.PactBroker;
 import com.nextbreakpoint.blueprint.common.core.Authority;
 import com.nextbreakpoint.blueprint.common.core.Environment;
 import com.nextbreakpoint.blueprint.common.core.Headers;
-import com.nextbreakpoint.blueprint.common.core.Message;
+import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.test.KafkaUtils;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
@@ -149,10 +149,10 @@ public class PactTests {
     }
   }
 
-  private static Optional<Message> safelyFindMessage(UUID designId) {
+  private static Optional<InputMessage> safelyFindMessage(UUID designId) {
     synchronized (records) {
       return records.stream()
-              .map(record -> Json.decodeValue(record.value(), Message.class))
+              .map(record -> Json.decodeValue(record.value(), InputMessage.class))
               .filter(value -> value.getKey().equals(designId.toString()))
               .findFirst();
     }

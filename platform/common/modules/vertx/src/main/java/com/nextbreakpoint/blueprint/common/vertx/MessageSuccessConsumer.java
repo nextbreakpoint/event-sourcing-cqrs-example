@@ -1,16 +1,16 @@
 package com.nextbreakpoint.blueprint.common.vertx;
 
-import com.nextbreakpoint.blueprint.common.core.Message;
+import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
 
 import java.util.function.BiConsumer;
 
-public class MessageSuccessConsumer implements BiConsumer<Message, Void> {
+public class MessageSuccessConsumer implements BiConsumer<InputMessage, Void> {
     private final Logger logger = LoggerFactory.getLogger(MessageSuccessConsumer.class.getName());
 
     @Override
-    public void accept(Message message, Void ignore) {
+    public void accept(InputMessage message, Void ignore) {
         logger.info("Message consumed " + message);
     }
 }

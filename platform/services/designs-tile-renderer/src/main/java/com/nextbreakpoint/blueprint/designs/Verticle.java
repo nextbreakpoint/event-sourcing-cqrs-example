@@ -2,7 +2,7 @@ package com.nextbreakpoint.blueprint.designs;
 
 import com.nextbreakpoint.blueprint.common.core.Environment;
 import com.nextbreakpoint.blueprint.common.core.IOUtils;
-import com.nextbreakpoint.blueprint.common.core.Message;
+import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.core.MessageType;
 import com.nextbreakpoint.blueprint.common.vertx.*;
 import io.vertx.core.DeploymentOptions;
@@ -153,7 +153,7 @@ public class Verticle extends AbstractVerticle {
 
             final CorsHandler corsHandler = CorsHandlerFactory.createWithAll(originPattern, asList(AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN), asList(CONTENT_TYPE, X_XSRF_TOKEN));
 
-            final Map<String, MessageHandler<Message, Void>> messageHandlers = new HashMap<>();
+            final Map<String, MessageHandler<InputMessage, Void>> messageHandlers = new HashMap<>();
 
             messageHandlers.put(MessageType.TILE_RENDER_REQUESTED, createTileRenderRequestedHandler(messageTopic, kafkaProducer, messageSource, workerExecutor, s3AsyncClient, s3Bucket));
 

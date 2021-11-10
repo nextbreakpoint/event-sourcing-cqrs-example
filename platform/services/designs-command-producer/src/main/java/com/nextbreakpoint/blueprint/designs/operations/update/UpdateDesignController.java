@@ -2,7 +2,7 @@ package com.nextbreakpoint.blueprint.designs.operations.update;
 
 import com.nextbreakpoint.blueprint.common.core.CommandStatus;
 import com.nextbreakpoint.blueprint.common.core.Mapper;
-import com.nextbreakpoint.blueprint.common.core.Message;
+import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.vertx.Controller;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
@@ -18,9 +18,9 @@ public class UpdateDesignController implements Controller<UpdateDesignRequest, U
 
     private final String topic;
     private final KafkaProducer<String, String> producer;
-    private final Mapper<UpdateDesignCommand, Message> mapper;
+    private final Mapper<UpdateDesignCommand, OutputMessage> mapper;
 
-    public UpdateDesignController(String topic, KafkaProducer<String, String> producer, Mapper<UpdateDesignCommand, Message> mapper) {
+    public UpdateDesignController(String topic, KafkaProducer<String, String> producer, Mapper<UpdateDesignCommand, OutputMessage> mapper) {
         this.topic = Objects.requireNonNull(topic);
         this.producer = Objects.requireNonNull(producer);
         this.mapper = Objects.requireNonNull(mapper);

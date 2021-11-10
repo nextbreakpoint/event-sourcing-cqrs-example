@@ -2,7 +2,7 @@ package com.nextbreakpoint.blueprint.designs.operations.delete;
 
 import com.nextbreakpoint.blueprint.common.core.CommandStatus;
 import com.nextbreakpoint.blueprint.common.core.Mapper;
-import com.nextbreakpoint.blueprint.common.core.Message;
+import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.vertx.Controller;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
@@ -18,9 +18,9 @@ public class DeleteDesignController implements Controller<DeleteDesignRequest, D
 
     private final String topic;
     private final KafkaProducer<String, String> producer;
-    private final Mapper<DeleteDesignCommand, Message> mapper;
+    private final Mapper<DeleteDesignCommand, OutputMessage> mapper;
 
-    public DeleteDesignController(String topic, KafkaProducer<String, String> producer, Mapper<DeleteDesignCommand, Message> mapper) {
+    public DeleteDesignController(String topic, KafkaProducer<String, String> producer, Mapper<DeleteDesignCommand, OutputMessage> mapper) {
         this.topic = Objects.requireNonNull(topic);
         this.producer = Objects.requireNonNull(producer);
         this.mapper = Objects.requireNonNull(mapper);

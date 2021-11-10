@@ -1,15 +1,15 @@
 package com.nextbreakpoint.blueprint.designs.operations.update;
 
 import com.nextbreakpoint.blueprint.common.core.Mapper;
-import com.nextbreakpoint.blueprint.common.core.Message;
 import com.nextbreakpoint.blueprint.common.core.MessageType;
+import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.core.Payload;
 import io.vertx.core.json.Json;
 
 import java.util.Objects;
 import java.util.UUID;
 
-public class UpdateDesignMessageMapper implements Mapper<UpdateDesignCommand, Message> {
+public class UpdateDesignMessageMapper implements Mapper<UpdateDesignCommand, OutputMessage> {
     private final String messageSource;
 
     public UpdateDesignMessageMapper(String messageSource) {
@@ -17,7 +17,7 @@ public class UpdateDesignMessageMapper implements Mapper<UpdateDesignCommand, Me
     }
 
     @Override
-    public Message transform(UpdateDesignCommand command) {
-        return new Message(command.getUuid().toString(), 0,  System.currentTimeMillis(), new Payload(UUID.randomUUID(), MessageType.DESIGN_UPDATE_REQUESTED, Json.encode(command), messageSource));
+    public OutputMessage transform(UpdateDesignCommand command) {
+        return new OutputMessage(command.getUuid().toString(), new Payload(UUID.randomUUID(), MessageType.DESIGN_UPDATE_REQUESTED, Json.encode(command), messageSource));
     }
 }

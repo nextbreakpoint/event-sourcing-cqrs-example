@@ -3,7 +3,7 @@ package com.nextbreakpoint.blueprint.designs;
 import com.fasterxml.jackson.core.JsonParser;
 import com.nextbreakpoint.blueprint.common.core.Environment;
 import com.nextbreakpoint.blueprint.common.core.IOUtils;
-import com.nextbreakpoint.blueprint.common.core.Message;
+import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.core.MessageType;
 import com.nextbreakpoint.blueprint.common.vertx.*;
 import com.nextbreakpoint.blueprint.designs.persistence.CassandraStore;
@@ -163,9 +163,9 @@ public class Verticle extends AbstractVerticle {
 
             final CorsHandler corsHandler = CorsHandlerFactory.createWithAll(originPattern, asList(AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN), asList(CONTENT_TYPE, X_XSRF_TOKEN));
 
-            final Map<String, MessageHandler<Message, Void>> messageHandlers = new HashMap<>();
+            final Map<String, MessageHandler<InputMessage, Void>> messageHandlers = new HashMap<>();
 
-            final Map<String, MessageHandler<Message, Void>> messageWithCompactionHandlers = new HashMap<>();
+            final Map<String, MessageHandler<InputMessage, Void>> messageWithCompactionHandlers = new HashMap<>();
 
             final KafkaPolling kafkaPolling = new KafkaPolling();
 

@@ -2,7 +2,7 @@ package com.nextbreakpoint.blueprint.designs;
 
 import com.nextbreakpoint.blueprint.common.core.Environment;
 import com.nextbreakpoint.blueprint.common.core.IOUtils;
-import com.nextbreakpoint.blueprint.common.core.Message;
+import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.core.MessageType;
 import com.nextbreakpoint.blueprint.common.vertx.*;
 import com.nextbreakpoint.blueprint.designs.handlers.EventsHandler;
@@ -115,7 +115,7 @@ public class Verticle extends AbstractVerticle {
 
             final Handler<RoutingContext> eventHandler = new AccessHandler(jwtProvider, EventsHandler.create(vertx), onAccessDenied, asList(ANONYMOUS, ADMIN, GUEST));
 
-            final Map<String, Handler<Message>> handlers = new HashMap<>();
+            final Map<String, Handler<InputMessage>> handlers = new HashMap<>();
 
             handlers.put(MessageType.DESIGN_CHANGED, Factory.createDesignChangedHandler(new DesignChangedController(vertx, "events.handler.input")));
 
@@ -182,14 +182,14 @@ public class Verticle extends AbstractVerticle {
         logger.error("Cannot process message", err);
     }
 
-    private void processRecord(Map<String, Handler<Message>> handlers, KafkaConsumerRecord<String, String> record) {
-        final Message message = Json.decodeValue(record.value(), Message.class);
-        final Handler<Message> handler = handlers.get(message.getType());
+    private void processRecord(Map<String, Handler<InputMessage>> handlers, KafkaConsumerRecord<String, String> record) {
+        final InputMessage message = Json.decodeValue(record.value(), InputMessage.class);
+        final Handler<InputMessage> handler = handlers.get(message.getValue().getType());
         if (handler != null) {
-            logger.info("Receive message of type: " + message.getType());
+            logger.info("Receive message of type: " + message.getValue().getType());
             handler.handle(message);
         } else {
-            logger.info("Ignore message of type: " + message.getType());
+            logger.info("Ignore message of type: " + message.getValue().getType());
         }
     }
 }

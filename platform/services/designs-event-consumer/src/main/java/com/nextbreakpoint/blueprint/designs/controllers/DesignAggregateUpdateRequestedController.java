@@ -2,7 +2,8 @@ package com.nextbreakpoint.blueprint.designs.controllers;
 
 import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.nextbreakpoint.blueprint.common.core.Mapper;
-import com.nextbreakpoint.blueprint.common.core.Message;
+import com.nextbreakpoint.blueprint.common.core.InputMessage;
+import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.events.DesignAggregateUpdateCompleted;
 import com.nextbreakpoint.blueprint.common.events.DesignAggregateUpdateRequested;
 import com.nextbreakpoint.blueprint.common.vertx.Controller;
@@ -14,15 +15,15 @@ import rx.Single;
 
 import java.util.Objects;
 
-public class DesignAggregateUpdateRequestedController implements Controller<Message, Void> {
+public class DesignAggregateUpdateRequestedController implements Controller<InputMessage, Void> {
     private final Logger logger = LoggerFactory.getLogger(DesignAggregateUpdateRequestedController.class.getName());
 
-    private final Mapper<Message, DesignAggregateUpdateRequested> inputMapper;
-    private final Mapper<DesignAggregateUpdateCompleted, Message> outputMapper;
+    private final Mapper<InputMessage, DesignAggregateUpdateRequested> inputMapper;
+    private final Mapper<DesignAggregateUpdateCompleted, OutputMessage> outputMapper;
     private final KafkaEmitter emitter;
     private final Store store;
 
-    public DesignAggregateUpdateRequestedController(Store store, Mapper<Message, DesignAggregateUpdateRequested> inputMapper, Mapper<DesignAggregateUpdateCompleted, Message> outputMapper, KafkaEmitter emitter) {
+    public DesignAggregateUpdateRequestedController(Store store, Mapper<InputMessage, DesignAggregateUpdateRequested> inputMapper, Mapper<DesignAggregateUpdateCompleted, OutputMessage> outputMapper, KafkaEmitter emitter) {
         this.store = Objects.requireNonNull(store);
         this.inputMapper =  Objects.requireNonNull(inputMapper);
         this.outputMapper = Objects.requireNonNull(outputMapper);
@@ -30,7 +31,7 @@ public class DesignAggregateUpdateRequestedController implements Controller<Mess
     }
 
     @Override
-    public Single<Void> onNext(Message message) {
+    public Single<Void> onNext(InputMessage message) {
         return Single.just(message)
                 .map(inputMapper::transform)
                 .flatMap(this::onAggregateUpdateRequested)

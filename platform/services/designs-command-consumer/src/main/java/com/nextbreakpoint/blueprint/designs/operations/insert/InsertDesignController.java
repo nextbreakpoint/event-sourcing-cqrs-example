@@ -1,7 +1,8 @@
 package com.nextbreakpoint.blueprint.designs.operations.insert;
 
 import com.nextbreakpoint.blueprint.common.core.Mapper;
-import com.nextbreakpoint.blueprint.common.core.Message;
+import com.nextbreakpoint.blueprint.common.core.InputMessage;
+import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.designs.Store;
 import com.nextbreakpoint.blueprint.designs.common.AbstractController;
 import com.nextbreakpoint.blueprint.designs.model.DesignChanged;
@@ -16,7 +17,7 @@ import java.util.UUID;
 public class InsertDesignController extends AbstractController<InsertDesignCommand> {
     private final Logger logger = LoggerFactory.getLogger(InsertDesignController.class.getName());
 
-    public InsertDesignController(Store store, String topic, KafkaProducer<String, String> producer, Mapper<DesignChanged, Message> mapper) {
+    public InsertDesignController(Store store, String topic, KafkaProducer<String, String> producer, Mapper<DesignChanged, OutputMessage> mapper) {
         super(store, topic, producer, mapper, 3);
     }
 

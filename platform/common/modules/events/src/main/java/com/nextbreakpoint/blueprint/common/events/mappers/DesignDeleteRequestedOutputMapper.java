@@ -1,28 +1,23 @@
 package com.nextbreakpoint.blueprint.common.events.mappers;
 
-import com.nextbreakpoint.blueprint.common.core.Mapper;
-import com.nextbreakpoint.blueprint.common.core.Message;
-import com.nextbreakpoint.blueprint.common.core.MessageType;
-import com.nextbreakpoint.blueprint.common.core.Payload;
+import com.nextbreakpoint.blueprint.common.core.*;
 import com.nextbreakpoint.blueprint.common.events.DesignDeleteRequested;
 import io.vertx.core.json.Json;
 
 import java.util.Objects;
 import java.util.UUID;
 
-public class DesignDeleteRequestedMessageMapper implements Mapper<DesignDeleteRequested, Message> {
+public class DesignDeleteRequestedOutputMapper implements Mapper<DesignDeleteRequested, OutputMessage> {
     private final String messageSource;
 
-    public DesignDeleteRequestedMessageMapper(String messageSource) {
+    public DesignDeleteRequestedOutputMapper(String messageSource) {
         this.messageSource = Objects.requireNonNull(messageSource);
     }
 
     @Override
-    public Message transform(DesignDeleteRequested event) {
-        return new Message(
+    public OutputMessage transform(DesignDeleteRequested event) {
+        return new OutputMessage(
                 event.getUuid().toString(),
-                0,
-                System.currentTimeMillis(),
                 new Payload(
                         UUID.randomUUID(),
                         MessageType.DESIGN_DELETE_REQUESTED,

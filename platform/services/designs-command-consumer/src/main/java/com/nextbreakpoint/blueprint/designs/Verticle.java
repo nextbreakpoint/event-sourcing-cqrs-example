@@ -2,7 +2,7 @@ package com.nextbreakpoint.blueprint.designs;
 
 import com.nextbreakpoint.blueprint.common.core.Environment;
 import com.nextbreakpoint.blueprint.common.core.IOUtils;
-import com.nextbreakpoint.blueprint.common.core.Message;
+import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.core.MessageType;
 import com.nextbreakpoint.blueprint.common.vertx.*;
 import com.nextbreakpoint.blueprint.designs.model.RecordAndMessage;
@@ -189,13 +189,13 @@ public class Verticle extends AbstractVerticle {
     }
 
     private void processRecord(Map<String, Handler<RecordAndMessage>> handlers, KafkaConsumerRecord<String, String> record) {
-        final Message message = Json.decodeValue(record.value(), Message.class);
-        final Handler<RecordAndMessage> handler = handlers.get(message.getType());
+        final InputMessage message = Json.decodeValue(record.value(), InputMessage.class);
+        final Handler<RecordAndMessage> handler = handlers.get(message.getValue().getType());
         if (handler != null) {
-            logger.info("Receive message of type: " + message.getType());
+            logger.info("Receive message of type: " + message.getValue().getType());
             handler.handle(new RecordAndMessage(record, message));
         } else {
-            logger.info("Ignore message of type: " + message.getType());
+            logger.info("Ignore message of type: " + message.getValue().getType());
         }
     }
 }

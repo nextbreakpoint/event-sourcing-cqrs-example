@@ -7,7 +7,7 @@ import com.datastax.oss.driver.api.core.data.UdtValue;
 import com.datastax.oss.driver.api.core.metadata.Metadata;
 import com.datastax.oss.driver.api.core.type.UserDefinedType;
 import com.nextbreakpoint.blueprint.common.core.Checksum;
-import com.nextbreakpoint.blueprint.common.core.Message;
+import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.core.MessageType;
 import com.nextbreakpoint.blueprint.common.events.DesignDeleteRequested;
 import com.nextbreakpoint.blueprint.common.events.DesignInsertRequested;
@@ -59,7 +59,7 @@ public class CassandraStore implements Store {
         this.supplier = Objects.requireNonNull(supplier);
     }
 
-    public Single<Void> appendMessage(Message message) {
+    public Single<Void> appendMessage(InputMessage message) {
         return withSession()
                 .flatMap(session -> appendMessage(session, makeAppendMessageParams(message)))
                 .doOnError(err -> handleError(ERROR_INSERT_MESSAGE, err));
@@ -148,23 +148,23 @@ public class CassandraStore implements Store {
     private DesignAccumulator convertRowToAccumulator(Row row) {
         final long offset = row.getLong("MESSAGE_OFFSET");
         final String type = row.getString("MESSAGE_TYPE");
-        final String data = row.getString("MESSAGE_VALUE");
+        final String value = row.getString("MESSAGE_VALUE");
         final Instant timestamp = row.getInstant("MESSAGE_TIMESTAMP");
         switch (type) {
             case MessageType.DESIGN_INSERT_REQUESTED: {
-                DesignInsertRequested event = Json.decodeValue(data, DesignInsertRequested.class);
+                DesignInsertRequested event = Json.decodeValue(value, DesignInsertRequested.class);
                 return new DesignAccumulator(event.getEvid(), event.getUuid(), offset, event.getData(), "CREATED", Checksum.of(event.getData()), event.getLevels(), createTilesMap(event.getLevels()), new Date(timestamp.toEpochMilli()));
             }
             case MessageType.DESIGN_UPDATE_REQUESTED: {
-                DesignUpdateRequested event = Json.decodeValue(data, DesignUpdateRequested.class);
+                DesignUpdateRequested event = Json.decodeValue(value, DesignUpdateRequested.class);
                 return new DesignAccumulator(event.getEvid(), event.getUuid(), offset, event.getData(), "UPDATED", Checksum.of(event.getData()), event.getLevels(), null, new Date(timestamp.toEpochMilli()));
             }
             case MessageType.DESIGN_DELETE_REQUESTED: {
-                DesignDeleteRequested event = Json.decodeValue(data, DesignDeleteRequested.class);
+                DesignDeleteRequested event = Json.decodeValue(value, DesignDeleteRequested.class);
                 return new DesignAccumulator(event.getEvid(), event.getUuid(), offset, null, "DELETED", null, 0, null, new Date(timestamp.toEpochMilli()));
             }
             case MessageType.TILE_RENDER_COMPLETED: {
-                TileRenderCompleted event = Json.decodeValue(data, TileRenderCompleted.class);
+                TileRenderCompleted event = Json.decodeValue(value, TileRenderCompleted.class);
                 return new DesignAccumulator(event.getEvid(), event.getUuid(), offset, null, null, null, 0, createTilesMap(event), new Date(timestamp.toEpochMilli()));
             }
             default: {
@@ -260,8 +260,8 @@ public class CassandraStore implements Store {
         }
     }
 
-    private Object[] makeAppendMessageParams(Message message) {
-        return new Object[] { message.getPayload().getUuid(), message.getOffset(), message.getPayload().getType(), message.getPayload().getData(), message.getPayload().getSource(), message.getKey(), Instant.ofEpochMilli(message.getTimestamp()) };
+    private Object[] makeAppendMessageParams(InputMessage message) {
+        return new Object[] { message.getValue().getUuid(), message.getOffset(), message.getValue().getType(), message.getValue().getData(), message.getValue().getSource(), message.getKey(), Instant.ofEpochMilli(message.getTimestamp()) };
     }
 
     private Object[] makeSelectMessagesParams(UUID uuid, long fromEesid, long toEsid) {

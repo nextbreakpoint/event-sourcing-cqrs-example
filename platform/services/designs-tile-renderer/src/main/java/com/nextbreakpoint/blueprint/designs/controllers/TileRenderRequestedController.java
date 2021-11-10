@@ -2,7 +2,7 @@ package com.nextbreakpoint.blueprint.designs.controllers;
 
 import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.nextbreakpoint.blueprint.common.core.Mapper;
-import com.nextbreakpoint.blueprint.common.core.Message;
+import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.events.TileRenderCompleted;
 import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
 import com.nextbreakpoint.blueprint.common.vertx.Controller;
@@ -23,13 +23,13 @@ import static com.nextbreakpoint.blueprint.designs.common.Bucket.createBucketKey
 public class TileRenderRequestedController implements Controller<TileRenderRequested, Void> {
     private final Logger logger = LoggerFactory.getLogger(TileRenderRequestedController.class.getName());
 
-    private final Mapper<TileRenderCompleted, Message> mapper;
+    private final Mapper<TileRenderCompleted, OutputMessage> mapper;
     private final KafkaEmitter emitter;
     private final WorkerExecutor executor;
     private final S3Driver s3Driver;
     private final TileRenderer renderer;
 
-    public TileRenderRequestedController(Mapper<TileRenderCompleted, Message> mapper, KafkaEmitter emitter, WorkerExecutor executor, S3Driver s3Driver, TileRenderer renderer) {
+    public TileRenderRequestedController(Mapper<TileRenderCompleted, OutputMessage> mapper, KafkaEmitter emitter, WorkerExecutor executor, S3Driver s3Driver, TileRenderer renderer) {
         this.mapper = Objects.requireNonNull(mapper);
         this.emitter = Objects.requireNonNull(emitter);
         this.executor = Objects.requireNonNull(executor);

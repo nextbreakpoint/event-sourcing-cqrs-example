@@ -18,25 +18,23 @@ import au.com.dius.pact.provider.junitsupport.loader.PactBroker;
 import com.datastax.oss.driver.api.core.cql.Row;
 import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.nextbreakpoint.blueprint.common.core.*;
-import com.nextbreakpoint.blueprint.common.events.DesignDeleteRequested;
 import com.nextbreakpoint.blueprint.common.events.DesignInsertRequested;
-import com.nextbreakpoint.blueprint.common.events.DesignUpdateRequested;
-import com.nextbreakpoint.blueprint.common.test.KafkaUtils;
+import com.nextbreakpoint.blueprint.common.events.mappers.DesignInsertRequestedOutputMapper;
+import com.nextbreakpoint.blueprint.common.test.KafkaTestEmitter;
+import com.nextbreakpoint.blueprint.common.test.KafkaTestPolling;
 import com.nextbreakpoint.blueprint.common.vertx.CassandraClientFactory;
+import com.nextbreakpoint.blueprint.common.vertx.KafkaClientFactory;
 import com.nextbreakpoint.blueprint.designs.model.DesignChangedEvent;
 import io.vertx.core.json.Json;
 import io.vertx.rxjava.cassandra.CassandraClient;
 import io.vertx.rxjava.core.Vertx;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.kafka.clients.producer.KafkaProducer;
-import org.apache.kafka.clients.producer.ProducerRecord;
+import io.vertx.rxjava.kafka.client.consumer.KafkaConsumer;
+import io.vertx.rxjava.kafka.client.producer.KafkaProducer;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
+import rx.schedulers.Schedulers;
 
 import java.io.IOException;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -55,16 +53,21 @@ public class PactTests {
     private static final UUID DESIGN_UUID_1 = new UUID(0L, 1L);
     private static final UUID DESIGN_UUID_2 = new UUID(0L, 2L);
     private static final UUID DESIGN_UUID_3 = new UUID(0L, 3L);
+    private static final String MESSAGE_SOURCE = "service-designs";
+    private static final String EVENTS_TOPIC_NAME = "design-event";
+    private static final String RENDERING_QUEUE_TOPIC_NAME = "tiles-rendering-queue";
 
     private static final TestScenario scenario = new TestScenario();
 
+    private static final Vertx vertx = new Vertx(io.vertx.core.Vertx.vertx());
+
     private static Environment environment = Environment.getDefaultEnvironment();
 
-    private static final List<ConsumerRecord<String, String>> records = new ArrayList<>();
-    private static KafkaConsumer<String, String> consumer;
-    private static KafkaProducer<String, String> producer;
     private static CassandraClient session;
-    private static Thread polling;
+
+    private static KafkaTestPolling eventMessagesPolling;
+    private static KafkaTestPolling renderMessagesPolling;
+    private static KafkaTestEmitter eventMessageEmitter;
 
     @BeforeAll
     public static void before() throws IOException, InterruptedException {
@@ -73,50 +76,50 @@ public class PactTests {
         System.setProperty("pact.verifier.publishResults", "true");
         System.setProperty("pact.provider.version", scenario.getVersion());
 
-        final Vertx vertx = new Vertx(io.vertx.core.Vertx.vertx());
+        KafkaProducer<String, String> producer = KafkaClientFactory.createProducer(environment, vertx, scenario.createProducerConfig());
+
+        KafkaConsumer<String, String> eventMessagesConsumer = KafkaClientFactory.createConsumer(environment, vertx, scenario.createConsumerConfig("test"));
+
+        KafkaConsumer<String, String> renderMessagesConsumer = KafkaClientFactory.createConsumer(environment, vertx, scenario.createConsumerConfig("test-rendering"));
 
         session = CassandraClientFactory.create(environment, vertx, scenario.createCassandraConfig());
 
-        producer = KafkaUtils.createProducer(environment, scenario.createProducerConfig());
+        eventMessagesConsumer.rxSubscribe(Collections.singleton(EVENTS_TOPIC_NAME))
+//                .flatMap(ignore -> eventMessagesConsumer.rxPoll(Duration.ofSeconds(5)))
+//                .flatMap(records -> eventMessagesConsumer.rxAssignment())
+//                .flatMap(partitions -> eventMessagesConsumer.rxSeekToEnd(partitions))
+                .doOnError(Throwable::printStackTrace)
+                .subscribeOn(Schedulers.io())
+                .toBlocking()
+                .value();
 
-        consumer = KafkaUtils.createConsumer(environment, scenario.createConsumerConfig("test"));
+        renderMessagesConsumer.rxSubscribe(Collections.singleton(RENDERING_QUEUE_TOPIC_NAME))
+//                .flatMap(ignore -> renderMessagesConsumer.rxPoll(Duration.ofSeconds(5)))
+//                .flatMap(records -> renderMessagesConsumer.rxAssignment())
+//                .flatMap(partitions -> renderMessagesConsumer.rxSeekToEnd(partitions))
+                .doOnError(Throwable::printStackTrace)
+                .subscribeOn(Schedulers.io())
+                .toBlocking()
+                .value();
 
-        consumer.subscribe(Collections.singleton("design-event"));
+        eventMessagesPolling = new KafkaTestPolling(eventMessagesConsumer);
+        renderMessagesPolling = new KafkaTestPolling(renderMessagesConsumer);
 
-        polling = createConsumerThread();
+        eventMessagesPolling.startPolling();
+        renderMessagesPolling.startPolling();
 
-        polling.start();
+        eventMessageEmitter = new KafkaTestEmitter(producer, EVENTS_TOPIC_NAME);
     }
 
     @AfterAll
     public static void after() throws IOException, InterruptedException {
-        if (polling != null) {
-            try {
-                polling.interrupt();
-                polling.join();
-            } catch (Exception ignore) {
-            }
-        }
-
-        if (consumer != null) {
-            try {
-                consumer.close();
-            } catch (Exception ignore) {
-            }
-        }
-
-        if (producer != null) {
-            try {
-                producer.close();
-            } catch (Exception ignore) {
-            }
-        }
-
-        if (session != null) {
-            try {
-                session.close();
-            } catch (Exception ignore) {
-            }
+        try {
+            vertx.rxClose()
+                    .doOnError(Throwable::printStackTrace)
+                    .subscribeOn(Schedulers.io())
+                    .toBlocking()
+                    .value();
+        } catch (Exception ignore) {
         }
 
         scenario.after();
@@ -229,9 +232,9 @@ public class PactTests {
 
             final UUID designId = designInsertEvent.getUuid();
 
-            safelyClearMessages();
+            eventMessagesPolling.clearMessages();
 
-            producer.send(createKafkaRecord(insertDesignMessage));
+            eventMessageEmitter.sendMessage(insertDesignMessage);
 
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
@@ -274,7 +277,7 @@ public class PactTests {
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final List<InputMessage> messages = safelyFindMessages(designId.toString());
+                        final List<InputMessage> messages = eventMessagesPolling.findMessages(designId.toString(), MESSAGE_SOURCE, MessageType.DESIGN_CHANGED);
                         assertThat(messages).hasSize(1);
                         final InputMessage actualMessage = messages.get(messages.size() - 1);
                         assertThat(actualMessage.getTimestamp()).isNotNull();
@@ -299,13 +302,11 @@ public class PactTests {
 
             final UUID designId = designInsertEvent.getUuid();
 
-            safelyClearMessages();
+            eventMessagesPolling.clearMessages();
 
-            producer.send(createKafkaRecord(insertDesignMessage));
+            eventMessageEmitter.sendMessage(insertDesignMessage);
 
-            pause(100);
-
-            producer.send(createKafkaRecord(updateDesignMessage));
+            eventMessageEmitter.sendMessage(updateDesignMessage);
 
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
@@ -354,7 +355,7 @@ public class PactTests {
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final List<InputMessage> messages = safelyFindMessages(designId.toString());
+                        final List<InputMessage> messages = eventMessagesPolling.findMessages(designId.toString(), MESSAGE_SOURCE, MessageType.DESIGN_CHANGED);
                         assertThat(messages).hasSize(2);
                         final InputMessage actualMessage = messages.get(messages.size() - 1);
                         assertThat(actualMessage.getTimestamp()).isNotNull();
@@ -379,13 +380,11 @@ public class PactTests {
 
             final UUID designId = designInsertEvent.getUuid();
 
-            safelyClearMessages();
+            eventMessagesPolling.clearMessages();
 
-            producer.send(createKafkaRecord(insertDesignMessage));
+            eventMessageEmitter.sendMessage(insertDesignMessage);
 
-            pause(100);
-
-            producer.send(createKafkaRecord(deleteDesignMessage));
+            eventMessageEmitter.sendMessage(deleteDesignMessage);
 
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
@@ -428,7 +427,7 @@ public class PactTests {
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final List<InputMessage> messages = safelyFindMessages(designId.toString());
+                        final List<InputMessage> messages = eventMessagesPolling.findMessages(designId.toString(), MESSAGE_SOURCE, MessageType.DESIGN_CHANGED);
                         assertThat(messages).hasSize(2);
                         final InputMessage actualMessage = messages.get(messages.size() - 1);
                         assertThat(actualMessage.getTimestamp()).isNotNull();
@@ -467,24 +466,20 @@ public class PactTests {
 
         @PactVerifyProvider("design changed event 1")
         public String produceDesignChanged1() {
-            final long eventTimestamp = System.currentTimeMillis();
-
             final UUID designId = DESIGN_UUID_1;
 
             final DesignInsertRequested designInsertEvent = new DesignInsertRequested(Uuids.timeBased(), designId, JSON_1, 3);
 
-            final long messageTimestamp = System.currentTimeMillis();
+            final OutputMessage insertDesignMessage = new DesignInsertRequestedOutputMapper("test").transform(designInsertEvent);
 
-            final OutputMessage insertDesignMessage = createInsertDesignMessage(UUID.randomUUID(), designId, messageTimestamp, designInsertEvent);
+            eventMessagesPolling.clearMessages();
 
-            safelyClearMessages();
-
-            producer.send(createKafkaRecord(insertDesignMessage));
+            eventMessageEmitter.sendMessage(insertDesignMessage);
 
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final List<InputMessage> messages = safelyFindMessages(designId.toString());
+                        final List<InputMessage> messages = eventMessagesPolling.findMessages(designId.toString(), MESSAGE_SOURCE, MessageType.DESIGN_CHANGED);
                         assertThat(messages).hasSize(2);
                         final InputMessage actualMessage = messages.get(messages.size() - 1);
                         assertThat(actualMessage.getTimestamp()).isNotNull();
@@ -497,7 +492,7 @@ public class PactTests {
                         assertThat(actualEvent.getTimestamp()).isNotNull();
                     });
 
-            final List<InputMessage> messages = safelyFindMessages(designId.toString());
+            final List<InputMessage> messages = eventMessagesPolling.findMessages(designId.toString(), MESSAGE_SOURCE, MessageType.DESIGN_CHANGED);
             assertThat(messages.isEmpty()).isFalse();
             InputMessage decodedMessage = messages.get(messages.size() - 1);
 
@@ -506,24 +501,20 @@ public class PactTests {
 
         @PactVerifyProvider("design changed event 2")
         public String produceDesignChanged2() {
-            final long eventTimestamp = System.currentTimeMillis();
-
             final UUID designId = DESIGN_UUID_2;
 
             final DesignInsertRequested designInsertEvent = new DesignInsertRequested(Uuids.timeBased(), designId, JSON_1, 3);
 
-            final long messageTimestamp = System.currentTimeMillis();
+            final OutputMessage insertDesignMessage = new DesignInsertRequestedOutputMapper("test").transform(designInsertEvent);
 
-            final OutputMessage insertDesignMessage = createInsertDesignMessage(UUID.randomUUID(), designId, messageTimestamp, designInsertEvent);
+            eventMessagesPolling.clearMessages();
 
-            safelyClearMessages();
-
-            producer.send(createKafkaRecord(insertDesignMessage));
+            eventMessageEmitter.sendMessage(insertDesignMessage);
 
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final List<InputMessage> messages = safelyFindMessages(designId.toString());
+                        final List<InputMessage> messages = eventMessagesPolling.findMessages(designId.toString(), MESSAGE_SOURCE, MessageType.DESIGN_CHANGED);
                         assertThat(messages).hasSize(2);
                         final InputMessage actualMessage = messages.get(messages.size() - 1);
                         assertThat(actualMessage.getTimestamp()).isNotNull();
@@ -536,70 +527,11 @@ public class PactTests {
                         assertThat(actualEvent.getTimestamp()).isNotNull();
                     });
 
-            final List<InputMessage> messages = safelyFindMessages(designId.toString());
+            final List<InputMessage> messages = eventMessagesPolling.findMessages(designId.toString(), MESSAGE_SOURCE, MessageType.DESIGN_CHANGED);
             assertThat(messages.isEmpty()).isFalse();
             InputMessage decodedMessage = messages.get(messages.size() - 1);
 
             return Json.encode(decodedMessage);
         }
-    }
-
-    private static ProducerRecord<String, String> createKafkaRecord(OutputMessage message) {
-        return new ProducerRecord<>("design-event", message.getKey(), Json.encode(message.getValue()));
-    }
-
-    private static OutputMessage createInsertDesignMessage(UUID messageId, UUID partitionKey, long timestamp, DesignInsertRequested event) {
-        return new OutputMessage(partitionKey.toString(), new Payload(messageId, MessageType.DESIGN_INSERT_REQUESTED, Json.encode(event), "test"));
-    }
-
-    private static OutputMessage createUpdateDesignMessage(UUID messageId, UUID partitionKey, long timestamp, DesignUpdateRequested event) {
-        return new OutputMessage(partitionKey.toString(), new Payload(messageId, MessageType.DESIGN_UPDATE_REQUESTED, Json.encode(event), "test"));
-    }
-
-    private static OutputMessage createDeleteDesignMessage(UUID messageId, UUID partitionKey, long timestamp, DesignDeleteRequested event) {
-        return new OutputMessage(partitionKey.toString(), new Payload(messageId, MessageType.DESIGN_DELETE_REQUESTED, Json.encode(event), "test"));
-    }
-
-    private static void pause(int millis) {
-        try {
-            Thread.sleep(millis);
-        } catch (InterruptedException ignored) {
-        }
-    }
-
-    private static List<InputMessage> safelyFindMessages(String designId) {
-        synchronized (records) {
-            return records.stream()
-                    .map(record -> Json.decodeValue(record.value(), InputMessage.class))
-                    .filter(value -> value.getKey().equals(designId))
-                    .collect(Collectors.toList());
-        }
-    }
-
-    private static void safelyClearMessages() {
-        synchronized (records) {
-            records.clear();
-        }
-    }
-
-    private static void safelyAppendRecord(ConsumerRecord<String, String> record) {
-        synchronized (records) {
-            records.add(record);
-        }
-    }
-
-    private static Thread createConsumerThread() {
-        return new Thread(() -> {
-            try {
-                while (!Thread.interrupted()) {
-                    ConsumerRecords<String, String> consumerRecords = consumer.poll(Duration.ofSeconds(5));
-                    System.out.println("Received " + consumerRecords.count() + " messages");
-                    consumerRecords.forEach(PactTests::safelyAppendRecord);
-                    consumer.commitSync();
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
     }
 }

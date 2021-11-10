@@ -19,7 +19,7 @@ public class TileRenderCompletedMessageMapper implements Mapper<TileRenderComple
     @Override
     public Message transform(TileRenderCompleted event) {
         return new Message(
-                UUID.randomUUID().toString(),
+                UUID.randomUUID(),
                 MessageType.TILE_RENDER_COMPLETED,
                 Json.encode(event),
                 messageSource,

@@ -19,7 +19,7 @@ public class DesignUpdateRequestedMessageMapper implements Mapper<DesignUpdateRe
     @Override
     public Message transform(DesignUpdateRequested event) {
         return new Message(
-                UUID.randomUUID().toString(),
+                UUID.randomUUID(),
                 MessageType.DESIGN_INSERT_REQUESTED,
                 Json.encode(event),
                 messageSource,

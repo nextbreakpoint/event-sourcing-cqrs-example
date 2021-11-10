@@ -19,7 +19,7 @@ public class TileAggregateUpdateRequiredMessageMapper implements Mapper<TileAggr
     @Override
     public Message transform(TileAggregateUpdateRequired event) {
         return new Message(
-                UUID.randomUUID().toString(),
+                UUID.randomUUID(),
                 MessageType.TILE_AGGREGATE_UPDATE_REQUIRED,
                 Json.encode(event),
                 messageSource,

@@ -19,7 +19,7 @@ public class DesignDeleteRequestedMessageMapper implements Mapper<DesignDeleteRe
     @Override
     public Message transform(DesignDeleteRequested event) {
         return new Message(
-                UUID.randomUUID().toString(),
+                UUID.randomUUID(),
                 MessageType.DESIGN_DELETE_REQUESTED,
                 Json.encode(event),
                 messageSource,

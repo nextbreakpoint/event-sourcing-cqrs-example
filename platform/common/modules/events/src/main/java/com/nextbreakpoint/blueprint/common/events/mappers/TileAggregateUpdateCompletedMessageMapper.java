@@ -19,7 +19,7 @@ public class TileAggregateUpdateCompletedMessageMapper implements Mapper<TileAgg
     @Override
     public Message transform(TileAggregateUpdateCompleted event) {
         return new Message(
-                UUID.randomUUID().toString(),
+                UUID.randomUUID(),
                 MessageType.TILE_AGGREGATE_UPDATE_COMPLETED,
                 Json.encode(event),
                 messageSource,

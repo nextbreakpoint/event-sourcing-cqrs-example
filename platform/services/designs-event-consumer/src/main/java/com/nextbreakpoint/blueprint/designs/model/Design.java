@@ -6,6 +6,7 @@ import java.util.Objects;
 import java.util.UUID;
 
 public class Design {
+    private final UUID evid;
     private final UUID uuid;
     private final UUID esid;
     private final String json;
@@ -16,6 +17,7 @@ public class Design {
     private final List<Tiles> tiles;
 
     public Design(
+        UUID evid,
         UUID uuid,
         UUID esid,
         String json,
@@ -25,6 +27,7 @@ public class Design {
         Date updated,
         List<Tiles> tiles
     ) {
+        this.evid = Objects.requireNonNull(evid);
         this.uuid = Objects.requireNonNull(uuid);
         this.esid = Objects.requireNonNull(esid);
         this.json = Objects.requireNonNull(json);
@@ -33,6 +36,10 @@ public class Design {
         this.levels = levels;
         this.updated = Objects.requireNonNull(updated);
         this.tiles = Objects.requireNonNull(tiles);
+    }
+
+    public UUID getEvid() {
+        return evid;
     }
 
     public UUID getUuid() {
@@ -65,19 +72,5 @@ public class Design {
 
     public List<Tiles> getTiles() {
         return tiles;
-    }
-
-    @Override
-    public String toString() {
-        return "Design{" +
-                "uuid='" + uuid + '\'' +
-                ", esid='" + esid + '\'' +
-                ", json='" + json + '\'' +
-                ", status='" + status + '\'' +
-                ", checksum='" + checksum + '\'' +
-                ", levels='" + levels + '\'' +
-                ", updated='" + updated + '\'' +
-                ", tiles='" + tiles + '\'' +
-                '}';
     }
 }

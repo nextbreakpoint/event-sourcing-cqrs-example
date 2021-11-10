@@ -17,6 +17,8 @@ import java.util.concurrent.TimeUnit;
 public class KafkaPolling {
     private static final Logger logger = LoggerFactory.getLogger(KafkaPolling.class.getName());
 
+    private int pollingInterval = 30000;
+
     public void pollRecords(KafkaConsumer<String, String> kafkaConsumer, Map<String, MessageHandler<Message, Void>> messageHandlers) {
         for (;;) {
             try {
@@ -119,7 +121,7 @@ public class KafkaPolling {
 
             final long duration = System.currentTimeMillis() - timestamp;
 
-            if (duration > 60000) {
+            if (duration > pollingInterval) {
                 break;
             }
         }

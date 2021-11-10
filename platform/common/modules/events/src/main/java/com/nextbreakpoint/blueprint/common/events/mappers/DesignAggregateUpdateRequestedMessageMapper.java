@@ -19,7 +19,7 @@ public class DesignAggregateUpdateRequestedMessageMapper implements Mapper<Desig
     @Override
     public Message transform(DesignAggregateUpdateRequested event) {
         return new Message(
-                UUID.randomUUID().toString(),
+                UUID.randomUUID(),
                 MessageType.DESIGN_AGGREGATE_UPDATE_REQUESTED,
                 Json.encode(event),
                 messageSource,

@@ -19,7 +19,7 @@ public class DesignAggregateUpdateCompletedMessageMapper implements Mapper<Desig
     @Override
     public Message transform(DesignAggregateUpdateCompleted event) {
         return new Message(
-                UUID.randomUUID().toString(),
+                UUID.randomUUID(),
                 MessageType.DESIGN_AGGREGATE_UPDATE_COMPLETED,
                 Json.encode(event),
                 messageSource,

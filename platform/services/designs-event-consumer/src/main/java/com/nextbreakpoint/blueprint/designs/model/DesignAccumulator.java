@@ -4,8 +4,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class DesignAccumulator {
-    private UUID uuid;
     private UUID evid;
+    private UUID uuid;
+    private UUID esid;
     private String json;
     private String status;
     private String checksum;
@@ -14,8 +15,9 @@ public class DesignAccumulator {
     private Map<Integer, Tiles> tiles;
 
     public DesignAccumulator(
-        UUID uuid,
         UUID evid,
+        UUID uuid,
+        UUID esid,
         String json,
         String status,
         String checksum,
@@ -23,8 +25,9 @@ public class DesignAccumulator {
         Date updated,
         Map<Integer, Tiles> tiles
     ) {
-        this.uuid = uuid;
         this.evid = evid;
+        this.uuid = uuid;
+        this.esid = esid;
         this.json = json;
         this.status = status;
         this.checksum = checksum;
@@ -33,12 +36,16 @@ public class DesignAccumulator {
         this.tiles = tiles;
     }
 
+    public UUID getEvid() {
+        return evid;
+    }
+
     public UUID getUuid() {
         return uuid;
     }
 
-    public UUID getEvid() {
-        return evid;
+    public UUID getEsid() {
+        return esid;
     }
 
     public String getJson() {
@@ -69,6 +76,6 @@ public class DesignAccumulator {
         final List<Tiles> tiles = this.tiles.values().stream()
                 .sorted(Comparator.comparing(Tiles::getLevel))
                 .collect(Collectors.toList());
-        return new Design(uuid, evid, json, status, checksum, levels, updated, tiles);
+        return new Design(evid, uuid, esid, json, status, checksum, levels, updated, tiles);
     }
 }

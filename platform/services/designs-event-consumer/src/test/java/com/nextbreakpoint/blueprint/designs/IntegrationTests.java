@@ -1,6 +1,8 @@
 package com.nextbreakpoint.blueprint.designs;
 
+import com.datastax.oss.driver.api.core.ConsistencyLevel;
 import com.datastax.oss.driver.api.core.cql.Row;
+import com.datastax.oss.driver.api.core.data.UdtValue;
 import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.jayway.restassured.RestAssured;
 import com.nextbreakpoint.blueprint.common.core.Checksum;
@@ -10,6 +12,7 @@ import com.nextbreakpoint.blueprint.common.events.*;
 import com.nextbreakpoint.blueprint.common.vertx.CassandraClientFactory;
 import com.nextbreakpoint.blueprint.common.vertx.KafkaClientFactory;
 import com.nextbreakpoint.blueprint.designs.model.DesignChangedEvent;
+import com.nextbreakpoint.blueprint.designs.model.Tiles;
 import io.vertx.core.json.Json;
 import io.vertx.rxjava.cassandra.CassandraClient;
 import io.vertx.rxjava.core.RxHelper;
@@ -28,6 +31,7 @@ import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -53,6 +57,7 @@ public class IntegrationTests {
     private static final String RENDERING_QUEUE_TOPIC_NAME = "tiles-rendering-queue";
     private static final String CHECKSUM_1 = Checksum.of(JSON_1);
     private static final String CHECKSUM_2 = Checksum.of(JSON_2);
+    private static final int LEVELS = 3;
 
     private static final Environment environment = Environment.getDefaultEnvironment();
 
@@ -138,7 +143,7 @@ public class IntegrationTests {
 
             System.out.println("designId = " + designId);
 
-            final DesignInsertRequested designInsertRequested = new DesignInsertRequested(Uuids.timeBased(), designId, JSON_1, 3);
+            final DesignInsertRequested designInsertRequested = new DesignInsertRequested(Uuids.timeBased(), designId, JSON_1, LEVELS);
 
             final Message designInsertRequestedMessage = createDesignInsertRequestedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), designInsertRequested);
 
@@ -147,7 +152,7 @@ public class IntegrationTests {
 
             sendMessage(designInsertRequestedMessage);
 
-            await().atMost(ONE_MINUTE)
+            await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
                         final List<Row> rows = fetchMessages(designId);
@@ -155,12 +160,13 @@ public class IntegrationTests {
                         assertExpectedMessage(rows.get(0), designInsertRequestedMessage);
                     });
 
-            await().atMost(ONE_MINUTE)
+            await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
                         final List<Row> rows = fetchDesign(designId);
                         assertThat(rows).hasSize(1);
-                        assertExpectedDesign(rows.get(0), JSON_1, "CREATED");
+                        final List<Tiles> tiles = convertToTilesList(createTilesMap(LEVELS));
+                        assertExpectedDesign(rows.get(0), JSON_1, "CREATED", tiles);
                     });
 
             await().atMost(TEN_SECONDS)
@@ -183,7 +189,7 @@ public class IntegrationTests {
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
                         final List<Message> messages = safelyFindEventMessages(designId.toString(), MESSAGE_SOURCE, TILE_RENDER_REQUESTED);
-                        assertThat(messages).hasSize(totalTilesByLevels(3));
+                        assertThat(messages).hasSize(totalTilesByLevels(LEVELS));
                         messages.forEach(message -> assertExpectedTileRenderRequestedMessage(message, designId.toString()));
                         List<TileRenderRequested> events = extractTileRenderRequestedEvents(messages, CHECKSUM_1);
                         assertThat(events).hasSize(messages.size());
@@ -194,7 +200,7 @@ public class IntegrationTests {
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
                         final List<Message> messages = safelyFindRenderMessages(CHECKSUM_1, MESSAGE_SOURCE, TILE_RENDER_REQUESTED);
-                        assertThat(messages).hasSize(totalTilesByLevels(3));
+                        assertThat(messages).hasSize(totalTilesByLevels(LEVELS));
                         List<TileRenderRequested> events = extractTileRenderRequestedEvents(messages, CHECKSUM_1);
                         assertThat(events).hasSize(messages.size());
                         events.forEach(event -> assertExpectedTileRenderRequestedEvent(designId, event, JSON_1, CHECKSUM_1));
@@ -209,9 +215,9 @@ public class IntegrationTests {
 
             System.out.println("designId = " + designId);
 
-            final DesignInsertRequested designInsertRequested = new DesignInsertRequested(Uuids.timeBased(), designId, JSON_1, 3);
+            final DesignInsertRequested designInsertRequested = new DesignInsertRequested(Uuids.timeBased(), designId, JSON_1, LEVELS);
 
-            final DesignUpdateRequested designUpdateRequested = new DesignUpdateRequested(Uuids.timeBased(), designId, JSON_2, 3);
+            final DesignUpdateRequested designUpdateRequested = new DesignUpdateRequested(Uuids.timeBased(), designId, JSON_2, LEVELS);
 
             final Message designInsertRequestedMessage = createDesignInsertRequestedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), designInsertRequested);
 
@@ -223,7 +229,7 @@ public class IntegrationTests {
             sendMessage(designInsertRequestedMessage);
             sendMessage(designUpdateRequestedMessage);
 
-            await().atMost(ONE_MINUTE)
+            await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
                         final List<Row> rows = fetchMessages(designId);
@@ -234,12 +240,13 @@ public class IntegrationTests {
                         assertExpectedMessage(rows.get(1), designUpdateRequestedMessage);
                     });
 
-            await().atMost(ONE_MINUTE)
+            await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
                         final List<Row> rows = fetchDesign(designId);
                         assertThat(rows).hasSize(1);
-                        assertExpectedDesign(rows.get(0), JSON_2, "UPDATED");
+                        final List<Tiles> tiles = convertToTilesList(createTilesMap(LEVELS));
+                        assertExpectedDesign(rows.get(0), JSON_2, "UPDATED", tiles);
                     });
 
             await().atMost(TEN_SECONDS)
@@ -264,7 +271,7 @@ public class IntegrationTests {
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
                         final List<Message> messages = safelyFindEventMessages(designId.toString(), MESSAGE_SOURCE, TILE_RENDER_REQUESTED);
-                        assertThat(messages).hasSize(totalTilesByLevels(3) * 2);
+                        assertThat(messages).hasSize(totalTilesByLevels(LEVELS) * 2);
                         messages.forEach(message -> assertExpectedTileRenderRequestedMessage(message, designId.toString()));
                         List<TileRenderRequested> events1 = extractTileRenderRequestedEvents(messages, CHECKSUM_1);
                         List<TileRenderRequested> events2 = extractTileRenderRequestedEvents(messages, CHECKSUM_2);
@@ -278,7 +285,7 @@ public class IntegrationTests {
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
                         final List<Message> messages = safelyFindRenderMessages(CHECKSUM_2, MESSAGE_SOURCE, TILE_RENDER_REQUESTED);
-                        assertThat(messages).hasSize(totalTilesByLevels(3));
+                        assertThat(messages).hasSize(totalTilesByLevels(LEVELS));
                         List<TileRenderRequested> events = extractTileRenderRequestedEvents(messages, CHECKSUM_2);
                         assertThat(events).hasSize(messages.size());
                         events.forEach(event -> assertExpectedTileRenderRequestedEvent(designId, event, JSON_2, CHECKSUM_2));
@@ -293,7 +300,7 @@ public class IntegrationTests {
 
             System.out.println("designId = " + designId);
 
-            final DesignInsertRequested designInsertRequested = new DesignInsertRequested(Uuids.timeBased(), designId, JSON_1, 3);
+            final DesignInsertRequested designInsertRequested = new DesignInsertRequested(Uuids.timeBased(), designId, JSON_1, LEVELS);
 
             final DesignDeleteRequested designDeleteRequested = new DesignDeleteRequested(Uuids.timeBased(), designId);
 
@@ -307,7 +314,7 @@ public class IntegrationTests {
             sendMessage(designInsertRequestedMessage);
             sendMessage(designDeleteRequestedMessage);
 
-            await().atMost(ONE_MINUTE)
+            await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
                         final List<Row> rows = fetchMessages(designId);
@@ -318,12 +325,13 @@ public class IntegrationTests {
                         assertExpectedMessage(rows.get(1), designDeleteRequestedMessage);
                     });
 
-            await().atMost(ONE_MINUTE)
+            await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
                         final List<Row> rows = fetchDesign(designId);
                         assertThat(rows).hasSize(1);
-                        assertExpectedDesign(rows.get(0), JSON_1, "DELETED");
+                        final List<Tiles> tiles = convertToTilesList(createTilesMap(LEVELS));
+                        assertExpectedDesign(rows.get(0), JSON_1, "DELETED", tiles);
                     });
 
             await().atMost(TEN_SECONDS)
@@ -347,7 +355,7 @@ public class IntegrationTests {
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
                         final List<Message> messages = safelyFindEventMessages(designId.toString(), MESSAGE_SOURCE, TILE_RENDER_REQUESTED);
-                        assertThat(messages).hasSize(totalTilesByLevels(3));
+                        assertThat(messages).hasSize(totalTilesByLevels(LEVELS));
                         messages.forEach(message -> assertExpectedTileRenderRequestedMessage(message, designId.toString()));
                         List<TileRenderRequested> events = extractTileRenderRequestedEvents(messages, CHECKSUM_1);
                         assertThat(events).hasSize(messages.size());
@@ -358,7 +366,7 @@ public class IntegrationTests {
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
                         final List<Message> messages = safelyFindRenderMessages(CHECKSUM_1, MESSAGE_SOURCE, TILE_RENDER_REQUESTED);
-                        assertThat(messages).hasSize(totalTilesByLevels(3));
+                        assertThat(messages).hasSize(totalTilesByLevels(LEVELS));
                         List<TileRenderRequested> events = extractTileRenderRequestedEvents(messages, CHECKSUM_1);
                         assertThat(events).hasSize(messages.size());
                         events.forEach(event -> assertExpectedTileRenderRequestedEvent(designId, event, JSON_1, CHECKSUM_1));
@@ -371,47 +379,37 @@ public class IntegrationTests {
         public void shouldUpdateTheDesignWhenReceivingATileRenderCompletedMessage() {
             final UUID designId = UUID.randomUUID();
 
-            final UUID evid = Uuids.timeBased();
-
             System.out.println("designId = " + designId);
 
-            System.out.println("evid = " + evid);
-
-            final DesignInsertRequested designInsertRequested = new DesignInsertRequested(Uuids.timeBased(), designId, JSON_1, 3);
-
-            final TileRenderCompleted tileRenderCompleted1 = new TileRenderCompleted(Uuids.timeBased(), designId, evid, CHECKSUM_1, 0, 0, 0, "COMPLETED");
-            final TileRenderCompleted tileRenderCompleted2 = new TileRenderCompleted(Uuids.timeBased(), designId, evid, CHECKSUM_1, 0, 1, 0, "COMPLETED");
-            final TileRenderCompleted tileRenderCompleted3 = new TileRenderCompleted(Uuids.timeBased(), designId, evid, CHECKSUM_1, 0, 2, 1, "COMPLETED");
-            final TileRenderCompleted tileRenderCompleted4 = new TileRenderCompleted(Uuids.timeBased(), designId, evid, CHECKSUM_1, 0, 3, 1, "COMPLETED");
+            final DesignInsertRequested designInsertRequested = new DesignInsertRequested(Uuids.timeBased(), designId, JSON_1, LEVELS);
 
             final Message designInsertRequestedMessage = createDesignInsertRequestedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), designInsertRequested);
-
-            final Message tileRenderCompletedMessage1 = createTileRenderCompletedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), tileRenderCompleted1);
-            final Message tileRenderCompletedMessage2 = createTileRenderCompletedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), tileRenderCompleted2);
-            final Message tileRenderCompletedMessage3 = createTileRenderCompletedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), tileRenderCompleted3);
-            final Message tileRenderCompletedMessage4 = createTileRenderCompletedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), tileRenderCompleted4);
 
             safelyClearEventMessages();
             safelyClearRenderMessages();
 
             sendMessage(designInsertRequestedMessage);
 
-            await().atMost(ONE_MINUTE)
+            final UUID[] esid = new UUID[1];
+
+            await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
                         final List<Row> rows = fetchMessages(designId);
                         assertThat(rows).hasSize(1);
                         final Set<UUID> uuids = extractUuids(rows);
                         assertThat(uuids).contains(designId);
+                        esid[0] = rows.get(0).getUuid("MESSAGE_ESID");
                         assertExpectedMessage(rows.get(0), designInsertRequestedMessage);
                     });
 
-            await().atMost(ONE_MINUTE)
+            await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
                         final List<Row> rows = fetchDesign(designId);
                         assertThat(rows).hasSize(1);
-                        assertExpectedDesign(rows.get(0), JSON_1, "CREATED");
+                        final List<Tiles> tiles = convertToTilesList(createTilesMap(LEVELS));
+                        assertExpectedDesign(rows.get(0), JSON_1, "CREATED", tiles);
                     });
 
             await().atMost(TEN_SECONDS)
@@ -434,7 +432,7 @@ public class IntegrationTests {
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
                         final List<Message> messages = safelyFindEventMessages(designId.toString(), MESSAGE_SOURCE, TILE_RENDER_REQUESTED);
-                        assertThat(messages).hasSize(totalTilesByLevels(3));
+                        assertThat(messages).hasSize(totalTilesByLevels(LEVELS));
                         messages.forEach(message -> assertExpectedTileRenderRequestedMessage(message, designId.toString()));
                         List<TileRenderRequested> events = extractTileRenderRequestedEvents(messages, CHECKSUM_1);
                         assertThat(events).hasSize(messages.size());
@@ -445,41 +443,65 @@ public class IntegrationTests {
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
                         final List<Message> messages = safelyFindRenderMessages(CHECKSUM_1, MESSAGE_SOURCE, TILE_RENDER_REQUESTED);
-                        assertThat(messages).hasSize(totalTilesByLevels(3));
+                        assertThat(messages).hasSize(totalTilesByLevels(LEVELS));
                         List<TileRenderRequested> events = extractTileRenderRequestedEvents(messages, CHECKSUM_1);
                         assertThat(events).hasSize(messages.size());
                         events.forEach(event -> assertExpectedTileRenderRequestedEvent(designId, event, JSON_1, CHECKSUM_1));
                     });
 
+            System.out.println("esid = " + esid[0]);
+
+            final TileRenderCompleted tileRenderCompleted0 = new TileRenderCompleted(Uuids.timeBased(), designId, esid[0], CHECKSUM_1, 0, 0, 0, "FAILED");
+            final TileRenderCompleted tileRenderCompleted1 = new TileRenderCompleted(Uuids.timeBased(), designId, esid[0], CHECKSUM_1, 1, 0, 0, "COMPLETED");
+            final TileRenderCompleted tileRenderCompleted2 = new TileRenderCompleted(Uuids.timeBased(), designId, esid[0], CHECKSUM_1, 1, 1, 0, "COMPLETED");
+            final TileRenderCompleted tileRenderCompleted3 = new TileRenderCompleted(Uuids.timeBased(), designId, esid[0], CHECKSUM_1, 1, 2, 1, "COMPLETED");
+            final TileRenderCompleted tileRenderCompleted4 = new TileRenderCompleted(Uuids.timeBased(), designId, esid[0], CHECKSUM_1, 1, LEVELS, 1, "COMPLETED");
+
+            final Message tileRenderCompletedMessage0 = createTileRenderCompletedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), tileRenderCompleted0);
+            final Message tileRenderCompletedMessage1 = createTileRenderCompletedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), tileRenderCompleted1);
+            final Message tileRenderCompletedMessage2 = createTileRenderCompletedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), tileRenderCompleted2);
+            final Message tileRenderCompletedMessage3 = createTileRenderCompletedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), tileRenderCompleted3);
+            final Message tileRenderCompletedMessage4 = createTileRenderCompletedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), tileRenderCompleted4);
+
+            sendMessage(tileRenderCompletedMessage0);
             sendMessage(tileRenderCompletedMessage1);
             sendMessage(tileRenderCompletedMessage2);
             sendMessage(tileRenderCompletedMessage3);
             sendMessage(tileRenderCompletedMessage4);
 
-            await().atMost(TWO_MINUTES)
+            await().atMost(ONE_MINUTE)
                     .pollInterval(TEN_SECONDS)
                     .untilAsserted(() -> {
-                        final List<Message> messages = safelyFindEventMessages(designId.toString(), MESSAGE_SOURCE, TILE_AGGREGATE_UPDATE_REQUIRED);
-                        assertThat(messages).hasSize(4);
-                        messages.forEach(message -> assertExpectedTileAggregateUpdateRequiredMessage(designId, message));
+                        final List<Message> messages1 = safelyFindEventMessages(designId.toString(), MESSAGE_SOURCE, TILE_AGGREGATE_UPDATE_REQUIRED);
+                        assertThat(messages1).hasSize(5);
+                        messages1.forEach(message -> assertExpectedTileAggregateUpdateRequiredMessage(designId, message));
+                        final List<Message> messages2 = safelyFindEventMessages(designId.toString(), MESSAGE_SOURCE, TILE_AGGREGATE_UPDATE_REQUESTED);
+                        assertThat(messages2).hasSize(1);
+                        messages2.forEach(message -> assertExpectedTileAggregateUpdateRequestedMessage(designId, message));
+                        final List<Message> messages3 = safelyFindEventMessages(designId.toString(), MESSAGE_SOURCE, TILE_AGGREGATE_UPDATE_COMPLETED);
+                        assertThat(messages3).hasSize(1);
+                        messages3.forEach(message -> assertExpectedTileAggregateUpdateCompletedMessage(designId, message));
                     });
 
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final List<Message> messages = safelyFindEventMessages(designId.toString(), MESSAGE_SOURCE, TILE_AGGREGATE_UPDATE_REQUESTED);
-                        assertThat(messages).hasSize(1);
-                        assertExpectedTileAggregateUpdateRequestedMessage(designId, messages.get(0));
-                    });
-
-            await().atMost(TEN_SECONDS)
-                    .pollInterval(ONE_SECOND)
-                    .untilAsserted(() -> {
-                        final List<Message> messages = safelyFindEventMessages(designId.toString(), MESSAGE_SOURCE, TILE_AGGREGATE_UPDATE_COMPLETED);
-                        assertThat(messages).hasSize(1);
-                        assertExpectedTileAggregateUpdateCompletedMessage(designId, messages.get(0));
+                        final List<Row> rows = fetchDesign(designId);
+                        assertThat(rows).hasSize(1);
+                        final Map<Integer, Tiles> tilesMap = createTilesMap(LEVELS);
+                        tilesMap.put(0, new Tiles(0, 1, Set.of(), Set.of(0)));
+                        tilesMap.put(1, new Tiles(1, 4, Set.of(0, 65536, 131073, 196609), Set.of()));
+                        final List<Tiles> tiles = convertToTilesList(tilesMap);
+                        assertExpectedDesign(rows.get(0), JSON_1, "CREATED", tiles);
                     });
         }
+    }
+
+    @NotNull
+    private List<Tiles> convertToTilesList(Map<Integer, Tiles> tiles) {
+        return tiles.values().stream()
+                .sorted(Comparator.comparing(Tiles::getLevel))
+                .collect(Collectors.toList());
     }
 
     private int totalTilesByLevels(int levels) {
@@ -509,37 +531,37 @@ public class IntegrationTests {
 
     @NotNull
     private static Message createDesignInsertRequestedMessage(UUID messageId, UUID partitionKey, long timestamp, DesignInsertRequested event) {
-        return new Message(messageId.toString(), DESIGN_INSERT_REQUESTED, Json.encode(event), "test", partitionKey.toString(), timestamp);
+        return new Message(messageId, DESIGN_INSERT_REQUESTED, Json.encode(event), "test", partitionKey.toString(), timestamp);
     }
 
     @NotNull
     private static Message createDesignUpdateRequestedMessage(UUID messageId, UUID partitionKey, long timestamp, DesignUpdateRequested event) {
-        return new Message(messageId.toString(), DESIGN_UPDATE_REQUESTED, Json.encode(event), "test", partitionKey.toString(), timestamp);
+        return new Message(messageId, DESIGN_UPDATE_REQUESTED, Json.encode(event), "test", partitionKey.toString(), timestamp);
     }
 
     @NotNull
     private static Message createDesignDeleteRequestedMessage(UUID messageId, UUID partitionKey, long timestamp, DesignDeleteRequested event) {
-        return new Message(messageId.toString(), DESIGN_DELETE_REQUESTED, Json.encode(event), "test", partitionKey.toString(), timestamp);
+        return new Message(messageId, DESIGN_DELETE_REQUESTED, Json.encode(event), "test", partitionKey.toString(), timestamp);
     }
 
     @NotNull
     private static Message createDesignAggregateUpdateRequestedMessage(UUID messageId, UUID partitionKey, long timestamp, DesignChangedEvent event) {
-        return new Message(messageId.toString(), DESIGN_AGGREGATE_UPDATE_REQUESTED, Json.encode(event), "test", partitionKey.toString(), timestamp);
+        return new Message(messageId, DESIGN_AGGREGATE_UPDATE_REQUESTED, Json.encode(event), "test", partitionKey.toString(), timestamp);
     }
 
     @NotNull
     private static Message createDesignAggregateUpdateCompletedMessage(UUID messageId, UUID partitionKey, long timestamp, DesignChangedEvent event) {
-        return new Message(messageId.toString(), DESIGN_AGGREGATE_UPDATE_COMPLETED, Json.encode(event), "test", partitionKey.toString(), timestamp);
+        return new Message(messageId, DESIGN_AGGREGATE_UPDATE_COMPLETED, Json.encode(event), "test", partitionKey.toString(), timestamp);
     }
 
     @NotNull
     private static Message createTileRenderRequestedMessage(UUID messageId, UUID partitionKey, long timestamp, TileRenderCompleted event) {
-        return new Message(messageId.toString(), TILE_RENDER_REQUESTED, Json.encode(event), "test", partitionKey.toString(), timestamp);
+        return new Message(messageId, TILE_RENDER_REQUESTED, Json.encode(event), "test", partitionKey.toString(), timestamp);
     }
 
     @NotNull
     private static Message createTileRenderCompletedMessage(UUID messageId, UUID partitionKey, long timestamp, TileRenderCompleted event) {
-        return new Message(messageId.toString(), TILE_RENDER_COMPLETED, Json.encode(event), "test", partitionKey.toString(), timestamp);
+        return new Message(messageId, TILE_RENDER_COMPLETED, Json.encode(event), "test", partitionKey.toString(), timestamp);
     }
 
     @NotNull
@@ -634,7 +656,7 @@ public class IntegrationTests {
     @NotNull
     private List<Row> fetchMessages(UUID designId) {
         return session.rxPrepare("SELECT * FROM MESSAGE WHERE MESSAGE_PARTITIONKEY = ?")
-                .map(stmt -> stmt.bind(designId.toString()))
+                .map(stmt -> stmt.bind(designId.toString()).setConsistencyLevel(ConsistencyLevel.QUORUM))
                 .flatMap(session::rxExecuteWithFullFetch)
                 .subscribeOn(Schedulers.io())
                 .toBlocking()
@@ -644,7 +666,7 @@ public class IntegrationTests {
     @NotNull
     private List<Row> fetchDesign(UUID designId) {
         return session.rxPrepare("SELECT * FROM DESIGN WHERE DESIGN_UUID = ?")
-                .map(stmt -> stmt.bind(designId))
+                .map(stmt -> stmt.bind(designId).setConsistencyLevel(ConsistencyLevel.QUORUM))
                 .flatMap(session::rxExecuteWithFullFetch)
                 .subscribeOn(Schedulers.io())
                 .toBlocking()
@@ -654,7 +676,7 @@ public class IntegrationTests {
     private void assertExpectedMessage(Row row, Message message) {
         String actualType = row.getString("MESSAGE_TYPE");
         String actualBody = row.getString("MESSAGE_BODY");
-        String actualUuid = row.getString("MESSAGE_UUID");
+        UUID actualUuid = row.getUuid("MESSAGE_UUID");
         String actualSource = row.getString("MESSAGE_SOURCE");
         String actualPartitionKey = row.getString("MESSAGE_PARTITIONKEY");
         Instant actualTimestamp = row.getInstant("MESSAGE_TIMESTAMP");
@@ -668,15 +690,20 @@ public class IntegrationTests {
         assertThat(actualTimestamp).isEqualTo(Instant.ofEpochMilli(message.getTimestamp()));
     }
 
-    private void assertExpectedDesign(Row row, String data, String status) {
+    private void assertExpectedDesign(Row row, String data, String status, List<Tiles> tiles) {
         String actualJson = row.getString("DESIGN_DATA");
         String actualStatus = row.getString("DESIGN_STATUS");
         String actualChecksum = row.getString("DESIGN_CHECKSUM");
         int actualLevels = row.getInt("DESIGN_LEVELS");
+        final Map<Integer, UdtValue> tilesMap = row.getMap("DESIGN_TILES", Integer.class, UdtValue.class);
+        final List<Tiles> actualTiles = tilesMap.entrySet().stream()
+                .map(entry -> convertToTiles(entry.getKey(), entry.getValue()))
+                .collect(Collectors.toList());
         assertThat(actualJson).isEqualTo(data);
         assertThat(actualStatus).isEqualTo(status);
         assertThat(actualChecksum).isNotNull();
-        assertThat(actualLevels).isEqualTo(3);
+        assertThat(actualLevels).isEqualTo(LEVELS);
+        assertThat(actualTiles).isEqualTo(tiles);
     }
 
     private void assertExpectedDesignAggregateUpdateRequestedMessage(UUID designId, Message actualMessage) {
@@ -770,5 +797,19 @@ public class IntegrationTests {
         assertThat(actualMessage.getType()).isEqualTo(TILE_AGGREGATE_UPDATE_COMPLETED);
         TileAggregateUpdateCompleted actualEvent = Json.decodeValue(actualMessage.getBody(), TileAggregateUpdateCompleted.class);
         assertThat(actualEvent.getUuid()).isEqualTo(designId);
+    }
+
+    private Tiles convertToTiles(Integer level, UdtValue udtValue) {
+        return new Tiles(level, udtValue.getInt("REQUESTED"), udtValue.getSet("COMPLETED", Integer.class), udtValue.getSet("FAILED", Integer.class));
+    }
+
+    private Map<Integer, Tiles> createTilesMap(int levels) {
+        return IntStream.range(0, levels)
+                .mapToObj(level -> new Tiles(level, requestedTiles(level), Collections.emptySet(), Collections.emptySet()))
+                .collect(Collectors.toMap(Tiles::getLevel, Function.identity()));
+    }
+
+    private int requestedTiles(int level) {
+        return (int) Math.rint(Math.pow(2, level * 2));
     }
 }

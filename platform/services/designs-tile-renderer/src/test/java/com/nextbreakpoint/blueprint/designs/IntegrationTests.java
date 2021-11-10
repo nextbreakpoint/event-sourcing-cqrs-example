@@ -227,11 +227,11 @@ public class IntegrationTests {
     }
 
     private static Message createTileRenderRequestedMessage(UUID messageId, UUID partitionKey, long timestamp, TileRenderRequested event) {
-        return new Message(messageId.toString(), TILE_RENDER_REQUESTED, Json.encode(event), "test", partitionKey.toString(), timestamp);
+        return new Message(messageId, TILE_RENDER_REQUESTED, Json.encode(event), "test", partitionKey.toString(), timestamp);
     }
 
     private static Message createDesignAbortRequestedMessage(UUID messageId, UUID partitionKey, long timestamp, DesignAbortRequested event) {
-        return new Message(messageId.toString(), DESIGN_ABORT_REQUESTED, Json.encode(event), "test", partitionKey.toString(), timestamp);
+        return new Message(messageId, DESIGN_ABORT_REQUESTED, Json.encode(event), "test", partitionKey.toString(), timestamp);
     }
 
     private static void pause(int millis) {

@@ -26,7 +26,7 @@ public class TileRenderRequestedMessageMapper implements Mapper<TileRenderReques
     @Override
     public Message transform(TileRenderRequested event) {
         return new Message(
-                UUID.randomUUID().toString(),
+                UUID.randomUUID(),
                 MessageType.TILE_RENDER_REQUESTED,
                 Json.encode(event),
                 messageSource,

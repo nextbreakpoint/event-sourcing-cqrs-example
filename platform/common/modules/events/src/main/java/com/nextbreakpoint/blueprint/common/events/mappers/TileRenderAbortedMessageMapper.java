@@ -19,7 +19,7 @@ public class TileRenderAbortedMessageMapper implements Mapper<TileRenderAborted,
     @Override
     public Message transform(TileRenderAborted event) {
         return new Message(
-                UUID.randomUUID().toString(),
+                UUID.randomUUID(),
                 MessageType.TILE_RENDER_ABORTED,
                 Json.encode(event),
                 messageSource,

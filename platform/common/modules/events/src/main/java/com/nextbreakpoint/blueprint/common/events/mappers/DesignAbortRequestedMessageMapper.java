@@ -19,7 +19,7 @@ public class DesignAbortRequestedMessageMapper implements Mapper<DesignAbortRequ
     @Override
     public Message transform(DesignAbortRequested event) {
         return new Message(
-                UUID.randomUUID().toString(),
+                UUID.randomUUID(),
                 MessageType.DESIGN_ABORT_REQUESTED,
                 Json.encode(event),
                 messageSource,

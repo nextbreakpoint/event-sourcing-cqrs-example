@@ -4,9 +4,10 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.Objects;
+import java.util.UUID;
 
 public class Message {
-    private String uuid;
+    private UUID uuid;
     private String type;
     private String body;
     private String source;
@@ -14,7 +15,7 @@ public class Message {
     private Long timestamp;
 
     @JsonCreator
-    public Message(@JsonProperty("uuid") String uuid,
+    public Message(@JsonProperty("uuid") UUID uuid,
                    @JsonProperty("type") String type,
                    @JsonProperty("body") String body,
                    @JsonProperty("source") String source,
@@ -28,7 +29,7 @@ public class Message {
         this.timestamp = Objects.requireNonNull(timestamp);
     }
 
-    public String getUuid() {
+    public UUID getUuid() {
         return uuid;
     }
 

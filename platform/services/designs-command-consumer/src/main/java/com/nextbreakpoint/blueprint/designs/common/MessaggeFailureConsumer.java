@@ -1,9 +1,8 @@
 package com.nextbreakpoint.blueprint.designs.common;
 
+import com.nextbreakpoint.blueprint.designs.model.RecordAndMessage;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
-
-import com.nextbreakpoint.blueprint.designs.model.RecordAndMessage;
 
 import java.util.function.BiConsumer;
 
@@ -12,6 +11,6 @@ public class MessaggeFailureConsumer implements BiConsumer<RecordAndMessage, Thr
 
     @Override
     public void accept(RecordAndMessage message, Throwable error) {
-        logger.error("An error occurred while consuming message " + message.getMessage().getUuid(), error);
+        logger.error("An error occurred while consuming message " + message.getMessage().getPayload().getUuid(), error);
     }
 }

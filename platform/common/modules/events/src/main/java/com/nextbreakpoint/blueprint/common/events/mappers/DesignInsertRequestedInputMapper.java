@@ -14,13 +14,13 @@ public class DesignInsertRequestedInputMapper implements Mapper<Message, DesignI
 
     @Override
     public DesignInsertRequested transform(Message message) {
-        if (!message.getType().equals(MessageType.DESIGN_INSERT_REQUESTED)) {
-            throw new IllegalArgumentException("Unexpected message type: " + message.getType());
+        if (!message.getPayload().getType().equals(MessageType.DESIGN_INSERT_REQUESTED)) {
+            throw new IllegalArgumentException("Unexpected message type: " + message.getPayload().getType());
         }
         try {
-            return Json.decodeValue(message.getBody(), DesignInsertRequested.class);
+            return Json.decodeValue(message.getPayload().getData(), DesignInsertRequested.class);
         } catch (DecodeException e) {
-            logger.warn("Cannot decode message body: " + message.getBody(), e);
+            logger.warn("Cannot decode message body: " + message.getPayload(), e);
             throw new IllegalArgumentException("Message body cannot be decoded");
         }
     }

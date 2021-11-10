@@ -8,7 +8,7 @@ import java.util.UUID;
 public class Design {
     private final UUID evid;
     private final UUID uuid;
-    private final UUID esid;
+    private final long esid;
     private final String json;
     private final String status;
     private final String checksum;
@@ -19,13 +19,13 @@ public class Design {
     public Design(
         UUID evid,
         UUID uuid,
-        UUID esid,
+        long esid,
         String json,
         String status,
         String checksum,
         int levels,
-        Date updated,
-        List<Tiles> tiles
+        List<Tiles> tiles,
+        Date updated
     ) {
         this.evid = Objects.requireNonNull(evid);
         this.uuid = Objects.requireNonNull(uuid);
@@ -34,8 +34,8 @@ public class Design {
         this.status = Objects.requireNonNull(status);
         this.checksum = Objects.requireNonNull(checksum);
         this.levels = levels;
-        this.updated = Objects.requireNonNull(updated);
         this.tiles = Objects.requireNonNull(tiles);
+        this.updated = Objects.requireNonNull(updated);
     }
 
     public UUID getEvid() {
@@ -46,7 +46,7 @@ public class Design {
         return uuid;
     }
 
-    public UUID getEsid() {
+    public long getEsid() {
         return esid;
     }
 
@@ -66,11 +66,11 @@ public class Design {
         return levels;
     }
 
-    public Date getUpdated() {
-        return updated;
-    }
-
     public List<Tiles> getTiles() {
         return tiles;
+    }
+
+    public Date getUpdated() {
+        return updated;
     }
 }

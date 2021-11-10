@@ -14,13 +14,13 @@ public class DesignUpdateRequestedInputMapper implements Mapper<Message, DesignU
 
     @Override
     public DesignUpdateRequested transform(Message message) {
-        if (!message.getType().equals(MessageType.DESIGN_UPDATE_REQUESTED)) {
-            throw new IllegalArgumentException("Unexpected message type: " + message.getType());
+        if (!message.getPayload().getType().equals(MessageType.DESIGN_UPDATE_REQUESTED)) {
+            throw new IllegalArgumentException("Unexpected message type: " + message.getPayload().getType());
         }
         try {
-            return Json.decodeValue(message.getBody(), DesignUpdateRequested.class);
+            return Json.decodeValue(message.getPayload().getData(), DesignUpdateRequested.class);
         } catch (DecodeException e) {
-            logger.warn("Cannot decode message body: " + message.getBody(), e);
+            logger.warn("Cannot decode message body: " + message.getPayload(), e);
             throw new IllegalArgumentException("Message body cannot be decoded");
         }
     }

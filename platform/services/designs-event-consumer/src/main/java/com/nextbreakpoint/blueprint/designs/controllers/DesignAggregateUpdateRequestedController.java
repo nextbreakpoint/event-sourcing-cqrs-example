@@ -10,10 +10,8 @@ import com.nextbreakpoint.blueprint.common.vertx.KafkaEmitter;
 import com.nextbreakpoint.blueprint.designs.Store;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
-import rx.Observable;
 import rx.Single;
 
-import java.util.Collections;
 import java.util.Objects;
 
 public class DesignAggregateUpdateRequestedController implements Controller<Message, Void> {

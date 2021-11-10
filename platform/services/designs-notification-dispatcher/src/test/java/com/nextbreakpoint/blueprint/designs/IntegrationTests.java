@@ -3,6 +3,7 @@ package com.nextbreakpoint.blueprint.designs;
 import com.nextbreakpoint.blueprint.common.core.Environment;
 import com.nextbreakpoint.blueprint.common.core.Message;
 import com.nextbreakpoint.blueprint.common.core.MessageType;
+import com.nextbreakpoint.blueprint.common.core.Payload;
 import com.nextbreakpoint.blueprint.common.test.EventSource;
 import com.nextbreakpoint.blueprint.common.test.KafkaUtils;
 import com.nextbreakpoint.blueprint.designs.model.DesignChanged;
@@ -167,11 +168,11 @@ public class IntegrationTests {
     }
 
     private static ProducerRecord<String, String> createKafkaRecord(Message message) {
-        return new ProducerRecord<>("design-event", message.getPartitionKey(), Json.encode(message));
+        return new ProducerRecord<>("design-event", message.getKey(), Json.encode(message.getPayload()));
     }
 
     private static Message createDesignChangedMessage(UUID messageId, UUID partitionKey, long timestamp, DesignChanged event) {
-        return new Message(messageId.toString(), MessageType.DESIGN_CHANGED, Json.encode(event), "test", partitionKey.toString(), timestamp);
+        return new Message(partitionKey.toString(), 0, timestamp,  new Payload(messageId, MessageType.DESIGN_CHANGED, Json.encode(event), "test"));
     }
 
     private static class SSENotification {

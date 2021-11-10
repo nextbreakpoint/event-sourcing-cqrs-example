@@ -3,6 +3,7 @@ package com.nextbreakpoint.blueprint.common.events.mappers;
 import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.Message;
 import com.nextbreakpoint.blueprint.common.core.MessageType;
+import com.nextbreakpoint.blueprint.common.core.Payload;
 import com.nextbreakpoint.blueprint.common.events.TileRenderCompleted;
 import io.vertx.core.json.Json;
 
@@ -19,12 +20,15 @@ public class TileRenderCompletedMessageMapper implements Mapper<TileRenderComple
     @Override
     public Message transform(TileRenderCompleted event) {
         return new Message(
-                UUID.randomUUID(),
-                MessageType.TILE_RENDER_COMPLETED,
-                Json.encode(event),
-                messageSource,
                 event.getUuid().toString(),
-                System.currentTimeMillis()
+                0,
+                System.currentTimeMillis(),
+                new Payload(
+                        UUID.randomUUID(),
+                        MessageType.TILE_RENDER_COMPLETED,
+                        Json.encode(event),
+                        messageSource
+                )
         );
     }
 }

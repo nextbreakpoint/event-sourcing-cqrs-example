@@ -4,16 +4,8 @@ import com.nextbreakpoint.blueprint.common.vertx.ErrorConsumer;
 import com.nextbreakpoint.blueprint.common.vertx.JsonConsumer;
 import com.nextbreakpoint.blueprint.common.vertx.NotFoundConsumer;
 import com.nextbreakpoint.blueprint.common.vertx.TemplateHandler;
-import com.nextbreakpoint.blueprint.designs.operations.list.ListDesignsController;
-import com.nextbreakpoint.blueprint.designs.operations.list.ListDesignsRequestMapper;
-import com.nextbreakpoint.blueprint.designs.operations.list.ListDesignsResponseMapper;
-import com.nextbreakpoint.blueprint.designs.operations.load.LoadDesignController;
-import com.nextbreakpoint.blueprint.designs.operations.load.LoadDesignRequestMapper;
-import com.nextbreakpoint.blueprint.designs.operations.load.LoadDesignResponseMapper;
-import com.nextbreakpoint.blueprint.designs.operations.list.ListDesignsRequest;
-import com.nextbreakpoint.blueprint.designs.operations.list.ListDesignsResponse;
-import com.nextbreakpoint.blueprint.designs.operations.load.LoadDesignRequest;
-import com.nextbreakpoint.blueprint.designs.operations.load.LoadDesignResponse;
+import com.nextbreakpoint.blueprint.designs.operations.list.*;
+import com.nextbreakpoint.blueprint.designs.operations.load.*;
 import io.vertx.core.Handler;
 import io.vertx.rxjava.ext.web.RoutingContext;
 

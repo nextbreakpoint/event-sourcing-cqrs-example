@@ -14,13 +14,13 @@ public class DesignDeleteRequestedInputMapper implements Mapper<Message, DesignD
 
     @Override
     public DesignDeleteRequested transform(Message message) {
-        if (!message.getType().equals(MessageType.DESIGN_DELETE_REQUESTED)) {
-            throw new IllegalArgumentException("Unexpected message type: " + message.getType());
+        if (!message.getPayload().getType().equals(MessageType.DESIGN_DELETE_REQUESTED)) {
+            throw new IllegalArgumentException("Unexpected message type: " + message.getPayload().getType());
         }
         try {
-            return Json.decodeValue(message.getBody(), DesignDeleteRequested.class);
+            return Json.decodeValue(message.getPayload().getData(), DesignDeleteRequested.class);
         } catch (DecodeException e) {
-            logger.warn("Cannot decode message body: " + message.getBody(), e);
+            logger.warn("Cannot decode message body: " + message.getPayload(), e);
             throw new IllegalArgumentException("Message body cannot be decoded");
         }
     }

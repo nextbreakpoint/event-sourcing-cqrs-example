@@ -3,7 +3,7 @@ package com.nextbreakpoint.blueprint.designs.persistence;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.Row;
 import com.nextbreakpoint.blueprint.designs.Store;
-import com.nextbreakpoint.blueprint.designs.model.*;
+import com.nextbreakpoint.blueprint.designs.model.DesignDocument;
 import com.nextbreakpoint.blueprint.designs.operations.list.ListDesignsRequest;
 import com.nextbreakpoint.blueprint.designs.operations.list.ListDesignsResponse;
 import com.nextbreakpoint.blueprint.designs.operations.load.LoadDesignRequest;
@@ -15,7 +15,8 @@ import rx.Single;
 
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.Objects;
+import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 

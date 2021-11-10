@@ -14,13 +14,13 @@ public class TileRenderRequestedInputMapper implements Mapper<Message, TileRende
 
     @Override
     public TileRenderRequested transform(Message message) {
-        if (!message.getType().equals(MessageType.TILE_RENDER_REQUESTED)) {
-            throw new IllegalArgumentException("Unexpected message type: " + message.getType());
+        if (!message.getPayload().getType().equals(MessageType.TILE_RENDER_REQUESTED)) {
+            throw new IllegalArgumentException("Unexpected message type: " + message.getPayload().getType());
         }
         try {
-            return Json.decodeValue(message.getBody(), TileRenderRequested.class);
+            return Json.decodeValue(message.getPayload().getData(), TileRenderRequested.class);
         } catch (DecodeException e) {
-            logger.warn("Cannot decode message body: " + message.getBody(), e);
+            logger.warn("Cannot decode message body: " + message.getPayload(), e);
             throw new IllegalArgumentException("Message body cannot be decoded");
         }
     }

@@ -38,6 +38,6 @@ public class KafkaEmitter implements Controller<Message, Void> {
     }
 
     private KafkaProducerRecord<String, String> createKafkaRecord(Message message) {
-        return KafkaProducerRecord.create(topic, message.getPartitionKey(), Json.encode(message));
+        return KafkaProducerRecord.create(topic, message.getKey(), Json.encode(message.getPayload()));
     }
 }

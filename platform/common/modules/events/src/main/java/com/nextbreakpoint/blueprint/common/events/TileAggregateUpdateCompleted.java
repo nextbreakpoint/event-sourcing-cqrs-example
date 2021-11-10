@@ -9,17 +9,17 @@ import java.util.UUID;
 public class TileAggregateUpdateCompleted {
     private final UUID evid;
     private final UUID uuid;
-    private final UUID esid;
+    private final long esid;
 
     @JsonCreator
     public TileAggregateUpdateCompleted(
         @JsonProperty("evid") UUID evid,
         @JsonProperty("uuid") UUID uuid,
-        @JsonProperty("esid") UUID esid
+        @JsonProperty("esid") long esid
     ) {
         this.evid = Objects.requireNonNull(evid);
         this.uuid = Objects.requireNonNull(uuid);
-        this.esid = Objects.requireNonNull(esid);
+        this.esid = esid;
     }
 
     public UUID getEvid() {
@@ -30,7 +30,7 @@ public class TileAggregateUpdateCompleted {
         return uuid;
     }
 
-    public UUID getEsid() {
+    public long getEsid() {
         return esid;
     }
 }

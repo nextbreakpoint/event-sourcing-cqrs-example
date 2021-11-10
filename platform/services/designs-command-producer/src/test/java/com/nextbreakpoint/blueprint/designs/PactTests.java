@@ -10,7 +10,10 @@ import au.com.dius.pact.provider.junitsupport.Provider;
 import au.com.dius.pact.provider.junitsupport.State;
 import au.com.dius.pact.provider.junitsupport.loader.PactBroker;
 import com.jayway.restassured.http.ContentType;
-import com.nextbreakpoint.blueprint.common.core.*;
+import com.nextbreakpoint.blueprint.common.core.Authority;
+import com.nextbreakpoint.blueprint.common.core.Environment;
+import com.nextbreakpoint.blueprint.common.core.Headers;
+import com.nextbreakpoint.blueprint.common.core.Message;
 import com.nextbreakpoint.blueprint.common.test.KafkaUtils;
 import com.nextbreakpoint.blueprint.common.vertx.Authentication;
 import com.nextbreakpoint.blueprint.designs.operations.delete.DeleteDesignCommand;
@@ -131,14 +134,14 @@ public class PactTests {
                         final List<Message> messages = safelyFindMessages(uuid);
                         assertThat(messages.isEmpty()).isFalse();
                         Message decodedMessage = messages.get(messages.size() - 1);
-                        assertThat(decodedMessage.getType()).isEqualTo("design-insert");
-                        assertThat(decodedMessage.getUuid()).isNotNull();
-                        assertThat(decodedMessage.getPartitionKey()).isNotNull();
-                        assertThat(decodedMessage.getSource()).isNotNull();
+                        assertThat(decodedMessage.getPayload().getType()).isEqualTo("design-insert");
+                        assertThat(decodedMessage.getPayload().getUuid()).isNotNull();
+                        assertThat(decodedMessage.getKey()).isNotNull();
+                        assertThat(decodedMessage.getPayload().getSource()).isNotNull();
                         assertThat(decodedMessage.getTimestamp()).isGreaterThan(timestamp);
-                        InsertDesignCommand decodedEvent = Json.decodeValue(decodedMessage.getBody(), InsertDesignCommand.class);
+                        InsertDesignCommand decodedEvent = Json.decodeValue(decodedMessage.getPayload().getData(), InsertDesignCommand.class);
                         assertThat(decodedEvent.getUuid()).isNotNull();
-                        assertThat(decodedMessage.getPartitionKey()).isEqualTo(decodedEvent.getUuid().toString());
+                        assertThat(decodedMessage.getKey()).isEqualTo(decodedEvent.getUuid().toString());
                         Design decodedDesign = Json.decodeValue(decodedEvent.getJson(), Design.class);
                         assertThat(decodedDesign.getManifest()).isEqualTo(MANIFEST);
                         assertThat(decodedDesign.getMetadata()).isEqualTo(METADATA);
@@ -172,12 +175,12 @@ public class PactTests {
                         final List<Message> messages = safelyFindMessages(uuid);
                         assertThat(messages.isEmpty()).isFalse();
                         Message decodedMessage = messages.get(messages.size() - 1);
-                        assertThat(decodedMessage.getType()).isEqualTo("design-update");
-                        assertThat(decodedMessage.getUuid()).isNotNull();
-                        assertThat(decodedMessage.getPartitionKey()).isEqualTo(uuid);
-                        assertThat(decodedMessage.getSource()).isNotNull();
+                        assertThat(decodedMessage.getPayload().getType()).isEqualTo("design-update");
+                        assertThat(decodedMessage.getPayload().getUuid()).isNotNull();
+                        assertThat(decodedMessage.getKey()).isEqualTo(uuid);
+                        assertThat(decodedMessage.getPayload().getSource()).isNotNull();
                         assertThat(decodedMessage.getTimestamp()).isGreaterThan(timestamp);
-                        UpdateDesignCommand decodedEvent = Json.decodeValue(decodedMessage.getBody(), UpdateDesignCommand.class);
+                        UpdateDesignCommand decodedEvent = Json.decodeValue(decodedMessage.getPayload().getData(), UpdateDesignCommand.class);
                         assertThat(decodedEvent.getUuid()).isNotNull();
                         assertThat(decodedEvent.getUuid().toString()).isEqualTo(uuid);
                         Design decodedDesign = Json.decodeValue(decodedEvent.getJson(), Design.class);
@@ -213,12 +216,12 @@ public class PactTests {
                         final List<Message> messages = safelyFindMessages(uuid);
                         assertThat(messages.isEmpty()).isFalse();
                         Message decodedMessage = messages.get(messages.size() - 1);
-                        assertThat(decodedMessage.getType()).isEqualTo("design-delete");
-                        assertThat(decodedMessage.getUuid()).isNotNull();
-                        assertThat(decodedMessage.getPartitionKey()).isEqualTo(uuid);
-                        assertThat(decodedMessage.getSource()).isNotNull();
+                        assertThat(decodedMessage.getPayload().getType()).isEqualTo("design-delete");
+                        assertThat(decodedMessage.getPayload().getUuid()).isNotNull();
+                        assertThat(decodedMessage.getKey()).isEqualTo(uuid);
+                        assertThat(decodedMessage.getPayload().getSource()).isNotNull();
                         assertThat(decodedMessage.getTimestamp()).isGreaterThan(timestamp);
-                        DeleteDesignCommand decodedEvent = Json.decodeValue(decodedMessage.getBody(), DeleteDesignCommand.class);
+                        DeleteDesignCommand decodedEvent = Json.decodeValue(decodedMessage.getPayload().getData(), DeleteDesignCommand.class);
                         assertThat(decodedEvent.getUuid()).isNotNull();
                         assertThat(decodedEvent.getUuid().toString()).isEqualTo(uuid);
                     });
@@ -269,7 +272,7 @@ public class PactTests {
         synchronized (records) {
             return records.stream()
                     .map(record -> Json.decodeValue(record.value(), Message.class))
-                    .filter(value -> value.getPartitionKey().equals(designId))
+                    .filter(value -> value.getKey().equals(designId))
                     .collect(Collectors.toList());
         }
     }

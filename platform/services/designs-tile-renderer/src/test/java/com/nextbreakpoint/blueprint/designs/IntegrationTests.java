@@ -5,12 +5,12 @@ import com.jayway.restassured.RestAssured;
 import com.nextbreakpoint.blueprint.common.core.Checksum;
 import com.nextbreakpoint.blueprint.common.core.Environment;
 import com.nextbreakpoint.blueprint.common.core.Message;
+import com.nextbreakpoint.blueprint.common.core.Payload;
 import com.nextbreakpoint.blueprint.common.events.DesignAbortRequested;
 import com.nextbreakpoint.blueprint.common.events.TileRenderCompleted;
 import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
 import com.nextbreakpoint.blueprint.common.vertx.KafkaClientFactory;
 import io.vertx.core.json.Json;
-import io.vertx.kafka.client.common.TopicPartition;
 import io.vertx.rxjava.core.RxHelper;
 import io.vertx.rxjava.core.Vertx;
 import io.vertx.rxjava.kafka.client.consumer.KafkaConsumer;
@@ -19,11 +19,12 @@ import io.vertx.rxjava.kafka.client.consumer.KafkaConsumerRecords;
 import io.vertx.rxjava.kafka.client.producer.KafkaProducer;
 import io.vertx.rxjava.kafka.client.producer.KafkaProducerRecord;
 import org.jetbrains.annotations.NotNull;
-import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.*;
 import rx.plugins.RxJavaHooks;
 import rx.schedulers.Schedulers;
-import software.amazon.awssdk.auth.credentials.*;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -32,14 +33,17 @@ import software.amazon.awssdk.services.s3.model.*;
 import java.io.IOException;
 import java.net.URI;
 import java.time.Duration;
-import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.awaitility.Durations.ONE_SECOND;
+import static org.awaitility.Durations.TEN_SECONDS;
 
 public class IntegrationTests {
     private static final String JSON_1 = "{\"metadata\":\"{\\\"translation\\\":{\\\"x\\\":0.0,\\\"y\\\":0.0,\\\"z\\\":1.0,\\\"w\\\":0.0},\\\"rotation\\\":{\\\"x\\\":0.0,\\\"y\\\":0.0,\\\"z\\\":0.0,\\\"w\\\":0.0},\\\"scale\\\":{\\\"x\\\":1.0,\\\"y\\\":1.0,\\\"z\\\":1.0,\\\"w\\\":1.0},\\\"point\\\":{\\\"x\\\":0.0,\\\"y\\\":0.0},\\\"julia\\\":false,\\\"options\\\":{\\\"showPreview\\\":false,\\\"showTraps\\\":false,\\\"showOrbit\\\":false,\\\"showPoint\\\":false,\\\"previewOrigin\\\":{\\\"x\\\":0.0,\\\"y\\\":0.0},\\\"previewSize\\\":{\\\"x\\\":0.25,\\\"y\\\":0.25}}}\",\"manifest\":\"{\\\"pluginId\\\":\\\"Mandelbrot\\\"}\",\"script\":\"fractal {\\norbit [-2.0 - 2.0i,+2.0 + 2.0i] [x,n] {\\nloop [0, 200] (mod2(x) > 40) {\\nx = x * x + w;\\n}\\n}\\ncolor [#FF000000] {\\npalette gradient {\\n[#FFFFFFFF > #FF000000, 100];\\n[#FF000000 > #FFFFFFFF, 100];\\n}\\ninit {\\nm = 100 * (1 + sin(mod(x) * 0.2 / pi));\\n}\\nrule (n > 0) [1] {\\ngradient[m - 1]\\n}\\n}\\n}\\n\"}";
@@ -48,7 +52,8 @@ public class IntegrationTests {
     private static final String TILE_RENDER_COMPLETED = "tile-render-completed";
     private static final String DESIGN_ABORT_REQUESTED = "design-abort-requested";
     private static final String MESSAGE_SOURCE = "service-designs";
-    private static final String TOPIC_NAME = "design-event";
+    private static final String EVENTS_TOPIC_NAME = "design-event";
+    private static final String RENDERING_QUEUE_TOPIC_NAME = "tiles-rendering-queue";
     private static final String BUCKET = "tiles";
 
     private static final TestScenario scenario = new TestScenario();
@@ -76,21 +81,9 @@ public class IntegrationTests {
 
         consumer = KafkaClientFactory.createConsumer(environment, vertx, scenario.createConsumerConfig("test"));
 
-        consumer.rxSubscribe(Collections.singleton(TOPIC_NAME))
-                .subscribeOn(Schedulers.computation())
+        consumer.rxSubscribe(Collections.singleton(EVENTS_TOPIC_NAME))
                 .doOnError(Throwable::printStackTrace)
-                .toBlocking()
-                .value();
-
-        final Set<TopicPartition> partitions = consumer.rxAssignment()
-                .subscribeOn(Schedulers.computation())
-                .doOnError(Throwable::printStackTrace)
-                .toBlocking()
-                .value();
-
-        consumer.rxSeekToEnd(partitions)
-                .subscribeOn(Schedulers.computation())
-                .doOnError(Throwable::printStackTrace)
+                .subscribeOn(Schedulers.io())
                 .toBlocking()
                 .value();
 
@@ -135,29 +128,29 @@ public class IntegrationTests {
         public void shouldRenderImageWhenReceivingAMessage() {
             final UUID designId = UUID.randomUUID();
 
-            final TileRenderRequested tileRenderRequested1 = new TileRenderRequested(Uuids.timeBased(), designId, Uuids.timeBased(), JSON_1, Checksum.of(JSON_1), 0, 0, 0);
+            final TileRenderRequested tileRenderRequested1 = new TileRenderRequested(Uuids.timeBased(), designId, 0, JSON_1, Checksum.of(JSON_1), 0, 0, 0);
 
-            final Message tileRenderRequestedMessage1 = createTileRenderRequestedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), tileRenderRequested1);
+            final Message tileRenderRequestedMessage1 = createTileRenderRequestedMessage(UUID.randomUUID(), createBucketKey(tileRenderRequested1), System.currentTimeMillis(), tileRenderRequested1);
 
             producer.rxSend(createKafkaRecord(tileRenderRequestedMessage1))
-                    .subscribeOn(Schedulers.computation())
                     .doOnError(Throwable::printStackTrace)
+                    .subscribeOn(Schedulers.io())
                     .toBlocking()
                     .value();
 
-            final TileRenderRequested tileRenderRequested2 = new TileRenderRequested(Uuids.timeBased(), designId, Uuids.timeBased(), JSON_2, Checksum.of(JSON_2), 1, 1, 2);
+            final TileRenderRequested tileRenderRequested2 = new TileRenderRequested(Uuids.timeBased(), designId, 1, JSON_2, Checksum.of(JSON_2), 1, 1, 2);
 
-            final Message tileRenderRequestedMessage2 = createTileRenderRequestedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), tileRenderRequested2);
+            final Message tileRenderRequestedMessage2 = createTileRenderRequestedMessage(UUID.randomUUID(), createBucketKey(tileRenderRequested1), System.currentTimeMillis(), tileRenderRequested2);
 
             producer.rxSend(createKafkaRecord(tileRenderRequestedMessage2))
-                    .subscribeOn(Schedulers.computation())
                     .doOnError(Throwable::printStackTrace)
+                    .subscribeOn(Schedulers.io())
                     .toBlocking()
                     .value();
 
             safelyClearMessages();
 
-            await().atMost(Duration.of(30L, ChronoUnit.SECONDS))
+            await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
                         final List<Message> messages = safelyFindMessages(designId.toString(), MESSAGE_SOURCE, TILE_RENDER_COMPLETED);
@@ -185,17 +178,17 @@ public class IntegrationTests {
 
             final DesignAbortRequested designAbortRequested1 = new DesignAbortRequested(Uuids.timeBased(), designId, Checksum.of(JSON_1));
 
-            final Message designAbortRequestedMessage1 = createDesignAbortRequestedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), designAbortRequested1);
+            final Message designAbortRequestedMessage1 = createDesignAbortRequestedMessage(UUID.randomUUID(), designId.toString(), System.currentTimeMillis(), designAbortRequested1);
 
             producer.rxSend(createKafkaRecord(designAbortRequestedMessage1))
-                    .subscribeOn(Schedulers.computation())
                     .doOnError(Throwable::printStackTrace)
+                    .subscribeOn(Schedulers.io())
                     .toBlocking()
                     .value();
 
 //            final DesignAbortRequested designAbortRequested2 = new DesignAbortRequested(designId, System.currentTimeMillis(), Checksum.of(JSON_2));
 //
-//            final Message designAbortRequestedMessage2 = createDesignAbortRequestedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), designAbortRequested2);
+//            final Message designAbortRequestedMessage2 = createDesignAbortRequestedMessage(UUID.randomUUID(), designId.toString(), System.currentTimeMillis(), designAbortRequested2);
 //
 //            producer.rxSend(createKafkaRecord(designAbortRequestedMessage2))
 //                    .subscribeOn(Schedulers.computation())
@@ -209,12 +202,12 @@ public class IntegrationTests {
 
     private void assertExpectedTileRenderCompletedMessage(TileRenderRequested tileRenderRequested, Message actualMessage) {
         assertThat(actualMessage.getTimestamp()).isNotNull();
-        assertThat(actualMessage.getSource()).isEqualTo(MESSAGE_SOURCE);
-        assertThat(actualMessage.getPartitionKey()).isEqualTo(tileRenderRequested.getUuid().toString());
-        assertThat(actualMessage.getUuid()).isNotNull();
-        assertThat(actualMessage.getType()).isEqualTo(TILE_RENDER_COMPLETED);
-        assertThat(actualMessage.getBody()).isNotNull();
-        TileRenderCompleted actualEvent = Json.decodeValue(actualMessage.getBody(), TileRenderCompleted.class);
+        assertThat(actualMessage.getPayload().getSource()).isEqualTo(MESSAGE_SOURCE);
+        assertThat(actualMessage.getKey()).isEqualTo(tileRenderRequested.getUuid().toString());
+        assertThat(actualMessage.getPayload().getUuid()).isNotNull();
+        assertThat(actualMessage.getPayload().getType()).isEqualTo(TILE_RENDER_COMPLETED);
+        assertThat(actualMessage.getPayload()).isNotNull();
+        TileRenderCompleted actualEvent = Json.decodeValue(actualMessage.getPayload().getData(), TileRenderCompleted.class);
         assertThat(actualEvent.getUuid()).isEqualTo(tileRenderRequested.getUuid());
         assertThat(actualEvent.getLevel()).isEqualTo(tileRenderRequested.getLevel());
         assertThat(actualEvent.getRow()).isEqualTo(tileRenderRequested.getRow());
@@ -223,15 +216,15 @@ public class IntegrationTests {
 
     @NotNull
     private static KafkaProducerRecord<String, String> createKafkaRecord(Message message) {
-        return KafkaProducerRecord.create(TOPIC_NAME, message.getPartitionKey(), Json.encode(message));
+        return KafkaProducerRecord.create(RENDERING_QUEUE_TOPIC_NAME, message.getKey(), Json.encode(message.getPayload()));
     }
 
-    private static Message createTileRenderRequestedMessage(UUID messageId, UUID partitionKey, long timestamp, TileRenderRequested event) {
-        return new Message(messageId, TILE_RENDER_REQUESTED, Json.encode(event), "test", partitionKey.toString(), timestamp);
+    private static Message createTileRenderRequestedMessage(UUID messageId, String partitionKey, long timestamp, TileRenderRequested event) {
+        return new Message(partitionKey, 0, timestamp,  new Payload(messageId, TILE_RENDER_REQUESTED, Json.encode(event), "test"));
     }
 
-    private static Message createDesignAbortRequestedMessage(UUID messageId, UUID partitionKey, long timestamp, DesignAbortRequested event) {
-        return new Message(messageId, DESIGN_ABORT_REQUESTED, Json.encode(event), "test", partitionKey.toString(), timestamp);
+    private static Message createDesignAbortRequestedMessage(UUID messageId, String partitionKey, long timestamp, DesignAbortRequested event) {
+        return new Message(partitionKey, 0, timestamp,  new Payload(messageId, DESIGN_ABORT_REQUESTED, Json.encode(event), "test"));
     }
 
     private static void pause(int millis) {
@@ -245,10 +238,10 @@ public class IntegrationTests {
     private static List<Message> safelyFindMessages(String partitionKey, String messageSource, String messageType) {
         synchronized (records) {
             return records.stream()
-                    .map(record -> Json.decodeValue(record.value(), Message.class))
-                    .filter(message -> message.getPartitionKey().equals(partitionKey))
-                    .filter(message -> message.getSource().equals(messageSource))
-                    .filter(message -> message.getType().equals(messageType))
+                    .map(record -> new Message(record.key(), record.offset(), record.timestamp(), Json.decodeValue(record.value(), Payload.class)))
+                    .filter(message -> message.getKey().equals(partitionKey))
+                    .filter(message -> message.getPayload().getSource().equals(messageSource))
+                    .filter(message -> message.getPayload().getType().equals(messageType))
 //                    .sorted(Comparator.comparing(Message::getTimestamp))
                     .collect(Collectors.toList());
         }
@@ -278,16 +271,16 @@ public class IntegrationTests {
 
     private static void pollRecords() {
         consumer.rxPoll(Duration.ofSeconds(5))
-                .subscribeOn(Schedulers.computation())
                 .doOnSuccess(IntegrationTests::consumeRecords)
+                .subscribeOn(Schedulers.io())
                 .doOnError(Throwable::printStackTrace)
                 .subscribe();
     }
 
     private static void commitOffsets() {
         consumer.rxCommit()
-                .subscribeOn(Schedulers.computation())
                 .doOnError(Throwable::printStackTrace)
+                .subscribeOn(Schedulers.io())
                 .subscribe();
     }
 

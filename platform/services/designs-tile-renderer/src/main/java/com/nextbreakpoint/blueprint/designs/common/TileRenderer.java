@@ -1,7 +1,6 @@
 package com.nextbreakpoint.blueprint.designs.common;
 
 import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
-import com.nextbreakpoint.blueprint.designs.model.Result;
 import com.nextbreakpoint.nextfractal.core.common.Bundle;
 import com.nextbreakpoint.nextfractal.core.common.TileGenerator;
 import com.nextbreakpoint.nextfractal.core.common.TileUtils;

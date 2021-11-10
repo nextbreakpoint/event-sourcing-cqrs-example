@@ -8,6 +8,7 @@ import com.jayway.restassured.RestAssured;
 import com.nextbreakpoint.blueprint.common.core.Checksum;
 import com.nextbreakpoint.blueprint.common.core.Environment;
 import com.nextbreakpoint.blueprint.common.core.Message;
+import com.nextbreakpoint.blueprint.common.core.Payload;
 import com.nextbreakpoint.blueprint.common.events.*;
 import com.nextbreakpoint.blueprint.common.vertx.CassandraClientFactory;
 import com.nextbreakpoint.blueprint.common.vertx.KafkaClientFactory;
@@ -390,7 +391,7 @@ public class IntegrationTests {
 
             sendMessage(designInsertRequestedMessage);
 
-            final UUID[] esid = new UUID[1];
+            final long[] esid = new long[1];
 
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
@@ -399,7 +400,7 @@ public class IntegrationTests {
                         assertThat(rows).hasSize(1);
                         final Set<UUID> uuids = extractUuids(rows);
                         assertThat(uuids).contains(designId);
-                        esid[0] = rows.get(0).getUuid("MESSAGE_ESID");
+                        esid[0] = rows.get(0).getLong("MESSAGE_OFFSET");
                         assertExpectedMessage(rows.get(0), designInsertRequestedMessage);
                     });
 
@@ -519,59 +520,59 @@ public class IntegrationTests {
     @NotNull
     private List<TileRenderRequested> extractTileRenderRequestedEvents(List<Message> messages, String checksum) {
         return messages.stream()
-                .map(message -> Json.decodeValue(message.getBody(), TileRenderRequested.class))
+                .map(message -> Json.decodeValue(message.getPayload().getData(), TileRenderRequested.class))
                 .filter(event -> event.getChecksum().equals(checksum))
                 .collect(Collectors.toList());
     }
 
     @NotNull
     private static KafkaProducerRecord<String, String> createKafkaRecord(Message message) {
-        return KafkaProducerRecord.create(EVENTS_TOPIC_NAME, message.getPartitionKey(), Json.encode(message));
+        return KafkaProducerRecord.create(EVENTS_TOPIC_NAME, message.getKey(), Json.encode(message.getPayload()));
     }
 
     @NotNull
     private static Message createDesignInsertRequestedMessage(UUID messageId, UUID partitionKey, long timestamp, DesignInsertRequested event) {
-        return new Message(messageId, DESIGN_INSERT_REQUESTED, Json.encode(event), "test", partitionKey.toString(), timestamp);
+        return new Message(partitionKey.toString(), 0, timestamp,  new Payload(messageId, DESIGN_INSERT_REQUESTED, Json.encode(event), "test"));
     }
 
     @NotNull
     private static Message createDesignUpdateRequestedMessage(UUID messageId, UUID partitionKey, long timestamp, DesignUpdateRequested event) {
-        return new Message(messageId, DESIGN_UPDATE_REQUESTED, Json.encode(event), "test", partitionKey.toString(), timestamp);
+        return new Message(partitionKey.toString(), 0, timestamp,  new Payload(messageId, DESIGN_UPDATE_REQUESTED, Json.encode(event), "test"));
     }
 
     @NotNull
     private static Message createDesignDeleteRequestedMessage(UUID messageId, UUID partitionKey, long timestamp, DesignDeleteRequested event) {
-        return new Message(messageId, DESIGN_DELETE_REQUESTED, Json.encode(event), "test", partitionKey.toString(), timestamp);
+        return new Message(partitionKey.toString(), 0, timestamp,  new Payload(messageId, DESIGN_DELETE_REQUESTED, Json.encode(event), "test"));
     }
 
     @NotNull
     private static Message createDesignAggregateUpdateRequestedMessage(UUID messageId, UUID partitionKey, long timestamp, DesignChangedEvent event) {
-        return new Message(messageId, DESIGN_AGGREGATE_UPDATE_REQUESTED, Json.encode(event), "test", partitionKey.toString(), timestamp);
+        return new Message(partitionKey.toString(), 0, timestamp,  new Payload(messageId, DESIGN_AGGREGATE_UPDATE_REQUESTED, Json.encode(event), "test"));
     }
 
     @NotNull
     private static Message createDesignAggregateUpdateCompletedMessage(UUID messageId, UUID partitionKey, long timestamp, DesignChangedEvent event) {
-        return new Message(messageId, DESIGN_AGGREGATE_UPDATE_COMPLETED, Json.encode(event), "test", partitionKey.toString(), timestamp);
+        return new Message(partitionKey.toString(), 0, timestamp,  new Payload(messageId, DESIGN_AGGREGATE_UPDATE_COMPLETED, Json.encode(event), "test"));
     }
 
     @NotNull
     private static Message createTileRenderRequestedMessage(UUID messageId, UUID partitionKey, long timestamp, TileRenderCompleted event) {
-        return new Message(messageId, TILE_RENDER_REQUESTED, Json.encode(event), "test", partitionKey.toString(), timestamp);
+        return new Message(partitionKey.toString(), 0, timestamp,  new Payload(messageId, TILE_RENDER_REQUESTED, Json.encode(event), "test"));
     }
 
     @NotNull
     private static Message createTileRenderCompletedMessage(UUID messageId, UUID partitionKey, long timestamp, TileRenderCompleted event) {
-        return new Message(messageId, TILE_RENDER_COMPLETED, Json.encode(event), "test", partitionKey.toString(), timestamp);
+        return new Message(partitionKey.toString(), 0, timestamp,  new Payload(messageId, TILE_RENDER_COMPLETED, Json.encode(event), "test"));
     }
 
     @NotNull
     private static List<Message> safelyFindEventMessages(String partitionKey, String messageSource, String messageType) {
         synchronized (eventMessages) {
             return eventMessages.stream()
-                    .map(record -> Json.decodeValue(record.value(), Message.class))
-                    .filter(message -> message.getPartitionKey().equals(partitionKey))
-                    .filter(message -> message.getSource().equals(messageSource))
-                    .filter(message -> message.getType().equals(messageType))
+                    .map(record -> new Message(record.key(), record.offset(), record.timestamp(), Json.decodeValue(record.value(), Payload.class)))
+                    .filter(message -> message.getKey().equals(partitionKey))
+                    .filter(message -> message.getPayload().getSource().equals(messageSource))
+                    .filter(message -> message.getPayload().getType().equals(messageType))
 //                    .sorted(Comparator.comparing(Message::getTimestamp))
                     .collect(Collectors.toList());
         }
@@ -581,10 +582,10 @@ public class IntegrationTests {
     private static List<Message> safelyFindRenderMessages(String partitionKey, String messageSource, String messageType) {
         synchronized (renderMessages) {
             return renderMessages.stream()
-                    .map(record -> Json.decodeValue(record.value(), Message.class))
-                    .filter(message -> message.getPartitionKey().startsWith(partitionKey))
-                    .filter(message -> message.getSource().equals(messageSource))
-                    .filter(message -> message.getType().equals(messageType))
+                    .map(record -> new Message(record.key(), record.offset(), record.timestamp(), Json.decodeValue(record.value(), Payload.class)))
+                    .filter(message -> message.getKey().startsWith(partitionKey))
+                    .filter(message -> message.getPayload().getSource().equals(messageSource))
+                    .filter(message -> message.getPayload().getType().equals(messageType))
 //                    .sorted(Comparator.comparing(Message::getTimestamp))
                     .collect(Collectors.toList());
         }
@@ -647,7 +648,7 @@ public class IntegrationTests {
     @NotNull
     private Set<UUID> extractUuids(List<Row> rows) {
         return rows.stream()
-                .map(row -> row.getString("MESSAGE_PARTITIONKEY"))
+                .map(row -> row.getString("MESSAGE_KEY"))
                 .filter(Objects::nonNull)
                 .map(UUID::fromString)
                 .collect(Collectors.toSet());
@@ -655,7 +656,7 @@ public class IntegrationTests {
 
     @NotNull
     private List<Row> fetchMessages(UUID designId) {
-        return session.rxPrepare("SELECT * FROM MESSAGE WHERE MESSAGE_PARTITIONKEY = ?")
+        return session.rxPrepare("SELECT * FROM MESSAGE WHERE MESSAGE_KEY = ?")
                 .map(stmt -> stmt.bind(designId.toString()).setConsistencyLevel(ConsistencyLevel.QUORUM))
                 .flatMap(session::rxExecuteWithFullFetch)
                 .subscribeOn(Schedulers.io())
@@ -675,19 +676,19 @@ public class IntegrationTests {
 
     private void assertExpectedMessage(Row row, Message message) {
         String actualType = row.getString("MESSAGE_TYPE");
-        String actualBody = row.getString("MESSAGE_BODY");
+        String actualValue = row.getString("MESSAGE_VALUE");
         UUID actualUuid = row.getUuid("MESSAGE_UUID");
         String actualSource = row.getString("MESSAGE_SOURCE");
-        String actualPartitionKey = row.getString("MESSAGE_PARTITIONKEY");
+        String actualKey = row.getString("MESSAGE_KEY");
         Instant actualTimestamp = row.getInstant("MESSAGE_TIMESTAMP");
-        UUID actualEsid = row.getUuid("MESSAGE_ESID");
-        assertThat(actualEsid).isNotNull();
-        assertThat(actualUuid).isEqualTo(message.getUuid());
-        assertThat(actualBody).isEqualTo(message.getBody());
-        assertThat(actualType).isEqualTo(message.getType());
-        assertThat(actualSource).isEqualTo(message.getSource());
-        assertThat(actualPartitionKey).isEqualTo(message.getPartitionKey());
-        assertThat(actualTimestamp).isEqualTo(Instant.ofEpochMilli(message.getTimestamp()));
+        Long actualOffset = row.getLong("MESSAGE_OFFSET");
+        assertThat(actualOffset).isNotNull();
+        assertThat(actualUuid).isEqualTo(message.getPayload().getUuid());
+        assertThat(actualValue).isEqualTo(message.getPayload().getData());
+        assertThat(actualType).isEqualTo(message.getPayload().getType());
+        assertThat(actualSource).isEqualTo(message.getPayload().getSource());
+        assertThat(actualKey).isEqualTo(message.getKey());
+        assertThat(actualTimestamp).isAfterOrEqualTo(Instant.ofEpochMilli(message.getTimestamp()));
     }
 
     private void assertExpectedDesign(Row row, String data, String status, List<Tiles> tiles) {
@@ -708,22 +709,22 @@ public class IntegrationTests {
 
     private void assertExpectedDesignAggregateUpdateRequestedMessage(UUID designId, Message actualMessage) {
         assertThat(actualMessage.getTimestamp()).isNotNull();
-        assertThat(actualMessage.getSource()).isEqualTo(MESSAGE_SOURCE);
-        assertThat(actualMessage.getPartitionKey()).isEqualTo(designId.toString());
-        assertThat(actualMessage.getUuid()).isNotNull();
-        assertThat(actualMessage.getType()).isEqualTo(DESIGN_AGGREGATE_UPDATE_REQUESTED);
-        DesignAggregateUpdateRequested actualEvent = Json.decodeValue(actualMessage.getBody(), DesignAggregateUpdateRequested.class);
+        assertThat(actualMessage.getPayload().getSource()).isEqualTo(MESSAGE_SOURCE);
+        assertThat(actualMessage.getKey()).isEqualTo(designId.toString());
+        assertThat(actualMessage.getPayload().getUuid()).isNotNull();
+        assertThat(actualMessage.getPayload().getType()).isEqualTo(DESIGN_AGGREGATE_UPDATE_REQUESTED);
+        DesignAggregateUpdateRequested actualEvent = Json.decodeValue(actualMessage.getPayload().getData(), DesignAggregateUpdateRequested.class);
         assertThat(actualEvent.getUuid()).isEqualTo(designId);
         assertThat(actualEvent.getEsid()).isNotNull();
     }
 
     private void assertExpectedDesignAggregateUpdateCompletedMessage(UUID designId, Message actualMessage, String data, String checksum) {
         assertThat(actualMessage.getTimestamp()).isNotNull();
-        assertThat(actualMessage.getSource()).isEqualTo(MESSAGE_SOURCE);
-        assertThat(actualMessage.getPartitionKey()).isEqualTo(designId.toString());
-        assertThat(actualMessage.getUuid()).isNotNull();
-        assertThat(actualMessage.getType()).isEqualTo(DESIGN_AGGREGATE_UPDATE_COMPLETED);
-        DesignAggregateUpdateCompleted actualEvent = Json.decodeValue(actualMessage.getBody(), DesignAggregateUpdateCompleted.class);
+        assertThat(actualMessage.getPayload().getSource()).isEqualTo(MESSAGE_SOURCE);
+        assertThat(actualMessage.getKey()).isEqualTo(designId.toString());
+        assertThat(actualMessage.getPayload().getUuid()).isNotNull();
+        assertThat(actualMessage.getPayload().getType()).isEqualTo(DESIGN_AGGREGATE_UPDATE_COMPLETED);
+        DesignAggregateUpdateCompleted actualEvent = Json.decodeValue(actualMessage.getPayload().getData(), DesignAggregateUpdateCompleted.class);
         assertThat(actualEvent.getUuid()).isEqualTo(designId);
         assertThat(actualEvent.getEsid()).isNotNull();
         assertThat(actualEvent.getData()).isEqualTo(data);
@@ -732,11 +733,11 @@ public class IntegrationTests {
 
     private void assertExpectedTileRenderRequestedMessage(Message actualMessage, String partitionKey) {
         assertThat(actualMessage.getTimestamp()).isNotNull();
-        assertThat(actualMessage.getSource()).isEqualTo(MESSAGE_SOURCE);
-        assertThat(actualMessage.getPartitionKey()).isEqualTo(partitionKey);
-        assertThat(actualMessage.getUuid()).isNotNull();
-        assertThat(actualMessage.getType()).isEqualTo(TILE_RENDER_REQUESTED);
-        assertThat(actualMessage.getBody()).isNotNull();
+        assertThat(actualMessage.getPayload().getSource()).isEqualTo(MESSAGE_SOURCE);
+        assertThat(actualMessage.getKey()).isEqualTo(partitionKey);
+        assertThat(actualMessage.getPayload().getUuid()).isNotNull();
+        assertThat(actualMessage.getPayload().getType()).isEqualTo(TILE_RENDER_REQUESTED);
+        assertThat(actualMessage.getPayload()).isNotNull();
     }
 
     private void assertExpectedTileRenderRequestedEvent(UUID designId, TileRenderRequested actualEvent, String data, String checksum) {
@@ -751,11 +752,11 @@ public class IntegrationTests {
 
     private void assertExpectedTileRenderCompletedMessage(UUID designId, Message actualMessage) {
         assertThat(actualMessage.getTimestamp()).isNotNull();
-        assertThat(actualMessage.getSource()).isEqualTo(MESSAGE_SOURCE);
-        assertThat(actualMessage.getPartitionKey()).isEqualTo(designId.toString());
-        assertThat(actualMessage.getUuid()).isNotNull();
-        assertThat(actualMessage.getType()).isEqualTo(TILE_RENDER_COMPLETED);
-        assertThat(actualMessage.getBody()).isNotNull();
+        assertThat(actualMessage.getPayload().getSource()).isEqualTo(MESSAGE_SOURCE);
+        assertThat(actualMessage.getKey()).isEqualTo(designId.toString());
+        assertThat(actualMessage.getPayload().getUuid()).isNotNull();
+        assertThat(actualMessage.getPayload().getType()).isEqualTo(TILE_RENDER_COMPLETED);
+        assertThat(actualMessage.getPayload()).isNotNull();
     }
 
     private void assertExpectedTileRenderCompletedEvent(UUID designId, TileRenderCompleted actualEvent, String checksum) {
@@ -769,33 +770,33 @@ public class IntegrationTests {
 
     private void assertExpectedTileAggregateUpdateRequiredMessage(UUID designId, Message actualMessage) {
         assertThat(actualMessage.getTimestamp()).isNotNull();
-        assertThat(actualMessage.getSource()).isEqualTo(MESSAGE_SOURCE);
-        assertThat(actualMessage.getPartitionKey()).isEqualTo(designId.toString());
-        assertThat(actualMessage.getUuid()).isNotNull();
-        assertThat(actualMessage.getType()).isEqualTo(TILE_AGGREGATE_UPDATE_REQUIRED);
-        TileAggregateUpdateRequired actualEvent = Json.decodeValue(actualMessage.getBody(), TileAggregateUpdateRequired.class);
+        assertThat(actualMessage.getPayload().getSource()).isEqualTo(MESSAGE_SOURCE);
+        assertThat(actualMessage.getKey()).isEqualTo(designId.toString());
+        assertThat(actualMessage.getPayload().getUuid()).isNotNull();
+        assertThat(actualMessage.getPayload().getType()).isEqualTo(TILE_AGGREGATE_UPDATE_REQUIRED);
+        TileAggregateUpdateRequired actualEvent = Json.decodeValue(actualMessage.getPayload().getData(), TileAggregateUpdateRequired.class);
         assertThat(actualEvent.getUuid()).isEqualTo(designId);
         assertThat(actualEvent.getEsid()).isNotNull();
     }
 
     private void assertExpectedTileAggregateUpdateRequestedMessage(UUID designId, Message actualMessage) {
         assertThat(actualMessage.getTimestamp()).isNotNull();
-        assertThat(actualMessage.getSource()).isEqualTo(MESSAGE_SOURCE);
-        assertThat(actualMessage.getPartitionKey()).isEqualTo(designId.toString());
-        assertThat(actualMessage.getUuid()).isNotNull();
-        assertThat(actualMessage.getType()).isEqualTo(TILE_AGGREGATE_UPDATE_REQUESTED);
-        TileAggregateUpdateRequested actualEvent = Json.decodeValue(actualMessage.getBody(), TileAggregateUpdateRequested.class);
+        assertThat(actualMessage.getPayload().getSource()).isEqualTo(MESSAGE_SOURCE);
+        assertThat(actualMessage.getKey()).isEqualTo(designId.toString());
+        assertThat(actualMessage.getPayload().getUuid()).isNotNull();
+        assertThat(actualMessage.getPayload().getType()).isEqualTo(TILE_AGGREGATE_UPDATE_REQUESTED);
+        TileAggregateUpdateRequested actualEvent = Json.decodeValue(actualMessage.getPayload().getData(), TileAggregateUpdateRequested.class);
         assertThat(actualEvent.getUuid()).isEqualTo(designId);
         assertThat(actualEvent.getEsid()).isNotNull();
     }
 
     private void assertExpectedTileAggregateUpdateCompletedMessage(UUID designId, Message actualMessage) {
         assertThat(actualMessage.getTimestamp()).isNotNull();
-        assertThat(actualMessage.getSource()).isEqualTo(MESSAGE_SOURCE);
-        assertThat(actualMessage.getPartitionKey()).isEqualTo(designId.toString());
-        assertThat(actualMessage.getUuid()).isNotNull();
-        assertThat(actualMessage.getType()).isEqualTo(TILE_AGGREGATE_UPDATE_COMPLETED);
-        TileAggregateUpdateCompleted actualEvent = Json.decodeValue(actualMessage.getBody(), TileAggregateUpdateCompleted.class);
+        assertThat(actualMessage.getPayload().getSource()).isEqualTo(MESSAGE_SOURCE);
+        assertThat(actualMessage.getKey()).isEqualTo(designId.toString());
+        assertThat(actualMessage.getPayload().getUuid()).isNotNull();
+        assertThat(actualMessage.getPayload().getType()).isEqualTo(TILE_AGGREGATE_UPDATE_COMPLETED);
+        TileAggregateUpdateCompleted actualEvent = Json.decodeValue(actualMessage.getPayload().getData(), TileAggregateUpdateCompleted.class);
         assertThat(actualEvent.getUuid()).isEqualTo(designId);
     }
 

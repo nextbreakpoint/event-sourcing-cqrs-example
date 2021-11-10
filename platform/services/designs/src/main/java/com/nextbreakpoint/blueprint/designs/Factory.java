@@ -1,6 +1,9 @@
 package com.nextbreakpoint.blueprint.designs;
 
-import com.nextbreakpoint.blueprint.common.vertx.*;
+import com.nextbreakpoint.blueprint.common.vertx.ErrorConsumer;
+import com.nextbreakpoint.blueprint.common.vertx.JsonConsumer;
+import com.nextbreakpoint.blueprint.common.vertx.NotFoundConsumer;
+import com.nextbreakpoint.blueprint.common.vertx.TemplateHandler;
 import com.nextbreakpoint.blueprint.designs.common.DesignChangedMessageMapper;
 import com.nextbreakpoint.blueprint.designs.operations.delete.*;
 import com.nextbreakpoint.blueprint.designs.operations.insert.*;

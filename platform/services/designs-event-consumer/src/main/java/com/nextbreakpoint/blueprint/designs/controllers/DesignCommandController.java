@@ -7,11 +7,8 @@ import com.nextbreakpoint.blueprint.common.events.DesignAggregateUpdateRequested
 import com.nextbreakpoint.blueprint.common.vertx.Controller;
 import com.nextbreakpoint.blueprint.common.vertx.KafkaEmitter;
 import com.nextbreakpoint.blueprint.designs.Store;
-import io.vertx.core.json.Json;
-import io.vertx.core.json.JsonObject;
 import rx.Single;
 
-import java.util.HashMap;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -35,8 +32,7 @@ public class DesignCommandController implements Controller<Message, Void> {
     }
 
     private Single<DesignAggregateUpdateRequested> onMessageReceived(Message message) {
-        final UUID esid = Uuids.timeBased();
-        return store.appendMessage(esid, message)
-                .map(result -> new DesignAggregateUpdateRequested(Uuids.timeBased(), UUID.fromString(message.getPartitionKey()), esid));
+        return store.appendMessage(message)
+                .map(result -> new DesignAggregateUpdateRequested(Uuids.timeBased(), UUID.fromString(message.getKey()), message.getOffset()));
     }
 }

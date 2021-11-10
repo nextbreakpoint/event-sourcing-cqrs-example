@@ -3,6 +3,7 @@ package com.nextbreakpoint.blueprint.common.events.mappers;
 import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.Message;
 import com.nextbreakpoint.blueprint.common.core.MessageType;
+import com.nextbreakpoint.blueprint.common.core.Payload;
 import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
 import io.vertx.core.json.Json;
 
@@ -12,7 +13,7 @@ import java.util.function.Function;
 
 public class TileRenderRequestedMessageMapper implements Mapper<TileRenderRequested, Message> {
     private final String messageSource;
-    private Function<TileRenderRequested, String> keyMapper;
+    private final Function<TileRenderRequested, String> keyMapper;
 
     public TileRenderRequestedMessageMapper(String messageSource, Function<TileRenderRequested, String> keyMapper) {
         this.messageSource = Objects.requireNonNull(messageSource);
@@ -26,12 +27,15 @@ public class TileRenderRequestedMessageMapper implements Mapper<TileRenderReques
     @Override
     public Message transform(TileRenderRequested event) {
         return new Message(
-                UUID.randomUUID(),
-                MessageType.TILE_RENDER_REQUESTED,
-                Json.encode(event),
-                messageSource,
                 keyMapper.apply(event),
-                System.currentTimeMillis()
+                0,
+                System.currentTimeMillis(),
+                new Payload(
+                        UUID.randomUUID(),
+                        MessageType.TILE_RENDER_REQUESTED,
+                        Json.encode(event),
+                        messageSource
+                )
         );
     }
 }

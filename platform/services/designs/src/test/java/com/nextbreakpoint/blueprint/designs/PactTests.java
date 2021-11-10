@@ -153,7 +153,7 @@ public class PactTests {
     synchronized (records) {
       return records.stream()
               .map(record -> Json.decodeValue(record.value(), Message.class))
-              .filter(value -> value.getPartitionKey().equals(designId.toString()))
+              .filter(value -> value.getKey().equals(designId.toString()))
               .findFirst();
     }
   }

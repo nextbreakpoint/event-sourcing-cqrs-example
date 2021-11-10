@@ -10,6 +10,7 @@ import au.com.dius.pact.core.model.messaging.MessagePact;
 import com.nextbreakpoint.blueprint.common.core.Environment;
 import com.nextbreakpoint.blueprint.common.core.Message;
 import com.nextbreakpoint.blueprint.common.core.MessageType;
+import com.nextbreakpoint.blueprint.common.core.Payload;
 import com.nextbreakpoint.blueprint.common.test.EventSource;
 import com.nextbreakpoint.blueprint.common.test.KafkaUtils;
 import com.nextbreakpoint.blueprint.designs.model.DesignChanged;
@@ -118,9 +119,9 @@ public class PactTests {
 
                 final Message designChangedMessage2 = Json.decodeValue(messagePact.getMessages().get(1).contentsAsString(), Message.class);
 
-                final DesignChanged event1 = Json.decodeValue(designChangedMessage1.getBody(), DesignChanged.class);
+                final DesignChanged event1 = Json.decodeValue(designChangedMessage1.getPayload().getData(), DesignChanged.class);
 
-                final DesignChanged event2 = Json.decodeValue(designChangedMessage2.getBody(), DesignChanged.class);
+                final DesignChanged event2 = Json.decodeValue(designChangedMessage2.getPayload().getData(), DesignChanged.class);
 
                 long eventTimestamp1 = System.currentTimeMillis() - 2;
 
@@ -186,9 +187,9 @@ public class PactTests {
 
                 final Message designChangedMessage2 = Json.decodeValue(messagePact.getMessages().get(1).contentsAsString(), Message.class);
 
-                final DesignChanged event1 = Json.decodeValue(designChangedMessage1.getBody(), DesignChanged.class);
+                final DesignChanged event1 = Json.decodeValue(designChangedMessage1.getPayload().getData(), DesignChanged.class);
 
-                final DesignChanged event2 = Json.decodeValue(designChangedMessage2.getBody(), DesignChanged.class);
+                final DesignChanged event2 = Json.decodeValue(designChangedMessage2.getPayload().getData(), DesignChanged.class);
 
                 long eventTimestamp1 = System.currentTimeMillis() - 2;
 
@@ -248,11 +249,11 @@ public class PactTests {
     }
 
     private static ProducerRecord<String, String> createKafkaRecord(Message message) {
-        return new ProducerRecord<>("design-event", message.getPartitionKey(), Json.encode(message));
+        return new ProducerRecord<>("design-event", message.getKey(), Json.encode(message.getPayload()));
     }
 
     private static Message createDesignChangedMessage(UUID messageId, UUID partitionKey, long timestamp, DesignChanged event) {
-        return new Message(messageId.toString(), MessageType.DESIGN_CHANGED, Json.encode(event), "test", partitionKey.toString(), timestamp);
+        return new Message(partitionKey.toString(), 0, timestamp,  new Payload(messageId, MessageType.DESIGN_CHANGED, Json.encode(event), "test"));
     }
 
     private static class SSENotification {

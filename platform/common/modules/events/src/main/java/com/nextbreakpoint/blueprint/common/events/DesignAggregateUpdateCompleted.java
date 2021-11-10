@@ -9,7 +9,7 @@ import java.util.UUID;
 public class DesignAggregateUpdateCompleted {
     private final UUID evid;
     private final UUID uuid;
-    private final UUID esid;
+    private final long esid;
     private final String data;
     private final String checksum;
     private final int levels;
@@ -19,7 +19,7 @@ public class DesignAggregateUpdateCompleted {
     public DesignAggregateUpdateCompleted(
         @JsonProperty("evid") UUID evid,
         @JsonProperty("uuid") UUID uuid,
-        @JsonProperty("esid") UUID esid,
+        @JsonProperty("esid") long esid,
         @JsonProperty("data") String data,
         @JsonProperty("checksum") String checksum,
         @JsonProperty("levels") int levels,
@@ -27,7 +27,7 @@ public class DesignAggregateUpdateCompleted {
     ) {
         this.evid = Objects.requireNonNull(evid);
         this.uuid = Objects.requireNonNull(uuid);
-        this.esid = Objects.requireNonNull(esid);
+        this.esid = esid;
         this.data = Objects.requireNonNull(data);
         this.checksum = Objects.requireNonNull(checksum);
         this.levels = levels;
@@ -42,7 +42,7 @@ public class DesignAggregateUpdateCompleted {
         return uuid;
     }
 
-    public UUID getEsid() {
+    public long getEsid() {
         return esid;
     }
 

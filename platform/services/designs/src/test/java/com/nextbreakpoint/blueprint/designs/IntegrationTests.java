@@ -221,11 +221,11 @@ public class IntegrationTests {
                 assertThat(message.isEmpty()).isFalse();
                 Message actualMessage = message.get();
                 assertThat(actualMessage.getTimestamp()).isNotNull();
-                assertThat(actualMessage.getSource()).isEqualTo("service-designs");
-                assertThat(actualMessage.getPartitionKey()).isEqualTo(designId);
-                assertThat(actualMessage.getUuid()).isNotNull();
-                assertThat(actualMessage.getType()).isEqualTo("design-changed");
-                DesignChanged actualEvent = Json.decodeValue(actualMessage.getBody(), DesignChanged.class);
+                assertThat(actualMessage.getPayload().getSource()).isEqualTo("service-designs");
+                assertThat(actualMessage.getKey()).isEqualTo(designId);
+                assertThat(actualMessage.getPayload().getUuid()).isNotNull();
+                assertThat(actualMessage.getPayload().getType()).isEqualTo("design-changed");
+                DesignChanged actualEvent = Json.decodeValue(actualMessage.getPayload().getData(), DesignChanged.class);
                 assertThat(actualEvent.getUuid()).isEqualTo(UUID.fromString(designId));
                 assertThat(actualEvent.getTimestamp()).isNotNull();
                 assertThat(actualEvent.getTimestamp()).isGreaterThan(eventTimestamp0);
@@ -263,11 +263,11 @@ public class IntegrationTests {
                 assertThat(message.isEmpty()).isFalse();
                 Message actualMessage = message.get();
                 assertThat(actualMessage.getTimestamp()).isNotNull();
-                assertThat(actualMessage.getSource()).isEqualTo("service-designs");
-                assertThat(actualMessage.getPartitionKey()).isEqualTo(designId);
-                assertThat(actualMessage.getUuid()).isNotNull();
-                assertThat(actualMessage.getType()).isEqualTo("design-changed");
-                DesignChanged actualEvent = Json.decodeValue(actualMessage.getBody(), DesignChanged.class);
+                assertThat(actualMessage.getPayload().getSource()).isEqualTo("service-designs");
+                assertThat(actualMessage.getKey()).isEqualTo(designId);
+                assertThat(actualMessage.getPayload().getUuid()).isNotNull();
+                assertThat(actualMessage.getPayload().getType()).isEqualTo("design-changed");
+                DesignChanged actualEvent = Json.decodeValue(actualMessage.getPayload().getData(), DesignChanged.class);
                 assertThat(actualEvent.getUuid()).isEqualTo(UUID.fromString(designId));
                 assertThat(actualEvent.getTimestamp()).isNotNull();
                 assertThat(actualEvent.getTimestamp()).isGreaterThan(eventTimestamp1);
@@ -333,11 +333,11 @@ public class IntegrationTests {
                 assertThat(message.isEmpty()).isFalse();
                 Message actualMessage = message.get();
                 assertThat(actualMessage.getTimestamp()).isNotNull();
-                assertThat(actualMessage.getSource()).isEqualTo("service-designs");
-                assertThat(actualMessage.getPartitionKey()).isEqualTo(designId);
-                assertThat(actualMessage.getUuid()).isNotNull();
-                assertThat(actualMessage.getType()).isEqualTo("design-changed");
-                DesignChanged actualEvent = Json.decodeValue(actualMessage.getBody(), DesignChanged.class);
+                assertThat(actualMessage.getPayload().getSource()).isEqualTo("service-designs");
+                assertThat(actualMessage.getKey()).isEqualTo(designId);
+                assertThat(actualMessage.getPayload().getUuid()).isNotNull();
+                assertThat(actualMessage.getPayload().getType()).isEqualTo("design-changed");
+                DesignChanged actualEvent = Json.decodeValue(actualMessage.getPayload().getData(), DesignChanged.class);
                 assertThat(actualEvent.getUuid()).isEqualTo(UUID.fromString(designId));
                 assertThat(actualEvent.getTimestamp()).isNotNull();
                 assertThat(actualEvent.getTimestamp()).isGreaterThan(eventTimestamp3);
@@ -367,7 +367,7 @@ public class IntegrationTests {
     synchronized (records) {
       return records.stream()
               .map(record -> Json.decodeValue(record.value(), Message.class))
-              .filter(value -> value.getPartitionKey().equals(designId.toString()))
+              .filter(value -> value.getKey().equals(designId.toString()))
               .findFirst();
     }
   }

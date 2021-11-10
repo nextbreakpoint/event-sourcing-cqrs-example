@@ -4,63 +4,49 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.Objects;
-import java.util.UUID;
 
 public class Message {
-    private UUID uuid;
-    private String type;
-    private String body;
-    private String source;
-    private String partitionKey;
+    private String key;
+    private long offset;
     private Long timestamp;
+    private Payload payload;
 
     @JsonCreator
-    public Message(@JsonProperty("uuid") UUID uuid,
-                   @JsonProperty("type") String type,
-                   @JsonProperty("body") String body,
-                   @JsonProperty("source") String source,
-                   @JsonProperty("partitionKey") String partitionKey,
-                   @JsonProperty("timestamp") Long timestamp) {
-        this.uuid = Objects.requireNonNull(uuid);
-        this.type = Objects.requireNonNull(type);
-        this.body = Objects.requireNonNull(body);
-        this.source = Objects.requireNonNull(source);
-        this.partitionKey = Objects.requireNonNull(partitionKey);
+    public Message(
+        @JsonProperty("key") String key,
+        @JsonProperty("offset") long offset,
+        @JsonProperty("timestamp") Long timestamp,
+        @JsonProperty("payload") Payload payload
+    ) {
+        this.key = Objects.requireNonNull(key);
+        this.offset = offset;
         this.timestamp = Objects.requireNonNull(timestamp);
+        this.payload = Objects.requireNonNull(payload);
     }
 
-    public UUID getUuid() {
-        return uuid;
+    public String getKey() {
+        return key;
     }
 
-    public String getType() {
-        return type;
-    }
-
-    public String getBody() {
-        return body;
-    }
-
-    public String getSource() {
-        return source;
-    }
-
-    public String getPartitionKey() {
-        return partitionKey;
+    public long getOffset() {
+        return offset;
     }
 
     public Long getTimestamp() {
         return timestamp;
     }
 
+    public Payload getPayload() {
+        return payload;
+    }
+
     @Override
     public String toString() {
-        return "[ " +
-                "uuid='" + uuid + '\'' +
-                ", partitionKey='" + partitionKey + '\'' +
+        return "[" +
+                "key='" + key + '\'' +
+                ", offset=" + offset +
                 ", timestamp=" + timestamp +
-                ", type='" + type + '\'' +
-                ", source='" + source + '\'' +
-                " ]";
+                ", payload=" + payload +
+                "]";
     }
 }

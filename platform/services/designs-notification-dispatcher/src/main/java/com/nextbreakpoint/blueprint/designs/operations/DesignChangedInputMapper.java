@@ -10,11 +10,11 @@ import io.vertx.core.json.Json;
 public class DesignChangedInputMapper implements Mapper<Message, DesignChanged> {
     @Override
     public DesignChanged transform(Message message) {
-        if (!message.getType().equals(MessageType.DESIGN_CHANGED)) {
-            throw new IllegalArgumentException("Unexpected message type: " + message.getType());
+        if (!message.getPayload().getType().equals(MessageType.DESIGN_CHANGED)) {
+            throw new IllegalArgumentException("Unexpected message type: " + message.getPayload().getType());
         }
         try {
-            return Json.decodeValue(message.getBody(), DesignChanged.class);
+            return Json.decodeValue(message.getPayload().getData(), DesignChanged.class);
         } catch (DecodeException e) {
             throw new IllegalArgumentException("Message body cannot be decoded");
         }

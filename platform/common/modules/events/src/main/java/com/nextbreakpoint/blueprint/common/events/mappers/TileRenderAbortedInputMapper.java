@@ -14,13 +14,13 @@ public class TileRenderAbortedInputMapper implements Mapper<Message, TileRenderA
 
     @Override
     public TileRenderAborted transform(Message message) {
-        if (!message.getType().equals(MessageType.TILE_RENDER_ABORTED)) {
-            throw new IllegalArgumentException("Unexpected message type: " + message.getType());
+        if (!message.getPayload().getType().equals(MessageType.TILE_RENDER_ABORTED)) {
+            throw new IllegalArgumentException("Unexpected message type: " + message.getPayload().getType());
         }
         try {
-            return Json.decodeValue(message.getBody(), TileRenderAborted.class);
+            return Json.decodeValue(message.getPayload().getData(), TileRenderAborted.class);
         } catch (DecodeException e) {
-            logger.warn("Cannot decode message body: " + message.getBody(), e);
+            logger.warn("Cannot decode message body: " + message.getPayload(), e);
             throw new IllegalArgumentException("Message body cannot be decoded");
         }
     }

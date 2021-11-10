@@ -3,8 +3,8 @@ package com.nextbreakpoint.blueprint.designs;
 import com.nextbreakpoint.blueprint.common.core.Message;
 import com.nextbreakpoint.blueprint.common.events.mappers.*;
 import com.nextbreakpoint.blueprint.common.vertx.*;
-import com.nextbreakpoint.blueprint.designs.controllers.*;
 import com.nextbreakpoint.blueprint.designs.common.Bucket;
+import com.nextbreakpoint.blueprint.designs.controllers.*;
 import io.vertx.rxjava.kafka.client.producer.KafkaProducer;
 
 public class Factory {

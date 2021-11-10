@@ -9,7 +9,7 @@ import java.util.UUID;
 public class TileRenderRequested {
     private final UUID evid;
     private final UUID uuid;
-    private final UUID esid;
+    private final long esid;
     private final String data;
     private final String checksum;
     private final int level;
@@ -20,7 +20,7 @@ public class TileRenderRequested {
     public TileRenderRequested(
         @JsonProperty("evid") UUID evid,
         @JsonProperty("uuid") UUID uuid,
-        @JsonProperty("esid") UUID esid,
+        @JsonProperty("esid") long esid,
         @JsonProperty("data") String data,
         @JsonProperty("checksum") String checksum,
         @JsonProperty("level") int level,
@@ -29,7 +29,7 @@ public class TileRenderRequested {
     ) {
         this.evid = Objects.requireNonNull(evid);
         this.uuid = Objects.requireNonNull(uuid);
-        this.esid = Objects.requireNonNull(esid);
+        this.esid = esid;
         this.data = Objects.requireNonNull(data);
         this.checksum = Objects.requireNonNull(checksum);
         this.level = level;
@@ -45,7 +45,7 @@ public class TileRenderRequested {
         return uuid;
     }
 
-    public UUID getEsid() {
+    public long getEsid() {
         return esid;
     }
 

@@ -1,6 +1,7 @@
 package com.nextbreakpoint.blueprint.common.vertx;
 
 import com.nextbreakpoint.blueprint.common.core.Message;
+import com.nextbreakpoint.blueprint.common.core.Payload;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.Json;
@@ -99,9 +100,11 @@ public class KafkaPolling {
                         continue;
                     }
 
-                    final Message message = Json.decodeValue(record.value(), Message.class);
+                    final Payload payload = Json.decodeValue(record.value(), Payload.class);
 
-                    final MessageHandler<Message, Void> handler = messageHandlers.get(message.getType());
+                    final Message message = new Message(record.key(), record.offset(), record.timestamp(), payload);
+
+                    final MessageHandler<Message, Void> handler = messageHandlers.get(payload.getType());
 
                     if (handler == null) {
 //                        logger.warn("Ignoring message of type: " + message.getType());
@@ -109,7 +112,7 @@ public class KafkaPolling {
                         continue;
                     }
 
-                    buffer.put(message.getPartitionKey(), record);
+                    buffer.put(message.getKey(), record);
                 } catch (Exception e) {
                     logger.error("Failed to process record: " + record.key());
 
@@ -149,9 +152,11 @@ public class KafkaPolling {
                 return;
             }
 
-            final Message message = Json.decodeValue(record.value(), Message.class);
+            final Payload payload = Json.decodeValue(record.value(), Payload.class);
 
-            final MessageHandler<Message, Void> handler = messageHandlers.get(message.getType());
+            final Message message = new Message(record.key(), record.offset(), record.timestamp(), payload);
+
+            final MessageHandler<Message, Void> handler = messageHandlers.get(payload.getType());
 
             if (handler == null) {
 //                logger.warn("Ignoring message of type: " + message.getType());

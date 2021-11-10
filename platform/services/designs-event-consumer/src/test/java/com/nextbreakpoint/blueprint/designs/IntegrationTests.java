@@ -143,7 +143,7 @@ public class IntegrationTests {
 
             final DesignInsertRequested designInsertRequested = new DesignInsertRequested(Uuids.timeBased(), designId, JSON_1, LEVELS);
 
-            final OutputMessage designInsertRequestedMessage = createDesignInsertRequestedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), designInsertRequested);
+            final OutputMessage designInsertRequestedMessage = createDesignInsertRequestedMessage(UUID.randomUUID(), designId, designInsertRequested);
 
             safelyClearEventMessages();
             safelyClearRenderMessages();
@@ -217,9 +217,9 @@ public class IntegrationTests {
 
             final DesignUpdateRequested designUpdateRequested = new DesignUpdateRequested(Uuids.timeBased(), designId, JSON_2, LEVELS);
 
-            final OutputMessage designInsertRequestedMessage = createDesignInsertRequestedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), designInsertRequested);
+            final OutputMessage designInsertRequestedMessage = createDesignInsertRequestedMessage(UUID.randomUUID(), designId, designInsertRequested);
 
-            final OutputMessage designUpdateRequestedMessage = createDesignUpdateRequestedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), designUpdateRequested);
+            final OutputMessage designUpdateRequestedMessage = createDesignUpdateRequestedMessage(UUID.randomUUID(), designId, designUpdateRequested);
 
             safelyClearEventMessages();
             safelyClearRenderMessages();
@@ -302,9 +302,9 @@ public class IntegrationTests {
 
             final DesignDeleteRequested designDeleteRequested = new DesignDeleteRequested(Uuids.timeBased(), designId);
 
-            final OutputMessage designInsertRequestedMessage = createDesignInsertRequestedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), designInsertRequested);
+            final OutputMessage designInsertRequestedMessage = createDesignInsertRequestedMessage(UUID.randomUUID(), designId, designInsertRequested);
 
-            final OutputMessage designDeleteRequestedMessage = createDesignDeleteRequestedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), designDeleteRequested);
+            final OutputMessage designDeleteRequestedMessage = createDesignDeleteRequestedMessage(UUID.randomUUID(), designId, designDeleteRequested);
 
             safelyClearEventMessages();
             safelyClearRenderMessages();
@@ -381,7 +381,7 @@ public class IntegrationTests {
 
             final DesignInsertRequested designInsertRequested = new DesignInsertRequested(Uuids.timeBased(), designId, JSON_1, LEVELS);
 
-            final OutputMessage designInsertRequestedMessage = createDesignInsertRequestedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), designInsertRequested);
+            final OutputMessage designInsertRequestedMessage = createDesignInsertRequestedMessage(UUID.randomUUID(), designId, designInsertRequested);
 
             safelyClearEventMessages();
             safelyClearRenderMessages();
@@ -453,13 +453,13 @@ public class IntegrationTests {
             final TileRenderCompleted tileRenderCompleted1 = new TileRenderCompleted(Uuids.timeBased(), designId, esid[0], CHECKSUM_1, 1, 0, 0, "COMPLETED");
             final TileRenderCompleted tileRenderCompleted2 = new TileRenderCompleted(Uuids.timeBased(), designId, esid[0], CHECKSUM_1, 1, 1, 0, "COMPLETED");
             final TileRenderCompleted tileRenderCompleted3 = new TileRenderCompleted(Uuids.timeBased(), designId, esid[0], CHECKSUM_1, 1, 2, 1, "COMPLETED");
-            final TileRenderCompleted tileRenderCompleted4 = new TileRenderCompleted(Uuids.timeBased(), designId, esid[0], CHECKSUM_1, 1, LEVELS, 1, "COMPLETED");
+            final TileRenderCompleted tileRenderCompleted4 = new TileRenderCompleted(Uuids.timeBased(), designId, esid[0], CHECKSUM_1, 1, 3, 1, "COMPLETED");
 
-            final OutputMessage tileRenderCompletedMessage0 = createTileRenderCompletedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), tileRenderCompleted0);
-            final OutputMessage tileRenderCompletedMessage1 = createTileRenderCompletedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), tileRenderCompleted1);
-            final OutputMessage tileRenderCompletedMessage2 = createTileRenderCompletedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), tileRenderCompleted2);
-            final OutputMessage tileRenderCompletedMessage3 = createTileRenderCompletedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), tileRenderCompleted3);
-            final OutputMessage tileRenderCompletedMessage4 = createTileRenderCompletedMessage(UUID.randomUUID(), designId, System.currentTimeMillis(), tileRenderCompleted4);
+            final OutputMessage tileRenderCompletedMessage0 = createTileRenderCompletedMessage(UUID.randomUUID(), designId, tileRenderCompleted0);
+            final OutputMessage tileRenderCompletedMessage1 = createTileRenderCompletedMessage(UUID.randomUUID(), designId, tileRenderCompleted1);
+            final OutputMessage tileRenderCompletedMessage2 = createTileRenderCompletedMessage(UUID.randomUUID(), designId, tileRenderCompleted2);
+            final OutputMessage tileRenderCompletedMessage3 = createTileRenderCompletedMessage(UUID.randomUUID(), designId, tileRenderCompleted3);
+            final OutputMessage tileRenderCompletedMessage4 = createTileRenderCompletedMessage(UUID.randomUUID(), designId, tileRenderCompleted4);
 
             sendMessage(tileRenderCompletedMessage0);
             sendMessage(tileRenderCompletedMessage1);
@@ -528,37 +528,37 @@ public class IntegrationTests {
     }
 
     @NotNull
-    private static OutputMessage createDesignInsertRequestedMessage(UUID messageId, UUID partitionKey, long timestamp, DesignInsertRequested event) {
+    private static OutputMessage createDesignInsertRequestedMessage(UUID messageId, UUID partitionKey, DesignInsertRequested event) {
         return new OutputMessage(partitionKey.toString(), new Payload(messageId, DESIGN_INSERT_REQUESTED, Json.encode(event), "test"));
     }
 
     @NotNull
-    private static OutputMessage createDesignUpdateRequestedMessage(UUID messageId, UUID partitionKey, long timestamp, DesignUpdateRequested event) {
+    private static OutputMessage createDesignUpdateRequestedMessage(UUID messageId, UUID partitionKey, DesignUpdateRequested event) {
         return new OutputMessage(partitionKey.toString(), new Payload(messageId, DESIGN_UPDATE_REQUESTED, Json.encode(event), "test"));
     }
 
     @NotNull
-    private static OutputMessage createDesignDeleteRequestedMessage(UUID messageId, UUID partitionKey, long timestamp, DesignDeleteRequested event) {
+    private static OutputMessage createDesignDeleteRequestedMessage(UUID messageId, UUID partitionKey, DesignDeleteRequested event) {
         return new OutputMessage(partitionKey.toString(), new Payload(messageId, DESIGN_DELETE_REQUESTED, Json.encode(event), "test"));
     }
 
     @NotNull
-    private static OutputMessage createDesignAggregateUpdateRequestedMessage(UUID messageId, UUID partitionKey, long timestamp, DesignChangedEvent event) {
+    private static OutputMessage createDesignAggregateUpdateRequestedMessage(UUID messageId, UUID partitionKey, DesignChangedEvent event) {
         return new OutputMessage(partitionKey.toString(), new Payload(messageId, DESIGN_AGGREGATE_UPDATE_REQUESTED, Json.encode(event), "test"));
     }
 
     @NotNull
-    private static OutputMessage createDesignAggregateUpdateCompletedMessage(UUID messageId, UUID partitionKey, long timestamp, DesignChangedEvent event) {
+    private static OutputMessage createDesignAggregateUpdateCompletedMessage(UUID messageId, UUID partitionKey, DesignChangedEvent event) {
         return new OutputMessage(partitionKey.toString(), new Payload(messageId, DESIGN_AGGREGATE_UPDATE_COMPLETED, Json.encode(event), "test"));
     }
 
     @NotNull
-    private static OutputMessage createTileRenderRequestedMessage(UUID messageId, UUID partitionKey, long timestamp, TileRenderCompleted event) {
+    private static OutputMessage createTileRenderRequestedMessage(UUID messageId, UUID partitionKey, TileRenderCompleted event) {
         return new OutputMessage(partitionKey.toString(), new Payload(messageId, TILE_RENDER_REQUESTED, Json.encode(event), "test"));
     }
 
     @NotNull
-    private static OutputMessage createTileRenderCompletedMessage(UUID messageId, UUID partitionKey, long timestamp, TileRenderCompleted event) {
+    private static OutputMessage createTileRenderCompletedMessage(UUID messageId, UUID partitionKey, TileRenderCompleted event) {
         return new OutputMessage(partitionKey.toString(), new Payload(messageId, TILE_RENDER_COMPLETED, Json.encode(event), "test"));
     }
 

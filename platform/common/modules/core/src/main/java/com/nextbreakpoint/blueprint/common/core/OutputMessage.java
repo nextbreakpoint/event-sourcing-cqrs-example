@@ -26,6 +26,14 @@ public class OutputMessage {
         return value;
     }
 
+    public static OutputMessage from(InputMessage inputMessage) {
+        return new OutputMessage(inputMessage.getKey(), inputMessage.getValue());
+    }
+
+    public static OutputMessage from(String key, Payload value) {
+        return new OutputMessage(key, value);
+    }
+
     @Override
     public String toString() {
         return "[" +

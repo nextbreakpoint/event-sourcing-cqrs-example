@@ -44,4 +44,14 @@ public class Tiles {
     public int hashCode() {
         return Objects.hash(getLevel(), getRequested(), getCompleted(), getFailed());
     }
+
+    @Override
+    public String toString() {
+        return "Tiles{" +
+                "level=" + level +
+                ", requested=" + requested +
+                ", completed=" + completed +
+                ", failed=" + failed +
+                '}';
+    }
 }

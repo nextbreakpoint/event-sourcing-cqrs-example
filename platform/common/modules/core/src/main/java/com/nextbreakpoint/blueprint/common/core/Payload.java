@@ -46,7 +46,7 @@ public class Payload {
         return "[" +
                 "uuid=" + uuid +
                 ", type='" + type + '\'' +
-                ", data=" + data.length() + " bytes" +
+                ", data='" + data + '\'' +
                 ", source='" + source + '\'' +
                 "]";
     }

@@ -24,6 +24,7 @@ import rx.plugins.RxJavaHooks;
 import rx.schedulers.Schedulers;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -57,9 +58,9 @@ public class IntegrationTests {
 
         KafkaProducer<String, String> producer = KafkaClientFactory.createProducer(environment, vertx, scenario.createProducerConfig());
 
-        KafkaConsumer<String, String> eventsConsumer = KafkaClientFactory.createConsumer(environment, vertx, scenario.createConsumerConfig("test"));
+        KafkaConsumer<String, String> eventsConsumer = KafkaClientFactory.createConsumer(environment, vertx, scenario.createConsumerConfig("test-events"));
 
-        KafkaConsumer<String, String> renderConsumer = KafkaClientFactory.createConsumer(environment, vertx, scenario.createConsumerConfig("test-rendering"));
+        KafkaConsumer<String, String> renderConsumer = KafkaClientFactory.createConsumer(environment, vertx, scenario.createConsumerConfig("test-render"));
 
         eventsPolling = new KafkaTestPolling(eventsConsumer, TestConstants.EVENTS_TOPIC_NAME);
         renderPolling = new KafkaTestPolling(renderConsumer, TestConstants.RENDERING_QUEUE_TOPIC_NAME);
@@ -95,7 +96,6 @@ public class IntegrationTests {
         }
 
         @Test
-        @Order(value = 100)
         @DisplayName("Should update the design after receiving a DesignInsertRequested event")
         public void shouldUpdateTheDesignWhenReceivingADesignInsertRequestedMessage() {
             final UUID designId = UUID.randomUUID();
@@ -174,7 +174,6 @@ public class IntegrationTests {
         }
 
         @Test
-        @Order(value = 200)
         @DisplayName("Should update the design after receiving a DesignUpdateRequested event")
         public void shouldUpdateTheDesignWhenReceivingADesignUpdateRequestedMessage() {
             final UUID designId = UUID.randomUUID();
@@ -269,7 +268,6 @@ public class IntegrationTests {
         }
 
         @Test
-        @Order(value = 300)
         @DisplayName("Should update the design after receiving a DesignDeleteRequested event")
         public void shouldUpdateTheDesignWhenReceivingADesignDeleteRequestedMessage() {
             final UUID designId = UUID.randomUUID();
@@ -361,7 +359,6 @@ public class IntegrationTests {
         }
 
         @Test
-        @Order(value = 400)
         @DisplayName("Should update the design after receiving a TileRenderCompleted event")
         public void shouldUpdateTheDesignWhenReceivingATileRenderCompletedMessage() {
             final UUID designId = UUID.randomUUID();

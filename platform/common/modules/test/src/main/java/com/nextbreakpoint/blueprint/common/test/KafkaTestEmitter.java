@@ -8,15 +8,16 @@ import rx.schedulers.Schedulers;
 
 public class KafkaTestEmitter {
     private KafkaProducer<String, String> kafkaProducer;
-    private String topic;
+    private String topicName;
 
-    public KafkaTestEmitter(KafkaProducer<String, String> kafkaProducer, String topic) {
+    public KafkaTestEmitter(KafkaProducer<String, String> kafkaProducer, String topicName) {
         this.kafkaProducer = kafkaProducer;
-        this.topic = topic;
+        this.topicName = topicName;
     }
 
     public void sendMessage(OutputMessage message) {
         kafkaProducer.rxSend(createKafkaRecord(message))
+                .doOnEach(action -> System.out.println("Sending message to topic " + topicName + ": " + message))
                 .doOnError(Throwable::printStackTrace)
                 .subscribeOn(Schedulers.io())
                 .toBlocking()
@@ -24,6 +25,6 @@ public class KafkaTestEmitter {
     }
 
     private KafkaProducerRecord<String, String> createKafkaRecord(OutputMessage message) {
-        return KafkaProducerRecord.create(topic, message.getKey(), Json.encode(message.getValue()));
+        return KafkaProducerRecord.create(topicName, message.getKey(), Json.encode(message.getValue()));
     }
 }

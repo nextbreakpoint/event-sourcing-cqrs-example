@@ -26,6 +26,16 @@ public class TestCassandra {
     }
 
     @NotNull
+    public List<Row> fetchMessage(UUID uuid) {
+        return session.rxPrepare("SELECT * FROM MESSAGE WHERE MESSAGE_UUID = ?")
+                .map(stmt -> stmt.bind(uuid).setConsistencyLevel(ConsistencyLevel.QUORUM))
+                .flatMap(session::rxExecuteWithFullFetch)
+                .subscribeOn(Schedulers.io())
+                .toBlocking()
+                .value();
+    }
+
+    @NotNull
     public List<Row> fetchDesign(UUID designId) {
         return session.rxPrepare("SELECT * FROM DESIGN WHERE DESIGN_UUID = ?")
                 .map(stmt -> stmt.bind(designId).setConsistencyLevel(ConsistencyLevel.QUORUM))

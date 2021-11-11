@@ -14,19 +14,19 @@ public class KafkaEmitter implements Controller<OutputMessage, Void> {
     private final Logger logger = LoggerFactory.getLogger(KafkaEmitter.class.getName());
 
     private final KafkaProducer<String, String> producer;
-    private final String topic;
+    private final String topicName;
     private final int retries;
 
-    public KafkaEmitter(KafkaProducer<String, String> producer, String topic, int retries) {
+    public KafkaEmitter(KafkaProducer<String, String> producer, String topicName, int retries) {
         this.producer = Objects.requireNonNull(producer);
-        this.topic = Objects.requireNonNull(topic);
+        this.topicName = Objects.requireNonNull(topicName);
         this.retries = retries;
     }
 
     @Override
     public Single<Void> onNext(OutputMessage message) {
         return Single.just(message)
-//                .doOnEach(action -> logger.debug("Sending message: " + action.getValue()))
+//                .doOnEach(message -> logger.debug("Sending message: " + message))
                 .map(this::createKafkaRecord)
                 .flatMap(this::writeRecord);
     }
@@ -38,6 +38,6 @@ public class KafkaEmitter implements Controller<OutputMessage, Void> {
     }
 
     private KafkaProducerRecord<String, String> createKafkaRecord(OutputMessage message) {
-        return KafkaProducerRecord.create(topic, message.getKey(), Json.encode(message.getValue()));
+        return KafkaProducerRecord.create(topicName, message.getKey(), Json.encode(message.getValue()));
     }
 }

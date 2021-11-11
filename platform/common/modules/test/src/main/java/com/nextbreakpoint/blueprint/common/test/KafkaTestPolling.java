@@ -6,9 +6,11 @@ import io.vertx.core.json.Json;
 import io.vertx.rxjava.kafka.client.consumer.KafkaConsumer;
 import io.vertx.rxjava.kafka.client.consumer.KafkaConsumerRecord;
 import io.vertx.rxjava.kafka.client.consumer.KafkaConsumerRecords;
+import rx.schedulers.Schedulers;
 
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -18,9 +20,11 @@ public class KafkaTestPolling {
     private final List<InputMessage> messages = new ArrayList<>();
 
     private final KafkaConsumer<String, String> kafkaConsumer;
+    private String topicName;
 
-    public KafkaTestPolling(KafkaConsumer<String, String> kafkaConsumer) {
+    public KafkaTestPolling(KafkaConsumer<String, String> kafkaConsumer, String topicName) {
         this.kafkaConsumer = kafkaConsumer;
+        this.topicName = topicName;
     }
 
     public List<InputMessage> findMessages(String partitionKey, String messageSource, String messageType) {
@@ -45,6 +49,15 @@ public class KafkaTestPolling {
     }
 
     public void startPolling() {
+        kafkaConsumer.rxSubscribe(Collections.singleton(topicName))
+//                .flatMap(ignore -> kafkaConsumer.rxPoll(Duration.ofSeconds(5)))
+//                .flatMap(records -> kafkaConsumer.rxAssignment())
+//                .flatMap(partitions -> kafkaConsumer.rxSeekToEnd(partitions))
+                .doOnError(Throwable::printStackTrace)
+                .subscribeOn(Schedulers.io())
+                .toBlocking()
+                .value();
+
         pollMessages();
     }
 

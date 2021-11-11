@@ -48,14 +48,9 @@ import static org.awaitility.Durations.TEN_SECONDS;
 public class PactTests {
     private static final String UUID_REGEXP = "[0-9a-f]{8}-[0-9a-f]{4}-[5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}";
 
-    private static final String JSON_1 = "{\"metadata\":\"{\\\"translation\\\":{\\\"x\\\":0.0,\\\"y\\\":0.0,\\\"z\\\":1.0,\\\"w\\\":0.0},\\\"rotation\\\":{\\\"x\\\":0.0,\\\"y\\\":0.0,\\\"z\\\":0.0,\\\"w\\\":0.0},\\\"scale\\\":{\\\"x\\\":1.0,\\\"y\\\":1.0,\\\"z\\\":1.0,\\\"w\\\":1.0},\\\"point\\\":{\\\"x\\\":0.0,\\\"y\\\":0.0},\\\"julia\\\":false,\\\"options\\\":{\\\"showPreview\\\":false,\\\"showTraps\\\":false,\\\"showOrbit\\\":false,\\\"showPoint\\\":false,\\\"previewOrigin\\\":{\\\"x\\\":0.0,\\\"y\\\":0.0},\\\"previewSize\\\":{\\\"x\\\":0.25,\\\"y\\\":0.25}}}\",\"manifest\":\"{\\\"pluginId\\\":\\\"Mandelbrot\\\"}\",\"script\":\"fractal {\\norbit [-2.0 - 2.0i,+2.0 + 2.0i] [x,n] {\\nloop [0, 200] (mod2(x) > 40) {\\nx = x * x + w;\\n}\\n}\\ncolor [#FF000000] {\\npalette gradient {\\n[#FFFFFFFF > #FF000000, 100];\\n[#FF000000 > #FFFFFFFF, 100];\\n}\\ninit {\\nm = 100 * (1 + sin(mod(x) * 0.2 / pi));\\n}\\nrule (n > 0) [1] {\\ngradient[m - 1]\\n}\\n}\\n}\\n\"}";
-    private static final String JSON_2 = "{\"metadata\":\"{\\\"translation\\\":{\\\"x\\\":0.0,\\\"y\\\":0.0,\\\"z\\\":1.0,\\\"w\\\":0.0},\\\"rotation\\\":{\\\"x\\\":0.0,\\\"y\\\":0.0,\\\"z\\\":0.0,\\\"w\\\":0.0},\\\"scale\\\":{\\\"x\\\":1.0,\\\"y\\\":1.0,\\\"z\\\":1.0,\\\"w\\\":1.0},\\\"point\\\":{\\\"x\\\":0.0,\\\"y\\\":0.0},\\\"julia\\\":false,\\\"options\\\":{\\\"showPreview\\\":false,\\\"showTraps\\\":false,\\\"showOrbit\\\":false,\\\"showPoint\\\":false,\\\"previewOrigin\\\":{\\\"x\\\":0.0,\\\"y\\\":0.0},\\\"previewSize\\\":{\\\"x\\\":0.25,\\\"y\\\":0.25}}}\",\"manifest\":\"{\\\"pluginId\\\":\\\"Mandelbrot\\\"}\",\"script\":\"fractal {\\norbit [-2.0 - 2.0i,+2.0 + 2.0i] [x,n] {\\nloop [0, 100] (mod2(x) > 40) {\\nx = x * x + w;\\n}\\n}\\ncolor [#FF000000] {\\npalette gradient {\\n[#FFFFFFFF > #FF000000, 100];\\n[#FF000000 > #FFFFFFFF, 100];\\n}\\ninit {\\nm = 100 * (1 + sin(mod(x) * 0.2 / pi));\\n}\\nrule (n > 0) [1] {\\ngradient[m - 1]\\n}\\n}\\n}\\n\"}";
     private static final UUID DESIGN_UUID_1 = new UUID(0L, 1L);
     private static final UUID DESIGN_UUID_2 = new UUID(0L, 2L);
     private static final UUID DESIGN_UUID_3 = new UUID(0L, 3L);
-    private static final String MESSAGE_SOURCE = "service-designs";
-    private static final String EVENTS_TOPIC_NAME = "design-event";
-    private static final String RENDERING_QUEUE_TOPIC_NAME = "tiles-rendering-queue";
 
     private static final TestScenario scenario = new TestScenario();
 
@@ -63,11 +58,12 @@ public class PactTests {
 
     private static Environment environment = Environment.getDefaultEnvironment();
 
-    private static CassandraClient session;
+    private static KafkaTestPolling eventsPolling;
+    private static KafkaTestPolling renderPolling;
+    private static KafkaTestEmitter eventEmitter;
 
-    private static KafkaTestPolling eventMessagesPolling;
-    private static KafkaTestPolling renderMessagesPolling;
-    private static KafkaTestEmitter eventMessageEmitter;
+    private static CassandraClient session;
+    private static TestCassandra testCassandra;
 
     @BeforeAll
     public static void before() throws IOException, InterruptedException {
@@ -78,37 +74,21 @@ public class PactTests {
 
         KafkaProducer<String, String> producer = KafkaClientFactory.createProducer(environment, vertx, scenario.createProducerConfig());
 
-        KafkaConsumer<String, String> eventMessagesConsumer = KafkaClientFactory.createConsumer(environment, vertx, scenario.createConsumerConfig("test"));
+        KafkaConsumer<String, String> eventsConsumer = KafkaClientFactory.createConsumer(environment, vertx, scenario.createConsumerConfig("test"));
 
-        KafkaConsumer<String, String> renderMessagesConsumer = KafkaClientFactory.createConsumer(environment, vertx, scenario.createConsumerConfig("test-rendering"));
+        KafkaConsumer<String, String> renderConsumer = KafkaClientFactory.createConsumer(environment, vertx, scenario.createConsumerConfig("test-rendering"));
 
         session = CassandraClientFactory.create(environment, vertx, scenario.createCassandraConfig());
 
-        eventMessagesConsumer.rxSubscribe(Collections.singleton(EVENTS_TOPIC_NAME))
-//                .flatMap(ignore -> eventMessagesConsumer.rxPoll(Duration.ofSeconds(5)))
-//                .flatMap(records -> eventMessagesConsumer.rxAssignment())
-//                .flatMap(partitions -> eventMessagesConsumer.rxSeekToEnd(partitions))
-                .doOnError(Throwable::printStackTrace)
-                .subscribeOn(Schedulers.io())
-                .toBlocking()
-                .value();
+        testCassandra = new TestCassandra(session);
 
-        renderMessagesConsumer.rxSubscribe(Collections.singleton(RENDERING_QUEUE_TOPIC_NAME))
-//                .flatMap(ignore -> renderMessagesConsumer.rxPoll(Duration.ofSeconds(5)))
-//                .flatMap(records -> renderMessagesConsumer.rxAssignment())
-//                .flatMap(partitions -> renderMessagesConsumer.rxSeekToEnd(partitions))
-                .doOnError(Throwable::printStackTrace)
-                .subscribeOn(Schedulers.io())
-                .toBlocking()
-                .value();
+        eventsPolling = new KafkaTestPolling(eventsConsumer, TestConstants.EVENTS_TOPIC_NAME);
+        renderPolling = new KafkaTestPolling(renderConsumer, TestConstants.RENDERING_QUEUE_TOPIC_NAME);
 
-        eventMessagesPolling = new KafkaTestPolling(eventMessagesConsumer);
-        renderMessagesPolling = new KafkaTestPolling(renderMessagesConsumer);
+        eventsPolling.startPolling();
+        renderPolling.startPolling();
 
-        eventMessagesPolling.startPolling();
-        renderMessagesPolling.startPolling();
-
-        eventMessageEmitter = new KafkaTestEmitter(producer, EVENTS_TOPIC_NAME);
+        eventEmitter = new KafkaTestEmitter(producer, TestConstants.EVENTS_TOPIC_NAME);
     }
 
     @AfterAll
@@ -135,16 +115,16 @@ public class PactTests {
         public MessagePact insertDesign(MessagePactBuilder builder) {
             PactDslJsonBody body = new PactDslJsonBody()
                     .stringValue("uuid", DESIGN_UUID_1.toString())
-                    .stringValue("json", JSON_1)
+                    .stringValue("json", TestConstants.JSON_1)
                     .stringMatcher("timestamp", "\\d{10}");
 
             PactDslJsonBody message = new PactDslJsonBody()
-                .stringMatcher("messageId", DESIGN_UUID_1.toString())
-                .stringValue("messageType", "design-insert")
-                .stringValue("messageBody", body.toString())
-                .stringValue("messageSource", "service-designs")
-                .stringMatcher("partitionKey", UUID_REGEXP)
-                .stringMatcher("timestamp", "\\d{10}");
+                    .stringMatcher("messageId", DESIGN_UUID_1.toString())
+                    .stringValue("messageType", "design-insert")
+                    .stringValue("messageBody", body.toString())
+                    .stringValue("messageSource", "service-designs")
+                    .stringMatcher("partitionKey", UUID_REGEXP)
+                    .stringMatcher("timestamp", "\\d{10}");
 
             return builder.given("kafka topic exists")
                     .expectsToReceive("command to insert design")
@@ -156,7 +136,7 @@ public class PactTests {
         public MessagePact updateDesign(MessagePactBuilder builder) {
             PactDslJsonBody body1 = new PactDslJsonBody()
                     .stringMatcher("uuid", DESIGN_UUID_2.toString())
-                    .stringValue("json", JSON_1)
+                    .stringValue("json", TestConstants.JSON_1)
                     .stringMatcher("timestamp", "\\d{10}");
 
             PactDslJsonBody message1 = new PactDslJsonBody()
@@ -169,7 +149,7 @@ public class PactTests {
 
             PactDslJsonBody body2 = new PactDslJsonBody()
                     .stringMatcher("uuid", DESIGN_UUID_2.toString())
-                    .stringValue("json", JSON_2)
+                    .stringValue("json", TestConstants.JSON_2)
                     .stringMatcher("timestamp", "\\d{10}");
 
             PactDslJsonBody message2 = new PactDslJsonBody()
@@ -192,7 +172,7 @@ public class PactTests {
         public MessagePact deleteDesign(MessagePactBuilder builder) {
             PactDslJsonBody body1 = new PactDslJsonBody()
                     .stringMatcher("uuid", DESIGN_UUID_3.toString())
-                    .stringValue("json", JSON_1)
+                    .stringValue("json", TestConstants.JSON_1)
                     .stringMatcher("timestamp", "\\d{10}");
 
             PactDslJsonBody message1 = new PactDslJsonBody()
@@ -232,9 +212,9 @@ public class PactTests {
 
             final UUID designId = designInsertEvent.getUuid();
 
-            eventMessagesPolling.clearMessages();
+            eventsPolling.clearMessages();
 
-            eventMessageEmitter.sendMessage(insertDesignMessage);
+            eventEmitter.sendMessage(insertDesignMessage);
 
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
@@ -250,7 +230,7 @@ public class PactTests {
                             String actualStatus = row.get("DESIGN_STATUS", String.class);
                             String actualChecksum = row.get("DESIGN_CHECKSUM", String.class);
                             Instant actualPublished = row.getInstant("DESIGN_UPDATED") ;
-                            assertThat(actualJson).isEqualTo(JSON_1);
+                            assertThat(actualJson).isEqualTo(TestConstants.JSON_1);
                             assertThat(actualStatus).isEqualTo("CREATED");
                             assertThat(actualChecksum).isNotNull();
                             assertThat(actualPublished).isNotNull();
@@ -269,7 +249,7 @@ public class PactTests {
                         rows.forEach(row -> {
                             String actualJson = row.get("DESIGN_DATA", String.class);
                             String actualChecksum = row.get("DESIGN_CHECKSUM", String.class);
-                            assertThat(actualJson).isEqualTo(JSON_1);
+                            assertThat(actualJson).isEqualTo(TestConstants.JSON_1);
                             assertThat(actualChecksum).isNotNull();
                         });
                     });
@@ -277,7 +257,7 @@ public class PactTests {
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final List<InputMessage> messages = eventMessagesPolling.findMessages(designId.toString(), MESSAGE_SOURCE, MessageType.DESIGN_CHANGED);
+                        final List<InputMessage> messages = eventsPolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, MessageType.DESIGN_CHANGED);
                         assertThat(messages).hasSize(1);
                         final InputMessage actualMessage = messages.get(messages.size() - 1);
                         assertThat(actualMessage.getTimestamp()).isNotNull();
@@ -302,11 +282,11 @@ public class PactTests {
 
             final UUID designId = designInsertEvent.getUuid();
 
-            eventMessagesPolling.clearMessages();
+            eventsPolling.clearMessages();
 
-            eventMessageEmitter.sendMessage(insertDesignMessage);
+            eventEmitter.sendMessage(insertDesignMessage);
 
-            eventMessageEmitter.sendMessage(updateDesignMessage);
+            eventEmitter.sendMessage(updateDesignMessage);
 
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
@@ -324,13 +304,13 @@ public class PactTests {
                         String actualJson1 = rows.get(0).get("DESIGN_DATA", String.class);
                         String actualStatus1 = rows.get(0).get("DESIGN_STATUS", String.class);
                         Instant actualPublished1 = rows.get(0).getInstant("DESIGN_UPDATED") ;
-                        assertThat(actualJson1).isEqualTo(JSON_1);
+                        assertThat(actualJson1).isEqualTo(TestConstants.JSON_1);
                         assertThat(actualStatus1).isEqualTo("CREATED");
                         assertThat(actualPublished1).isNotNull();
                         String actualJson2 = rows.get(1).get("DESIGN_DATA", String.class);
                         String actualStatus2 = rows.get(1).get("DESIGN_STATUS", String.class);
                         Instant actualPublished2 = rows.get(1).getInstant("DESIGN_UPDATED") ;
-                        assertThat(actualJson2).isEqualTo(JSON_2);
+                        assertThat(actualJson2).isEqualTo(TestConstants.JSON_2);
                         assertThat(actualStatus2).isEqualTo("UPDATED");
                         assertThat(actualPublished2).isNotNull();
                     });
@@ -347,7 +327,7 @@ public class PactTests {
                         rows.forEach(row -> {
                             String actualJson = row.get("DESIGN_DATA", String.class);
                             String actualChecksum = row.get("DESIGN_CHECKSUM", String.class);
-                            assertThat(actualJson).isEqualTo(JSON_2);
+                            assertThat(actualJson).isEqualTo(TestConstants.JSON_2);
                             assertThat(actualChecksum).isNotNull();
                         });
                     });
@@ -355,7 +335,7 @@ public class PactTests {
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final List<InputMessage> messages = eventMessagesPolling.findMessages(designId.toString(), MESSAGE_SOURCE, MessageType.DESIGN_CHANGED);
+                        final List<InputMessage> messages = eventsPolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, MessageType.DESIGN_CHANGED);
                         assertThat(messages).hasSize(2);
                         final InputMessage actualMessage = messages.get(messages.size() - 1);
                         assertThat(actualMessage.getTimestamp()).isNotNull();
@@ -380,11 +360,11 @@ public class PactTests {
 
             final UUID designId = designInsertEvent.getUuid();
 
-            eventMessagesPolling.clearMessages();
+            eventsPolling.clearMessages();
 
-            eventMessageEmitter.sendMessage(insertDesignMessage);
+            eventEmitter.sendMessage(insertDesignMessage);
 
-            eventMessageEmitter.sendMessage(deleteDesignMessage);
+            eventEmitter.sendMessage(deleteDesignMessage);
 
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
@@ -402,7 +382,7 @@ public class PactTests {
                         String actualJson1 = rows.get(0).get("DESIGN_DATA", String.class);
                         String actualStatus1 = rows.get(0).get("DESIGN_STATUS", String.class);
                         Instant actualPublished1 = rows.get(0).getInstant("DESIGN_UPDATED") ;
-                        assertThat(actualJson1).isEqualTo(JSON_1);
+                        assertThat(actualJson1).isEqualTo(TestConstants.JSON_1);
                         assertThat(actualStatus1).isEqualTo("CREATED");
                         assertThat(actualPublished1).isNotNull();
                         String actualJson2 = rows.get(1).get("DESIGN_DATA", String.class);
@@ -427,7 +407,7 @@ public class PactTests {
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final List<InputMessage> messages = eventMessagesPolling.findMessages(designId.toString(), MESSAGE_SOURCE, MessageType.DESIGN_CHANGED);
+                        final List<InputMessage> messages = eventsPolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, MessageType.DESIGN_CHANGED);
                         assertThat(messages).hasSize(2);
                         final InputMessage actualMessage = messages.get(messages.size() - 1);
                         assertThat(actualMessage.getTimestamp()).isNotNull();
@@ -468,18 +448,18 @@ public class PactTests {
         public String produceDesignChanged1() {
             final UUID designId = DESIGN_UUID_1;
 
-            final DesignInsertRequested designInsertEvent = new DesignInsertRequested(Uuids.timeBased(), designId, JSON_1, 3);
+            final DesignInsertRequested designInsertEvent = new DesignInsertRequested(Uuids.timeBased(), designId, TestConstants.JSON_1, 3);
 
             final OutputMessage insertDesignMessage = new DesignInsertRequestedOutputMapper("test").transform(designInsertEvent);
 
-            eventMessagesPolling.clearMessages();
+            eventsPolling.clearMessages();
 
-            eventMessageEmitter.sendMessage(insertDesignMessage);
+            eventEmitter.sendMessage(insertDesignMessage);
 
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final List<InputMessage> messages = eventMessagesPolling.findMessages(designId.toString(), MESSAGE_SOURCE, MessageType.DESIGN_CHANGED);
+                        final List<InputMessage> messages = eventsPolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, MessageType.DESIGN_CHANGED);
                         assertThat(messages).hasSize(2);
                         final InputMessage actualMessage = messages.get(messages.size() - 1);
                         assertThat(actualMessage.getTimestamp()).isNotNull();
@@ -492,7 +472,7 @@ public class PactTests {
                         assertThat(actualEvent.getTimestamp()).isNotNull();
                     });
 
-            final List<InputMessage> messages = eventMessagesPolling.findMessages(designId.toString(), MESSAGE_SOURCE, MessageType.DESIGN_CHANGED);
+            final List<InputMessage> messages = eventsPolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, MessageType.DESIGN_CHANGED);
             assertThat(messages.isEmpty()).isFalse();
             InputMessage decodedMessage = messages.get(messages.size() - 1);
 
@@ -503,18 +483,18 @@ public class PactTests {
         public String produceDesignChanged2() {
             final UUID designId = DESIGN_UUID_2;
 
-            final DesignInsertRequested designInsertEvent = new DesignInsertRequested(Uuids.timeBased(), designId, JSON_1, 3);
+            final DesignInsertRequested designInsertEvent = new DesignInsertRequested(Uuids.timeBased(), designId, TestConstants.JSON_1, 3);
 
             final OutputMessage insertDesignMessage = new DesignInsertRequestedOutputMapper("test").transform(designInsertEvent);
 
-            eventMessagesPolling.clearMessages();
+            eventsPolling.clearMessages();
 
-            eventMessageEmitter.sendMessage(insertDesignMessage);
+            eventEmitter.sendMessage(insertDesignMessage);
 
             await().atMost(TEN_SECONDS)
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
-                        final List<InputMessage> messages = eventMessagesPolling.findMessages(designId.toString(), MESSAGE_SOURCE, MessageType.DESIGN_CHANGED);
+                        final List<InputMessage> messages = eventsPolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, MessageType.DESIGN_CHANGED);
                         assertThat(messages).hasSize(2);
                         final InputMessage actualMessage = messages.get(messages.size() - 1);
                         assertThat(actualMessage.getTimestamp()).isNotNull();
@@ -527,7 +507,7 @@ public class PactTests {
                         assertThat(actualEvent.getTimestamp()).isNotNull();
                     });
 
-            final List<InputMessage> messages = eventMessagesPolling.findMessages(designId.toString(), MESSAGE_SOURCE, MessageType.DESIGN_CHANGED);
+            final List<InputMessage> messages = eventsPolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, MessageType.DESIGN_CHANGED);
             assertThat(messages.isEmpty()).isFalse();
             InputMessage decodedMessage = messages.get(messages.size() - 1);
 

@@ -1,6 +1,7 @@
 package com.nextbreakpoint.blueprint.designs.controllers;
 
 import com.datastax.oss.driver.api.core.uuid.Uuids;
+import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.events.TileRenderCompleted;
@@ -14,23 +15,24 @@ import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.rxjava.core.WorkerExecutor;
 import rx.Single;
-import rx.schedulers.Schedulers;
 
 import java.util.Objects;
 
 import static com.nextbreakpoint.blueprint.designs.common.Bucket.createBucketKey;
 
-public class TileRenderRequestedController implements Controller<TileRenderRequested, Void> {
+public class TileRenderRequestedController implements Controller<InputMessage, Void> {
     private final Logger logger = LoggerFactory.getLogger(TileRenderRequestedController.class.getName());
 
-    private final Mapper<TileRenderCompleted, OutputMessage> mapper;
+    private Mapper<InputMessage, TileRenderRequested> inputMapper;
+    private final Mapper<TileRenderCompleted, OutputMessage> outputMapper;
     private final KafkaEmitter emitter;
     private final WorkerExecutor executor;
     private final S3Driver s3Driver;
     private final TileRenderer renderer;
 
-    public TileRenderRequestedController(Mapper<TileRenderCompleted, OutputMessage> mapper, KafkaEmitter emitter, WorkerExecutor executor, S3Driver s3Driver, TileRenderer renderer) {
-        this.mapper = Objects.requireNonNull(mapper);
+    public TileRenderRequestedController(Mapper<InputMessage, TileRenderRequested> inputMapper, Mapper<TileRenderCompleted, OutputMessage> outputMapper, KafkaEmitter emitter, WorkerExecutor executor, S3Driver s3Driver, TileRenderer renderer) {
+        this.inputMapper = Objects.requireNonNull(inputMapper);;
+        this.outputMapper = Objects.requireNonNull(outputMapper);
         this.emitter = Objects.requireNonNull(emitter);
         this.executor = Objects.requireNonNull(executor);
         this.s3Driver = Objects.requireNonNull(s3Driver);
@@ -38,11 +40,11 @@ public class TileRenderRequestedController implements Controller<TileRenderReque
     }
 
     @Override
-    public Single<Void> onNext(TileRenderRequested event) {
-        return Single.just(event)
-                .observeOn(Schedulers.computation())
+    public Single<Void> onNext(InputMessage message) {
+        return Single.just(message)
+                .map(inputMapper::transform)
                 .flatMap(this::onTileRenderRequested)
-                .map(mapper::transform)
+                .map(outputMapper::transform)
                 .flatMap(emitter::onNext);
     }
 

@@ -1,7 +1,6 @@
 package com.nextbreakpoint.blueprint.designs;
 
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
-import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
 import com.nextbreakpoint.blueprint.common.events.mappers.TileRenderCompletedOutputMapper;
 import com.nextbreakpoint.blueprint.common.events.mappers.TileRenderRequestedInputMapper;
 import com.nextbreakpoint.blueprint.common.vertx.*;
@@ -16,10 +15,11 @@ public class Factory {
     private Factory() {}
 
     public static MessageHandler<InputMessage, Void> createTileRenderRequestedHandler(String topic, KafkaProducer<String, String> producer, String messageSource, WorkerExecutor executor, S3AsyncClient s3AsyncClient, String bucket) {
-        return TemplateHandler.<InputMessage, TileRenderRequested, Void, Void>builder()
-                .withInputMapper(new TileRenderRequestedInputMapper())
-                .withOutputMapper(ignore -> null)
+        return TemplateHandler.<InputMessage, InputMessage, Void, Void>builder()
+                .withInputMapper(input -> input)
+                .withOutputMapper(output -> output)
                 .withController(new TileRenderRequestedController(
+                        new TileRenderRequestedInputMapper(),
                         new TileRenderCompletedOutputMapper(messageSource),
                         new KafkaEmitter(producer, topic, 3),
                         executor,

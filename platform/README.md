@@ -48,7 +48,7 @@ Export variables
     export NEXUS_HOST=localhost
     export NEXUS_PORT=38081
     export NEXUS_USERNAME=admin
-    export NEXUS_PASSWORD=$(docker exec -it $(docker container ls -f name=pipeline-nexus-1 -q) cat /nexus-data/admin.password)
+    export NEXUS_PASSWORD=$(docker exec -it $(docker container ls -f name=pipeline-nexus-1 -q) cat /opt/sonatype/sonatype-work/nexus3/admin.password)
 
 Create Maven repository
 

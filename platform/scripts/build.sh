@@ -7,15 +7,15 @@ export VERSION=${2:-1.0.0}
 export BUILD="true"
 export TEST="false"
 
-#mvn clean deploy -s settings.xml -Dnexus=true
-#
-#pushd common
-#mvn clean deploy -s settings.xml -Dnexus=true
-#popd
-#
-#pushd services
-#mvn clean deploy -s settings.xml -Dnexus=true
-#popd
+mvn clean deploy -s settings.xml -Dnexus=true
+
+pushd common
+mvn clean deploy -s settings.xml -Dnexus=true
+popd
+
+pushd services
+mvn clean deploy -s settings.xml -Dnexus=true
+popd
 
 export JAEGER_SERVICE_NAME=integration
 
@@ -108,12 +108,12 @@ export JAEGER_SERVICE_NAME=integration
 # mvn clean verify -Dminikube=true
 #fi
 #popd
-
-pushd services/designs-tile-renderer
-if [ "$BUILD" == "true" ]; then
-  sh build.sh $REPOSITORY $VERSION
-fi
-if [ "$TEST" == "true" ]; then
-  mvn clean verify -Dminikube=true
-fi
-popd
+#
+#pushd services/designs-tile-renderer
+#if [ "$BUILD" == "true" ]; then
+#  sh build.sh $REPOSITORY $VERSION
+#fi
+#if [ "$TEST" == "true" ]; then
+#  mvn clean verify -Dminikube=true
+#fi
+#popd

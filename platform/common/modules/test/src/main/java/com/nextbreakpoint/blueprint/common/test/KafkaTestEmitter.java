@@ -17,7 +17,7 @@ public class KafkaTestEmitter {
 
     public void sendMessage(OutputMessage message) {
         kafkaProducer.rxSend(createKafkaRecord(message))
-                .doOnEach(action -> System.out.println("Sending message to topic " + topicName + ": " + message))
+                .doOnEach(action -> System.out.println("Sending message " + message + " to topic " + topicName))
                 .doOnError(Throwable::printStackTrace)
                 .subscribeOn(Schedulers.io())
                 .toBlocking()

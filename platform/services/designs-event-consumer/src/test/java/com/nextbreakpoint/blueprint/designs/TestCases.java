@@ -458,7 +458,7 @@ public class TestCases {
 
         final DesignInsertRequested designInsertRequested = new DesignInsertRequested(Uuids.timeBased(), designId, TestConstants.JSON_1, TestConstants.LEVELS);
 
-        final OutputMessage designInsertRequestedMessage = new DesignInsertRequestedOutputMapper("test").transform(designInsertRequested);
+        final OutputMessage designInsertRequestedMessage = new DesignInsertRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designInsertRequested);
 
         eventsPolling.clearMessages();
 
@@ -488,7 +488,7 @@ public class TestCases {
 
         final DesignInsertRequested designInsertRequested = new DesignInsertRequested(Uuids.timeBased(), designId, TestConstants.JSON_1, TestConstants.LEVELS);
 
-        final OutputMessage designInsertRequestedMessage = new DesignInsertRequestedOutputMapper("test").transform(designInsertRequested);
+        final OutputMessage designInsertRequestedMessage = new DesignInsertRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designInsertRequested);
 
         eventsPolling.clearMessages();
 
@@ -506,5 +506,13 @@ public class TestCases {
         assertThat(messages).hasSize(1);
 
         return Json.encode(new KafkaRecord(messages.get(0).getKey(), Json.encode(messages.get(0).getValue())));
+    }
+
+    public String produceTileRenderRequested1() {
+        return null;
+    }
+
+    public String produceTileRenderRequested2() {
+        return null;
     }
 }

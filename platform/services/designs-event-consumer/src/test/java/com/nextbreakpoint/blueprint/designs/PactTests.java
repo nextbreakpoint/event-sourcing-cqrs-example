@@ -53,7 +53,7 @@ public class PactTests {
     @Tag("pact")
     @DisplayName("Test designs-event-consumer pact")
     @ExtendWith(PactConsumerTestExt.class)
-    public class TestDesignsCommandConsumer {
+    public class TestDesignsEventConsumer {
         @Pact(consumer = "designs-event-consumer")
         public MessagePact designInsertRequested(MessagePactBuilder builder) {
             UUID uuid = UUID.randomUUID();
@@ -75,7 +75,7 @@ public class PactTests {
                     .stringValue("value", value.toString());
 
             return builder.given("kafka topic exists")
-                    .expectsToReceive("command to insert design")
+                    .expectsToReceive("design insert requested")
                     .withContent(message)
                     .toPact();
         }
@@ -117,9 +117,9 @@ public class PactTests {
                     .stringValue("value", value2.toString());
 
             return builder.given("kafka topic exists")
-                    .expectsToReceive("command to insert design")
+                    .expectsToReceive("design insert requested")
                     .withContent(message1)
-                    .expectsToReceive("command to update design")
+                    .expectsToReceive("design update requested")
                     .withContent(message2)
                     .toPact();
         }
@@ -159,9 +159,9 @@ public class PactTests {
                     .stringValue("value", value2.toString());
 
             return builder.given("kafka topic exists")
-                    .expectsToReceive("command to insert design")
+                    .expectsToReceive("design insert requested")
                     .withContent(message1)
-                    .expectsToReceive("command to delete design")
+                    .expectsToReceive("design delete requested")
                     .withContent(message2)
                     .toPact();
         }
@@ -287,7 +287,7 @@ public class PactTests {
                     .stringValue("value", value6.toString());
 
             return builder.given("kafka topic exists")
-                    .expectsToReceive("command to insert design")
+                    .expectsToReceive("design insert requested")
                     .withContent(message1)
                     .expectsToReceive("tile render completed")
                     .withContent(message2)
@@ -303,18 +303,18 @@ public class PactTests {
         }
 
         @Test
-        @PactTestFor(providerName = "designs-event-producer", port = "1111", pactMethod = "designInsertRequested", providerType = ProviderType.ASYNCH)
+        @PactTestFor(providerName = "designs-event-consumer", port = "1111", pactMethod = "designInsertRequested", providerType = ProviderType.ASYNCH)
         @DisplayName("Should update the design after receiving a DesignInsertRequested event")
         public void shouldUpdateTheDesignWhenReceivingADesignInsertRequestedMessage(MessagePact messagePact) {
             final KafkaRecord kafkaRecord = Json.decodeValue(messagePact.getMessages().get(0).contentsAsString(), KafkaRecord.class);
 
             final OutputMessage designInsertRequestedMessage = OutputMessage.from(kafkaRecord.getKey(), Json.decodeValue(kafkaRecord.getValue(), Payload.class));
 
-            testCases.shouldUpdateTheDesignWhenReceivingADesignInsertRequestedMessage(List.of(designInsertRequestedMessage).get(0));
+            testCases.shouldUpdateTheDesignWhenReceivingADesignInsertRequestedMessage(designInsertRequestedMessage);
         }
 
         @Test
-        @PactTestFor(providerName = "designs-event-producer", port = "1112", pactMethod = "designUpdateRequested", providerType = ProviderType.ASYNCH)
+        @PactTestFor(providerName = "designs-event-consumer", port = "1112", pactMethod = "designUpdateRequested", providerType = ProviderType.ASYNCH)
         @DisplayName("Should update the design after receiving a DesignUpdateRequested event")
         public void shouldUpdateTheDesignWhenReceivingADesignUpdateRequestedMessage(MessagePact messagePact) {
             final KafkaRecord kafkaRecord1 = Json.decodeValue(messagePact.getMessages().get(0).contentsAsString(), KafkaRecord.class);
@@ -325,11 +325,11 @@ public class PactTests {
 
             final OutputMessage designUpdateRequestedMessage = OutputMessage.from(kafkaRecord2.getKey(), Json.decodeValue(kafkaRecord2.getValue(), Payload.class));
 
-            testCases.shouldUpdateTheDesignWhenReceivingADesignUpdateRequestedMessage(List.of(designInsertRequestedMessage, designUpdateRequestedMessage).get(0), List.of(designInsertRequestedMessage, designUpdateRequestedMessage).get(1));
+            testCases.shouldUpdateTheDesignWhenReceivingADesignUpdateRequestedMessage(designInsertRequestedMessage, designUpdateRequestedMessage);
         }
 
         @Test
-        @PactTestFor(providerName = "designs-event-producer", port = "1113", pactMethod = "designDeleteRequested", providerType = ProviderType.ASYNCH)
+        @PactTestFor(providerName = "designs-event-consumer", port = "1113", pactMethod = "designDeleteRequested", providerType = ProviderType.ASYNCH)
         @DisplayName("Should update the design after receiving a DesignDeleteRequested event")
         public void shouldUpdateTheDesignWhenReceivingADesignDeleteRequestedMessage(MessagePact messagePact) {
             final KafkaRecord kafkaRecord1 = Json.decodeValue(messagePact.getMessages().get(0).contentsAsString(), KafkaRecord.class);
@@ -340,11 +340,11 @@ public class PactTests {
 
             final OutputMessage designDeleteRequestedMessage = OutputMessage.from(kafkaRecord2.getKey(), Json.decodeValue(kafkaRecord2.getValue(), Payload.class));
 
-            testCases.shouldUpdateTheDesignWhenReceivingADesignDeleteRequestedMessage(List.of(designInsertRequestedMessage, designDeleteRequestedMessage).get(0), List.of(designInsertRequestedMessage, designDeleteRequestedMessage).get(1));
+            testCases.shouldUpdateTheDesignWhenReceivingADesignDeleteRequestedMessage(designInsertRequestedMessage, designDeleteRequestedMessage);
         }
 
         @Test
-        @PactTestFor(providerName = "designs-tile-renderer", port = "1114", pactMethod = "tileRenderCompleted", providerType = ProviderType.ASYNCH)
+        @PactTestFor(providerName = "designs-event-consumer", port = "1114", pactMethod = "tileRenderCompleted", providerType = ProviderType.ASYNCH)
         @DisplayName("Should update the design after receiving a TileRenderCompleted event")
         public void shouldUpdateTheDesignWhenReceivingATileRenderCompletedMessage(MessagePact messagePact) {
             final KafkaRecord kafkaRecord1 = Json.decodeValue(messagePact.getMessages().get(0).contentsAsString(), KafkaRecord.class);
@@ -399,14 +399,47 @@ public class PactTests {
         public void kafkaTopicExists() {
         }
 
-        @PactVerifyProvider("design changed event 1")
+        @PactVerifyProvider("design aggregate update completed event 1")
         public String produceDesignAggregateUpdateCompleted1() {
             return testCases.produceDesignAggregateUpdateCompleted1();
         }
 
-        @PactVerifyProvider("design changed event 2")
+        @PactVerifyProvider("design aggregate update completed event 2")
         public String produceDesignAggregateUpdateCompleted2() {
             return testCases.produceDesignAggregateUpdateCompleted2();
+        }
+    }
+
+    @Nested
+    @Tag("pact")
+    @DisplayName("Verify contract between designs-event-consumer and designs-tile-renderer")
+    @Provider("designs-event-consumer")
+    @Consumer("designs-tile-renderer")
+    @PactBroker
+    public class VerifyDesignsTileRenderer {
+        @BeforeEach
+        public void before(PactVerificationContext context) {
+            context.setTarget(new AmpqTestTarget());
+        }
+
+        @TestTemplate
+        @ExtendWith(PactVerificationInvocationContextProvider.class)
+        @DisplayName("Verify interaction")
+        public void pactVerificationTestTemplate(PactVerificationContext context) {
+        }
+
+        @State("kafka topic exists")
+        public void kafkaTopicExists() {
+        }
+
+        @PactVerifyProvider("tile render requested event 1")
+        public String produceTileRenderRequested1() {
+            return testCases.produceTileRenderRequested1();
+        }
+
+        @PactVerifyProvider("tile render requested event 2")
+        public String produceTileRenderRequested2() {
+            return testCases.produceTileRenderRequested2();
         }
     }
 }

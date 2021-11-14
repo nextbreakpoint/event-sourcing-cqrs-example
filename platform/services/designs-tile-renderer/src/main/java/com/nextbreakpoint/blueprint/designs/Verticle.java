@@ -43,6 +43,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import static com.nextbreakpoint.blueprint.common.core.Headers.*;
 import static com.nextbreakpoint.blueprint.designs.Factory.createTileRenderRequestedHandler;
@@ -121,7 +122,11 @@ public class Verticle extends AbstractVerticle {
 
             final Executor executor = Executors.newSingleThreadExecutor();
 
-            final WorkerExecutor workerExecutor = createWorkerExecutor(environment, config);
+            final int poolSize = Runtime.getRuntime().availableProcessors();
+
+            final long maxExecuteTime = Integer.parseInt(environment.resolve(config.getString("max_execution_time_in_millis", "2000")));
+
+            final WorkerExecutor workerExecutor = vertx.createSharedWorkerExecutor("worker", poolSize, maxExecuteTime, TimeUnit.MICROSECONDS);
 
             final int port = Integer.parseInt(environment.resolve(config.getString("host_port")));
 
@@ -212,11 +217,5 @@ public class Verticle extends AbstractVerticle {
             logger.error("Failed to start server", e);
             promise.fail(e);
         }
-    }
-
-    private WorkerExecutor createWorkerExecutor(Environment environment, JsonObject config) {
-        final int poolSize = Runtime.getRuntime().availableProcessors();
-        final long maxExecuteTime = Integer.parseInt(environment.resolve(config.getString("max_execution_time_in_millis", "2000"))) * 1000000L;
-        return vertx.createSharedWorkerExecutor("worker", poolSize, maxExecuteTime);
     }
 }

@@ -303,7 +303,7 @@ public class PactTests {
         }
 
         @Test
-        @PactTestFor(providerName = "designs-event-consumer", port = "1111", pactMethod = "designInsertRequested", providerType = ProviderType.ASYNCH)
+        @PactTestFor(providerName = "designs-command-producer", port = "1111", pactMethod = "designInsertRequested", providerType = ProviderType.ASYNCH)
         @DisplayName("Should update the design after receiving a DesignInsertRequested event")
         public void shouldUpdateTheDesignWhenReceivingADesignInsertRequestedMessage(MessagePact messagePact) {
             final KafkaRecord kafkaRecord = Json.decodeValue(messagePact.getMessages().get(0).contentsAsString(), KafkaRecord.class);
@@ -314,7 +314,7 @@ public class PactTests {
         }
 
         @Test
-        @PactTestFor(providerName = "designs-event-consumer", port = "1112", pactMethod = "designUpdateRequested", providerType = ProviderType.ASYNCH)
+        @PactTestFor(providerName = "designs-command-producer", port = "1112", pactMethod = "designUpdateRequested", providerType = ProviderType.ASYNCH)
         @DisplayName("Should update the design after receiving a DesignUpdateRequested event")
         public void shouldUpdateTheDesignWhenReceivingADesignUpdateRequestedMessage(MessagePact messagePact) {
             final KafkaRecord kafkaRecord1 = Json.decodeValue(messagePact.getMessages().get(0).contentsAsString(), KafkaRecord.class);
@@ -329,7 +329,7 @@ public class PactTests {
         }
 
         @Test
-        @PactTestFor(providerName = "designs-event-consumer", port = "1113", pactMethod = "designDeleteRequested", providerType = ProviderType.ASYNCH)
+        @PactTestFor(providerName = "designs-command-producer", port = "1113", pactMethod = "designDeleteRequested", providerType = ProviderType.ASYNCH)
         @DisplayName("Should update the design after receiving a DesignDeleteRequested event")
         public void shouldUpdateTheDesignWhenReceivingADesignDeleteRequestedMessage(MessagePact messagePact) {
             final KafkaRecord kafkaRecord1 = Json.decodeValue(messagePact.getMessages().get(0).contentsAsString(), KafkaRecord.class);
@@ -344,7 +344,7 @@ public class PactTests {
         }
 
         @Test
-        @PactTestFor(providerName = "designs-event-consumer", port = "1114", pactMethod = "tileRenderCompleted", providerType = ProviderType.ASYNCH)
+        @PactTestFor(providerName = "designs-tile-renderer", port = "1114", pactMethod = "tileRenderCompleted", providerType = ProviderType.ASYNCH)
         @DisplayName("Should update the design after receiving a TileRenderCompleted event")
         public void shouldUpdateTheDesignWhenReceivingATileRenderCompletedMessage(MessagePact messagePact) {
             final KafkaRecord kafkaRecord1 = Json.decodeValue(messagePact.getMessages().get(0).contentsAsString(), KafkaRecord.class);
@@ -379,6 +379,7 @@ public class PactTests {
 
     @Nested
     @Tag("pact")
+    @Tag("wip")
     @DisplayName("Verify contract between designs-event-consumer and designs-notification-dispatcher")
     @Provider("designs-event-consumer")
     @Consumer("designs-notification-dispatcher")
@@ -412,6 +413,7 @@ public class PactTests {
 
     @Nested
     @Tag("pact")
+    @Tag("verify-circular-pact")
     @DisplayName("Verify contract between designs-event-consumer and designs-tile-renderer")
     @Provider("designs-event-consumer")
     @Consumer("designs-tile-renderer")

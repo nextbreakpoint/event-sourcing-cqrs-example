@@ -120,7 +120,7 @@ public class PactTests {
         }
 
         @Test
-        @PactTestFor(providerName = "designs-tile-renderer", port = "1111", pactMethod = "tileRenderRequested", providerType = ProviderType.ASYNCH)
+        @PactTestFor(providerName = "designs-event-consumer", port = "1111", pactMethod = "tileRenderRequested", providerType = ProviderType.ASYNCH)
         @DisplayName("Should start rendering an image after receiving a TileRenderRequested event")
         public void shouldStartRenderingAnImageWhenReceivingATileRenderRequestedMessage(MessagePact messagePact) {
             final KafkaRecord kafkaRecord1 = Json.decodeValue(messagePact.getMessages().get(0).contentsAsString(), KafkaRecord.class);

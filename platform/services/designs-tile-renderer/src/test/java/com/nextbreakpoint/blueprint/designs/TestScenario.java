@@ -14,12 +14,12 @@ import java.util.Collections;
 import java.util.List;
 
 public class TestScenario {
+  private final String version = TestUtils.getVariable("BUILD_VERSION", System.getProperty("build.version", "0"));
+  private final boolean buildImages = TestUtils.getVariable("BUILD_IMAGES", System.getProperty("build.images", "false")).equals("true");
+
   private Scenario scenario;
 
   public void before() throws IOException, InterruptedException {
-    final String version = TestUtils.getVariable("BUILD_VERSION", System.getProperty("build.version", "0"));
-    final boolean buildImages = TestUtils.getVariable("BUILD_IMAGES", System.getProperty("build.images", "false")).equals("true");
-
     final List<String> secretArgs = Arrays.asList(
             "--from-file",
             "keystore_server.jks=../../secrets/keystore_server.jks",
@@ -88,7 +88,7 @@ public class TestScenario {
   }
 
   public String getVersion() {
-    return scenario.getVersion();
+    return version;
   }
 
   public String makeAuthorization(String user, String role) {

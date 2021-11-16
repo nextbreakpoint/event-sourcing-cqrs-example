@@ -3,10 +3,8 @@ package com.nextbreakpoint.blueprint.designs;
 import com.nextbreakpoint.blueprint.common.core.Checksum;
 
 public interface TestConstants {
-    String DESIGN_INSERT_REQUESTED = "design-insert-requested";
     String TILE_RENDER_REQUESTED = "tile-render-requested";
     String TILE_RENDER_COMPLETED = "tile-render-completed";
-    String DESIGN_ABORT_REQUESTED = "design-abort-requested";
 
     String MESSAGE_SOURCE = "service-designs";
     String EVENTS_TOPIC_NAME = "design-event";
@@ -19,5 +17,5 @@ public interface TestConstants {
 
     String BUCKET = "tiles";
 
-    int LEVELS = 3;
+    String UUID_REGEXP = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
 }

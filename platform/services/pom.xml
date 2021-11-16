@@ -176,7 +176,8 @@
                             <forkCount>0</forkCount>
                             <includes>
                                 <include>**/IntegrationTests.java</include>
-                                <include>**/PactTests.java</include>
+                                <include>**/Verify*Pact.java</include>
+                                <include>**/PactConsumerTests.java</include>
                             </includes>
                             <systemProperties>
                                 <pactbroker.host>${pactbroker.host}</pactbroker.host>

@@ -1,7 +1,6 @@
 package com.nextbreakpoint.blueprint.designs.operations.delete;
 
 import com.nextbreakpoint.blueprint.common.core.Mapper;
-import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.designs.Store;
 import com.nextbreakpoint.blueprint.designs.common.AbstractController;

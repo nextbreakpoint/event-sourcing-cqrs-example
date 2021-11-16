@@ -3,16 +3,17 @@ package com.nextbreakpoint.blueprint.common.core;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.Map;
 import java.util.Objects;
 
 public class KafkaRecord {
     private final String key;
-    private final String value;
+    private final Map<String, Object> value;
 
     @JsonCreator
     public KafkaRecord(
         @JsonProperty("key") String key,
-        @JsonProperty("value") String value
+        @JsonProperty("value") Map<String, Object> value
     ) {
         this.key = Objects.requireNonNull(key);
         this.value = Objects.requireNonNull(value);
@@ -22,7 +23,7 @@ public class KafkaRecord {
         return key;
     }
 
-    public String getValue() {
+    public Map<String, Object> getValue() {
         return value;
     }
 }

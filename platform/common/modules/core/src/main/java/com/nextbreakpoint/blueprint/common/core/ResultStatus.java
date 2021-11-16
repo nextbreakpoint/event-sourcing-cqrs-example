@@ -1,5 +1,5 @@
 package com.nextbreakpoint.blueprint.common.core;
 
-public enum CommandStatus {
+public enum ResultStatus {
     SUCCESS, FAILURE;
 }

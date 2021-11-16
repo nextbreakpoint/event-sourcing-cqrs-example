@@ -1,7 +1,10 @@
 package com.nextbreakpoint.blueprint.designs;
 
-import com.datastax.oss.driver.api.core.cql.Row;
+import au.com.dius.pact.core.model.messaging.Message;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
+import com.nextbreakpoint.blueprint.common.core.KafkaRecord;
+import com.nextbreakpoint.blueprint.common.core.OutputMessage;
+import com.nextbreakpoint.blueprint.common.core.Payload;
 import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
 import com.nextbreakpoint.blueprint.designs.model.Tiles;
 import io.vertx.core.json.Json;
@@ -13,6 +16,13 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class TestUtils {
+    private TestUtils() {}
+
+    @NotNull
+    public static String createBucketKey(TileRenderRequested event) {
+        return String.format("%s/%d/%04d%04d.png", event.getChecksum(), event.getLevel(), event.getRow(), event.getCol());
+    }
+
     public static int totalTilesByLevels(int levels) {
         return IntStream.range(0, levels).map(TestUtils::totalTileByLevel).sum();
     }
@@ -44,11 +54,27 @@ public class TestUtils {
     }
 
     @NotNull
-    public static Set<UUID> extractUuids(List<Row> rows) {
-        return rows.stream()
-                .map(row -> row.getString("MESSAGE_KEY"))
-                .filter(Objects::nonNull)
-                .map(UUID::fromString)
-                .collect(Collectors.toSet());
+    public static OutputMessage toOutputMessage(Message message) {
+        final KafkaRecord kafkaRecord1 = Json.decodeValue(message.contentsAsString(), KafkaRecord.class);
+        return OutputMessage.from(kafkaRecord1.getKey(), mapToPayload(kafkaRecord1.getValue()));
+    }
+
+    @NotNull
+    public static Payload mapToPayload(Map<String, Object> value) {
+        String uuid = (String) value.get("uuid");
+        String type = (String) value.get("type");
+        String source = (String) value.get("source");
+        Map data = (Map) value.get("data");
+        return new Payload(UUID.fromString(uuid), type, Json.encode(data), source);
+    }
+
+    @NotNull
+    public static Map<String, Object> payloadToMap(Payload payload) {
+        Map<String, Object> result = new HashMap<>();
+        result.put("uuid", payload.getUuid().toString());
+        result.put("data", Json.decodeValue(payload.getData(), Map.class));
+        result.put("type", payload.getType());
+        result.put("source", payload.getSource());
+        return result;
     }
 }

@@ -1,11 +1,7 @@
 package com.nextbreakpoint.blueprint.designs;
 
-import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.nextbreakpoint.blueprint.common.core.*;
-import com.nextbreakpoint.blueprint.common.events.DesignInsertRequested;
 import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
-import com.nextbreakpoint.blueprint.common.events.mappers.DesignInsertRequestedOutputMapper;
-import com.nextbreakpoint.blueprint.common.events.mappers.TileRenderRequestedOutputMapper;
 import com.nextbreakpoint.blueprint.common.test.KafkaTestEmitter;
 import com.nextbreakpoint.blueprint.common.test.KafkaTestPolling;
 import com.nextbreakpoint.blueprint.common.vertx.KafkaClientFactory;
@@ -23,7 +19,6 @@ import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import java.io.IOException;
 import java.net.URI;
 import java.util.List;
-import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
@@ -50,6 +45,10 @@ public class TestCases {
 
     public String getVersion() {
         return scenario.getVersion();
+    }
+
+    public TestScenario getScenario() {
+        return scenario;
     }
 
     public void before() throws IOException, InterruptedException {
@@ -94,17 +93,9 @@ public class TestCases {
         scenario.after();
     }
 
-    public void shouldStartRenderingAnImageWhenReceivingATileRenderRequestedMessage(OutputMessage designInsertRequestedMessage, List<OutputMessage> tileRenderRequestedMessages) {
-        final DesignInsertRequested designInsertRequested = Json.decodeValue(designInsertRequestedMessage.getValue().getData(), DesignInsertRequested.class);
-
-        final UUID designId = designInsertRequested.getUuid();
-
-        System.out.println("designId = " + designId);
-
+    public void shouldStartRenderingAnImageWhenReceivingATileRenderRequestedMessage(List<OutputMessage> tileRenderRequestedMessages) {
         eventsPolling.clearMessages();
         renderPolling.clearMessages();
-
-        eventsEmitter.sendMessage(designInsertRequestedMessage);
 
         final OutputMessage tileRenderRequestedMessage1 = tileRenderRequestedMessages.get(0);
         final OutputMessage tileRenderRequestedMessage2 = tileRenderRequestedMessages.get(1);
@@ -118,13 +109,6 @@ public class TestCases {
         await().atMost(TEN_SECONDS)
                 .pollInterval(ONE_SECOND)
                 .untilAsserted(() -> {
-                    final List<InputMessage> messages = eventsPolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_INSERT_REQUESTED);
-                    assertThat(messages).hasSize(1);
-                });
-
-        await().atMost(TEN_SECONDS)
-                .pollInterval(ONE_SECOND)
-                .untilAsserted(() -> {
                     final List<InputMessage> messages1 = renderPolling.findMessages(TestConstants.MESSAGE_SOURCE, TestConstants.TILE_RENDER_REQUESTED, key -> key.startsWith(TestConstants.CHECKSUM_1));
                     assertThat(messages1).hasSize(1);
                     final List<InputMessage> messages2 = renderPolling.findMessages(TestConstants.MESSAGE_SOURCE, TestConstants.TILE_RENDER_REQUESTED, key -> key.startsWith(TestConstants.CHECKSUM_2));
@@ -134,7 +118,7 @@ public class TestCases {
         await().atMost(TEN_SECONDS)
                 .pollInterval(ONE_SECOND)
                 .untilAsserted(() -> {
-                    final List<InputMessage> messages = eventsPolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, TestConstants.TILE_RENDER_COMPLETED);
+                    final List<InputMessage> messages = eventsPolling.findMessages(tileRenderRequested1.getUuid().toString(), TestConstants.MESSAGE_SOURCE, TestConstants.TILE_RENDER_COMPLETED);
                     assertThat(messages).hasSize(2);
                     InputMessage message1 = messages.get(0);
                     InputMessage message2 = messages.get(1);
@@ -149,90 +133,5 @@ public class TestCases {
 
         ResponseBytes<GetObjectResponse> response2 = TestS3.getObject(s3Client, TestConstants.BUCKET, TestUtils.createBucketKey(tileRenderRequested2));
         assertThat(response2.asByteArray()).isNotEmpty();
-    }
-
-    public void shouldAbortRenderingImagesWhenReceivingADesignAbortRequestedMessage(OutputMessage designInsertRequestedMessage, OutputMessage designAbortRequestedMessage1) {
-        final DesignInsertRequested designInsertRequested = Json.decodeValue(designInsertRequestedMessage.getValue().getData(), DesignInsertRequested.class);
-
-        final UUID designId = designInsertRequested.getUuid();
-
-        System.out.println("designId = " + designId);
-
-        renderEmitter.sendMessage(designAbortRequestedMessage1);
-
-        await().atMost(TEN_SECONDS)
-                .pollInterval(ONE_SECOND)
-                .untilAsserted(() -> {
-                    final List<InputMessage> messages = eventsPolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_ABORT_REQUESTED);
-                    assertThat(messages).hasSize(1);
-                });
-    }
-
-    public String produceTileRenderCompleted1() {
-        final UUID designId = UUID.randomUUID();
-
-        System.out.println("designId = " + designId);
-
-        eventsPolling.clearMessages();
-        renderPolling.clearMessages();
-
-        final DesignInsertRequested designInsertRequested = new DesignInsertRequested(Uuids.timeBased(), designId, TestConstants.JSON_1, TestConstants.LEVELS);
-
-        final OutputMessage designInsertRequestedMessage = new DesignInsertRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designInsertRequested);
-
-        renderEmitter.sendMessage(designInsertRequestedMessage);
-
-        final TileRenderRequested tileRenderRequested = new TileRenderRequested(Uuids.timeBased(), designId, 0, TestConstants.JSON_1, TestConstants.CHECKSUM_1, 0,  0, 0);
-
-        final OutputMessage tileRenderRequestedMessage = new TileRenderRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(tileRenderRequested);
-
-        renderEmitter.sendMessage(tileRenderRequestedMessage);
-
-        await().atMost(TEN_SECONDS)
-                .pollInterval(ONE_SECOND)
-                .untilAsserted(() -> {
-                    final List<InputMessage> messages = eventsPolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, MessageType.TILE_RENDER_COMPLETED);
-                    assertThat(messages).hasSize(1);
-                    TestAssertions.assertExpectedTileRenderCompletedMessage(tileRenderRequested, messages.get(0));
-                });
-
-        final List<InputMessage> messages = eventsPolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, MessageType.TILE_RENDER_COMPLETED);
-        assertThat(messages).hasSize(1);
-
-        return Json.encode(new KafkaRecord(messages.get(0).getKey(), Json.encode(messages.get(0).getValue())));
-    }
-
-    public String produceTileRenderCompleted2() {
-        final UUID designId = UUID.randomUUID();
-
-        System.out.println("designId = " + designId);
-
-        eventsPolling.clearMessages();
-        renderPolling.clearMessages();
-
-        final DesignInsertRequested designInsertRequested = new DesignInsertRequested(Uuids.timeBased(), designId, TestConstants.JSON_2, TestConstants.LEVELS);
-
-        final OutputMessage designInsertRequestedMessage = new DesignInsertRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designInsertRequested);
-
-        renderEmitter.sendMessage(designInsertRequestedMessage);
-
-        final TileRenderRequested tileRenderRequested = new TileRenderRequested(Uuids.timeBased(), designId, 0, TestConstants.JSON_2, TestConstants.CHECKSUM_2, 1,  1, 2);
-
-        final OutputMessage tileRenderRequestedMessage = new TileRenderRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(tileRenderRequested);
-
-        renderEmitter.sendMessage(tileRenderRequestedMessage);
-
-        await().atMost(TEN_SECONDS)
-                .pollInterval(ONE_SECOND)
-                .untilAsserted(() -> {
-                    final List<InputMessage> messages = eventsPolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, MessageType.TILE_RENDER_COMPLETED);
-                    assertThat(messages).hasSize(1);
-                    TestAssertions.assertExpectedTileRenderCompletedMessage(tileRenderRequested, messages.get(0));
-                });
-
-        final List<InputMessage> messages = eventsPolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, MessageType.TILE_RENDER_COMPLETED);
-        assertThat(messages).hasSize(1);
-
-        return Json.encode(new KafkaRecord(messages.get(0).getKey(), Json.encode(messages.get(0).getValue())));
     }
 }

@@ -73,9 +73,15 @@ public class DesignAccumulator {
     }
 
     public Design toDesign() {
-        final List<Tiles> tilesList = this.tiles.values().stream()
-                .sorted(Comparator.comparing(Tiles::getLevel))
-                .collect(Collectors.toList());
-        return new Design(evid, uuid, esid, json, status, checksum, levels, tilesList, updated);
+        return new Design(evid, uuid, esid, json, status, checksum, levels, getTilesList(), updated);
+    }
+
+    private List<Tiles> getTilesList() {
+        if (tiles == null) {
+            return new ArrayList<>();
+        }
+        return this.tiles.values().stream()
+            .sorted(Comparator.comparing(Tiles::getLevel))
+            .collect(Collectors.toList());
     }
 }

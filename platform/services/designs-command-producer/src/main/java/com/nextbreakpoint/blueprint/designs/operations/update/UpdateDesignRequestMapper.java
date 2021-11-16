@@ -12,13 +12,13 @@ public class UpdateDesignRequestMapper implements Mapper<RoutingContext, UpdateD
         final String uuid = context.request().getParam("designId");
 
         if (uuid == null) {
-            throw new IllegalStateException("parameter uuid (designId) missing from routing context");
+            throw new IllegalStateException("the required parameter designId is missing");
         }
 
         final JsonObject bodyAsJson = context.getBodyAsJson();
 
         if (bodyAsJson == null) {
-            throw new IllegalStateException("body is not defined in routing context");
+            throw new IllegalStateException("the request's body is not defined");
         }
 
         final String manifest = bodyAsJson.getString("manifest");
@@ -26,8 +26,10 @@ public class UpdateDesignRequestMapper implements Mapper<RoutingContext, UpdateD
         final String script = bodyAsJson.getString("script");
 
         if (manifest == null || metadata == null || script == null) {
-            throw new IllegalArgumentException("body doesn't contain required properties: manifest, metadata, script");
+            throw new IllegalArgumentException("the request's body doesn't contain the required properties: manifest, metadata, script");
         }
+
+        final Integer levels = bodyAsJson.getInteger("levels", 5);
 
         final String json = new JsonObject()
                 .put("manifest", manifest)
@@ -35,6 +37,6 @@ public class UpdateDesignRequestMapper implements Mapper<RoutingContext, UpdateD
                 .put("script", script)
                 .encode();
 
-        return new UpdateDesignRequest(UUID.fromString(uuid), json);
+        return new UpdateDesignRequest(UUID.fromString(uuid), json, levels);
     }
 }

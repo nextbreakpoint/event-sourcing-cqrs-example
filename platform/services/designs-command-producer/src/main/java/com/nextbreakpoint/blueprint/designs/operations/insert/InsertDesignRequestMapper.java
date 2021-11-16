@@ -12,7 +12,7 @@ public class InsertDesignRequestMapper implements Mapper<RoutingContext, InsertD
         final JsonObject bodyAsJson = context.getBodyAsJson();
 
         if (bodyAsJson == null) {
-            throw new IllegalStateException("body is not defined in routing context");
+            throw new IllegalStateException("the request's body is not defined");
         }
 
         final String manifest = bodyAsJson.getString("manifest");
@@ -20,8 +20,10 @@ public class InsertDesignRequestMapper implements Mapper<RoutingContext, InsertD
         final String script = bodyAsJson.getString("script");
 
         if (manifest == null || metadata == null || script == null) {
-            throw new IllegalArgumentException("body doesn't contain required properties: manifest, metadata, script");
+            throw new IllegalArgumentException("the request's body doesn't contain the required properties: manifest, metadata, script");
         }
+
+        final Integer levels = bodyAsJson.getInteger("levels", 5);
 
         final String json = new JsonObject()
                 .put("manifest", manifest)
@@ -29,6 +31,6 @@ public class InsertDesignRequestMapper implements Mapper<RoutingContext, InsertD
                 .put("script", script)
                 .encode();
 
-        return new InsertDesignRequest(UUID.randomUUID(), json);
+        return new InsertDesignRequest(UUID.randomUUID(), json, levels);
     }
 }

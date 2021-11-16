@@ -129,6 +129,8 @@ components:
           type: string
         script:
           type: string
+        levels:
+          type: integer
     InsertDesignResponse:
       type: object
       properties:
@@ -144,6 +146,8 @@ components:
           type: string
         script:
           type: string
+        levels:
+          type: integer
     UpdateDesignResponse:
       type: object
       properties:

@@ -44,4 +44,22 @@ public class TestCassandra {
                 .toBlocking()
                 .value();
     }
+
+    public void deleteMessages() {
+        session.rxPrepare("TRUNCATE TABLE MESSAGE")
+                .map(stmt -> stmt.bind().setConsistencyLevel(ConsistencyLevel.QUORUM))
+                .flatMap(session::rxExecute)
+                .subscribeOn(Schedulers.io())
+                .toBlocking()
+                .value();
+    }
+
+    public void deleteDesigns() {
+        session.rxPrepare("TRUNCATE TABLE DESIGN")
+                .map(stmt -> stmt.bind().setConsistencyLevel(ConsistencyLevel.QUORUM))
+                .flatMap(session::rxExecute)
+                .subscribeOn(Schedulers.io())
+                .toBlocking()
+                .value();
+    }
 }

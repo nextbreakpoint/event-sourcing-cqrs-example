@@ -11,7 +11,7 @@ public class DeleteDesignRequestMapper implements Mapper<RoutingContext, DeleteD
         final String uuid = context.request().getParam("designId");
 
         if (uuid == null) {
-            throw new IllegalStateException("parameter uuid (designId) missing from routing context");
+            throw new IllegalStateException("the required parameter designId is missing");
         }
 
         return new DeleteDesignRequest(UUID.fromString(uuid));

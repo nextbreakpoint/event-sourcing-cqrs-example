@@ -3,7 +3,9 @@ package com.nextbreakpoint.blueprint.designs;
 import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.events.DesignAggregateUpdateCompleted;
+import com.nextbreakpoint.blueprint.common.events.TileAggregateUpdateCompleted;
 import com.nextbreakpoint.blueprint.common.events.mappers.DesignAggregateUpdateCompletedOutputMapper;
+import com.nextbreakpoint.blueprint.common.events.mappers.TileAggregateUpdateCompletedOutputMapper;
 import org.junit.jupiter.api.*;
 
 import java.io.IOException;
@@ -14,7 +16,7 @@ import java.util.UUID;
 @Tag("integration")
 @DisplayName("Verify behaviour of designs-notification-dispatcher service")
 public class IntegrationTests {
-    private static TestCases testCases = new TestCases("IntegrationTests");
+    private static TestCases testCases = new TestCases();
 
     @BeforeAll
     public static void before() throws IOException, InterruptedException {
@@ -28,7 +30,7 @@ public class IntegrationTests {
 
     @Test
     @DisplayName("Should notify watchers of all resources after receiving a DesignAggregateUpdateCompleted event")
-    public void shouldNotifyWatchersOfAllResourcesWhenReceivingAnEvent() {
+    public void shouldNotifyWatchersOfAllResourcesWhenReceivingADesignAggregateUpdateCompletedEvent() {
         final UUID designId1 = UUID.randomUUID();
 
         final UUID designId2 = UUID.randomUUID();
@@ -46,7 +48,7 @@ public class IntegrationTests {
 
     @Test
     @DisplayName("Should notify watchers of single resource after receiving a DesignAggregateUpdateCompleted event")
-    public void shouldNotifyWatchersOfSingleResourceWhenReceivingAnEvent() {
+    public void shouldNotifyWatchersOfSingleResourceWhenReceivingAnDesignAggregateUpdateCompletedEvent() {
         final UUID designId1 = UUID.randomUUID();
 
         final UUID designId2 = UUID.randomUUID();
@@ -58,6 +60,42 @@ public class IntegrationTests {
         final OutputMessage designAggregateUpdateCompletedMessage1 = new DesignAggregateUpdateCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designAggregateUpdateCompleted1);
 
         final OutputMessage designAggregateUpdateCompletedMessage2 = new DesignAggregateUpdateCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designAggregateUpdateCompleted2);
+
+        testCases.shouldNotifyWatchersOfSingleResourceWhenReceivingAnEvent(List.of(designAggregateUpdateCompletedMessage1, designAggregateUpdateCompletedMessage2));
+    }
+
+    @Test
+    @DisplayName("Should notify watchers of all resources after receiving a TileAggregateUpdateCompleted event")
+    public void shouldNotifyWatchersOfAllResourcesWhenReceivingATileAggregateUpdateCompletedEvent() {
+        final UUID designId1 = UUID.randomUUID();
+
+        final UUID designId2 = UUID.randomUUID();
+
+        final TileAggregateUpdateCompleted designAggregateUpdateCompleted1 = new TileAggregateUpdateCompleted(Uuids.timeBased(), designId1, 0);
+
+        final TileAggregateUpdateCompleted designAggregateUpdateCompleted2 = new TileAggregateUpdateCompleted(Uuids.timeBased(), designId2, 0);
+
+        final OutputMessage designAggregateUpdateCompletedMessage1 = new TileAggregateUpdateCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designAggregateUpdateCompleted1);
+
+        final OutputMessage designAggregateUpdateCompletedMessage2 = new TileAggregateUpdateCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designAggregateUpdateCompleted2);
+
+        testCases.shouldNotifyWatchersOfAllResourcesWhenReceivingAnEvent(List.of(designAggregateUpdateCompletedMessage1, designAggregateUpdateCompletedMessage2));
+    }
+
+    @Test
+    @DisplayName("Should notify watchers of single resource after receiving a TileAggregateUpdateCompleted event")
+    public void shouldNotifyWatchersOfSingleResourceWhenReceivingAnTileAggregateUpdateCompletedEvent() {
+        final UUID designId1 = UUID.randomUUID();
+
+        final UUID designId2 = UUID.randomUUID();
+
+        final TileAggregateUpdateCompleted designAggregateUpdateCompleted1 = new TileAggregateUpdateCompleted(Uuids.timeBased(), designId1, 0);
+
+        final TileAggregateUpdateCompleted designAggregateUpdateCompleted2 = new TileAggregateUpdateCompleted(Uuids.timeBased(), designId2, 0);
+
+        final OutputMessage designAggregateUpdateCompletedMessage1 = new TileAggregateUpdateCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designAggregateUpdateCompleted1);
+
+        final OutputMessage designAggregateUpdateCompletedMessage2 = new TileAggregateUpdateCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designAggregateUpdateCompleted2);
 
         testCases.shouldNotifyWatchersOfSingleResourceWhenReceivingAnEvent(List.of(designAggregateUpdateCompletedMessage1, designAggregateUpdateCompletedMessage2));
     }

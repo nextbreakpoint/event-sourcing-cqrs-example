@@ -25,7 +25,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-public class PactTests {
+@Tag("slow")
+@Tag("pact-verify")
+@DisplayName("Verify contract between designs-aggregate-fetcher and frontend")
+@Provider("designs-aggregate-fetcher")
+@Consumer("frontend")
+@PactBroker
+public class VerifyFrontendPact {
   private static final String SCRIPT1 = "fractal {\norbit [-2.0 - 2.0i,+2.0 + 2.0i] [x,n] {\nloop [0, 200] (mod2(x) > 40) {\nx = x * x + w;\n}\n}\ncolor [#FF000000] {\npalette gradient {\n[#FFFFFFFF > #FF000000, 100];\n[#FF000000 > #FFFFFFFF, 100];\n}\ninit {\nm = 100 * (1 + sin(mod(x) * 0.2 / pi));\n}\nrule (n > 0) [1] {\ngradient[m - 1]\n}\n}\n}\n";
   private static final String SCRIPT2 = "fractal {\norbit [-2.0 - 2.0i,+2.0 + 2.0i] [x,n] {\nloop [0, 100] (mod2(x) > 30) {\nx = x * x + w;\n}\n}\ncolor [#FF000000] {\npalette gradient {\n[#FFFFFFFF > #FF000000, 100];\n[#FF000000 > #FFFFFFFF, 100];\n}\ninit {\nm = 100 * (1 + sin(mod(x) * 0.2 / pi));\n}\nrule (n > 0) [1] {\ngradient[m - 1]\n}\n}\n}\n";
   private static final String METADATA = "{\"translation\":{\"x\":0.0,\"y\":0.0,\"z\":1.0,\"w\":0.0},\"rotation\":{\"x\":0.0,\"y\":0.0,\"z\":0.0,\"w\":0.0},\"scale\":{\"x\":1.0,\"y\":1.0,\"z\":1.0,\"w\":1.0},\"point\":{\"x\":0.0,\"y\":0.0},\"julia\":false,\"options\":{\"showPreview\":false,\"showTraps\":false,\"showOrbit\":false,\"showPoint\":false,\"previewOrigin\":{\"x\":0.0,\"y\":0.0},\"previewSize\":{\"x\":0.25,\"y\":0.25}}}";
@@ -43,6 +49,7 @@ public class PactTests {
   public static void before() throws IOException, InterruptedException {
     scenario.before();
 
+    System.setProperty("pact.showStacktrace", "true");
     System.setProperty("pact.verifier.publishResults", "true");
     System.setProperty("pact.provider.version", scenario.getVersion());
 
@@ -63,72 +70,63 @@ public class PactTests {
     scenario.after();
   }
 
-  @Nested
-  @Tag("slow")
-  @Tag("pact")
-  @DisplayName("Verify contract between designs-aggregate-fetcher and frontend")
-  @Provider("designs-aggregate-fetcher")
-  @Consumer("frontend")
-  @PactBroker
-  public class VerifyFrontend {
-    @BeforeEach
-    public void before(PactVerificationContext context) {
-      context.setTarget(new HttpsTestTarget(scenario.getServiceHost(), Integer.parseInt(scenario.getServicePort()), "/", true));
-    }
+  @BeforeEach
+  public void before(PactVerificationContext context) {
+    context.setTarget(new HttpsTestTarget(scenario.getServiceHost(), Integer.parseInt(scenario.getServicePort()), "/", true));
+  }
 
-    @TestTemplate
-    @ExtendWith(PactVerificationInvocationContextProvider.class)
-    @DisplayName("Verify interaction")
-    public void pactVerificationTestTemplate(PactVerificationContext context, HttpRequest request) {
-      final String authorization = scenario.makeAuthorization("test", Authority.GUEST);
-      request.setHeader(Headers.AUTHORIZATION, authorization);
-      context.verifyInteraction();
-    }
+  @TestTemplate
+  @ExtendWith(PactVerificationInvocationContextProvider.class)
+  @DisplayName("Verify interaction")
+  public void pactVerificationTestTemplate(PactVerificationContext context, HttpRequest request) {
+    final String authorization = scenario.makeAuthorization("test", Authority.GUEST);
+    request.setHeader(Headers.AUTHORIZATION, authorization);
+    context.verifyInteraction();
+  }
 
-    @State("there are some designs")
-    public void designsExist() {
-      session.rxPrepare("TRUNCATE DESIGN")
-              .map(PreparedStatement::bind)
-              .flatMap(session::rxExecute)
-              .toBlocking()
-              .value();
+  @State("there are some designs")
+  public void designsExist() {
+    session.rxPrepare("TRUNCATE DESIGN")
+            .map(PreparedStatement::bind)
+            .flatMap(session::rxExecute)
+            .toBlocking()
+            .value();
 
-      final String json1 = new JsonObject(createPostData(MANIFEST, METADATA, SCRIPT1)).toString();
-      final String json2 = new JsonObject(createPostData(MANIFEST, METADATA, SCRIPT2)).toString();
+    final String json1 = new JsonObject(createPostData(MANIFEST, METADATA, SCRIPT1)).toString();
+    final String json2 = new JsonObject(createPostData(MANIFEST, METADATA, SCRIPT2)).toString();
 
-      final Single<PreparedStatement> preparedStatementSingle = session.rxPrepare("INSERT INTO DESIGN (DESIGN_UUID, DESIGN_DATA, DESIGN_CHECKSUM, DESIGN_CREATED, DESIGN_UPDATED) VALUES (?,?,?,toTimeStamp(now()),toTimeStamp(now()))");
+    final Single<PreparedStatement> preparedStatementSingle = session.rxPrepare("INSERT INTO DESIGN (DESIGN_UUID, DESIGN_DATA, DESIGN_CHECKSUM, DESIGN_CREATED, DESIGN_UPDATED) VALUES (?,?,?,toTimeStamp(now()),toTimeStamp(now()))");
 
-      preparedStatementSingle
-              .map(stmt -> stmt.bind(DESIGN_UUID_1, json1, "1"))
-              .flatMap(session::rxExecute)
-              .toBlocking()
-              .value();
+    preparedStatementSingle
+            .map(stmt -> stmt.bind(DESIGN_UUID_1, json1, "1"))
+            .flatMap(session::rxExecute)
+            .toBlocking()
+            .value();
 
-      preparedStatementSingle
-              .map(stmt -> stmt.bind(DESIGN_UUID_2, json2, "1"))
-              .flatMap(session::rxExecute)
-              .toBlocking()
-              .value();
-    }
+    preparedStatementSingle
+            .map(stmt -> stmt.bind(DESIGN_UUID_2, json2, "1"))
+            .flatMap(session::rxExecute)
+            .toBlocking()
+            .value();
+  }
 
-    @State("design exists for uuid")
-    public void designExistsForUuid() {
-      session.rxPrepare("TRUNCATE DESIGN")
-              .map(PreparedStatement::bind)
-              .flatMap(session::rxExecute)
-              .toBlocking()
-              .value();
+  @State("design exists for uuid")
+  public void designExistsForUuid() {
+    session.rxPrepare("TRUNCATE DESIGN")
+            .map(PreparedStatement::bind)
+            .flatMap(session::rxExecute)
+            .toBlocking()
+            .value();
 
-      final String json1 = new JsonObject(createPostData(MANIFEST, METADATA, SCRIPT1)).toString();
+    final String json1 = new JsonObject(createPostData(MANIFEST, METADATA, SCRIPT1)).toString();
 
-      final Single<PreparedStatement> preparedStatementSingle = session.rxPrepare("INSERT INTO DESIGN (DESIGN_UUID, DESIGN_DATA, DESIGN_CHECKSUM, DESIGN_CREATED, DESIGN_UPDATED) VALUES (?,?,?,toTimeStamp(now()),toTimeStamp(now()))");
+    final Single<PreparedStatement> preparedStatementSingle = session.rxPrepare("INSERT INTO DESIGN (DESIGN_UUID, DESIGN_DATA, DESIGN_CHECKSUM, DESIGN_CREATED, DESIGN_UPDATED) VALUES (?,?,?,toTimeStamp(now()),toTimeStamp(now()))");
 
-      preparedStatementSingle
-              .map(stmt -> stmt.bind(DESIGN_UUID_1, json1, "1"))
-              .flatMap(session::rxExecute)
-              .toBlocking()
-              .value();
-    }
+    preparedStatementSingle
+            .map(stmt -> stmt.bind(DESIGN_UUID_1, json1, "1"))
+            .flatMap(session::rxExecute)
+            .toBlocking()
+            .value();
   }
 
   private static Map<String, Object> createPostData(String manifest, String metadata, String script) {

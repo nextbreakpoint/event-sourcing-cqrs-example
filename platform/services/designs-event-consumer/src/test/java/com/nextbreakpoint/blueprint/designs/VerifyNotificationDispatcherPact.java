@@ -13,15 +13,17 @@ import au.com.dius.pact.provider.junitsupport.loader.PactBroker;
 import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.nextbreakpoint.blueprint.common.core.KafkaRecord;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
-import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
-import com.nextbreakpoint.blueprint.common.events.mappers.TileRenderRequestedOutputMapper;
+import com.nextbreakpoint.blueprint.common.events.DesignAggregateUpdateCompleted;
+import com.nextbreakpoint.blueprint.common.events.TileAggregateUpdateCompleted;
+import com.nextbreakpoint.blueprint.common.events.mappers.DesignAggregateUpdateCompletedOutputMapper;
+import com.nextbreakpoint.blueprint.common.events.mappers.TileAggregateUpdateCompletedOutputMapper;
+import com.nextbreakpoint.blueprint.common.test.PayloadUtils;
 import io.vertx.core.json.Json;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.UUID;
 
-@Disabled
 @Tag("slow")
 @Tag("pact-verify")
 @DisplayName("Verify contract between designs-event-consumer and designs-notification-dispatcher")
@@ -56,12 +58,12 @@ public class VerifyNotificationDispatcherPact {
 
     @PactVerifyProvider("design aggregate update completed for design 00000000-0000-0000-0000-000000000001")
     public String produceDesignAggregateUpdateCompleted1() {
-        return produceDesignAggregateUpdateCompleted(new UUID(0L, 1L));
+        return produceDesignAggregateUpdateCompleted(new UUID(0L, 1L), TestConstants.JSON_1, TestConstants.CHECKSUM_1, "CREATED");
     }
 
     @PactVerifyProvider("design aggregate update completed for design 00000000-0000-0000-0000-000000000002")
     public String produceDesignAggregateUpdateCompleted2() {
-        return produceDesignAggregateUpdateCompleted(new UUID(0L, 2L));
+        return produceDesignAggregateUpdateCompleted(new UUID(0L, 2L), TestConstants.JSON_2, TestConstants.CHECKSUM_2, "UPDATED");
     }
 
     @PactVerifyProvider("tile aggregate update completed for design 00000000-0000-0000-0000-000000000001")
@@ -74,19 +76,19 @@ public class VerifyNotificationDispatcherPact {
         return produceTileAggregateUpdateCompleted(new UUID(0L, 2L));
     }
 
-    private String produceDesignAggregateUpdateCompleted(UUID uuid) {
-        return null;
+    private String produceDesignAggregateUpdateCompleted(UUID uuid, String data, String checksum, String status) {
+        final DesignAggregateUpdateCompleted designAggregateUpdateCompleted = new DesignAggregateUpdateCompleted(Uuids.timeBased(), uuid, 0, data, checksum, TestConstants.LEVELS, status);
+
+        final OutputMessage designAggregateUpdateCompletedMessage = new DesignAggregateUpdateCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designAggregateUpdateCompleted);
+
+        return Json.encode(new KafkaRecord(designAggregateUpdateCompletedMessage.getKey(), PayloadUtils.payloadToMap(designAggregateUpdateCompletedMessage.getValue())));
     }
 
     private String produceTileAggregateUpdateCompleted(UUID uuid) {
-        return null;
-    }
+        final TileAggregateUpdateCompleted designAggregateUpdateCompleted = new TileAggregateUpdateCompleted(Uuids.timeBased(), uuid, 0);
 
-//    private String produceTileRenderRequested(UUID uuid, int level, int row, int col, String data, String checksum) {
-//        final TileRenderRequested tileRenderRequested = new TileRenderRequested(Uuids.timeBased(), uuid, 0, data, checksum, level,  row, col);
-//
-//        final OutputMessage tileRenderRequestedMessage = new TileRenderRequestedOutputMapper(TestConstants.MESSAGE_SOURCE, event -> TestUtils.createBucketKey(tileRenderRequested)).transform(tileRenderRequested);
-//
-//        return Json.encode(new KafkaRecord(tileRenderRequestedMessage.getKey(), TestUtils.payloadToMap(tileRenderRequestedMessage.getValue())));
-//    }
+        final OutputMessage designAggregateUpdateCompletedMessage = new TileAggregateUpdateCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designAggregateUpdateCompleted);
+
+        return Json.encode(new KafkaRecord(designAggregateUpdateCompletedMessage.getKey(), PayloadUtils.payloadToMap(designAggregateUpdateCompletedMessage.getValue())));
+    }
 }

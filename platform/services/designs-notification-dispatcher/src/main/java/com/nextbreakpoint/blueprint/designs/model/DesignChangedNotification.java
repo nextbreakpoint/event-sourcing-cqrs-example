@@ -1,12 +1,19 @@
 package com.nextbreakpoint.blueprint.designs.model;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.Objects;
 
 public class DesignChangedNotification {
-    private String key;
-    private long timestamp;
+    private final String key;
+    private final long timestamp;
 
-    public DesignChangedNotification(String key, long timestamp) {
+    @JsonCreator
+    public DesignChangedNotification(
+        @JsonProperty("key") String key,
+        @JsonProperty("timestamp") long timestamp
+    ) {
         this.key = Objects.requireNonNull(key);
         this.timestamp = timestamp;
     }

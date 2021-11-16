@@ -133,6 +133,8 @@ public class Verticle extends AbstractVerticle {
 
             final String s3Bucket = environment.resolve(config.getString("s3_bucket"));
 
+            final String s3Region = environment.resolve(config.getString("s3_region", "eu-west-1"));
+
             final String messageSource = environment.resolve(config.getString("message_source"));
 
             final String renderTopic = environment.resolve(config.getString("render_topic"));
@@ -146,7 +148,7 @@ public class Verticle extends AbstractVerticle {
             final AwsCredentialsProvider credentialsProvider = AwsCredentialsProviderChain.of(DefaultCredentialsProvider.create());
 
             final S3AsyncClient s3AsyncClient = S3AsyncClient.builder()
-                    .region(Region.EU_WEST_1)
+                    .region(Region.of(s3Region))
                     .credentialsProvider(credentialsProvider)
                     .endpointOverride(URI.create(s3Endpoint))
                     .build();

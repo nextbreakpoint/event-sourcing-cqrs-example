@@ -24,11 +24,15 @@ public class NotificationDispatcher implements Handler<RoutingContext> {
     protected NotificationDispatcher(Vertx vertx) {
         this.vertx = vertx;
 
-        vertx.eventBus().consumer("notifications", message -> handleMessage(message));
+        vertx.eventBus().consumer("notifications", this::handleMessage);
     }
 
     private void handleMessage(Message<Object> message) {
-        dispatchNotification(Json.decodeValue((String) message.body(), DesignChangedNotification.class));
+        try {
+            dispatchNotification(Json.decodeValue((String) message.body(), DesignChangedNotification.class));
+        } catch (Exception e) {
+            logger.error("Failed to process event", e);
+        }
     }
 
     public static NotificationDispatcher create(Vertx vertx) {
@@ -44,21 +48,21 @@ public class NotificationDispatcher implements Handler<RoutingContext> {
     }
 
     protected void createWatcher(RoutingContext routingContext) {
-        Long offset = getOffset(routingContext);
+//        Long offset = getOffset(routingContext);
 
         final String watchKey = getWatchKey(routingContext);
 
         final String sessionId = UUID.randomUUID().toString();
 
-        final String lastEventId = routingContext.request().headers().get("Last-Message-ID");
+//        final String lastEventId = routingContext.request().headers().get("Last-Message-ID");
 
-        if (lastEventId != null) {
-            offset = Long.parseLong(lastEventId);
-        }
+//        if (lastEventId != null) {
+//            offset = Long.parseLong(lastEventId);
+//        }
 
         final Watcher watcher = new Watcher(watchKey, sessionId);
 
-        watcher.setOffset(offset);
+//        watcher.setOffset(offset);
 
         final Set<Watcher> watchers = watcherMap.getOrDefault(watchKey, new HashSet<>());
 
@@ -122,7 +126,7 @@ public class NotificationDispatcher implements Handler<RoutingContext> {
     }
 
     private void notifyWatcher(Watcher watcher, Long timestamp) {
-        watcher.setOffset(timestamp);
+//        watcher.setOffset(timestamp);
 
         logger.info("Notify watcher for session " + watcher.sessionId);
 
@@ -161,11 +165,7 @@ public class NotificationDispatcher implements Handler<RoutingContext> {
         final Set<Watcher> watchers = watcherMap.get(watchKey);
 
         if (watchers != null && watchers.size() > 0) {
-            watchers.forEach(watcher -> {
-                if (watcher.getOffset() < timestamp) {
-                    notifyWatcher(watcher, timestamp);
-                }
-            });
+            watchers.forEach(watcher -> notifyWatcher(watcher, System.currentTimeMillis()));
         } else {
             logger.info("No watchers found for resource " + watchKey);
         }
@@ -173,11 +173,7 @@ public class NotificationDispatcher implements Handler<RoutingContext> {
         final Set<Watcher> otherWatchers = watcherMap.get("*");
 
         if (otherWatchers != null && otherWatchers.size() > 0) {
-            otherWatchers.forEach(watcher -> {
-                if (watcher.getOffset() < timestamp) {
-                    notifyWatcher(watcher, timestamp);
-                }
-            });
+            otherWatchers.forEach(watcher -> notifyWatcher(watcher, System.currentTimeMillis()));
         } else {
             logger.info("No watchers found for all resources");
         }
@@ -186,7 +182,7 @@ public class NotificationDispatcher implements Handler<RoutingContext> {
     private static class Watcher {
         private final String sessionId;
         private final String watchKey;
-        private Long offset;
+//        private Long offset;
 
         public Watcher(String watchKey, String sessionId) {
             this.sessionId = sessionId;
@@ -200,13 +196,13 @@ public class NotificationDispatcher implements Handler<RoutingContext> {
         public String getWatchKey() {
             return watchKey;
         }
-
-        public Long getOffset() {
-            return offset;
-        }
-
-        public void setOffset(Long offset) {
-            this.offset = offset;
-        }
+//
+//        public Long getOffset() {
+//            return offset;
+//        }
+//
+//        public void setOffset(Long offset) {
+//            this.offset = offset;
+//        }
     }
 }

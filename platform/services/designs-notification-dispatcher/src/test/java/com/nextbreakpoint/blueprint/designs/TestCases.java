@@ -29,15 +29,11 @@ public class TestCases {
 
     private EventSource eventSource;
 
-    private String consumerGroupId;
-
     private KafkaTestEmitter eventEmitter;
 
     private List<SSENotification> notifications = Collections.synchronizedList(new ArrayList<>());
 
-    public TestCases(String consumerGroupId) {
-        this.consumerGroupId = consumerGroupId;
-    }
+    public TestCases() {}
 
     public String getVersion() {
         return scenario.getVersion();
@@ -79,14 +75,23 @@ public class TestCases {
             notifications.clear();
 
             eventSource.connect("/v1/sse/designs/0", null, result -> {
-                notifications.add(new SSENotification("CONNECT", result.succeeded() ? "SUCCESS" : "FAILURE"));
-                eventEmitter.sendAsync(messages.get(0));
-                eventEmitter.sendAsync(messages.get(1));
+                final SSENotification notification = new SSENotification("CONNECT", result.succeeded() ? "SUCCESS" : "FAILURE");
+                System.out.println(notification);
+                notifications.add(notification);
+                if (result.succeeded()) {
+                    eventEmitter.sendAsync(messages.get(0));
+                    eventEmitter.sendAsync(messages.get(1));
+                }
             }).onEvent("update", sseEvent -> {
-                notifications.add(new SSENotification("UPDATE", sseEvent));
+                final SSENotification notification = new SSENotification("UPDATE", sseEvent);
+                System.out.println(notification);
+                notifications.add(notification);
             }).onEvent("open", sseEvent -> {
-                notifications.add(new SSENotification("OPEN", sseEvent));
+                final SSENotification notification = new SSENotification("OPEN", sseEvent);
+                System.out.println(notification);
+                notifications.add(notification);
             }).onClose(nothing -> {
+                System.out.println("closed");
             });
 
             await().atMost(TEN_SECONDS)
@@ -94,11 +99,12 @@ public class TestCases {
                     .untilAsserted(() -> {
                         assertThat(notifications).isNotEmpty();
                         List<SSENotification> events = new ArrayList<>(notifications);
-                        events.forEach(System.out::println);
-                        assertThat(notifications).hasSize(3);
+//                        events.forEach(System.out::println);
+                        assertThat(notifications).hasSize(4);
                         assertThat(events.get(0).type).isEqualTo("CONNECT");
                         assertThat(events.get(1).type).isEqualTo("OPEN");
                         assertThat(events.get(2).type).isEqualTo("UPDATE");
+                        assertThat(events.get(3).type).isEqualTo("UPDATE");
                         String openData = events.get(1).body.split("\n")[1];
                         Map<String, Object> openObject = Json.decodeValue(openData, HashMap.class);
                         assertThat(openObject.get("session")).isNotNull();
@@ -123,14 +129,23 @@ public class TestCases {
             notifications.clear();
 
             eventSource.connect("/v1/sse/designs/0/" + designId, null, result -> {
-                notifications.add(new SSENotification("CONNECT", result.succeeded() ? "SUCCESS" : "FAILURE"));
-                eventEmitter.sendAsync(messages.get(0));
-                eventEmitter.sendAsync(messages.get(1));
+                final SSENotification notification = new SSENotification("CONNECT", result.succeeded() ? "SUCCESS" : "FAILURE");
+                System.out.println(notification);
+                notifications.add(notification);
+                if (result.succeeded()) {
+                    eventEmitter.sendAsync(messages.get(0));
+                    eventEmitter.sendAsync(messages.get(1));
+                }
             }).onEvent("update", sseEvent -> {
-                notifications.add(new SSENotification("UPDATE", sseEvent));
+                final SSENotification notification = new SSENotification("UPDATE", sseEvent);
+                System.out.println(notification);
+                notifications.add(notification);
             }).onEvent("open", sseEvent -> {
-                notifications.add(new SSENotification("OPEN", sseEvent));
+                final SSENotification notification = new SSENotification("OPEN", sseEvent);
+                System.out.println(notification);
+                notifications.add(notification);
             }).onClose(nothing -> {
+                System.out.println("closed");
             });
 
             await().atMost(TEN_SECONDS)
@@ -138,7 +153,7 @@ public class TestCases {
                     .untilAsserted(() -> {
                         assertThat(notifications).isNotEmpty();
                         List<SSENotification> events = new ArrayList<>(notifications);
-                        events.forEach(System.out::println);
+//                        events.forEach(System.out::println);
                         assertThat(notifications).hasSize(3);
                         assertThat(events.get(0).type).isEqualTo("CONNECT");
                         assertThat(events.get(1).type).isEqualTo("OPEN");

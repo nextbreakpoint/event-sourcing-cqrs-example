@@ -15,7 +15,5 @@
   "cassandra_username": "${DATABASE_USERNAME}",
   "cassandra_password": "${DATABASE_PASSWORD}",
   "cassandra_contactPoints": "${DATABASE_HOST}",
-  "cassandra_port": "9042",
-
-  "max_execution_time_in_millis": "30000"
+  "cassandra_port": "9042"
 }

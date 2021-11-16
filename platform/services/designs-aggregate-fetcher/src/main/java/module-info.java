@@ -18,5 +18,9 @@ module com.nextbreakpoint.blueprint.designsaggregatefetcher {
     requires java.sql;
     requires java.desktop;
     requires jdk.compiler;
+    requires software.amazon.awssdk.core;
+    requires software.amazon.awssdk.auth;
+    requires software.amazon.awssdk.regions;
+    requires software.amazon.awssdk.services.s3;
     opens com.nextbreakpoint.blueprint.designs.model to com.fasterxml.jackson.databind;
 }

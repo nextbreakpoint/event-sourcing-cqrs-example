@@ -37,14 +37,17 @@ public class EventSource {
 		eventHandlers = new HashMap<>();
 	}
 
-	public EventSource connect(String path, String lastEventId, Handler<AsyncResult<Void>> handler) throws MalformedURLException {
+	public EventSource connect(String path, String lastEventId, Handler<AsyncResult<Void>> connectHandler) throws MalformedURLException {
 		if (connected || connecting) {
 			throw new VertxException("SSEConnection already connected");
 		}
+
 		connecting = true;
+
 		if (client == null) {
 			client = HttpClientFactory.create(environment, vertx, serviceUrl, config);
 		}
+
 		client.rxRequest(HttpMethod.GET, path)
 				.flatMap(request -> {
 					request.headers().add("Accept", "text/event-stream");
@@ -55,7 +58,7 @@ public class EventSource {
 					request.exceptionHandler(e -> {
 						connecting = false;
 						connected = false;
-						handler.handle(Future.failedFuture(e));
+						connectHandler.handle(Future.failedFuture(e));
 					});
 					return request.rxSend();
 				})
@@ -63,32 +66,32 @@ public class EventSource {
 					response.exceptionHandler(e -> {
 						connecting = false;
 						connected = false;
-						handler.handle(Future.failedFuture(e));
+						connectHandler.handle(Future.failedFuture(e));
 					});
 					if (response.statusCode() != 200) {
 						VertxException ex = new VertxException("Cannot connect");
-						handler.handle(Future.failedFuture(ex));
+						connectHandler.handle(Future.failedFuture(ex));
 					} else {
 						connecting = false;
 						connected = true;
-						response.handler(this::handleMessage);
 						if (closeHandler != null) {
 							response.endHandler(closeHandler);
 						}
-						handler.handle(Future.succeededFuture());
+						response.handler(this::handleMessage);
+						connectHandler.handle(Future.succeededFuture());
 					}
-//				}).connectionHandler(conn -> {
-//					if (closeHandler != null) {
-//						conn.closeHandler(closeHandler);
-//					}
 				})
-				.subscribe();
+				.toCompletable()
+				.await();
+
 		return this;
 	}
 
 	public EventSource close() {
 		if (client != null) {
-			client.close();
+			client.rxClose()
+				.toCompletable()
+				.await();
 			client = null;
 		}
 		connecting = false;
@@ -128,7 +131,7 @@ public class EventSource {
 				messageHandler.handle(currentPacket.toString());
 				return;
 			}
-			switch (currentPacket.headerName) {
+			switch (header) {
 				case "event":
 					handler = eventHandlers.get(currentPacket.headerValue);
 					break;
@@ -154,7 +157,7 @@ public class EventSource {
 	}
 
 	private class SSEPacket {
-		/* Use constants, but hope this will never change in the future (it should'nt) */
+		/* Use constants, but hope this will never change in the future (it shouldn't) */
 		private final static String END_OF_PACKET = "\n\n";
 		private final static String LINE_SEPARATOR = "\n";
 		private final static String FIELD_SEPARATOR = ":";
@@ -178,7 +181,7 @@ public class EventSource {
 					continue; // ignore line
 				}
 				final String type = line.substring(0, idx);
-				final String data = line.substring(idx + 2, line.length());
+				final String data = line.substring(idx + 2);
 				if (i == 0 && headerName == null && !"data".equals(type)) {
 					headerName = type;
 					headerValue = data;

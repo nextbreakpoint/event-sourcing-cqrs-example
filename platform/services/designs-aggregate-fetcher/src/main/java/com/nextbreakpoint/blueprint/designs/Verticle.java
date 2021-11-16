@@ -3,7 +3,6 @@ package com.nextbreakpoint.blueprint.designs;
 import com.nextbreakpoint.blueprint.common.core.Environment;
 import com.nextbreakpoint.blueprint.common.core.IOUtils;
 import com.nextbreakpoint.blueprint.common.vertx.*;
-import com.nextbreakpoint.blueprint.designs.handlers.TileHandler;
 import com.nextbreakpoint.blueprint.designs.persistence.CassandraStore;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Handler;
@@ -21,7 +20,6 @@ import io.vertx.rxjava.cassandra.CassandraClient;
 import io.vertx.rxjava.core.AbstractVerticle;
 import io.vertx.rxjava.core.Promise;
 import io.vertx.rxjava.core.Vertx;
-import io.vertx.rxjava.core.WorkerExecutor;
 import io.vertx.rxjava.ext.auth.jwt.JWTAuth;
 import io.vertx.rxjava.ext.web.Router;
 import io.vertx.rxjava.ext.web.RoutingContext;
@@ -31,9 +29,15 @@ import io.vertx.rxjava.ext.web.handler.LoggerHandler;
 import io.vertx.rxjava.ext.web.handler.TimeoutHandler;
 import io.vertx.tracing.opentracing.OpenTracingOptions;
 import rx.Completable;
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProviderChain;
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.s3.S3AsyncClient;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.URI;
 import java.net.URL;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -41,8 +45,6 @@ import java.util.function.Supplier;
 
 import static com.nextbreakpoint.blueprint.common.core.Authority.*;
 import static com.nextbreakpoint.blueprint.common.core.Headers.*;
-import static com.nextbreakpoint.blueprint.designs.Factory.createListDesignsHandler;
-import static com.nextbreakpoint.blueprint.designs.Factory.createLoadDesignHandler;
 import static java.util.Arrays.asList;
 
 public class Verticle extends AbstractVerticle {
@@ -97,15 +99,27 @@ public class Verticle extends AbstractVerticle {
 
             final Executor executor = Executors.newSingleThreadExecutor();
 
-            final WorkerExecutor workerExecutor = createWorkerExecutor(environment, config);
-
             final int port = Integer.parseInt(environment.resolve(config.getString("host_port")));
 
             final String originPattern = environment.resolve(config.getString("origin_pattern"));
 
             final JWTAuth jwtProvider = JWTProviderFactory.create(environment, vertx, config);
 
+            final String s3Endpoint = environment.resolve(config.getString("s3_endpoint"));
+
+            final String s3Bucket = environment.resolve(config.getString("s3_bucket"));
+
+            final String s3Region = environment.resolve(config.getString("s3_region", "eu-west-1"));
+
             final Supplier<CassandraClient> supplier = () -> CassandraClientFactory.create(environment, vertx, config);
+
+            final AwsCredentialsProvider credentialsProvider = AwsCredentialsProviderChain.of(DefaultCredentialsProvider.create());
+
+            final S3AsyncClient s3AsyncClient = S3AsyncClient.builder()
+                    .region(Region.of(s3Region))
+                    .credentialsProvider(credentialsProvider)
+                    .endpointOverride(URI.create(s3Endpoint))
+                    .build();
 
             final Store store = new CassandraStore(supplier);
 
@@ -115,11 +129,11 @@ public class Verticle extends AbstractVerticle {
 
             final Handler<RoutingContext> onAccessDenied = routingContext -> routingContext.fail(Failure.accessDenied("Authorisation failed"));
 
-            final Handler<RoutingContext> getTileHandler = new AccessHandler(jwtProvider, new TileHandler(store, workerExecutor), onAccessDenied, asList(ADMIN, GUEST, ANONYMOUS));
+            final Handler<RoutingContext> listDesignsHandler = new AccessHandler(jwtProvider, Factory.createListDesignsHandler(store), onAccessDenied, asList(ADMIN, GUEST, ANONYMOUS));
 
-            final Handler<RoutingContext> listDesignsHandler = new AccessHandler(jwtProvider, createListDesignsHandler(store), onAccessDenied, asList(ADMIN, GUEST, ANONYMOUS));
+            final Handler<RoutingContext> loadDesignHandler = new AccessHandler(jwtProvider, Factory.createLoadDesignHandler(store), onAccessDenied, asList(ADMIN, GUEST, ANONYMOUS));
 
-            final Handler<RoutingContext> loadDesignHandler = new AccessHandler(jwtProvider, createLoadDesignHandler(store), onAccessDenied, asList(ADMIN, GUEST, ANONYMOUS));
+            final Handler<RoutingContext> getTileHandler = new AccessHandler(jwtProvider, Factory.createGetTileHandler(s3AsyncClient, s3Bucket), onAccessDenied, asList(ADMIN, GUEST, ANONYMOUS));
 
             final Handler<RoutingContext> openapiHandler = new OpenApiHandler(vertx.getDelegate(), executor, "openapi.yaml");
 
@@ -177,11 +191,5 @@ public class Verticle extends AbstractVerticle {
             logger.error("Failed to start server", e);
             promise.fail(e);
         }
-    }
-
-    private WorkerExecutor createWorkerExecutor(Environment environment, JsonObject config) {
-        final int poolSize = Runtime.getRuntime().availableProcessors();
-        final long maxExecuteTime = Integer.parseInt(environment.resolve(config.getString("max_execution_time_in_millis", "2000"))) * 1000000L;
-        return vertx.createSharedWorkerExecutor("worker", poolSize, maxExecuteTime);
     }
 }

@@ -1,6 +1,6 @@
-package com.nextbreakpoint.blueprint.designs.operations;
+package com.nextbreakpoint.blueprint.designs.controllers;
 
-import com.nextbreakpoint.blueprint.common.events.TileAggregateUpdateCompleted;
+import com.nextbreakpoint.blueprint.common.events.DesignAggregateUpdateCompleted;
 import com.nextbreakpoint.blueprint.common.vertx.Controller;
 import com.nextbreakpoint.blueprint.designs.model.DesignChangedNotification;
 import io.vertx.core.json.Json;
@@ -9,17 +9,17 @@ import rx.Single;
 
 import java.util.Objects;
 
-public class TileAggregateUpdateCompletedController implements Controller<TileAggregateUpdateCompleted, Void> {
+public class DesignAggregateUpdateCompletedController implements Controller<DesignAggregateUpdateCompleted, Void> {
     private final Vertx vertx;
     private final String address;
 
-    public TileAggregateUpdateCompletedController(Vertx vertx, String address) {
+    public DesignAggregateUpdateCompletedController(Vertx vertx, String address) {
         this.vertx = Objects.requireNonNull(vertx);
         this.address = Objects.requireNonNull(address);
     }
 
     @Override
-    public Single<Void> onNext(TileAggregateUpdateCompleted event) {
+    public Single<Void> onNext(DesignAggregateUpdateCompleted event) {
         DesignChangedNotification notification = new DesignChangedNotification(event.getUuid().toString(), event.getEvid().timestamp());
         vertx.eventBus().publish(address, Json.encode(notification));
         return Single.just(null);

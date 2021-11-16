@@ -1,12 +1,10 @@
 package com.nextbreakpoint.blueprint.designs;
 
-import com.nextbreakpoint.blueprint.common.core.Environment;
-import com.nextbreakpoint.blueprint.common.core.IOUtils;
-import com.nextbreakpoint.blueprint.common.core.InputMessage;
-import com.nextbreakpoint.blueprint.common.core.MessageType;
+import com.nextbreakpoint.blueprint.common.core.*;
 import com.nextbreakpoint.blueprint.common.vertx.*;
-import com.nextbreakpoint.blueprint.designs.handlers.EventsHandler;
-import com.nextbreakpoint.blueprint.designs.operations.DesignChangedController;
+import com.nextbreakpoint.blueprint.designs.common.NotificationDispatcher;
+import com.nextbreakpoint.blueprint.designs.operations.DesignAggregateUpdateCompletedController;
+import com.nextbreakpoint.blueprint.designs.operations.TileAggregateUpdateCompletedController;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Handler;
 import io.vertx.core.VertxOptions;
@@ -14,7 +12,6 @@ import io.vertx.core.dns.AddressResolverOptions;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
-import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.openapi.RouterBuilder;
 import io.vertx.micrometer.MicrometerMetricsOptions;
@@ -29,7 +26,6 @@ import io.vertx.rxjava.ext.web.handler.BodyHandler;
 import io.vertx.rxjava.ext.web.handler.CorsHandler;
 import io.vertx.rxjava.ext.web.handler.LoggerHandler;
 import io.vertx.rxjava.kafka.client.consumer.KafkaConsumer;
-import io.vertx.rxjava.kafka.client.consumer.KafkaConsumerRecord;
 import io.vertx.tracing.opentracing.OpenTracingOptions;
 import rx.Completable;
 
@@ -89,6 +85,23 @@ public class Verticle extends AbstractVerticle {
                 .toCompletable();
     }
 
+    @Override
+    public Completable rxStop() {
+        return Completable.fromCallable(() -> {
+            if (pollingThread != null) {
+                try {
+                    pollingThread.interrupt();
+                    pollingThread.join();
+                } catch (InterruptedException e) {
+                    logger.warn("Can't stop polling thread", e);
+                }
+            }
+            return null;
+        });
+    }
+
+    private Thread pollingThread;
+
     private void initServer(Promise<Void> promise) {
         try {
             final JsonObject config = vertx.getOrCreateContext().config();
@@ -101,11 +114,11 @@ public class Verticle extends AbstractVerticle {
 
             final String originPattern = environment.resolve(config.getString("origin_pattern"));
 
-            final String eventTopic = environment.resolve(config.getString("design_event_topic"));
+            final String eventTopic = environment.resolve(config.getString("event_topic"));
 
             final JWTAuth jwtProvider = JWTProviderFactory.create(environment, vertx, config);
 
-            final KafkaConsumer<String, String> consumer = KafkaClientFactory.createConsumer(environment, vertx, config);
+            final KafkaConsumer<String, String> kafkaConsumer = KafkaClientFactory.createConsumer(environment, vertx, config);
 
             final Router mainRouter = Router.router(vertx);
 
@@ -113,17 +126,21 @@ public class Verticle extends AbstractVerticle {
 
             final Handler<RoutingContext> onAccessDenied = routingContext -> routingContext.fail(Failure.accessDenied("Authorisation failed"));
 
-            final Handler<RoutingContext> eventHandler = new AccessHandler(jwtProvider, EventsHandler.create(vertx), onAccessDenied, asList(ANONYMOUS, ADMIN, GUEST));
+            final Handler<RoutingContext> eventHandler = new AccessHandler(jwtProvider, NotificationDispatcher.create(vertx), onAccessDenied, asList(ANONYMOUS, ADMIN, GUEST));
 
-            final Map<String, Handler<InputMessage>> handlers = new HashMap<>();
+            final Map<String, BlockingHandler<InputMessage>> messageHandlers = new HashMap<>();
 
-            handlers.put(MessageType.DESIGN_CHANGED, Factory.createDesignChangedHandler(new DesignChangedController(vertx, "events.handler.input")));
+            messageHandlers.put(MessageType.DESIGN_AGGREGATE_UPDATE_COMPLETED, Factory.createDesignAggregateUpdateCompletedHandler(new DesignAggregateUpdateCompletedController(vertx, "notifications")));
 
-            consumer.handler(record -> processRecord(handlers, record))
-                    .rxSubscribe(eventTopic)
-                    .doOnEach(ignore -> consumer.commit())
-                    .doOnError(this::handleError)
-                    .subscribe();
+            messageHandlers.put(MessageType.TILE_AGGREGATE_UPDATE_COMPLETED, Factory.createTileAggregateUpdateCompletedHandler(new TileAggregateUpdateCompletedController(vertx, "notifications")));
+
+            final KafkaPolling kafkaPolling = new KafkaPolling();
+
+            kafkaConsumer.subscribe(eventTopic);
+
+            pollingThread = new Thread(() -> kafkaPolling.pollRecords(kafkaConsumer, messageHandlers), "kafka-records-poll");
+
+            pollingThread.start();
 
             final Handler<RoutingContext> openapiHandler = new OpenApiHandler(vertx.getDelegate(), executor, "openapi.yaml");
 
@@ -175,21 +192,6 @@ public class Verticle extends AbstractVerticle {
         } catch (Exception e) {
             logger.error("Failed to start server", e);
             promise.fail(e);
-        }
-    }
-
-    private void handleError(Throwable err) {
-        logger.error("Cannot process message", err);
-    }
-
-    private void processRecord(Map<String, Handler<InputMessage>> handlers, KafkaConsumerRecord<String, String> record) {
-        final InputMessage message = Json.decodeValue(record.value(), InputMessage.class);
-        final Handler<InputMessage> handler = handlers.get(message.getValue().getType());
-        if (handler != null) {
-            logger.info("Receive message of type: " + message.getValue().getType());
-            handler.handle(message);
-        } else {
-            logger.info("Ignore message of type: " + message.getValue().getType());
         }
     }
 }

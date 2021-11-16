@@ -103,8 +103,8 @@ public class TestCases {
         final TileRenderRequested tileRenderRequested1 = Json.decodeValue(tileRenderRequestedMessage1.getValue().getData(), TileRenderRequested.class);
         final TileRenderRequested tileRenderRequested2 = Json.decodeValue(tileRenderRequestedMessage2.getValue().getData(), TileRenderRequested.class);
 
-        renderEmitter.sendMessage(tileRenderRequestedMessage1);
-        renderEmitter.sendMessage(tileRenderRequestedMessage2);
+        renderEmitter.send(tileRenderRequestedMessage1);
+        renderEmitter.send(tileRenderRequestedMessage2);
 
         await().atMost(TEN_SECONDS)
                 .pollInterval(ONE_SECOND)

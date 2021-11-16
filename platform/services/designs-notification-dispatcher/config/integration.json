@@ -12,5 +12,5 @@
 
   "kafka_bootstrap_servers": "${KAFKA_HOST}:9093",
   "kafka_group_id": "designs-notification-dispatcher",
-  "design_event_topic": "design-event"
+  "event_topic": "design-event"
 }

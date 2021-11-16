@@ -63,6 +63,10 @@
             <artifactId>vertx-kafka-client</artifactId>
         </dependency>
         <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-cassandra-client</artifactId>
+        </dependency>
+        <dependency>
             <groupId>au.com.dius.pact</groupId>
             <artifactId>consumer</artifactId>
             <scope>test</scope>

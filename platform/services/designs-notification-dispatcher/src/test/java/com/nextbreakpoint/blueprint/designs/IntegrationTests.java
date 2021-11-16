@@ -1,189 +1,64 @@
 package com.nextbreakpoint.blueprint.designs;
 
-import com.nextbreakpoint.blueprint.common.core.*;
-import com.nextbreakpoint.blueprint.common.test.EventSource;
-import com.nextbreakpoint.blueprint.common.test.KafkaUtils;
-import com.nextbreakpoint.blueprint.designs.model.DesignChanged;
-import io.vertx.core.json.Json;
-import io.vertx.rxjava.core.Vertx;
-import org.apache.kafka.clients.producer.KafkaProducer;
-import org.apache.kafka.clients.producer.ProducerRecord;
+import com.datastax.oss.driver.api.core.uuid.Uuids;
+import com.nextbreakpoint.blueprint.common.core.OutputMessage;
+import com.nextbreakpoint.blueprint.common.events.DesignAggregateUpdateCompleted;
+import com.nextbreakpoint.blueprint.common.events.mappers.DesignAggregateUpdateCompletedOutputMapper;
 import org.junit.jupiter.api.*;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.List;
+import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
-import static org.awaitility.Durations.ONE_SECOND;
-import static org.awaitility.Durations.TEN_SECONDS;
-
+@Tag("slow")
+@Tag("integration")
+@DisplayName("Verify behaviour of designs-notification-dispatcher service")
 public class IntegrationTests {
-    private static final TestScenario scenario = new TestScenario();
-
-    private static Environment environment = Environment.getDefaultEnvironment();
-
-    private static final List<SSENotification> notifications = Collections.synchronizedList(new ArrayList<>());
-    private static KafkaProducer<String, String> producer;
-    private static EventSource eventSource;
+    private static TestCases testCases = new TestCases("IntegrationTests");
 
     @BeforeAll
     public static void before() throws IOException, InterruptedException {
-        scenario.before();
-
-        final Vertx vertx = new Vertx(io.vertx.core.Vertx.vertx());
-
-        producer = KafkaUtils.createProducer(environment, scenario.createProducerConfig());
-
-        eventSource = new EventSource(environment, vertx, "https://" + scenario.getServiceHost() + ":" + scenario.getServicePort(), scenario.getEventSourceConfig());
+        testCases.before();
     }
 
     @AfterAll
     public static void after() throws IOException, InterruptedException {
-        if (producer != null) {
-            try {
-                producer.close();
-            } catch (Exception ignore) {
-            }
-        }
-
-        if (eventSource != null) {
-            eventSource.close();
-        }
-
-        scenario.after();
+        testCases.after();
     }
 
-    @Nested
-    @Tag("slow")
-    @Tag("integration")
-    @DisplayName("Verify behaviour of designs-notification-dispatcher service")
-    public class VerifyService {
-        @Test
-        @DisplayName("Should notify watchers after receiving a DesignChanged event")
-        public void shouldNotifyWatchersWhenReceivingAnEvent() throws IOException {
-            try {
-                long eventTimestamp = System.currentTimeMillis();
+    @Test
+    @DisplayName("Should notify watchers of all resources after receiving a DesignAggregateUpdateCompleted event")
+    public void shouldNotifyWatchersOfAllResourcesWhenReceivingAnEvent() {
+        final UUID designId1 = UUID.randomUUID();
 
-                final UUID messageId = UUID.randomUUID();
-                final UUID designId = UUID.randomUUID();
+        final UUID designId2 = UUID.randomUUID();
 
-                final DesignChanged designChangedEvent = new DesignChanged(designId, eventTimestamp);
+        final DesignAggregateUpdateCompleted designAggregateUpdateCompleted1 = new DesignAggregateUpdateCompleted(Uuids.timeBased(), designId1, 0, TestConstants.JSON_1, TestConstants.CHECKSUM_1, TestConstants.LEVELS, "CREATED");
 
-                final long messageTimestamp = System.currentTimeMillis();
+        final DesignAggregateUpdateCompleted designAggregateUpdateCompleted2 = new DesignAggregateUpdateCompleted(Uuids.timeBased(), designId2, 0, TestConstants.JSON_2, TestConstants.CHECKSUM_2, TestConstants.LEVELS, "UPDATED");
 
-                final OutputMessage designChangedMessage = createDesignChangedMessage(messageId, designId, designChangedEvent);
+        final OutputMessage designAggregateUpdateCompletedMessage1 = new DesignAggregateUpdateCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designAggregateUpdateCompleted1);
 
-                notifications.clear();
+        final OutputMessage designAggregateUpdateCompletedMessage2 = new DesignAggregateUpdateCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designAggregateUpdateCompleted2);
 
-                eventSource.connect("/v1/sse/designs/0", null, result -> {
-                    notifications.add(new SSENotification("CONNECT", result.succeeded() ? "SUCCESS" : "FAILURE"));
-                    producer.send(createKafkaRecord(designChangedMessage));
-                }).onEvent("update", sseEvent -> {
-                    notifications.add(new SSENotification("UPDATE", sseEvent));
-                }).onEvent("open", sseEvent -> {
-                    notifications.add(new SSENotification("OPEN", sseEvent));
-                }).onClose(nothing -> {
-                });
-
-                await().atMost(TEN_SECONDS)
-                        .pollInterval(ONE_SECOND)
-                        .untilAsserted(() -> {
-                            assertThat(notifications).isNotEmpty();
-                            List<SSENotification> events = new ArrayList<>(notifications);
-                            events.forEach(System.out::println);
-                            assertThat(notifications).hasSize(3);
-                            assertThat(events.get(0).type).isEqualTo("CONNECT");
-                            assertThat(events.get(1).type).isEqualTo("OPEN");
-                            assertThat(events.get(2).type).isEqualTo("UPDATE");
-                            String openData = events.get(1).body.split("\n")[1];
-                            Map<String, Object> openObject = Json.decodeValue(openData, HashMap.class);
-                            assertThat(openObject.get("session")).isNotNull();
-                            String updateData = events.get(2).body.split("\n")[1];
-                            Map<String, Object> updateObject = Json.decodeValue(updateData, HashMap.class);
-                            assertThat(updateObject.get("session")).isNotNull();
-                            assertThat(updateObject.get("session")).isEqualTo(openObject.get("session"));
-                            assertThat(updateObject.get("uuid")).isNotNull();
-                            assertThat(updateObject.get("uuid")).isEqualTo("*");
-                        });
-            } finally {
-                eventSource.close();
-            }
-        }
-
-        @Test
-        @DisplayName("Should notify watchers after receiving a DesignChanged event for single design")
-        public void shouldNotifyWatchersWhenReceivingAnEventForSingleDesign() throws IOException {
-            try {
-                long eventTimestamp = System.currentTimeMillis();
-
-                final UUID messageId = UUID.randomUUID();
-                final UUID designId = UUID.randomUUID();
-
-                final DesignChanged designChangedEvent = new DesignChanged(designId, eventTimestamp);
-
-                final long messageTimestamp = System.currentTimeMillis();
-
-                final OutputMessage designChangedMessage = createDesignChangedMessage(messageId, designId, designChangedEvent);
-
-                notifications.clear();
-
-                eventSource.connect("/v1/sse/designs/0/" + designId, null, result -> {
-                    notifications.add(new SSENotification("CONNECT", result.succeeded() ? "SUCCESS" : "FAILURE"));
-                    producer.send(createKafkaRecord(designChangedMessage));
-                }).onEvent("update", sseEvent -> {
-                    notifications.add(new SSENotification("UPDATE", sseEvent));
-                }).onEvent("open", sseEvent -> {
-                    notifications.add(new SSENotification("OPEN", sseEvent));
-                }).onClose(nothing -> {
-                });
-
-                await().atMost(TEN_SECONDS)
-                        .pollInterval(ONE_SECOND)
-                        .untilAsserted(() -> {
-                            assertThat(notifications).isNotEmpty();
-                            List<SSENotification> events = new ArrayList<>(notifications);
-                            events.forEach(System.out::println);
-                            assertThat(notifications).hasSize(3);
-                            assertThat(events.get(0).type).isEqualTo("CONNECT");
-                            assertThat(events.get(1).type).isEqualTo("OPEN");
-                            assertThat(events.get(2).type).isEqualTo("UPDATE");
-                            String openData = events.get(1).body.split("\n")[1];
-                            Map<String, Object> openObject = Json.decodeValue(openData, HashMap.class);
-                            assertThat(openObject.get("session")).isNotNull();
-                            String updateData = events.get(2).body.split("\n")[1];
-                            Map<String, Object> updateObject = Json.decodeValue(updateData, HashMap.class);
-                            assertThat(updateObject.get("session")).isNotNull();
-                            assertThat(updateObject.get("session")).isEqualTo(openObject.get("session"));
-                            assertThat(updateObject.get("uuid")).isNotNull();
-                            assertThat(updateObject.get("uuid")).isEqualTo(designId.toString());
-                        });
-            } finally {
-                eventSource.close();
-            }
-        }
+        testCases.shouldNotifyWatchersOfAllResourcesWhenReceivingAnEvent(List.of(designAggregateUpdateCompletedMessage1, designAggregateUpdateCompletedMessage2));
     }
 
-    private static ProducerRecord<String, String> createKafkaRecord(OutputMessage message) {
-        return new ProducerRecord<>("design-event", message.getKey(), Json.encode(message.getValue()));
-    }
+    @Test
+    @DisplayName("Should notify watchers of single resource after receiving a DesignAggregateUpdateCompleted event")
+    public void shouldNotifyWatchersOfSingleResourceWhenReceivingAnEvent() {
+        final UUID designId1 = UUID.randomUUID();
 
-    private static OutputMessage createDesignChangedMessage(UUID messageId, UUID partitionKey, DesignChanged event) {
-        return new OutputMessage(partitionKey.toString(), new Payload(messageId, MessageType.DESIGN_CHANGED, Json.encode(event), "test"));
-    }
+        final UUID designId2 = UUID.randomUUID();
 
-    private static class SSENotification {
-        public final String type;
-        public final String body;
+        final DesignAggregateUpdateCompleted designAggregateUpdateCompleted1 = new DesignAggregateUpdateCompleted(Uuids.timeBased(), designId1, 0, TestConstants.JSON_1, TestConstants.CHECKSUM_1, TestConstants.LEVELS, "CREATED");
 
-        public SSENotification(String type, String body) {
-            this.type = type;
-            this.body = body;
-        }
+        final DesignAggregateUpdateCompleted designAggregateUpdateCompleted2 = new DesignAggregateUpdateCompleted(Uuids.timeBased(), designId2, 0, TestConstants.JSON_2, TestConstants.CHECKSUM_2, TestConstants.LEVELS, "UPDATED");
 
-        @Override
-        public String toString() {
-            return type + ": " + body;
-        }
+        final OutputMessage designAggregateUpdateCompletedMessage1 = new DesignAggregateUpdateCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designAggregateUpdateCompleted1);
+
+        final OutputMessage designAggregateUpdateCompletedMessage2 = new DesignAggregateUpdateCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designAggregateUpdateCompleted2);
+
+        testCases.shouldNotifyWatchersOfSingleResourceWhenReceivingAnEvent(List.of(designAggregateUpdateCompletedMessage1, designAggregateUpdateCompletedMessage2));
     }
 }

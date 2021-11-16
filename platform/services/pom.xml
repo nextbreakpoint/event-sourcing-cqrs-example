@@ -257,9 +257,7 @@
                 <module>gateway</module>
                 <module>authentication</module>
                 <module>accounts</module>
-                <module>designs</module>
                 <module>designs-aggregate-fetcher</module>
-                <module>designs-command-consumer</module>
                 <module>designs-command-producer</module>
                 <module>designs-notification-dispatcher</module>
                 <module>designs-event-consumer</module>

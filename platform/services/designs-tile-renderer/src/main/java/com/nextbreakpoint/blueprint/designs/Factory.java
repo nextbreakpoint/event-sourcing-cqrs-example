@@ -1,5 +1,6 @@
 package com.nextbreakpoint.blueprint.designs;
 
+import com.nextbreakpoint.blueprint.common.core.BlockingHandler;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.events.mappers.TileRenderCompletedOutputMapper;
 import com.nextbreakpoint.blueprint.common.events.mappers.TileRenderRequestedInputMapper;
@@ -14,7 +15,7 @@ import software.amazon.awssdk.services.s3.S3AsyncClient;
 public class Factory {
     private Factory() {}
 
-    public static MessageHandler<InputMessage, Void> createTileRenderRequestedHandler(String topic, KafkaProducer<String, String> producer, String messageSource, WorkerExecutor executor, S3AsyncClient s3AsyncClient, String bucket) {
+    public static BlockingHandler<InputMessage> createTileRenderRequestedHandler(String topic, KafkaProducer<String, String> producer, String messageSource, WorkerExecutor executor, S3AsyncClient s3AsyncClient, String bucket) {
         return TemplateHandler.<InputMessage, InputMessage, Void, Void>builder()
                 .withInputMapper(input -> input)
                 .withOutputMapper(output -> output)

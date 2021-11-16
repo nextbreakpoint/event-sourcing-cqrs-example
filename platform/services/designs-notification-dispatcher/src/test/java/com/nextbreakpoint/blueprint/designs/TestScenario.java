@@ -1,6 +1,7 @@
 package com.nextbreakpoint.blueprint.designs;
 
 import com.jayway.restassured.config.RestAssuredConfig;
+import com.nextbreakpoint.blueprint.common.test.EventSource;
 import com.nextbreakpoint.blueprint.common.test.Scenario;
 import com.nextbreakpoint.blueprint.common.test.TestUtils;
 import com.nextbreakpoint.blueprint.common.test.VertxUtils;
@@ -9,17 +10,18 @@ import io.vertx.core.json.JsonObject;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 public class TestScenario {
+  private final String version = TestUtils.getVariable("BUILD_VERSION", System.getProperty("build.version", "0"));
+  private final boolean buildImages = TestUtils.getVariable("BUILD_IMAGES", System.getProperty("build.images", "false")).equals("true");
+
   private Scenario scenario;
 
   public void before() throws IOException, InterruptedException {
-    final String version = TestUtils.getVariable("BUILD_VERSION", System.getProperty("build.version", "0"));
-    final boolean buildImages = TestUtils.getVariable("BUILD_IMAGES", System.getProperty("build.images", "false")).equals("true");
-
     final List<String> secretArgs = Arrays.asList(
             "--from-file",
             "keystore_server.jks=../../secrets/keystore_server.jks",
@@ -47,8 +49,8 @@ public class TestScenario {
             .withSecretArgs(secretArgs)
             .withHelmPath("../../helm")
             .withHelmArgs(helmArgs)
-            .withKubernetes()
-            .withMinikube()
+//            .withKubernetes()
+//            .withMinikube()
             .withZookeeper()
             .withKafka()
             .build();
@@ -84,7 +86,7 @@ public class TestScenario {
   }
 
   public String getVersion() {
-    return scenario.getVersion();
+    return version;
   }
 
   public String makeAuthorization(String user, String role) {

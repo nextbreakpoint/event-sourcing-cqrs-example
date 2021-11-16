@@ -1,9 +1,6 @@
 package com.nextbreakpoint.blueprint.designs;
 
-import com.nextbreakpoint.blueprint.common.core.Environment;
-import com.nextbreakpoint.blueprint.common.core.IOUtils;
-import com.nextbreakpoint.blueprint.common.core.InputMessage;
-import com.nextbreakpoint.blueprint.common.core.MessageType;
+import com.nextbreakpoint.blueprint.common.core.*;
 import com.nextbreakpoint.blueprint.common.vertx.*;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Handler;
@@ -138,9 +135,9 @@ public class Verticle extends AbstractVerticle {
 
             final String messageSource = environment.resolve(config.getString("message_source"));
 
-            final String messageTopic = environment.resolve(config.getString("message_topic"));
+            final String renderTopic = environment.resolve(config.getString("render_topic"));
 
-            final String renderingTopic = environment.resolve(config.getString("rendering_topic"));
+            final String eventTopic = environment.resolve(config.getString("event_topic"));
 
             final KafkaProducer<String, String> kafkaProducer = KafkaClientFactory.createProducer(environment, vertx, config);
 
@@ -158,11 +155,11 @@ public class Verticle extends AbstractVerticle {
 
             final CorsHandler corsHandler = CorsHandlerFactory.createWithAll(originPattern, asList(AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN), asList(CONTENT_TYPE, X_XSRF_TOKEN));
 
-            final Map<String, MessageHandler<InputMessage, Void>> messageHandlers = new HashMap<>();
+            final Map<String, BlockingHandler<InputMessage>> messageHandlers = new HashMap<>();
 
-            messageHandlers.put(MessageType.TILE_RENDER_REQUESTED, createTileRenderRequestedHandler(messageTopic, kafkaProducer, messageSource, workerExecutor, s3AsyncClient, s3Bucket));
+            messageHandlers.put(MessageType.TILE_RENDER_REQUESTED, createTileRenderRequestedHandler(eventTopic, kafkaProducer, messageSource, workerExecutor, s3AsyncClient, s3Bucket));
 
-            kafkaConsumer.subscribe(renderingTopic);
+            kafkaConsumer.subscribe(renderTopic);
 
             final KafkaPolling kafkaPolling = new KafkaPolling();
 

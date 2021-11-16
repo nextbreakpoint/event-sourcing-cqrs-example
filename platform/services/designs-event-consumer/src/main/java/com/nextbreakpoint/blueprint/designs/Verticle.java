@@ -1,10 +1,7 @@
 package com.nextbreakpoint.blueprint.designs;
 
 import com.fasterxml.jackson.core.JsonParser;
-import com.nextbreakpoint.blueprint.common.core.Environment;
-import com.nextbreakpoint.blueprint.common.core.IOUtils;
-import com.nextbreakpoint.blueprint.common.core.InputMessage;
-import com.nextbreakpoint.blueprint.common.core.MessageType;
+import com.nextbreakpoint.blueprint.common.core.*;
 import com.nextbreakpoint.blueprint.common.vertx.*;
 import com.nextbreakpoint.blueprint.designs.persistence.CassandraStore;
 import io.vertx.core.DeploymentOptions;
@@ -139,9 +136,9 @@ public class Verticle extends AbstractVerticle {
 
             final String originPattern = environment.resolve(config.getString("origin_pattern"));
 
-            final String renderingTopic = environment.resolve(config.getString("rendering_topic"));
+            final String renderTopic = environment.resolve(config.getString("render_topic"));
 
-            final String messageTopic = environment.resolve(config.getString("message_topic"));
+            final String eventTopic = environment.resolve(config.getString("event_topic"));
 
             final String messageSource = environment.resolve(config.getString("message_source"));
 
@@ -163,32 +160,32 @@ public class Verticle extends AbstractVerticle {
 
             final CorsHandler corsHandler = CorsHandlerFactory.createWithAll(originPattern, asList(AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN), asList(CONTENT_TYPE, X_XSRF_TOKEN));
 
-            final Map<String, MessageHandler<InputMessage, Void>> messageHandlers = new HashMap<>();
+            final Map<String, BlockingHandler<InputMessage>> messageHandlers = new HashMap<>();
 
-            final Map<String, MessageHandler<InputMessage, Void>> messageWithCompactionHandlers = new HashMap<>();
+            final Map<String, BlockingHandler<InputMessage>> messageWithCompactionHandlers = new HashMap<>();
 
             final KafkaPolling kafkaPolling = new KafkaPolling();
 
-            kafkaConsumer1.subscribe(messageTopic);
+            kafkaConsumer1.subscribe(eventTopic);
 
-            kafkaConsumer2.subscribe(messageTopic);
+            kafkaConsumer2.subscribe(eventTopic);
 
-            messageHandlers.put(MessageType.DESIGN_INSERT_REQUESTED, createDesignInsertRequestedHandler(store, messageTopic, kafkaProducer, messageSource));
-            messageHandlers.put(MessageType.DESIGN_UPDATE_REQUESTED, createDesignUpdateRequestedHandler(store, messageTopic, kafkaProducer, messageSource));
-            messageHandlers.put(MessageType.DESIGN_DELETE_REQUESTED, createDesignDeleteRequestedHandler(store, messageTopic, kafkaProducer, messageSource));
-            messageHandlers.put(MessageType.DESIGN_ABORT_REQUESTED, createDesignAbortRequestedHandler(store, messageTopic, kafkaProducer, messageSource));
+            messageHandlers.put(MessageType.DESIGN_INSERT_REQUESTED, createDesignInsertRequestedHandler(store, eventTopic, kafkaProducer, messageSource));
+            messageHandlers.put(MessageType.DESIGN_UPDATE_REQUESTED, createDesignUpdateRequestedHandler(store, eventTopic, kafkaProducer, messageSource));
+            messageHandlers.put(MessageType.DESIGN_DELETE_REQUESTED, createDesignDeleteRequestedHandler(store, eventTopic, kafkaProducer, messageSource));
+            messageHandlers.put(MessageType.DESIGN_ABORT_REQUESTED, createDesignAbortRequestedHandler(store, eventTopic, kafkaProducer, messageSource));
 
-            messageHandlers.put(MessageType.DESIGN_AGGREGATE_UPDATE_REQUESTED, createDesignAggregateUpdateRequestedHandler(store, messageTopic, kafkaProducer, messageSource));
-            messageHandlers.put(MessageType.DESIGN_AGGREGATE_UPDATE_COMPLETED, createDesignAggregateUpdateCompletedHandler(store, messageTopic, kafkaProducer, messageSource));
+            messageHandlers.put(MessageType.DESIGN_AGGREGATE_UPDATE_REQUESTED, createDesignAggregateUpdateRequestedHandler(store, eventTopic, kafkaProducer, messageSource));
+            messageHandlers.put(MessageType.DESIGN_AGGREGATE_UPDATE_COMPLETED, createDesignAggregateUpdateCompletedHandler(store, eventTopic, kafkaProducer, messageSource));
 
-            messageHandlers.put(MessageType.TILE_AGGREGATE_UPDATE_REQUESTED, createTileAggregateUpdateRequestedHandler(store, messageTopic, kafkaProducer, messageSource));
-            messageHandlers.put(MessageType.TILE_AGGREGATE_UPDATE_COMPLETED, createTileAggregateUpdateCompletedHandler(store, messageTopic, kafkaProducer, messageSource));
+            messageHandlers.put(MessageType.TILE_AGGREGATE_UPDATE_REQUESTED, createTileAggregateUpdateRequestedHandler(store, eventTopic, kafkaProducer, messageSource));
+            messageHandlers.put(MessageType.TILE_AGGREGATE_UPDATE_COMPLETED, createTileAggregateUpdateCompletedHandler(store, eventTopic, kafkaProducer, messageSource));
 
-            messageHandlers.put(MessageType.TILE_RENDER_REQUESTED, createTileRenderRequestedHandler(store, renderingTopic, kafkaProducer, messageSource));
-            messageHandlers.put(MessageType.TILE_RENDER_COMPLETED, createTileRenderCompletedHandler(store, messageTopic, kafkaProducer, messageSource));
-            messageHandlers.put(MessageType.TILE_RENDER_ABORTED, createTileRenderAbortedHandler(store, renderingTopic, kafkaProducer, messageSource));
+            messageHandlers.put(MessageType.TILE_RENDER_REQUESTED, createTileRenderRequestedHandler(store, renderTopic, kafkaProducer, messageSource));
+            messageHandlers.put(MessageType.TILE_RENDER_COMPLETED, createTileRenderCompletedHandler(store, eventTopic, kafkaProducer, messageSource));
+            messageHandlers.put(MessageType.TILE_RENDER_ABORTED, createTileRenderAbortedHandler(store, renderTopic, kafkaProducer, messageSource));
 
-            messageWithCompactionHandlers.put(MessageType.TILE_AGGREGATE_UPDATE_REQUIRED, createTileAggregateUpdateRequiredHandler(store, messageTopic, kafkaProducer, messageSource));
+            messageWithCompactionHandlers.put(MessageType.TILE_AGGREGATE_UPDATE_REQUIRED, createTileAggregateUpdateRequiredHandler(store, eventTopic, kafkaProducer, messageSource));
 
             pollingThread = new Thread(() -> kafkaPolling.pollRecords(kafkaConsumer1, messageHandlers), "kafka-records-poll");
 

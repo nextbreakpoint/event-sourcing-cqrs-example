@@ -107,7 +107,7 @@ public class TestCases {
         eventsPolling.clearMessages();
         renderPolling.clearMessages();
 
-        eventEmitter.sendMessage(designInsertRequestedMessage);
+        eventEmitter.send(designInsertRequestedMessage);
 
         await().atMost(TEN_SECONDS)
                 .pollInterval(ONE_SECOND)
@@ -181,9 +181,9 @@ public class TestCases {
         eventsPolling.clearMessages();
         renderPolling.clearMessages();
 
-        eventEmitter.sendMessage(designInsertRequestedMessage);
+        eventEmitter.send(designInsertRequestedMessage);
 
-        eventEmitter.sendMessage(designUpdateRequestedMessage);
+        eventEmitter.send(designUpdateRequestedMessage);
 
         await().atMost(TEN_SECONDS)
                 .pollInterval(ONE_SECOND)
@@ -265,9 +265,9 @@ public class TestCases {
         eventsPolling.clearMessages();
         renderPolling.clearMessages();
 
-        eventEmitter.sendMessage(designInsertRequestedMessage);
+        eventEmitter.send(designInsertRequestedMessage);
 
-        eventEmitter.sendMessage(designDeleteRequestedMessage);
+        eventEmitter.send(designDeleteRequestedMessage);
 
         await().atMost(TEN_SECONDS)
                 .pollInterval(ONE_SECOND)
@@ -348,7 +348,7 @@ public class TestCases {
         eventsPolling.clearMessages();
         renderPolling.clearMessages();
 
-        eventEmitter.sendMessage(designInsertRequestedMessage);
+        eventEmitter.send(designInsertRequestedMessage);
 
         await().atMost(TEN_SECONDS)
                 .pollInterval(ONE_SECOND)
@@ -420,11 +420,11 @@ public class TestCases {
         final OutputMessage tileRenderCompletedMessage4 = tileRenderCompletedMessages.get(3);
         final OutputMessage tileRenderCompletedMessage5 = tileRenderCompletedMessages.get(4);
 
-        eventEmitter.sendMessage(tileRenderCompletedMessage1);
-        eventEmitter.sendMessage(tileRenderCompletedMessage2);
-        eventEmitter.sendMessage(tileRenderCompletedMessage3);
-        eventEmitter.sendMessage(tileRenderCompletedMessage4);
-        eventEmitter.sendMessage(tileRenderCompletedMessage5);
+        eventEmitter.send(tileRenderCompletedMessage1);
+        eventEmitter.send(tileRenderCompletedMessage2);
+        eventEmitter.send(tileRenderCompletedMessage3);
+        eventEmitter.send(tileRenderCompletedMessage4);
+        eventEmitter.send(tileRenderCompletedMessage5);
 
         await().atMost(ONE_MINUTE)
                 .pollInterval(TEN_SECONDS)

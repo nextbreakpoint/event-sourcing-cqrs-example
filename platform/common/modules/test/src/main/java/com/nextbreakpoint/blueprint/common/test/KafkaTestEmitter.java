@@ -15,13 +15,20 @@ public class KafkaTestEmitter {
         this.topicName = topicName;
     }
 
-    public void sendMessage(OutputMessage message) {
+    public void send(OutputMessage message) {
         kafkaProducer.rxSend(createKafkaRecord(message))
                 .doOnEach(action -> System.out.println("Sending message " + message + " to topic " + topicName))
                 .doOnError(Throwable::printStackTrace)
                 .subscribeOn(Schedulers.io())
                 .toBlocking()
                 .value();
+    }
+
+    public void sendAsync(OutputMessage message) {
+        kafkaProducer.rxSend(createKafkaRecord(message))
+                .doOnEach(action -> System.out.println("Sending message " + message + " to topic " + topicName))
+                .doOnError(Throwable::printStackTrace)
+                .subscribe();
     }
 
     private KafkaProducerRecord<String, String> createKafkaRecord(OutputMessage message) {

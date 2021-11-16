@@ -1,5 +1,6 @@
 package com.nextbreakpoint.blueprint.common.vertx;
 
+import com.nextbreakpoint.blueprint.common.core.BlockingHandler;
 import com.nextbreakpoint.blueprint.common.core.Mapper;
 import io.vertx.core.Handler;
 import rx.Single;
@@ -8,7 +9,7 @@ import rx.schedulers.Schedulers;
 import java.util.Objects;
 import java.util.function.BiConsumer;
 
-public class TemplateHandler<T, I, O, R> implements Handler<T>, MessageHandler<T, R> {
+public class TemplateHandler<T, I, O, R> implements Handler<T>, BlockingHandler<T> {
     private final Mapper<T, I> inputMapper;
     private final Mapper<O, R> outputMapper;
     private final Controller<I, O> controller;

@@ -1,5 +1,6 @@
 package com.nextbreakpoint.blueprint.designs;
 
+import com.nextbreakpoint.blueprint.common.core.BlockingHandler;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.events.mappers.*;
 import com.nextbreakpoint.blueprint.common.vertx.*;
@@ -10,7 +11,7 @@ import io.vertx.rxjava.kafka.client.producer.KafkaProducer;
 public class Factory {
     private Factory() {}
 
-    public static MessageHandler<InputMessage, Void> createDesignInsertRequestedHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
+    public static BlockingHandler<InputMessage> createDesignInsertRequestedHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
         return TemplateHandler.<InputMessage, InputMessage, Void, Void>builder()
                 .withInputMapper(input -> input)
                 .withOutputMapper(output -> output)
@@ -24,7 +25,7 @@ public class Factory {
                 .build();
     }
 
-    public static MessageHandler<InputMessage, Void> createDesignUpdateRequestedHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
+    public static BlockingHandler<InputMessage> createDesignUpdateRequestedHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
         return TemplateHandler.<InputMessage, InputMessage, Void, Void>builder()
                 .withInputMapper(input -> input)
                 .withOutputMapper(output -> output)
@@ -38,7 +39,7 @@ public class Factory {
                 .build();
     }
 
-    public static MessageHandler<InputMessage, Void> createDesignDeleteRequestedHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
+    public static BlockingHandler<InputMessage> createDesignDeleteRequestedHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
         return TemplateHandler.<InputMessage, InputMessage, Void, Void>builder()
                 .withInputMapper(input -> input)
                 .withOutputMapper(output -> output)
@@ -52,7 +53,7 @@ public class Factory {
                 .build();
     }
 
-    public static MessageHandler<InputMessage, Void> createDesignAbortRequestedHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
+    public static BlockingHandler<InputMessage> createDesignAbortRequestedHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
         return TemplateHandler.<InputMessage, InputMessage, Void, Void>builder()
                 .withInputMapper(input -> input)
                 .withOutputMapper(output -> output)
@@ -67,7 +68,7 @@ public class Factory {
                 .build();
     }
 
-    public static MessageHandler<InputMessage, Void> createDesignAggregateUpdateRequestedHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
+    public static BlockingHandler<InputMessage> createDesignAggregateUpdateRequestedHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
         return TemplateHandler.<InputMessage, InputMessage, Void, Void>builder()
                 .withInputMapper(input -> input)
                 .withOutputMapper(output -> output)
@@ -82,7 +83,7 @@ public class Factory {
                 .build();
     }
 
-    public static MessageHandler<InputMessage, Void> createDesignAggregateUpdateCompletedHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
+    public static BlockingHandler<InputMessage> createDesignAggregateUpdateCompletedHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
         return TemplateHandler.<InputMessage, InputMessage, Void, Void>builder()
                 .withInputMapper(input -> input)
                 .withOutputMapper(output -> output)
@@ -97,7 +98,7 @@ public class Factory {
                 .build();
     }
 
-    public static MessageHandler<InputMessage, Void> createTileAggregateUpdateRequiredHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
+    public static BlockingHandler<InputMessage> createTileAggregateUpdateRequiredHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
         return TemplateHandler.<InputMessage, InputMessage, Void, Void>builder()
                 .withInputMapper(input -> input)
                 .withOutputMapper(output -> output)
@@ -112,7 +113,7 @@ public class Factory {
                 .build();
     }
 
-    public static MessageHandler<InputMessage, Void> createTileAggregateUpdateRequestedHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
+    public static BlockingHandler<InputMessage> createTileAggregateUpdateRequestedHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
         return TemplateHandler.<InputMessage, InputMessage, Void, Void>builder()
                 .withInputMapper(input -> input)
                 .withOutputMapper(output -> output)
@@ -127,7 +128,7 @@ public class Factory {
                 .build();
     }
 
-    public static MessageHandler<InputMessage, Void> createTileAggregateUpdateCompletedHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
+    public static BlockingHandler<InputMessage> createTileAggregateUpdateCompletedHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
         return TemplateHandler.<InputMessage, InputMessage, Void, Void>builder()
                 .withInputMapper(input -> input)
                 .withOutputMapper(output -> output)
@@ -137,7 +138,7 @@ public class Factory {
                 .build();
     }
 
-    public static MessageHandler<InputMessage, Void> createTileRenderRequestedHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
+    public static BlockingHandler<InputMessage> createTileRenderRequestedHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
         return TemplateHandler.<InputMessage, InputMessage, Void, Void>builder()
                 .withInputMapper(input -> input)
                 .withOutputMapper(output -> output)
@@ -151,7 +152,7 @@ public class Factory {
                 .build();
     }
 
-    public static MessageHandler<InputMessage, Void> createTileRenderCompletedHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
+    public static BlockingHandler<InputMessage> createTileRenderCompletedHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
         return TemplateHandler.<InputMessage, InputMessage, Void, Void>builder()
                 .withInputMapper(input -> input)
                 .withOutputMapper(output -> output)
@@ -166,7 +167,7 @@ public class Factory {
                 .build();
     }
 
-    public static MessageHandler<InputMessage, Void> createTileRenderAbortedHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
+    public static BlockingHandler<InputMessage> createTileRenderAbortedHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
         return TemplateHandler.<InputMessage, InputMessage, Void, Void>builder()
                 .withInputMapper(input -> input)
                 .withOutputMapper(output -> output)

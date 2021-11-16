@@ -15,12 +15,14 @@ import com.nextbreakpoint.blueprint.common.core.KafkaRecord;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
 import com.nextbreakpoint.blueprint.common.events.mappers.TileRenderRequestedOutputMapper;
+import com.nextbreakpoint.blueprint.common.test.PayloadUtils;
 import io.vertx.core.json.Json;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.UUID;
 
+@Tag("slow")
 @Tag("pact-verify")
 @Tag("verify-circular-pact")
 @DisplayName("Verify contract between designs-event-consumer and designs-tile-renderer")
@@ -53,12 +55,12 @@ public class VerifyTileRendererPact {
     public void kafkaTopicExists() {
     }
 
-    @PactVerifyProvider("tile render requested 1")
+    @PactVerifyProvider("tile render requested for tile 0/00000000.png of design 00000000-0000-0000-0000-000000000004 with checksum 1")
     public String produceTileRenderRequested1() {
         return produceTileRenderRequested(new UUID(0L, 4L), 0, 0, 0, TestConstants.JSON_1, TestConstants.CHECKSUM_1);
     }
 
-    @PactVerifyProvider("tile render requested 2")
+    @PactVerifyProvider("tile render requested for tile 1/00010002.png of design 00000000-0000-0000-0000-000000000004 with checksum 2")
     public String produceTileRenderRequested2() {
         return produceTileRenderRequested(new UUID(0L, 4L), 1, 1, 2, TestConstants.JSON_2, TestConstants.CHECKSUM_2);
     }
@@ -68,6 +70,6 @@ public class VerifyTileRendererPact {
 
         final OutputMessage tileRenderRequestedMessage = new TileRenderRequestedOutputMapper(TestConstants.MESSAGE_SOURCE, event -> TestUtils.createBucketKey(tileRenderRequested)).transform(tileRenderRequested);
 
-        return Json.encode(new KafkaRecord(tileRenderRequestedMessage.getKey(), TestUtils.payloadToMap(tileRenderRequestedMessage.getValue())));
+        return Json.encode(new KafkaRecord(tileRenderRequestedMessage.getKey(), PayloadUtils.payloadToMap(tileRenderRequestedMessage.getValue())));
     }
 }

@@ -35,7 +35,7 @@ public class TestCases {
 
     private final Vertx vertx = new Vertx(io.vertx.core.Vertx.vertx());
 
-    private Environment environment = Environment.getDefaultEnvironment();
+    private final Environment environment = Environment.getDefaultEnvironment();
 
     private KafkaTestPolling eventsPolling;
 
@@ -146,7 +146,6 @@ public class TestCases {
         return uuid;
     }
 
-
     public String shouldPublishDesignDeleteRequestedEventWhenReceivingADeleteDesignRequest() throws MalformedURLException {
         final String authorization = scenario.makeAuthorization("test", Authority.ADMIN);
 
@@ -175,33 +174,6 @@ public class TestCases {
                 });
 
         return uuid;
-    }
-
-    public String produceDesignInsertRequested() throws MalformedURLException {
-        final String uuid = shouldPublishDesignInsertRequestedEventWhenReceivingAInsertDesignRequest();
-
-        final List<InputMessage> messages = eventsPolling.findMessages(uuid, TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_INSERT_REQUESTED);
-        assertThat(messages).hasSize(1);
-
-        return Json.encode(messages.get(0));
-    }
-
-    public String produceDesignUpdateRequested() throws MalformedURLException {
-        final String uuid = shouldPublishDesignUpdateRequestedEventWhenReceivingAUpdateDesignRequest();
-
-        final List<InputMessage> messages = eventsPolling.findMessages(uuid, TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_UPDATE_REQUESTED);
-        assertThat(messages).hasSize(1);
-
-        return Json.encode(messages.get(0));
-    }
-
-    public String produceDesignDeleteRequested() throws MalformedURLException {
-        final String uuid = shouldPublishDesignDeleteRequestedEventWhenReceivingADeleteDesignRequest();
-
-        final List<InputMessage> messages = eventsPolling.findMessages(uuid, TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_DELETE_REQUESTED);
-        assertThat(messages).hasSize(1);
-
-        return Json.encode(messages.get(0));
     }
 
     private String submitInsertDesignRequest(String authorization, Map<String, Object> design) throws MalformedURLException {

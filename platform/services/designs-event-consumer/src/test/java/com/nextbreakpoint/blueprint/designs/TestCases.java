@@ -1,11 +1,9 @@
 package com.nextbreakpoint.blueprint.designs;
 
 import com.datastax.oss.driver.api.core.cql.Row;
-import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.nextbreakpoint.blueprint.common.core.*;
 import com.nextbreakpoint.blueprint.common.events.DesignInsertRequested;
 import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
-import com.nextbreakpoint.blueprint.common.events.mappers.DesignInsertRequestedOutputMapper;
 import com.nextbreakpoint.blueprint.common.test.KafkaTestEmitter;
 import com.nextbreakpoint.blueprint.common.test.KafkaTestPolling;
 import com.nextbreakpoint.blueprint.common.vertx.CassandraClientFactory;
@@ -35,7 +33,7 @@ public class TestCases {
 
     private final Vertx vertx = new Vertx(io.vertx.core.Vertx.vertx());
 
-    private Environment environment = Environment.getDefaultEnvironment();
+    private final Environment environment = Environment.getDefaultEnvironment();
 
     private KafkaTestPolling eventsPolling;
     private KafkaTestPolling renderPolling;
@@ -449,135 +447,10 @@ public class TestCases {
                     assertThat(rows).hasSize(1);
                     final Map<Integer, Tiles> tilesMap = TestUtils.createTilesMap(TestConstants.LEVELS);
                     tilesMap.put(0, new Tiles(0, 1, Set.of(), Set.of(0)));
-                    tilesMap.put(1, new Tiles(1, 4, Set.of(0, 65536, 131073, 196609), Set.of()));
+                    tilesMap.put(1, new Tiles(1, 4, Set.of(0, 65536), Set.of()));
+                    tilesMap.put(2, new Tiles(2, 16, Set.of(131073), Set.of(196609)));
                     final List<Tiles> tiles = TestUtils.convertToTilesList(tilesMap);
                     TestAssertions.assertExpectedDesign(rows.get(0), TestConstants.JSON_1, "CREATED", tiles);
                 });
     }
-
-//    public String produceDesignAggregateUpdateCompleted1() {
-//        final UUID designId = UUID.randomUUID();
-//
-//        System.out.println("designId = " + designId);
-//
-//        eventsPolling.clearMessages();
-//        renderPolling.clearMessages();
-//
-//        final DesignInsertRequested designInsertRequested = new DesignInsertRequested(Uuids.timeBased(), designId, TestConstants.JSON_1, TestConstants.LEVELS);
-//
-//        final OutputMessage designInsertRequestedMessage = new DesignInsertRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designInsertRequested);
-//
-//        eventsPolling.clearMessages();
-//
-//        eventEmitter.sendMessage(designInsertRequestedMessage);
-//
-//        await().atMost(TEN_SECONDS)
-//                .pollInterval(ONE_SECOND)
-//                .untilAsserted(() -> {
-//                    final List<InputMessage> messages = eventsPolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, MessageType.DESIGN_AGGREGATE_UPDATE_COMPLETED);
-//                    assertThat(messages).hasSize(1);
-//                    TestAssertions.assertExpectedDesignAggregateUpdateCompletedMessage(designId, messages.get(0), TestConstants.JSON_1, TestConstants.CHECKSUM_1, "CREATED");
-//                });
-//
-//        final List<InputMessage> messages = eventsPolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, MessageType.DESIGN_AGGREGATE_UPDATE_COMPLETED);
-//        assertThat(messages).hasSize(1);
-//
-//        return Json.encode(new KafkaRecord(messages.get(0).getKey(), Json.encode(messages.get(0).getValue())));
-//    }
-//
-//    public String produceDesignAggregateUpdateCompleted2() {
-//        final UUID designId = UUID.randomUUID();
-//
-//        System.out.println("designId = " + designId);
-//
-//        eventsPolling.clearMessages();
-//        renderPolling.clearMessages();
-//
-//        final DesignInsertRequested designInsertRequested = new DesignInsertRequested(Uuids.timeBased(), designId, TestConstants.JSON_1, TestConstants.LEVELS);
-//
-//        final OutputMessage designInsertRequestedMessage = new DesignInsertRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designInsertRequested);
-//
-//        eventsPolling.clearMessages();
-//
-//        eventEmitter.sendMessage(designInsertRequestedMessage);
-//
-//        await().atMost(TEN_SECONDS)
-//                .pollInterval(ONE_SECOND)
-//                .untilAsserted(() -> {
-//                    final List<InputMessage> messages = eventsPolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, MessageType.DESIGN_AGGREGATE_UPDATE_COMPLETED);
-//                    assertThat(messages).hasSize(1);
-//                    TestAssertions.assertExpectedDesignAggregateUpdateCompletedMessage(designId, messages.get(0), TestConstants.JSON_1, TestConstants.CHECKSUM_1, "CREATED");
-//                });
-//
-//        final List<InputMessage> messages = eventsPolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, MessageType.DESIGN_AGGREGATE_UPDATE_COMPLETED);
-//        assertThat(messages).hasSize(1);
-//
-//        return Json.encode(new KafkaRecord(messages.get(0).getKey(), Json.encode(messages.get(0).getValue())));
-//    }
-//
-//    public String produceTileRenderRequested1() {
-//        final UUID designId = UUID.randomUUID();
-//
-//        System.out.println("designId = " + designId);
-//
-//        eventsPolling.clearMessages();
-//        renderPolling.clearMessages();
-//
-//        final DesignInsertRequested designInsertRequested = new DesignInsertRequested(Uuids.timeBased(), designId, TestConstants.JSON_1, TestConstants.LEVELS);
-//
-//        final OutputMessage designInsertRequestedMessage = new DesignInsertRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designInsertRequested);
-//
-//        eventsPolling.clearMessages();
-//
-//        eventEmitter.sendMessage(designInsertRequestedMessage);
-//
-//        await().atMost(TEN_SECONDS)
-//                .pollInterval(ONE_SECOND)
-//                .untilAsserted(() -> {
-//                    final List<InputMessage> messages = eventsPolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, MessageType.TILE_RENDER_REQUESTED);
-//                    assertThat(messages).hasSize(TestUtils.totalTilesByLevels(TestConstants.LEVELS));
-//                    TestAssertions.assertExpectedTileRenderRequestedMessage(messages.get(0), designId.toString());
-//                    List<TileRenderRequested> events = TestUtils.extractTileRenderRequestedEvents(messages, TestConstants.CHECKSUM_1);
-//                    assertThat(events).hasSize(messages.size());
-//                    events.forEach(event -> TestAssertions.assertExpectedTileRenderRequestedEvent(designId, event, TestConstants.JSON_1, TestConstants.CHECKSUM_1));
-//                });
-//
-//        final List<InputMessage> messages = eventsPolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, MessageType.TILE_RENDER_REQUESTED);
-//        assertThat(messages).hasSize(TestUtils.totalTilesByLevels(TestConstants.LEVELS));
-//
-//        return Json.encode(new KafkaRecord(messages.get(0).getKey(), Json.encode(messages.get(0).getValue())));
-//    }
-//
-//    public String produceTileRenderRequested2() {
-//        final UUID designId = UUID.randomUUID();
-//
-//        System.out.println("designId = " + designId);
-//
-//        eventsPolling.clearMessages();
-//        renderPolling.clearMessages();
-//
-//        final DesignInsertRequested designInsertRequested = new DesignInsertRequested(Uuids.timeBased(), designId, TestConstants.JSON_1, TestConstants.LEVELS);
-//
-//        final OutputMessage designInsertRequestedMessage = new DesignInsertRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designInsertRequested);
-//
-//        eventsPolling.clearMessages();
-//
-//        eventEmitter.sendMessage(designInsertRequestedMessage);
-//
-//        await().atMost(TEN_SECONDS)
-//                .pollInterval(ONE_SECOND)
-//                .untilAsserted(() -> {
-//                    final List<InputMessage> messages = eventsPolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, MessageType.TILE_RENDER_REQUESTED);
-//                    assertThat(messages).hasSize(TestUtils.totalTilesByLevels(TestConstants.LEVELS));
-//                    TestAssertions.assertExpectedTileRenderRequestedMessage(messages.get(0), designId.toString());
-//                    List<TileRenderRequested> events = TestUtils.extractTileRenderRequestedEvents(messages, TestConstants.CHECKSUM_1);
-//                    assertThat(events).hasSize(messages.size());
-//                    events.forEach(event -> TestAssertions.assertExpectedTileRenderRequestedEvent(designId, event, TestConstants.JSON_1, TestConstants.CHECKSUM_1));
-//                });
-//
-//        final List<InputMessage> messages = eventsPolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, MessageType.TILE_RENDER_REQUESTED);
-//        assertThat(messages).hasSize(TestUtils.totalTilesByLevels(TestConstants.LEVELS));
-//
-//        return Json.encode(new KafkaRecord(messages.get(0).getKey(), Json.encode(messages.get(0).getValue())));
-//    }
 }

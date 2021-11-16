@@ -30,7 +30,7 @@ public class TestCases {
 
     private final Vertx vertx = new Vertx(io.vertx.core.Vertx.vertx());
 
-    private Environment environment = Environment.getDefaultEnvironment();
+    private final Environment environment = Environment.getDefaultEnvironment();
 
     private KafkaTestPolling eventsPolling;
     private KafkaTestPolling renderPolling;

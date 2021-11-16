@@ -60,7 +60,7 @@ public class PactConsumerTests {
 
         return builder
                 .given("kafka topic exists")
-                .expectsToReceive("design insert requested 1")
+                .expectsToReceive("design insert requested for design 00000000-0000-0000-0000-000000000001")
                 .withContent(message1)
                 .toPact();
     }
@@ -103,9 +103,9 @@ public class PactConsumerTests {
 
         return builder
                 .given("kafka topic exists")
-                .expectsToReceive("design insert requested 2")
+                .expectsToReceive("design insert requested for design 00000000-0000-0000-0000-000000000002")
                 .withContent(message1)
-                .expectsToReceive("design update requested 1")
+                .expectsToReceive("design update requested for design 00000000-0000-0000-0000-000000000002")
                 .withContent(message2)
                 .toPact();
     }
@@ -146,9 +146,9 @@ public class PactConsumerTests {
 
         return builder
                 .given("kafka topic exists")
-                .expectsToReceive("design insert requested 3")
+                .expectsToReceive("design insert requested for design 00000000-0000-0000-0000-000000000003")
                 .withContent(message1)
-                .expectsToReceive("design delete requested 1")
+                .expectsToReceive("design delete requested for design 00000000-0000-0000-0000-000000000003")
                 .withContent(message2)
                 .toPact();
     }
@@ -222,7 +222,7 @@ public class PactConsumerTests {
                 .stringMatcher("evid", TestConstants.UUID1_REGEXP)
                 .numberType("esid")
                 .stringValue("checksum", TestConstants.CHECKSUM_1)
-                .numberValue("level", 1)
+                .numberValue("level", 2)
                 .numberValue("row", 2)
                 .numberValue("col", 1)
                 .stringValue("status", "COMPLETED");
@@ -241,11 +241,11 @@ public class PactConsumerTests {
                 .uuid("uuid", uuid)
                 .stringMatcher("evid", TestConstants.UUID1_REGEXP)
                 .numberType("esid")
-                .stringValue("checksum", TestConstants.CHECKSUM_1)
-                .numberValue("level", 1)
+                .stringValue("checksum", TestConstants.CHECKSUM_2)
+                .numberValue("level", 2)
                 .numberValue("row", 3)
                 .numberValue("col", 1)
-                .stringValue("status", "COMPLETED");
+                .stringValue("status", "FAILED");
 
         PactDslJsonBody payload5 = new PactDslJsonBody()
                 .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
@@ -258,15 +258,15 @@ public class PactConsumerTests {
                 .object("value", payload5);
 
         return builder.given("kafka topic exists")
-                .expectsToReceive("tile render completed 1")
+                .expectsToReceive("tile render completed with status FAILED for tile 0/00000000.png of design 00000000-0000-0000-0000-000000000004 with checksum 1")
                 .withContent(message1)
-                .expectsToReceive("tile render completed 2")
+                .expectsToReceive("tile render completed with status COMPLETED for tile 1/00010000.png of design 00000000-0000-0000-0000-000000000004 with checksum 1")
                 .withContent(message2)
-                .expectsToReceive("tile render completed 3")
+                .expectsToReceive("tile render completed with status COMPLETED for tile 1/00010001.png of design 00000000-0000-0000-0000-000000000004 with checksum 1")
                 .withContent(message3)
-                .expectsToReceive("tile render completed 4")
+                .expectsToReceive("tile render completed with status COMPLETED for tile 2/00020001.png of design 00000000-0000-0000-0000-000000000004 with checksum 1")
                 .withContent(message4)
-                .expectsToReceive("tile render completed 5")
+                .expectsToReceive("tile render completed with status FAILED for tile 2/00030001.png of design 00000000-0000-0000-0000-000000000004 with checksum 2")
                 .withContent(message5)
                 .toPact();
     }
@@ -306,9 +306,7 @@ public class PactConsumerTests {
     @PactTestFor(providerName = "designs-tile-renderer", port = "1114", pactMethod = "tileRenderCompleted", providerType = ProviderType.ASYNCH)
     @DisplayName("Should update the design after receiving a TileRenderCompleted event")
     public void shouldUpdateTheDesignWhenReceivingATileRenderCompletedMessage(MessagePact messagePact) {
-        final UUID uuid = new UUID(0L, 4L);
-
-        final DesignInsertRequested designInsertRequested = new DesignInsertRequested(Uuids.timeBased(), uuid, TestConstants.JSON_1, TestConstants.LEVELS);
+        final DesignInsertRequested designInsertRequested = new DesignInsertRequested(Uuids.timeBased(), new UUID(0L, 4L), TestConstants.JSON_1, TestConstants.LEVELS);
 
         final OutputMessage designInsertRequestedMessage = new DesignInsertRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designInsertRequested);
 

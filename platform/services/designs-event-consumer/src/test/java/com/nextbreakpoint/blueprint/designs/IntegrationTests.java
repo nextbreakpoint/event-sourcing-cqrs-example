@@ -84,8 +84,8 @@ public class IntegrationTests {
         final TileRenderCompleted tileRenderCompleted1 = new TileRenderCompleted(Uuids.timeBased(), designId, 0, TestConstants.CHECKSUM_1, 0, 0, 0, "FAILED");
         final TileRenderCompleted tileRenderCompleted2 = new TileRenderCompleted(Uuids.timeBased(), designId, 0, TestConstants.CHECKSUM_1, 1, 0, 0, "COMPLETED");
         final TileRenderCompleted tileRenderCompleted3 = new TileRenderCompleted(Uuids.timeBased(), designId, 0, TestConstants.CHECKSUM_1, 1, 1, 0, "COMPLETED");
-        final TileRenderCompleted tileRenderCompleted4 = new TileRenderCompleted(Uuids.timeBased(), designId, 0, TestConstants.CHECKSUM_1, 1, 2, 1, "COMPLETED");
-        final TileRenderCompleted tileRenderCompleted5 = new TileRenderCompleted(Uuids.timeBased(), designId, 0, TestConstants.CHECKSUM_1, 1, 3, 1, "COMPLETED");
+        final TileRenderCompleted tileRenderCompleted4 = new TileRenderCompleted(Uuids.timeBased(), designId, 0, TestConstants.CHECKSUM_1, 2, 2, 1, "COMPLETED");
+        final TileRenderCompleted tileRenderCompleted5 = new TileRenderCompleted(Uuids.timeBased(), designId, 0, TestConstants.CHECKSUM_1, 2, 3, 1, "FAILED");
 
         final OutputMessage tileRenderCompletedMessage1 = new TileRenderCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(tileRenderCompleted1);
         final OutputMessage tileRenderCompletedMessage2 = new TileRenderCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(tileRenderCompleted2);

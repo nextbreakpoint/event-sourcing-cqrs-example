@@ -15,12 +15,14 @@ import com.nextbreakpoint.blueprint.common.core.KafkaRecord;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.events.TileRenderCompleted;
 import com.nextbreakpoint.blueprint.common.events.mappers.TileRenderCompletedOutputMapper;
+import com.nextbreakpoint.blueprint.common.test.PayloadUtils;
 import io.vertx.core.json.Json;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.UUID;
 
+@Tag("slow")
 @Tag("pact-verify")
 @Provider("designs-tile-renderer")
 @Consumer("designs-event-consumer")
@@ -52,29 +54,29 @@ public class VerifyEventConsumerPact {
     public void kafkaTopicExists() {
     }
 
-    @PactVerifyProvider("tile render completed 1")
+    @PactVerifyProvider("tile render completed with status FAILED for tile 0/00000000.png of design 00000000-0000-0000-0000-000000000004 with checksum 1")
     public String produceTileRenderCompleted1() {
         return produceTileRenderCompleted(new UUID(0L, 4L), 0, 0, 0, TestConstants.CHECKSUM_1, "FAILED");
     }
 
-    @PactVerifyProvider("tile render completed 2")
+    @PactVerifyProvider("tile render completed with status COMPLETED for tile 1/00010000.png of design 00000000-0000-0000-0000-000000000004 with checksum 1")
     public String produceTileRenderCompleted2() {
         return produceTileRenderCompleted(new UUID(0L, 4L), 1, 0, 0, TestConstants.CHECKSUM_1, "COMPLETED");
     }
 
-    @PactVerifyProvider("tile render completed 3")
+    @PactVerifyProvider("tile render completed with status COMPLETED for tile 1/00010001.png of design 00000000-0000-0000-0000-000000000004 with checksum 1")
     public String produceTileRenderCompleted3() {
         return produceTileRenderCompleted(new UUID(0L, 4L), 1, 1, 0, TestConstants.CHECKSUM_1, "COMPLETED");
     }
 
-    @PactVerifyProvider("tile render completed 4")
+    @PactVerifyProvider("tile render completed with status COMPLETED for tile 2/00020001.png of design 00000000-0000-0000-0000-000000000004 with checksum 1")
     public String produceTileRenderCompleted4() {
-        return produceTileRenderCompleted(new UUID(0L, 4L), 1, 2, 1, TestConstants.CHECKSUM_1, "COMPLETED");
+        return produceTileRenderCompleted(new UUID(0L, 4L), 2, 2, 1, TestConstants.CHECKSUM_1, "COMPLETED");
     }
 
-    @PactVerifyProvider("tile render completed 5")
+    @PactVerifyProvider("tile render completed with status FAILED for tile 2/00030001.png of design 00000000-0000-0000-0000-000000000004 with checksum 2")
     public String produceTileRenderCompleted5() {
-        return produceTileRenderCompleted(new UUID(0L, 4L), 1, 3, 1, TestConstants.CHECKSUM_1, "COMPLETED");
+        return produceTileRenderCompleted(new UUID(0L, 4L), 2, 3, 1, TestConstants.CHECKSUM_2, "FAILED");
     }
 
     private String produceTileRenderCompleted(UUID uuid, int level, int row, int col, String checksum, String status) {
@@ -82,6 +84,6 @@ public class VerifyEventConsumerPact {
 
         final OutputMessage tileRenderCompletedMessage = new TileRenderCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(tileRenderCompleted);
 
-        return Json.encode(new KafkaRecord(tileRenderCompletedMessage.getKey(), TestUtils.payloadToMap(tileRenderCompletedMessage.getValue())));
+        return Json.encode(new KafkaRecord(tileRenderCompletedMessage.getKey(), PayloadUtils.payloadToMap(tileRenderCompletedMessage.getValue())));
     }
 }

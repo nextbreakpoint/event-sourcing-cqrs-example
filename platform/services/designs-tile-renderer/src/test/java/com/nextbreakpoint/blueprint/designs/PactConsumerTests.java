@@ -81,9 +81,9 @@ public class PactConsumerTests {
                 .object("value", payload2);
 
         return builder.given("kafka topic exists")
-                .expectsToReceive("tile render requested 1")
+                .expectsToReceive("tile render requested for tile 0/00000000.png of design 00000000-0000-0000-0000-000000000004 with checksum 1")
                 .withContent(message1)
-                .expectsToReceive("tile render requested 2")
+                .expectsToReceive("tile render requested for tile 1/00010002.png of design 00000000-0000-0000-0000-000000000004 with checksum 2")
                 .withContent(message2)
                 .toPact();
     }

@@ -16,14 +16,13 @@ import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
 import com.nextbreakpoint.blueprint.common.events.mappers.TileRenderRequestedOutputMapper;
 import io.vertx.core.json.Json;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.TestTemplate;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.UUID;
 
+@Disabled
+@Tag("slow")
 @Tag("pact-verify")
 @DisplayName("Verify contract between designs-event-consumer and designs-notification-dispatcher")
 @Provider("designs-event-consumer")
@@ -55,30 +54,34 @@ public class VerifyNotificationDispatcherPact {
     public void kafkaTopicExists() {
     }
 
-    @PactVerifyProvider("design aggregate update completed 1")
+    @PactVerifyProvider("design aggregate update completed for design 00000000-0000-0000-0000-000000000001")
     public String produceDesignAggregateUpdateCompleted1() {
-        return produceDesignAggregateUpdateCompleted();
+        return produceDesignAggregateUpdateCompleted(new UUID(0L, 1L));
     }
 
-    @PactVerifyProvider("design aggregate update completed 2")
+    @PactVerifyProvider("design aggregate update completed for design 00000000-0000-0000-0000-000000000002")
     public String produceDesignAggregateUpdateCompleted2() {
-        return produceDesignAggregateUpdateCompleted();
+        return produceDesignAggregateUpdateCompleted(new UUID(0L, 2L));
     }
 
-    private String produceDesignAggregateUpdateCompleted() {
+    @PactVerifyProvider("tile aggregate update completed for design 00000000-0000-0000-0000-000000000001")
+    public String produceTileAggregateUpdateCompleted1() {
+        return produceTileAggregateUpdateCompleted(new UUID(0L, 1L));
+    }
+
+    @PactVerifyProvider("tile aggregate update completed for design 00000000-0000-0000-0000-000000000002")
+    public String produceTileAggregateUpdateCompleted2() {
+        return produceTileAggregateUpdateCompleted(new UUID(0L, 2L));
+    }
+
+    private String produceDesignAggregateUpdateCompleted(UUID uuid) {
         return null;
     }
 
-//    @PactVerifyProvider("tile render requested 1")
-//    public String produceTileRenderRequested1() {
-//        return produceTileRenderRequested(new UUID(0L, 4L), 0, 0, 0, TestConstants.JSON_1, TestConstants.CHECKSUM_1);
-//    }
-//
-//    @PactVerifyProvider("tile render requested 2")
-//    public String produceTileRenderRequested2() {
-//        return produceTileRenderRequested(new UUID(0L, 4L), 1, 1, 2, TestConstants.JSON_2, TestConstants.CHECKSUM_2);
-//    }
-//
+    private String produceTileAggregateUpdateCompleted(UUID uuid) {
+        return null;
+    }
+
 //    private String produceTileRenderRequested(UUID uuid, int level, int row, int col, String data, String checksum) {
 //        final TileRenderRequested tileRenderRequested = new TileRenderRequested(Uuids.timeBased(), uuid, 0, data, checksum, level,  row, col);
 //

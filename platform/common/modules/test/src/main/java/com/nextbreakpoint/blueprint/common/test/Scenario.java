@@ -27,6 +27,7 @@ public class Scenario {
 
     private String serviceHost;
     private String stubHost;
+    private String stubHost2;
     private String mysqlHost;
     private String kafkaHost;
     private String minioHost;
@@ -35,6 +36,7 @@ public class Scenario {
 
     private String httpPort;
     private String stubPort;
+    private String stubPort2;
     private String mysqlPort;
     private String kafkaPort;
     private String minioPort;
@@ -42,6 +44,7 @@ public class Scenario {
     private String cassandraPort;
 
     private StubServer stubServer;
+    private StubServer stubServer2;
 
     private RestAssuredConfig restAssuredConfig;
 
@@ -77,6 +80,7 @@ public class Scenario {
 
         httpPort = TestUtils.getVariable("HTTP_PORT", System.getProperty("http.port", "8080"));
         stubPort = TestUtils.getVariable("STUB_PORT", System.getProperty("stub.port", "9000"));
+        stubPort2 = TestUtils.getVariable("STUB_PORT2", System.getProperty("stub.port2", "9001"));
         mysqlPort = TestUtils.getVariable("MYSQL_PORT", System.getProperty("mysql.port", "3306"));
         kafkaPort = TestUtils.getVariable("KAFKA_PORT", System.getProperty("kafka.port", "9093"));
         minioPort = TestUtils.getVariable("MINIO_PORT", System.getProperty("minio.port", "9000"));
@@ -88,9 +92,11 @@ public class Scenario {
             if (scenarioState.kubernetes) {
                 serviceHost = minikubeHost;
                 stubHost = serviceHost.substring(0, serviceHost.lastIndexOf(".")) + ".1";
+                stubHost2 = serviceHost.substring(0, serviceHost.lastIndexOf(".")) + ".1";
             } else {
                 serviceHost = "localhost";
                 stubHost = "localhost";
+                stubHost2 = "localhost";
             }
             mysqlHost = minikubeHost;
             kafkaHost = minikubeHost;
@@ -100,6 +106,7 @@ public class Scenario {
         } else {
             serviceHost = "localhost";
             stubHost = "localhost";
+            stubHost2 = "localhost";
             mysqlHost = "localhost";
             kafkaHost = "localhost";
             minioHost = "localhost";
@@ -161,6 +168,10 @@ public class Scenario {
             stubServer = new StubServer(Integer.parseInt(stubPort)).run();
         }
 
+        if (scenarioState.stubServer2) {
+            stubServer2 = new StubServer(Integer.parseInt(stubPort2)).run();
+        }
+
         if (scenarioState.kubernetes) {
             createSecrets(scenarioState.serviceName, scenarioState.secretArgs);
 
@@ -186,6 +197,12 @@ public class Scenario {
         if (scenarioState.stubServer) {
             if (stubServer != null) {
                 stubServer.stop();
+            }
+        }
+
+        if (scenarioState.stubServer2) {
+            if (stubServer2 != null) {
+                stubServer2.stop();
             }
         }
 
@@ -240,6 +257,7 @@ public class Scenario {
         public final long timestamp;
         public final boolean buildImage;
         public final boolean stubServer;
+        public final boolean stubServer2;
         private final String serviceName;
         private final List<String> helmArgs;
         private final List<String> secretArgs;
@@ -260,6 +278,7 @@ public class Scenario {
                 long timestamp,
                 boolean buildImage,
                 boolean stubServer,
+                boolean stubServer2,
                 String serviceName,
                 List<String> helmArgs,
                 List<String> secretArgs
@@ -279,6 +298,7 @@ public class Scenario {
             this.timestamp = timestamp;
             this.buildImage = buildImage;
             this.stubServer = stubServer;
+            this.stubServer2 = stubServer2;
             this.serviceName = serviceName;
             this.helmArgs = helmArgs;
             this.secretArgs = secretArgs;
@@ -301,6 +321,7 @@ public class Scenario {
         private long timestamp;
         private boolean buildImage;
         private boolean stubServer;
+        private boolean stubServer2;
         private String serviceName;
         private List<String> helmArgs;
         private List<String> secretArgs;
@@ -382,6 +403,11 @@ public class Scenario {
             return this;
         }
 
+        public ScenarioBuilder withStubServer2() {
+            this.stubServer2 = true;
+            return this;
+        }
+
         public ScenarioBuilder withServiceName(String serviceName) {
             this.serviceName = serviceName;
             return this;
@@ -414,6 +440,7 @@ public class Scenario {
                     timestamp,
                     buildImage,
                     stubServer,
+                    stubServer2,
                     serviceName,
                     helmArgs,
                     secretArgs
@@ -778,12 +805,20 @@ public class Scenario {
         return stubServer;
     }
 
+    public StubServer getStubServer2() {
+        return stubServer2;
+    }
+
     public String getServiceHost() {
         return serviceHost;
     }
 
     public String getStubHost() {
         return stubHost;
+    }
+
+    public String getStubHost2() {
+        return stubHost2;
     }
 
     public String getMySQLHost() {
@@ -812,6 +847,10 @@ public class Scenario {
 
     public String getStubPort() {
         return stubPort;
+    }
+
+    public String getStubPort2() {
+        return stubPort2;
     }
 
     public String getMySQLPort() {

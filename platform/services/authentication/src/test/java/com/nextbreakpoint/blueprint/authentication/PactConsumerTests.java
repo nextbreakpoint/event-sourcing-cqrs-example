@@ -47,9 +47,10 @@ public class PactConsumerTests {
     scenario.after();
   }
 
-  @AfterEach
+  @BeforeEach
   public void reset() {
     RestAssured.reset();
+    scenario.getStubServer2().clear();
   }
 
   @Pact(consumer = "authentication")
@@ -182,17 +183,15 @@ public class PactConsumerTests {
   @Test
   @PactTestFor(providerName = "accounts", hostInterface = "0.0.0.0", port = "11111", pactMethod = "accountDoesNotExist")
   public void shouldCreateAnAccountAndRedirectToDesignsWhenAuthenticatedUserDoNotHaveAnAccount(MockServer mockServer) throws IOException, InterruptedException {
-    scenario.getStubServer().clear();
-
-    whenHttp(scenario.getStubServer())
+    whenHttp(scenario.getStubServer2())
             .match(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"access_token\":\"abcdef\"}"));
 
-    whenHttp(scenario.getStubServer())
+    whenHttp(scenario.getStubServer2())
             .match(get(OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"))
             .then(status(HttpStatus.OK_200), stringContent("{\"name\":\"test\"}"));
 
-    whenHttp(scenario.getStubServer())
+    whenHttp(scenario.getStubServer2())
             .match(get(OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
             .then(status(HttpStatus.OK_200), stringContent("[{\"email\":\"test@localhost\", \"primary\":true}]"));
 
@@ -203,7 +202,7 @@ public class PactConsumerTests {
             .then().assertThat().statusCode(303)
             .and().header("Location", startsWith("https://" + scenario.getServiceHost() + ":" + scenario.getServicePort() + "/content/designs"));
 
-    verifyHttp(scenario.getStubServer()).once(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
+    verifyHttp(scenario.getStubServer2()).once(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
             .then().once(get(OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
             .then().once(get(OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"));
 
@@ -218,13 +217,11 @@ public class PactConsumerTests {
   @Test
   @PactTestFor(providerName = "accounts", hostInterface = "0.0.0.0", port = "11111", pactMethod = "accountExists")
   public void shouldNotCreateAnAccountAndRedirectToDesignsWhenAuthenticatedUserAlreadyHasAnAccount(MockServer mockServer) throws IOException, InterruptedException {
-    scenario.getStubServer().clear();
-
-    whenHttp(scenario.getStubServer())
+    whenHttp(scenario.getStubServer2())
             .match(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"access_token\":\"abcdef\"}"));
 
-    whenHttp(scenario.getStubServer())
+    whenHttp(scenario.getStubServer2())
             .match(get(OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
             .then(status(HttpStatus.OK_200), stringContent("[{\"email\":\"test@localhost\", \"primary\":true}]"));
 
@@ -235,7 +232,7 @@ public class PactConsumerTests {
             .then().assertThat().statusCode(303)
             .and().header("Location", startsWith("https://" + scenario.getServiceHost() + ":" + scenario.getServicePort() + "/content/designs"));
 
-    verifyHttp(scenario.getStubServer()).once(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
+    verifyHttp(scenario.getStubServer2()).once(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
             .then().once(get(OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
             .then().never(get(OAUTH_USER_PATH));
 

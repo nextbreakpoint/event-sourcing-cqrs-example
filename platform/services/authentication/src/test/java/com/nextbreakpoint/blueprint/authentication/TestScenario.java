@@ -60,7 +60,7 @@ public class TestScenario {
             "--set=image.tag=${version}"
     );
 
-    scenario = Scenario.builder()
+    Scenario.ScenarioBuilder scenarioBuilder = Scenario.builder()
             .withNamespace("integration")
             .withVersion(version)
             .withTimestamp(System.currentTimeMillis())
@@ -68,11 +68,20 @@ public class TestScenario {
             .withBuildImage(buildImages)
             .withSecretArgs(secretArgs)
             .withHelmPath("../../helm")
-            .withHelmArgs(helmArgs)
+            .withHelmArgs(helmArgs);
 //            .withKubernetes()
 //            .withMinikube()
-            .withStubServer()
-            .build();
+
+    if (pactPort != null) {
+      scenarioBuilder = scenarioBuilder
+              .withStubServer2();
+    } else {
+      scenarioBuilder = scenarioBuilder
+              .withStubServer()
+              .withStubServer2();
+    }
+
+    scenario = scenarioBuilder.build();
 
     scenario.create();
   }
@@ -96,6 +105,10 @@ public class TestScenario {
     return scenario.getStubServer();
   }
 
+  public StubServer getStubServer2() {
+    return scenario.getStubServer2();
+  }
+
   public String getServiceHost() {
     return scenario.getServiceHost();
   }
@@ -110,6 +123,14 @@ public class TestScenario {
 
   public String getStubPort() {
     return scenario.getStubPort();
+  }
+
+  public String getStubHost2() {
+    return scenario.getStubHost2();
+  }
+
+  public String getStubPort2() {
+    return scenario.getStubPort2();
   }
 
   public String getNamespace() {

@@ -23,13 +23,13 @@
 
   "server_accounts_url": "https://localhost:${ACCOUNTS_PORT}",
 
-  "github_url": "http://localhost:9000",
+  "github_url": "http://localhost:{STUB_PORT}",
   "github_client_id": "111",
   "github_client_secret": "222",
 
-  "oauth_login_url": "http://localhost:9000/login",
-  "oauth_token_path": "http://localhost:9000/login/oauth/access_token",
-  "oauth_authorize_path": "http://localhost:9000/login/oauth/authorize",
+  "oauth_login_url": "http://localhost:${STUB_PORT}/login",
+  "oauth_token_path": "http://localhost:${STUB_PORT}/login/oauth/access_token",
+  "oauth_authorize_path": "http://localhost:${STUB_PORT}/login/oauth/authorize",
   "oauth_authority": "user:email",
 
   "cookie_domain": "localhost",

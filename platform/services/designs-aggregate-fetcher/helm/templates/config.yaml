@@ -30,5 +30,8 @@ data:
       "cassandra_username": "${DATABASE_USERNAME}",
       "cassandra_password": "${DATABASE_PASSWORD}",
       "cassandra_contactPoints": "cassandra",
-      "cassandra_port": "9042"
+      "cassandra_port": "9042",
+
+      "s3_endpoint": {{ $root.Values.s3Endpoint | default "http://minio:9000" | quote }},
+      "s3_bucket": {{ $root.Values.s3Bucket | default "tiles" | quote }}
     }

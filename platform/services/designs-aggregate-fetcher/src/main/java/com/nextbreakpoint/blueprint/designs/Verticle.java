@@ -133,7 +133,7 @@ public class Verticle extends AbstractVerticle {
 
             final Handler<RoutingContext> loadDesignHandler = new AccessHandler(jwtProvider, Factory.createLoadDesignHandler(store), onAccessDenied, asList(ADMIN, GUEST, ANONYMOUS));
 
-            final Handler<RoutingContext> getTileHandler = new AccessHandler(jwtProvider, Factory.createGetTileHandler(s3AsyncClient, s3Bucket), onAccessDenied, asList(ADMIN, GUEST, ANONYMOUS));
+            final Handler<RoutingContext> getTileHandler = new AccessHandler(jwtProvider, Factory.createGetTileHandler(store, s3AsyncClient, s3Bucket), onAccessDenied, asList(ADMIN, GUEST, ANONYMOUS));
 
             final Handler<RoutingContext> openapiHandler = new OpenApiHandler(vertx.getDelegate(), executor, "openapi.yaml");
 

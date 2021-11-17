@@ -26,8 +26,8 @@ public class CassandraStore implements Store {
     private static final String ERROR_LOAD_DESIGN = "An error occurred while loading a design";
     private static final String ERROR_LIST_DESIGNS = "An error occurred while loading designs";
 
-    private static final String SELECT_DESIGN = "SELECT * FROM DESIGN WHERE DESIGN_UUID = ?";
-    private static final String SELECT_DESIGNS = "SELECT DESIGN_UUID, DESIGN_CHECKSUM, DESIGN_UPDATED FROM DESIGN";
+    private static final String SELECT_DESIGN = "SELECT DESIGN_UUID, DESIGN_DATA, DESIGN_CHECKSUM, DESIGN_STATUS, DESIGN_UPDATED FROM DESIGN WHERE DESIGN_UUID = ?";
+    private static final String SELECT_DESIGNS = "SELECT DESIGN_UUID, DESIGN_CHECKSUM, DESIGN_STATUS, DESIGN_UPDATED FROM DESIGN";
 
     private final Supplier<CassandraClient> supplier;
 
@@ -70,7 +70,7 @@ public class CassandraStore implements Store {
         return selectDesign
                 .map(pst -> pst.bind(makeLoadParams(request)))
                 .flatMap(session::rxExecuteWithFullFetch)
-                .map(rows -> rows.stream().findFirst().map(this::toDesignDocument).orElse(null))
+                .map(rows -> rows.stream().findFirst().map(this::toDesignDocument).filter(this::isNotDeleted).orElse(null))
                 .map(document -> new LoadDesignResponse(request.getUuid(), document));
     }
 
@@ -78,23 +78,29 @@ public class CassandraStore implements Store {
         return selectDesigns
                 .map(PreparedStatement::bind)
                 .flatMap(session::rxExecuteWithFullFetch)
-                .map(rows -> rows.stream().map(this::toDesignDocumentWithoutData).collect(Collectors.toList()))
+                .map(rows -> rows.stream().map(this::toDesignDocumentWithoutData).filter(this::isNotDeleted).collect(Collectors.toList()))
                 .map(ListDesignsResponse::new);
+    }
+
+    private boolean isNotDeleted(DesignDocument designDocument) {
+        return !designDocument.getStatus().equals("DELETED");
     }
 
     private DesignDocument toDesignDocument(Row row) {
         final UUID uuid = row.getUuid("DESIGN_UUID");
         final String json = row.getString("DESIGN_DATA");
         final String checksum = row.getString("DESIGN_CHECKSUM");
+        final String status = row.getString("DESIGN_STATUS");
         final Instant timestamp = row.getInstant("DESIGN_UPDATED");
-        return new DesignDocument(Objects.requireNonNull(uuid).toString(), json, checksum, formatDate(timestamp));
+        return new DesignDocument(Objects.requireNonNull(uuid).toString(), json, checksum, status, formatDate(timestamp));
     }
 
     private DesignDocument toDesignDocumentWithoutData(Row row) {
         final UUID uuid = row.getUuid("DESIGN_UUID");
         final String checksum = row.getString("DESIGN_CHECKSUM");
+        final String status = row.getString("DESIGN_STATUS");
         final Instant timestamp = row.getInstant("DESIGN_UPDATED");
-        return new DesignDocument(Objects.requireNonNull(uuid).toString(), null, checksum, formatDate(timestamp));
+        return new DesignDocument(Objects.requireNonNull(uuid).toString(), null, checksum, status, formatDate(timestamp));
     }
 
     private Object[] makeLoadParams(LoadDesignRequest request) {

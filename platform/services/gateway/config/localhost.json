@@ -22,8 +22,8 @@
   "consul_host": "${CONSUL_HOST}",
   "consul_port": "8400",
 
-  "server_auth_url": "http://localhost:9000/auth",
-  "server_accounts_url": "http://localhost:9000/accounts",
-  "server_designs_query_url": "http://localhost:9000/designs",
-  "server_designs_command_url": "http://localhost:9000/designs"
+  "server_auth_url": "http://localhost:${STUB_PORT}/auth",
+  "server_accounts_url": "http://localhost:${STUB_PORT}/accounts",
+  "server_designs_query_url": "http://localhost:${STUB_PORT}/designs",
+  "server_designs_command_url": "http://localhost:${STUB_PORT}/designs"
 }

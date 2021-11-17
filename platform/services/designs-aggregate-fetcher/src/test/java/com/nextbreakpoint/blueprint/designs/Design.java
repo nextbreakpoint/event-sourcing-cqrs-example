@@ -1,4 +1,4 @@
-package com.nextbreakpoint.blueprint.designs.model;
+package com.nextbreakpoint.blueprint.designs;
 
 import java.util.Date;
 import java.util.List;

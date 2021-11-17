@@ -18,7 +18,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.io.IOException;
 
-@Disabled
 @Tag("slow")
 @Tag("pact-verify")
 @DisplayName("Verify contract between designs-command-producer and frontend")

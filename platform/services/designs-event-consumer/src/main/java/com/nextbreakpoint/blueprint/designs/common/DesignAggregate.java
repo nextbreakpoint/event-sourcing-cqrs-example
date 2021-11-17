@@ -36,15 +36,15 @@ public class DesignAggregate {
         switch (type) {
             case MessageType.DESIGN_INSERT_REQUESTED: {
                 DesignInsertRequested event = Json.decodeValue(value, DesignInsertRequested.class);
-                return new DesignAccumulator(event.getEvid(), event.getUuid(), offset, event.getData(), "CREATED", Checksum.of(event.getData()), event.getLevels(), createLevelsMap(event.getLevels()), new Date(timestamp.toEpochMilli()));
+                return new DesignAccumulator(event.getEvid(), event.getUuid(), offset, event.getData(), Checksum.of(event.getData()), "CREATED", event.getLevels(), createLevelsMap(event.getLevels()), new Date(timestamp.toEpochMilli()));
             }
             case MessageType.DESIGN_UPDATE_REQUESTED: {
                 DesignUpdateRequested event = Json.decodeValue(value, DesignUpdateRequested.class);
-                return new DesignAccumulator(event.getEvid(), event.getUuid(), offset, event.getData(), "UPDATED", Checksum.of(event.getData()), event.getLevels(), null, new Date(timestamp.toEpochMilli()));
+                return new DesignAccumulator(event.getEvid(), event.getUuid(), offset, event.getData(), Checksum.of(event.getData()), "UPDATED", event.getLevels(), null, new Date(timestamp.toEpochMilli()));
             }
             case MessageType.DESIGN_DELETE_REQUESTED: {
                 DesignDeleteRequested event = Json.decodeValue(value, DesignDeleteRequested.class);
-                return new DesignAccumulator(event.getEvid(), event.getUuid(), offset, null, "DELETED", null, 0, null, new Date(timestamp.toEpochMilli()));
+                return new DesignAccumulator(event.getEvid(), event.getUuid(), offset, null, null, "DELETED", 0, null, new Date(timestamp.toEpochMilli()));
             }
             case MessageType.TILE_RENDER_COMPLETED: {
                 TileRenderCompleted event = Json.decodeValue(value, TileRenderCompleted.class);
@@ -110,12 +110,12 @@ public class DesignAggregate {
             return accumulator;
         }
         if (element.getStatus() == null) {
-            return new DesignAccumulator(accumulator.getEvid(), accumulator.getUuid(), element.getEsid(), accumulator.getJson(), accumulator.getStatus(), accumulator.getChecksum(), accumulator.getLevels(), createLevelsMap(accumulator, element), element.getUpdated());
+            return new DesignAccumulator(accumulator.getEvid(), accumulator.getUuid(), element.getEsid(), accumulator.getJson(), accumulator.getChecksum(), accumulator.getStatus(), accumulator.getLevels(), createLevelsMap(accumulator, element), element.getUpdated());
         }
         if ("DELETED".equals(element.getStatus())) {
-            return new DesignAccumulator(element.getEvid(), element.getUuid(), element.getEsid(), accumulator.getJson(), element.getStatus(), accumulator.getChecksum(), accumulator.getLevels(), accumulator.getTiles(), element.getUpdated());
+            return new DesignAccumulator(element.getEvid(), element.getUuid(), element.getEsid(), accumulator.getJson(), accumulator.getChecksum(), element.getStatus(), accumulator.getLevels(), accumulator.getTiles(), element.getUpdated());
         } else {
-            return new DesignAccumulator(element.getEvid(), element.getUuid(), element.getEsid(), element.getJson(), element.getStatus(), Checksum.of(element.getJson()), element.getLevels(), accumulator.getTiles(), element.getUpdated());
+            return new DesignAccumulator(element.getEvid(), element.getUuid(), element.getEsid(), element.getJson(), Checksum.of(element.getJson()), element.getStatus(), element.getLevels(), accumulator.getTiles(), element.getUpdated());
         }
     }
 }

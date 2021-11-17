@@ -76,6 +76,16 @@ spec:
                 secretKeyRef:
                   name: {{ $root.Values.secretName | default "designs-aggregate-fetcher" | quote }}
                   key: DATABASE_PASSWORD
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $root.Values.secretName | default "designs-aggregate-fetcher" | quote }}
+                  key: AWS_ACCESS_KEY_ID
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $root.Values.secretName | default "designs-aggregate-fetcher" | quote }}
+                  key: AWS_SECRET_ACCESS_KEY
             - name: JAEGER_SERVICE_NAME
               value: {{ $root.Values.name | default "authentication" | quote }}
           volumeMounts:

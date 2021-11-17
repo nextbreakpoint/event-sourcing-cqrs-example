@@ -24,3 +24,6 @@ resources:
 serviceAccount: default
 
 clientDomain:
+
+s3Endpoint:
+s3Bucket:

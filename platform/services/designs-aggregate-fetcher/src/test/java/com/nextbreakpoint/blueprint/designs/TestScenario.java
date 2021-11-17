@@ -15,11 +15,12 @@ import java.util.Collections;
 import java.util.List;
 
 public class TestScenario {
+  private final String version = TestUtils.getVariable("BUILD_VERSION", System.getProperty("build.version", "0"));
+  private final boolean buildImages = TestUtils.getVariable("BUILD_IMAGES", System.getProperty("build.images", "false")).equals("true");
+
   private Scenario scenario;
 
   public void before() throws IOException, InterruptedException {
-    final String version = TestUtils.getVariable("BUILD_VERSION", System.getProperty("build.version", "0"));
-    final boolean buildImages = TestUtils.getVariable("BUILD_IMAGES", System.getProperty("build.images", "false")).equals("true");
 
     final List<String> secretArgs = Arrays.asList(
             "--from-file",
@@ -51,9 +52,10 @@ public class TestScenario {
             .withSecretArgs(secretArgs)
             .withHelmPath("../../helm")
             .withHelmArgs(helmArgs)
-            .withKubernetes()
-            .withMinikube()
+//            .withKubernetes()
+//            .withMinikube()
             .withCassandra()
+            .withMinio()
             .build();
 
     scenario.create();
@@ -87,7 +89,7 @@ public class TestScenario {
   }
 
   public String getVersion() {
-    return scenario.getVersion();
+    return version;
   }
 
   public String makeAuthorization(String user, String role) {
@@ -105,5 +107,13 @@ public class TestScenario {
 
   public JsonObject createCassandraConfig() {
     return scenario.createCassandraConfig("datacenter1", "designs");
+  }
+
+  public String getMinioHost() {
+    return scenario.getMinioHost();
+  }
+
+  public String getMinioPort() {
+    return scenario.getMinioPort();
   }
 }

@@ -33,7 +33,7 @@ public class CassandraStore implements Store {
     private static final String ERROR_FIND_DESIGN = "An error occurred while fetching a design";
 
     private static final String SELECT_DESIGN = "SELECT * FROM DESIGN WHERE DESIGN_UUID = ?";
-    private static final String INSERT_DESIGN = "INSERT INTO DESIGN (DESIGN_EVID, DESIGN_UUID, DESIGN_ESID, DESIGN_DATA, DESIGN_STATUS, DESIGN_CHECKSUM, DESIGN_LEVELS, DESIGN_UPDATED, DESIGN_TILES) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    private static final String INSERT_DESIGN = "INSERT INTO DESIGN (DESIGN_EVID, DESIGN_UUID, DESIGN_ESID, DESIGN_DATA, DESIGN_CHECKSUM, DESIGN_STATUS, DESIGN_LEVELS, DESIGN_TILES, DESIGN_UPDATED) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
     private static final String INSERT_MESSAGE = "INSERT INTO MESSAGE (MESSAGE_UUID, MESSAGE_OFFSET, MESSAGE_TYPE, MESSAGE_VALUE, MESSAGE_SOURCE, MESSAGE_KEY, MESSAGE_TIMESTAMP) VALUES (?, ?, ?, ?, ?, ?, ?)";
     private static final String SELECT_MESSAGES = "SELECT * FROM MESSAGE WHERE MESSAGE_KEY = ? AND MESSAGE_OFFSET <= ? AND MESSAGE_OFFSET > ?";
 
@@ -130,15 +130,15 @@ public class CassandraStore implements Store {
         final UUID uuid = row.getUuid("DESIGN_UUID");
         final long esid = row.getLong("DESIGN_ESID");
         final String data = row.getString("DESIGN_DATA");
-        final String status = row.getString("DESIGN_STATUS");
         final String checksum = row.getString("DESIGN_CHECKSUM");
+        final String status = row.getString("DESIGN_STATUS");
         final int levels = row.getInt("DESIGN_LEVELS");
         final Instant updated = row.getInstant("DESIGN_UPDATED");
         final Map<Integer, UdtValue> tilesMap = row.getMap("DESIGN_TILES", Integer.class, UdtValue.class);
         final List<Tiles> tilesList = tilesMap.entrySet().stream()
                 .map(entry -> convertUDTToTiles(entry.getKey(), entry.getValue()))
                 .collect(Collectors.toList());
-        return new Design(evid, uuid, esid, data, status, checksum, levels, tilesList, toDate(updated));
+        return new Design(evid, uuid, esid, data, checksum, status, levels, tilesList, toDate(updated));
     }
 
     private Date toDate(Instant instant) {
@@ -159,7 +159,7 @@ public class CassandraStore implements Store {
 
     private Object[] makeDesignInsertParams(Design design, UserDefinedType levelType) {
         final Map<Integer, UdtValue> levelsMap = design.getTiles().stream().collect(Collectors.toMap(Tiles::getLevel, x -> convertTilesToUDT(levelType, x)));
-        return new Object[] { design.getEvid(), design.getUuid(), design.getEsid(), design.getJson(), design.getStatus(), Checksum.of(design.getJson()), design.getLevels(), design.getUpdated().toInstant(), levelsMap};
+        return new Object[] { design.getEvid(), design.getUuid(), design.getEsid(), design.getJson(), Checksum.of(design.getJson()), design.getStatus(), design.getLevels(), levelsMap, design.getUpdated().toInstant() };
     }
 
     private Tiles convertUDTToTiles(Integer level, UdtValue udtValue) {
@@ -182,6 +182,6 @@ public class CassandraStore implements Store {
 
     private DesignAccumulator convertToAccumulator(Design design) {
         final Map<Integer, Tiles> tilesMap = design.getTiles().stream().collect(Collectors.toMap(Tiles::getLevel, Function.identity()));
-        return new DesignAccumulator(design.getEvid(), design.getUuid(), design.getEsid(), design.getJson(), design.getStatus(), design.getChecksum(), design.getLevels(), tilesMap, design.getUpdated());
+        return new DesignAccumulator(design.getEvid(), design.getUuid(), design.getEsid(), design.getJson(), design.getChecksum(), design.getStatus(), design.getLevels(), tilesMap, design.getUpdated());
     }
 }

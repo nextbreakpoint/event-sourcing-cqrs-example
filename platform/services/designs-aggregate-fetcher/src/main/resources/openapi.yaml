@@ -62,7 +62,7 @@ paths:
 #            - admin
 #            - guest
 #            - anonymous
-  /designs/{designId}/{zoom}/{x}/{y}/{size}.png:
+  /designs/{designId}/{level}/{col}/{row}/{size}.png:
     get:
       tags:
         - designs
@@ -71,26 +71,26 @@ paths:
       parameters:
         - name: designId
           in: path
-          description: uuid of design to return
+          description: uuid of the design
           required: true
           schema:
             type: string
             format: uuid
-        - name: zoom
+        - name: level
           in: path
           description: zoom level
           required: true
           schema:
             type: integer
-        - name: x
+        - name: col
           in: path
-          description: Position x
+          description: horizontal location
           required: true
           schema:
             type: integer
-        - name: y
+        - name: row
           in: path
-          description: Position y
+          description: vertical location
           required: true
           schema:
             type: integer

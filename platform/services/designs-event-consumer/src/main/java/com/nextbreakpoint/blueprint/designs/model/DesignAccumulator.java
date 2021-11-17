@@ -8,8 +8,8 @@ public class DesignAccumulator {
     private UUID uuid;
     private long esid;
     private String json;
-    private String status;
     private String checksum;
+    private String status;
     private int levels;
     private Map<Integer, Tiles> tiles;
     private Date updated;
@@ -19,8 +19,8 @@ public class DesignAccumulator {
         UUID uuid,
         long esid,
         String json,
-        String status,
         String checksum,
+        String status,
         int levels,
         Map<Integer, Tiles> tiles,
         Date updated
@@ -29,8 +29,8 @@ public class DesignAccumulator {
         this.uuid = uuid;
         this.esid = esid;
         this.json = json;
-        this.status = status;
         this.checksum = checksum;
+        this.status = status;
         this.levels = levels;
         this.tiles = tiles;
         this.updated = updated;
@@ -52,12 +52,12 @@ public class DesignAccumulator {
         return json;
     }
 
-    public String getStatus() {
-        return status;
-    }
-
     public String getChecksum() {
         return checksum;
+    }
+
+    public String getStatus() {
+        return status;
     }
 
     public int getLevels() {

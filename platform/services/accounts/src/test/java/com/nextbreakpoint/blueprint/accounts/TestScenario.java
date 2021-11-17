@@ -14,11 +14,12 @@ import java.util.Collections;
 import java.util.List;
 
 public class TestScenario {
+  private final String version = TestUtils.getVariable("BUILD_VERSION", System.getProperty("build.version", "0"));
+  private final boolean buildImages = TestUtils.getVariable("BUILD_IMAGES", System.getProperty("build.images", "false")).equals("true");
+
   private Scenario scenario;
 
   public void before() throws IOException, InterruptedException {
-    final String version = TestUtils.getVariable("BUILD_VERSION", System.getProperty("build.version", "0"));
-    final boolean buildImages = TestUtils.getVariable("BUILD_IMAGES", System.getProperty("build.images", "false")).equals("true");
 
     final List<String> secretArgs = Arrays.asList(
             "--from-file",
@@ -50,8 +51,8 @@ public class TestScenario {
             .withSecretArgs(secretArgs)
             .withHelmPath("../../helm")
             .withHelmArgs(helmArgs)
-            .withKubernetes()
-            .withMinikube()
+//            .withKubernetes()
+//            .withMinikube()
             .withMySQL()
             .build();
 
@@ -86,7 +87,7 @@ public class TestScenario {
   }
 
   public String getVersion() {
-    return scenario.getVersion();
+    return version;
   }
 
   public int executeMySQLCommand(String namespace, String database, String sql) throws IOException, InterruptedException {

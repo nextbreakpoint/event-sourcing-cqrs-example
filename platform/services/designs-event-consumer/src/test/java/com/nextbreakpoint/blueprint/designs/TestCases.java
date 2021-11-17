@@ -89,8 +89,8 @@ public class TestCases {
             vertx.rxClose()
                     .doOnError(Throwable::printStackTrace)
                     .subscribeOn(Schedulers.io())
-                    .toBlocking()
-                    .value();
+                    .toCompletable()
+                    .await();
         } catch (Exception ignore) {
         }
 

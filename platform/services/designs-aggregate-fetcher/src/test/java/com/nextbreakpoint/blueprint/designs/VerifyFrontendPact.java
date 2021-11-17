@@ -7,23 +7,19 @@ import au.com.dius.pact.provider.junitsupport.Consumer;
 import au.com.dius.pact.provider.junitsupport.Provider;
 import au.com.dius.pact.provider.junitsupport.State;
 import au.com.dius.pact.provider.junitsupport.loader.PactBroker;
-import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.nextbreakpoint.blueprint.common.core.Authority;
-import com.nextbreakpoint.blueprint.common.core.Environment;
+import com.nextbreakpoint.blueprint.common.core.Checksum;
 import com.nextbreakpoint.blueprint.common.core.Headers;
-import com.nextbreakpoint.blueprint.common.vertx.CassandraClientFactory;
 import io.vertx.core.json.JsonObject;
-import io.vertx.rxjava.cassandra.CassandraClient;
-import io.vertx.rxjava.core.Vertx;
 import org.apache.http.HttpRequest;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
-import rx.Single;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 @Tag("slow")
 @Tag("pact-verify")
@@ -32,108 +28,58 @@ import java.util.UUID;
 @Consumer("frontend")
 @PactBroker
 public class VerifyFrontendPact {
-  private static final String SCRIPT1 = "fractal {\norbit [-2.0 - 2.0i,+2.0 + 2.0i] [x,n] {\nloop [0, 200] (mod2(x) > 40) {\nx = x * x + w;\n}\n}\ncolor [#FF000000] {\npalette gradient {\n[#FFFFFFFF > #FF000000, 100];\n[#FF000000 > #FFFFFFFF, 100];\n}\ninit {\nm = 100 * (1 + sin(mod(x) * 0.2 / pi));\n}\nrule (n > 0) [1] {\ngradient[m - 1]\n}\n}\n}\n";
-  private static final String SCRIPT2 = "fractal {\norbit [-2.0 - 2.0i,+2.0 + 2.0i] [x,n] {\nloop [0, 100] (mod2(x) > 30) {\nx = x * x + w;\n}\n}\ncolor [#FF000000] {\npalette gradient {\n[#FFFFFFFF > #FF000000, 100];\n[#FF000000 > #FFFFFFFF, 100];\n}\ninit {\nm = 100 * (1 + sin(mod(x) * 0.2 / pi));\n}\nrule (n > 0) [1] {\ngradient[m - 1]\n}\n}\n}\n";
-  private static final String METADATA = "{\"translation\":{\"x\":0.0,\"y\":0.0,\"z\":1.0,\"w\":0.0},\"rotation\":{\"x\":0.0,\"y\":0.0,\"z\":0.0,\"w\":0.0},\"scale\":{\"x\":1.0,\"y\":1.0,\"z\":1.0,\"w\":1.0},\"point\":{\"x\":0.0,\"y\":0.0},\"julia\":false,\"options\":{\"showPreview\":false,\"showTraps\":false,\"showOrbit\":false,\"showPoint\":false,\"previewOrigin\":{\"x\":0.0,\"y\":0.0},\"previewSize\":{\"x\":0.25,\"y\":0.25}}}";
-  private static final String MANIFEST = "{\"pluginId\":\"Mandelbrot\"}";
-  private static final UUID DESIGN_UUID_1 = new UUID(1L, 1L);
-  private static final UUID DESIGN_UUID_2 = new UUID(1L, 2L);
-
-  private static final TestScenario scenario = new TestScenario();
-
-  private static Environment environment = Environment.getDefaultEnvironment();
-
-  private static CassandraClient session;
+  private static final TestCases testCases = new TestCases();
 
   @BeforeAll
   public static void before() throws IOException, InterruptedException {
-    scenario.before();
+    testCases.before();
 
     System.setProperty("pact.showStacktrace", "true");
     System.setProperty("pact.verifier.publishResults", "true");
-    System.setProperty("pact.provider.version", scenario.getVersion());
-
-    final Vertx vertx = new Vertx(io.vertx.core.Vertx.vertx());
-
-    session = CassandraClientFactory.create(environment, vertx, scenario.createCassandraConfig());
+    System.setProperty("pact.provider.version", testCases.getVersion());
   }
 
   @AfterAll
   public static void after() throws IOException, InterruptedException {
-    if (session != null) {
-      try {
-        session.close();
-      } catch (Exception ignore) {
-      }
-    }
+    testCases.after();
+  }
 
-    scenario.after();
+  @BeforeEach
+  public void setup() {
+    testCases.deleteDesigns();
   }
 
   @BeforeEach
   public void before(PactVerificationContext context) {
-    context.setTarget(new HttpsTestTarget(scenario.getServiceHost(), Integer.parseInt(scenario.getServicePort()), "/", true));
+    context.setTarget(new HttpsTestTarget(testCases.getScenario().getServiceHost(), Integer.parseInt(testCases.getScenario().getServicePort()), "/", true));
   }
 
   @TestTemplate
   @ExtendWith(PactVerificationInvocationContextProvider.class)
   @DisplayName("Verify interaction")
   public void pactVerificationTestTemplate(PactVerificationContext context, HttpRequest request) {
-    final String authorization = scenario.makeAuthorization("test", Authority.GUEST);
+    final String authorization = testCases.getScenario().makeAuthorization("test", Authority.GUEST);
     request.setHeader(Headers.AUTHORIZATION, authorization);
     context.verifyInteraction();
   }
 
   @State("there are some designs")
   public void designsExist() {
-    session.rxPrepare("TRUNCATE DESIGN")
-            .map(PreparedStatement::bind)
-            .flatMap(session::rxExecute)
-            .toBlocking()
-            .value();
+    final String json1 = new JsonObject(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT1)).toString();
+    final String json2 = new JsonObject(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT2)).toString();
 
-    final String json1 = new JsonObject(createPostData(MANIFEST, METADATA, SCRIPT1)).toString();
-    final String json2 = new JsonObject(createPostData(MANIFEST, METADATA, SCRIPT2)).toString();
+    final Design design1 = new Design(Uuids.timeBased(), TestConstants.DESIGN_UUID_1, 0, json1, Checksum.of(json1), "CREATED", TestConstants.LEVELS, new ArrayList<>(), new Date());
+    final Design design2 = new Design(Uuids.timeBased(), TestConstants.DESIGN_UUID_2, 1, json2, Checksum.of(json1), "UPDATED", TestConstants.LEVELS, new ArrayList<>(), new Date());
 
-    final Single<PreparedStatement> preparedStatementSingle = session.rxPrepare("INSERT INTO DESIGN (DESIGN_UUID, DESIGN_DATA, DESIGN_CHECKSUM, DESIGN_CREATED, DESIGN_UPDATED) VALUES (?,?,?,toTimeStamp(now()),toTimeStamp(now()))");
-
-    preparedStatementSingle
-            .map(stmt -> stmt.bind(DESIGN_UUID_1, json1, "1"))
-            .flatMap(session::rxExecute)
-            .toBlocking()
-            .value();
-
-    preparedStatementSingle
-            .map(stmt -> stmt.bind(DESIGN_UUID_2, json2, "1"))
-            .flatMap(session::rxExecute)
-            .toBlocking()
-            .value();
+    List.of(design1, design2).forEach(testCases::insertDesign);
   }
 
   @State("design exists for uuid")
   public void designExistsForUuid() {
-    session.rxPrepare("TRUNCATE DESIGN")
-            .map(PreparedStatement::bind)
-            .flatMap(session::rxExecute)
-            .toBlocking()
-            .value();
+    final String json1 = new JsonObject(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT1)).toString();
 
-    final String json1 = new JsonObject(createPostData(MANIFEST, METADATA, SCRIPT1)).toString();
+    final Design design1 = new Design(Uuids.timeBased(), TestConstants.DESIGN_UUID_1, 0, json1, Checksum.of(json1), "CREATED", TestConstants.LEVELS, new ArrayList<>(), new Date());
 
-    final Single<PreparedStatement> preparedStatementSingle = session.rxPrepare("INSERT INTO DESIGN (DESIGN_UUID, DESIGN_DATA, DESIGN_CHECKSUM, DESIGN_CREATED, DESIGN_UPDATED) VALUES (?,?,?,toTimeStamp(now()),toTimeStamp(now()))");
-
-    preparedStatementSingle
-            .map(stmt -> stmt.bind(DESIGN_UUID_1, json1, "1"))
-            .flatMap(session::rxExecute)
-            .toBlocking()
-            .value();
-  }
-
-  private static Map<String, Object> createPostData(String manifest, String metadata, String script) {
-    final Map<String, Object> data = new HashMap<>();
-    data.put("manifest", manifest);
-    data.put("metadata", metadata);
-    data.put("script", script);
-    return data;
+    List.of(design1).forEach(testCases::insertDesign);
   }
 }

@@ -15,5 +15,8 @@
   "cassandra_username": "${DATABASE_USERNAME}",
   "cassandra_password": "${DATABASE_PASSWORD}",
   "cassandra_contactPoints": "${DATABASE_HOST}",
-  "cassandra_port": "9042"
+  "cassandra_port": "9042",
+
+  "s3_endpoint": "http://${MINIO_HOST}:${MINIO_PORT}",
+  "s3_bucket": "tiles"
 }

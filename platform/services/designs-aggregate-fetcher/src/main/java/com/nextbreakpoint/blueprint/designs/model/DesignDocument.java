@@ -9,16 +9,19 @@ public class DesignDocument {
     private String uuid;
     private String json;
     private String checksum;
+    private String status;
     private String modified;
 
     @JsonCreator
     public DesignDocument(@JsonProperty("uuid") String uuid,
                           @JsonProperty("json") String json,
                           @JsonProperty("checksum") String checksum,
+                          @JsonProperty("status") String status,
                           @JsonProperty("modified") String modified) {
         this.uuid = uuid;
         this.json = json;
         this.checksum = checksum;
+        this.status = status;
         this.modified = modified;
     }
 
@@ -30,12 +33,13 @@ public class DesignDocument {
         return Objects.equals(getUuid(), that.getUuid()) &&
                 Objects.equals(getJson(), that.getJson()) &&
                 Objects.equals(getChecksum(), that.getChecksum()) &&
+                Objects.equals(getStatus(), that.getStatus()) &&
                 Objects.equals(getModified(), that.getModified());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getUuid(), getJson(), getChecksum(), getModified());
+        return Objects.hash(getUuid(), getJson(), getChecksum(), getStatus(), getModified());
     }
 
     public String getUuid() {
@@ -50,6 +54,10 @@ public class DesignDocument {
         return checksum;
     }
 
+    public String getStatus() {
+        return status;
+    }
+
     public String getModified() {
         return modified;
     }
@@ -60,6 +68,7 @@ public class DesignDocument {
                 "uuid='" + uuid + '\'' +
                 ", json='" + json + '\'' +
                 ", checksum='" + checksum + '\'' +
+                ", status='" + status + '\'' +
                 ", modified='" + modified + '\'' +
                 '}';
     }

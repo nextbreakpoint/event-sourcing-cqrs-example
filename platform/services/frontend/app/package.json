@@ -1,18 +1,18 @@
 {
   "name": "express",
   "version": "1.0.0",
+  "description": "blueprint frontend",
   "private": true,
   "scripts": {
-    "start": "node ./bin/www"
+    "start": "CONFIG_PATH=$(pwd)/../config/localhost.json SECRETS_PATH=$(pwd)/../../../secrets PORT=18080 node ./bin/www"
   },
   "dependencies": {
-    "axios": "^0.24.0",
-    "cookie-parser": "~1.4.3",
-    "debug": "~2.6.9",
-    "express": "~4.16.0",
-    "hbs": "^4.0.3",
-    "http-errors": "~1.6.2",
-    "morgan": "~1.9.0",
-    "node-sass-middleware": "0.11.0"
+    "express": "4.17.1",
+    "cookie-parser": "1.4.6",
+    "http-errors": "1.8.1",
+    "morgan": "1.10.0",
+    "axios": "0.24.0",
+    "debug": "4.3.2",
+    "hbs": "^4.0.3"
   }
 }

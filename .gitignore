@@ -21,3 +21,5 @@ secrets
 dependency-reduced-pom.xml
 **/node
 .gradle
+designs.js
+preview.js

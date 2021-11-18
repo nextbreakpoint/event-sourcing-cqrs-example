@@ -1,7 +1,8 @@
 var express = require('express');
+var https = require('https');
 var axios = require('axios');
 var fs = require('fs');
-var https = require('https');
+
 var router = express.Router();
 
 var configPath = process.env.CONFIG_PATH;
@@ -13,7 +14,7 @@ const agent = new https.Agent({
     ca: fs.readFileSync(secretsPath + '/ca_cert.pem')
 });
 
-const appConfig = JSON.parse(fs.readFileSync(configPath + '/config.json', 'utf8'));
+const appConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
 
 extractToken = (req) => {
     let authorization = req.headers.authorization;

@@ -1,10 +1,11 @@
 var express = require('express');
 var fs = require('fs');
+
 var router = express.Router();
 
 var configPath = process.env.CONFIG_PATH;
 
-const appConfig = JSON.parse(fs.readFileSync(configPath + '/config.json', 'utf8'));
+const appConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
 
 router.get('/designs.html', function(req, res, next) {
     res.render('admin/designs', {

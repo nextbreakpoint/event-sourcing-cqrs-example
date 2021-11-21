@@ -3,10 +3,8 @@ package com.nextbreakpoint.blueprint.designs;
 import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.http.ContentType;
-import com.jayway.restassured.path.json.JsonPath;
 import com.nextbreakpoint.blueprint.common.core.Authority;
 import com.nextbreakpoint.blueprint.common.core.Checksum;
-import com.nextbreakpoint.blueprint.designs.model.DesignDocument;
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.*;
 
@@ -36,6 +34,8 @@ public class IntegrationTests {
 
   @BeforeAll
   public static void before() throws IOException, InterruptedException {
+    System.setProperty("http.port", "30120");
+
     testCases.before();
   }
 
@@ -124,10 +124,10 @@ public class IntegrationTests {
   public void shouldAllowGetOnDesignsWhenUserIsAnonymous() throws MalformedURLException {
     final String authorization = testCases.getScenario().makeAuthorization("test", Authority.ANONYMOUS);;
 
-    DesignDocument[] results = listDesigns(authorization);
+    Document[] results = listDesigns(authorization);
 
-    List<DesignDocument> sortedResults = Stream.of(results)
-            .sorted(Comparator.comparing(DesignDocument::getUuid))
+    List<Document> sortedResults = Stream.of(results)
+            .sorted(Comparator.comparing(Document::getUuid))
             .collect(Collectors.toList());
 
     assertThat(sortedResults.get(0).getUuid()).isEqualTo(TestConstants.DESIGN_UUID_1.toString());
@@ -146,13 +146,13 @@ public class IntegrationTests {
   public void shouldAllowGetOnDesignsSlashIdWhenUserIsAnonymous() throws MalformedURLException {
     final String authorization = testCases.getScenario().makeAuthorization("test", Authority.ANONYMOUS);;
 
-    JsonPath result = loadDesign(authorization, TestConstants.DESIGN_UUID_1);
+    Document result = loadDesign(authorization, TestConstants.DESIGN_UUID_1);
 
     String json1 = new JsonObject(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT1)).toString();
-    assertThat(result.getString("uuid")).isEqualTo(TestConstants.DESIGN_UUID_1.toString());
-    assertThat(result.getString("json")).isEqualTo(json1);
-    assertThat(result.getString("modified")).isNotNull();
-    assertThat(result.getString("checksum")).isNotNull();
+    assertThat(result.getUuid()).isEqualTo(TestConstants.DESIGN_UUID_1.toString());
+    assertThat(result.getJson()).isEqualTo(json1);
+    assertThat(result.getModified()).isNotNull();
+    assertThat(result.getChecksum()).isNotNull();
   }
 
   @Test
@@ -172,10 +172,10 @@ public class IntegrationTests {
   public void shouldAllowGetOnDesignsWhenUserIsAdmin() throws MalformedURLException {
     final String authorization = testCases.getScenario().makeAuthorization("test", Authority.ADMIN);;
 
-    DesignDocument[] results = listDesigns(authorization);
+    Document[] results = listDesigns(authorization);
 
-    List<DesignDocument> sortedResults = Stream.of(results)
-            .sorted(Comparator.comparing(DesignDocument::getUuid))
+    List<Document> sortedResults = Stream.of(results)
+            .sorted(Comparator.comparing(Document::getUuid))
             .collect(Collectors.toList());
 
     assertThat(sortedResults.get(0).getUuid()).isEqualTo(TestConstants.DESIGN_UUID_1.toString());
@@ -194,13 +194,13 @@ public class IntegrationTests {
   public void shouldAllowGetOnDesignsSlashIdWhenUserIsAdmin() throws MalformedURLException {
     final String authorization = testCases.getScenario().makeAuthorization("test", Authority.ADMIN);;
 
-    JsonPath result = loadDesign(authorization, TestConstants.DESIGN_UUID_1);
+    Document result = loadDesign(authorization, TestConstants.DESIGN_UUID_1);
 
     String json1 = new JsonObject(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT1)).toString();
-    assertThat(result.getString("uuid")).isEqualTo(TestConstants.DESIGN_UUID_1.toString());
-    assertThat(result.getString("json")).isEqualTo(json1);
-    assertThat(result.getString("modified")).isNotNull();
-    assertThat(result.getString("checksum")).isNotNull();
+    assertThat(result.getUuid()).isEqualTo(TestConstants.DESIGN_UUID_1.toString());
+    assertThat(result.getJson()).isEqualTo(json1);
+    assertThat(result.getModified()).isNotNull();
+    assertThat(result.getChecksum()).isNotNull();
   }
 
   @Test
@@ -220,10 +220,10 @@ public class IntegrationTests {
   public void shouldAllowGetOnDesignsWhenUserIsGuest() throws MalformedURLException {
     final String authorization = testCases.getScenario().makeAuthorization("test", Authority.GUEST);;
 
-    DesignDocument[] results = listDesigns(authorization);
+    Document[] results = listDesigns(authorization);
 
-    List<DesignDocument> sortedResults = Stream.of(results)
-            .sorted(Comparator.comparing(DesignDocument::getUuid))
+    List<Document> sortedResults = Stream.of(results)
+            .sorted(Comparator.comparing(Document::getUuid))
             .collect(Collectors.toList());
 
     assertThat(sortedResults.get(0).getUuid()).isEqualTo(TestConstants.DESIGN_UUID_1.toString());
@@ -242,13 +242,13 @@ public class IntegrationTests {
   public void shouldAllowGetOnDesignsSlashIdWhenUserIsGuest() throws MalformedURLException {
     final String authorization = testCases.getScenario().makeAuthorization("test", Authority.GUEST);;
 
-    JsonPath result = loadDesign(authorization, TestConstants.DESIGN_UUID_1);
+    Document result = loadDesign(authorization, TestConstants.DESIGN_UUID_1);
 
     String json1 = new JsonObject(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT1)).toString();
-    assertThat(result.getString("uuid")).isEqualTo(TestConstants.DESIGN_UUID_1.toString());
-    assertThat(result.getString("json")).isEqualTo(json1);
-    assertThat(result.getString("modified")).isNotNull();
-    assertThat(result.getString("checksum")).isNotNull();
+    assertThat(result.getUuid()).isEqualTo(TestConstants.DESIGN_UUID_1.toString());
+    assertThat(result.getJson()).isEqualTo(json1);
+    assertThat(result.getModified()).isNotNull();
+    assertThat(result.getChecksum()).isNotNull();
   }
 
   @Test
@@ -311,22 +311,22 @@ public class IntegrationTests {
             .then().assertThat().statusCode(404);
   }
 
-  private static DesignDocument[] listDesigns(String authorization) throws MalformedURLException {
+  private static Document[] listDesigns(String authorization) throws MalformedURLException {
     return given().config(testCases.getScenario().getRestAssuredConfig())
             .with().header(AUTHORIZATION, authorization)
             .and().accept(ContentType.JSON)
             .when().get(testCases.getScenario().makeBaseURL("/v1/designs"))
             .then().assertThat().statusCode(200)
-            .extract().body().as(DesignDocument[].class);
+            .extract().body().as(Document[].class);
   }
 
-  private static JsonPath loadDesign(String authorization, UUID uuid) throws MalformedURLException {
+  private static Document loadDesign(String authorization, UUID uuid) throws MalformedURLException {
     return given().config(testCases.getScenario().getRestAssuredConfig())
             .with().header(AUTHORIZATION, authorization)
             .and().accept(ContentType.JSON)
             .when().get(testCases.getScenario().makeBaseURL("/v1/designs/" + uuid))
             .then().assertThat().statusCode(200)
-            .extract().body().jsonPath();
+            .extract().body().as(Document.class);
   }
 
   private static byte[] getTile(String authorization, UUID uuid) throws MalformedURLException {

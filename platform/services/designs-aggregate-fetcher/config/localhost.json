@@ -1,5 +1,5 @@
 {
-  "host_port": "${DESIGNS_PORT}",
+  "host_port": "30120",
 
   "server_keystore_path": "../../secrets/keystore_server.jks",
   "server_keystore_secret": "${KEYSTORE_SECRET}",
@@ -11,12 +11,12 @@
   "origin_pattern": "https://localhost(:[0-9]+)?",
 
   "cassandra_cluster": "datacenter1",
-  "cassandra_keyspace": "designs",
+  "cassandra_keyspace": "${DATABASE_KEYSPACE}",
   "cassandra_username": "${DATABASE_USERNAME}",
   "cassandra_password": "${DATABASE_PASSWORD}",
   "cassandra_contactPoints": "${DATABASE_HOST}",
   "cassandra_port": "9042",
 
   "s3_endpoint": "http://${MINIO_HOST}:${MINIO_PORT}",
-  "s3_bucket": "tiles"
+  "s3_bucket": "${BUCKET_NAME}"
 }

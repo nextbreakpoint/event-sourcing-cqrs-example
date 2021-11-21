@@ -31,6 +31,8 @@ public class IntegrationTests {
 
   @BeforeAll
   public static void before() throws IOException, InterruptedException {
+    System.setProperty("http.port", "30110");
+
     scenario.before();
   }
 
@@ -113,8 +115,6 @@ public class IntegrationTests {
   public void shouldForbidDeleteRequestWithoutAccessToken() throws MalformedURLException {
     final String authorization = scenario.makeAuthorization("test", Authority.ADMIN);
 
-    pause();
-
     final String uuid = createAccount(authorization, createPostData(makeUniqueEmail(), "guest"));
 
     given().config(scenario.getRestAssuredConfig())
@@ -127,8 +127,6 @@ public class IntegrationTests {
   @DisplayName("should forbid get request when user doesn't have permissions")
   public void shouldForbidGetRequestWhenUserDoNotHavePermissions() throws MalformedURLException {
     final String authorization = scenario.makeAuthorization("test", Authority.ADMIN);
-
-    pause();
 
     final String uuid = createAccount(authorization, createPostData(makeUniqueEmail(), "guest"));
 
@@ -158,8 +156,6 @@ public class IntegrationTests {
   @DisplayName("should allow get request when user has permissions")
   public void shouldAllowGetRequestWhenUserHasPlatformPermissions() throws MalformedURLException {
     final String authorization = scenario.makeAuthorization("test", Authority.ADMIN);
-
-    pause();
 
     final String uuid = createAccount(authorization, createPostData(makeUniqueEmail(), "guest"));
 
@@ -192,8 +188,6 @@ public class IntegrationTests {
   public void shouldCreateAndDeleteDesigns() throws MalformedURLException {
     final String authorization = scenario.makeAuthorization("test", Authority.ADMIN);
 
-    pause();
-
     final String email1 = "user1@localhost";
     final String email2 = "user2@localhost";
 
@@ -202,16 +196,12 @@ public class IntegrationTests {
 
     final String uuid1 = createAccount(authorization, account1);
 
-    pause();
-
     final JsonPath json1 = getAccount(authorization, uuid1);
 
     assertThat(json1.getString("uuid")).isEqualTo(uuid1);
     assertThat(json1.getString("role")).isEqualTo("guest");
 
     final String uuid2 = createAccount(authorization, account2);
-
-    pause();
 
     final JsonPath json2 = getAccount(authorization, uuid2);
 
@@ -226,23 +216,12 @@ public class IntegrationTests {
 
     deleteAccount(authorization, uuid1);
 
-    pause();
-
     assertThat(getAccounts(authorization)).contains(uuid2);
     assertThat(getAccounts(authorization)).doesNotContain(uuid1);
 
     deleteAccount(authorization, uuid2);
 
-    pause();
-
     assertThat(getAccounts(authorization)).doesNotContain(uuid1, uuid2);
-  }
-
-  private static void pause() {
-    try {
-      Thread.sleep(1000);
-    } catch (InterruptedException ignored) {
-    }
   }
 
   private static String[] findAccount(String authorization, String email) throws MalformedURLException {

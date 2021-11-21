@@ -35,10 +35,14 @@ public class PactConsumerTests {
   private static final String OAUTH_USER_EMAILS_PATH = "/user/emails";
   private static final UUID ACCOUNT_UUID = new UUID(1L, 1L);
 
-  private static final TestScenario scenario = new TestScenario(11111);
+  private static final TestScenario scenario = new TestScenario(false);
 
   @BeforeAll
   public static void before() throws IOException, InterruptedException {
+    System.setProperty("http.port", "30101");
+    System.setProperty("stub.port", "39001");
+    System.setProperty("stub.port2", "39002");
+
     scenario.before();
   }
 
@@ -181,7 +185,8 @@ public class PactConsumerTests {
 //    }
 
   @Test
-  @PactTestFor(providerName = "accounts", hostInterface = "0.0.0.0", port = "11111", pactMethod = "accountDoesNotExist")
+  @PactTestFor(providerName = "accounts", hostInterface = "0.0.0.0", port = "39001", pactMethod = "accountDoesNotExist")
+  @DisplayName("should create an account and redirect to designs when authenticated user doesn't have an account")
   public void shouldCreateAnAccountAndRedirectToDesignsWhenAuthenticatedUserDoNotHaveAnAccount(MockServer mockServer) throws IOException, InterruptedException {
     whenHttp(scenario.getStubServer2())
             .match(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
@@ -215,7 +220,8 @@ public class PactConsumerTests {
   }
 
   @Test
-  @PactTestFor(providerName = "accounts", hostInterface = "0.0.0.0", port = "11111", pactMethod = "accountExists")
+  @PactTestFor(providerName = "accounts", hostInterface = "0.0.0.0", port = "39001", pactMethod = "accountExists")
+  @DisplayName("should not create an account and redirect to designs when authenticated user already has an account")
   public void shouldNotCreateAnAccountAndRedirectToDesignsWhenAuthenticatedUserAlreadyHasAnAccount(MockServer mockServer) throws IOException, InterruptedException {
     whenHttp(scenario.getStubServer2())
             .match(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))

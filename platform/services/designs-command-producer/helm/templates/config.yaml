@@ -27,5 +27,5 @@ data:
 
       "kafka_bootstrap_servers": "kafka:9092",
       "message_source": "service-designs",
-      "event_topic": "design-command"
+      "events_topic": "events"
     }

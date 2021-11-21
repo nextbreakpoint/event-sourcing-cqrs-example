@@ -1,5 +1,5 @@
 {
-  "host_port": "${DESIGNS_PORT}",
+  "host_port": "30123",
 
   "server_keystore_path": "../../secrets/keystore_server.jks",
   "server_keystore_secret": "${KEYSTORE_SECRET}",
@@ -12,5 +12,5 @@
 
   "kafka_bootstrap_servers": "${KAFKA_HOST}:9093",
   "kafka_group_id": "designs-notification-dispatcher",
-  "event_topic": "design-event"
+  "events_topic": "${EVENTS_TOPIC}"
 }

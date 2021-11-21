@@ -114,7 +114,7 @@ public class Verticle extends AbstractVerticle {
 
             final String originPattern = environment.resolve(config.getString("origin_pattern"));
 
-            final String eventTopic = environment.resolve(config.getString("event_topic"));
+            final String eventsTopic = environment.resolve(config.getString("events_topic"));
 
             final JWTAuth jwtProvider = JWTProviderFactory.create(environment, vertx, config);
 
@@ -136,7 +136,7 @@ public class Verticle extends AbstractVerticle {
 
             final KafkaPolling kafkaPolling = new KafkaPolling();
 
-            kafkaConsumer.subscribe(eventTopic);
+            kafkaConsumer.subscribe(eventsTopic);
 
             pollingThread = new Thread(() -> kafkaPolling.pollRecords(kafkaConsumer, messageHandlers), "kafka-records-poll");
 

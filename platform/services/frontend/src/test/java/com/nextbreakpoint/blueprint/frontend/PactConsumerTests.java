@@ -39,6 +39,9 @@ public class PactConsumerTests {
 
   @BeforeAll
   public static void before() throws IOException, InterruptedException {
+    System.setProperty("http.port", "30400");
+    System.setProperty("stub.port", "39001");
+
     scenario.before();
   }
 
@@ -97,96 +100,96 @@ public class PactConsumerTests {
             .toPact();
   }
 
-  @Pact(consumer = "frontend")
-  public RequestResponsePact retrieveDesign(PactDslWithProvider builder) {
-    final Map<String, String> headers = new HashMap<>();
-    headers.put("Content-Type", "application/json");
-    return builder
-            .given("design exists for uuid")
-            .uponReceiving("request to fetch design")
-            .method("GET")
-            .path("/v1/designs/" + DESIGN_UUID_1.toString())
-            .matchHeader("Accept", "application/json")
-            .matchHeader("Authorization", "Bearer .+")
-            .willRespondWith()
-            .headers(headers)
-            .status(200)
-            .body(
-                    new PactDslJsonBody()
-                            .stringValue("uuid", DESIGN_UUID_1.toString())
-                            .stringMatcher("json", ".+")
-                            .stringMatcher("checksum", ".+")
-                            .timestamp("modified", "yyyy-MM-dd'T'HH:mm:ss'Z'")
-            )
-            .toPact();
-  }
-
-  @Pact(consumer = "frontend")
-  public RequestResponsePact insertDesign(PactDslWithProvider builder) {
-    final Map<String, String> headers = new HashMap<>();
-    headers.put("Content-Type", "application/json");
-    return builder
-            .given("there are no designs")
-            .uponReceiving("request to insert design")
-            .method("POST")
-            .path("/v1/designs")
-            .matchHeader("Accept", "application/json")
-            .matchHeader("Content-Type", "application/json")
-            .matchHeader("Authorization", "Bearer .+")
-            .body(new JsonObject(createPostData(MANIFEST, METADATA, SCRIPT)).toString())
-            .willRespondWith()
-            .headers(headers)
-            .status(201)
-            .body(
-                    new PactDslJsonBody()
-                            .stringMatcher("uuid", ".+")
-            )
-            .toPact();
-  }
-
-  @Pact(consumer = "frontend")
-  public RequestResponsePact updateDesign(PactDslWithProvider builder) {
-    final Map<String, String> headers = new HashMap<>();
-    headers.put("Content-Type", "application/json");
-    return builder
-            .given("design exists for uuid")
-            .uponReceiving("request to update design")
-            .method("PUT")
-            .path("/v1/designs/" + DESIGN_UUID_1)
-            .matchHeader("Accept", "application/json")
-            .matchHeader("Content-Type", "application/json")
-            .matchHeader("Authorization", "Bearer .+")
-            .body(new JsonObject(createPostData(MANIFEST, METADATA, SCRIPT)).toString())
-            .willRespondWith()
-            .headers(headers)
-            .status(200)
-            .body(
-                    new PactDslJsonBody()
-                            .stringValue("uuid", DESIGN_UUID_1.toString())
-            )
-            .toPact();
-  }
-
-  @Pact(consumer = "frontend")
-  public RequestResponsePact deleteDesign(PactDslWithProvider builder) {
-    final Map<String, String> headers = new HashMap<>();
-    headers.put("Content-Type", "application/json");
-    return builder
-            .given("design exists for uuid")
-            .uponReceiving("request to delete design")
-            .method("DELETE")
-            .path("/v1/designs/" + DESIGN_UUID_1)
-            .matchHeader("Accept", "application/json")
-            .matchHeader("Authorization", "Bearer .+")
-            .willRespondWith()
-            .headers(headers)
-            .status(200)
-            .body(
-                    new PactDslJsonBody()
-                            .stringValue("uuid", DESIGN_UUID_1.toString())
-            )
-            .toPact();
-  }
+//  @Pact(consumer = "frontend")
+//  public RequestResponsePact retrieveDesign(PactDslWithProvider builder) {
+//    final Map<String, String> headers = new HashMap<>();
+//    headers.put("Content-Type", "application/json");
+//    return builder
+//            .given("design exists for uuid")
+//            .uponReceiving("request to fetch design")
+//            .method("GET")
+//            .path("/v1/designs/" + DESIGN_UUID_1.toString())
+//            .matchHeader("Accept", "application/json")
+//            .matchHeader("Authorization", "Bearer .+")
+//            .willRespondWith()
+//            .headers(headers)
+//            .status(200)
+//            .body(
+//                    new PactDslJsonBody()
+//                            .stringValue("uuid", DESIGN_UUID_1.toString())
+//                            .stringMatcher("json", ".+")
+//                            .stringMatcher("checksum", ".+")
+//                            .timestamp("modified", "yyyy-MM-dd'T'HH:mm:ss'Z'")
+//            )
+//            .toPact();
+//  }
+//
+//  @Pact(consumer = "frontend")
+//  public RequestResponsePact insertDesign(PactDslWithProvider builder) {
+//    final Map<String, String> headers = new HashMap<>();
+//    headers.put("Content-Type", "application/json");
+//    return builder
+//            .given("there are no designs")
+//            .uponReceiving("request to insert design")
+//            .method("POST")
+//            .path("/v1/designs")
+//            .matchHeader("Accept", "application/json")
+//            .matchHeader("Content-Type", "application/json")
+//            .matchHeader("Authorization", "Bearer .+")
+//            .body(new JsonObject(createPostData(MANIFEST, METADATA, SCRIPT)).toString())
+//            .willRespondWith()
+//            .headers(headers)
+//            .status(201)
+//            .body(
+//                    new PactDslJsonBody()
+//                            .stringMatcher("uuid", ".+")
+//            )
+//            .toPact();
+//  }
+//
+//  @Pact(consumer = "frontend")
+//  public RequestResponsePact updateDesign(PactDslWithProvider builder) {
+//    final Map<String, String> headers = new HashMap<>();
+//    headers.put("Content-Type", "application/json");
+//    return builder
+//            .given("design exists for uuid")
+//            .uponReceiving("request to update design")
+//            .method("PUT")
+//            .path("/v1/designs/" + DESIGN_UUID_1)
+//            .matchHeader("Accept", "application/json")
+//            .matchHeader("Content-Type", "application/json")
+//            .matchHeader("Authorization", "Bearer .+")
+//            .body(new JsonObject(createPostData(MANIFEST, METADATA, SCRIPT)).toString())
+//            .willRespondWith()
+//            .headers(headers)
+//            .status(200)
+//            .body(
+//                    new PactDslJsonBody()
+//                            .stringValue("uuid", DESIGN_UUID_1.toString())
+//            )
+//            .toPact();
+//  }
+//
+//  @Pact(consumer = "frontend")
+//  public RequestResponsePact deleteDesign(PactDslWithProvider builder) {
+//    final Map<String, String> headers = new HashMap<>();
+//    headers.put("Content-Type", "application/json");
+//    return builder
+//            .given("design exists for uuid")
+//            .uponReceiving("request to delete design")
+//            .method("DELETE")
+//            .path("/v1/designs/" + DESIGN_UUID_1)
+//            .matchHeader("Accept", "application/json")
+//            .matchHeader("Authorization", "Bearer .+")
+//            .willRespondWith()
+//            .headers(headers)
+//            .status(200)
+//            .body(
+//                    new PactDslJsonBody()
+//                            .stringValue("uuid", DESIGN_UUID_1.toString())
+//            )
+//            .toPact();
+//  }
 
   @Pact(consumer = "frontend")
   public RequestResponsePact retrieveDesignWhenUsingCQRS(PactDslWithProvider builder) {
@@ -282,18 +285,18 @@ public class PactConsumerTests {
             .toPact();
   }
 
-//  @Test
-//  @PactTestFor(providerName = "accounts", port = "1110", pactMethod = "retrieveAccount")
-//  public void shouldRetrieveAccount(MockServer mockServer) throws IOException {
-//    HttpResponse httpResponse = Request.Get(mockServer.getUrl() + "/v1/accounts/" + ACCOUNT_UUID.toString())
-//            .addHeader("Accept", "application/json")
-//            .addHeader("Authorization", "Bearer abcdef")
-//            .execute().returnResponse();
-//    assertThat(httpResponse.getStatusLine().getStatusCode()).isEqualTo(200);
-//    assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.uuid").toString()).isEqualTo(ACCOUNT_UUID.toString());
-//    assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.role").toString()).isEqualTo("guest");
-//  }
-//
+  @Test
+  @PactTestFor(providerName = "accounts", port = "1110", pactMethod = "retrieveAccount")
+  public void shouldRetrieveAccount(MockServer mockServer) throws IOException {
+    HttpResponse httpResponse = Request.Get(mockServer.getUrl() + "/v1/accounts/" + ACCOUNT_UUID)
+            .addHeader("Accept", "application/json")
+            .addHeader("Authorization", "Bearer abcdef")
+            .execute().returnResponse();
+    assertThat(httpResponse.getStatusLine().getStatusCode()).isEqualTo(200);
+    assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.uuid").toString()).isEqualTo(ACCOUNT_UUID.toString());
+    assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.role").toString()).isEqualTo("guest");
+  }
+
 //  @Test
 //  @PactTestFor(providerName = "designs", port = "1111", pactMethod = "retrieveDesigns")
 //  public void shouldRetrieveDesigns(MockServer mockServer) throws IOException {
@@ -376,7 +379,7 @@ public class PactConsumerTests {
   @Test
   @PactTestFor(providerName = "designs-aggregate-fetcher", port = "1117", pactMethod = "retrieveDesignWhenUsingCQRS")
   public void shouldRetrieveDesignWhenUsingCQRS(MockServer mockServer) throws IOException {
-    HttpResponse httpResponse = Request.Get(mockServer.getUrl() + "/v1/designs/" + DESIGN_UUID_1.toString())
+    HttpResponse httpResponse = Request.Get(mockServer.getUrl() + "/v1/designs/" + DESIGN_UUID_1)
             .addHeader("Accept", "application/json")
             .addHeader("Authorization", "Bearer abcdef")
             .execute().returnResponse();

@@ -73,7 +73,7 @@ public class DesignAccumulator {
     }
 
     public Design toDesign() {
-        return new Design(evid, uuid, esid, json, status, checksum, levels, getTilesList(), updated);
+        return new Design(evid, uuid, esid, json, checksum, status, levels, getTilesList(), updated);
     }
 
     private List<Tiles> getTilesList() {

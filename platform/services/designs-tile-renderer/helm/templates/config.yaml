@@ -28,8 +28,8 @@ data:
       "kafka_bootstrap_servers": "kafka:9092",
       "kafka_group_id": "designs-tile-renderer",
       "message_source": "service-designs",
-      "event_topic": "design-event",
-      "render_topic": "tiles-rendering-queue",
+      "events_topic": "events",
+      "render_topic": "render",
 
       "max_execution_time_in_millis": "30000",
 

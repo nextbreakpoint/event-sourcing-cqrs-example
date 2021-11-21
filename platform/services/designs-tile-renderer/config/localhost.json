@@ -1,5 +1,5 @@
 {
-  "host_port": "${DESIGNS_PORT}",
+  "host_port": "30124",
 
   "server_keystore_path": "../../secrets/keystore_server.jks",
   "server_keystore_secret": "${KEYSTORE_SECRET}",
@@ -13,11 +13,11 @@
   "kafka_bootstrap_servers": "${KAFKA_HOST}:9093",
   "kafka_group_id": "designs-tile-renderer",
   "message_source": "service-designs",
-  "event_topic": "design-event",
-  "render_topic": "tiles-rendering-queue",
+  "events_topic": "${EVENTS_TOPIC}",
+  "render_topic": "${RENDER_TOPIC}",
 
   "max_execution_time_in_millis": "30000",
 
   "s3_endpoint": "http://${MINIO_HOST}:${MINIO_PORT}",
-  "s3_bucket": "tiles"
+  "s3_bucket": "${BUCKET_NAME}"
 }

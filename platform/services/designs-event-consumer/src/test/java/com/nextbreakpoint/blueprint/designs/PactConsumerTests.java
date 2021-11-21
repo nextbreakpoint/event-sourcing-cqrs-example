@@ -26,6 +26,8 @@ public class PactConsumerTests {
 
     @BeforeAll
     public static void before() throws IOException, InterruptedException {
+        System.setProperty("http.port", "30122");
+
         testCases.before();
 
         System.setProperty("pact.showStacktrace", "true");

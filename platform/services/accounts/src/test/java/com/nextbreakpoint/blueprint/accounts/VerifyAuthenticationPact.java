@@ -34,6 +34,8 @@ public class VerifyAuthenticationPact {
 
   @BeforeAll
   public static void before() throws IOException, InterruptedException {
+    System.setProperty("http.port", "30110");
+
     scenario.before();
 
     System.setProperty("pact.showStacktrace", "true");

@@ -65,13 +65,13 @@ public class TestCases {
         KafkaConsumer<String, String> renderConsumer = KafkaClientFactory.createConsumer(environment, vertx, scenario.createConsumerConfig(consumerGroupId));
 
         eventsPolling = new KafkaTestPolling(eventsConsumer, TestConstants.EVENTS_TOPIC_NAME);
-        renderPolling = new KafkaTestPolling(renderConsumer, TestConstants.RENDERING_QUEUE_TOPIC_NAME);
+        renderPolling = new KafkaTestPolling(renderConsumer, TestConstants.RENDER_TOPIC_NAME);
 
         eventsPolling.startPolling();
         renderPolling.startPolling();
 
         eventsEmitter = new KafkaTestEmitter(producer, TestConstants.EVENTS_TOPIC_NAME);
-        renderEmitter = new KafkaTestEmitter(producer, TestConstants.RENDERING_QUEUE_TOPIC_NAME);
+        renderEmitter = new KafkaTestEmitter(producer, TestConstants.RENDER_TOPIC_NAME);
 
         final S3Client s3Client = TestS3.createS3Client(URI.create("http://" + scenario.getMinioHost() + ":" + scenario.getMinioPort()));
 

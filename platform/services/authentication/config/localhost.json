@@ -1,5 +1,5 @@
 {
-  "host_port": "${AUTHENTICATION_PORT}",
+  "host_port": "30101",
 
   "server_keystore_path": "../../secrets/keystore_server.jks",
   "server_keystore_secret": "${KEYSTORE_SECRET}",
@@ -18,18 +18,18 @@
 
   "origin_pattern": "https://localhost(:[0-9]+)?",
 
-  "client_web_url": "https://localhost:28081",
-  "client_auth_url": "https://localhost:28081",
+  "client_web_url": "https://localhost:30101",
+  "client_auth_url": "https://localhost:30101",
 
-  "server_accounts_url": "http://localhost:${STUB_PORT}",
+  "server_accounts_url": "http://localhost:${STUB_PORT_1}",
 
-  "github_url": "http://localhost:${STUB_PORT2}",
+  "github_url": "http://localhost:${STUB_PORT_2}",
   "github_client_id": "111",
   "github_client_secret": "222",
 
-  "oauth_login_url": "http://localhost:${STUB_PORT2}/login",
-  "oauth_token_path": "http://localhost:${STUB_PORT2}/login/oauth/access_token",
-  "oauth_authorize_path": "http://localhost:${STUB_PORT2}/login/oauth/authorize",
+  "oauth_login_url": "http://localhost:${STUB_PORT_2}/login",
+  "oauth_token_path": "http://localhost:${STUB_PORT_2}/login/oauth/access_token",
+  "oauth_authorize_path": "http://localhost:${STUB_PORT_2}/login/oauth/authorize",
   "oauth_authority": "user:email",
 
   "cookie_domain": "localhost",

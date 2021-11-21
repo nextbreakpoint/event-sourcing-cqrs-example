@@ -55,6 +55,63 @@
                     </archive>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>${exec-maven-plugin.version}</version>
+                <configuration>
+                    <toolchain>jdk</toolchain>
+                    <executable>java</executable>
+                    <environmentVariables>
+                        <KEYSTORE_SECRET>secret</KEYSTORE_SECRET>
+                        <KAFKA_HOST>localhost</KAFKA_HOST>
+                        <JAEGER_SERVICE_NAME>designs-tile-renderer</JAEGER_SERVICE_NAME>
+                        <JAEGER_AGENT_HOST>localhost</JAEGER_AGENT_HOST>
+                        <JAEGER_TAGS>env=dev</JAEGER_TAGS>
+                        <JAEGER_SAMPLER_TYPE>const</JAEGER_SAMPLER_TYPE>
+                        <JAEGER_SAMPLER_PARAM>1</JAEGER_SAMPLER_PARAM>
+                        <JAEGER_REPORTER_LOG_SPANS>true</JAEGER_REPORTER_LOG_SPANS>
+                        <AWS_ACCESS_KEY_ID>admin</AWS_ACCESS_KEY_ID>
+                        <AWS_SECRET_ACCESS_KEY>password</AWS_SECRET_ACCESS_KEY>
+                        <MINIO_HOST>localhost</MINIO_HOST>
+                        <MINIO_PORT>9000</MINIO_PORT>
+                    </environmentVariables>
+                    <arguments>
+                        <argument>-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:35124</argument>
+                        <argument>--class-path</argument>
+                        <classpath/>
+                        <argument>com.nextbreakpoint.blueprint.designs.Verticle</argument>
+                    </arguments>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>isolated</id>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <environmentVariables>
+                                <BUCKET_NAME>test-designs-tile-renderer</BUCKET_NAME>
+                                <EVENTS_TOPIC>test-events-designs-tile-renderer</EVENTS_TOPIC>
+                                <RENDER_TOPIC>test-render-designs-tile-renderer</RENDER_TOPIC>
+                            </environmentVariables>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>shared</id>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <environmentVariables>
+                                <BUCKET_NAME>tiles</BUCKET_NAME>
+                                <RENDER_TOPIC>render</RENDER_TOPIC>
+                                <EVENTS_TOPIC>events</EVENTS_TOPIC>
+                            </environmentVariables>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
     <dependencies>

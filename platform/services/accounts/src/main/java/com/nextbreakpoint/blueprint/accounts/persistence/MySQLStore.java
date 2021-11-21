@@ -31,7 +31,7 @@ public class MySQLStore implements Store {
     private final Logger logger = LoggerFactory.getLogger(MySQLStore.class.getName());
 
     private static final SQLOptions OPTIONS = new SQLOptions()
-            .setTransactionIsolation(TransactionIsolation.SERIALIZABLE)
+            .setTransactionIsolation(TransactionIsolation.READ_UNCOMMITTED)
             .setQueryTimeout(10000);
 
     private static final String ERROR_GET_CONNECTION = "An error occurred while getting a connection";
@@ -83,7 +83,8 @@ public class MySQLStore implements Store {
     }
 
     private Single<InsertAccountResponse> doInsertAccount(SQLConnection conn, InsertAccountRequest request) {
-        return conn.rxSetAutoCommit(false)
+        return conn.rxSetTransactionIsolation(TransactionIsolation.READ_COMMITTED)
+                .flatMap(ignore -> conn.rxSetAutoCommit(false))
                 .flatMap(x -> conn.rxUpdateWithParams(INSERT_ACCOUNT, makeInsertParams(request)))
                 .map(UpdateResult::getUpdated)
                 .map(result -> new InsertAccountResponse(request.getUuid(), request.getAuthorities(), result))
@@ -93,7 +94,8 @@ public class MySQLStore implements Store {
     }
 
     private Single<DeleteAccountResponse> doDeleteAccount(SQLConnection conn, DeleteAccountRequest request) {
-        return conn.rxSetAutoCommit(false)
+        return conn.rxSetTransactionIsolation(TransactionIsolation.READ_COMMITTED)
+                .flatMap(ignore -> conn.rxSetAutoCommit(false))
                 .flatMap(x -> conn.rxUpdateWithParams(DELETE_ACCOUNT, makeDeleteParams(request)))
                 .map(UpdateResult::getUpdated)
                 .map(result -> new DeleteAccountResponse(request.getUuid(), result))
@@ -103,7 +105,8 @@ public class MySQLStore implements Store {
     }
 
     private Single<LoadAccountResponse> doLoadAccount(SQLConnection conn, LoadAccountRequest request) {
-        return conn.rxSetAutoCommit(true)
+        return conn.rxSetTransactionIsolation(TransactionIsolation.READ_COMMITTED)
+                .flatMap(ignore -> conn.rxSetAutoCommit(false))
                 .flatMap(x -> conn.rxQueryWithParams(SELECT_ACCOUNT, makeLoadParams(request)))
                 .map(ResultSet::getRows)
                 .map(this::exactlyOne)
@@ -113,7 +116,8 @@ public class MySQLStore implements Store {
     }
 
     private Single<ListAccountsResponse> doListAccounts(SQLConnection conn, ListAccountsRequest request) {
-        return conn.rxSetAutoCommit(true)
+        return conn.rxSetTransactionIsolation(TransactionIsolation.READ_COMMITTED)
+                .flatMap(ignore -> conn.rxSetAutoCommit(false))
                 .flatMap(x -> selectAccounts(conn, request))
                 .map(ResultSet::getRows)
                 .map(result -> result.stream().map(x -> x.getString("ACCOUNT_UUID")).collect(toList()))

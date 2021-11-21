@@ -18,6 +18,8 @@ public class IntegrationTests {
 
     @BeforeAll
     public static void before() throws IOException, InterruptedException {
+        System.setProperty("http.port", "30121");
+
         testCases.before();
     }
 

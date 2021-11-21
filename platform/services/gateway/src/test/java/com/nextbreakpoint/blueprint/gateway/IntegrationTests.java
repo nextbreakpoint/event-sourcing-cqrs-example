@@ -33,6 +33,9 @@ public class IntegrationTests {
 
   @BeforeAll
   public static void before() throws IOException, InterruptedException {
+    System.setProperty("http.port", "30100");
+    System.setProperty("stub.port", "39001");
+
     scenario.before();
   }
 
@@ -138,7 +141,7 @@ public class IntegrationTests {
             .with().header("accept", "application/json")
             .when().get(scenario.makeBaseURL("/watch/designs/0/" + designUuid))
             .then().assertThat().statusCode(200)
-            .and().header("location", startsWith("https://" + scenario.getServiceHost() + ":" + scenario.getServicePort()))
+            .and().header("location", startsWith("https://localhost:8080"))
             .and().header("location", endsWith("/sse/designs/0/" + designUuid))
             .extract().header("location");
 

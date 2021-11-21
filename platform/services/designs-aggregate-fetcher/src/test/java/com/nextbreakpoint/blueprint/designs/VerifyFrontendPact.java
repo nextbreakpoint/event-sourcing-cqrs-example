@@ -32,6 +32,8 @@ public class VerifyFrontendPact {
 
   @BeforeAll
   public static void before() throws IOException, InterruptedException {
+    System.setProperty("http.port", "30120");
+
     testCases.before();
 
     System.setProperty("pact.showStacktrace", "true");

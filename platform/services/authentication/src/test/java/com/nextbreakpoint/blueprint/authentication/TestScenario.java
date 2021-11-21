@@ -16,14 +16,14 @@ public class TestScenario {
   private final boolean buildImages = TestUtils.getVariable("BUILD_IMAGES", System.getProperty("build.images", "false")).equals("true");
 
   private Scenario scenario;
-  private Integer pactPort;
+  private boolean requireStubServer;
 
   public TestScenario() {
-    this(null);
+    this(true);
   }
 
-  public TestScenario(Integer pactPort) {
-    this.pactPort = pactPort;
+  public TestScenario(boolean requireStubServer) {
+    this.requireStubServer = requireStubServer;
   }
 
   public void before() throws IOException, InterruptedException {
@@ -52,15 +52,15 @@ public class TestScenario {
             "--set=clientDomain=${serviceHost}",
             "--set=clientWebUrl=https://${serviceHost}:${servicePort}",
             "--set=clientAuthUrl=https://${serviceHost}:${servicePort}",
-            pactPort != null ? "--set=accountsApiUrl=http://${stubHost}:" + pactPort : "--set=accountsApiUrl=http://${stubHost}:${stubPort}",
-            "--set=githubApiUrl=http://${stubHost}:${stubPort}",
-            "--set=githubOAuthUrl=http://${stubHost}:${stubPort}",
+            "--set=accountsApiUrl=http://${stubHost}:${stubPort}",
+            "--set=githubApiUrl=http://${stubHost2}:${stubPort2}",
+            "--set=githubOAuthUrl=http://${stubHost2}:${stubPort2}",
             "--set=image.pullPolicy=Never",
             "--set=image.repository=integration/authentication",
             "--set=image.tag=${version}"
     );
 
-    Scenario.ScenarioBuilder scenarioBuilder = Scenario.builder()
+    scenario = Scenario.builder()
             .withNamespace("integration")
             .withVersion(version)
             .withTimestamp(System.currentTimeMillis())
@@ -68,20 +68,12 @@ public class TestScenario {
             .withBuildImage(buildImages)
             .withSecretArgs(secretArgs)
             .withHelmPath("../../helm")
-            .withHelmArgs(helmArgs);
+            .withHelmArgs(helmArgs)
+            .requireStubServer(requireStubServer)
+            .withStubServer2()
 //            .withKubernetes()
 //            .withMinikube()
-
-    if (pactPort != null) {
-      scenarioBuilder = scenarioBuilder
-              .withStubServer2();
-    } else {
-      scenarioBuilder = scenarioBuilder
-              .withStubServer()
-              .withStubServer2();
-    }
-
-    scenario = scenarioBuilder.build();
+            .build();
 
     scenario.create();
   }

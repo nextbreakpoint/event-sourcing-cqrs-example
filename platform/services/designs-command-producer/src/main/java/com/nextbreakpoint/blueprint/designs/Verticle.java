@@ -96,7 +96,7 @@ public class Verticle extends AbstractVerticle {
 
             final String originPattern = environment.resolve(config.getString("origin_pattern"));
 
-            final String eventTopic = environment.resolve(config.getString("event_topic"));
+            final String eventsTopic = environment.resolve(config.getString("events_topic"));
 
             final String messageSource = environment.resolve(config.getString("message_source"));
 
@@ -110,11 +110,11 @@ public class Verticle extends AbstractVerticle {
 
             final Handler<RoutingContext> onAccessDenied = routingContext -> routingContext.fail(Failure.accessDenied("Authorisation failed"));
 
-            final Handler<RoutingContext> insertDesignHandler = new AccessHandler(jwtProvider, Factory.createInsertDesignHandler(kafkaProducer, eventTopic, messageSource), onAccessDenied, singletonList(ADMIN));
+            final Handler<RoutingContext> insertDesignHandler = new AccessHandler(jwtProvider, Factory.createInsertDesignHandler(kafkaProducer, eventsTopic, messageSource), onAccessDenied, singletonList(ADMIN));
 
-            final Handler<RoutingContext> updateDesignHandler = new AccessHandler(jwtProvider, Factory.createUpdateDesignHandler(kafkaProducer, eventTopic, messageSource), onAccessDenied, singletonList(ADMIN));
+            final Handler<RoutingContext> updateDesignHandler = new AccessHandler(jwtProvider, Factory.createUpdateDesignHandler(kafkaProducer, eventsTopic, messageSource), onAccessDenied, singletonList(ADMIN));
 
-            final Handler<RoutingContext> deleteDesignHandler = new AccessHandler(jwtProvider, Factory.createDeleteDesignHandler(kafkaProducer, eventTopic, messageSource), onAccessDenied, singletonList(ADMIN));
+            final Handler<RoutingContext> deleteDesignHandler = new AccessHandler(jwtProvider, Factory.createDeleteDesignHandler(kafkaProducer, eventsTopic, messageSource), onAccessDenied, singletonList(ADMIN));
 
             final Handler<RoutingContext> openapiHandler = new OpenApiHandler(vertx.getDelegate(), executor, "openapi.yaml");
 

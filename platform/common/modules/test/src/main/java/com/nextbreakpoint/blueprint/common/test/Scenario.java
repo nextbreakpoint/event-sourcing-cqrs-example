@@ -403,8 +403,18 @@ public class Scenario {
             return this;
         }
 
+        public ScenarioBuilder requireStubServer(boolean enabled) {
+            this.stubServer = enabled;
+            return this;
+        }
+
         public ScenarioBuilder withStubServer2() {
             this.stubServer2 = true;
+            return this;
+        }
+
+        public ScenarioBuilder requireStubServer2(boolean enabled) {
+            this.stubServer2 = enabled;
             return this;
         }
 

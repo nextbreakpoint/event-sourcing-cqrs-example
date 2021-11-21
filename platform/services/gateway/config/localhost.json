@@ -1,5 +1,5 @@
 {
-  "host_port": "${GATEWAY_PORT}",
+  "host_port": "30100",
 
   "server_keystore_path": "../../secrets/keystore_server.jks",
   "server_keystore_secret": "${KEYSTORE_SECRET}",

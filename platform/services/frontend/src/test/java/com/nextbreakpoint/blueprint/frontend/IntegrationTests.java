@@ -34,6 +34,9 @@ public class IntegrationTests {
 
   @BeforeAll
   public static void before() throws IOException, InterruptedException {
+    System.setProperty("http.port", "30400");
+    System.setProperty("stub.port", "39001");
+
     scenario.before();
   }
 

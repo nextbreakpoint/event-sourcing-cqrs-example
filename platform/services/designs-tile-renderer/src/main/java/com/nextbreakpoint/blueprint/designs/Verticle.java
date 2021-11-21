@@ -139,7 +139,7 @@ public class Verticle extends AbstractVerticle {
 
             final String renderTopic = environment.resolve(config.getString("render_topic"));
 
-            final String eventTopic = environment.resolve(config.getString("event_topic"));
+            final String eventsTopic = environment.resolve(config.getString("events_topic"));
 
             final KafkaProducer<String, String> kafkaProducer = KafkaClientFactory.createProducer(environment, vertx, config);
 
@@ -159,7 +159,7 @@ public class Verticle extends AbstractVerticle {
 
             final Map<String, BlockingHandler<InputMessage>> messageHandlers = new HashMap<>();
 
-            messageHandlers.put(MessageType.TILE_RENDER_REQUESTED, createTileRenderRequestedHandler(eventTopic, kafkaProducer, messageSource, workerExecutor, s3AsyncClient, s3Bucket));
+            messageHandlers.put(MessageType.TILE_RENDER_REQUESTED, createTileRenderRequestedHandler(eventsTopic, kafkaProducer, messageSource, workerExecutor, s3AsyncClient, s3Bucket));
 
             kafkaConsumer.subscribe(renderTopic);
 

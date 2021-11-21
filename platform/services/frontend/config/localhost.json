@@ -1,5 +1,5 @@
 {
-  "client_web_url": "https://localhost:18080",
-  "client_api_url": "https://localhost:9000",
-  "server_api_url": "https://localhost:18080"
+  "client_web_url": "https://localhost:30400",
+  "client_api_url": "https://localhost:30100",
+  "server_api_url": "https://localhost:30100"
 }

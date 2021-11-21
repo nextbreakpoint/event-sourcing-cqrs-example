@@ -4,7 +4,7 @@
   "description": "blueprint frontend",
   "private": true,
   "scripts": {
-    "start": "CONFIG_PATH=$(pwd)/../config/localhost.json SECRETS_PATH=$(pwd)/../../../secrets PORT=18080 node ./bin/www"
+    "start": "CONFIG_PATH=$(pwd)/../config/localhost.json SECRETS_PATH=$(pwd)/../../../secrets PORT=30400 node ./bin/www"
   },
   "dependencies": {
     "express": "4.17.1",

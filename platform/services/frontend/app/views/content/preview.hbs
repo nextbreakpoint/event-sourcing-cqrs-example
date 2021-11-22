@@ -11,7 +11,7 @@
         domReady(function(event) {
             var map = L.map('fractal').setView([0, 0], 2);
 
-            var url = '{{config.api_url}}/designs/{{design.uuid}}/{z}/{x}/{y}/256.png';
+            var url = '{{config.api_url}}/v1/designs/{{design.uuid}}/{z}/{x}/{y}/256.png';
 
             var layer = L.tileLayer(url, {
                 attribution: '&copy; Andrea Medeghini',

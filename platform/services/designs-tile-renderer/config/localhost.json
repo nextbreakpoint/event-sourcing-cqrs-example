@@ -16,7 +16,7 @@
   "events_topic": "${EVENTS_TOPIC}",
   "render_topic": "${RENDER_TOPIC}",
 
-  "max_execution_time_in_millis": "30000",
+  "max_execution_time_in_millis": "30000000",
 
   "s3_endpoint": "http://${MINIO_HOST}:${MINIO_PORT}",
   "s3_bucket": "${BUCKET_NAME}"

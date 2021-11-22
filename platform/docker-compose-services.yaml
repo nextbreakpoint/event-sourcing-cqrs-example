@@ -109,18 +109,14 @@ services:
     restart: unless-stopped
     image: nginx:1.18.0-alpine
     ports:
-      - target: 80
-        published: 8080
-        protocol: tcp
-        mode: host
       - target: 443
-        published: 8081
+        published: 8080
         protocol: tcp
         mode: host
     networks:
       - services
     volumes:
-      - ./scripts/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./scripts/nginx-localhost.conf:/etc/nginx/nginx.conf:ro
       - ./secrets/nginx_server_key.pem:/etc/nginx/server_key.pem:ro
       - ./secrets/nginx_server_cert.pem:/etc/nginx/server_cert.pem:ro
   elasticsearch:

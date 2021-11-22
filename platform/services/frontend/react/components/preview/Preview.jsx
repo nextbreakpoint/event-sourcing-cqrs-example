@@ -41,7 +41,7 @@ let Preview = class Preview extends React.Component {
 
         try {
             if (typeof(EventSource) !== "undefined") {
-                axios.get(component.props.config.api_url + "/watch/designs/" + timestamp + "/" + this.props.uuid, config)
+                axios.get(component.props.config.api_url + "/v1/watch/designs/" + timestamp + "/" + this.props.uuid, config)
                     .then(function (response) {
                         if (response.status == 200) {
                             var source = new EventSource(response.headers.location, { withCredentials: true })
@@ -91,7 +91,7 @@ let Preview = class Preview extends React.Component {
 
         component.props.handleLoadDesign()
 
-        axios.get(component.props.config.api_url + '/designs/' + this.props.uuid, config)
+        axios.get(component.props.config.api_url + '/v1/designs/' + this.props.uuid, config)
             .then(function (response) {
                 if (response.status == 200) {
                     console.log("Design loaded")

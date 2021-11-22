@@ -43,7 +43,7 @@ let Header = class Header extends React.Component {
     }
 
     handleLogin = () => {
-        window.location = this.props.config.api_url + "/auth/signin" + this.props.landing
+        window.location = this.props.config.api_url + "/v1/auth/signin" + this.props.landing
     }
 
     handleLogout = () => {

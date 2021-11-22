@@ -18,21 +18,21 @@
 
   "origin_pattern": "https://localhost(:[0-9]+)?",
 
-  "client_web_url": "https://localhost:30101",
-  "client_auth_url": "https://localhost:30101",
+  "client_web_url": "https://localhost:8080",
+  "client_auth_url": "https://localhost:8080",
 
-  "server_accounts_url": "http://localhost:${STUB_PORT_1}",
+  "server_accounts_url": "https://localhost:${ACCOUNTS_PORT}",
 
-  "github_url": "http://localhost:${STUB_PORT_2}",
-  "github_client_id": "111",
-  "github_client_secret": "222",
+  "github_url": "${GITHUB_API_URL}",
+  "github_client_id": "${GITHUB_CLIENT_ID}",
+  "github_client_secret": "${GITHUB_CLIENT_SECRET}",
 
-  "oauth_login_url": "http://localhost:${STUB_PORT_2}/login",
-  "oauth_token_path": "http://localhost:${STUB_PORT_2}/login/oauth/access_token",
-  "oauth_authorize_path": "http://localhost:${STUB_PORT_2}/login/oauth/authorize",
+  "oauth_login_url": "${GITHUB_OAUTH_URL}/login",
+  "oauth_token_path": "${GITHUB_OAUTH_URL}/login/oauth/access_token",
+  "oauth_authorize_path": "${GITHUB_OAUTH_URL}/login/oauth/authorize",
   "oauth_authority": "user:email",
 
   "cookie_domain": "localhost",
 
-  "admin_users": ["admin@localhost"]
+  "admin_users": ["${ADMIN_EMAIL}"]
 }

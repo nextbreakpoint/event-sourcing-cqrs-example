@@ -144,7 +144,7 @@ public class Verticle extends AbstractVerticle {
                 .method(HttpMethod.OPTIONS)
                 .handler(new ProxyHandler(authClient));
 
-        mainRouter.mountSubRouter("/auth", authRouter);
+        mainRouter.mountSubRouter("/v1/auth", authRouter);
     }
 
     private void configureAccountRoute(Environment environment, JsonObject config, Router mainRouter) throws MalformedURLException {
@@ -164,7 +164,7 @@ public class Verticle extends AbstractVerticle {
                 .method(HttpMethod.POST)
                 .handler(new ProxyHandler(accountsClient));
 
-        mainRouter.mountSubRouter("/accounts", accountsRouter);
+        mainRouter.mountSubRouter("/v1/accounts", accountsRouter);
     }
 
     private void configureDesignsRoute(Environment environment, JsonObject config, Router mainRouter) throws MalformedURLException {
@@ -202,7 +202,7 @@ public class Verticle extends AbstractVerticle {
                 .method(HttpMethod.DELETE)
                 .handler(new ProxyHandler(designsCommandClient));
 
-        mainRouter.mountSubRouter("/designs", designsRouter);
+        mainRouter.mountSubRouter("/v1/designs", designsRouter);
     }
 
     private void configureWatchRoute(Environment environment, JsonObject config, Router mainRouter, String originPattern, ServiceDiscovery serviceDiscovery) {
@@ -221,6 +221,6 @@ public class Verticle extends AbstractVerticle {
         designsRouter.get("/*")
                 .handler(new WatchHandler(serviceDiscovery));
 
-        mainRouter.mountSubRouter("/watch/designs", designsRouter);
+        mainRouter.mountSubRouter("/v1/watch/designs", designsRouter);
     }
 }

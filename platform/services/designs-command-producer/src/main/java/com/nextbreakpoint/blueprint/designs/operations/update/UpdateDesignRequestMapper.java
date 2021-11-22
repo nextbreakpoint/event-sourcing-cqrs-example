@@ -29,7 +29,7 @@ public class UpdateDesignRequestMapper implements Mapper<RoutingContext, UpdateD
             throw new IllegalArgumentException("the request's body doesn't contain the required properties: manifest, metadata, script");
         }
 
-        final Integer levels = bodyAsJson.getInteger("levels", 5);
+        final Integer levels = bodyAsJson.getInteger("levels", 8);
 
         final String json = new JsonObject()
                 .put("manifest", manifest)

@@ -195,12 +195,12 @@ public class Verticle extends AbstractVerticle {
 
             pollingWihCompactionThread.start();
 
-            final Handler<RoutingContext> openapiHandler = new OpenApiHandler(vertx.getDelegate(), executor, "openapi.yaml");
+            final Handler<RoutingContext> apiV1DocsHandler = new OpenApiHandler(vertx.getDelegate(), executor, "api-v1.yaml");
 
-            final URL resource = RouterBuilder.class.getClassLoader().getResource("openapi.yaml");
+            final URL resource = RouterBuilder.class.getClassLoader().getResource("api-v1.yaml");
 
             if (resource == null) {
-                throw new Exception("Cannot find resource openapi.yaml");
+                throw new Exception("Cannot find resource api-v1.yaml");
             }
 
             final String url = resource.toURI().toString();
@@ -219,7 +219,7 @@ public class Verticle extends AbstractVerticle {
 
                         mainRouter.mountSubRouter("/v1", apiRouter);
 
-                        mainRouter.get("/v1/apidocs").handler(openapiHandler);
+                        mainRouter.get("/v1/apidocs").handler(apiV1DocsHandler);
 
                         mainRouter.options("/*").handler(ResponseHelper::sendNoContent);
 

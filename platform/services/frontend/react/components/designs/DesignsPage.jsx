@@ -91,7 +91,7 @@ let DesignsPage = class DesignsPage extends React.Component {
         component.props.handleHideCreateDialog()
         component.props.handleHideErrorMessage()
 
-        axios.post(component.props.config.api_url + '/designs', design, config)
+        axios.post(component.props.config.api_url + '/v1/designs', design, config)
             .then(function (response) {
                 if (response.status == 202 || response.status == 201) {
                     //var designs = component.props.designs.slice()
@@ -121,7 +121,7 @@ let DesignsPage = class DesignsPage extends React.Component {
 
         let promises = this.props.selected
             .map((uuid) => {
-                return axios.delete(component.props.config.api_url + '/designs/' + uuid, config)
+                return axios.delete(component.props.config.api_url + '/v1/designs/' + uuid, config)
             })
 
         component.props.handleHideConfirmDelete()

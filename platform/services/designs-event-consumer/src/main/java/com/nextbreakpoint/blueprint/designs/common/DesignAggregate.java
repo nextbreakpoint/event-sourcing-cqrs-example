@@ -83,13 +83,13 @@ public class DesignAggregate {
     }
 
     private Set<Integer> mergeCompleted(DesignAccumulator accumulator, DesignAccumulator element, int level) {
-        Set<Integer> combined = new HashSet<>(accumulator.getTiles().get(level).getCompleted());
+        Set<Integer> combined = new HashSet<>(accumulator.getTiles().getOrDefault(level, TILES_EMPTY).getCompleted());
         combined.addAll(element.getTiles().getOrDefault(level, TILES_EMPTY).getCompleted());
         return combined;
     }
 
     private Set<Integer> mergeFailed(DesignAccumulator accumulator, DesignAccumulator element, int level) {
-        Set<Integer> combined = new HashSet<>(accumulator.getTiles().get(level).getFailed());
+        Set<Integer> combined = new HashSet<>(accumulator.getTiles().getOrDefault(level, TILES_EMPTY).getFailed());
         combined.addAll(element.getTiles().getOrDefault(level, TILES_EMPTY).getFailed());
         return combined;
     }

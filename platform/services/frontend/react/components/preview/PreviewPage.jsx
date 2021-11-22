@@ -81,7 +81,7 @@ let PreviewPage = class PreviewPage extends React.Component {
         component.props.handleHideUpdateDialog()
         component.props.handleHideErrorMessage()
 
-        axios.put(component.props.config.api_url + '/designs/' + this.props.uuid, design, config)
+        axios.put(component.props.config.api_url + '/v1/designs/' + this.props.uuid, design, config)
             .then(function (content) {
                 if (content.status == 202 || content.status == 200) {
                     //component.props.handleDesignLoadedSuccess(design, timestamp)
@@ -114,11 +114,11 @@ let PreviewPage = class PreviewPage extends React.Component {
     }
 
     renderMapLayer = (url) => {
-        return <TileLayer url={url} attribution='&copy; Andrea Medeghini' detectRetina={true} bounds={[[-180, -180],[180, 180]]} noWrap={true} minZoom={2} maxZoom={10} tileSize={256} updateWhenIdle={true} updateWhenZooming={false} updateInterval={500} keepBuffer={2}/>
+        return <TileLayer url={url} attribution='&copy; Andrea Medeghini' detectRetina={true} bounds={[[-180, -180],[180, 180]]} noWrap={true} minZoom={1} maxZoom={7} tileSize={256} updateWhenIdle={true} updateWhenZooming={false} updateInterval={500} keepBuffer={2}/>
     }
 
     render() {
-        const url = this.props.config.api_url + '/designs/' + this.props.uuid + '/{z}/{x}/{y}/256.png?t=' + this.props.design.checksum
+        const url = this.props.config.api_url + '/v1/designs/' + this.props.uuid + '/{z}/{x}/{y}/256.png?t=' + this.props.design.checksum
 
         return (
             <React.Fragment>

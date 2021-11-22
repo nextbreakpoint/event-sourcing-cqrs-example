@@ -22,7 +22,7 @@
     "tags": [
       "http-endpoint"
     ],
-    "port": 8080,
+    "port": 30123,
     "address": "localhost"
   }]
 }

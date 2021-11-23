@@ -4,7 +4,6 @@ import com.nextbreakpoint.blueprint.common.core.Environment;
 import com.nextbreakpoint.blueprint.common.core.IOUtils;
 import com.nextbreakpoint.blueprint.common.vertx.*;
 import com.nextbreakpoint.blueprint.gateway.handlers.ProxyHandler;
-import com.nextbreakpoint.blueprint.gateway.handlers.WatchHandler;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.dns.AddressResolverOptions;
@@ -24,9 +23,6 @@ import io.vertx.rxjava.ext.web.Router;
 import io.vertx.rxjava.ext.web.handler.CorsHandler;
 import io.vertx.rxjava.ext.web.handler.LoggerHandler;
 import io.vertx.rxjava.ext.web.handler.TimeoutHandler;
-import io.vertx.rxjava.servicediscovery.ServiceDiscovery;
-import io.vertx.rxjava.servicediscovery.spi.ServiceImporter;
-import io.vertx.servicediscovery.consul.ConsulServiceImporter;
 import io.vertx.tracing.opentracing.OpenTracingOptions;
 import rx.Completable;
 
@@ -91,25 +87,13 @@ public class Verticle extends AbstractVerticle {
 
             final String originPattern = environment.resolve(config.getString("origin_pattern"));
 
-            final String consulHost = environment.resolve(config.getString("consul_host"));
-            final Integer consulPort = Integer.parseInt(environment.resolve(config.getString("consul_port")));
-
-            final JsonObject configuration = new JsonObject()
-                    .put("host", consulHost)
-                    .put("port", consulPort)
-                    .put("scan-period", 2000);
-
-            final ServiceDiscovery serviceDiscovery = ServiceDiscovery.create(vertx);
-
-            serviceDiscovery.registerServiceImporter(new ServiceImporter(new ConsulServiceImporter()), configuration);
-
             final Router mainRouter = Router.router(vertx);
 
             mainRouter.route().handler(MDCHandler.create());
             mainRouter.route().handler(LoggerHandler.create(true, LoggerFormat.DEFAULT));
             mainRouter.route().handler(TimeoutHandler.create(30000L));
 
-            configureWatchRoute(environment, config, mainRouter, originPattern, serviceDiscovery);
+            configureWatchRoute(environment, config, mainRouter, originPattern);
 
             configureAuthRoute(environment, config, mainRouter);
 
@@ -205,21 +189,22 @@ public class Verticle extends AbstractVerticle {
         mainRouter.mountSubRouter("/v1/designs", designsRouter);
     }
 
-    private void configureWatchRoute(Environment environment, JsonObject config, Router mainRouter, String originPattern, ServiceDiscovery serviceDiscovery) {
+    private void configureWatchRoute(Environment environment, JsonObject config, Router mainRouter, String originPattern) throws MalformedURLException {
         final Router designsRouter = Router.router(vertx);
+
+        final HttpClient designsWatchClient = HttpClientFactory.create(environment, vertx, environment.resolve(config.getString("server_designs_watch_url")), config);
 
         final CorsHandler corsHandler = CorsHandlerFactory.createWithAll(originPattern, asList(COOKIE, AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN, LOCATION), asList(COOKIE, CONTENT_TYPE, X_XSRF_TOKEN, LOCATION));
 
         designsRouter.route("/*").handler(corsHandler);
 
-        designsRouter.options("/*")
-                .handler(ResponseHelper::sendNoContent);
-
-        designsRouter.getWithRegex("/([0-9]+)")
-                .handler(new WatchHandler(serviceDiscovery));
+        designsRouter.get("/*")
+                .method(HttpMethod.OPTIONS)
+                .handler(new ProxyHandler(designsWatchClient));
 
         designsRouter.get("/*")
-                .handler(new WatchHandler(serviceDiscovery));
+                .method(HttpMethod.GET)
+                .handler(new ProxyHandler(designsWatchClient));
 
         mainRouter.mountSubRouter("/v1/watch/designs", designsRouter);
     }

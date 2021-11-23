@@ -5,8 +5,6 @@ module com.nextbreakpoint.blueprint.gateway {
     requires io.vertx.web;
     requires io.vertx.metrics.micrometer;
     requires io.vertx.tracing.opentracing;
-    requires io.vertx.servicediscovery;
-    requires io.vertx.servicediscovery.bridge.consul;
     requires vertx.rx.java;
     requires rxjava;
     requires com.fasterxml.jackson.core;

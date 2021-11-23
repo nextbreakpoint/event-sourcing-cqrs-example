@@ -53,7 +53,7 @@
                         <JAEGER_REPORTER_LOG_SPANS>true</JAEGER_REPORTER_LOG_SPANS>
                     </environmentVariables>
                     <arguments>
-                        <argument>-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:35120</argument>
+                        <argument>-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:35121</argument>
                         <argument>--class-path</argument>
                         <classpath/>
                         <argument>com.nextbreakpoint.blueprint.designs.Verticle</argument>

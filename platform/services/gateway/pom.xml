@@ -44,7 +44,6 @@
                     <executable>java</executable>
                     <environmentVariables>
                         <KEYSTORE_SECRET>secret</KEYSTORE_SECRET>
-                        <CONSUL_HOST>localhost</CONSUL_HOST>
                         <JAEGER_SERVICE_NAME>gateway</JAEGER_SERVICE_NAME>
                         <JAEGER_AGENT_HOST>localhost</JAEGER_AGENT_HOST>
                         <JAEGER_TAGS>env=dev</JAEGER_TAGS>
@@ -71,6 +70,7 @@
                                 <AUTHENTICATION_PORT>39001</AUTHENTICATION_PORT>
                                 <DESIGNS_QUERY_PORT>39001</DESIGNS_QUERY_PORT>
                                 <DESIGNS_COMMAND_PORT>39001</DESIGNS_COMMAND_PORT>
+                                <DESIGNS_WATCH_PORT>39001</DESIGNS_WATCH_PORT>
                             </environmentVariables>
                         </configuration>
                     </execution>
@@ -85,6 +85,7 @@
                                 <AUTHENTICATION_PORT>30101</AUTHENTICATION_PORT>
                                 <DESIGNS_QUERY_PORT>30120</DESIGNS_QUERY_PORT>
                                 <DESIGNS_COMMAND_PORT>30121</DESIGNS_COMMAND_PORT>
+                                <DESIGNS_WATCH_PORT>30123</DESIGNS_WATCH_PORT>
                             </environmentVariables>
                         </configuration>
                     </execution>
@@ -92,10 +93,4 @@
             </plugin>
         </plugins>
     </build>
-    <dependencies>
-        <dependency>
-            <groupId>io.vertx</groupId>
-            <artifactId>vertx-service-discovery-bridge-consul</artifactId>
-        </dependency>
-    </dependencies>
 </project>

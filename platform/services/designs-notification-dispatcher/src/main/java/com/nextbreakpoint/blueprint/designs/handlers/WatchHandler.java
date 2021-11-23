@@ -1,4 +1,4 @@
-package com.nextbreakpoint.blueprint.gateway.handlers;
+package com.nextbreakpoint.blueprint.designs.handlers;
 
 import io.vertx.core.Handler;
 import io.vertx.core.impl.logging.Logger;

@@ -34,6 +34,11 @@ public class TestScenario {
     final List<String> helmArgs = Arrays.asList(
             "--set=replicas=1",
             "--set=clientDomain=${serviceHost}",
+            "--set=authApiUrl=http://${stubHost}:${stubPort}",
+            "--set=accountsApiUrl=http://${stubHost}:${stubPort}",
+            "--set=designsAggregateFetcherApiUrl=http://${stubHost}:${stubPort}",
+            "--set=designsCommandProducerApiUrl=http://${stubHost}:${stubPort}",
+            "--set=designsNotificationDispatcherApiUrl=http://${stubHost}:${stubPort}",
             "--set=image.pullPolicy=Never",
             "--set=image.repository=integration/designs-notification-dispatcher",
             "--set=image.tag=${version}"
@@ -53,6 +58,7 @@ public class TestScenario {
 //            .withMinikube()
             .withZookeeper()
             .withKafka()
+            .withConsul()
             .build();
 
     scenario.create();
@@ -79,6 +85,14 @@ public class TestScenario {
 
   public String getServicePort() {
     return scenario.getServicePort();
+  }
+
+ public String getStubHost() {
+    return scenario.getStubHost();
+  }
+
+  public String getStubPort() {
+    return scenario.getStubPort();
   }
 
   public String getNamespace() {

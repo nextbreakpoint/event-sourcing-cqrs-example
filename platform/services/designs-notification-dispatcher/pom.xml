@@ -65,6 +65,7 @@
                     <environmentVariables>
                         <KEYSTORE_SECRET>secret</KEYSTORE_SECRET>
                         <KAFKA_HOST>localhost</KAFKA_HOST>
+                        <CONSUL_HOST>localhost</CONSUL_HOST>
                         <JAEGER_SERVICE_NAME>designs-notification-dispatcher</JAEGER_SERVICE_NAME>
                         <JAEGER_AGENT_HOST>localhost</JAEGER_AGENT_HOST>
                         <JAEGER_TAGS>env=dev</JAEGER_TAGS>
@@ -114,6 +115,10 @@
         <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-cassandra-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-service-discovery-bridge-consul</artifactId>
         </dependency>
         <dependency>
             <groupId>au.com.dius.pact</groupId>

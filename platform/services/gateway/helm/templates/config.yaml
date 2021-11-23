@@ -34,11 +34,9 @@ data:
 
       "origin_pattern": "https://{{ $root.Values.clientDomain | default "localhost" }}(:[0-9]+)?",
 
-      "consul_host": "consul",
-      "consul_port": "8400",
-
       "server_auth_url": "{{ $root.Values.authApiUrl | default "https://authentication:8080" }}/auth",
       "server_accounts_url": "{{ $root.Values.accountsApiUrl | default "https://accounts:8080" }}/accounts",
       "server_designs_query_url": "{{ $root.Values.designsAggregateFetcherApiUrl | default "https://designs-aggregate-fetcher:8080" }}/designs",
-      "server_designs_command_url": "{{ $root.Values.designsCommandProducerApiUrl | default "https://designs-command-producer:8080" }}/designs"
+      "server_designs_command_url": "{{ $root.Values.designsCommandProducerApiUrl | default "https://designs-command-producer:8080" }}/designs",
+      "server_designs_watch_url": "{{ $root.Values.designsNotificationDispatcherApiUrl | default "https://designs-notification-dispatcher:8080" }}/watch/designs"
     }

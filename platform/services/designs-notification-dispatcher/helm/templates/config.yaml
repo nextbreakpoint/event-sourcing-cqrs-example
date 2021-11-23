@@ -27,5 +27,8 @@ data:
 
       "kafka_bootstrap_servers": "kafka:9092",
       "kafka_group_id": "designs-notification-dispatcher",
-      "events_topic": "events"
+      "events_topic": "events",
+
+      "consul_host": "consul",
+      "consul_port": "8400"
     }

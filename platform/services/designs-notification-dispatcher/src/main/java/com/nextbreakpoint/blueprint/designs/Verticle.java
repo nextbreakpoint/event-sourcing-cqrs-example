@@ -3,6 +3,7 @@ package com.nextbreakpoint.blueprint.designs;
 import com.nextbreakpoint.blueprint.common.core.*;
 import com.nextbreakpoint.blueprint.common.vertx.*;
 import com.nextbreakpoint.blueprint.designs.common.NotificationDispatcher;
+import com.nextbreakpoint.blueprint.designs.handlers.WatchHandler;
 import com.nextbreakpoint.blueprint.designs.controllers.DesignAggregateUpdateCompletedController;
 import com.nextbreakpoint.blueprint.designs.controllers.TileAggregateUpdateCompletedController;
 import io.vertx.core.DeploymentOptions;
@@ -26,6 +27,9 @@ import io.vertx.rxjava.ext.web.handler.BodyHandler;
 import io.vertx.rxjava.ext.web.handler.CorsHandler;
 import io.vertx.rxjava.ext.web.handler.LoggerHandler;
 import io.vertx.rxjava.kafka.client.consumer.KafkaConsumer;
+import io.vertx.rxjava.servicediscovery.ServiceDiscovery;
+import io.vertx.rxjava.servicediscovery.spi.ServiceImporter;
+import io.vertx.servicediscovery.consul.ConsulServiceImporter;
 import io.vertx.tracing.opentracing.OpenTracingOptions;
 import rx.Completable;
 
@@ -122,11 +126,25 @@ public class Verticle extends AbstractVerticle {
 
             final Router mainRouter = Router.router(vertx);
 
+            final String consulHost = environment.resolve(config.getString("consul_host"));
+            final Integer consulPort = Integer.parseInt(environment.resolve(config.getString("consul_port")));
+
+            final JsonObject configuration = new JsonObject()
+                    .put("host", consulHost)
+                    .put("port", consulPort)
+                    .put("scan-period", 2000);
+
+            final ServiceDiscovery serviceDiscovery = ServiceDiscovery.create(vertx);
+
+            serviceDiscovery.registerServiceImporter(new ServiceImporter(new ConsulServiceImporter()), configuration);
+
             final CorsHandler corsHandler = CorsHandlerFactory.createWithAll(originPattern, asList(COOKIE, AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN));
 
             final Handler<RoutingContext> onAccessDenied = routingContext -> routingContext.fail(Failure.accessDenied("Authorisation failed"));
 
-            final Handler<RoutingContext> eventHandler = new AccessHandler(jwtProvider, NotificationDispatcher.create(vertx), onAccessDenied, asList(ANONYMOUS, ADMIN, GUEST));
+            final Handler<RoutingContext> watchHandler = new AccessHandler(jwtProvider, new WatchHandler(serviceDiscovery), onAccessDenied, asList(ANONYMOUS, ADMIN, GUEST));
+
+            final Handler<RoutingContext> sseHandler = new AccessHandler(jwtProvider, NotificationDispatcher.create(vertx), onAccessDenied, asList(ANONYMOUS, ADMIN, GUEST));
 
             final Map<String, BlockingHandler<InputMessage>> messageHandlers = new HashMap<>();
 
@@ -155,10 +173,16 @@ public class Verticle extends AbstractVerticle {
             RouterBuilder.create(vertx.getDelegate(), url)
                     .onSuccess(routerBuilder -> {
                         routerBuilder.operation("watchDesign")
-                                .handler(context -> eventHandler.handle(RoutingContext.newInstance(context)));
+                                .handler(context -> watchHandler.handle(RoutingContext.newInstance(context)));
 
                         routerBuilder.operation("watchDesigns")
-                                .handler(context -> eventHandler.handle(RoutingContext.newInstance(context)));
+                                .handler(context -> watchHandler.handle(RoutingContext.newInstance(context)));
+//
+                        routerBuilder.operation("sseDesign")
+                                .handler(context -> sseHandler.handle(RoutingContext.newInstance(context)));
+
+                        routerBuilder.operation("sseDesigns")
+                                .handler(context -> sseHandler.handle(RoutingContext.newInstance(context)));
 //
                         final Router apiRouter = Router.newInstance(routerBuilder.createRouter());
 

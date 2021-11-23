@@ -93,6 +93,13 @@
                         <goals>
                             <goal>exec</goal>
                         </goals>
+                        <configuration>
+                            <environmentVariables>
+                                <BUCKET_NAME>test-designs-tile-renderer</BUCKET_NAME>
+                                <EVENTS_TOPIC>test-designs-tile-renderer-events</EVENTS_TOPIC>
+                                <RENDER_TOPIC>test-designs-tile-renderer-render</RENDER_TOPIC>
+                            </environmentVariables>
+                        </configuration>
                     </execution>
                     <execution>
                         <id>shared</id>

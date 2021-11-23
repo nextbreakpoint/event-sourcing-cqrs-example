@@ -84,6 +84,12 @@
                         <goals>
                             <goal>exec</goal>
                         </goals>
+                        <configuration>
+                            <environmentVariables>
+                                <DATABASE_KEYSPACE>test_designs_aggregate_fetcher</DATABASE_KEYSPACE>
+                                <BUCKET_NAME>test-designs-aggregate-fetcher</BUCKET_NAME>
+                            </environmentVariables>
+                        </configuration>
                     </execution>
                     <execution>
                         <id>shared</id>

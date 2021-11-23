@@ -67,6 +67,11 @@
                         <goals>
                             <goal>exec</goal>
                         </goals>
+                        <configuration>
+                            <environmentVariables>
+                                <EVENTS_TOPIC>test-designs-command-producer-events</EVENTS_TOPIC>
+                            </environmentVariables>
+                        </configuration>
                     </execution>
                     <execution>
                         <id>shared</id>

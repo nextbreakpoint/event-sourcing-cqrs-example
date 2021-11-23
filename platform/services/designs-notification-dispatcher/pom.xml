@@ -88,6 +88,11 @@
                         <goals>
                             <goal>exec</goal>
                         </goals>
+                        <configuration>
+                            <environmentVariables>
+                                <EVENTS_TOPIC>test-designs-notification-dispatcher-events</EVENTS_TOPIC>
+                            </environmentVariables>
+                        </configuration>
                     </execution>
                     <execution>
                         <id>shared</id>

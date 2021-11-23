@@ -46,11 +46,15 @@ public class TestCases {
         RxJavaHooks.setOnIOScheduler(s -> RxHelper.blockingScheduler(vertx));
         RxJavaHooks.setOnNewThreadScheduler(s -> RxHelper.blockingScheduler(vertx));
 
-        CassandraClient session = CassandraClientFactory.create(environment, vertx, scenario.createCassandraConfig());
+        CassandraClient session = CassandraClientFactory.create(environment, vertx, scenario.createCassandraConfig("test_designs_aggregate_fetcher"));
 
         testCassandra = new TestCassandra(session);
 
         s3Client = TestS3.createS3Client(URI.create("http://" + scenario.getMinioHost() + ":" + scenario.getMinioPort()));
+
+        TestS3.deleteContent(s3Client, TestConstants.BUCKET, object -> true);
+        TestS3.deleteBucket(s3Client, TestConstants.BUCKET);
+        TestS3.createBucket(s3Client, TestConstants.BUCKET);
     }
 
     public void after() throws IOException, InterruptedException {

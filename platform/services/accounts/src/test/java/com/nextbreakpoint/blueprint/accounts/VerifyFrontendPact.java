@@ -64,7 +64,7 @@ public class VerifyFrontendPact {
 
   @State("account exists for uuid")
   public void accountExistsForUuid() throws SQLException {
-    try (Connection connection = DriverManager.getConnection(scenario.getMySqlConnectionUrl("accounts"), "root", "password")) {
+    try (Connection connection = DriverManager.getConnection(scenario.getMySqlConnectionUrl(TestConstants.DATABASE_NAME), TestConstants.DATABASE_USERNAME, TestConstants.DATABASE_PASSWORD)) {
       connection.prepareStatement("TRUNCATE ACCOUNT;").execute();
       PreparedStatement statement = connection.prepareStatement("INSERT INTO ACCOUNT (ACCOUNT_UUID,ACCOUNT_NAME,ACCOUNT_EMAIL,ACCOUNT_AUTHORITIES,ACCOUNT_CREATED) VALUES (?,?,?,?,CURRENT_TIMESTAMP);");
       statement.setString(1, ACCOUNT_UUID.toString());

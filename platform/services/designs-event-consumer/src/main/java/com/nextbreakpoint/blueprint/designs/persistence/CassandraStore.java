@@ -39,6 +39,7 @@ public class CassandraStore implements Store {
 
     private final DesignAggregate designAggregate = new DesignAggregate();
 
+    private String keyspace;
     private final Supplier<CassandraClient> supplier;
 
     private CassandraClient session;
@@ -49,7 +50,8 @@ public class CassandraStore implements Store {
     private Single<PreparedStatement> selectMessages;
     private Single<Metadata> metadata;
 
-    public CassandraStore(Supplier<CassandraClient> supplier) {
+    public CassandraStore(String keyspace, Supplier<CassandraClient> supplier) {
+        this.keyspace = Objects.requireNonNull(keyspace);
         this.supplier = Objects.requireNonNull(supplier);
     }
 
@@ -114,7 +116,7 @@ public class CassandraStore implements Store {
 
     private Single<Optional<Design>> insertDesign(CassandraClient session, Design design) {
         return metadata
-                .map(metadata -> metadata.getKeyspace("designs").orElseThrow())
+                .map(metadata -> metadata.getKeyspace(keyspace).orElseThrow())
                 .map(keyspaceMetadata -> keyspaceMetadata.getUserDefinedType("LEVEL").orElseThrow(() -> new RuntimeException("UDT not found: LEVEL")))
                 .flatMap(levelType -> insertDesign.map(pst -> pst.bind(makeDesignInsertParams(design, levelType)).setConsistencyLevel(ConsistencyLevel.QUORUM)))
                 .flatMap(session::rxExecute)

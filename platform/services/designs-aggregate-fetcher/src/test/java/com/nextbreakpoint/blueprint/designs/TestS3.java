@@ -43,16 +43,21 @@ public class TestS3 {
     }
 
     public static void deleteContent(S3Client s3Client, String bucket, Predicate<S3Object> predicate) {
-        s3Client.listObjectsV2Paginator(ListObjectsV2Request.builder().bucket(bucket).build())
-                .stream()
-                .forEach(response -> TestS3.deleteObjects(s3Client, bucket, response.contents().stream().filter(predicate).collect(Collectors.toList())));
+        if (s3Client.listBuckets().buckets().stream().anyMatch(s3Bucket -> s3Bucket.name().equals(bucket))) {
+            s3Client.listObjectsV2Paginator(ListObjectsV2Request.builder().bucket(bucket).build())
+                    .stream().forEach(response -> TestS3.deleteObjects(s3Client, bucket, response.contents().stream().filter(predicate).collect(Collectors.toList())));
+        }
     }
 
     public static void deleteBucket(S3Client s3Client, String bucket) {
-        s3Client.deleteBucket(DeleteBucketRequest.builder().bucket(bucket).build());
+        if (s3Client.listBuckets().buckets().stream().anyMatch(s3Bucket -> s3Bucket.name().equals(bucket))) {
+            s3Client.deleteBucket(DeleteBucketRequest.builder().bucket(bucket).build());
+        }
     }
 
     public static void createBucket(S3Client s3Client, String bucket) {
-        s3Client.createBucket(CreateBucketRequest.builder().bucket(bucket).build());
+        if (s3Client.listBuckets().buckets().stream().noneMatch(s3Bucket -> s3Bucket.name().equals(bucket))) {
+            s3Client.createBucket(CreateBucketRequest.builder().bucket(bucket).build());
+        }
     }
 }

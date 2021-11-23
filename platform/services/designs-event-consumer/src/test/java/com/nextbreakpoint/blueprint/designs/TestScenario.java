@@ -96,8 +96,8 @@ public class TestScenario {
     return VertxUtils.makeAuthorization(user, Collections.singletonList(role), "../../secrets/keystore_auth.jceks");
   }
 
-  public JsonObject createCassandraConfig() {
-    return scenario.createCassandraConfig("datacenter1", "designs");
+  public JsonObject createCassandraConfig(String keyspace) {
+    return scenario.createCassandraConfig("datacenter1", keyspace);
   }
 
   public JsonObject createConsumerConfig(String group) {

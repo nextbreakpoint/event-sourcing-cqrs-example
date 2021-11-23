@@ -20,5 +20,5 @@ public interface TestConstants {
 
     int LEVELS = 3;
 
-    String BUCKET = "tiles";
+    String BUCKET = "test-designs-aggregate-fetcher";
 }

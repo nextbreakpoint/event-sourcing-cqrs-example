@@ -80,7 +80,7 @@ public class NotificationDispatcher implements Handler<RoutingContext> {
 
         routingContext.response().write(makeEvent("open", 0L, "{\"session\":\"" + sessionId + "\"}"));
 
-        final MessageConsumer<JsonObject> consumer = vertx.eventBus().consumer("events.handler.output." + sessionId, msg -> {
+        final MessageConsumer<JsonObject> consumer = vertx.eventBus().consumer("notifications." + sessionId, msg -> {
             try {
                 final JsonObject message = msg.body();
 

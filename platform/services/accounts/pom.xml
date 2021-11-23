@@ -69,6 +69,11 @@
                         <goals>
                             <goal>exec</goal>
                         </goals>
+                        <configuration>
+                            <environmentVariables>
+                                <DATABASE_NAME>test_accounts</DATABASE_NAME>
+                            </environmentVariables>
+                        </configuration>
                     </execution>
                     <execution>
                         <id>shared</id>

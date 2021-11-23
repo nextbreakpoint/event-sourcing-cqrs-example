@@ -76,11 +76,9 @@ public class TestCases {
 
         final S3Client s3Client = TestS3.createS3Client(URI.create("http://" + scenario.getMinioHost() + ":" + scenario.getMinioPort()));
 
-        TestS3.deleteContent(s3Client, TestConstants.BUCKET, object -> object.key().startsWith(TestConstants.CHECKSUM_1) || object.key().startsWith(TestConstants.CHECKSUM_2));
-
-//        TestS3.deleteContent(s3Client, TestConstants.BUCKET);
-//        TestS3.deleteBucket(s3Client, TestConstants.BUCKET);
-//        TestS3.createBucket(s3Client, TestConstants.BUCKET);
+        TestS3.deleteContent(s3Client, TestConstants.BUCKET, object -> true);
+        TestS3.deleteBucket(s3Client, TestConstants.BUCKET);
+        TestS3.createBucket(s3Client, TestConstants.BUCKET);
     }
 
     public void after() throws IOException, InterruptedException {

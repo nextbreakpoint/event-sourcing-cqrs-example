@@ -105,8 +105,8 @@ public class TestScenario {
     return KubeUtils.executeCommand(command, true);
   }
 
-  public JsonObject createCassandraConfig() {
-    return scenario.createCassandraConfig("datacenter1", "designs");
+  public JsonObject createCassandraConfig(String keyspace) {
+    return scenario.createCassandraConfig("datacenter1", keyspace);
   }
 
   public String getMinioHost() {

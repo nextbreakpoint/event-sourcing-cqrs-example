@@ -62,7 +62,7 @@ public class TestCases {
         RxJavaHooks.setOnIOScheduler(s -> RxHelper.blockingScheduler(vertx));
         RxJavaHooks.setOnNewThreadScheduler(s -> RxHelper.blockingScheduler(vertx));
 
-        CassandraClient session = CassandraClientFactory.create(environment, vertx, scenario.createCassandraConfig());
+        CassandraClient session = CassandraClientFactory.create(environment, vertx, scenario.createCassandraConfig("test_designs_event_consumer"));
 
         testCassandra = new TestCassandra(session);
 

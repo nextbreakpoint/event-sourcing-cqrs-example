@@ -142,6 +142,8 @@ public class Verticle extends AbstractVerticle {
 
             final String messageSource = environment.resolve(config.getString("message_source"));
 
+            final String keyspace = environment.resolve(config.getString("cassandra_keyspace"));
+
             final KafkaProducer<String, String> kafkaProducer = KafkaClientFactory.createProducer(environment, vertx, config);
 
             final JsonObject consumerConfig1 = new JsonObject(config.getMap());
@@ -154,7 +156,7 @@ public class Verticle extends AbstractVerticle {
 
             final Supplier<CassandraClient> supplier = () -> CassandraClientFactory.create(environment, vertx, config);
 
-            final Store store = new CassandraStore(supplier);
+            final Store store = new CassandraStore(keyspace, supplier);
 
             final Router mainRouter = Router.router(vertx);
 

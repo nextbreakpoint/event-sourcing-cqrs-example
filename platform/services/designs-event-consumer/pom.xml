@@ -92,6 +92,13 @@
                         <goals>
                             <goal>exec</goal>
                         </goals>
+                        <configuration>
+                            <environmentVariables>
+                                <DATABASE_KEYSPACE>test_designs_event_consumer</DATABASE_KEYSPACE>
+                                <EVENTS_TOPIC>test-designs-event-consumer-events</EVENTS_TOPIC>
+                                <RENDER_TOPIC>test-designs-event-consumer-render</RENDER_TOPIC>
+                            </environmentVariables>
+                        </configuration>
                     </execution>
                     <execution>
                         <id>shared</id>

@@ -40,7 +40,7 @@ public class PactConsumerTests {
   @BeforeAll
   public static void before() throws IOException, InterruptedException {
     System.setProperty("http.port", "30101");
-    System.setProperty("stub.port", "39001");
+    System.setProperty("stub.port", "39000");
     System.setProperty("stub.port2", "39002");
 
     scenario.before();
@@ -78,7 +78,7 @@ public class PactConsumerTests {
             )
             .uponReceiving("request to fetch account")
             .method("GET")
-            .path("/v1/accounts/" + ACCOUNT_UUID.toString())
+            .path("/v1/accounts/" + ACCOUNT_UUID)
             .matchHeader("Accept", "application/json")
             .matchHeader("Authorization", "Bearer .+")
             .willRespondWith()
@@ -205,7 +205,7 @@ public class PactConsumerTests {
             .and().param("state", "/v1/auth/signin/content/designs")
             .when().get(scenario.makeBaseURL("/v1/auth/callback"))
             .then().assertThat().statusCode(303)
-            .and().header("Location", startsWith("https://" + scenario.getServiceHost() + ":" + scenario.getServicePort() + "/content/designs"));
+            .and().header("Location", startsWith("https://localhost:8080/content/designs"));
 
     verifyHttp(scenario.getStubServer2()).once(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
             .then().once(get(OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
@@ -236,7 +236,7 @@ public class PactConsumerTests {
             .and().param("state", "/v1/auth/signin/content/designs")
             .when().get(scenario.makeBaseURL("/v1/auth/callback"))
             .then().assertThat().statusCode(303)
-            .and().header("Location", startsWith("https://" + scenario.getServiceHost() + ":" + scenario.getServicePort() + "/content/designs"));
+            .and().header("Location", startsWith("https://localhost:8080/content/designs"));
 
     verifyHttp(scenario.getStubServer2()).once(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
             .then().once(get(OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))

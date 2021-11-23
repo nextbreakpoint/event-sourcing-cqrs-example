@@ -4,10 +4,14 @@ import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
 import com.nextbreakpoint.nextfractal.core.common.Bundle;
 import com.nextbreakpoint.nextfractal.core.common.TileGenerator;
 import com.nextbreakpoint.nextfractal.core.common.TileUtils;
+import io.vertx.core.impl.logging.Logger;
+import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.JsonObject;
 import io.vertx.rxjava.core.Promise;
 
 public class TileRenderer {
+    private final Logger logger = LoggerFactory.getLogger(TileRenderer.class.getName());
+
     public TileRenderer() {}
 
     public void renderImage(TileRenderRequested event, Promise<Result> promise) {
@@ -16,8 +20,10 @@ public class TileRenderer {
             final JsonObject json = new JsonObject(event.getData());
             final Bundle bundle = convertToBundle(json);
             final byte[] image = renderImage(bundle, params);
+            logger.info("Image size " + image.length);
             promise.complete(Result.of(image, null));
         } catch (Exception e) {
+            logger.error("Can't render image", e);
             promise.complete(Result.of(new byte[0], e));
         }
     }

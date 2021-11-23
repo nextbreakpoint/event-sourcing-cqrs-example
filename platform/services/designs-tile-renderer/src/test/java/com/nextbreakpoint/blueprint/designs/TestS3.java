@@ -10,6 +10,8 @@ import software.amazon.awssdk.services.s3.model.*;
 
 import java.net.URI;
 import java.util.List;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public class TestS3 {
     private TestS3() {}
@@ -35,10 +37,10 @@ public class TestS3 {
         return s3Client.getObjectAsBytes(GetObjectRequest.builder().bucket(bucket).key(key).build());
     }
 
-    public static void deleteContent(S3Client s3Client, String bucket) {
+    public static void deleteContent(S3Client s3Client, String bucket, Predicate<S3Object> predicate) {
         s3Client.listObjectsV2Paginator(ListObjectsV2Request.builder().bucket(bucket).build())
                 .stream()
-                .forEach(response -> TestS3.deleteObjects(s3Client, bucket, response.contents()));
+                .forEach(response -> TestS3.deleteObjects(s3Client, bucket, response.contents().stream().filter(predicate).collect(Collectors.toList())));
     }
 
     public static void deleteBucket(S3Client s3Client, String bucket) {

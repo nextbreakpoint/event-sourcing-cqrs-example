@@ -18,6 +18,7 @@ import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 
 import java.io.IOException;
 import java.net.URI;
+import java.time.Duration;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -75,6 +76,8 @@ public class TestCases {
 
         final S3Client s3Client = TestS3.createS3Client(URI.create("http://" + scenario.getMinioHost() + ":" + scenario.getMinioPort()));
 
+        TestS3.deleteContent(s3Client, TestConstants.BUCKET, object -> object.key().startsWith(TestConstants.CHECKSUM_1) || object.key().startsWith(TestConstants.CHECKSUM_2));
+
 //        TestS3.deleteContent(s3Client, TestConstants.BUCKET);
 //        TestS3.deleteBucket(s3Client, TestConstants.BUCKET);
 //        TestS3.createBucket(s3Client, TestConstants.BUCKET);
@@ -115,7 +118,7 @@ public class TestCases {
                     assertThat(messages2).hasSize(1);
                 });
 
-        await().atMost(TEN_SECONDS)
+        await().atMost(Duration.ofSeconds(30))
                 .pollInterval(ONE_SECOND)
                 .untilAsserted(() -> {
                     final List<InputMessage> messages = eventsPolling.findMessages(tileRenderRequested1.getUuid().toString(), TestConstants.MESSAGE_SOURCE, TestConstants.TILE_RENDER_COMPLETED);

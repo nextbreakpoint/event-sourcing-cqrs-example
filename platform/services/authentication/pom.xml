@@ -73,9 +73,10 @@
                     </environmentVariables>
                     <arguments>
                         <argument>-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:35101</argument>
-                        <argument>--class-path</argument>
-                        <classpath/>
-                        <argument>com.nextbreakpoint.blueprint.authentication.Verticle</argument>
+                        <argument>--module-path</argument>
+                        <modulepath/>
+                        <argument>--module</argument>
+                        <argument>com.nextbreakpoint.blueprint.authentication/com.nextbreakpoint.blueprint.authentication.Verticle</argument>
                     </arguments>
                 </configuration>
                 <executions>
@@ -86,12 +87,12 @@
                         </goals>
                         <configuration>
                             <environmentVariables>
-                                <ACCOUNTS_PORT>39001</ACCOUNTS_PORT>
+                                <ACCOUNTS_URL>http://localhost:39001</ACCOUNTS_URL>
                                 <GITHUB_API_URL>http://localhost:39002</GITHUB_API_URL>
                                 <GITHUB_OAUTH_URL>http://localhost:39002</GITHUB_OAUTH_URL>
                                 <GITHUB_CLIENT_ID>111</GITHUB_CLIENT_ID>
                                 <GITHUB_CLIENT_SECRET>222</GITHUB_CLIENT_SECRET>
-                                <ADMIN_EMAIL>test@localhost</ADMIN_EMAIL>
+                                <ADMIN_EMAIL>admin@localhost</ADMIN_EMAIL>
                             </environmentVariables>
                         </configuration>
                     </execution>
@@ -102,7 +103,7 @@
                         </goals>
                         <configuration>
                             <environmentVariables>
-                                <ACCOUNTS_PORT>30110</ACCOUNTS_PORT>
+                                <ACCOUNTS_URL>https://localhost:30110</ACCOUNTS_URL>
                                 <GITHUB_API_URL>https://api.github.com</GITHUB_API_URL>
                                 <GITHUB_OAUTH_URL>https://github.com</GITHUB_OAUTH_URL>
                                 <GITHUB_CLIENT_ID>${env.GITHUB_CLIENT_ID}</GITHUB_CLIENT_ID>

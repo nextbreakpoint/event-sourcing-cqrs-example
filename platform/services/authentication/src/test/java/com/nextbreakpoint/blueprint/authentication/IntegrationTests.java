@@ -86,7 +86,7 @@ public class IntegrationTests {
             .and().param("state", "/v1/auth/signin/content/designs")
             .when().get(scenario.makeBaseURL("/v1/auth/callback"))
             .then().assertThat().statusCode(303)
-            .and().header("Location", startsWith("https://" + scenario.getServiceHost() + ":" + scenario.getServicePort() + "/content/designs"));
+            .and().header("Location", startsWith("https://localhost:8080/content/designs"));
 
     verifyHttp(scenario.getStubServer())
             .once(post(ACCOUNTS_PATH), withPostBody(), withHeader("authorization"));
@@ -122,7 +122,7 @@ public class IntegrationTests {
             .and().param("state", "/v1/auth/signin/content/designs")
             .when().get(scenario.makeBaseURL("/v1/auth/callback"))
             .then().assertThat().statusCode(303)
-            .and().header("Location", startsWith("https://" + scenario.getServiceHost() + ":" + scenario.getServicePort() + "/content/designs"));
+            .and().header("Location", startsWith("https://localhost:8080/content/designs"));
 
     verifyHttp(scenario.getStubServer())
             .once(get(ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"))
@@ -146,7 +146,7 @@ public class IntegrationTests {
             .and().param("state", "/v1/auth/signin/content/designs")
             .when().get(scenario.makeBaseURL("/v1/auth/callback"))
             .then().assertThat().statusCode(303)
-            .and().header("Location", startsWith("https://" + scenario.getServiceHost() + ":" + scenario.getServicePort() + "/error/500"));
+            .and().header("Location", startsWith("https://localhost:8080/error/500"));
 
     verifyHttp(scenario.getStubServer2())
             .once(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
@@ -169,7 +169,7 @@ public class IntegrationTests {
             .and().param("state", "/v1/auth/signin/content/designs")
             .when().get(scenario.makeBaseURL("/v1/auth/callback"))
             .then().assertThat().statusCode(303)
-            .and().header("Location", startsWith("https://" + scenario.getServiceHost() + ":" + scenario.getServicePort() + "/error/403"));
+            .and().header("Location", startsWith("https://localhost:8080/error/403"));
 
     verifyHttp(scenario.getStubServer())
             .never(post(ACCOUNTS_PATH));
@@ -200,7 +200,7 @@ public class IntegrationTests {
             .and().param("state", "/v1/auth/signin/content/designs")
             .when().get(scenario.makeBaseURL("/v1/auth/callback"))
             .then().assertThat().statusCode(303)
-            .and().header("Location", startsWith("https://" + scenario.getServiceHost() + ":" + scenario.getServicePort() + "/error/403"));
+            .and().header("Location", startsWith("https://localhost:8080/error/403"));
 
     verifyHttp(scenario.getStubServer())
             .once(get(ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"))
@@ -232,7 +232,7 @@ public class IntegrationTests {
             .and().param("state", "/v1/auth/signin/content/designs")
             .when().get(scenario.makeBaseURL("/v1/auth/callback"))
             .then().assertThat().statusCode(303)
-            .and().header("Location", startsWith("https://" + scenario.getServiceHost() + ":" + scenario.getServicePort() + "/error/500"));
+            .and().header("Location", startsWith("https://localhost:8080/error/500"));
 
     verifyHttp(scenario.getStubServer())
             .once(get(ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"))
@@ -272,7 +272,7 @@ public class IntegrationTests {
             .and().param("state", "/v1/auth/signin/content/designs")
             .when().get(scenario.makeBaseURL("/v1/auth/callback"))
             .then().assertThat().statusCode(303)
-            .and().header("Location", startsWith("https://" + scenario.getServiceHost() + ":" + scenario.getServicePort() + "/error/403"));
+            .and().header("Location", startsWith("https://localhost:8080/error/403"));
 
     verifyHttp(scenario.getStubServer())
             .once(post(ACCOUNTS_PATH), withPostBody(), withHeader("Authorization"));
@@ -311,7 +311,7 @@ public class IntegrationTests {
             .and().param("state", "/v1/auth/signin/content/designs")
             .when().get(scenario.makeBaseURL("/v1/auth/callback"))
             .then().assertThat().statusCode(303)
-            .and().header("Location", startsWith("https://" + scenario.getServiceHost() + ":" + scenario.getServicePort() + "/error/403"));
+            .and().header("Location", startsWith("https://localhost:8080/error/403"));
 
     verifyHttp(scenario.getStubServer())
             .once(get(ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"))
@@ -347,7 +347,7 @@ public class IntegrationTests {
             .and().param("state", "/v1/auth/signin/content/designs")
             .when().get(scenario.makeBaseURL("/v1/auth/callback"))
             .then().assertThat().statusCode(303)
-            .and().header("Location", startsWith("https://" + scenario.getServiceHost() + ":" + scenario.getServicePort() + "/error/403"));
+            .and().header("Location", startsWith("https://localhost:8080/error/403"));
 
     whenHttp(scenario.getStubServer())
             .match(get(ACCOUNTS_PATH + "/" + ACCOUNT_UUID))
@@ -358,7 +358,7 @@ public class IntegrationTests {
             .and().param("state", "/v1/auth/signin/content/designs")
             .when().get(scenario.makeBaseURL("/v1/auth/callback"))
             .then().assertThat().statusCode(303)
-            .and().header("Location", startsWith("https://" + scenario.getServiceHost() + ":" + scenario.getServicePort() + "/error/403"));
+            .and().header("Location", startsWith("https://localhost:8080/error/403"));
 
     verifyHttp(scenario.getStubServer())
             .times(2, get(ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"))
@@ -394,7 +394,7 @@ public class IntegrationTests {
             .and().param("state", "/v1/auth/signin/content/designs")
             .when().get(scenario.makeBaseURL("/v1/auth/callback"))
             .then().assertThat().statusCode(303)
-            .and().header("Location", startsWith("https://" + scenario.getServiceHost() + ":" + scenario.getServicePort() + "/error/500"));
+            .and().header("Location", startsWith("https://localhost:8080/error/500"));
 
     verifyHttp(scenario.getStubServer())
             .once(get(ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"))
@@ -422,7 +422,7 @@ public class IntegrationTests {
             .and().param("state", "/v1/auth/signin/content/designs")
             .when().get(scenario.makeBaseURL("/v1/auth/callback"))
             .then().assertThat().statusCode(303)
-            .and().header("Location", startsWith("https://" + scenario.getServiceHost() + ":" + scenario.getServicePort() + "/error/500"));
+            .and().header("Location", startsWith("https://localhost:8080/error/500"));
 
     verifyHttp(scenario.getStubServer())
             .never(post(ACCOUNTS_PATH));
@@ -445,7 +445,7 @@ public class IntegrationTests {
             .and().param("state", "/v1/auth/signin/content/designs")
             .when().get(scenario.makeBaseURL("/v1/auth/callback"))
             .then().assertThat().statusCode(303)
-            .and().header("Location", startsWith("https://" + scenario.getServiceHost() + ":" + scenario.getServicePort() + "/error/403"));
+            .and().header("Location", startsWith("https://localhost:8080/error/403"));
 
     verifyHttp(scenario.getStubServer2())
             .once(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
@@ -480,7 +480,7 @@ public class IntegrationTests {
             .and().param("state", "/v1/auth/signin/content/designs")
             .when().get(scenario.makeBaseURL("/v1/auth/callback"))
             .then().assertThat().statusCode(303)
-            .and().header("Location", startsWith("https://" + scenario.getServiceHost() + ":" + scenario.getServicePort() + "/content/designs"));
+            .and().header("Location", startsWith("https://localhost:8080/content/designs"));
 
     verifyHttp(scenario.getStubServer())
             .once(post(ACCOUNTS_PATH), withPostBody(), withHeader("authorization"));

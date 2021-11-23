@@ -21,7 +21,7 @@
   "client_web_url": "https://localhost:8080",
   "client_auth_url": "https://localhost:8080",
 
-  "server_accounts_url": "https://localhost:${ACCOUNTS_PORT}",
+  "server_accounts_url": "${ACCOUNTS_URL}",
 
   "github_url": "${GITHUB_API_URL}",
   "github_client_id": "${GITHUB_CLIENT_ID}",

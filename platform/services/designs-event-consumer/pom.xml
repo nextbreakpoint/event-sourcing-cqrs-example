@@ -67,6 +67,7 @@
                         <DATABASE_HOST>localhost</DATABASE_HOST>
                         <DATABASE_USERNAME>verticle</DATABASE_USERNAME>
                         <DATABASE_PASSWORD>password</DATABASE_PASSWORD>
+                        <DATABASE_KEYSPACE>designs</DATABASE_KEYSPACE>
                         <KAFKA_HOST>localhost</KAFKA_HOST>
                         <JAEGER_SERVICE_NAME>designs-event-consumer</JAEGER_SERVICE_NAME>
                         <JAEGER_AGENT_HOST>localhost</JAEGER_AGENT_HOST>
@@ -74,12 +75,15 @@
                         <JAEGER_SAMPLER_TYPE>const</JAEGER_SAMPLER_TYPE>
                         <JAEGER_SAMPLER_PARAM>1</JAEGER_SAMPLER_PARAM>
                         <JAEGER_REPORTER_LOG_SPANS>true</JAEGER_REPORTER_LOG_SPANS>
+                        <EVENTS_TOPIC>events</EVENTS_TOPIC>
+                        <RENDER_TOPIC>render</RENDER_TOPIC>
                     </environmentVariables>
                     <arguments>
                         <argument>-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:35122</argument>
-                        <argument>--class-path</argument>
-                        <classpath/>
-                        <argument>com.nextbreakpoint.blueprint.designs.Verticle</argument>
+                        <argument>--module-path</argument>
+                        <modulepath/>
+                        <argument>--module</argument>
+                        <argument>com.nextbreakpoint.blueprint.designseventconsumer/com.nextbreakpoint.blueprint.designs.Verticle</argument>
                     </arguments>
                 </configuration>
                 <executions>
@@ -88,26 +92,12 @@
                         <goals>
                             <goal>exec</goal>
                         </goals>
-                        <configuration>
-                            <environmentVariables>
-                                <DATABASE_KEYSPACE>test-designs-event-consumer</DATABASE_KEYSPACE>
-                                <EVENTS_TOPIC>test-events-designs-event-consumer</EVENTS_TOPIC>
-                                <RENDER_TOPIC>test-render-designs-event-consumer</RENDER_TOPIC>
-                            </environmentVariables>
-                        </configuration>
                     </execution>
                     <execution>
                         <id>shared</id>
                         <goals>
                             <goal>exec</goal>
                         </goals>
-                        <configuration>
-                            <environmentVariables>
-                                <DATABASE_KEYSPACE>designs</DATABASE_KEYSPACE>
-                                <EVENTS_TOPIC>events</EVENTS_TOPIC>
-                                <RENDER_TOPIC>render</RENDER_TOPIC>
-                            </environmentVariables>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>

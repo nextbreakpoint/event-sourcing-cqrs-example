@@ -53,9 +53,10 @@
                     </environmentVariables>
                     <arguments>
                         <argument>-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:35100</argument>
-                        <argument>--class-path</argument>
-                        <classpath/>
-                        <argument>com.nextbreakpoint.blueprint.gateway.Verticle</argument>
+                        <argument>--module-path</argument>
+                        <modulepath/>
+                        <argument>--module</argument>
+                        <argument>com.nextbreakpoint.blueprint.gateway/com.nextbreakpoint.blueprint.gateway.Verticle</argument>
                     </arguments>
                 </configuration>
                 <executions>
@@ -66,11 +67,11 @@
                         </goals>
                         <configuration>
                             <environmentVariables>
-                                <ACCOUNTS_PORT>39001</ACCOUNTS_PORT>
-                                <AUTHENTICATION_PORT>39001</AUTHENTICATION_PORT>
-                                <DESIGNS_QUERY_PORT>39001</DESIGNS_QUERY_PORT>
-                                <DESIGNS_COMMAND_PORT>39001</DESIGNS_COMMAND_PORT>
-                                <DESIGNS_WATCH_PORT>39001</DESIGNS_WATCH_PORT>
+                                <ACCOUNTS_URL>http://localhost:39001</ACCOUNTS_URL>
+                                <AUTHENTICATION_URL>http://localhost:39001</AUTHENTICATION_URL>
+                                <DESIGNS_QUERY_URL>http://localhost:39001</DESIGNS_QUERY_URL>
+                                <DESIGNS_COMMAND_URL>http://localhost:39001</DESIGNS_COMMAND_URL>
+                                <DESIGNS_WATCH_URL>http://localhost:39001</DESIGNS_WATCH_URL>
                             </environmentVariables>
                         </configuration>
                     </execution>
@@ -81,11 +82,11 @@
                         </goals>
                         <configuration>
                             <environmentVariables>
-                                <ACCOUNTS_PORT>30110</ACCOUNTS_PORT>
-                                <AUTHENTICATION_PORT>30101</AUTHENTICATION_PORT>
-                                <DESIGNS_QUERY_PORT>30120</DESIGNS_QUERY_PORT>
-                                <DESIGNS_COMMAND_PORT>30121</DESIGNS_COMMAND_PORT>
-                                <DESIGNS_WATCH_PORT>30123</DESIGNS_WATCH_PORT>
+                                <ACCOUNTS_URL>https://localhost:30110</ACCOUNTS_URL>
+                                <AUTHENTICATION_URL>https://localhost:30101</AUTHENTICATION_URL>
+                                <DESIGNS_QUERY_URL>https://localhost:30120</DESIGNS_QUERY_URL>
+                                <DESIGNS_COMMAND_URL>https://localhost:30121</DESIGNS_COMMAND_URL>
+                                <DESIGNS_WATCH_URL>https://localhost:30123</DESIGNS_WATCH_URL>
                             </environmentVariables>
                         </configuration>
                     </execution>

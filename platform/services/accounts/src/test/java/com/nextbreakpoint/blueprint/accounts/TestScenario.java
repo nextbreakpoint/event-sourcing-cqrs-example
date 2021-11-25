@@ -16,11 +16,12 @@ import java.util.List;
 public class TestScenario {
   private final String version = TestUtils.getVariable("BUILD_VERSION", System.getProperty("build.version", "0"));
   private final boolean buildImages = TestUtils.getVariable("BUILD_IMAGES", System.getProperty("build.images", "false")).equals("true");
+  private final boolean useMinikube = TestUtils.getVariable("USE_MINIKUBE", System.getProperty("use.minikube", "false")).equals("true");
+  private final boolean useKubernetes = TestUtils.getVariable("USE_KUBERNETES", System.getProperty("use.kubernetes", "false")).equals("true");
 
   private Scenario scenario;
 
   public void before() throws IOException, InterruptedException {
-
     final List<String> secretArgs = Arrays.asList(
             "--from-file",
             "keystore_server.jks=../../secrets/keystore_server.jks",
@@ -39,7 +40,8 @@ public class TestScenario {
             "--set=clientDomain=${serviceHost}",
             "--set=image.pullPolicy=Never",
             "--set=image.repository=integration/accounts",
-            "--set=image.tag=${version}"
+            "--set=image.tag=${version}",
+            "--set=databaseName=test_accounts"
     );
 
     scenario = Scenario.builder()
@@ -51,9 +53,9 @@ public class TestScenario {
             .withSecretArgs(secretArgs)
             .withHelmPath("../../helm")
             .withHelmArgs(helmArgs)
-//            .withKubernetes()
-//            .withMinikube()
-            .withMySQL()
+            .requireKubernetes(useKubernetes)
+            .requireMinikube(useMinikube)
+            .withMySQL("test_accounts")
             .build();
 
     scenario.create();

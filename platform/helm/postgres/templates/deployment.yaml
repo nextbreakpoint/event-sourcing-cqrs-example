@@ -1,0 +1,96 @@
+{{- $fullname := include "service.fullname" . -}}
+{{- $name := include "service.name" . -}}
+{{- $chart := include "service.chart" . -}}
+{{- $root := . }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $root.Values.name | default "postgres" | quote }}
+  namespace: {{ $root.Release.Namespace | quote }}
+  labels:
+    app: {{ $root.Values.name | default "postgres" | quote }}
+    chart: {{ $chart }}
+    release: {{ $root.Release.Name }}
+    heritage: {{ $root.Release.Service }}
+spec:
+  replicas: {{ $root.Values.replicas | default 0 }}
+  {{- if $root.Values.strategy }}
+  strategy:
+    {{ toYaml $root.Values.strategy | indent 4 | trim }}
+  {{- end}}
+  selector:
+    matchLabels:
+      app: {{ $root.Values.name | default "postgres" | quote }}
+  template:
+    metadata:
+      {{- if $root.Values.annotations }}
+      annotations:
+        {{ toYaml $root.Values.annotations | indent 8 | trim }}
+      {{- end}}
+      labels:
+        app: {{ $root.Values.name | default "postgres" | quote }}
+    spec:
+      serviceAccountName: {{ $root.Values.serviceAccount | default "postgres" }}
+      {{- if $root.Values.image }}
+      {{- if $root.Values.image.pullSecrets }}
+      imagePullSecrets:
+        - name: {{ toYaml $root.Values.image.pullSecrets | indent 8 | trim }}
+      {{- end}}
+      {{- end}}
+      securityContext:
+        runAsUser: 70
+        runAsGroup: 70
+        fsGroup: 70
+      volumes:
+        - name: config-vol
+          configMap:
+            name: {{ $root.Values.configName | default "postgres" | quote }}
+        - name: data-vol
+          hostPath:
+            path: /postgress-data
+            type: DirectoryOrCreate
+      initContainers:
+        - name: take-data-dir-ownership
+          image: alpine:3
+          command:
+            - chown
+            - -R
+            - 70:70
+            - /var/lib/postgresql/data/pgdata
+          volumeMounts:
+            - name: data-vol
+              mountPath: /var/lib/postgresql/data/pgdata
+      containers:
+        - name: {{ $root.Values.name | default "postgres" | quote }}
+          image: "{{ $root.Values.image.registry }}{{ $root.Values.image.repository }}:{{ $root.Values.image.tag }}"
+          imagePullPolicy: {{ $root.Values.image.pullPolicy }}
+          ports:
+            - name: control
+              containerPort: 5432
+              protocol: TCP
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POSTGRES_USER
+              value: "admin"
+            - name: POSTGRES_PASSWORD
+              value: "password"
+            - name: PGDATA
+              value: "/var/lib/postgresql/data/pgdata"
+          volumeMounts:
+            - name: config-vol
+              readOnly: true
+              mountPath: /docker-entrypoint-initdb.d/init.sql
+              subPath: init.sql
+            - name: data-vol
+              mountPath: /var/lib/postgresql/data/pgdata
+          {{- if $root.Values.resources }}
+          resources:
+            {{ $root.Values.resources | toYaml | indent 12 | trim }}
+          {{- end}}

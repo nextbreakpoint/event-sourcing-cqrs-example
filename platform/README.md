@@ -50,6 +50,11 @@ Export variables
     export NEXUS_USERNAME=admin
     export NEXUS_PASSWORD=$(docker exec -it $(docker container ls -f name=pipeline-nexus-1 -q) cat /opt/sonatype/sonatype-work/nexus3/admin.password)
 
+    export NEXUS_HOST=$(minikube ip)
+    export NEXUS_PORT=8081
+    export NEXUS_USERNAME=admin
+    export NEXUS_PASSWORD=$(kubectl -n blueprint exec -it $(kubectl -n blueprint get pod -l app=nexus -o json | jq -r '.items[0].metadata.name') -c nexus -- cat /opt/sonatype/sonatype-work/nexus3/admin.password)
+
 Create Maven repository
 
     curl -u ${NEXUS_USERNAME}:${NEXUS_PASSWORD} -X POST "http://${NEXUS_HOST}:${NEXUS_PORT}/service/rest/v1/repositories/maven/hosted" -H "accept: application/json" -H "Content-Type: application/json" -d "{ \"name\": \"maven-internal\", \"online\": true, \"storage\": { \"blobStoreName\": \"default\", \"strictContentTypeValidation\": true, \"writePolicy\": \"allow_once\" }, \"cleanup\": { \"policyNames\": [ \"string\" ] }, \"component\": { \"proprietaryComponents\": true }, \"maven\": { \"versionPolicy\": \"MIXED\", \"layoutPolicy\": \"STRICT\" }}"
@@ -66,16 +71,40 @@ Create namespace:
 
 Deploy secrets:
 
-    kubectl -n blueprint create secret generic keystore-server.jks --from-file=secrets/keystore-server.jks
-    kubectl -n blueprint create secret generic keystore-client.jks --from-file=secrets/keystore-client.jks
-    kubectl -n blueprint create secret generic truststore-server.jks --from-file=secrets/truststore-server.jks
-    kubectl -n blueprint create secret generic truststore-client.jks --from-file=secrets/truststore-client.jks
-    kubectl -n blueprint create secret generic keystore-auth.jceks --from-file=secrets/keystore-auth.jceks
+    kubectl -n blueprint create secret generic keystore-server.jks --from-file=secrets/keystore_server.jks
+    kubectl -n blueprint create secret generic keystore-client.jks --from-file=secrets/keystore_client.jks
+    kubectl -n blueprint create secret generic truststore-server.jks --from-file=secrets/truststore_server.jks
+    kubectl -n blueprint create secret generic truststore-client.jks --from-file=secrets/truststore_client.jks
+    kubectl -n blueprint create secret generic keystore-auth.jceks --from-file=secrets/keystore_auth.jceks
     kubectl -n blueprint create secret generic nginx --from-file server_cert.pem=secrets/nginx_server_cert.pem --from-file server_key.pem=secrets/nginx_server_key.pem
 
 Build Docker images:
 
     ./build_images.sh
+
+Deploy Nexus:
+
+    helm install integration-nexus platform/helm/nexus -n blueprint --set replicas=1
+
+Check Nexus:
+
+    kubectl -n blueprint logs -f --tail=-1 -l app=nexus
+
+Deploy Postgres:
+
+    helm install integration-postgres platform/helm/postgres -n blueprint --set replicas=1
+
+Check Postgres:
+
+    kubectl -n blueprint logs -f --tail=-1 -l app=postgres
+
+Deploy Pact Broker:
+
+    helm install integration-pactbroker platform/helm/pactbroker -n blueprint --set replicas=1
+
+Check Pact Broker:
+
+    kubectl -n blueprint logs -f --tail=-1 -l app=pactbroker
 
 Deploy Cassandra:
 
@@ -148,14 +177,13 @@ Deploy secrets for services:
     kubectl -n blueprint create secret generic authentication --from-file keystore_client.jks=secrets/keystore_client.jks --from-file truststore_client.jks=secrets/truststore_client.jks --from-file keystore_server.jks=secrets/keystore_server.jks --from-file keystore_auth.jceks=secrets/keystore_auth.jceks --from-literal KEYSTORE_SECRET=secret --from-literal GITHUB_ACCOUNT_ID=$GITHUB_ACCOUNT_ID --from-literal GITHUB_CLIENT_ID=$GITHUB_CLIENT_ID --from-literal GITHUB_CLIENT_SECRET=$GITHUB_CLIENT_SECRET
 
     kubectl -n blueprint create secret generic accounts --from-file keystore_server.jks=secrets/keystore_server.jks --from-file keystore_auth.jceks=secrets/keystore_auth.jceks --from-literal KEYSTORE_SECRET=secret --from-literal DATABASE_USERNAME=verticle --from-literal DATABASE_PASSWORD=password
-    kubectl -n blueprint create secret generic designs --from-file keystore_server.jks=secrets/keystore_server.jks --from-file keystore_auth.jceks=secrets/keystore_auth.jceks --from-literal KEYSTORE_SECRET=secret --from-literal DATABASE_USERNAME=verticle --from-literal DATABASE_PASSWORD=password
 
     kubectl -n blueprint create secret generic designs-aggregate-fetcher --from-file keystore_server.jks=secrets/keystore_server.jks --from-file keystore_auth.jceks=secrets/keystore_auth.jceks --from-literal KEYSTORE_SECRET=secret --from-literal DATABASE_USERNAME=verticle --from-literal DATABASE_PASSWORD=password
     kubectl -n blueprint create secret generic designs-command-consumer --from-file keystore_server.jks=secrets/keystore_server.jks --from-file keystore_auth.jceks=secrets/keystore_auth.jceks --from-literal KEYSTORE_SECRET=secret --from-literal DATABASE_USERNAME=verticle --from-literal DATABASE_PASSWORD=password
-    kubectl -n blueprint create secret generic designs-command-producer --from-file keystore_server.jks=secrets/keystore_server.jks --from-file keystore_auth.jceks=secrets/keystore_auth.jceks --from-literal KEYSTORE_SECRET=secret  
     kubectl -n blueprint create secret generic designs-event-consumer --from-file keystore_server.jks=secrets/keystore_server.jks --from-file keystore_auth.jceks=secrets/keystore_auth.jceks --from-literal KEYSTORE_SECRET=secret --from-literal DATABASE_USERNAME=verticle --from-literal DATABASE_PASSWORD=password
     kubectl -n blueprint create secret generic designs-tile-renderer --from-file keystore_server.jks=secrets/keystore_server.jks --from-file keystore_auth.jceks=secrets/keystore_auth.jceks --from-literal KEYSTORE_SECRET=secret --from-literal DATABASE_USERNAME=verticle --from-literal DATABASE_PASSWORD=password --from-literal AWS_ACCESS_KEY_ID=admin --from-literal AWS_SECRET_ACCESS_KEY=password
-    kubectl -n blueprint create secret generic designs-notification-dispatcher --from-file keystore_server.jks=secrets/keystore_server.jks --from-file keystore_auth.jceks=secrets/keystore_auth.jceks --from-literal KEYSTORE_SECRET=secret  
+    kubectl -n blueprint create secret generic designs-notification-dispatcher --from-file keystore_server.jks=secrets/keystore_server.jks --from-file keystore_auth.jceks=secrets/keystore_auth.jceks --from-literal KEYSTORE_SECRET=secret --from-literal AWS_ACCESS_KEY_ID=admin --from-literal AWS_SECRET_ACCESS_KEY=password
+    kubectl -n blueprint create secret generic designs-tile-renderer --from-file keystore_server.jks=secrets/keystore_server.jks --from-file keystore_auth.jceks=secrets/keystore_auth.jceks --from-literal KEYSTORE_SECRET=secret  
 
     kubectl -n blueprint create secret generic gateway --from-file keystore_client.jks=secrets/keystore_client.jks --from-file truststore_client.jks=secrets/truststore_client.jks --from-file keystore_server.jks=secrets/keystore_server.jks --from-file keystore_auth.jceks=secrets/keystore_auth.jceks --from-literal KEYSTORE_SECRET=secret
 
@@ -164,14 +192,15 @@ Deploy secrets for services:
 Deploy services:
 
     helm install service-authentication platform/services/authentication/helm -n blueprint --set replicas=1,clientDomain=$(minikube ip),clientWebUrl=https://$(minikube ip):8081,clientAuthUrl=https://$(minikube ip):8081
+
     helm install service-accounts platform/services/accounts/helm -n blueprint --set replicas=1,clientDomain=$(minikube ip)
-    helm install service-designs platform/services/designs/helm -n blueprint --set replicas=1,clientDomain=$(minikube ip)
+
     helm install service-designs-aggregate-fetcher platform/services/designs-aggregate-fetcher/helm -n blueprint --set replicas=1,clientDomain=$(minikube ip)
     helm install service-designs-command-consumer platform/services/designs-command-consumer/helm -n blueprint --set replicas=1,clientDomain=$(minikube ip)
-    helm install service-designs-command-producer platform/services/designs-command-producer/helm -n blueprint --set replicas=1,clientDomain=$(minikube ip)
     helm install service-designs-event-consumer platform/services/designs-event-consumer/helm -n blueprint --set replicas=1,clientDomain=$(minikube ip)
     helm install service-designs-tile-renderer platform/services/designs-tile-renderer/helm -n blueprint --set replicas=1,clientDomain=$(minikube ip)
     helm install service-designs-notification-dispatcher platform/services/designs-notification-dispatcher/helm -n blueprint --set replicas=1,clientDomain=$(minikube ip)
+    helm install service-designs-command-producer platform/services/designs-tile-renderer/helm -n blueprint --set replicas=1,clientDomain=$(minikube ip)
 
     helm install service-gateway platform/services/gateway/helm -n blueprint --set replicas=1,clientDomain=$(minikube ip)
 
@@ -181,13 +210,12 @@ Check services:
 
     kubectl -n blueprint logs -f --tail=-1 -l app=authentication
     kubectl -n blueprint logs -f --tail=-1 -l app=accounts
-    kubectl -n blueprint logs -f --tail=-1 -l app=designs
     kubectl -n blueprint logs -f --tail=-1 -l app=designs-aggregate-fetcher
     kubectl -n blueprint logs -f --tail=-1 -l app=designs-command-consumer
-    kubectl -n blueprint logs -f --tail=-1 -l app=designs-command-producer
     kubectl -n blueprint logs -f --tail=-1 -l app=designs-event-producer
     kubectl -n blueprint logs -f --tail=-1 -l app=designs-tile-renderer
     kubectl -n blueprint logs -f --tail=-1 -l app=designs-notification-dispatcher
+    kubectl -n blueprint logs -f --tail=-1 -l app=designs-tile-renderer
     kubectl -n blueprint logs -f --tail=-1 -l app=gateway
     kubectl -n blueprint logs -f --tail=-1 -l app=frontend
 
@@ -199,15 +227,18 @@ Forward ports:
 
     kubectl -n blueprint expose service/minio --name minio-external --port 9000 --target-port 9000 --type LoadBalancer --external-ip $(minikube ip)
 
+    kubectl -n blueprint expose service/nexus --name nexus-external --port 8081 --target-port 8081 --type LoadBalancer --external-ip $(minikube ip)
+
+    kubectl -n blueprint expose service/pactbroker --name pactbroker-external --port 9292 --target-port 9292 --type LoadBalancer --external-ip $(minikube ip)
+
 Scale services:
 
     kubectl -n blueprint scale deployment authentication --replicas=2
     kubectl -n blueprint scale deployment accounts --replicas=2
-    kubectl -n blueprint scale deployment designs --replicas=4
     kubectl -n blueprint scale deployment designs-command-producer --replicas=2
-    kubectl -n blueprint scale deployment designs-command-consumer --replicas=2
     kubectl -n blueprint scale deployment designs-event-consumer --replicas=2
     kubectl -n blueprint scale deployment designs-aggregate-fetcher --replicas=4
+    kubectl -n blueprint scale deployment designs-tile-renderer --replicas=8
     kubectl -n blueprint scale deployment frontend --replicas=2
     kubectl -n blueprint scale deployment gateway --replicas=2
     kubectl -n blueprint scale deployment nginx --replicas=4

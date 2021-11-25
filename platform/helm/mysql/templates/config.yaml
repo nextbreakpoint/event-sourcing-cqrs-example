@@ -13,15 +13,15 @@ metadata:
     heritage: {{ $root.Release.Service }}
 data:
   init.sql: |
-    DROP DATABASE IF EXISTS accounts;
-    CREATE DATABASE accounts;
+    DROP DATABASE IF EXISTS {{ $root.Values.databaseName | default "accounts" }};
+    CREATE DATABASE {{ $root.Values.databaseName | default "accounts" }};
 
-    CREATE USER IF NOT EXISTS admin IDENTIFIED BY 'password' PASSWORD EXPIRE NEVER;
-    CREATE USER IF NOT EXISTS verticle IDENTIFIED BY 'password' PASSWORD EXPIRE NEVER;
-    GRANT SELECT, INSERT, UPDATE, DELETE ON accounts.* TO admin;
-    GRANT SELECT, INSERT, UPDATE, DELETE ON accounts.* TO verticle;
+    CREATE USER IF NOT EXISTS admin IDENTIFIED BY '{{ $root.Values.adminPassword | default "password" }}' PASSWORD EXPIRE NEVER;
+    CREATE USER IF NOT EXISTS verticle IDENTIFIED BY '{{ $root.Values.verticlePassword | default "password" }}' PASSWORD EXPIRE NEVER;
+    GRANT SELECT, INSERT, UPDATE, DELETE ON {{ $root.Values.databaseName | default "accounts" }}.* TO admin;
+    GRANT SELECT, INSERT, UPDATE, DELETE ON {{ $root.Values.databaseName | default "accounts" }}.* TO verticle;
 
-    USE accounts;
+    USE {{ $root.Values.databaseName | default "accounts" }};
 
     CREATE TABLE IF NOT EXISTS ACCOUNT (
       ACCOUNT_UUID VARCHAR(36) PRIMARY KEY,

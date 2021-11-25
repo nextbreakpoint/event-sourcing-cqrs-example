@@ -141,25 +141,52 @@ public class KubeUtils {
         return executeCommand(command, true);
     }
 
-    public static int exposeService(String namespace, String name, int port, int targetPort) throws IOException, InterruptedException {
-        final List<String> command = Arrays.asList(
-                "sh",
-                "-c",
-                "kubectl -n " + namespace + " expose service " + name + " --type=LoadBalancer --name=" + name + "-lb --port=" + port + " --target-port=" + targetPort + " --external-ip=$(minikube ip)"
-        );
-        return KubeUtils.executeCommand(command, true);
+    public static int exposeService(String namespace, String name, int port, int targetPort, final String externalIp) throws IOException, InterruptedException {
+        if (externalIp != null) {
+            final List<String> command = Arrays.asList(
+                    "sh",
+                    "-c",
+                    "kubectl -n " + namespace + " expose service " + name + " --type=LoadBalancer --name=" + name + "-lb --port=" + port + " --target-port=" + targetPort + " --external-ip=" + externalIp
+            );
+            return KubeUtils.executeCommand(command, true);
+        } else {
+            final List<String> command = Arrays.asList(
+                    "sh",
+                    "-c",
+                    "kubectl -n " + namespace + " expose service " + name + " --type=NodePort --name=" + name + "-lb --port=" + port + " --target-port=" + targetPort
+            );
+            return KubeUtils.executeCommand(command, true);
+        }
     }
 
     public static int buildDockerImage(String path, String name, List<String> args) throws IOException, InterruptedException {
         final List<String> command = Arrays.asList(
                 "sh",
                 "-c",
-                "eval $(minikube docker-env) && docker build -t " + name + " " + path + " " + args.stream().collect(Collectors.joining(" "))
+                "docker build -t " + name + " " + String.join(" ", args) + " " + path
         );
         return executeCommand(command, true);
     }
 
     public static int cleanDockerImages() throws IOException, InterruptedException {
+        final List<String> command = Arrays.asList(
+                "sh",
+                "-c",
+                "docker rmi $(docker images -f dangling=true -q)"
+        );
+        return executeCommand(command, true);
+    }
+
+    public static int buildDockerImageMinikube(String path, String name, List<String> args) throws IOException, InterruptedException {
+        final List<String> command = Arrays.asList(
+                "sh",
+                "-c",
+                "eval $(minikube docker-env) && docker build -t " + name + " " + String.join(" ", args) + " " + path
+        );
+        return executeCommand(command, true);
+    }
+
+    public static int cleanDockerImagesMinikube() throws IOException, InterruptedException {
         final List<String> command = Arrays.asList(
                 "sh",
                 "-c",

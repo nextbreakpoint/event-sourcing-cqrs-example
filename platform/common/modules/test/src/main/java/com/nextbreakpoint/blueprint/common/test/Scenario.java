@@ -10,7 +10,6 @@ import org.awaitility.Awaitility;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -25,15 +24,19 @@ public class Scenario {
 
     private boolean buildDockerImages;
 
+    private String externalIp;
+
     private String serviceHost;
     private String stubHost;
     private String stubHost2;
+    private String nexusHost;
     private String mysqlHost;
     private String kafkaHost;
     private String minioHost;
     private String consulHost;
     private String cassandraHost;
 
+    private String nexusPort;
     private String httpPort;
     private String stubPort;
     private String stubPort2;
@@ -78,6 +81,9 @@ public class Scenario {
     public void create() throws IOException, InterruptedException {
         buildDockerImages = scenarioState.buildImage;
 
+        nexusHost = TestUtils.getVariable("NEXUS_HOST", System.getProperty("nexus.host", "localhost"));
+        nexusPort = TestUtils.getVariable("NEXUS_PORT", System.getProperty("nexus.port", "8081"));
+
         httpPort = TestUtils.getVariable("HTTP_PORT", System.getProperty("http.port", "8080"));
         stubPort = TestUtils.getVariable("STUB_PORT", System.getProperty("stub.port", "9000"));
         stubPort2 = TestUtils.getVariable("STUB_PORT2", System.getProperty("stub.port2", "9001"));
@@ -87,31 +93,28 @@ public class Scenario {
         consulPort = TestUtils.getVariable("CONSUL_PORT", System.getProperty("consul.port", "8400"));
         cassandraPort = TestUtils.getVariable("CASSANDRA_PORT", System.getProperty("cassandra.port", "9042"));
 
-        if (scenarioState.minikube) {
-            final String minikubeHost = KubeUtils.getMinikubeIp();
-            if (scenarioState.kubernetes) {
-                serviceHost = minikubeHost;
-                stubHost = serviceHost.substring(0, serviceHost.lastIndexOf(".")) + ".1";
-                stubHost2 = serviceHost.substring(0, serviceHost.lastIndexOf(".")) + ".1";
-            } else {
-                serviceHost = "localhost";
-                stubHost = "localhost";
-                stubHost2 = "localhost";
-            }
-            mysqlHost = minikubeHost;
-            kafkaHost = minikubeHost;
-            minioHost = minikubeHost;
-            consulHost = minikubeHost;
-            cassandraHost = minikubeHost;
-        } else {
-            serviceHost = "localhost";
+        if (scenarioState.kubernetes) {
             stubHost = "localhost";
             stubHost2 = "localhost";
-            mysqlHost = "localhost";
-            kafkaHost = "localhost";
-            minioHost = "localhost";
-            consulHost = "localhost";
-            cassandraHost = "localhost";
+            //            stubHost = serviceHost.substring(0, serviceHost.lastIndexOf(".")) + ".1";
+            //            stubHost2 = serviceHost.substring(0, serviceHost.lastIndexOf(".")) + ".1";
+
+            if (scenarioState.minikube) {
+                externalIp = KubeUtils.getMinikubeIp();
+            } else {
+                externalIp = TestUtils.getVariable("EXTERNAL_IP", System.getProperty("external.ip"));
+            }
+
+            if (externalIp == null) {
+                throw new RuntimeException("External IP not defined");
+            }
+
+            serviceHost = externalIp;
+            mysqlHost = externalIp;
+            kafkaHost = externalIp;
+            minioHost = externalIp;
+            consulHost = externalIp;
+            cassandraHost = externalIp;
         }
 
         printInfo();
@@ -129,7 +132,7 @@ public class Scenario {
 
         if (scenarioState.kubernetes) {
             if (scenarioState.mysql) {
-                installMySQL();
+                installMySQL(scenarioState.databaseName);
                 waitForMySQL();
                 exposeMySQL();
             }
@@ -261,6 +264,7 @@ public class Scenario {
         private final String serviceName;
         private final List<String> helmArgs;
         private final List<String> secretArgs;
+        private final String databaseName;
 
         public ScenarioState(
                 boolean mysql,
@@ -281,7 +285,8 @@ public class Scenario {
                 boolean stubServer2,
                 String serviceName,
                 List<String> helmArgs,
-                List<String> secretArgs
+                List<String> secretArgs,
+                String databaseName
         ) {
             this.mysql = mysql;
             this.cassandra = cassandra;
@@ -302,6 +307,7 @@ public class Scenario {
             this.serviceName = serviceName;
             this.helmArgs = helmArgs;
             this.secretArgs = secretArgs;
+            this.databaseName = databaseName;
         }
     }
 
@@ -325,11 +331,13 @@ public class Scenario {
         private String serviceName;
         private List<String> helmArgs;
         private List<String> secretArgs;
+        private String databaseName;
 
         private ScenarioBuilder() {}
 
-        public ScenarioBuilder withMySQL() {
+        public ScenarioBuilder withMySQL(String databaseName) {
             mysql = true;
+            this.databaseName = databaseName;
             return this;
         }
 
@@ -363,8 +371,18 @@ public class Scenario {
             return this;
         }
 
+        public ScenarioBuilder requireKubernetes(boolean kubernetes) {
+            this.kubernetes = kubernetes;
+            return this;
+        }
+
         public ScenarioBuilder withMinikube() {
             minikube = true;
+            return this;
+        }
+
+        public ScenarioBuilder requireMinikube(boolean minikube) {
+            this.minikube = minikube;
             return this;
         }
 
@@ -453,7 +471,8 @@ public class Scenario {
                     stubServer2,
                     serviceName,
                     helmArgs,
-                    secretArgs
+                    secretArgs,
+                    databaseName
             ));
         }
     }
@@ -469,11 +488,24 @@ public class Scenario {
         if (!buildDockerImages) {
             return;
         }
-        KubeUtils.cleanDockerImages();
+        if (scenarioState.minikube) {
+            KubeUtils.cleanDockerImagesMinikube();
+        }
         System.out.println("Building image...");
-        List<String> args = Collections.emptyList();
-        if (KubeUtils.buildDockerImage(".", "integration/" + scenarioState.serviceName + ":" + scenarioState.version, args) != 0) {
-            throw new RuntimeException("Can't build image");
+        List<String> args = List.of(
+                "--build-arg",
+                "nexus_host=" + nexusHost,
+                "--build-arg",
+                "nexus_port=" + nexusPort
+        );
+        if (scenarioState.minikube) {
+            if (KubeUtils.buildDockerImageMinikube(".", "integration/" + scenarioState.serviceName + ":" + scenarioState.version, args) != 0) {
+                throw new RuntimeException("Can't build image");
+            }
+        } else {
+            if (KubeUtils.buildDockerImage(".", "integration/" + scenarioState.serviceName + ":" + scenarioState.version, args) != 0) {
+                throw new RuntimeException("Can't build image");
+            }
         }
         System.out.println("Image created");
         buildDockerImages = false;
@@ -506,9 +538,9 @@ public class Scenario {
         }
     }
 
-    private void installMySQL() throws IOException, InterruptedException {
+    private void installMySQL(String databaseName) throws IOException, InterruptedException {
         System.out.println("Installing MySQL...");
-        final List<String> args = Arrays.asList("--set=replicas=1");
+        final List<String> args = Arrays.asList("--set=replicas=1", "--set=databaseName=" + databaseName);
         if (KubeUtils.installHelmChart(scenarioState.namespace, "integration-mysql", scenarioState.helmPath + "/mysql", args, true) != 0) {
             if (KubeUtils.upgradeHelmChart(scenarioState.namespace, "integration-mysql", scenarioState.helmPath + "/mysql", args, true) != 0) {
                 throw new RuntimeException("Can't install or upgrade Helm chart");
@@ -539,7 +571,7 @@ public class Scenario {
 
     private void exposeMySQL() throws IOException, InterruptedException {
         System.out.println("Exposing MySQL...");
-        if (KubeUtils.exposeService(scenarioState.namespace,"mysql", Integer.parseInt(mysqlPort), 3306) != 0) {
+        if (KubeUtils.exposeService(scenarioState.namespace,"mysql", Integer.parseInt(mysqlPort), 3306, externalIp) != 0) {
             throw new RuntimeException("Can't expose MySQL");
         }
         System.out.println("MySQL exposed");
@@ -607,7 +639,7 @@ public class Scenario {
 
     private void exposeKafka() throws IOException, InterruptedException {
         System.out.println("Exposing Kafka...");
-        if (KubeUtils.exposeService(scenarioState.namespace, "kafka", Integer.parseInt(kafkaPort), 9093) != 0) {
+        if (KubeUtils.exposeService(scenarioState.namespace, "kafka", Integer.parseInt(kafkaPort), 9093, externalIp) != 0) {
             throw new RuntimeException("Can't expose Kafka");
         }
         System.out.println("Kafka exposed");
@@ -645,7 +677,7 @@ public class Scenario {
 
     private void exposeMinio() throws IOException, InterruptedException {
         System.out.println("Exposing Minio...");
-        if (KubeUtils.exposeService(scenarioState.namespace, "minio", Integer.parseInt(minioPort), 9000) != 0) {
+        if (KubeUtils.exposeService(scenarioState.namespace, "minio", Integer.parseInt(minioPort), 9000, externalIp) != 0) {
             throw new RuntimeException("Can't expose Minio");
         }
         System.out.println("Minio exposed");
@@ -683,7 +715,7 @@ public class Scenario {
 
     private void exposeCassandra() throws IOException, InterruptedException {
         System.out.println("Exposing Cassandra...");
-        if (KubeUtils.exposeService(scenarioState.namespace,"cassandra", Integer.parseInt(cassandraPort), 9042) != 0) {
+        if (KubeUtils.exposeService(scenarioState.namespace,"cassandra", Integer.parseInt(cassandraPort), 9042, externalIp) != 0) {
             throw new RuntimeException("Can't expose Cassandra");
         }
         System.out.println("Cassandra exposed");
@@ -721,7 +753,7 @@ public class Scenario {
 
     private void exposeConsul() throws IOException, InterruptedException {
         System.out.println("Exposing Consul...");
-        if (KubeUtils.exposeService(scenarioState.namespace,"consul", Integer.parseInt(consulPort), 8400) != 0) {
+        if (KubeUtils.exposeService(scenarioState.namespace,"consul", Integer.parseInt(consulPort), 8400, externalIp) != 0) {
             throw new RuntimeException("Can't expose Consul");
         }
         System.out.println("Consul exposed");
@@ -759,7 +791,7 @@ public class Scenario {
 
     private void exposeService(String name) throws IOException, InterruptedException {
         System.out.println("Exposing service...");
-        if (KubeUtils.exposeService(scenarioState.namespace, name, Integer.parseInt(httpPort), 8080) != 0) {
+        if (KubeUtils.exposeService(scenarioState.namespace, name, Integer.parseInt(httpPort), 8080, externalIp) != 0) {
             throw new RuntimeException("Can't expose service");
         }
         System.out.println("Service exposed");

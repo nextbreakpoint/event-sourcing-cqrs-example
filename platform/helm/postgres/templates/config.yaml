@@ -1,0 +1,18 @@
+{{- $fullname := include "service.fullname" . -}}
+{{- $name := include "service.name" . -}}
+{{- $chart := include "service.chart" . -}}
+{{- $root := . }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $root.Values.name | default "postgres" | quote }}
+  namespace: {{ $root.Release.Namespace | quote }}
+  labels:
+    chart: {{ $chart }}
+    release: {{ $root.Release.Name }}
+    heritage: {{ $root.Release.Service }}
+data:
+  init.sql: |
+    CREATE USER pactbrokeruser WITH PASSWORD 'password';
+    CREATE DATABASE pactbroker WITH OWNER pactbrokeruser;
+    GRANT ALL PRIVILEGES ON DATABASE pactbroker TO pactbrokeruser;

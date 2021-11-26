@@ -1,10 +1,10 @@
 package com.nextbreakpoint.blueprint.authentication;
 
 import com.jayway.restassured.RestAssured;
+import com.xebialabs.restito.server.StubServer;
 import org.glassfish.grizzly.http.util.HttpStatus;
 import org.junit.jupiter.api.*;
 
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.UUID;
 
@@ -28,25 +28,48 @@ public class IntegrationTests {
 
   private static final TestScenario scenario = new TestScenario();
 
-  @BeforeAll
-  public static void before() throws IOException, InterruptedException {
-    System.setProperty("http.port", "30101");
-    System.setProperty("stub.port", "39001");
-    System.setProperty("stub.port2", "39002");
+  private static final StubServer accountsStub = new StubServer(Integer.parseInt("39001")).run();
 
+  private static final StubServer githubStub = new StubServer(Integer.parseInt("39002")).run();
+
+  @BeforeAll
+  public static void before() {
     scenario.before();
+
+    if (accountsStub != null) {
+      accountsStub.start();
+    }
+
+    if (githubStub != null) {
+      githubStub.start();
+    }
   }
 
   @AfterAll
-  public static void after() throws IOException, InterruptedException {
+  public static void after() {
     scenario.after();
+
+    if (accountsStub != null) {
+      accountsStub.stop();
+    }
+
+    if (githubStub != null) {
+      githubStub.stop();
+    }
   }
 
   @BeforeEach
   public void reset() {
     RestAssured.reset();
-    scenario.getStubServer().clear();
-    scenario.getStubServer2().clear();
+
+
+    if (accountsStub != null) {
+      accountsStub.clear();
+    }
+
+    if (githubStub != null) {
+      githubStub.clear();
+    }
   }
 
   @Test
@@ -61,23 +84,23 @@ public class IntegrationTests {
   @Test
   @DisplayName("should create an account and redirect to designs when authenticated user doesn't have an account")
   public void shouldCreateAnAccountAndRedirectToDesignsWhenAuthenticatedUserDoNotHaveAnAccount() throws MalformedURLException {
-    whenHttp(scenario.getStubServer2())
+    whenHttp(githubStub)
             .match(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"access_token\":\"abcdef\"}"));
 
-    whenHttp(scenario.getStubServer2())
+    whenHttp(githubStub)
             .match(get(OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"))
             .then(status(HttpStatus.OK_200), stringContent("{\"name\":\"test\"}"));
 
-    whenHttp(scenario.getStubServer2())
+    whenHttp(githubStub)
             .match(get(OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
             .then(status(HttpStatus.OK_200), stringContent("[{\"email\":\"test@localhost\", \"primary\":true}]"));
 
-    whenHttp(scenario.getStubServer())
+    whenHttp(accountsStub)
             .match(get(ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"))
             .then(status(HttpStatus.OK_200), stringContent("[]"));
 
-    whenHttp(scenario.getStubServer())
+    whenHttp(accountsStub)
             .match(post(ACCOUNTS_PATH), withPostBody(), withHeader("Authorization"))
             .then(status(HttpStatus.CREATED_201), stringContent("{\"role\":\"guest\", \"uuid\":\"" + ACCOUNT_UUID + "\"}"));
 
@@ -88,11 +111,11 @@ public class IntegrationTests {
             .then().assertThat().statusCode(303)
             .and().header("Location", startsWith("https://localhost:8080/content/designs"));
 
-    verifyHttp(scenario.getStubServer())
+    verifyHttp(accountsStub)
             .once(post(ACCOUNTS_PATH), withPostBody(), withHeader("authorization"));
 //          .once(get(ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"))
 
-    verifyHttp(scenario.getStubServer2())
+    verifyHttp(githubStub)
             .once(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
             .then().once(get(OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
             .then().once(get(OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"));
@@ -101,19 +124,19 @@ public class IntegrationTests {
   @Test
   @DisplayName("should not create an account and redirect to designs when authenticated user already has an account")
   public void shouldNotCreateAnAccountAndRedirectToDesignsWhenAuthenticatedUserAlreadyHasAnAccount() throws MalformedURLException {
-    whenHttp(scenario.getStubServer2())
+    whenHttp(githubStub)
             .match(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"access_token\":\"abcdef\"}"));
 
-    whenHttp(scenario.getStubServer2())
+    whenHttp(githubStub)
             .match(get(OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
             .then(status(HttpStatus.OK_200), stringContent("[{\"email\":\"test@localhost\", \"primary\":true}]"));
 
-    whenHttp(scenario.getStubServer())
+    whenHttp(accountsStub)
             .match(get(ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"))
             .then(status(HttpStatus.OK_200), stringContent("[\"" + ACCOUNT_UUID + "\"]"));
 
-    whenHttp(scenario.getStubServer())
+    whenHttp(accountsStub)
             .match(get(ACCOUNTS_PATH + "/" + ACCOUNT_UUID))
             .then(status(HttpStatus.OK_200), stringContent("{\"role\":\"guest\", \"uuid\":\"" + ACCOUNT_UUID + "\"}"));
 
@@ -124,11 +147,11 @@ public class IntegrationTests {
             .then().assertThat().statusCode(303)
             .and().header("Location", startsWith("https://localhost:8080/content/designs"));
 
-    verifyHttp(scenario.getStubServer())
+    verifyHttp(accountsStub)
             .once(get(ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"))
             .then().once(get(ACCOUNTS_PATH + "/" + ACCOUNT_UUID));
 
-    verifyHttp(scenario.getStubServer2())
+    verifyHttp(githubStub)
             .once(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
             .then().once(get(OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
             .then().never(get(OAUTH_USER_PATH));
@@ -137,7 +160,7 @@ public class IntegrationTests {
   @Test
   @DisplayName("should redirect to error 500 when it can't retrieve oauth data")
   public void shouldRedirectToError403WhenItCannotRetrieveOAuthData() throws MalformedURLException {
-    whenHttp(scenario.getStubServer2())
+    whenHttp(githubStub)
             .match(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
             .then(status(HttpStatus.INTERNAL_SERVER_ERROR_500));
 
@@ -148,7 +171,7 @@ public class IntegrationTests {
             .then().assertThat().statusCode(303)
             .and().header("Location", startsWith("https://localhost:8080/error/500"));
 
-    verifyHttp(scenario.getStubServer2())
+    verifyHttp(githubStub)
             .once(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
             .then().never(get(OAUTH_USER_EMAILS_PATH));
   }
@@ -156,11 +179,11 @@ public class IntegrationTests {
   @Test
   @DisplayName("should redirect to error 403 when it can't retrieve user data")
   public void shouldRedirectToError403WhenItCannotRetrieveUserData() throws MalformedURLException {
-    whenHttp(scenario.getStubServer2())
+    whenHttp(githubStub)
             .match(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"access_token\":\"abcdef\"}"));
 
-    whenHttp(scenario.getStubServer2())
+    whenHttp(githubStub)
             .match(get(OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
             .then(status(HttpStatus.INTERNAL_SERVER_ERROR_500));
 
@@ -171,10 +194,10 @@ public class IntegrationTests {
             .then().assertThat().statusCode(303)
             .and().header("Location", startsWith("https://localhost:8080/error/403"));
 
-    verifyHttp(scenario.getStubServer())
+    verifyHttp(accountsStub)
             .never(post(ACCOUNTS_PATH));
 
-    verifyHttp(scenario.getStubServer2())
+    verifyHttp(githubStub)
             .once(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
             .then().once(get(OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
             .then().never(get(OAUTH_USER_PATH));
@@ -183,15 +206,15 @@ public class IntegrationTests {
   @Test
   @DisplayName("should redirect to error 403 when it can't retrieve user account")
   public void shouldRedirectToError403WhenItCannotRetrieveUserAccount() throws MalformedURLException {
-    whenHttp(scenario.getStubServer2())
+    whenHttp(githubStub)
             .match(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"access_token\":\"abcdef\"}"));
 
-    whenHttp(scenario.getStubServer2())
+    whenHttp(githubStub)
             .match(get(OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
             .then(status(HttpStatus.OK_200), stringContent("[{\"email\":\"test@localhost\", \"primary\":true}]"));
 
-    whenHttp(scenario.getStubServer())
+    whenHttp(accountsStub)
             .match(get(ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"))
             .then(status(HttpStatus.INTERNAL_SERVER_ERROR_500));
 
@@ -202,11 +225,11 @@ public class IntegrationTests {
             .then().assertThat().statusCode(303)
             .and().header("Location", startsWith("https://localhost:8080/error/403"));
 
-    verifyHttp(scenario.getStubServer())
+    verifyHttp(accountsStub)
             .once(get(ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"))
             .then().never(post(ACCOUNTS_PATH));
 
-    verifyHttp(scenario.getStubServer2())
+    verifyHttp(githubStub)
             .once(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
             .then().once(get(OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
             .then().never(get(OAUTH_USER_PATH));
@@ -215,15 +238,15 @@ public class IntegrationTests {
   @Test
   @DisplayName("should redirect to error 500 when it retrieves a malformed list of accounts")
   public void shouldRedirectToError500WhenItRetrievesAMalformedListOfAcccounts() throws MalformedURLException {
-    whenHttp(scenario.getStubServer2())
+    whenHttp(githubStub)
             .match(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"access_token\":\"abcdef\"}"));
 
-    whenHttp(scenario.getStubServer2())
+    whenHttp(githubStub)
             .match(get(OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
             .then(status(HttpStatus.OK_200), stringContent("[{\"email\":\"test@localhost\", \"primary\":true}]"));
 
-    whenHttp(scenario.getStubServer())
+    whenHttp(accountsStub)
             .match(get(ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"))
             .then(status(HttpStatus.OK_200), stringContent("x"));
 
@@ -234,11 +257,11 @@ public class IntegrationTests {
             .then().assertThat().statusCode(303)
             .and().header("Location", startsWith("https://localhost:8080/error/500"));
 
-    verifyHttp(scenario.getStubServer())
+    verifyHttp(accountsStub)
             .once(get(ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"))
             .then().never(post(ACCOUNTS_PATH));
 
-    verifyHttp(scenario.getStubServer2())
+    verifyHttp(githubStub)
             .once(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
             .then().once(get(OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
             .then().never(get(OAUTH_USER_PATH));
@@ -247,23 +270,23 @@ public class IntegrationTests {
   @Test
   @DisplayName("should redirect to error 403 when it can't create an account")
   public void shouldRedirectToError403WhenItCannotCreateAnAccount() throws MalformedURLException {
-    whenHttp(scenario.getStubServer2())
+    whenHttp(githubStub)
             .match(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"access_token\":\"abcdef\"}"));
 
-    whenHttp(scenario.getStubServer2())
+    whenHttp(githubStub)
             .match(get(OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"))
             .then(status(HttpStatus.OK_200), stringContent("{\"name\":\"test\"}"));
 
-    whenHttp(scenario.getStubServer2())
+    whenHttp(githubStub)
             .match(get(OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
             .then(status(HttpStatus.OK_200), stringContent("[{\"email\":\"test@localhost\", \"primary\":true}]"));
 
-    whenHttp(scenario.getStubServer())
+    whenHttp(accountsStub)
             .match(get(ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"))
             .then(status(HttpStatus.OK_200), stringContent("[]"));
 
-    whenHttp(scenario.getStubServer())
+    whenHttp(accountsStub)
             .match(post(ACCOUNTS_PATH), withPostBody(), withHeader("Authorization"))
             .then(status(HttpStatus.INTERNAL_SERVER_ERROR_500));
 
@@ -274,10 +297,10 @@ public class IntegrationTests {
             .then().assertThat().statusCode(303)
             .and().header("Location", startsWith("https://localhost:8080/error/403"));
 
-    verifyHttp(scenario.getStubServer())
+    verifyHttp(accountsStub)
             .once(post(ACCOUNTS_PATH), withPostBody(), withHeader("Authorization"));
 
-    verifyHttp(scenario.getStubServer2())
+    verifyHttp(githubStub)
             .once(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
             .then().once(get(OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
             .then().once(get(OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"));
@@ -286,23 +309,23 @@ public class IntegrationTests {
   @Test
   @DisplayName("should redirect to error 403 when it can't retrieve an account")
   public void shouldRedirectToError403WhenItCannotRetrieveAnAccount() throws MalformedURLException {
-    whenHttp(scenario.getStubServer2())
+    whenHttp(githubStub)
             .match(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"access_token\":\"abcdef\"}"));
 
-    whenHttp(scenario.getStubServer2())
+    whenHttp(githubStub)
             .match(get(OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
             .then(status(HttpStatus.OK_200), stringContent("[{\"name\":\"test\"}]"));
 
-    whenHttp(scenario.getStubServer2())
+    whenHttp(githubStub)
             .match(get(OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
             .then(status(HttpStatus.OK_200), stringContent("[{\"email\":\"test@localhost\", \"primary\":true}]"));
 
-    whenHttp(scenario.getStubServer())
+    whenHttp(accountsStub)
             .match(get(ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"))
             .then(status(HttpStatus.OK_200), stringContent("[\"" + ACCOUNT_UUID + "\"]"));
 
-    whenHttp(scenario.getStubServer())
+    whenHttp(accountsStub)
             .match(get(ACCOUNTS_PATH + "/" + ACCOUNT_UUID))
             .then(status(HttpStatus.INTERNAL_SERVER_ERROR_500));
 
@@ -313,11 +336,11 @@ public class IntegrationTests {
             .then().assertThat().statusCode(303)
             .and().header("Location", startsWith("https://localhost:8080/error/403"));
 
-    verifyHttp(scenario.getStubServer())
+    verifyHttp(accountsStub)
             .once(get(ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"))
             .then().once(get(ACCOUNTS_PATH + "/" + ACCOUNT_UUID));
 
-    verifyHttp(scenario.getStubServer2())
+    verifyHttp(githubStub)
             .once(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
             .then().once(get(OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
             .then().never(get(OAUTH_USER_PATH));
@@ -326,19 +349,19 @@ public class IntegrationTests {
   @Test
   @DisplayName("should redirect to error 403 when it retrieves an invalid account")
   public void shouldRedirectToError403WhenItRetrievesAnInvalidAccount() throws MalformedURLException {
-    whenHttp(scenario.getStubServer2())
+    whenHttp(githubStub)
             .match(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"access_token\":\"abcdef\"}"));
 
-    whenHttp(scenario.getStubServer2())
+    whenHttp(githubStub)
             .match(get(OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
             .then(status(HttpStatus.OK_200), stringContent("[{\"email\":\"test@localhost\", \"primary\":true}]"));
 
-    whenHttp(scenario.getStubServer())
+    whenHttp(accountsStub)
             .match(get(ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"))
             .then(status(HttpStatus.OK_200), stringContent("[\"" + ACCOUNT_UUID + "\"]"));
 
-    whenHttp(scenario.getStubServer())
+    whenHttp(accountsStub)
             .match(get(ACCOUNTS_PATH + "/" + ACCOUNT_UUID))
             .then(status(HttpStatus.OK_200), stringContent("{\"uuid\":\"" + ACCOUNT_UUID + "\"}"));
 
@@ -349,7 +372,7 @@ public class IntegrationTests {
             .then().assertThat().statusCode(303)
             .and().header("Location", startsWith("https://localhost:8080/error/403"));
 
-    whenHttp(scenario.getStubServer())
+    whenHttp(accountsStub)
             .match(get(ACCOUNTS_PATH + "/" + ACCOUNT_UUID))
             .then(status(HttpStatus.OK_200), stringContent("{\"role\":\"guest\"}"));
 
@@ -360,11 +383,11 @@ public class IntegrationTests {
             .then().assertThat().statusCode(303)
             .and().header("Location", startsWith("https://localhost:8080/error/403"));
 
-    verifyHttp(scenario.getStubServer())
+    verifyHttp(accountsStub)
             .times(2, get(ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"))
             .then().once(get(ACCOUNTS_PATH + "/" + ACCOUNT_UUID));
 
-    verifyHttp(scenario.getStubServer2())
+    verifyHttp(githubStub)
             .times(2, post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
             .then().once(get(OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
             .then().never(get(OAUTH_USER_PATH));
@@ -373,19 +396,19 @@ public class IntegrationTests {
   @Test
   @DisplayName("should redirect to error 500 when it retrieves a malformed account")
   public void shouldRedirectToError500WhenItRetrievesAMalformedAccount() throws MalformedURLException {
-    whenHttp(scenario.getStubServer2())
+    whenHttp(githubStub)
             .match(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"access_token\":\"abcdef\"}"));
 
-    whenHttp(scenario.getStubServer2())
+    whenHttp(githubStub)
             .match(get(OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
             .then(status(HttpStatus.OK_200), stringContent("[{\"email\":\"test@localhost\", \"primary\":true}]"));
 
-    whenHttp(scenario.getStubServer())
+    whenHttp(accountsStub)
             .match(get(ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"))
             .then(status(HttpStatus.OK_200), stringContent("[\"" + ACCOUNT_UUID + "\"]"));
 
-    whenHttp(scenario.getStubServer())
+    whenHttp(accountsStub)
             .match(get(ACCOUNTS_PATH + "/" + ACCOUNT_UUID))
             .then(status(HttpStatus.OK_200), stringContent("x"));
 
@@ -396,11 +419,11 @@ public class IntegrationTests {
             .then().assertThat().statusCode(303)
             .and().header("Location", startsWith("https://localhost:8080/error/500"));
 
-    verifyHttp(scenario.getStubServer())
+    verifyHttp(accountsStub)
             .once(get(ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"))
             .then().once(get(ACCOUNTS_PATH + "/" + ACCOUNT_UUID));
 
-    verifyHttp(scenario.getStubServer2())
+    verifyHttp(githubStub)
             .once(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
             .then().once(get(OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
             .then().never(get(OAUTH_USER_PATH));
@@ -409,11 +432,11 @@ public class IntegrationTests {
   @Test
   @DisplayName("should redirect to error 500 when it retrieves malformed user data")
   public void shouldRedirectToError500WhenItRetrievesMalformedUserData() throws MalformedURLException {
-    whenHttp(scenario.getStubServer2())
+    whenHttp(githubStub)
             .match(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"access_token\":\"abcdef\"}"));
 
-    whenHttp(scenario.getStubServer2())
+    whenHttp(githubStub)
             .match(get(OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
             .then(status(HttpStatus.OK_200), stringContent("x"));
 
@@ -424,10 +447,10 @@ public class IntegrationTests {
             .then().assertThat().statusCode(303)
             .and().header("Location", startsWith("https://localhost:8080/error/500"));
 
-    verifyHttp(scenario.getStubServer())
+    verifyHttp(accountsStub)
             .never(post(ACCOUNTS_PATH));
 
-    verifyHttp(scenario.getStubServer2())
+    verifyHttp(githubStub)
             .once(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
             .then().once(get(OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
             .then().never(get(OAUTH_USER_PATH));
@@ -436,7 +459,7 @@ public class IntegrationTests {
   @Test
   @DisplayName("should redirect to error 403 when it retrieves malformed oauth response")
   public void shouldRedirectToError403WhenItRetrievesMalformedOAuthResponse() throws MalformedURLException {
-    whenHttp(scenario.getStubServer2())
+    whenHttp(githubStub)
             .match(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{}"));
 
@@ -447,7 +470,7 @@ public class IntegrationTests {
             .then().assertThat().statusCode(303)
             .and().header("Location", startsWith("https://localhost:8080/error/403"));
 
-    verifyHttp(scenario.getStubServer2())
+    verifyHttp(githubStub)
             .once(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
             .then().never(get(OAUTH_USER_EMAILS_PATH));
   }
@@ -455,23 +478,23 @@ public class IntegrationTests {
   @Test
   @DisplayName("should propagate the trace id when creating an account")
   public void shouldPropagateTheTraceIdWhenCreatingAnAccount() throws MalformedURLException {
-    whenHttp(scenario.getStubServer2())
+    whenHttp(githubStub)
             .match(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"access_token\":\"abcdef\"}"));
 
-    whenHttp(scenario.getStubServer2())
+    whenHttp(githubStub)
             .match(get(OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"))
             .then(status(HttpStatus.OK_200), stringContent("{\"name\":\"test\"}"));
 
-    whenHttp(scenario.getStubServer2())
+    whenHttp(githubStub)
             .match(get(OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
             .then(status(HttpStatus.OK_200), stringContent("[{\"email\":\"test@localhost\", \"primary\":true}]"));
 
-    whenHttp(scenario.getStubServer())
+    whenHttp(accountsStub)
             .match(get(ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"))
             .then(status(HttpStatus.OK_200), stringContent("[]"));
 
-    whenHttp(scenario.getStubServer())
+    whenHttp(accountsStub)
             .match(post(ACCOUNTS_PATH), withPostBody(), withHeader("Authorization"))
             .then(status(HttpStatus.CREATED_201), stringContent("{\"role\":\"guest\", \"uuid\":\"" + ACCOUNT_UUID + "\"}"));
 
@@ -482,11 +505,11 @@ public class IntegrationTests {
             .then().assertThat().statusCode(303)
             .and().header("Location", startsWith("https://localhost:8080/content/designs"));
 
-    verifyHttp(scenario.getStubServer())
+    verifyHttp(accountsStub)
             .once(post(ACCOUNTS_PATH), withPostBody(), withHeader("authorization"));
 //          .once(get(ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"))
 
-    verifyHttp(scenario.getStubServer2())
+    verifyHttp(githubStub)
             .once(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
             .then().once(get(OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
             .then().once(get(OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"));

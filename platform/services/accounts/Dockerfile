@@ -20,6 +20,7 @@ COPY --from=build /src/target/libs/* /libs/
 COPY --from=build /src/target/com.nextbreakpoint.blueprint.accounts-1.0.0.jar /libs/
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod u+x /entrypoint.sh
+#RUN apt-get update -y && apt-get install -y netcat
 EXPOSE 8080
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["/etc/config.json"]

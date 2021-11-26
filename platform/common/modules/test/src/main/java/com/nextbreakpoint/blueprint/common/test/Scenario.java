@@ -68,6 +68,10 @@ public class Scenario {
                     return getStubHost();
                 case "stubport":
                     return getStubPort();
+                case "stubhost2":
+                    return getStubHost2();
+                case "stubport2":
+                    return getStubPort2();
                 case "version":
                     return getVersion();
                 case "namespace":
@@ -84,9 +88,13 @@ public class Scenario {
         nexusHost = TestUtils.getVariable("NEXUS_HOST", System.getProperty("nexus.host", "localhost"));
         nexusPort = TestUtils.getVariable("NEXUS_PORT", System.getProperty("nexus.port", "8081"));
 
+        stubHost = TestUtils.getVariable("STUB_HOST", System.getProperty("stub.host", "localhost"));
+        stubPort = TestUtils.getVariable("STUB_PORT", System.getProperty("stub.port", "9001"));
+
+        stubHost2 = TestUtils.getVariable("STUB_HOST2", System.getProperty("stub.host2", "localhost"));
+        stubPort2 = TestUtils.getVariable("STUB_PORT2", System.getProperty("stub.port2", "9002"));
+
         httpPort = TestUtils.getVariable("HTTP_PORT", System.getProperty("http.port", "8080"));
-        stubPort = TestUtils.getVariable("STUB_PORT", System.getProperty("stub.port", "9000"));
-        stubPort2 = TestUtils.getVariable("STUB_PORT2", System.getProperty("stub.port2", "9001"));
         mysqlPort = TestUtils.getVariable("MYSQL_PORT", System.getProperty("mysql.port", "3306"));
         kafkaPort = TestUtils.getVariable("KAFKA_PORT", System.getProperty("kafka.port", "9093"));
         minioPort = TestUtils.getVariable("MINIO_PORT", System.getProperty("minio.port", "9000"));
@@ -94,11 +102,6 @@ public class Scenario {
         cassandraPort = TestUtils.getVariable("CASSANDRA_PORT", System.getProperty("cassandra.port", "9042"));
 
         if (scenarioState.kubernetes) {
-            stubHost = "localhost";
-            stubHost2 = "localhost";
-            //            stubHost = serviceHost.substring(0, serviceHost.lastIndexOf(".")) + ".1";
-            //            stubHost2 = serviceHost.substring(0, serviceHost.lastIndexOf(".")) + ".1";
-
             if (scenarioState.minikube) {
                 externalIp = KubeUtils.getMinikubeIp();
             } else {
@@ -108,6 +111,9 @@ public class Scenario {
             if (externalIp == null) {
                 throw new RuntimeException("External IP not defined");
             }
+
+//            stubHost = externalIp.substring(0, serviceHost.lastIndexOf(".")) + ".1";
+//            stubHost2 = externalIp.substring(0, serviceHost.lastIndexOf(".")) + ".1";
 
             serviceHost = externalIp;
             mysqlHost = externalIp;

@@ -6,7 +6,6 @@ import com.jayway.restassured.path.json.JsonPath;
 import com.nextbreakpoint.blueprint.common.core.Authority;
 import org.junit.jupiter.api.*;
 
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -30,14 +29,12 @@ public class IntegrationTests {
   private static final TestScenario scenario = new TestScenario();
 
   @BeforeAll
-  public static void before() throws IOException, InterruptedException {
-    System.setProperty("http.port", "30110");
-
+  public static void before() {
     scenario.before();
   }
 
   @AfterAll
-  public static void after() throws IOException, InterruptedException {
+  public static void after() {
     scenario.after();
   }
 

@@ -33,9 +33,7 @@ public class VerifyAuthenticationPact {
   private static final TestScenario scenario = new TestScenario();
 
   @BeforeAll
-  public static void before() throws IOException, InterruptedException {
-    System.setProperty("http.port", "30110");
-
+  public static void before() {
     scenario.before();
 
     System.setProperty("pact.showStacktrace", "true");
@@ -44,13 +42,13 @@ public class VerifyAuthenticationPact {
   }
 
   @AfterAll
-  public static void after() throws IOException, InterruptedException {
+  public static void after() {
     scenario.after();
   }
 
   @BeforeEach
   public void before(PactVerificationContext context) {
-    context.setTarget(new HttpsTestTarget(scenario.getServiceHost(), Integer.parseInt(scenario.getServicePort()), "/", true));
+    context.setTarget(new HttpsTestTarget(scenario.getServiceHost(), scenario.getServicePort(), "/", true));
   }
 
   @TestTemplate

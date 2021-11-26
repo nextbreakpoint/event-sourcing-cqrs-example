@@ -12,15 +12,15 @@ export NEXUS_PORT="8081"
 export NEXUS_USERNAME=admin
 export NEXUS_PASSWORD=password
 
-mvn clean deploy -s settings.xml -Dnexus=true
-
-pushd common
-mvn clean deploy -s settings.xml -Dnexus=true
-popd
-
-pushd services
-mvn clean deploy -s settings.xml -Dnexus=true
-popd
+#mvn clean deploy -s settings.xml -Dnexus=true
+#
+#pushd common
+#mvn clean deploy -s settings.xml -Dnexus=true
+#popd
+#
+#pushd services
+#mvn clean deploy -s settings.xml -Dnexus=true
+#popd
 
 export JAEGER_SERVICE_NAME=integration
 #
@@ -51,14 +51,14 @@ export JAEGER_SERVICE_NAME=integration
 #fi
 #popd
 #
-#pushd services/accounts
-#if [ "$BUILD" == "true" ]; then
-# sh build.sh $REPOSITORY $VERSION ${NEXUS_HOST} ${NEXUS_PORT}
-#fi
-#if [ "$TEST" == "true" ]; then
-# mvn clean verify -Dminikube=true
-#fi
-#popd
+pushd services/accounts
+if [ "$BUILD" == "true" ]; then
+ sh build.sh $REPOSITORY $VERSION ${NEXUS_HOST} ${NEXUS_PORT}
+fi
+if [ "$TEST" == "true" ]; then
+ mvn clean verify -Dminikube=true
+fi
+popd
 #
 #pushd services/designs-notification-dispatcher
 #if [ "$BUILD" == "true" ]; then

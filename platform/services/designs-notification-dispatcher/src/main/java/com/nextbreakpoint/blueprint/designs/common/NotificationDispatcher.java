@@ -132,7 +132,7 @@ public class NotificationDispatcher implements Handler<RoutingContext> {
 
         final JsonObject message = makeMessageData(timestamp);
 
-        vertx.eventBus().publish("events.handler.output." + watcher.getSessionId(), message);
+        vertx.eventBus().publish("notifications." + watcher.getSessionId(), message);
     }
 
     private JsonObject makeMessageData(Long timestamp) {

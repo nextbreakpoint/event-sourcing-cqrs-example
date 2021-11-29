@@ -3,12 +3,12 @@ package com.nextbreakpoint.blueprint.frontend;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.http.ContentType;
 import com.nextbreakpoint.blueprint.common.core.Authority;
+import com.xebialabs.restito.server.StubServer;
 import io.vertx.core.json.JsonObject;
 import io.vertx.rxjava.core.http.Cookie;
 import org.glassfish.grizzly.http.util.HttpStatus;
 import org.junit.jupiter.api.*;
 
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
@@ -26,29 +26,35 @@ import static org.hamcrest.CoreMatchers.equalTo;
 @Tag("integration")
 @DisplayName("Verify behaviour of frontend service")
 public class IntegrationTests {
-  private static final String SCRIPT = "fractal {\norbit [-2.0 - 2.0i,+2.0 + 2.0i] [x,n] {\nloop [0, 200] (mod2(x) > 40) {\nx = x * x + w;\n}\n}\ncolor [#FF000000] {\npalette gradient {\n[#FFFFFFFF > #FF000000, 100];\n[#FF000000 > #FFFFFFFF, 100];\n}\ninit {\nm = 100 * (1 + sin(mod(x) * 0.2 / pi));\n}\nrule (n > 0) [1] {\ngradient[m - 1]\n}\n}\n}\n";
-  private static final String METADATA = "{\"translation\":{\"x\":0.0,\"y\":0.0,\"z\":1.0,\"w\":0.0},\"rotation\":{\"x\":0.0,\"y\":0.0,\"z\":0.0,\"w\":0.0},\"scale\":{\"x\":1.0,\"y\":1.0,\"z\":1.0,\"w\":1.0},\"point\":{\"x\":0.0,\"y\":0.0},\"julia\":false,\"options\":{\"showPreview\":false,\"showTraps\":false,\"showOrbit\":false,\"showPoint\":false,\"previewOrigin\":{\"x\":0.0,\"y\":0.0},\"previewSize\":{\"x\":0.25,\"y\":0.25}}}";
-  private static final String MANIFEST = "{\"pluginId\":\"Mandelbrot\"}";
+  private static final StubServer apiStub = new StubServer(Integer.parseInt("39001")).run();
 
-  private static final TestScenario scenario = new TestScenario();
+  private static final TestCases testCases = new TestCases();
 
   @BeforeAll
-  public static void before() throws IOException, InterruptedException {
-    System.setProperty("http.port", "30400");
-    System.setProperty("stub.port", "39001");
+  public static void before() {
+    testCases.before();
 
-    scenario.before();
+    if (apiStub != null) {
+      apiStub.start();
+    }
   }
 
   @AfterAll
-  public static void after() throws IOException, InterruptedException {
-    scenario.after();
+  public static void after() {
+    testCases.after();
+
+    if (apiStub != null) {
+      apiStub.stop();
+    }
   }
 
   @AfterEach
   public void reset() {
     RestAssured.reset();
-    scenario.getStubServer().clear();
+
+    if (apiStub != null) {
+      apiStub.clear();
+    }
   }
 
   @Test
@@ -56,12 +62,12 @@ public class IntegrationTests {
   public void shouldReturnHTMLWhenRequestingDesignsContentPageWithoutToken() throws MalformedURLException {
     final UUID uuid = UUID.randomUUID();
 
-    whenHttp(scenario.getStubServer())
+    whenHttp(apiStub)
             .match(get("/designs"), withHeader("accept", "application/json"))
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("[{\"uuid\":\"" + uuid + "\",\"checksum\":\"1\"}]"));
 
-    given().config(scenario.getRestAssuredConfig())
-            .when().get(scenario.makeBaseURL("/content/designs.html"))
+    given().config(TestUtils.getRestAssuredConfig())
+            .when().get(testCases.makeBaseURL("/content/designs.html"))
             .then().assertThat().statusCode(200)
             .and().contentType(ContentType.HTML);
   }
@@ -74,9 +80,9 @@ public class IntegrationTests {
     final Date date = new Date();
 
     final String json = new JsonObject()
-            .put("manifest", MANIFEST)
-            .put("metadata", METADATA)
-            .put("script", SCRIPT)
+            .put("manifest", TestConstants.MANIFEST)
+            .put("metadata", TestConstants.METADATA)
+            .put("script", TestConstants.SCRIPT)
             .encode();
 
     final String content = new JsonObject()
@@ -86,12 +92,12 @@ public class IntegrationTests {
             .put("modified", DateTimeFormatter.ISO_INSTANT.format(date.toInstant()))
             .encode();
 
-    whenHttp(scenario.getStubServer())
+    whenHttp(apiStub)
             .match(get("/designs/" + designUuid), withHeader("accept", "application/json"))
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent(content));
 
-    given().config(scenario.getRestAssuredConfig())
-            .when().get(scenario.makeBaseURL("/content/designs/" + designUuid + ".html"))
+    given().config(TestUtils.getRestAssuredConfig())
+            .when().get(testCases.makeBaseURL("/content/designs/" + designUuid + ".html"))
             .then().assertThat().statusCode(200)
             .and().contentType(ContentType.HTML);
   }
@@ -102,19 +108,19 @@ public class IntegrationTests {
     final UUID designUuid = UUID.randomUUID();
     final UUID accountUuid = UUID.randomUUID();
 
-    whenHttp(scenario.getStubServer())
+    whenHttp(apiStub)
             .match(get("/designs"), withHeader("accept", "application/json"))
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("[{\"uuid\":\"" + designUuid + "\",\"checksum\":\"1\"}]"));
 
-    whenHttp(scenario.getStubServer())
+    whenHttp(apiStub)
             .match(get("/accounts/" + accountUuid), withHeader("accept", "application/json"))
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"name\":\"test\",\"role\":\"guest\",\"uuid\":\"" + accountUuid + "\"}"));
 
-    final Cookie cookie = scenario.makeCookie(accountUuid.toString(), Authority.GUEST);
+    final Cookie cookie = testCases.makeCookie(accountUuid.toString(), Authority.GUEST);
 
-    given().config(scenario.getRestAssuredConfig())
+    given().config(TestUtils.getRestAssuredConfig())
             .with().cookie("token", cookie.getValue())
-            .when().get(scenario.makeBaseURL("/content/designs.html"))
+            .when().get(testCases.makeBaseURL("/content/designs.html"))
             .then().assertThat().statusCode(200)
             .and().contentType(ContentType.HTML);
   }
@@ -128,9 +134,9 @@ public class IntegrationTests {
     final Date date = new Date();
 
     final String json = new JsonObject()
-            .put("manifest", MANIFEST)
-            .put("metadata", METADATA)
-            .put("script", SCRIPT)
+            .put("manifest", TestConstants.MANIFEST)
+            .put("metadata", TestConstants.METADATA)
+            .put("script", TestConstants.SCRIPT)
             .encode();
 
     final String content = new JsonObject()
@@ -140,19 +146,19 @@ public class IntegrationTests {
             .put("modified", DateTimeFormatter.ISO_INSTANT.format(date.toInstant()))
             .encode();
 
-    whenHttp(scenario.getStubServer())
+    whenHttp(apiStub)
             .match(get("/designs/" + designUuid), withHeader("accept", "application/json"))
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent(content));
 
-    whenHttp(scenario.getStubServer())
+    whenHttp(apiStub)
             .match(get("/accounts/" + accountUuid), withHeader("accept", "application/json"))
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"name\":\"test\",\"role\":\"guest\",\"uuid\":\"" + accountUuid + "\"}"));
 
-    final Cookie cookie = scenario.makeCookie(accountUuid.toString(), Authority.GUEST);
+    final Cookie cookie = testCases.makeCookie(accountUuid.toString(), Authority.GUEST);
 
-    given().config(scenario.getRestAssuredConfig())
+    given().config(TestUtils.getRestAssuredConfig())
             .with().cookie("token", cookie.getValue())
-            .when().get(scenario.makeBaseURL("/content/designs/" + designUuid + ".html"))
+            .when().get(testCases.makeBaseURL("/content/designs/" + designUuid + ".html"))
             .then().assertThat().statusCode(200)
             .and().contentType(ContentType.HTML);
   }
@@ -160,8 +166,8 @@ public class IntegrationTests {
   @Test
   @DisplayName("should return HTML when requesting designs admin page without token")
   public void shouldReturnHTMLWhenRequestingDesignsAdminPageWithoutToken() throws MalformedURLException {
-    given().config(scenario.getRestAssuredConfig())
-            .when().get(scenario.makeBaseURL("/admin/designs.html"))
+    given().config(TestUtils.getRestAssuredConfig())
+            .when().get(testCases.makeBaseURL("/admin/designs.html"))
             .then().assertThat().statusCode(200)
             .and().contentType(ContentType.HTML)
             .and().body("html.body.div.@id", equalTo("app"));
@@ -172,8 +178,8 @@ public class IntegrationTests {
   public void shouldReturnHTMLWhenRequestingPreviewAdminPageWithoutToken() throws MalformedURLException {
     final UUID uuid = UUID.randomUUID();
 
-    given().config(scenario.getRestAssuredConfig())
-            .when().get(scenario.makeBaseURL("/admin/designs/" + uuid + ".html"))
+    given().config(TestUtils.getRestAssuredConfig())
+            .when().get(testCases.makeBaseURL("/admin/designs/" + uuid + ".html"))
             .then().assertThat().statusCode(200)
             .and().contentType(ContentType.HTML)
             .and().body("html.body.div.@id", equalTo("app"));
@@ -182,15 +188,15 @@ public class IntegrationTests {
   @Test
   @DisplayName("should return HTML when requesting designs admin page with token")
   public void shouldReturnHTMLWhenRequestingDesignsAdminPageWithToken() throws MalformedURLException {
-    final Cookie cookie = scenario.makeCookie("test", Authority.GUEST);
+    final Cookie cookie = testCases.makeCookie("test", Authority.GUEST);
 
-    whenHttp(scenario.getStubServer())
+    whenHttp(apiStub)
             .match(get("/accounts/test"), withHeader("accept", "application/json"))
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"name\":\"test\",\"role\":\"guest\",\"uuid\":\"test\"}"));
 
-    given().config(scenario.getRestAssuredConfig())
+    given().config(TestUtils.getRestAssuredConfig())
             .with().cookie("token", cookie.getValue())
-            .when().get(scenario.makeBaseURL("/admin/designs.html"))
+            .when().get(testCases.makeBaseURL("/admin/designs.html"))
             .then().assertThat().statusCode(200)
             .and().contentType(ContentType.HTML)
             .and().body("html.body.div.@id", equalTo("app"));
@@ -201,15 +207,15 @@ public class IntegrationTests {
   public void shouldReturnHTMLWhenRequestingPreviewAdminPageWithToken() throws MalformedURLException {
     final UUID uuid = UUID.randomUUID();
 
-    final Cookie cookie = scenario.makeCookie("test", Authority.GUEST);
+    final Cookie cookie = testCases.makeCookie("test", Authority.GUEST);
 
-    whenHttp(scenario.getStubServer())
+    whenHttp(apiStub)
             .match(get("/accounts/test"), withHeader("accept", "application/json"))
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"name\":\"test\",\"role\":\"guest\",\"uuid\":\"test\"}"));
 
-    given().config(scenario.getRestAssuredConfig())
+    given().config(TestUtils.getRestAssuredConfig())
             .with().cookie("token", cookie.getValue())
-            .when().get(scenario.makeBaseURL("/admin/designs/" + uuid + ".html"))
+            .when().get(testCases.makeBaseURL("/admin/designs/" + uuid + ".html"))
             .then().assertThat().statusCode(200)
             .and().contentType(ContentType.HTML)
             .and().body("html.body.div.@id", equalTo("app"));

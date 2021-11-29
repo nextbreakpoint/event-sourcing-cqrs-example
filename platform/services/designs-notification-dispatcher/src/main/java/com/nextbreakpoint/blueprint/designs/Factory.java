@@ -7,9 +7,9 @@ import com.nextbreakpoint.blueprint.common.events.TileAggregateUpdateCompleted;
 import com.nextbreakpoint.blueprint.common.events.mappers.DesignAggregateUpdateCompletedInputMapper;
 import com.nextbreakpoint.blueprint.common.events.mappers.TileAggregateUpdateCompletedInputMapper;
 import com.nextbreakpoint.blueprint.common.vertx.Controller;
-import com.nextbreakpoint.blueprint.common.vertx.TemplateHandler;
-import com.nextbreakpoint.blueprint.common.vertx.MessageSuccessConsumer;
 import com.nextbreakpoint.blueprint.common.vertx.MessageFailureConsumer;
+import com.nextbreakpoint.blueprint.common.vertx.MessageSuccessConsumer;
+import com.nextbreakpoint.blueprint.common.vertx.TemplateHandler;
 
 public class Factory {
     private Factory() {}

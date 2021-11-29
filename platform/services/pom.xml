@@ -20,19 +20,6 @@
             <email>andrea@nextbreakpoint.com</email>
         </developer>
     </developers>
-    <properties>
-        <stub.host>localhost</stub.host>
-        <minikube.host>localhost</minikube.host>
-        <pactbroker.host>localhost</pactbroker.host>
-        <pactbroker.port>9292</pactbroker.port>
-    </properties>
-    <repositories>
-        <repository>
-            <id>nexus</id>
-            <name>Nexus</name>
-            <url>${nexus.url}/repository/maven-internal</url>
-        </repository>
-    </repositories>
     <dependencies>
         <dependency>
             <groupId>com.nextbreakpoint</groupId>
@@ -142,26 +129,6 @@
             </resource>
         </resources>
         <plugins>
-<!--            <plugin>-->
-<!--                <groupId>org.codehaus.mojo</groupId>-->
-<!--                <artifactId>build-helper-maven-plugin</artifactId>-->
-<!--                <version>${build-helper-maven-plugin.version}</version>-->
-<!--                <executions>-->
-<!--                    <execution>-->
-<!--                        <id>reserve-network-port</id>-->
-<!--                        <goals>-->
-<!--                            <goal>reserve-network-port</goal>-->
-<!--                        </goals>-->
-<!--                        <phase>process-sources</phase>-->
-<!--                        <configuration>-->
-<!--                            <portNames>-->
-<!--                                <portName>http.port</portName>-->
-<!--                                <portName>stub.port</portName>-->
-<!--                            </portNames>-->
-<!--                        </configuration>-->
-<!--                    </execution>-->
-<!--                </executions>-->
-<!--            </plugin>-->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
@@ -214,36 +181,6 @@
         </plugins>
     </build>
     <profiles>
-        <!-- <profile>
-            <id>minikube</id>
-            <activation>
-                <property>
-                    <name>minikube</name>
-                    <value>true</value>
-                </property>
-            </activation>
-            <properties>
-                <stub.host>192.168.64.1</stub.host>
-                <minikube.host>192.168.64.12</minikube.host>
-                <pactbroker.host>192.168.64.12</pactbroker.host>
-            </properties>
-        </profile> -->
-        <profile>
-            <id>nexus</id>
-            <activation>
-                <property>
-                    <name>nexus</name>
-                    <value>true</value>
-                </property>
-            </activation>
-            <distributionManagement>
-                <repository>
-                    <id>nexus</id>
-                    <name>Nexus</name>
-                    <url>${nexus.url}/repository/maven-internal/</url>
-                </repository>
-            </distributionManagement>
-        </profile>
         <profile>
             <id>platform</id>
             <activation>

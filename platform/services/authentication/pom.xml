@@ -16,7 +16,7 @@
         <repository>
             <id>nexus</id>
             <name>Nexus</name>
-            <url>${nexus.url}/repository/maven-internal</url>
+            <url>${nexus.host}:${nexus.port}/repository/maven-internal</url>
         </repository>
     </repositories>
     <build>
@@ -63,13 +63,13 @@
                     <toolchain>jdk</toolchain>
                     <executable>java</executable>
                     <environmentVariables>
-                        <KEYSTORE_SECRET>secret</KEYSTORE_SECRET>
                         <JAEGER_SERVICE_NAME>authentication</JAEGER_SERVICE_NAME>
                         <JAEGER_AGENT_HOST>localhost</JAEGER_AGENT_HOST>
                         <JAEGER_TAGS>env=dev</JAEGER_TAGS>
                         <JAEGER_SAMPLER_TYPE>const</JAEGER_SAMPLER_TYPE>
                         <JAEGER_SAMPLER_PARAM>1</JAEGER_SAMPLER_PARAM>
                         <JAEGER_REPORTER_LOG_SPANS>true</JAEGER_REPORTER_LOG_SPANS>
+                        <KEYSTORE_SECRET>secret</KEYSTORE_SECRET>
                     </environmentVariables>
                     <arguments>
                         <argument>-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:35101</argument>

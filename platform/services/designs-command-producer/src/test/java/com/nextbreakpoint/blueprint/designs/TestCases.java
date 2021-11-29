@@ -1,5 +1,6 @@
 package com.nextbreakpoint.blueprint.designs;
 
+import au.com.dius.pact.provider.junit5.HttpsTestTarget;
 import com.jayway.restassured.http.ContentType;
 import com.nextbreakpoint.blueprint.common.core.Authority;
 import com.nextbreakpoint.blueprint.common.core.Environment;
@@ -10,14 +11,16 @@ import com.nextbreakpoint.blueprint.common.events.DesignUpdateRequested;
 import com.nextbreakpoint.blueprint.common.test.KafkaTestPolling;
 import com.nextbreakpoint.blueprint.common.vertx.KafkaClientFactory;
 import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonObject;
 import io.vertx.rxjava.core.RxHelper;
 import io.vertx.rxjava.core.Vertx;
 import io.vertx.rxjava.kafka.client.consumer.KafkaConsumer;
+import org.jetbrains.annotations.NotNull;
 import rx.plugins.RxJavaHooks;
 import rx.schedulers.Schedulers;
 
-import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -45,29 +48,21 @@ public class TestCases {
         this.consumerGroupId = consumerGroupId;
     }
 
-    public String getVersion() {
-        return scenario.getVersion();
-    }
-
-    public TestScenario getScenario() {
-        return scenario;
-    }
-
-    public void before() throws IOException, InterruptedException {
+    public void before() {
         scenario.before();
 
         RxJavaHooks.setOnComputationScheduler(s -> RxHelper.scheduler(vertx));
         RxJavaHooks.setOnIOScheduler(s -> RxHelper.blockingScheduler(vertx));
         RxJavaHooks.setOnNewThreadScheduler(s -> RxHelper.blockingScheduler(vertx));
 
-        KafkaConsumer<String, String> eventsConsumer = KafkaClientFactory.createConsumer(environment, vertx, scenario.createConsumerConfig(consumerGroupId));
+        KafkaConsumer<String, String> eventsConsumer = KafkaClientFactory.createConsumer(environment, vertx, createConsumerConfig(consumerGroupId));
 
         eventsPolling = new KafkaTestPolling(eventsConsumer, TestConstants.EVENTS_TOPIC_NAME);
 
         eventsPolling.startPolling();
     }
 
-    public void after() throws IOException, InterruptedException {
+    public void after() {
         try {
             vertx.rxClose()
                     .doOnError(Throwable::printStackTrace)
@@ -78,6 +73,40 @@ public class TestCases {
         }
 
         scenario.after();
+    }
+
+    @NotNull
+    public String getVersion() {
+        return scenario.getVersion();
+    }
+
+    @NotNull
+    public URL makeBaseURL(String path) throws MalformedURLException {
+        final String normPath = path.startsWith("/") ? path.substring(1) : path;
+        return new URL("https://" + scenario.getServiceHost() + ":" + scenario.getServicePort() + "/" + normPath);
+    }
+
+    @NotNull
+    public String makeAuthorization(String user, String role) {
+        return scenario.makeAuthorization(user, role);
+    }
+
+    @NotNull
+    public String getOriginUrl() {
+        return "https://" + scenario.getServiceHost() + ":" + scenario.getServicePort();
+    }
+
+    @NotNull
+    public HttpsTestTarget getHttpsTestTarget() {
+        return new HttpsTestTarget(scenario.getServiceHost(), scenario.getServicePort(), "/", true);
+    }
+
+    @NotNull
+    public JsonObject createConsumerConfig(String group) {
+        final JsonObject config = new JsonObject();
+        config.put("kafka_bootstrap_servers", scenario.getKafkaHost() + ":" + scenario.getKafkaPort());
+        config.put("kafka_group_id", group);
+        return config;
     }
 
     public String shouldPublishDesignInsertRequestedEventWhenReceivingAInsertDesignRequest() throws MalformedURLException {
@@ -177,12 +206,12 @@ public class TestCases {
     }
 
     private String submitInsertDesignRequest(String authorization, Map<String, Object> design) throws MalformedURLException {
-        return given().config(scenario.getRestAssuredConfig())
+        return given().config(TestUtils.getRestAssuredConfig())
                 .and().header(AUTHORIZATION, authorization)
                 .and().contentType(ContentType.JSON)
                 .and().accept(ContentType.JSON)
                 .and().body(design)
-                .when().post(scenario.makeBaseURL("/v1/designs"))
+                .when().post(makeBaseURL("/v1/designs"))
                 .then().assertThat().statusCode(202)
                 .and().contentType(ContentType.JSON)
                 .and().body("uuid", notNullValue())
@@ -190,21 +219,21 @@ public class TestCases {
     }
 
     private void submitUpdateDesignRequest(String authorization, Map<String, Object> design, String uuid) throws MalformedURLException {
-        given().config(scenario.getRestAssuredConfig())
+        given().config(TestUtils.getRestAssuredConfig())
                 .and().header(AUTHORIZATION, authorization)
                 .and().contentType(ContentType.JSON)
                 .and().accept(ContentType.JSON)
                 .and().body(design)
-                .when().put(scenario.makeBaseURL("/v1/designs/" + uuid))
+                .when().put(makeBaseURL("/v1/designs/" + uuid))
                 .then().assertThat().statusCode(202)
                 .and().contentType(ContentType.JSON);
     }
 
     private void submitDeleteDesignRequest(String authorization, String uuid) throws MalformedURLException {
-        given().config(scenario.getRestAssuredConfig())
+        given().config(TestUtils.getRestAssuredConfig())
                 .and().header(AUTHORIZATION, authorization)
                 .and().accept(ContentType.JSON)
-                .when().delete(scenario.makeBaseURL("/v1/designs/" + uuid))
+                .when().delete(makeBaseURL("/v1/designs/" + uuid))
                 .then().assertThat().statusCode(202)
                 .and().contentType(ContentType.JSON);
     }

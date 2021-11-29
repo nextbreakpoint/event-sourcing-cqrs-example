@@ -1,7 +1,8 @@
 package com.nextbreakpoint.blueprint.designs;
 
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
-import com.nextbreakpoint.blueprint.common.events.*;
+import com.nextbreakpoint.blueprint.common.events.TileRenderCompleted;
+import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
 import io.vertx.core.json.Json;
 
 import static org.assertj.core.api.Assertions.assertThat;

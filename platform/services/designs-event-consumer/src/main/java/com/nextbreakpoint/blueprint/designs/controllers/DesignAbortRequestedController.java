@@ -1,8 +1,8 @@
 package com.nextbreakpoint.blueprint.designs.controllers;
 
 import com.datastax.oss.driver.api.core.uuid.Uuids;
-import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
+import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.events.DesignAbortRequested;
 import com.nextbreakpoint.blueprint.common.events.TileRenderAborted;

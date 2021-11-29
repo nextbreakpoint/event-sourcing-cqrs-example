@@ -1,7 +1,9 @@
 package com.nextbreakpoint.blueprint.designs;
 
 import com.datastax.oss.driver.api.core.cql.Row;
-import com.nextbreakpoint.blueprint.common.core.*;
+import com.nextbreakpoint.blueprint.common.core.Environment;
+import com.nextbreakpoint.blueprint.common.core.InputMessage;
+import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.events.DesignInsertRequested;
 import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
 import com.nextbreakpoint.blueprint.common.test.KafkaTestEmitter;
@@ -10,15 +12,16 @@ import com.nextbreakpoint.blueprint.common.vertx.CassandraClientFactory;
 import com.nextbreakpoint.blueprint.common.vertx.KafkaClientFactory;
 import com.nextbreakpoint.blueprint.designs.model.Tiles;
 import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonObject;
 import io.vertx.rxjava.cassandra.CassandraClient;
 import io.vertx.rxjava.core.RxHelper;
 import io.vertx.rxjava.core.Vertx;
 import io.vertx.rxjava.kafka.client.consumer.KafkaConsumer;
 import io.vertx.rxjava.kafka.client.producer.KafkaProducer;
+import org.jetbrains.annotations.NotNull;
 import rx.plugins.RxJavaHooks;
 import rx.schedulers.Schedulers;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -47,30 +50,22 @@ public class TestCases {
         this.consumerGroupId = consumerGroupId;
     }
 
-    public String getVersion() {
-        return scenario.getVersion();
-    }
-
-    public TestScenario getScenario() {
-        return scenario;
-    }
-
-    public void before() throws IOException, InterruptedException {
+    public void before() {
         scenario.before();
 
         RxJavaHooks.setOnComputationScheduler(s -> RxHelper.scheduler(vertx));
         RxJavaHooks.setOnIOScheduler(s -> RxHelper.blockingScheduler(vertx));
         RxJavaHooks.setOnNewThreadScheduler(s -> RxHelper.blockingScheduler(vertx));
 
-        CassandraClient session = CassandraClientFactory.create(environment, vertx, scenario.createCassandraConfig("test_designs_event_consumer"));
+        CassandraClient session = CassandraClientFactory.create(environment, vertx, createCassandraConfig());
 
         testCassandra = new TestCassandra(session);
 
-        KafkaProducer<String, String> producer = KafkaClientFactory.createProducer(environment, vertx, scenario.createProducerConfig());
+        KafkaProducer<String, String> producer = KafkaClientFactory.createProducer(environment, vertx, createProducerConfig());
 
-        KafkaConsumer<String, String> eventsConsumer = KafkaClientFactory.createConsumer(environment, vertx, scenario.createConsumerConfig(consumerGroupId));
+        KafkaConsumer<String, String> eventsConsumer = KafkaClientFactory.createConsumer(environment, vertx, createConsumerConfig(consumerGroupId));
 
-        KafkaConsumer<String, String> renderConsumer = KafkaClientFactory.createConsumer(environment, vertx, scenario.createConsumerConfig(consumerGroupId));
+        KafkaConsumer<String, String> renderConsumer = KafkaClientFactory.createConsumer(environment, vertx, createConsumerConfig(consumerGroupId));
 
         eventsPolling = new KafkaTestPolling(eventsConsumer, TestConstants.EVENTS_TOPIC_NAME);
         renderPolling = new KafkaTestPolling(renderConsumer, TestConstants.RENDER_TOPIC_NAME);
@@ -84,7 +79,7 @@ public class TestCases {
         testCassandra.deleteDesigns();
     }
 
-    public void after() throws IOException, InterruptedException {
+    public void after() {
         try {
             vertx.rxClose()
                     .doOnError(Throwable::printStackTrace)
@@ -95,6 +90,39 @@ public class TestCases {
         }
 
         scenario.after();
+    }
+
+    @NotNull
+    public String getVersion() {
+        return scenario.getVersion();
+    }
+
+    @NotNull
+    public JsonObject createCassandraConfig() {
+        final JsonObject config = new JsonObject();
+        config.put("cassandra_contactPoints", scenario.getCassandraHost());
+        config.put("cassandra_port", scenario.getCassandraPort());
+        config.put("cassandra_cluster", "datacenter1");
+        config.put("cassandra_keyspace", TestConstants.DATABASE_KEYSPACE);
+        config.put("cassandra_username", "admin");
+        config.put("cassandra_password", "password");
+        return config;
+    }
+
+    @NotNull
+    public JsonObject createConsumerConfig(String group) {
+        final JsonObject config = new JsonObject();
+        config.put("kafka_bootstrap_servers", scenario.getKafkaHost() + ":" + scenario.getKafkaPort());
+        config.put("kafka_group_id", group);
+        return config;
+    }
+
+    @NotNull
+    public JsonObject createProducerConfig() {
+        final JsonObject config = new JsonObject();
+        config.put("kafka_bootstrap_servers", scenario.getKafkaHost() + ":" + scenario.getKafkaPort());
+        config.put("kafka_client_id", "integration");
+        return config;
     }
 
     public void shouldUpdateTheDesignWhenReceivingADesignInsertRequestedMessage(OutputMessage designInsertRequestedMessage) {

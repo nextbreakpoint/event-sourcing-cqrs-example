@@ -1,27 +1,15 @@
 package com.nextbreakpoint.blueprint.designs;
 
 import com.datastax.oss.driver.api.core.uuid.Uuids;
-import com.jayway.restassured.http.ContentType;
-import com.nextbreakpoint.blueprint.common.core.Authority;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.events.DesignAggregateUpdateCompleted;
 import com.nextbreakpoint.blueprint.common.events.TileAggregateUpdateCompleted;
 import com.nextbreakpoint.blueprint.common.events.mappers.DesignAggregateUpdateCompletedOutputMapper;
 import com.nextbreakpoint.blueprint.common.events.mappers.TileAggregateUpdateCompletedOutputMapper;
-import io.vertx.core.json.JsonObject;
-import org.glassfish.grizzly.http.util.HttpStatus;
 import org.junit.jupiter.api.*;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.time.format.DateTimeFormatter;
-import java.util.*;
-
-import static com.jayway.restassured.RestAssured.given;
-import static com.xebialabs.restito.builder.stub.StubHttp.whenHttp;
-import static com.xebialabs.restito.semantics.Action.*;
-import static com.xebialabs.restito.semantics.Condition.*;
-import static org.hamcrest.CoreMatchers.*;
+import java.util.List;
+import java.util.UUID;
 
 @Tag("slow")
 @Tag("integration")
@@ -30,15 +18,12 @@ public class IntegrationTests {
     private static TestCases testCases = new TestCases();
 
     @BeforeAll
-    public static void before() throws IOException, InterruptedException {
-        System.setProperty("http.port", "30123");
-        System.setProperty("stub.port", "39001");
-
+    public static void before() {
         testCases.before();
     }
 
     @AfterAll
-    public static void after() throws IOException, InterruptedException {
+    public static void after() {
         testCases.after();
     }
 

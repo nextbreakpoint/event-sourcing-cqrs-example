@@ -21,4 +21,6 @@ public interface TestConstants {
     int LEVELS = 3;
 
     String BUCKET = "test-designs-aggregate-fetcher";
+
+    String DATABASE_KEYSPACE = "test_designs_aggregate_fetcher";
 }

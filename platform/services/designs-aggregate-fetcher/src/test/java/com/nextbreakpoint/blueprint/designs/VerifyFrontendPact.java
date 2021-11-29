@@ -1,6 +1,5 @@
 package com.nextbreakpoint.blueprint.designs;
 
-import au.com.dius.pact.provider.junit5.HttpsTestTarget;
 import au.com.dius.pact.provider.junit5.PactVerificationContext;
 import au.com.dius.pact.provider.junit5.PactVerificationInvocationContextProvider;
 import au.com.dius.pact.provider.junitsupport.Consumer;
@@ -16,7 +15,6 @@ import org.apache.http.HttpRequest;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -31,9 +29,7 @@ public class VerifyFrontendPact {
   private static final TestCases testCases = new TestCases();
 
   @BeforeAll
-  public static void before() throws IOException, InterruptedException {
-    System.setProperty("http.port", "30120");
-
+  public static void before() {
     testCases.before();
 
     System.setProperty("pact.showStacktrace", "true");
@@ -42,7 +38,7 @@ public class VerifyFrontendPact {
   }
 
   @AfterAll
-  public static void after() throws IOException, InterruptedException {
+  public static void after() {
     testCases.after();
   }
 
@@ -53,14 +49,14 @@ public class VerifyFrontendPact {
 
   @BeforeEach
   public void before(PactVerificationContext context) {
-    context.setTarget(new HttpsTestTarget(testCases.getScenario().getServiceHost(), Integer.parseInt(testCases.getScenario().getServicePort()), "/", true));
+    context.setTarget(testCases.getHttpsTestTarget());
   }
 
   @TestTemplate
   @ExtendWith(PactVerificationInvocationContextProvider.class)
   @DisplayName("Verify interaction")
   public void pactVerificationTestTemplate(PactVerificationContext context, HttpRequest request) {
-    final String authorization = testCases.getScenario().makeAuthorization("test", Authority.GUEST);
+    final String authorization = testCases.makeAuthorization("test", Authority.GUEST);
     request.setHeader(Headers.AUTHORIZATION, authorization);
     context.verifyInteraction();
   }

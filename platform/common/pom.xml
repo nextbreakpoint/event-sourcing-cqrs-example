@@ -16,24 +16,6 @@
         <module>modules/vertx</module>
         <module>modules/test</module>
     </modules>
-    <profiles>
-        <profile>
-            <id>nexus</id>
-            <activation>
-                <property>
-                    <name>nexus</name>
-                    <value>true</value>
-                </property>
-            </activation>
-            <distributionManagement>
-                <repository>
-                    <id>nexus</id>
-                    <name>Nexus</name>
-                    <url>${nexus.url}/repository/maven-internal/</url>
-                </repository>
-            </distributionManagement>
-        </profile>
-    </profiles>
     <build>
         <plugins>
             <plugin>

@@ -11,7 +11,6 @@ import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
@@ -23,9 +22,7 @@ public class PactConsumerTests {
     private static TestCases testCases = new TestCases("PactTests");
 
     @BeforeAll
-    public static void before() throws IOException, InterruptedException {
-        System.setProperty("http.port", "30124");
-
+    public static void before() {
         testCases.before();
 
         System.setProperty("pact.showStacktrace", "true");
@@ -34,7 +31,7 @@ public class PactConsumerTests {
     }
 
     @AfterAll
-    public static void after() throws IOException, InterruptedException {
+    public static void after() {
         testCases.after();
     }
 

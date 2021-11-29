@@ -17,7 +17,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 import static com.jayway.restassured.RestAssured.given;
 import static com.xebialabs.restito.builder.stub.StubHttp.whenHttp;
@@ -31,18 +30,13 @@ import static org.hamcrest.CoreMatchers.startsWith;
 @DisplayName("Test authentication pact")
 @ExtendWith(PactConsumerTestExt.class)
 public class PactConsumerTests {
-  private static final String OAUTH_TOKEN_PATH = "/login/oauth/access_token";
-  private static final String OAUTH_USER_PATH = "/user";
-  private static final String OAUTH_USER_EMAILS_PATH = "/user/emails";
-  private static final UUID ACCOUNT_UUID = new UUID(1L, 1L);
-
-  private static final TestScenario scenario = new TestScenario();
+  private static final TestCases testCases = new TestCases();
 
   private static final StubServer githubStub = new StubServer(Integer.parseInt("39002")).run();
 
   @BeforeAll
   public static void before() {
-    scenario.before();
+    testCases.before();
 
     if (githubStub != null) {
       githubStub.start();
@@ -51,7 +45,7 @@ public class PactConsumerTests {
 
   @AfterAll
   public static void after() {
-    scenario.after();
+    testCases.after();
 
     if (githubStub != null) {
       githubStub.stop();
@@ -84,11 +78,11 @@ public class PactConsumerTests {
             .status(200)
             .body(
                     new PactDslJsonArray()
-                            .stringValue(ACCOUNT_UUID.toString())
+                            .stringValue(TestConstants.ACCOUNT_UUID.toString())
             )
             .uponReceiving("request to fetch account")
             .method("GET")
-            .path("/v1/accounts/" + ACCOUNT_UUID)
+            .path("/v1/accounts/" + TestConstants.ACCOUNT_UUID)
             .matchHeader("Accept", "application/json")
             .matchHeader("Authorization", "Bearer .+")
             .willRespondWith()
@@ -96,7 +90,7 @@ public class PactConsumerTests {
             .status(200)
             .body(
                     new PactDslJsonBody()
-                            .stringValue("uuid", ACCOUNT_UUID.toString())
+                            .stringValue("uuid", TestConstants.ACCOUNT_UUID.toString())
                             .stringValue("role", "guest")
             )
             .toPact();
@@ -143,31 +137,32 @@ public class PactConsumerTests {
             .toPact();
   }
 
+  @Test
   @PactTestFor(providerName = "accounts", hostInterface = "0.0.0.0", port = "39001", pactMethod = "accountDoesNotExist")
   @DisplayName("should create an account and redirect to designs when authenticated user doesn't have an account")
-  public void shouldCreateAnAccountAndRedirectToDesignsWhenAuthenticatedUserDoNotHaveAnAccount(MockServer mockServer) throws IOException, InterruptedException {
+  public void shouldCreateAnAccountAndRedirectToDesignsWhenAuthenticatedUserDoNotHaveAnAccount(MockServer mockServer) throws IOException {
     whenHttp(githubStub)
-            .match(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
+            .match(post(TestConstants.OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"access_token\":\"abcdef\"}"));
 
     whenHttp(githubStub)
-            .match(get(OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"))
+            .match(get(TestConstants.OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"))
             .then(status(HttpStatus.OK_200), stringContent("{\"name\":\"test\"}"));
 
     whenHttp(githubStub)
-            .match(get(OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
+            .match(get(TestConstants.OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
             .then(status(HttpStatus.OK_200), stringContent("[{\"email\":\"test@localhost\", \"primary\":true}]"));
 
-    given().config(scenario.getRestAssuredConfig())
+    given().config(TestUtils.getRestAssuredConfig())
             .with().param("code", "xxx")
             .and().param("state", "/v1/auth/signin/content/designs")
-            .when().get(scenario.makeBaseURL("/v1/auth/callback"))
+            .when().get(testCases.makeBaseURL("/v1/auth/callback"))
             .then().assertThat().statusCode(303)
             .and().header("Location", startsWith("https://localhost:8080/content/designs"));
 
-    verifyHttp(githubStub).once(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
-            .then().once(get(OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
-            .then().once(get(OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"));
+    verifyHttp(githubStub).once(post(TestConstants.OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
+            .then().once(get(TestConstants.OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
+            .then().once(get(TestConstants.OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"));
 
 //        HttpResponse httpResponse = Request.Get(mockServer.getUrl() + "/v1/accounts?email=test@localhost")
 //                .addHeader("Accept", "application/json")
@@ -180,25 +175,25 @@ public class PactConsumerTests {
   @Test
   @PactTestFor(providerName = "accounts", hostInterface = "0.0.0.0", port = "39001", pactMethod = "accountExists")
   @DisplayName("should not create an account and redirect to designs when authenticated user already has an account")
-  public void shouldNotCreateAnAccountAndRedirectToDesignsWhenAuthenticatedUserAlreadyHasAnAccount(MockServer mockServer) throws IOException, InterruptedException {
+  public void shouldNotCreateAnAccountAndRedirectToDesignsWhenAuthenticatedUserAlreadyHasAnAccount(MockServer mockServer) throws IOException {
     whenHttp(githubStub)
-            .match(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
+            .match(post(TestConstants.OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"access_token\":\"abcdef\"}"));
 
     whenHttp(githubStub)
-            .match(get(OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
+            .match(get(TestConstants.OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
             .then(status(HttpStatus.OK_200), stringContent("[{\"email\":\"test@localhost\", \"primary\":true}]"));
 
-    given().config(scenario.getRestAssuredConfig())
+    given().config(TestUtils.getRestAssuredConfig())
             .with().param("code", "xxx")
             .and().param("state", "/v1/auth/signin/content/designs")
-            .when().get(scenario.makeBaseURL("/v1/auth/callback"))
+            .when().get(testCases.makeBaseURL("/v1/auth/callback"))
             .then().assertThat().statusCode(303)
             .and().header("Location", startsWith("https://localhost:8080/content/designs"));
 
-    verifyHttp(githubStub).once(post(OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
-            .then().once(get(OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
-            .then().never(get(OAUTH_USER_PATH));
+    verifyHttp(githubStub).once(post(TestConstants.OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
+            .then().once(get(TestConstants.OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
+            .then().never(get(TestConstants.OAUTH_USER_PATH));
 
 //        HttpResponse httpResponse = Request.Get(mockServer.getUrl() + "/v1/accounts?email=test@localhost")
 //                .addHeader("Accept", "application/json")

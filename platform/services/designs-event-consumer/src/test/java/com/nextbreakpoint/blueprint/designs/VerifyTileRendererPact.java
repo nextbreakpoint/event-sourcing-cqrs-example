@@ -17,14 +17,16 @@ import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
 import com.nextbreakpoint.blueprint.common.events.mappers.TileRenderRequestedOutputMapper;
 import com.nextbreakpoint.blueprint.common.test.PayloadUtils;
 import io.vertx.core.json.Json;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.UUID;
 
 @Tag("slow")
 @Tag("pact-verify")
-@Tag("verify-circular-pact")
 @DisplayName("Verify contract between designs-event-consumer and designs-tile-renderer")
 @Provider("designs-event-consumer")
 @Consumer("designs-tile-renderer")

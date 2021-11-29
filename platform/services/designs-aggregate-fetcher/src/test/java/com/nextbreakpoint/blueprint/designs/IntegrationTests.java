@@ -33,14 +33,12 @@ public class IntegrationTests {
   private static final String JSON_4 = new JsonObject(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT4)).toString();
 
   @BeforeAll
-  public static void before() throws IOException, InterruptedException {
-    System.setProperty("http.port", "30120");
-
+  public static void before() {
     testCases.before();
   }
 
   @AfterAll
-  public static void after() throws IOException, InterruptedException {
+  public static void after() {
     testCases.after();
   }
 
@@ -64,65 +62,65 @@ public class IntegrationTests {
   @Test
   @DisplayName("Should allow OPTIONS on /designs without access token")
   public void shouldAllowOptionsOnDesignsWithoutAccessToken() throws MalformedURLException {
-    given().config(testCases.getScenario().getRestAssuredConfig())
-            .with().header("Origin", "https://" + testCases.getScenario().getServiceHost() + ":" + testCases.getScenario().getServicePort())
-            .when().options(testCases.getScenario().makeBaseURL("/v1/designs"))
+    given().config(TestUtils.getRestAssuredConfig())
+            .with().header("Origin", testCases.getOriginUrl())
+            .when().options(testCases.makeBaseURL("/v1/designs"))
             .then().assertThat().statusCode(204)
-            .and().header("Access-Control-Allow-Origin", "https://" + testCases.getScenario().getServiceHost() + ":" + testCases.getScenario().getServicePort())
+            .and().header("Access-Control-Allow-Origin", testCases.getOriginUrl())
             .and().header("Access-Control-Allow-Credentials", "true");
   }
 
   @Test
   @DisplayName("Should allow OPTIONS on /v1/designs/id without access token")
   public void shouldAllowOptionsOnDesignsSlashIdWithoutAccessToken() throws MalformedURLException {
-    given().config(testCases.getScenario().getRestAssuredConfig())
-            .with().header("Origin", "https://" + testCases.getScenario().getServiceHost() + ":" + testCases.getScenario().getServicePort())
-            .when().options(testCases.getScenario().makeBaseURL("/v1/designs/" + UUID.randomUUID().toString()))
+    given().config(TestUtils.getRestAssuredConfig())
+            .with().header("Origin", testCases.getOriginUrl())
+            .when().options(testCases.makeBaseURL("/v1/designs/" + UUID.randomUUID()))
             .then().assertThat().statusCode(204)
-            .and().header("Access-Control-Allow-Origin", "https://" + testCases.getScenario().getServiceHost() + ":" + testCases.getScenario().getServicePort())
+            .and().header("Access-Control-Allow-Origin", testCases.getOriginUrl())
             .and().header("Access-Control-Allow-Credentials", "true");
   }
 
   @Test
   @DisplayName("Should forbid GET on /v1/designs when user has unknown authority")
   public void shouldForbidGetOnDesignsWhenUserHasUnknownAuthority() throws MalformedURLException {
-    final String otherAuthorization = testCases.getScenario().makeAuthorization("test", "other");
+    final String otherAuthorization = testCases.makeAuthorization("test", "other");
 
-    given().config(testCases.getScenario().getRestAssuredConfig())
+    given().config(TestUtils.getRestAssuredConfig())
             .with().header(AUTHORIZATION, otherAuthorization)
             .and().accept(ContentType.JSON)
-            .when().get(testCases.getScenario().makeBaseURL("/v1/designs"))
+            .when().get(testCases.makeBaseURL("/v1/designs"))
             .then().assertThat().statusCode(403);
   }
 
   @Test
   @DisplayName("Should forbid GET on /v1/designs/id when user has unknown authority")
   public void shouldForbidGetOnDesignsSlashIdWhenUserHasUnknownAuthority() throws MalformedURLException {
-    final String otherAuthorization = testCases.getScenario().makeAuthorization("test", "other");
+    final String otherAuthorization = testCases.makeAuthorization("test", "other");
 
-    given().config(testCases.getScenario().getRestAssuredConfig())
+    given().config(TestUtils.getRestAssuredConfig())
             .with().header(AUTHORIZATION, otherAuthorization)
             .and().accept(ContentType.JSON)
-            .when().get(testCases.getScenario().makeBaseURL("/v1/designs/" + TestConstants.DESIGN_UUID_1))
+            .when().get(testCases.makeBaseURL("/v1/designs/" + TestConstants.DESIGN_UUID_1))
             .then().assertThat().statusCode(403);
   }
 
   @Test
   @DisplayName("Should forbid GET on /v1/designs/designId/level/col/row/256.png when user has unknown authority")
   public void shouldForbidGetOnDesignsSlashIdSlashLocationSlashSizeWhenUserHasUnknownAuthority() throws MalformedURLException {
-    final String otherAuthorization = testCases.getScenario().makeAuthorization("test", "other");
+    final String otherAuthorization = testCases.makeAuthorization("test", "other");
 
-    given().config(testCases.getScenario().getRestAssuredConfig())
+    given().config(TestUtils.getRestAssuredConfig())
             .with().header(AUTHORIZATION, otherAuthorization)
             .and().accept("image/png")
-            .when().get(testCases.getScenario().makeBaseURL("/v1/designs/" + TestConstants.DESIGN_UUID_2 + "/0/0/0/256.png"))
+            .when().get(testCases.makeBaseURL("/v1/designs/" + TestConstants.DESIGN_UUID_2 + "/0/0/0/256.png"))
             .then().assertThat().statusCode(403);
   }
 
   @Test
   @DisplayName("Should allow GET on /v1/designs when user is anonymous")
   public void shouldAllowGetOnDesignsWhenUserIsAnonymous() throws MalformedURLException {
-    final String authorization = testCases.getScenario().makeAuthorization("test", Authority.ANONYMOUS);;
+    final String authorization = testCases.makeAuthorization("test", Authority.ANONYMOUS);;
 
     Document[] results = listDesigns(authorization);
 
@@ -144,7 +142,7 @@ public class IntegrationTests {
   @Test
   @DisplayName("Should allow GET on /v1/designs/id when user is anonymous")
   public void shouldAllowGetOnDesignsSlashIdWhenUserIsAnonymous() throws MalformedURLException {
-    final String authorization = testCases.getScenario().makeAuthorization("test", Authority.ANONYMOUS);;
+    final String authorization = testCases.makeAuthorization("test", Authority.ANONYMOUS);;
 
     Document result = loadDesign(authorization, TestConstants.DESIGN_UUID_1);
 
@@ -158,7 +156,7 @@ public class IntegrationTests {
   @Test
   @DisplayName("Should allow GET on /v1/designs/designId/level/col/row/256.png when user is anonymous")
   public void shouldAllowGetOnDesignsSlashIdSlashLocationSlashSizeWhenUserIsAnonymous() throws IOException {
-    final String authorization = testCases.getScenario().makeAuthorization("test", Authority.ANONYMOUS);;
+    final String authorization = testCases.makeAuthorization("test", Authority.ANONYMOUS);;
 
     byte[] result = getTile(authorization, TestConstants.DESIGN_UUID_1);
 
@@ -170,7 +168,7 @@ public class IntegrationTests {
   @Test
   @DisplayName("Should allow GET on /v1/designs when user is admin")
   public void shouldAllowGetOnDesignsWhenUserIsAdmin() throws MalformedURLException {
-    final String authorization = testCases.getScenario().makeAuthorization("test", Authority.ADMIN);;
+    final String authorization = testCases.makeAuthorization("test", Authority.ADMIN);;
 
     Document[] results = listDesigns(authorization);
 
@@ -192,7 +190,7 @@ public class IntegrationTests {
   @Test
   @DisplayName("Should allow GET on /v1/designs/id when user is admin")
   public void shouldAllowGetOnDesignsSlashIdWhenUserIsAdmin() throws MalformedURLException {
-    final String authorization = testCases.getScenario().makeAuthorization("test", Authority.ADMIN);;
+    final String authorization = testCases.makeAuthorization("test", Authority.ADMIN);;
 
     Document result = loadDesign(authorization, TestConstants.DESIGN_UUID_1);
 
@@ -206,7 +204,7 @@ public class IntegrationTests {
   @Test
   @DisplayName("Should allow GET on /v1/designs/designId/level/col/row/256.png when user is admin")
   public void shouldAllowGetOnDesignsSlashIdSlashLocationSlashSizeWhenUserIsAdmin() throws IOException {
-    final String authorization = testCases.getScenario().makeAuthorization("test", Authority.ADMIN);;
+    final String authorization = testCases.makeAuthorization("test", Authority.ADMIN);;
 
     byte[] result = getTile(authorization, TestConstants.DESIGN_UUID_2);
 
@@ -218,7 +216,7 @@ public class IntegrationTests {
   @Test
   @DisplayName("Should allow GET on /v1/designs when user is guest")
   public void shouldAllowGetOnDesignsWhenUserIsGuest() throws MalformedURLException {
-    final String authorization = testCases.getScenario().makeAuthorization("test", Authority.GUEST);;
+    final String authorization = testCases.makeAuthorization("test", Authority.GUEST);;
 
     Document[] results = listDesigns(authorization);
 
@@ -240,7 +238,7 @@ public class IntegrationTests {
   @Test
   @DisplayName("Should allow GET on /v1/designs/id when user is guest")
   public void shouldAllowGetOnDesignsSlashIdWhenUserIsGuest() throws MalformedURLException {
-    final String authorization = testCases.getScenario().makeAuthorization("test", Authority.GUEST);;
+    final String authorization = testCases.makeAuthorization("test", Authority.GUEST);;
 
     Document result = loadDesign(authorization, TestConstants.DESIGN_UUID_1);
 
@@ -254,7 +252,7 @@ public class IntegrationTests {
   @Test
   @DisplayName("Should allow GET on /v1/designs/designId/level/col/row/256.png when user is guest")
   public void shouldAllowGetOnDesignsSlashIdSlashLocationSlashSizeWhenUserIsGuest() throws IOException {
-    final String authorization = testCases.getScenario().makeAuthorization("test", Authority.GUEST);;
+    final String authorization = testCases.makeAuthorization("test", Authority.GUEST);;
 
     byte[] result = getTile(authorization, TestConstants.DESIGN_UUID_2);
 
@@ -266,74 +264,74 @@ public class IntegrationTests {
   @Test
   @DisplayName("Should return NOT_FOUND when /v1/designs/id does not exist")
   public void shouldReturnNotFoundWhenDeisgnDoesNotExist() throws MalformedURLException {
-    final String authorization = testCases.getScenario().makeAuthorization("test", Authority.ANONYMOUS);;
+    final String authorization = testCases.makeAuthorization("test", Authority.ANONYMOUS);;
 
-    given().config(testCases.getScenario().getRestAssuredConfig())
+    given().config(TestUtils.getRestAssuredConfig())
             .with().header(AUTHORIZATION, authorization)
             .and().accept(ContentType.JSON)
-            .when().get(testCases.getScenario().makeBaseURL("/v1/designs/" + TestConstants.DESIGN_UUID_0))
+            .when().get(testCases.makeBaseURL("/v1/designs/" + TestConstants.DESIGN_UUID_0))
             .then().assertThat().statusCode(404);
   }
 
   @Test
   @DisplayName("Should return NOT_FOUND when /v1/designs/designId/level/col/row/256.png does not exist")
   public void shouldReturnNotFoundWhenDesignSlashLocationSlashSizeDoesNotExist() throws MalformedURLException {
-    final String authorization = testCases.getScenario().makeAuthorization("test", Authority.ANONYMOUS);;
+    final String authorization = testCases.makeAuthorization("test", Authority.ANONYMOUS);;
 
-    given().config(testCases.getScenario().getRestAssuredConfig())
+    given().config(TestUtils.getRestAssuredConfig())
             .with().header(AUTHORIZATION, authorization)
             .and().accept("image/png")
-            .when().get(testCases.getScenario().makeBaseURL("/v1/designs/" + TestConstants.DESIGN_UUID_0 + "/0/0/0/256.png"))
+            .when().get(testCases.makeBaseURL("/v1/designs/" + TestConstants.DESIGN_UUID_0 + "/0/0/0/256.png"))
             .then().assertThat().statusCode(404);
   }
 
   @Test
   @DisplayName("Should return NOT_FOUND when /v1/designs/id has been deleted")
   public void shouldReturnNotFoundWhenDeisgnHasBeenDeleted() throws MalformedURLException {
-    final String authorization = testCases.getScenario().makeAuthorization("test", Authority.ANONYMOUS);;
+    final String authorization = testCases.makeAuthorization("test", Authority.ANONYMOUS);;
 
-    given().config(testCases.getScenario().getRestAssuredConfig())
+    given().config(TestUtils.getRestAssuredConfig())
             .with().header(AUTHORIZATION, authorization)
             .and().accept(ContentType.JSON)
-            .when().get(testCases.getScenario().makeBaseURL("/v1/designs/" + TestConstants.DESIGN_UUID_4))
+            .when().get(testCases.makeBaseURL("/v1/designs/" + TestConstants.DESIGN_UUID_4))
             .then().assertThat().statusCode(404);
   }
 
   @Test
   @DisplayName("Should return NOT_FOUND when /v1/designs/designId/level/col/row/256.png has been deleted")
   public void shouldReturnNotFoundWhenDesignSlashLocationSlashSizeHasBeenDeleted() throws MalformedURLException {
-    final String authorization = testCases.getScenario().makeAuthorization("test", Authority.ANONYMOUS);;
+    final String authorization = testCases.makeAuthorization("test", Authority.ANONYMOUS);;
 
-    given().config(testCases.getScenario().getRestAssuredConfig())
+    given().config(TestUtils.getRestAssuredConfig())
             .with().header(AUTHORIZATION, authorization)
             .and().accept("image/png")
-            .when().get(testCases.getScenario().makeBaseURL("/v1/designs/" + TestConstants.DESIGN_UUID_4 + "/0/0/0/256.png"))
+            .when().get(testCases.makeBaseURL("/v1/designs/" + TestConstants.DESIGN_UUID_4 + "/0/0/0/256.png"))
             .then().assertThat().statusCode(404);
   }
 
   private static Document[] listDesigns(String authorization) throws MalformedURLException {
-    return given().config(testCases.getScenario().getRestAssuredConfig())
+    return given().config(TestUtils.getRestAssuredConfig())
             .with().header(AUTHORIZATION, authorization)
             .and().accept(ContentType.JSON)
-            .when().get(testCases.getScenario().makeBaseURL("/v1/designs"))
+            .when().get(testCases.makeBaseURL("/v1/designs"))
             .then().assertThat().statusCode(200)
             .extract().body().as(Document[].class);
   }
 
   private static Document loadDesign(String authorization, UUID uuid) throws MalformedURLException {
-    return given().config(testCases.getScenario().getRestAssuredConfig())
+    return given().config(TestUtils.getRestAssuredConfig())
             .with().header(AUTHORIZATION, authorization)
             .and().accept(ContentType.JSON)
-            .when().get(testCases.getScenario().makeBaseURL("/v1/designs/" + uuid))
+            .when().get(testCases.makeBaseURL("/v1/designs/" + uuid))
             .then().assertThat().statusCode(200)
             .extract().body().as(Document.class);
   }
 
   private static byte[] getTile(String authorization, UUID uuid) throws MalformedURLException {
-    return given().config(testCases.getScenario().getRestAssuredConfig())
+    return given().config(TestUtils.getRestAssuredConfig())
             .with().header(AUTHORIZATION, authorization)
             .and().accept("image/png")
-            .when().get(testCases.getScenario().makeBaseURL("/v1/designs/" + uuid + "/0/0/0/256.png"))
+            .when().get(testCases.makeBaseURL("/v1/designs/" + uuid + "/0/0/0/256.png"))
             .then().assertThat().statusCode(200)
             .and().assertThat().contentType("image/png")
             .extract().response().asByteArray();

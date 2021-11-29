@@ -1,11 +1,8 @@
 FROM maven:3-openjdk-11 AS build
-ARG nexus_host
-ARG nexus_port
-ENV NEXUS_HOST $nexus_host
-ENV NEXUS_PORT $nexus_port
+ARG maven_args
 ADD . /src
 WORKDIR /src
-RUN mvn clean verify -s settings.xml -t toolchains.xml -DskipTests=true
+RUN mvn clean verify -s settings.xml -t toolchains.xml -DexcludedGroups=slow $maven_args
 
 #FROM oracle/graalvm-ce:20.3.0-java11 as native-image
 #COPY --from=build /src/target/libs/* /libs/

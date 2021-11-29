@@ -3,15 +3,10 @@ package com.nextbreakpoint.blueprint.designs;
 import au.com.dius.pact.core.model.messaging.Message;
 import com.nextbreakpoint.blueprint.common.core.KafkaRecord;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
-import com.nextbreakpoint.blueprint.common.core.Payload;
 import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
 import com.nextbreakpoint.blueprint.common.test.PayloadUtils;
 import io.vertx.core.json.Json;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
 
 public class TestUtils {
     private TestUtils() {}

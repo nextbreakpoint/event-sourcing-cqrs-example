@@ -1,110 +1,99 @@
 package com.nextbreakpoint.blueprint.designs;
 
-import com.jayway.restassured.config.RestAssuredConfig;
-import com.nextbreakpoint.blueprint.common.test.Scenario;
+import com.nextbreakpoint.blueprint.common.test.BuildUtils;
+import com.nextbreakpoint.blueprint.common.test.ContainerUtils;
 import com.nextbreakpoint.blueprint.common.test.TestUtils;
-import com.nextbreakpoint.blueprint.common.test.VertxUtils;
-import io.vertx.core.json.JsonObject;
+import org.testcontainers.containers.BindMode;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.Network;
+import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.utility.DockerImageName;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.time.Duration;
 
 public class TestScenario {
+  private static final int PORT = 30122;
+  private final String serviceName = "designs-event-consumer";
   private final String version = TestUtils.getVariable("BUILD_VERSION", System.getProperty("build.version", "0"));
+  private final String nexusHost = TestUtils.getVariable("NEXUS_HOST", System.getProperty("nexus.host", "localhost"));
+  private final String nexusPort = TestUtils.getVariable("NEXUS_PORT", System.getProperty("nexus.port", "8081"));
   private final boolean buildImages = TestUtils.getVariable("BUILD_IMAGES", System.getProperty("build.images", "false")).equals("true");
 
-  private Scenario scenario;
+  private Network network = Network.builder().driver("bridge").build();
 
-  public void before() throws IOException, InterruptedException {
+  private GenericContainer cassandra = ContainerUtils.createCassandraContainer(network)
+          .waitingFor(Wait.forLogMessage(".* Initializing test_designs_event_consumer.design.*", 1).withStartupTimeout(Duration.ofSeconds(60)));
 
-    final List<String> secretArgs = Arrays.asList(
-            "--from-file",
-            "keystore_server.jks=../../secrets/keystore_server.jks",
-            "--from-file",
-            "keystore_auth.jceks=../../secrets/keystore_auth.jceks",
-            "--from-literal",
-            "KEYSTORE_SECRET=secret",
-            "--from-literal",
-            "DATABASE_USERNAME=verticle",
-            "--from-literal",
-            "DATABASE_PASSWORD=password"
-    );
+  private GenericContainer zookeeper = ContainerUtils.createZookeeperContainer(network)
+          .waitingFor(Wait.forLogMessage(".* binding to port /0.0.0.0:2181.*", 1).withStartupTimeout(Duration.ofSeconds(60)));
 
-    final List<String> helmArgs = Arrays.asList(
-            "--set=replicas=1",
-            "--set=clientDomain=${serviceHost}",
-            "--set=image.pullPolicy=Never",
-            "--set=image.repository=integration/designs-event-consumer",
-            "--set=image.tag=${version}"
-    );
+  private GenericContainer kafka = ContainerUtils.createKafkaContainer(network)
+          .dependsOn(zookeeper)
+          .waitingFor(Wait.forLogMessage(".* started \\(kafka.server.KafkaServer\\).*", 1).withStartupTimeout(Duration.ofSeconds(90)));
 
-    scenario = Scenario.builder()
-            .withNamespace("integration")
-            .withVersion(version)
-            .withTimestamp(System.currentTimeMillis())
-            .withServiceName("designs-event-consumer")
-            .withBuildImage(buildImages)
-            .withSecretArgs(secretArgs)
-            .withHelmPath("../../helm")
-            .withHelmArgs(helmArgs)
-//            .withKubernetes()
-//            .withMinikube()
-            .withCassandra()
-            .withZookeeper()
-            .withKafka()
-            .build();
+  private GenericContainer service = new GenericContainer(DockerImageName.parse("integration/" + serviceName + ":" + version))
+          .withEnv("JAEGER_SERVICE_NAME", serviceName)
+          .withEnv("KEYSTORE_SECRET", "secret")
+          .withEnv("DATABASE_HOST", "cassandra")
+          .withEnv("DATABASE_KEYSPACE", TestConstants.DATABASE_KEYSPACE)
+          .withEnv("DATABASE_USERNAME", "verticle")
+          .withEnv("DATABASE_PASSWORD", "password")
+          .withEnv("KAFKA_HOST", "kafka")
+          .withEnv("KAFKA_PORT", "9092")
+          .withEnv("EVENTS_TOPIC", TestConstants.EVENTS_TOPIC_NAME)
+          .withEnv("RENDER_TOPIC", TestConstants.RENDER_TOPIC_NAME)
+          .withFileSystemBind("../../secrets/keystore_server.jks", "/secrets/keystore_server.jks", BindMode.READ_ONLY)
+          .withFileSystemBind("../../secrets/keystore_auth.jceks", "/secrets/keystore_auth.jceks", BindMode.READ_ONLY)
+          .withFileSystemBind("config/integration.json", "/etc/config.json", BindMode.READ_ONLY)
+          .withExposedPorts(PORT)
+          .withNetwork(network)
+          .withNetworkAliases(serviceName)
+          .dependsOn(zookeeper, kafka, cassandra)
+          .waitingFor(Wait.forLogMessage(".* Service listening on port " + PORT + ".*", 1).withStartupTimeout(Duration.ofSeconds(20)));
 
-    scenario.create();
-  }
-
-  public void after() throws IOException, InterruptedException {
-    if (scenario != null) {
-      scenario.destroy();
+  public void before() {
+    if (buildImages) {
+      BuildUtils.of(nexusHost, nexusPort, serviceName, version).buildDockerImage();
     }
+
+    cassandra.start();
+    zookeeper.start();
+    kafka.start();
+    service.start();
   }
 
-  public URL makeBaseURL(String path) throws MalformedURLException {
-    final String normPath = path.startsWith("/") ? path.substring(1) : path;
-    return new URL("https://" + scenario.getServiceHost() + ":" + scenario.getServicePort() + "/" + normPath);
-  }
-
-  public RestAssuredConfig getRestAssuredConfig() {
-    return scenario.getRestAssuredConfig();
-  }
-
-  public String getServiceHost() {
-    return scenario.getServiceHost();
-  }
-
-  public String getServicePort() {
-    return scenario.getServicePort();
-  }
-
-  public String getNamespace() {
-    return scenario.getNamespace();
+  public void after() {
+    service.stop();
+    kafka.stop();
+    zookeeper.stop();
+    cassandra.stop();
   }
 
   public String getVersion() {
     return version;
   }
 
-  public String makeAuthorization(String user, String role) {
-    return VertxUtils.makeAuthorization(user, Collections.singletonList(role), "../../secrets/keystore_auth.jceks");
+  public String getServiceHost() {
+    return service.getHost();
   }
 
-  public JsonObject createCassandraConfig(String keyspace) {
-    return scenario.createCassandraConfig("datacenter1", keyspace);
+  public Integer getServicePort() {
+    return service.getMappedPort(PORT);
   }
 
-  public JsonObject createConsumerConfig(String group) {
-    return scenario.createConsumerConfig(group);
+  public String getKafkaHost() {
+    return kafka.getHost();
   }
 
-  public JsonObject createProducerConfig() {
-    return scenario.createProducerConfig();
+  public Integer getKafkaPort() {
+    return kafka.getMappedPort(9093);
+  }
+
+  public String getCassandraHost() {
+    return cassandra.getHost();
+  }
+
+  public Integer getCassandraPort() {
+    return cassandra.getMappedPort(9042);
   }
 }

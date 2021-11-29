@@ -1,124 +1,87 @@
 package com.nextbreakpoint.blueprint.designs;
 
-import com.jayway.restassured.config.RestAssuredConfig;
-import com.nextbreakpoint.blueprint.common.test.EventSource;
-import com.nextbreakpoint.blueprint.common.test.Scenario;
+import com.nextbreakpoint.blueprint.common.test.BuildUtils;
+import com.nextbreakpoint.blueprint.common.test.ContainerUtils;
 import com.nextbreakpoint.blueprint.common.test.TestUtils;
-import com.nextbreakpoint.blueprint.common.test.VertxUtils;
-import io.vertx.core.json.JsonObject;
+import org.testcontainers.containers.BindMode;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.Network;
+import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.utility.DockerImageName;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.time.Duration;
 
 public class TestScenario {
-  private final String version = TestUtils.getVariable("BUILD_VERSION", System.getProperty("build.version", "0"));
-  private final boolean buildImages = TestUtils.getVariable("BUILD_IMAGES", System.getProperty("build.images", "false")).equals("true");
+    private static final int PORT = 30123;
+    private final String serviceName = "designs-notification-dispatcher";
+    private final String version = TestUtils.getVariable("BUILD_VERSION", System.getProperty("build.version", "0"));
+    private final String nexusHost = TestUtils.getVariable("NEXUS_HOST", System.getProperty("nexus.host", "localhost"));
+    private final String nexusPort = TestUtils.getVariable("NEXUS_PORT", System.getProperty("nexus.port", "8081"));
+    private final boolean buildImages = TestUtils.getVariable("BUILD_IMAGES", System.getProperty("build.images", "false")).equals("true");
 
-  private Scenario scenario;
+    private Network network = Network.builder().driver("bridge").build();
 
-  public void before() throws IOException, InterruptedException {
-    final List<String> secretArgs = Arrays.asList(
-            "--from-file",
-            "keystore_server.jks=../../secrets/keystore_server.jks",
-            "--from-file",
-            "keystore_auth.jceks=../../secrets/keystore_auth.jceks",
-            "--from-literal",
-            "KEYSTORE_SECRET=secret"
-    );
+    private GenericContainer consul = ContainerUtils.createConsulContainer(network, "../../scripts/consul.json")
+            .waitingFor(Wait.forLogMessage(".* agent: Synced service: service=designs-sse.*", 1).withStartupTimeout(Duration.ofSeconds(60)));
 
-    final List<String> helmArgs = Arrays.asList(
-            "--set=replicas=1",
-            "--set=clientDomain=${serviceHost}",
-            "--set=authApiUrl=http://${stubHost}:${stubPort}",
-            "--set=accountsApiUrl=http://${stubHost}:${stubPort}",
-            "--set=designsAggregateFetcherApiUrl=http://${stubHost}:${stubPort}",
-            "--set=designsCommandProducerApiUrl=http://${stubHost}:${stubPort}",
-            "--set=designsNotificationDispatcherApiUrl=http://${stubHost}:${stubPort}",
-            "--set=image.pullPolicy=Never",
-            "--set=image.repository=integration/designs-notification-dispatcher",
-            "--set=image.tag=${version}"
-    );
+    private GenericContainer zookeeper = ContainerUtils.createZookeeperContainer(network)
+            .waitingFor(Wait.forLogMessage(".* binding to port /0.0.0.0:2181.*", 1).withStartupTimeout(Duration.ofSeconds(60)));
 
-    scenario = Scenario.builder()
-            .withNamespace("integration")
-            .withVersion(version)
-            .withTimestamp(System.currentTimeMillis())
-            .withTimestamp(System.currentTimeMillis())
-            .withServiceName("designs-notification-dispatcher")
-            .withBuildImage(buildImages)
-            .withSecretArgs(secretArgs)
-            .withHelmPath("../../helm")
-            .withHelmArgs(helmArgs)
-//            .withKubernetes()
-//            .withMinikube()
-            .withZookeeper()
-            .withKafka()
-            .withConsul()
-            .build();
+    private GenericContainer kafka = ContainerUtils.createKafkaContainer(network)
+            .dependsOn(zookeeper)
+            .waitingFor(Wait.forLogMessage(".* started \\(kafka.server.KafkaServer\\).*", 1).withStartupTimeout(Duration.ofSeconds(90)));
 
-    scenario.create();
-  }
+    private GenericContainer service = new GenericContainer(DockerImageName.parse("integration/" + serviceName + ":" + version))
+            .withEnv("JAEGER_SERVICE_NAME", serviceName)
+            .withEnv("KEYSTORE_SECRET", "secret")
+            .withEnv("CONSUL_HOST", "consul")
+            .withEnv("KAFKA_HOST", "kafka")
+            .withEnv("KAFKA_PORT", "9092")
+            .withEnv("EVENTS_TOPIC", TestConstants.EVENTS_TOPIC_NAME)
+            .withFileSystemBind("../../secrets/keystore_server.jks", "/secrets/keystore_server.jks", BindMode.READ_ONLY)
+            .withFileSystemBind("../../secrets/keystore_auth.jceks", "/secrets/keystore_auth.jceks", BindMode.READ_ONLY)
+            .withFileSystemBind("config/integration.json", "/etc/config.json", BindMode.READ_ONLY)
+            .withExposedPorts(PORT)
+            .withNetwork(network)
+            .withNetworkAliases(serviceName)
+            .dependsOn(consul, zookeeper, kafka)
+            .waitingFor(Wait.forLogMessage(".* Service listening on port " + PORT + ".*", 1).withStartupTimeout(Duration.ofSeconds(20)));
 
-  public void after() throws IOException, InterruptedException {
-    if (scenario != null) {
-      scenario.destroy();
+    public void before() {
+        if (buildImages) {
+            BuildUtils.of(nexusHost, nexusPort, serviceName, version).buildDockerImage();
+        }
+
+        consul.start();
+        zookeeper.start();
+        kafka.start();
+        service.start();
     }
-  }
 
-  public URL makeBaseURL(String path) throws MalformedURLException {
-    final String normPath = path.startsWith("/") ? path.substring(1) : path;
-    return new URL("https://" + scenario.getServiceHost() + ":" + scenario.getServicePort() + "/" + normPath);
-  }
+    public void after() {
+        service.stop();
+        kafka.stop();
+        zookeeper.stop();
+        consul.stop();
+    }
 
-  public RestAssuredConfig getRestAssuredConfig() {
-    return scenario.getRestAssuredConfig();
-  }
+    public String getVersion() {
+        return version;
+    }
 
-  public String getServiceHost() {
-    return scenario.getServiceHost();
-  }
+    public String getServiceHost() {
+        return service.getHost();
+    }
 
-  public String getServicePort() {
-    return scenario.getServicePort();
-  }
+    public Integer getServicePort() {
+        return service.getMappedPort(PORT);
+    }
 
- public String getStubHost() {
-    return scenario.getStubHost();
-  }
+    public String getKafkaHost() {
+        return kafka.getHost();
+    }
 
-  public String getStubPort() {
-    return scenario.getStubPort();
-  }
-
-  public String getNamespace() {
-    return scenario.getNamespace();
-  }
-
-  public String getVersion() {
-    return version;
-  }
-
-  public String makeAuthorization(String user, String role) {
-    return VertxUtils.makeAuthorization(user, Collections.singletonList(role), "../../secrets/keystore_auth.jceks");
-  }
-
-  public JsonObject createProducerConfig() {
-    return scenario.createProducerConfig();
-  }
-
-  public JsonObject getEventSourceConfig() {
-    final JsonObject config = new JsonObject();
-    config.put("client_keep_alive", "true");
-    config.put("client_verify_host", "false");
-    config.put("client_keystore_path", "../../secrets/keystore_client.jks");
-    config.put("client_keystore_secret", "secret");
-    config.put("client_truststore_path", "../../secrets/truststore_client.jks");
-    config.put("client_truststore_secret", "secret");
-    return config;
-  }
+    public Integer getKafkaPort() {
+        return kafka.getMappedPort(9093);
+    }
 }

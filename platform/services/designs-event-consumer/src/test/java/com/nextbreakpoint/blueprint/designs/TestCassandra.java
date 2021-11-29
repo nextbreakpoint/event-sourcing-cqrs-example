@@ -6,7 +6,8 @@ import io.vertx.rxjava.cassandra.CassandraClient;
 import org.jetbrains.annotations.NotNull;
 import rx.schedulers.Schedulers;
 
-import java.util.*;
+import java.util.List;
+import java.util.UUID;
 
 public class TestCassandra {
     private CassandraClient session;

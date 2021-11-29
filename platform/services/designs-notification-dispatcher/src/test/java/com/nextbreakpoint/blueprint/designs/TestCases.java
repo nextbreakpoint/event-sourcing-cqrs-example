@@ -6,19 +6,21 @@ import com.nextbreakpoint.blueprint.common.test.EventSource;
 import com.nextbreakpoint.blueprint.common.test.KafkaTestEmitter;
 import com.nextbreakpoint.blueprint.common.vertx.KafkaClientFactory;
 import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonObject;
 import io.vertx.rxjava.core.RxHelper;
 import io.vertx.rxjava.core.Vertx;
 import io.vertx.rxjava.kafka.client.producer.KafkaProducer;
+import org.jetbrains.annotations.NotNull;
 import rx.plugins.RxJavaHooks;
 import rx.schedulers.Schedulers;
 
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
-import static org.awaitility.Durations.*;
+import static org.awaitility.Durations.ONE_SECOND;
+import static org.awaitility.Durations.TEN_SECONDS;
 
 public class TestCases {
     private final TestScenario scenario = new TestScenario();
@@ -35,29 +37,21 @@ public class TestCases {
 
     public TestCases() {}
 
-    public String getVersion() {
-        return scenario.getVersion();
-    }
-
-    public TestScenario getScenario() {
-        return scenario;
-    }
-
-    public void before() throws IOException, InterruptedException {
+    public void before() {
         scenario.before();
 
         RxJavaHooks.setOnComputationScheduler(s -> RxHelper.scheduler(vertx));
         RxJavaHooks.setOnIOScheduler(s -> RxHelper.blockingScheduler(vertx));
         RxJavaHooks.setOnNewThreadScheduler(s -> RxHelper.blockingScheduler(vertx));
 
-        KafkaProducer<String, String> producer = KafkaClientFactory.createProducer(environment, vertx, scenario.createProducerConfig());
+        KafkaProducer<String, String> producer = KafkaClientFactory.createProducer(environment, vertx, createProducerConfig());
 
         eventEmitter = new KafkaTestEmitter(producer, TestConstants.EVENTS_TOPIC_NAME);
 
-        eventSource = new EventSource(environment, vertx, "https://" + scenario.getServiceHost() + ":" + scenario.getServicePort(), scenario.getEventSourceConfig());
+        eventSource = new EventSource(environment, vertx, getServiceUrl(), getEventSourceConfig());
     }
 
-    public void after() throws IOException, InterruptedException {
+    public void after() {
         try {
             vertx.rxClose()
                     .doOnError(Throwable::printStackTrace)
@@ -68,6 +62,36 @@ public class TestCases {
         }
 
         scenario.after();
+    }
+
+    @NotNull
+    public String getVersion() {
+        return scenario.getVersion();
+    }
+
+    @NotNull
+    public String getServiceUrl() {
+        return "https://" + scenario.getServiceHost() + ":" + scenario.getServicePort();
+    }
+
+    @NotNull
+    public JsonObject createProducerConfig() {
+        final JsonObject config = new JsonObject();
+        config.put("kafka_bootstrap_servers", scenario.getKafkaHost() + ":" + scenario.getKafkaPort());
+        config.put("kafka_client_id", "integration");
+        return config;
+    }
+
+    @NotNull
+    public JsonObject getEventSourceConfig() {
+        final JsonObject config = new JsonObject();
+        config.put("client_keep_alive", "true");
+        config.put("client_verify_host", "false");
+        config.put("client_keystore_path", "../../secrets/keystore_client.jks");
+        config.put("client_keystore_secret", "secret");
+        config.put("client_truststore_path", "../../secrets/truststore_client.jks");
+        config.put("client_truststore_secret", "secret");
+        return config;
     }
 
     public void shouldNotifyWatchersOfAllResourcesWhenReceivingAnEvent(List<OutputMessage> messages) {

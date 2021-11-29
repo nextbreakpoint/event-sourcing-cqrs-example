@@ -37,10 +37,10 @@ spec:
         - name: {{ toYaml $root.Values.image.pullSecrets | indent 8 | trim }}
       {{- end}}
       {{- end}}
-      securityContext:
-        runAsUser: 200
-        runAsGroup: 200
-        fsGroup: 200
+#      securityContext:
+#        runAsUser: 200
+#        runAsGroup: 200
+#        fsGroup: 200
       volumes:
         - name: data-vol
           hostPath:

@@ -10,10 +10,8 @@ import java.net.MalformedURLException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.jayway.restassured.RestAssured.given;
 import static com.nextbreakpoint.blueprint.common.core.Headers.AUTHORIZATION;
@@ -24,23 +22,21 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 @Tag("integration")
 @DisplayName("Verify behaviour of accounts service")
 public class IntegrationTests {
-  private static final AtomicInteger counter = new AtomicInteger(10);
-
-  private static final TestScenario scenario = new TestScenario();
+  private static final TestCases testCases = new TestCases();
 
   @BeforeAll
   public static void before() {
-    scenario.before();
+    testCases.before();
   }
 
   @AfterAll
   public static void after() {
-    scenario.after();
+    testCases.after();
   }
 
   @BeforeEach
   public void setup() throws SQLException {
-    try (Connection connection = DriverManager.getConnection(scenario.getMySqlConnectionUrl(TestConstants.DATABASE_NAME), TestConstants.DATABASE_USERNAME, TestConstants.DATABASE_PASSWORD)) {
+    try (Connection connection = DriverManager.getConnection(testCases.getMySqlConnectionUrl(TestConstants.DATABASE_NAME), TestConstants.DATABASE_USERNAME, TestConstants.DATABASE_PASSWORD)) {
       connection.prepareStatement("TRUNCATE ACCOUNT;").execute();
     }
   }
@@ -53,143 +49,143 @@ public class IntegrationTests {
   @Test
   @DisplayName("should allow options request without access token")
   public void shouldAllowOptionsRequestWithoutAccessToken() throws MalformedURLException {
-    given().config(scenario.getRestAssuredConfig())
-            .with().header("Origin", "https://" + scenario.getServiceHost() + ":" + scenario.getServicePort())
+    given().config(TestUtils.getRestAssuredConfig())
+            .with().header("Origin", testCases.getOriginUrl())
             .when().queryParam("email", "test@localhost")
-            .when().options(scenario.makeBaseURL("/v1/accounts"))
+            .when().options(testCases.makeBaseURL("/v1/accounts"))
             .then().assertThat().statusCode(204)
-            .and().header("Access-Control-Allow-Origin", "https://" + scenario.getServiceHost() + ":" + scenario.getServicePort())
+            .and().header("Access-Control-Allow-Origin", testCases.getOriginUrl())
             .and().header("Access-Control-Allow-Credentials", "true");
 
-    given().config(scenario.getRestAssuredConfig())
-            .with().header("Origin", "https://" + scenario.getServiceHost() + ":" + scenario.getServicePort())
-            .when().options(scenario.makeBaseURL("/v1/accounts/me"))
+    given().config(TestUtils.getRestAssuredConfig())
+            .with().header("Origin", testCases.getOriginUrl())
+            .when().options(testCases.makeBaseURL("/v1/accounts/me"))
             .then().assertThat().statusCode(204)
-            .and().header("Access-Control-Allow-Origin", "https://" + scenario.getServiceHost() + ":" + scenario.getServicePort())
+            .and().header("Access-Control-Allow-Origin", testCases.getOriginUrl())
             .and().header("Access-Control-Allow-Credentials", "true");
 
-    given().config(scenario.getRestAssuredConfig())
-            .with().header("Origin", "https://" + scenario.getServiceHost() + ":" + scenario.getServicePort())
-            .when().options(scenario.makeBaseURL("/v1/accounts/" + UUID.randomUUID().toString()))
+    given().config(TestUtils.getRestAssuredConfig())
+            .with().header("Origin", testCases.getOriginUrl())
+            .when().options(testCases.makeBaseURL("/v1/accounts/" + UUID.randomUUID().toString()))
             .then().assertThat().statusCode(204)
-            .and().header("Access-Control-Allow-Origin", "https://" + scenario.getServiceHost() + ":" + scenario.getServicePort())
+            .and().header("Access-Control-Allow-Origin", testCases.getOriginUrl())
             .and().header("Access-Control-Allow-Credentials", "true");
   }
 
   @Test
   @DisplayName("should forbid get request without access token")
   public void shouldForbidGetRequestWithoutAccessToken() throws MalformedURLException {
-    given().config(scenario.getRestAssuredConfig())
+    given().config(TestUtils.getRestAssuredConfig())
             .with().accept(ContentType.JSON)
             .when().queryParam("email", "test@localhost")
-            .when().get(scenario.makeBaseURL("/v1/accounts"))
+            .when().get(testCases.makeBaseURL("/v1/accounts"))
             .then().assertThat().statusCode(403);
 
-    given().config(scenario.getRestAssuredConfig())
+    given().config(TestUtils.getRestAssuredConfig())
             .with().accept(ContentType.JSON)
-            .when().get(scenario.makeBaseURL("/v1/accounts/me"))
+            .when().get(testCases.makeBaseURL("/v1/accounts/me"))
             .then().assertThat().statusCode(403);
 
-    given().config(scenario.getRestAssuredConfig())
+    given().config(TestUtils.getRestAssuredConfig())
             .with().accept(ContentType.JSON)
-            .when().get(scenario.makeBaseURL("/v1/accounts/" + UUID.randomUUID().toString()))
+            .when().get(testCases.makeBaseURL("/v1/accounts/" + UUID.randomUUID().toString()))
             .then().assertThat().statusCode(403);
   }
 
   @Test
   @DisplayName("should forbid post request without access token")
   public void shouldForbidPostRequestWithoutAccessToken() throws MalformedURLException {
-    given().config(scenario.getRestAssuredConfig())
+    given().config(TestUtils.getRestAssuredConfig())
             .and().contentType(ContentType.JSON)
             .and().accept(ContentType.JSON)
-            .and().body(createPostData(makeUniqueEmail(), "guest"))
-            .when().post(scenario.makeBaseURL("/v1/accounts"))
+            .and().body(TestUtils.createPostData(testCases.makeUniqueEmail(), "guest"))
+            .when().post(testCases.makeBaseURL("/v1/accounts"))
             .then().assertThat().statusCode(403);
   }
 
   @Test
   @DisplayName("should forbid delete request without access token")
   public void shouldForbidDeleteRequestWithoutAccessToken() throws MalformedURLException {
-    final String authorization = scenario.makeAuthorization("test", Authority.ADMIN);
+    final String authorization = testCases.makeAuthorization("test", Authority.ADMIN);
 
-    final String uuid = createAccount(authorization, createPostData(makeUniqueEmail(), "guest"));
+    final String uuid = createAccount(authorization, TestUtils.createPostData(testCases.makeUniqueEmail(), "guest"));
 
-    given().config(scenario.getRestAssuredConfig())
+    given().config(TestUtils.getRestAssuredConfig())
             .and().accept(ContentType.JSON)
-            .when().delete(scenario.makeBaseURL("/v1/accounts/" + uuid))
+            .when().delete(testCases.makeBaseURL("/v1/accounts/" + uuid))
             .then().assertThat().statusCode(403);
   }
 
   @Test
   @DisplayName("should forbid get request when user doesn't have permissions")
   public void shouldForbidGetRequestWhenUserDoNotHavePermissions() throws MalformedURLException {
-    final String authorization = scenario.makeAuthorization("test", Authority.ADMIN);
+    final String authorization = testCases.makeAuthorization("test", Authority.ADMIN);
 
-    final String uuid = createAccount(authorization, createPostData(makeUniqueEmail(), "guest"));
+    final String uuid = createAccount(authorization, TestUtils.createPostData(testCases.makeUniqueEmail(), "guest"));
 
-    final String otherAuthorization = scenario.makeAuthorization("test", "other");
+    final String otherAuthorization = testCases.makeAuthorization("test", "other");
 
-    given().config(scenario.getRestAssuredConfig())
+    given().config(TestUtils.getRestAssuredConfig())
             .with().header(AUTHORIZATION, otherAuthorization)
             .and().accept(ContentType.JSON)
             .when().queryParam("email", "test@localhost")
-            .when().get(scenario.makeBaseURL("/v1/accounts"))
+            .when().get(testCases.makeBaseURL("/v1/accounts"))
             .then().assertThat().statusCode(403);
 
-    given().config(scenario.getRestAssuredConfig())
+    given().config(TestUtils.getRestAssuredConfig())
             .with().header(AUTHORIZATION, otherAuthorization)
             .and().accept(ContentType.JSON)
-            .when().get(scenario.makeBaseURL("/v1/accounts/" + uuid))
+            .when().get(testCases.makeBaseURL("/v1/accounts/" + uuid))
             .then().assertThat().statusCode(403);
 
-    given().config(scenario.getRestAssuredConfig())
+    given().config(TestUtils.getRestAssuredConfig())
             .with().header(AUTHORIZATION, otherAuthorization)
             .and().accept(ContentType.JSON)
-            .when().get(scenario.makeBaseURL("/v1/accounts/me"))
+            .when().get(testCases.makeBaseURL("/v1/accounts/me"))
             .then().assertThat().statusCode(403);
   }
 
   @Test
   @DisplayName("should allow get request when user has permissions")
   public void shouldAllowGetRequestWhenUserHasPlatformPermissions() throws MalformedURLException {
-    final String authorization = scenario.makeAuthorization("test", Authority.ADMIN);
+    final String authorization = testCases.makeAuthorization("test", Authority.ADMIN);
 
-    final String uuid = createAccount(authorization, createPostData(makeUniqueEmail(), "guest"));
+    final String uuid = createAccount(authorization, TestUtils.createPostData(testCases.makeUniqueEmail(), "guest"));
 
-    final String adminAuthorization = scenario.makeAuthorization("test", Authority.ADMIN);
+    final String adminAuthorization = testCases.makeAuthorization("test", Authority.ADMIN);
 
-    given().config(scenario.getRestAssuredConfig())
+    given().config(TestUtils.getRestAssuredConfig())
             .with().header(AUTHORIZATION, adminAuthorization)
             .and().accept(ContentType.JSON)
             .when().queryParam("email", "test@localhost")
-            .when().get(scenario.makeBaseURL("/v1/accounts"))
+            .when().get(testCases.makeBaseURL("/v1/accounts"))
             .then().assertThat().statusCode(200);
 
-    given().config(scenario.getRestAssuredConfig())
+    given().config(TestUtils.getRestAssuredConfig())
             .with().header(AUTHORIZATION, adminAuthorization)
             .and().accept(ContentType.JSON)
-            .when().get(scenario.makeBaseURL("/v1/accounts/" + uuid))
+            .when().get(testCases.makeBaseURL("/v1/accounts/" + uuid))
             .then().assertThat().statusCode(200);
 
-    final String guestAuthorization = scenario.makeAuthorization(uuid, Authority.GUEST);
+    final String guestAuthorization = testCases.makeAuthorization(uuid, Authority.GUEST);
 
-    given().config(scenario.getRestAssuredConfig())
+    given().config(TestUtils.getRestAssuredConfig())
             .with().header(AUTHORIZATION, guestAuthorization)
             .and().accept(ContentType.JSON)
-            .when().get(scenario.makeBaseURL("/v1/accounts/me" ))
+            .when().get(testCases.makeBaseURL("/v1/accounts/me" ))
             .then().assertThat().statusCode(200);
   }
 
   @Test
   @DisplayName("should create and delete accounts")
   public void shouldCreateAndDeleteDesigns() throws MalformedURLException {
-    final String authorization = scenario.makeAuthorization("test", Authority.ADMIN);
+    final String authorization = testCases.makeAuthorization("test", Authority.ADMIN);
 
     final String email1 = "user1@localhost";
     final String email2 = "user2@localhost";
 
-    final Map<String, Object> account1 = createPostData(email1, "guest");
-    final Map<String, Object> account2 = createPostData(email2, "guest");
+    final Map<String, Object> account1 = TestUtils.createPostData(email1, "guest");
+    final Map<String, Object> account2 = TestUtils.createPostData(email2, "guest");
 
     final String uuid1 = createAccount(authorization, account1);
 
@@ -222,42 +218,42 @@ public class IntegrationTests {
   }
 
   private static String[] findAccount(String authorization, String email) throws MalformedURLException {
-    return given().config(scenario.getRestAssuredConfig())
+    return given().config(TestUtils.getRestAssuredConfig())
             .and().header(AUTHORIZATION, authorization)
             .and().accept(ContentType.JSON)
             .and().queryParam("email", email)
-            .when().get(scenario.makeBaseURL("/v1/accounts"))
+            .when().get(testCases.makeBaseURL("/v1/accounts"))
             .then().assertThat().statusCode(200)
             .and().contentType(ContentType.JSON)
             .and().extract().as(String[].class);
   }
 
   private static String[] getAccounts(String authorization) throws MalformedURLException {
-    return given().config(scenario.getRestAssuredConfig())
+    return given().config(TestUtils.getRestAssuredConfig())
             .and().header(AUTHORIZATION, authorization)
             .and().accept(ContentType.JSON)
-            .when().get(scenario.makeBaseURL("/v1/accounts"))
+            .when().get(testCases.makeBaseURL("/v1/accounts"))
             .then().assertThat().statusCode(200)
             .and().contentType(ContentType.JSON)
             .and().extract().body().as(String[].class);
   }
 
   private static JsonPath getAccount(String authorization, String uuid) throws MalformedURLException {
-    return given().config(scenario.getRestAssuredConfig())
+    return given().config(TestUtils.getRestAssuredConfig())
             .with().header(AUTHORIZATION, authorization)
             .and().accept(ContentType.JSON)
-            .when().get(scenario.makeBaseURL("/v1/accounts/" + uuid))
+            .when().get(testCases.makeBaseURL("/v1/accounts/" + uuid))
             .then().assertThat().statusCode(200)
             .and().extract().jsonPath();
   }
 
   private static String createAccount(String authorization, Map<String, Object> account) throws MalformedURLException {
-    return given().config(scenario.getRestAssuredConfig())
+    return given().config(TestUtils.getRestAssuredConfig())
             .and().header(AUTHORIZATION, authorization)
             .and().contentType(ContentType.JSON)
             .and().accept(ContentType.JSON)
             .and().body(account)
-            .when().post(scenario.makeBaseURL("/v1/accounts"))
+            .when().post(testCases.makeBaseURL("/v1/accounts"))
             .then().assertThat().statusCode(201)
             .and().contentType(ContentType.JSON)
             .and().body("uuid", notNullValue())
@@ -265,24 +261,12 @@ public class IntegrationTests {
   }
 
   private static void deleteAccount(String authorization, String uuid) throws MalformedURLException {
-    given().config(scenario.getRestAssuredConfig())
+    given().config(TestUtils.getRestAssuredConfig())
             .and().header(AUTHORIZATION, authorization)
             .and().accept(ContentType.JSON)
-            .when().delete(scenario.makeBaseURL("/v1/accounts/" + uuid))
+            .when().delete(testCases.makeBaseURL("/v1/accounts/" + uuid))
             .then().assertThat().statusCode(200)
             .and().contentType(ContentType.JSON)
             .and().body("uuid", notNullValue());
-  }
-
-  private static Map<String, Object> createPostData(String email, String role) {
-    final Map<String, Object> data = new HashMap<>();
-    data.put("email", email);
-    data.put("name", "test");
-    data.put("role", role);
-    return data;
-  }
-
-  private static String makeUniqueEmail() {
-    return "user" + counter.getAndIncrement() + "@localhost";
   }
 }

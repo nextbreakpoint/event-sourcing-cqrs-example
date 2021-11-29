@@ -7,12 +7,12 @@ import au.com.dius.pact.consumer.junit5.PactTestFor;
 import au.com.dius.pact.consumer.junit5.ProviderType;
 import au.com.dius.pact.core.model.annotations.Pact;
 import au.com.dius.pact.core.model.messaging.MessagePact;
-import com.nextbreakpoint.blueprint.common.core.*;
+import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import java.io.IOException;
-import java.util.*;
+import java.util.List;
+import java.util.UUID;
 
 @Tag("slow")
 @Tag("pact")
@@ -22,15 +22,12 @@ public class PactConsumerTests {
     private static TestCases testCases = new TestCases();
 
     @BeforeAll
-    public static void before() throws IOException, InterruptedException {
-        System.setProperty("http.port", "30123");
-        System.setProperty("stub.port", "39001");
-
+    public static void before() {
         testCases.before();
     }
 
     @AfterAll
-    public static void after() throws IOException, InterruptedException {
+    public static void after() {
         testCases.after();
     }
 

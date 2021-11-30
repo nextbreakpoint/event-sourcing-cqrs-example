@@ -119,6 +119,11 @@
             <artifactId>vertx-service-discovery-bridge-consul</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>au.com.dius.pact</groupId>
             <artifactId>consumer</artifactId>
             <scope>test</scope>

@@ -103,7 +103,15 @@ public class Verticle extends AbstractVerticle {
 
             final String originPattern = config.getString("origin_pattern");
 
-            final JWTAuth jwtProvider = JWTProviderFactory.create(vertx, config);
+            final String jksStorePath = config.getString("server_keystore_path");
+
+            final String jksStoreSecret = config.getString("server_keystore_secret");
+
+            final String jwtKeystoreType = config.getString("jwt_keystore_type");
+
+            final String jwtKeystorePath = config.getString("jwt_keystore_path");
+
+            final String jwtKeystoreSecret = config.getString("jwt_keystore_secret");
 
             final String s3Endpoint = config.getString("s3_endpoint");
 
@@ -111,9 +119,38 @@ public class Verticle extends AbstractVerticle {
 
             final String s3Region = config.getString("s3_region", "eu-west-1");
 
-            final Supplier<CassandraClient> supplier = () -> CassandraClientFactory.create(vertx, config);
+            final String clusterName = config.getString("cassandra_cluster");
+
+            final String keyspace = config.getString("cassandra_keyspace");
+
+            final String username = config.getString("cassandra_username");
+
+            final String password = config.getString("cassandra_password");
+
+            final String[] contactPoints = config.getString("cassandra_contactPoints").split(",");
+
+            final int cassandraPort = Integer.parseInt(config.getString("cassandra_port", "9042"));
+
+            final CassandraClientConfig cassandraConfig = CassandraClientConfig.builder()
+                    .withClusterName(clusterName)
+                    .withKeyspace(keyspace)
+                    .withUsername(username)
+                    .withPassword(password)
+                    .withContactPoints(contactPoints)
+                    .withPort(cassandraPort)
+                    .build();
+
+            final Supplier<CassandraClient> supplier = () -> CassandraClientFactory.create(vertx, cassandraConfig);
 
             final AwsCredentialsProvider credentialsProvider = AwsCredentialsProviderChain.of(DefaultCredentialsProvider.create());
+
+            final JWTProviderConfig jwtProviderConfig = JWTProviderConfig.builder()
+                    .withKeyStoreType(jwtKeystoreType)
+                    .withKeyStorePath(jwtKeystorePath)
+                    .withKeyStoreSecret(jwtKeystoreSecret)
+                    .build();
+
+            final JWTAuth jwtProvider = JWTProviderFactory.create(vertx, jwtProviderConfig);
 
             final S3AsyncClient s3AsyncClient = S3AsyncClient.builder()
                     .region(Region.of(s3Region))
@@ -174,7 +211,12 @@ public class Verticle extends AbstractVerticle {
 
                         mainRouter.route().failureHandler(ResponseHelper::sendFailure);
 
-                        final HttpServerOptions options = ServerUtil.makeServerOptions(config);
+                        final ServerConfig serverConfig = ServerConfig.builder()
+                                .withJksStorePath(jksStorePath)
+                                .withJksStoreSecret(jksStoreSecret)
+                                .build();
+
+                        final HttpServerOptions options = Server.makeOptions(serverConfig);
 
                         vertx.createHttpServer(options)
                                 .requestHandler(mainRouter)

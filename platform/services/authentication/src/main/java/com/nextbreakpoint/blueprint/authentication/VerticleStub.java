@@ -2,12 +2,17 @@ package com.nextbreakpoint.blueprint.authentication;
 
 import com.nextbreakpoint.blueprint.authentication.handlers.GitHubSignInHandler;
 import com.nextbreakpoint.blueprint.common.vertx.Failure;
+import io.vertx.core.Handler;
 import io.vertx.core.Launcher;
 import io.vertx.core.json.JsonObject;
+import io.vertx.rxjava.ext.auth.jwt.JWTAuth;
 import io.vertx.rxjava.ext.web.Router;
 import io.vertx.rxjava.ext.web.RoutingContext;
+import io.vertx.rxjava.ext.web.client.WebClient;
+import io.vertx.rxjava.ext.web.handler.OAuth2AuthHandler;
 
 import java.net.MalformedURLException;
+import java.util.Set;
 
 public class VerticleStub extends Verticle {
     public static final String DEFAULT_EMAIL = "test@localhost";
@@ -17,8 +22,8 @@ public class VerticleStub extends Verticle {
     }
 
     @Override
-    protected GitHubSignInHandler createSignInHandler(JsonObject config, Router router) throws MalformedURLException {
-        return new GitHubSignInHandler(vertx, config, router) {
+    protected Handler<RoutingContext> createSignInHandler(String cookieDomain, String webUrl, Set<String> adminUsers, WebClient accountsClient, WebClient githubClient, JWTAuth jwtProvider, OAuth2AuthHandler oauthHandler) {
+        return new GitHubSignInHandler(cookieDomain, webUrl, adminUsers, accountsClient, githubClient, jwtProvider, oauthHandler) {
             @Override
             public void handle(RoutingContext routingContext) {
                 try {

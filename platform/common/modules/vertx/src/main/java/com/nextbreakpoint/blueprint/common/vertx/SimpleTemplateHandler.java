@@ -7,6 +7,7 @@ import io.vertx.rxjava.ext.web.RoutingContext;
 import io.vertx.rxjava.ext.web.common.template.TemplateEngine;
 
 import java.util.HashMap;
+import java.util.Objects;
 
 public class SimpleTemplateHandler implements Handler<RoutingContext> {
     private final TemplateEngine engine;
@@ -15,10 +16,10 @@ public class SimpleTemplateHandler implements Handler<RoutingContext> {
     private final String fileName;
 
     public SimpleTemplateHandler(TemplateEngine engine, String templateDirectory, String contentType, String fileName) {
-        this.engine = engine;
-        this.templateDirectory = templateDirectory;
-        this.contentType = contentType;
-        this.fileName = fileName;
+        this.engine = Objects.requireNonNull(engine);
+        this.templateDirectory = Objects.requireNonNull(templateDirectory);
+        this.contentType = Objects.requireNonNull(contentType);
+        this.fileName = Objects.requireNonNull(fileName);
     }
 
     public void handle(RoutingContext context) {

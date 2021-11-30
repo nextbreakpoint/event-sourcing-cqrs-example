@@ -33,7 +33,14 @@ public class DesignCommandController implements Controller<InputMessage, Void> {
     }
 
     private Single<DesignAggregateUpdateRequested> onMessageReceived(InputMessage message) {
-        return store.appendMessage(message)
-                .map(result -> new DesignAggregateUpdateRequested(Uuids.timeBased(), UUID.fromString(message.getKey()), message.getOffset()));
+        return store.appendMessage(message).map(result -> createEvent(message));
+    }
+
+    private DesignAggregateUpdateRequested createEvent(InputMessage message) {
+        return DesignAggregateUpdateRequested.builder()
+                .withEvid(Uuids.timeBased())
+                .withUuid(UUID.fromString(message.getKey()))
+                .withEsid(message.getOffset())
+                .build();
     }
 }

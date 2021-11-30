@@ -11,24 +11,17 @@ import java.util.stream.Stream;
 public class CassandraClientFactory {
     private CassandraClientFactory() {}
 
-    public static CassandraClient create(Vertx vertx, JsonObject config) {
-        final String clusterName = config.getString("cassandra_cluster");
-        final String keyspace = config.getString("cassandra_keyspace");
-        final String username = config.getString("cassandra_username");
-        final String password = config.getString("cassandra_password");
-        final String[] contactPoints = config.getString("cassandra_contactPoints").split(",");
-        final int port = Integer.parseInt(config.getString("cassandra_port", "9042"));
-
+    public static CassandraClient create(Vertx vertx, CassandraClientConfig clientConfig) {
         final CqlSessionBuilder sessionBuilder = new CassandraClientOptions()
-                .setKeyspace(keyspace)
+                .setKeyspace(clientConfig.getKeyspace())
                 .dataStaxClusterBuilder()
-                .withLocalDatacenter(clusterName)
-                .withAuthCredentials(username, password, "");
+                .withLocalDatacenter(clientConfig.getClusterName())
+                .withAuthCredentials(clientConfig.getUsername(), clientConfig.getPassword(), "");
 
         final CassandraClientOptions options = new CassandraClientOptions(sessionBuilder);
 
-        Stream.of(contactPoints).forEach(contactPoint -> options.addContactPoint(contactPoint, port));
+        Stream.of(clientConfig.getContactPoints()).forEach(contactPoint -> options.addContactPoint(contactPoint, clientConfig.getPort()));
 
-        return CassandraClient.createShared(vertx, clusterName, options);
+        return CassandraClient.createShared(vertx, clientConfig.getClusterName(), options);
     }
 }

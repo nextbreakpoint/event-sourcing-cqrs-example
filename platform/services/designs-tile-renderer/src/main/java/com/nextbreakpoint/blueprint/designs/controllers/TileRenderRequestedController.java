@@ -57,7 +57,16 @@ public class TileRenderRequestedController implements Controller<InputMessage, V
     }
 
     private TileRenderCompleted createEvent(TileRenderRequested event, String status) {
-        return new TileRenderCompleted(Uuids.timeBased(), event.getUuid(), event.getEsid(), event.getChecksum(), event.getLevel(), event.getRow(), event.getCol(), status);
+        return TileRenderCompleted.builder()
+                .withEvid(Uuids.timeBased())
+                .withUuid(event.getUuid())
+                .withEsid(event.getEsid())
+                .withChecksum(event.getChecksum())
+                .withLevel(event.getLevel())
+                .withRow(event.getRow())
+                .withCol(event.getCol())
+                .withStatus(status)
+                .build();
     }
 
     private Single<Result> uploadImage(TileRenderRequested event, Result result) {

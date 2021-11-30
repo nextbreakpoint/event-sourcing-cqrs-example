@@ -1,12 +1,12 @@
 package com.nextbreakpoint.blueprint.common.test;
 
+import com.nextbreakpoint.blueprint.common.vertx.HttpClientConfig;
 import com.nextbreakpoint.blueprint.common.vertx.HttpClientFactory;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.VertxException;
 import io.vertx.core.http.HttpMethod;
-import io.vertx.core.json.JsonObject;
 import io.vertx.rxjava.core.Vertx;
 import io.vertx.rxjava.core.buffer.Buffer;
 import io.vertx.rxjava.core.http.HttpClient;
@@ -17,7 +17,7 @@ import java.util.HashMap;
 public class EventSource {
 	private final Vertx vertx;
 	private final String serviceUrl;
-	private final JsonObject config;
+	private final HttpClientConfig clientConfig;
 	private HttpClient client;
 	private volatile boolean connecting;
 	private volatile boolean connected;
@@ -27,10 +27,10 @@ public class EventSource {
 	private SSEPacket currentPacket;
 	private Handler<Void> closeHandler;
 
-	public EventSource(Vertx vertx, String serviceUrl, JsonObject config) {
+	public EventSource(Vertx vertx, String serviceUrl, HttpClientConfig clientConfig) {
 		this.vertx = vertx;
 		this.serviceUrl = serviceUrl;
-		this.config = config;
+		this.clientConfig = clientConfig;
 		eventHandlers = new HashMap<>();
 	}
 
@@ -42,7 +42,7 @@ public class EventSource {
 		connecting = true;
 
 		if (client == null) {
-			client = HttpClientFactory.create(vertx, serviceUrl, config);
+			client = HttpClientFactory.create(vertx, serviceUrl, clientConfig);
 		}
 
 		client.rxRequest(HttpMethod.GET, path)

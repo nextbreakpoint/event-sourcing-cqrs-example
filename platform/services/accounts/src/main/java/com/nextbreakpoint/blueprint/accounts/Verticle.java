@@ -98,9 +98,46 @@ public class Verticle extends AbstractVerticle {
 
             final String originPattern = config.getString("origin_pattern");
 
-            final JWTAuth jwtProvider = JWTProviderFactory.create(vertx, config);
+            final String jksStorePath = config.getString("server_keystore_path");
 
-            final JDBCClient jdbcClient = JDBCClientFactory.create(vertx, config);
+            final String jksStoreSecret = config.getString("server_keystore_secret");
+
+            final String jdbcUrl = config.getString("jdbc_url", "jdbc:hsqldb:mem:test?shutdown=true");
+
+            final String jdbcDriver = config.getString("jdbc_driver", "org.hsqldb.jdbcDriver");
+
+            final String jdbcUsername = config.getString("jdbc_username", "root");
+
+            final String jdbcPassword = config.getString("jdbc_password", "root");
+
+            final int jdbcMaxPoolSize = Integer.parseInt(config.getString("jdbc_max_pool_size", "200"));
+
+            final int jdbcMinPoolSize = Integer.parseInt(config.getString("jdbc_min_pool_size", "20"));
+
+            final String jwtKeystoreType = config.getString("jwt_keystore_type");
+
+            final String jwtKeystorePath = config.getString("jwt_keystore_path");
+
+            final String jwtKeystoreSecret = config.getString("jwt_keystore_secret");
+
+            final JWTProviderConfig jwtProviderConfig = JWTProviderConfig.builder()
+                    .withKeyStoreType(jwtKeystoreType)
+                    .withKeyStorePath(jwtKeystorePath)
+                    .withKeyStoreSecret(jwtKeystoreSecret)
+                    .build();
+
+            final JWTAuth jwtProvider = JWTProviderFactory.create(vertx, jwtProviderConfig);
+
+            final JDBCClientConfig jdbcConfig = JDBCClientConfig.builder()
+                    .withUrl(jdbcUrl)
+                    .withDriver(jdbcDriver)
+                    .withUsername(jdbcUsername)
+                    .withPassword(jdbcPassword)
+                    .withMaxPoolSize(jdbcMaxPoolSize)
+                    .withMinPoolSize(jdbcMinPoolSize)
+                    .build();
+
+            final JDBCClient jdbcClient = JDBCClientFactory.create(vertx, jdbcConfig);
 
             final Store store = new MySQLStore(jdbcClient);
 
@@ -167,7 +204,12 @@ public class Verticle extends AbstractVerticle {
 
                         mainRouter.route().failureHandler(ResponseHelper::sendFailure);
 
-                        final HttpServerOptions options = ServerUtil.makeServerOptions(config);
+                        final ServerConfig serverConfig = ServerConfig.builder()
+                                .withJksStorePath(jksStorePath)
+                                .withJksStoreSecret(jksStoreSecret)
+                                .build();
+
+                        final HttpServerOptions options = Server.makeOptions(serverConfig);
 
                         vertx.createHttpServer(options)
                                 .requestHandler(mainRouter)

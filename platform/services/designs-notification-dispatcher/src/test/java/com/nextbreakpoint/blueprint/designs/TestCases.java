@@ -1,12 +1,12 @@
 package com.nextbreakpoint.blueprint.designs;
 
-import com.nextbreakpoint.blueprint.common.core.Environment;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.test.EventSource;
 import com.nextbreakpoint.blueprint.common.test.KafkaTestEmitter;
+import com.nextbreakpoint.blueprint.common.vertx.HttpClientConfig;
 import com.nextbreakpoint.blueprint.common.vertx.KafkaClientFactory;
+import com.nextbreakpoint.blueprint.common.vertx.KafkaProducerConfig;
 import io.vertx.core.json.Json;
-import io.vertx.core.json.JsonObject;
 import io.vertx.rxjava.core.RxHelper;
 import io.vertx.rxjava.core.Vertx;
 import io.vertx.rxjava.kafka.client.producer.KafkaProducer;
@@ -26,8 +26,6 @@ public class TestCases {
     private final TestScenario scenario = new TestScenario();
 
     private final Vertx vertx = new Vertx(io.vertx.core.Vertx.vertx());
-
-    private final Environment environment = Environment.getDefaultEnvironment();
 
     private EventSource eventSource;
 
@@ -75,23 +73,24 @@ public class TestCases {
     }
 
     @NotNull
-    public JsonObject createProducerConfig() {
-        final JsonObject config = new JsonObject();
-        config.put("kafka_bootstrap_servers", scenario.getKafkaHost() + ":" + scenario.getKafkaPort());
-        config.put("kafka_client_id", "integration");
-        return config;
+    public KafkaProducerConfig createProducerConfig() {
+        return KafkaProducerConfig.builder()
+                .withBootstrapServers(scenario.getKafkaHost() + ":" + scenario.getKafkaPort())
+                .withClientId("integration")
+                .withKafkaAcks("1")
+                .build();
     }
 
     @NotNull
-    public JsonObject getEventSourceConfig() {
-        final JsonObject config = new JsonObject();
-        config.put("client_keep_alive", "true");
-        config.put("client_verify_host", "false");
-        config.put("client_keystore_path", "../../secrets/keystore_client.jks");
-        config.put("client_keystore_secret", "secret");
-        config.put("client_truststore_path", "../../secrets/truststore_client.jks");
-        config.put("client_truststore_secret", "secret");
-        return config;
+    public HttpClientConfig getEventSourceConfig() {
+        return HttpClientConfig.builder()
+                .withKeepAlive(Boolean.TRUE)
+                .withVerifyHost(Boolean.FALSE)
+                .withKeyStorePath("../../secrets/keystore_client.jks")
+                .withKeyStoreSecret("secret")
+                .withTrustStorePath("../../secrets/truststore_client.jks")
+                .withTrustStoreSecret("secret")
+                .build();
     }
 
     public void shouldNotifyWatchersOfAllResourcesWhenReceivingAnEvent(List<OutputMessage> messages) {

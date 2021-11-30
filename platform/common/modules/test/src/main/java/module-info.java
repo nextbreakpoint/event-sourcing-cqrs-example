@@ -8,9 +8,9 @@ module com.nextbreakpoint.blueprint.common.test {
     requires static vertx.rx.java;
     requires static io.vertx.auth.jwt;
     requires static io.vertx.auth.common;
+    requires static io.vertx.client.kafka;
     requires static kafka.clients;
     requires static rxjava;
     requires static testcontainers;
-    requires io.vertx.client.kafka;
     exports com.nextbreakpoint.blueprint.common.test;
 }

@@ -6,8 +6,8 @@ import io.vertx.core.impl.logging.LoggerFactory;
 
 import java.util.function.BiConsumer;
 
-public class MessageSuccessConsumer implements BiConsumer<InputMessage, Void> {
-    private final Logger logger = LoggerFactory.getLogger(MessageSuccessConsumer.class.getName());
+public class MessageConsumed implements BiConsumer<InputMessage, Void> {
+    private final Logger logger = LoggerFactory.getLogger(MessageConsumed.class.getName());
 
     @Override
     public void accept(InputMessage message, Void ignore) {

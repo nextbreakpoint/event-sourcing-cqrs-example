@@ -4,7 +4,7 @@ set -e
 
 export REPOSITORY=${1:-integration}
 export VERSION=${2:-1.0.0}
-export BUILD="true"
+export BUILD="false"
 export TEST="true"
 
 export PACTBROKER_HOST=localhost
@@ -16,15 +16,15 @@ export NEXUS_USERNAME=admin
 export NEXUS_PASSWORD=password
 
 services=(
-  gateway
-  authentication
-  accounts
+#  gateway
+#  authentication
+#  accounts
   designs-notification-dispatcher
   designs-command-producer
   designs-aggregate-fetcher
   designs-event-consumer
   designs-tile-renderer
-  frontend
+#  frontend
 )
 
 export JAEGER_SERVICE_NAME=integration

@@ -6,8 +6,9 @@ import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
 import com.nextbreakpoint.blueprint.common.test.KafkaTestEmitter;
 import com.nextbreakpoint.blueprint.common.test.KafkaTestPolling;
 import com.nextbreakpoint.blueprint.common.vertx.KafkaClientFactory;
+import com.nextbreakpoint.blueprint.common.vertx.KafkaConsumerConfig;
+import com.nextbreakpoint.blueprint.common.vertx.KafkaProducerConfig;
 import io.vertx.core.json.Json;
-import io.vertx.core.json.JsonObject;
 import io.vertx.rxjava.core.RxHelper;
 import io.vertx.rxjava.core.Vertx;
 import io.vertx.rxjava.kafka.client.consumer.KafkaConsumer;
@@ -92,19 +93,20 @@ public class TestCases {
     }
 
     @NotNull
-    public JsonObject createConsumerConfig(String group) {
-        final JsonObject config = new JsonObject();
-        config.put("kafka_bootstrap_servers", scenario.getKafkaHost() + ":" + scenario.getKafkaPort());
-        config.put("kafka_group_id", group);
-        return config;
+    public KafkaConsumerConfig createConsumerConfig(String group) {
+        return KafkaConsumerConfig.builder()
+                .withBootstrapServers(scenario.getKafkaHost() + ":" + scenario.getKafkaPort())
+                .withGroupId(group)
+                .build();
     }
 
     @NotNull
-    public JsonObject createProducerConfig() {
-        final JsonObject config = new JsonObject();
-        config.put("kafka_bootstrap_servers", scenario.getKafkaHost() + ":" + scenario.getKafkaPort());
-        config.put("kafka_client_id", "integration");
-        return config;
+    public KafkaProducerConfig createProducerConfig() {
+        return KafkaProducerConfig.builder()
+                .withBootstrapServers(scenario.getKafkaHost() + ":" + scenario.getKafkaPort())
+                .withClientId("integration")
+                .withKafkaAcks("1")
+                .build();
     }
 
     public void shouldStartRenderingAnImageWhenReceivingATileRenderRequestedMessage(List<OutputMessage> tileRenderRequestedMessages) {

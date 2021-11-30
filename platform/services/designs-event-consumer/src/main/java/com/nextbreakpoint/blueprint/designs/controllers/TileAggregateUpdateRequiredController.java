@@ -36,6 +36,14 @@ public class TileAggregateUpdateRequiredController implements Controller<InputMe
     }
 
     private Single<TileAggregateUpdateRequested> onAggregateUpdateRequired(TileAggregateUpdateRequired event) {
-        return Single.just(new TileAggregateUpdateRequested(Uuids.timeBased(), event.getUuid(), event.getEsid()));
+        return Single.just(createEvent(event));
+    }
+
+    private TileAggregateUpdateRequested createEvent(TileAggregateUpdateRequired event) {
+        return TileAggregateUpdateRequested.builder()
+                .withEvid(Uuids.timeBased())
+                .withUuid(event.getUuid())
+                .withEsid(event.getEsid())
+                .build();
     }
 }

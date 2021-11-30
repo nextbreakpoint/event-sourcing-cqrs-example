@@ -5,8 +5,8 @@ import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.events.mappers.TileRenderCompletedOutputMapper;
 import com.nextbreakpoint.blueprint.common.events.mappers.TileRenderRequestedInputMapper;
 import com.nextbreakpoint.blueprint.common.vertx.KafkaEmitter;
-import com.nextbreakpoint.blueprint.common.vertx.MessageFailureConsumer;
-import com.nextbreakpoint.blueprint.common.vertx.MessageSuccessConsumer;
+import com.nextbreakpoint.blueprint.common.vertx.MessageFailed;
+import com.nextbreakpoint.blueprint.common.vertx.MessageConsumed;
 import com.nextbreakpoint.blueprint.common.vertx.TemplateHandler;
 import com.nextbreakpoint.blueprint.designs.common.S3Driver;
 import com.nextbreakpoint.blueprint.designs.common.TileRenderer;
@@ -30,8 +30,8 @@ public class Factory {
                         new S3Driver(s3AsyncClient, bucket),
                         new TileRenderer()
                 ))
-                .onSuccess(new MessageSuccessConsumer())
-                .onFailure(new MessageFailureConsumer())
+                .onSuccess(new MessageConsumed())
+                .onFailure(new MessageFailed())
                 .build();
     }
 }

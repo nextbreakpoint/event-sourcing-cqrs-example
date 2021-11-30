@@ -9,15 +9,12 @@ import com.nextbreakpoint.blueprint.common.events.DesignAggregateUpdateRequested
 import com.nextbreakpoint.blueprint.common.vertx.Controller;
 import com.nextbreakpoint.blueprint.common.vertx.KafkaEmitter;
 import com.nextbreakpoint.blueprint.designs.Store;
-import io.vertx.core.impl.logging.Logger;
-import io.vertx.core.impl.logging.LoggerFactory;
+import com.nextbreakpoint.blueprint.designs.model.Design;
 import rx.Single;
 
 import java.util.Objects;
 
 public class DesignAggregateUpdateRequestedController implements Controller<InputMessage, Void> {
-    private final Logger logger = LoggerFactory.getLogger(DesignAggregateUpdateRequestedController.class.getName());
-
     private final Mapper<InputMessage, DesignAggregateUpdateRequested> inputMapper;
     private final Mapper<DesignAggregateUpdateCompleted, OutputMessage> outputMapper;
     private final KafkaEmitter emitter;
@@ -42,7 +39,19 @@ public class DesignAggregateUpdateRequestedController implements Controller<Inpu
     private Single<DesignAggregateUpdateCompleted> onAggregateUpdateRequested(DesignAggregateUpdateRequested event) {
         return store.updateDesign(event.getUuid(), event.getEsid())
                 .map(result -> result.orElseThrow(() -> new RuntimeException("Design aggregate not found " + event.getUuid())))
-                .map(design -> new DesignAggregateUpdateCompleted(Uuids.timeBased(), design.getUuid(), design.getEsid(), design.getJson(), design.getChecksum(), design.getLevels(), design.getStatus()));
+                .map(this::createEvent);
+    }
+
+    private DesignAggregateUpdateCompleted createEvent(Design design) {
+        return DesignAggregateUpdateCompleted.builder()
+                .withEvid(Uuids.timeBased())
+                .withUuid(design.getUuid())
+                .withEsid(design.getEsid())
+                .withData(design.getJson())
+                .withChecksum(design.getChecksum())
+                .withLevels(design.getLevels())
+                .withStatus(design.getStatus())
+                .build();
     }
 
 //    @Override
@@ -62,6 +71,6 @@ public class DesignAggregateUpdateRequestedController implements Controller<Inpu
 //        return store.updateDesign(event.getUuid(), event.getEsid())
 ////                .map(result -> result.orElseThrow(() -> new RuntimeException("Design aggregate not found " + event.getUuid())))
 //                .flatMapObservable(result -> Observable.from(result.map(Collections::singletonList).orElseGet(Collections::emptyList)))
-//                .map(design -> new DesignAggregateUpdateCompleted(Uuids.timeBased(), design.getUuid(), design.getEsid(), design.getJson(), design.getChecksum(), design.getLevels(), design.getStatus()));
+//                .map(this::createEvent);
 //    }
 }

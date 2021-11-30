@@ -1,31 +1,23 @@
 package com.nextbreakpoint.blueprint.authentication.handlers;
 
 import com.nextbreakpoint.blueprint.common.core.Authority;
-import com.nextbreakpoint.blueprint.common.vertx.Authentication;
-import com.nextbreakpoint.blueprint.common.vertx.Failure;
-import com.nextbreakpoint.blueprint.common.vertx.JWTProviderFactory;
-import com.nextbreakpoint.blueprint.common.vertx.WebClientFactory;
+import com.nextbreakpoint.blueprint.common.vertx.*;
 import io.vertx.core.Handler;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.auth.oauth2.OAuth2Options;
-import io.vertx.rxjava.core.Vertx;
 import io.vertx.rxjava.core.buffer.Buffer;
 import io.vertx.rxjava.core.http.Cookie;
 import io.vertx.rxjava.ext.auth.jwt.JWTAuth;
-import io.vertx.rxjava.ext.auth.oauth2.OAuth2Auth;
-import io.vertx.rxjava.ext.web.Router;
 import io.vertx.rxjava.ext.web.RoutingContext;
 import io.vertx.rxjava.ext.web.client.HttpResponse;
 import io.vertx.rxjava.ext.web.client.WebClient;
 import io.vertx.rxjava.ext.web.handler.OAuth2AuthHandler;
 
-import java.net.MalformedURLException;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static com.nextbreakpoint.blueprint.common.core.ContentType.APPLICATION_JSON;
 import static com.nextbreakpoint.blueprint.common.core.Headers.*;
@@ -34,27 +26,23 @@ import static com.nextbreakpoint.blueprint.common.vertx.Authentication.NULL_USER
 public class GitHubSignInHandler implements Handler<RoutingContext> {
     private static final Logger logger = LoggerFactory.getLogger(GitHubSignInHandler.class.getName());
 
-    private static final String CALLBACK_PATH = "/v1/auth/callback";
-
     private final OAuth2AuthHandler oauthHandler;
     private final WebClient accountsClient;
     private final WebClient githubClient;
-    private final Set<String> adminUsers;
     private final JWTAuth jwtProvider;
+
+    private final Set<String> adminUsers;
     private final String cookieDomain;
     private final String webUrl;
 
-    public GitHubSignInHandler(Vertx vertx, JsonObject config, Router router) throws MalformedURLException {
-        adminUsers = config.getJsonArray("admin_users")
-                .stream()
-                .map(x -> (String) x)
-                .collect(Collectors.toSet());
-        cookieDomain = config.getString("cookie_domain");
-        webUrl = config.getString("client_web_url");
-        accountsClient = WebClientFactory.create(vertx, config.getString("server_accounts_url"), config);
-        githubClient = WebClientFactory.create(vertx, config.getString("github_url"));
-        jwtProvider = JWTProviderFactory.create(vertx, config);
-        oauthHandler = createOAuth2Handler(vertx, config, router);
+    public GitHubSignInHandler(String cookieDomain, String webUrl, Set<String> adminUsers, WebClient accountsClient, WebClient githubClient, JWTAuth jwtProvider, OAuth2AuthHandler oauthHandler) {
+        this.cookieDomain = Objects.requireNonNull(cookieDomain);
+        this.webUrl = Objects.requireNonNull(webUrl);
+        this.adminUsers = Objects.requireNonNull(adminUsers);
+        this.accountsClient = Objects.requireNonNull(accountsClient);
+        this.githubClient = Objects.requireNonNull(githubClient);
+        this.jwtProvider = Objects.requireNonNull(jwtProvider);
+        this.oauthHandler = Objects.requireNonNull(oauthHandler);
     }
 
     @Override
@@ -203,31 +191,6 @@ public class GitHubSignInHandler implements Handler<RoutingContext> {
                 .putHeader("Location", redirectTo)
                 .setStatusCode(303)
                 .end();
-    }
-
-    protected OAuth2AuthHandler createOAuth2Handler(Vertx vetx, JsonObject config, Router router) {
-        final String clientId = config.getString("github_client_id");
-        final String clientSecret = config.getString("github_client_secret");
-        final String oauthLoginUrl = config.getString("oauth_login_url");
-        final String oauthTokenPath = config.getString("oauth_token_path");
-        final String oauthAuthorisePath = config.getString("oauth_authorize_path");
-        final String oauthAuthority = config.getString("oauth_authority");
-        final String authUrl = config.getString("client_auth_url");
-
-        final OAuth2Options oauth2Options = new OAuth2Options()
-                .setClientID(clientId)
-                .setClientSecret(clientSecret)
-                .setSite(oauthLoginUrl)
-                .setTokenPath(oauthTokenPath)
-                .setAuthorizationPath(oauthAuthorisePath);
-
-        final OAuth2Auth oauth2Provider = OAuth2Auth.create(vetx, oauth2Options);
-        final OAuth2AuthHandler oauth2 = OAuth2AuthHandler.create(vetx, oauth2Provider, authUrl + CALLBACK_PATH);
-
-        oauth2.withScope(oauthAuthority);
-        oauth2.setupCallback(router.route(CALLBACK_PATH));
-
-        return oauth2;
     }
 
     protected String extractPrimaryEmail(JsonArray emails) {

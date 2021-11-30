@@ -3,15 +3,14 @@ package com.nextbreakpoint.blueprint.designs;
 import au.com.dius.pact.provider.junit5.HttpsTestTarget;
 import com.jayway.restassured.http.ContentType;
 import com.nextbreakpoint.blueprint.common.core.Authority;
-import com.nextbreakpoint.blueprint.common.core.Environment;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.events.DesignDeleteRequested;
 import com.nextbreakpoint.blueprint.common.events.DesignInsertRequested;
 import com.nextbreakpoint.blueprint.common.events.DesignUpdateRequested;
 import com.nextbreakpoint.blueprint.common.test.KafkaTestPolling;
 import com.nextbreakpoint.blueprint.common.vertx.KafkaClientFactory;
+import com.nextbreakpoint.blueprint.common.vertx.KafkaConsumerConfig;
 import io.vertx.core.json.Json;
-import io.vertx.core.json.JsonObject;
 import io.vertx.rxjava.core.RxHelper;
 import io.vertx.rxjava.core.Vertx;
 import io.vertx.rxjava.kafka.client.consumer.KafkaConsumer;
@@ -37,8 +36,6 @@ public class TestCases {
     private final TestScenario scenario = new TestScenario();
 
     private final Vertx vertx = new Vertx(io.vertx.core.Vertx.vertx());
-
-    private final Environment environment = Environment.getDefaultEnvironment();
 
     private KafkaTestPolling eventsPolling;
 
@@ -102,11 +99,11 @@ public class TestCases {
     }
 
     @NotNull
-    public JsonObject createConsumerConfig(String group) {
-        final JsonObject config = new JsonObject();
-        config.put("kafka_bootstrap_servers", scenario.getKafkaHost() + ":" + scenario.getKafkaPort());
-        config.put("kafka_group_id", group);
-        return config;
+    public KafkaConsumerConfig createConsumerConfig(String group) {
+        return KafkaConsumerConfig.builder()
+                .withBootstrapServers(scenario.getKafkaHost() + ":" + scenario.getKafkaPort())
+                .withGroupId(group)
+                .build();
     }
 
     public String shouldPublishDesignInsertRequestedEventWhenReceivingAInsertDesignRequest() throws MalformedURLException {

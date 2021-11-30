@@ -15,5 +15,6 @@ module com.nextbreakpoint.blueprint.designsnotificationdispatcher {
     requires com.fasterxml.jackson.databind;
     requires org.apache.logging.log4j;
     requires com.datastax.oss.driver.core;
+    requires static lombok;
     opens com.nextbreakpoint.blueprint.designs.model to com.fasterxml.jackson.databind;
 }

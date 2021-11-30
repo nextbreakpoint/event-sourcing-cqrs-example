@@ -7,11 +7,9 @@ import com.nextbreakpoint.blueprint.common.events.DesignInsertRequested;
 import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
 import com.nextbreakpoint.blueprint.common.test.KafkaTestEmitter;
 import com.nextbreakpoint.blueprint.common.test.KafkaTestPolling;
-import com.nextbreakpoint.blueprint.common.vertx.CassandraClientFactory;
-import com.nextbreakpoint.blueprint.common.vertx.KafkaClientFactory;
+import com.nextbreakpoint.blueprint.common.vertx.*;
 import com.nextbreakpoint.blueprint.designs.model.Tiles;
 import io.vertx.core.json.Json;
-import io.vertx.core.json.JsonObject;
 import io.vertx.rxjava.cassandra.CassandraClient;
 import io.vertx.rxjava.core.RxHelper;
 import io.vertx.rxjava.core.Vertx;
@@ -21,10 +19,7 @@ import org.jetbrains.annotations.NotNull;
 import rx.plugins.RxJavaHooks;
 import rx.schedulers.Schedulers;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
@@ -95,31 +90,32 @@ public class TestCases {
     }
 
     @NotNull
-    public JsonObject createCassandraConfig() {
-        final JsonObject config = new JsonObject();
-        config.put("cassandra_contactPoints", scenario.getCassandraHost());
-        config.put("cassandra_port", scenario.getCassandraPort());
-        config.put("cassandra_cluster", "datacenter1");
-        config.put("cassandra_keyspace", TestConstants.DATABASE_KEYSPACE);
-        config.put("cassandra_username", "admin");
-        config.put("cassandra_password", "password");
-        return config;
+    public CassandraClientConfig createCassandraConfig() {
+        return CassandraClientConfig.builder()
+                .withClusterName("datacenter1")
+                .withKeyspace(TestConstants.DATABASE_KEYSPACE)
+                .withUsername("admin")
+                .withPassword("password")
+                .withContactPoints(new String[] { scenario.getCassandraHost() })
+                .withPort(scenario.getCassandraPort())
+                .build();
     }
 
     @NotNull
-    public JsonObject createConsumerConfig(String group) {
-        final JsonObject config = new JsonObject();
-        config.put("kafka_bootstrap_servers", scenario.getKafkaHost() + ":" + scenario.getKafkaPort());
-        config.put("kafka_group_id", group);
-        return config;
+    public KafkaConsumerConfig createConsumerConfig(String group) {
+        return KafkaConsumerConfig.builder()
+                .withBootstrapServers(scenario.getKafkaHost() + ":" + scenario.getKafkaPort())
+                .withGroupId(group)
+                .build();
     }
 
     @NotNull
-    public JsonObject createProducerConfig() {
-        final JsonObject config = new JsonObject();
-        config.put("kafka_bootstrap_servers", scenario.getKafkaHost() + ":" + scenario.getKafkaPort());
-        config.put("kafka_client_id", "integration");
-        return config;
+    public KafkaProducerConfig createProducerConfig() {
+        return KafkaProducerConfig.builder()
+                .withBootstrapServers(scenario.getKafkaHost() + ":" + scenario.getKafkaPort())
+                .withClientId("integration")
+                .withKafkaAcks("1")
+                .build();
     }
 
     public void shouldUpdateTheDesignWhenReceivingADesignInsertRequestedMessage(OutputMessage designInsertRequestedMessage) {

@@ -64,19 +64,22 @@ public class DesignAbortRequestedController implements Controller<InputMessage, 
 
     private Observable<TileRenderAborted> generateEvents(DesignAbortRequested event, Design design, int level) {
         if (design.getLevels() > level) {
-            return Observable.from(generateTiles(level))
-                    .map(tile -> new TileRenderAborted(
-                            Uuids.timeBased(),
-                            event.getUuid(),
-                            design.getEsid(),
-                            event.getChecksum(),
-                            tile.getLevel(),
-                            tile.getRow(),
-                            tile.getCol()
-                    ));
+            return Observable.from(generateTiles(level)).map(tile -> createEvent(event, design, tile));
         } else {
             return Observable.empty();
         }
+    }
+
+    private TileRenderAborted createEvent(DesignAbortRequested event, Design design, Tile tile) {
+        return TileRenderAborted.builder()
+                .withEvid(Uuids.timeBased())
+                .withUuid(event.getUuid())
+                .withEsid(design.getEsid())
+                .withChecksum(event.getChecksum())
+                .withLevel(tile.getLevel())
+                .withRow(tile.getRow())
+                .withCol(tile.getCol())
+                .build();
     }
 
     private List<Tile> generateTiles(int level) {

@@ -61,20 +61,23 @@ public class DesignAggregateUpdateCompletedController implements Controller<Inpu
 
     private Observable<TileRenderRequested> generateEvents(DesignAggregateUpdateCompleted event, int level) {
         if (event.getLevels() > level) {
-            return Observable.from(generateTiles(level))
-                    .map(tile -> new TileRenderRequested(
-                            Uuids.timeBased(),
-                            event.getUuid(),
-                            event.getEsid(),
-                            event.getData(),
-                            event.getChecksum(),
-                            tile.getLevel(),
-                            tile.getRow(),
-                            tile.getCol()
-                    ));
+            return Observable.from(generateTiles(level)).map(tile -> createEvent(event, tile));
         } else {
             return Observable.empty();
         }
+    }
+
+    private TileRenderRequested createEvent(DesignAggregateUpdateCompleted event, Tile tile) {
+        return TileRenderRequested.builder()
+                .withEvid(Uuids.timeBased())
+                .withUuid(event.getUuid())
+                .withEsid(event.getEsid())
+                .withData(event.getData())
+                .withChecksum(event.getChecksum())
+                .withLevel(tile.getLevel())
+                .withRow(tile.getRow())
+                .withCol(tile.getCol())
+                .build();
     }
 
     private List<Tile> generateTiles(int level) {

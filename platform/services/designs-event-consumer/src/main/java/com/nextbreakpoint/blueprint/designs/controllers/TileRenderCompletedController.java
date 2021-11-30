@@ -34,8 +34,16 @@ public class TileRenderCompletedController implements Controller<InputMessage, V
     private Single<Void> onMessageReceived(InputMessage message) {
         return store.appendMessage(message)
                 .map(result -> inputMapper.transform(message))
-                .map(event -> new TileAggregateUpdateRequired(Uuids.timeBased(), event.getUuid(), message.getOffset()))
+                .map(event -> createEvent(message, event))
                 .map(outputMapper::transform)
                 .flatMap(emitter::onNext);
+    }
+
+    private TileAggregateUpdateRequired createEvent(InputMessage message, TileRenderCompleted event) {
+        return TileAggregateUpdateRequired.builder()
+                .withEvid(Uuids.timeBased())
+                .withUuid(event.getUuid())
+                .withEsid(message.getOffset())
+                .build();
     }
 }

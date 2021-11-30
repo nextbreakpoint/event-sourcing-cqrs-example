@@ -1,6 +1,5 @@
 package com.nextbreakpoint.blueprint.common.vertx;
 
-import io.vertx.core.json.JsonObject;
 import io.vertx.rxjava.core.Vertx;
 import io.vertx.rxjava.kafka.client.consumer.KafkaConsumer;
 import io.vertx.rxjava.kafka.client.producer.KafkaProducer;
@@ -15,75 +14,56 @@ import java.util.Map;
 public class KafkaClientFactory {
     private KafkaClientFactory() {}
 
-    public static <K, V> KafkaProducer<K, V> createProducer(Vertx vertx, JsonObject config) {
-        final String bootstrapServers = config.getString("kafka_bootstrap_servers", "localhost:9092");
-        final String keySerializer = config.getString("kafka_key_serializer", "org.apache.kafka.common.serialization.StringSerializer");
-        final String valSerializer = config.getString("kafka_val_serializer", "org.apache.kafka.common.serialization.StringSerializer");
-        final String acks = config.getString("kafka_acks", "1");
+    public static <K, V> KafkaProducer<K, V> createProducer(Vertx vertx, KafkaProducerConfig producerConfig) {
+        final Map<String, String> kafkaProducerConfig = new HashMap<>();
 
-        final String keystoreLocation = config.getString("kafka_keystore_location");
-        final String keystorePassword = config.getString("kafka_keystore_password");
-        final String truststoreLocation = config.getString("kafka_truststore_location");
-        final String truststorePassword = config.getString("kafka_truststore_password");
+        kafkaProducerConfig.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, producerConfig.getBootstrapServers());
+        kafkaProducerConfig.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, producerConfig.getKeySerializer());
+        kafkaProducerConfig.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, producerConfig.getValueSerializer());
+        kafkaProducerConfig.put(ProducerConfig.CLIENT_ID_CONFIG, producerConfig.getClientId());
+        kafkaProducerConfig.put(ProducerConfig.ACKS_CONFIG, producerConfig.getKafkaAcks());
 
-        final Map<String, String> producerConfig = new HashMap<>();
-        producerConfig.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        producerConfig.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, keySerializer);
-        producerConfig.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, valSerializer);
-        producerConfig.put(ProducerConfig.ACKS_CONFIG, acks);
+        if (producerConfig.getKeystoreLocation() != null && producerConfig.getTruststoreLocation() != null) {
+            kafkaProducerConfig.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
 
-        if (keystoreLocation != null && truststoreLocation != null) {
-            producerConfig.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
-
-            producerConfig.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, keystoreLocation);
-            if (keystorePassword != null) {
-                producerConfig.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, keystorePassword);
+            kafkaProducerConfig.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, producerConfig.getKeystoreLocation());
+            if (producerConfig.getKeystorePassword() != null) {
+                kafkaProducerConfig.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, producerConfig.getKeystorePassword());
             }
 
-            producerConfig.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, truststoreLocation);
-            if (truststorePassword != null) {
-                producerConfig.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, truststorePassword);
+            kafkaProducerConfig.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, producerConfig.getTruststoreLocation());
+            if (producerConfig.getTruststorePassword() != null) {
+                kafkaProducerConfig.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, producerConfig.getTruststorePassword());
             }
         }
 
-        return KafkaProducer.create(vertx, producerConfig);
+        return KafkaProducer.create(vertx, kafkaProducerConfig);
     }
 
-    public static <K, V> KafkaConsumer<K, V> createConsumer(Vertx vertx, JsonObject config) {
-        final String bootstrapServers = config.getString("kafka_bootstrap_servers", "localhost:9092");
-        final String keyDeserializer = config.getString("kafka_key_serializer", "org.apache.kafka.common.serialization.StringDeserializer");
-        final String valDeserializer = config.getString("kafka_val_serializer", "org.apache.kafka.common.serialization.StringDeserializer");
-        final String groupId = config.getString("kafka_group_id", "test");
-        final String autoOffsetReset = config.getString("kafka_auto_offset_reset", "earliest");
-        final String enableAutoCommit = config.getString("kafka_enable_auto_commit", "false");
+    public static <K, V> KafkaConsumer<K, V> createConsumer(Vertx vertx, KafkaConsumerConfig consumerConfig) {
+        final Map<String, String> kafkaConsumerConfig = new HashMap<>();
 
-        final String keystoreLocation = config.getString("kafka_keystore_location");
-        final String keystorePassword = config.getString("kafka_keystore_password");
-        final String truststoreLocation = config.getString("kafka_truststore_location");
-        final String truststorePassword = config.getString("kafka_truststore_password");
+        kafkaConsumerConfig.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, consumerConfig.getBootstrapServers());
+        kafkaConsumerConfig.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, consumerConfig.getKeyDeserializer());
+        kafkaConsumerConfig.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, consumerConfig.getValueDeserializer());
+        kafkaConsumerConfig.put(ConsumerConfig.GROUP_ID_CONFIG, consumerConfig.getGroupId());
+        kafkaConsumerConfig.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, consumerConfig.getAutoOffsetReset());
+        kafkaConsumerConfig.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, consumerConfig.getEnableAutoCommit());
 
-        final Map<String, String> consumerConfig = new HashMap<>();
-        consumerConfig.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        consumerConfig.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, keyDeserializer);
-        consumerConfig.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, valDeserializer);
-        consumerConfig.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
-        consumerConfig.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, autoOffsetReset);
-        consumerConfig.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, enableAutoCommit);
+        if (consumerConfig.getKeystoreLocation() != null && consumerConfig.getTruststoreLocation() != null) {
+            kafkaConsumerConfig.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
 
-        if (keystoreLocation != null && truststoreLocation != null) {
-            consumerConfig.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
-
-            consumerConfig.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, keystoreLocation);
-            if (keystorePassword != null) {
-                consumerConfig.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, keystorePassword);
+            kafkaConsumerConfig.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, consumerConfig.getKeystoreLocation());
+            if (consumerConfig.getKeystorePassword() != null) {
+                kafkaConsumerConfig.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, consumerConfig.getKeystorePassword());
             }
 
-            consumerConfig.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, truststoreLocation);
-            if (truststorePassword != null) {
-                consumerConfig.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, truststorePassword);
+            kafkaConsumerConfig.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, consumerConfig.getTruststoreLocation());
+            if (consumerConfig.getTruststorePassword() != null) {
+                kafkaConsumerConfig.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, consumerConfig.getTruststorePassword());
             }
         }
 
-        return KafkaConsumer.create(vertx, consumerConfig);
+        return KafkaConsumer.create(vertx, kafkaConsumerConfig);
     }
 }

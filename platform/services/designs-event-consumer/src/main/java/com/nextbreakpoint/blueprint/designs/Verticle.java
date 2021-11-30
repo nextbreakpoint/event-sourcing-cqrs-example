@@ -136,25 +136,110 @@ public class Verticle extends AbstractVerticle {
 
             final String originPattern = config.getString("origin_pattern");
 
+            final String jksStorePath = config.getString("server_keystore_path");
+
+            final String jksStoreSecret = config.getString("server_keystore_secret");
+
             final String renderTopic = config.getString("render_topic");
 
             final String eventsTopic = config.getString("events_topic");
 
             final String messageSource = config.getString("message_source");
 
+            final String clusterName = config.getString("cassandra_cluster");
+
             final String keyspace = config.getString("cassandra_keyspace");
 
-            final KafkaProducer<String, String> kafkaProducer = KafkaClientFactory.createProducer(vertx, config);
+            final String username = config.getString("cassandra_username");
 
-            final JsonObject consumerConfig1 = new JsonObject(config.getMap());
-            consumerConfig1.put("kafka_group_id", config.getValue("kafka_group_id", "test") + "-1");
+            final String password = config.getString("cassandra_password");
+
+            final String[] contactPoints = config.getString("cassandra_contactPoints").split(",");
+
+            final int cassandraPort = Integer.parseInt(config.getString("cassandra_port", "9042"));
+
+            final String bootstrapServers = config.getString("kafka_bootstrap_servers", "localhost:9092");
+
+            final String keySerializer = config.getString("kafka_key_serializer", "org.apache.kafka.common.serialization.StringSerializer");
+
+            final String valSerializer = config.getString("kafka_val_serializer", "org.apache.kafka.common.serialization.StringSerializer");
+
+            final String clientId = config.getString("kafka_client_id", "designs-event-consumer");
+
+            final String acks = config.getString("kafka_acks", "1");
+
+            final String keystoreLocation = config.getString("kafka_keystore_location");
+
+            final String keystorePassword = config.getString("kafka_keystore_password");
+
+            final String truststoreLocation = config.getString("kafka_truststore_location");
+
+            final String truststorePassword = config.getString("kafka_truststore_password");
+
+            final String keyDeserializer = config.getString("kafka_key_serializer", "org.apache.kafka.common.serialization.StringDeserializer");
+
+            final String valDeserializer = config.getString("kafka_val_serializer", "org.apache.kafka.common.serialization.StringDeserializer");
+
+            final String groupId = config.getString("kafka_group_id", "test");
+
+            final String autoOffsetReset = config.getString("kafka_auto_offset_reset", "earliest");
+
+            final String enableAutoCommit = config.getString("kafka_enable_auto_commit", "false");
+
+            final KafkaProducerConfig producerConfig = KafkaProducerConfig.builder()
+                    .withBootstrapServers(bootstrapServers)
+                    .withKeySerializer(keySerializer)
+                    .withValueSerializer(valSerializer)
+                    .withKeystoreLocation(keystoreLocation)
+                    .withKeystorePassword(keystorePassword)
+                    .withTruststoreLocation(truststoreLocation)
+                    .withTruststorePassword(truststorePassword)
+                    .withClientId(clientId)
+                    .withKafkaAcks(acks)
+                    .build();
+
+            final KafkaProducer<String, String> kafkaProducer = KafkaClientFactory.createProducer(vertx, producerConfig);
+
+            final KafkaConsumerConfig consumerConfig1 = KafkaConsumerConfig.builder()
+                    .withBootstrapServers(bootstrapServers)
+                    .withKeyDeserializer(keyDeserializer)
+                    .withValueDeserializer(valDeserializer)
+                    .withKeystoreLocation(keystoreLocation)
+                    .withKeystorePassword(keystorePassword)
+                    .withTruststoreLocation(truststoreLocation)
+                    .withTruststorePassword(truststorePassword)
+                    .withGroupId(groupId + "-1")
+                    .withAutoOffsetReset(autoOffsetReset)
+                    .withEnableAutoCommit(enableAutoCommit)
+                    .build();
+
+            final KafkaConsumerConfig consumerConfig2 = KafkaConsumerConfig.builder()
+                    .withBootstrapServers(bootstrapServers)
+                    .withKeyDeserializer(keyDeserializer)
+                    .withValueDeserializer(valDeserializer)
+                    .withKeystoreLocation(keystoreLocation)
+                    .withKeystorePassword(keystorePassword)
+                    .withTruststoreLocation(truststoreLocation)
+                    .withTruststorePassword(truststorePassword)
+                    .withGroupId(groupId + "-2")
+                    .withAutoOffsetReset(autoOffsetReset)
+                    .withEnableAutoCommit(enableAutoCommit)
+                    .build();
+
             final KafkaConsumer<String, String> kafkaConsumer1 = KafkaClientFactory.createConsumer(vertx, consumerConfig1);
 
-            final JsonObject consumerConfig2 = new JsonObject(config.getMap());
-            consumerConfig2.put("kafka_group_id", config.getValue("kafka_group_id", "test") + "-2");
             final KafkaConsumer<String, String> kafkaConsumer2 = KafkaClientFactory.createConsumer(vertx, consumerConfig2);
 
-            final Supplier<CassandraClient> supplier = () -> CassandraClientFactory.create(vertx, config);
+            final CassandraClientConfig cassandraConfig = CassandraClientConfig.builder()
+                    .withClusterName(clusterName)
+                    .withKeyspace(keyspace)
+                    .withUsername(username)
+                    .withPassword(password)
+                    .withContactPoints(contactPoints)
+                    .withPort(cassandraPort)
+                    .build();
+
+            final Supplier<CassandraClient> supplier = () -> CassandraClientFactory.create(vertx, cassandraConfig);
 
             final Store store = new CassandraStore(keyspace, supplier);
 
@@ -227,7 +312,12 @@ public class Verticle extends AbstractVerticle {
 
                         mainRouter.route().failureHandler(ResponseHelper::sendFailure);
 
-                        final HttpServerOptions options = ServerUtil.makeServerOptions(config);
+                        final ServerConfig serverConfig = ServerConfig.builder()
+                                .withJksStorePath(jksStorePath)
+                                .withJksStoreSecret(jksStoreSecret)
+                                .build();
+
+                        final HttpServerOptions options = Server.makeOptions(serverConfig);
 
                         vertx.createHttpServer(options)
                                 .requestHandler(mainRouter)

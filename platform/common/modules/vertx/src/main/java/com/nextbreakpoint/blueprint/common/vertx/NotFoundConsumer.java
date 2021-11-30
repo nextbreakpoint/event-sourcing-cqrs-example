@@ -2,6 +2,7 @@ package com.nextbreakpoint.blueprint.common.vertx;
 
 import io.vertx.rxjava.ext.web.RoutingContext;
 
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 
@@ -9,7 +10,7 @@ public class NotFoundConsumer<T> implements BiConsumer<RoutingContext, Optional<
     private BiConsumer<RoutingContext, T> consumer;
 
     public NotFoundConsumer(BiConsumer<RoutingContext, T> consumer) {
-        this.consumer = consumer;
+        this.consumer = Objects.requireNonNull(consumer);
     }
 
     @Override

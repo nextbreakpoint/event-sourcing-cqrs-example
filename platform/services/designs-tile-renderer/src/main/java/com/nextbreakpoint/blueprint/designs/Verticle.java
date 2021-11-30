@@ -129,6 +129,10 @@ public class Verticle extends AbstractVerticle {
 
             final String originPattern = config.getString("origin_pattern");
 
+            final String jksStorePath = config.getString("server_keystore_path");
+
+            final String jksStoreSecret = config.getString("server_keystore_secret");
+
             final String s3Endpoint = config.getString("s3_endpoint");
 
             final String s3Bucket = config.getString("s3_bucket");
@@ -141,9 +145,62 @@ public class Verticle extends AbstractVerticle {
 
             final String eventsTopic = config.getString("events_topic");
 
-            final KafkaProducer<String, String> kafkaProducer = KafkaClientFactory.createProducer(vertx, config);
+            final String bootstrapServers = config.getString("kafka_bootstrap_servers", "localhost:9092");
 
-            final KafkaConsumer<String, String> kafkaConsumer = KafkaClientFactory.createConsumer(vertx, config);
+            final String keySerializer = config.getString("kafka_key_serializer", "org.apache.kafka.common.serialization.StringSerializer");
+
+            final String valSerializer = config.getString("kafka_val_serializer", "org.apache.kafka.common.serialization.StringSerializer");
+
+            final String clientId = config.getString("kafka_client_id", "designs-tile-renderer");
+
+            final String acks = config.getString("kafka_acks", "1");
+
+            final String keystoreLocation = config.getString("kafka_keystore_location");
+
+            final String keystorePassword = config.getString("kafka_keystore_password");
+
+            final String truststoreLocation = config.getString("kafka_truststore_location");
+
+            final String truststorePassword = config.getString("kafka_truststore_password");
+
+            final String keyDeserializer = config.getString("kafka_key_serializer", "org.apache.kafka.common.serialization.StringDeserializer");
+
+            final String valDeserializer = config.getString("kafka_val_serializer", "org.apache.kafka.common.serialization.StringDeserializer");
+
+            final String groupId = config.getString("kafka_group_id", "test");
+
+            final String autoOffsetReset = config.getString("kafka_auto_offset_reset", "earliest");
+
+            final String enableAutoCommit = config.getString("kafka_enable_auto_commit", "false");
+
+            final KafkaProducerConfig producerConfig = KafkaProducerConfig.builder()
+                    .withBootstrapServers(bootstrapServers)
+                    .withKeySerializer(keySerializer)
+                    .withValueSerializer(valSerializer)
+                    .withKeystoreLocation(keystoreLocation)
+                    .withKeystorePassword(keystorePassword)
+                    .withTruststoreLocation(truststoreLocation)
+                    .withTruststorePassword(truststorePassword)
+                    .withClientId(clientId)
+                    .withKafkaAcks(acks)
+                    .build();
+
+            final KafkaProducer<String, String> kafkaProducer = KafkaClientFactory.createProducer(vertx, producerConfig);
+
+            final KafkaConsumerConfig consumerConfig = KafkaConsumerConfig.builder()
+                    .withBootstrapServers(bootstrapServers)
+                    .withKeyDeserializer(keyDeserializer)
+                    .withValueDeserializer(valDeserializer)
+                    .withKeystoreLocation(keystoreLocation)
+                    .withKeystorePassword(keystorePassword)
+                    .withTruststoreLocation(truststoreLocation)
+                    .withTruststorePassword(truststorePassword)
+                    .withGroupId(groupId)
+                    .withAutoOffsetReset(autoOffsetReset)
+                    .withEnableAutoCommit(enableAutoCommit)
+                    .build();
+
+            final KafkaConsumer<String, String> kafkaConsumer = KafkaClientFactory.createConsumer(vertx, consumerConfig);
 
             final AwsCredentialsProvider credentialsProvider = AwsCredentialsProviderChain.of(DefaultCredentialsProvider.create());
 
@@ -199,7 +256,12 @@ public class Verticle extends AbstractVerticle {
 
                         mainRouter.route().failureHandler(ResponseHelper::sendFailure);
 
-                        final HttpServerOptions options = ServerUtil.makeServerOptions(config);
+                        final ServerConfig serverConfig = ServerConfig.builder()
+                                .withJksStorePath(jksStorePath)
+                                .withJksStoreSecret(jksStoreSecret)
+                                .build();
+
+                        final HttpServerOptions options = Server.makeOptions(serverConfig);
 
                         vertx.createHttpServer(options)
                                 .requestHandler(mainRouter)

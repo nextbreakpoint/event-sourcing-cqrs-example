@@ -11,5 +11,6 @@ module com.nextbreakpoint.blueprint.common.vertx {
     requires static kafka.clients;
     requires static com.datastax.oss.driver.core;
     requires static rxjava;
+    requires static lombok;
     exports com.nextbreakpoint.blueprint.common.vertx;
 }

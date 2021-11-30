@@ -7,8 +7,8 @@ import com.nextbreakpoint.blueprint.common.events.TileAggregateUpdateCompleted;
 import com.nextbreakpoint.blueprint.common.events.mappers.DesignAggregateUpdateCompletedInputMapper;
 import com.nextbreakpoint.blueprint.common.events.mappers.TileAggregateUpdateCompletedInputMapper;
 import com.nextbreakpoint.blueprint.common.vertx.Controller;
-import com.nextbreakpoint.blueprint.common.vertx.MessageFailureConsumer;
-import com.nextbreakpoint.blueprint.common.vertx.MessageSuccessConsumer;
+import com.nextbreakpoint.blueprint.common.vertx.MessageFailed;
+import com.nextbreakpoint.blueprint.common.vertx.MessageConsumed;
 import com.nextbreakpoint.blueprint.common.vertx.TemplateHandler;
 
 public class Factory {
@@ -19,8 +19,8 @@ public class Factory {
                 .withInputMapper(new DesignAggregateUpdateCompletedInputMapper())
                 .withOutputMapper(output -> output)
                 .withController(controller)
-                .onSuccess(new MessageSuccessConsumer())
-                .onFailure(new MessageFailureConsumer())
+                .onSuccess(new MessageConsumed())
+                .onFailure(new MessageFailed())
                 .build();
     }
 
@@ -29,8 +29,8 @@ public class Factory {
                 .withInputMapper(new TileAggregateUpdateCompletedInputMapper())
                 .withOutputMapper(output -> output)
                 .withController(controller)
-                .onSuccess(new MessageSuccessConsumer())
-                .onFailure(new MessageFailureConsumer())
+                .onSuccess(new MessageConsumed())
+                .onFailure(new MessageFailed())
                 .build();
     }
 }

@@ -1,8 +1,8 @@
 package com.nextbreakpoint.blueprint.designs;
 
 import au.com.dius.pact.provider.junit5.HttpsTestTarget;
+import com.nextbreakpoint.blueprint.common.vertx.CassandraClientConfig;
 import com.nextbreakpoint.blueprint.common.vertx.CassandraClientFactory;
-import io.vertx.core.json.JsonObject;
 import io.vertx.rxjava.cassandra.CassandraClient;
 import io.vertx.rxjava.core.RxHelper;
 import io.vertx.rxjava.core.Vertx;
@@ -91,15 +91,15 @@ public class TestCases {
     }
 
     @NotNull
-    public JsonObject createCassandraConfig() {
-        final JsonObject config = new JsonObject();
-        config.put("cassandra_contactPoints", scenario.getCassandraHost());
-        config.put("cassandra_port", scenario.getCassandraPort());
-        config.put("cassandra_cluster", "datacenter1");
-        config.put("cassandra_keyspace", TestConstants.DATABASE_KEYSPACE);
-        config.put("cassandra_username", "admin");
-        config.put("cassandra_password", "password");
-        return config;
+    public CassandraClientConfig createCassandraConfig() {
+        return CassandraClientConfig.builder()
+                .withClusterName("datacenter1")
+                .withKeyspace(TestConstants.DATABASE_KEYSPACE)
+                .withUsername("admin")
+                .withPassword("password")
+                .withContactPoints(new String[] { scenario.getCassandraHost() })
+                .withPort(scenario.getCassandraPort())
+                .build();
     }
 
     public void deleteDesigns() {

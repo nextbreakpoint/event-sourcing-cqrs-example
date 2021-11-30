@@ -54,24 +54,11 @@ public class Authentication {
         return getUser(jwtProvider, routingContext).flatMap(user -> userHasRole(roles, user));
     }
 
-    protected static Single<User> userHasRole(List<String> roles, User user) {
-        return hasRole(user, roles).map(role -> Single.just(user))
-                .orElseGet(() -> Single.error(Failure.accessDenied("User doesn't have required role")));
-    }
-
     public static Cookie createCookie(String token, String domain) {
         return Cookie.cookie(COOKIE_NAME, token)
                 .setDomain(domain)
                 .setPath(COOKIE_PATH)
                 .setMaxAge(COOKIE_MAX_AGE);
-    }
-
-    private static JWTOptions makeJWTOptions(List<String> authorities) {
-        final JWTOptions jwtOptions = new JWTOptions()
-                .setExpiresInMinutes(JWT_EXPIRES_IN_MINUTES)
-                .setSubject(JWT_SUBJECT);
-        authorities.forEach(jwtOptions::addPermission);
-        return jwtOptions;
     }
 
     public static Optional<String> hasRole(User user, List<String> roles) {
@@ -98,6 +85,19 @@ public class Authentication {
         }
         logger.debug("Authorisation header and token cookie not present");
         return null;
+    }
+
+    protected static Single<User> userHasRole(List<String> roles, User user) {
+        return hasRole(user, roles).map(role -> Single.just(user))
+                .orElseGet(() -> Single.error(Failure.accessDenied("User doesn't have required role")));
+    }
+
+    private static JWTOptions makeJWTOptions(List<String> authorities) {
+        final JWTOptions jwtOptions = new JWTOptions()
+                .setExpiresInMinutes(JWT_EXPIRES_IN_MINUTES)
+                .setSubject(JWT_SUBJECT);
+        authorities.forEach(jwtOptions::addPermission);
+        return jwtOptions;
     }
 
     private static Single<JsonObject> makeAuthInfo(JWTAuth jwtProvider, String token) {

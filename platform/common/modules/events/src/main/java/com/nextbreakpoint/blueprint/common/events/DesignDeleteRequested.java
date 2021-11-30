@@ -2,10 +2,15 @@ package com.nextbreakpoint.blueprint.common.events;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Data;
 
 import java.util.Objects;
 import java.util.UUID;
 
+@Data
+@Builder(access = AccessLevel.PUBLIC, setterPrefix = "with")
 public class DesignDeleteRequested {
     private final UUID evid;
     private final UUID uuid;

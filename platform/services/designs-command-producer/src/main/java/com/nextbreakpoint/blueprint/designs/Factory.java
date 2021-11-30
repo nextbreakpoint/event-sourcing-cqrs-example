@@ -1,9 +1,5 @@
 package com.nextbreakpoint.blueprint.designs;
 
-import com.datastax.oss.driver.api.core.uuid.Uuids;
-import com.nextbreakpoint.blueprint.common.events.DesignDeleteRequested;
-import com.nextbreakpoint.blueprint.common.events.DesignInsertRequested;
-import com.nextbreakpoint.blueprint.common.events.DesignUpdateRequested;
 import com.nextbreakpoint.blueprint.common.events.mappers.DesignDeleteRequestedOutputMapper;
 import com.nextbreakpoint.blueprint.common.events.mappers.DesignInsertRequestedOutputMapper;
 import com.nextbreakpoint.blueprint.common.events.mappers.DesignUpdateRequestedOutputMapper;
@@ -25,7 +21,7 @@ public class Factory {
         return TemplateHandler.<RoutingContext, InsertDesignRequest, InsertDesignResponse, String>builder()
                 .withInputMapper(new InsertDesignRequestMapper())
                 .withController(new InsertDesignController(
-                        request -> new DesignInsertRequested(Uuids.timeBased(), request.getUuid(), request.getJson(), request.getLevels()),
+                        new InsertDesignEventMapper(),
                         new DesignInsertRequestedOutputMapper(messageSource),
                         new KafkaEmitter(producer, topic, 3)
                 ))
@@ -39,7 +35,7 @@ public class Factory {
         return TemplateHandler.<RoutingContext, UpdateDesignRequest, UpdateDesignResponse, String>builder()
                 .withInputMapper(new UpdateDesignRequestMapper())
                 .withController(new UpdateDesignController(
-                        request -> new DesignUpdateRequested(Uuids.timeBased(), request.getUuid(), request.getJson(), request.getLevels()),
+                        new UpdateDesignEventMapper(),
                         new DesignUpdateRequestedOutputMapper(messageSource),
                         new KafkaEmitter(producer, topic, 3)
                 ))
@@ -53,7 +49,7 @@ public class Factory {
         return TemplateHandler.<RoutingContext, DeleteDesignRequest, DeleteDesignResponse, String>builder()
                 .withInputMapper(new DeleteDesignRequestMapper())
                 .withController(new DeleteDesignController(
-                        request -> new DesignDeleteRequested(Uuids.timeBased(), request.getUuid()),
+                        new DeleteDesignEventMapper(),
                         new DesignDeleteRequestedOutputMapper(messageSource),
                         new KafkaEmitter(producer, topic, 3)
                 ))

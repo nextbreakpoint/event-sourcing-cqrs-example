@@ -20,7 +20,10 @@ public class TileAggregateUpdateCompletedController implements Controller<TileAg
 
     @Override
     public Single<Void> onNext(TileAggregateUpdateCompleted event) {
-        DesignChangedNotification notification = new DesignChangedNotification(event.getUuid().toString(), event.getEvid().timestamp());
+        DesignChangedNotification notification = DesignChangedNotification.builder()
+                .withKey(event.getUuid().toString())
+                .withTimestamp(event.getEvid().timestamp())
+                .build();
         vertx.eventBus().publish(address, Json.encode(notification));
         return Single.just(null);
     }

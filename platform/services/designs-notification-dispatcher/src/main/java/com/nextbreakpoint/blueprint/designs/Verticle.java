@@ -118,16 +118,66 @@ public class Verticle extends AbstractVerticle {
 
             final String originPattern = config.getString("origin_pattern");
 
+            final String jksStorePath = config.getString("server_keystore_path");
+
+            final String jksStoreSecret = config.getString("server_keystore_secret");
+
             final String eventsTopic = config.getString("events_topic");
 
-            final JWTAuth jwtProvider = JWTProviderFactory.create(vertx, config);
+            final String jwtKeystoreType = config.getString("jwt_keystore_type");
 
-            final KafkaConsumer<String, String> kafkaConsumer = KafkaClientFactory.createConsumer(vertx, config);
+            final String jwtKeystorePath = config.getString("jwt_keystore_path");
 
-            final Router mainRouter = Router.router(vertx);
+            final String jwtKeystoreSecret = config.getString("jwt_keystore_secret");
 
             final String consulHost = config.getString("consul_host");
+
             final Integer consulPort = Integer.parseInt(config.getString("consul_port"));
+
+            final String bootstrapServers = config.getString("kafka_bootstrap_servers", "localhost:9092");
+
+            final String keyDeserializer = config.getString("kafka_key_serializer", "org.apache.kafka.common.serialization.StringDeserializer");
+
+            final String valDeserializer = config.getString("kafka_val_serializer", "org.apache.kafka.common.serialization.StringDeserializer");
+
+            final String groupId = config.getString("kafka_group_id", "test");
+
+            final String autoOffsetReset = config.getString("kafka_auto_offset_reset", "earliest");
+
+            final String enableAutoCommit = config.getString("kafka_enable_auto_commit", "false");
+
+            final String keystoreLocation = config.getString("kafka_keystore_location");
+
+            final String keystorePassword = config.getString("kafka_keystore_password");
+
+            final String truststoreLocation = config.getString("kafka_truststore_location");
+
+            final String truststorePassword = config.getString("kafka_truststore_password");
+
+            final JWTProviderConfig jwtProviderConfig = JWTProviderConfig.builder()
+                    .withKeyStoreType(jwtKeystoreType)
+                    .withKeyStorePath(jwtKeystorePath)
+                    .withKeyStoreSecret(jwtKeystoreSecret)
+                    .build();
+
+            final JWTAuth jwtProvider = JWTProviderFactory.create(vertx, jwtProviderConfig);
+
+            final KafkaConsumerConfig consumerConfig = KafkaConsumerConfig.builder()
+                    .withBootstrapServers(bootstrapServers)
+                    .withKeyDeserializer(keyDeserializer)
+                    .withValueDeserializer(valDeserializer)
+                    .withKeystoreLocation(keystoreLocation)
+                    .withKeystorePassword(keystorePassword)
+                    .withTruststoreLocation(truststoreLocation)
+                    .withTruststorePassword(truststorePassword)
+                    .withGroupId(groupId)
+                    .withAutoOffsetReset(autoOffsetReset)
+                    .withEnableAutoCommit(enableAutoCommit)
+                    .build();
+
+            final KafkaConsumer<String, String> kafkaConsumer = KafkaClientFactory.createConsumer(vertx, consumerConfig);
+
+            final Router mainRouter = Router.router(vertx);
 
             final JsonObject configuration = new JsonObject()
                     .put("host", consulHost)
@@ -200,7 +250,12 @@ public class Verticle extends AbstractVerticle {
 
                         mainRouter.route().failureHandler(ResponseHelper::sendFailure);
 
-                        final HttpServerOptions options = ServerUtil.makeServerOptions(config);
+                        final ServerConfig serverConfig = ServerConfig.builder()
+                                .withJksStorePath(jksStorePath)
+                                .withJksStoreSecret(jksStoreSecret)
+                                .build();
+
+                        final HttpServerOptions options = Server.makeOptions(serverConfig);
 
                         vertx.createHttpServer(options)
                                 .requestHandler(mainRouter)

@@ -2,10 +2,7 @@ package com.nextbreakpoint.blueprint.gateway;
 
 import com.nextbreakpoint.blueprint.common.core.Environment;
 import com.nextbreakpoint.blueprint.common.core.IOUtils;
-import com.nextbreakpoint.blueprint.common.vertx.CorsHandlerFactory;
-import com.nextbreakpoint.blueprint.common.vertx.HttpClientFactory;
-import com.nextbreakpoint.blueprint.common.vertx.MDCHandler;
-import com.nextbreakpoint.blueprint.common.vertx.ServerUtil;
+import com.nextbreakpoint.blueprint.common.vertx.*;
 import com.nextbreakpoint.blueprint.gateway.handlers.ProxyHandler;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.VertxOptions;
@@ -90,21 +87,61 @@ public class Verticle extends AbstractVerticle {
 
             final String originPattern = config.getString("origin_pattern");
 
+            final String jksStorePath = config.getString("server_keystore_path");
+
+            final String jksStoreSecret = config.getString("server_keystore_secret");
+
+            final String clientKeyStorePath = config.getString("client_keystore_path");
+
+            final String clientKeyStoreSecret = config.getString("client_keystore_secret");
+
+            final String clientTrustStorePath = config.getString("client_truststore_path");
+
+            final String clientTrustStoreSecret = config.getString("client_truststore_secret");
+
+            final Boolean keepAlive = Boolean.parseBoolean(config.getString("client_keep_alive"));
+
+            final Boolean verifyHost = Boolean.parseBoolean(config.getString("client_verify_host"));
+
+            final String authUrl = config.getString("server_auth_url");
+
+            final String accountsUrl = config.getString("server_accounts_url");
+
+            final String designsCommandUrl = config.getString("server_designs_command_url");
+
+            final String designsQueryUrl = config.getString("server_designs_query_url");
+
+            final String designsWatchUrl = config.getString("server_designs_watch_url");
+
             final Router mainRouter = Router.router(vertx);
 
             mainRouter.route().handler(MDCHandler.create());
             mainRouter.route().handler(LoggerHandler.create(true, LoggerFormat.DEFAULT));
             mainRouter.route().handler(TimeoutHandler.create(30000L));
 
-            configureWatchRoute(config, mainRouter, originPattern);
+            final HttpClientConfig clientConfig = HttpClientConfig.builder()
+                    .withKeepAlive(keepAlive)
+                    .withVerifyHost(verifyHost)
+                    .withKeyStorePath(clientKeyStorePath)
+                    .withKeyStoreSecret(clientKeyStoreSecret)
+                    .withTrustStorePath(clientTrustStorePath)
+                    .withTrustStoreSecret(clientTrustStoreSecret)
+                    .build();
 
-            configureAuthRoute(config, mainRouter);
+            configureWatchRoute(mainRouter, clientConfig, originPattern, designsWatchUrl);
 
-            configureAccountRoute(config, mainRouter);
+            configureAuthRoute(mainRouter, clientConfig, authUrl);
 
-            configureDesignsRoute(config, mainRouter);
+            configureAccountRoute(mainRouter, clientConfig, accountsUrl);
 
-            final HttpServerOptions options = ServerUtil.makeServerOptions(config);
+            configureDesignsRoute(mainRouter, clientConfig, designsCommandUrl, designsQueryUrl);
+
+            final ServerConfig serverConfig = ServerConfig.builder()
+                    .withJksStorePath(jksStorePath)
+                    .withJksStoreSecret(jksStoreSecret)
+                    .build();
+
+            final HttpServerOptions options = Server.makeOptions(serverConfig);
 
             vertx.createHttpServer(options)
                     .requestHandler(mainRouter)
@@ -118,10 +155,10 @@ public class Verticle extends AbstractVerticle {
         }
     }
 
-    private void configureAuthRoute(JsonObject config, Router mainRouter) throws MalformedURLException {
+    private void configureAuthRoute(Router mainRouter, HttpClientConfig clientConfig, String authUrl) throws MalformedURLException {
         final Router authRouter = Router.router(vertx);
 
-        final HttpClient authClient = HttpClientFactory.create(vertx, config.getString("server_auth_url"), config);
+        final HttpClient authClient = HttpClientFactory.create(vertx, authUrl, clientConfig);
 
         authRouter.route("/*")
                 .method(HttpMethod.GET)
@@ -134,10 +171,10 @@ public class Verticle extends AbstractVerticle {
         mainRouter.mountSubRouter("/v1/auth", authRouter);
     }
 
-    private void configureAccountRoute(JsonObject config, Router mainRouter) throws MalformedURLException {
+    private void configureAccountRoute(Router mainRouter, HttpClientConfig clientConfig, String accountsUrl) throws MalformedURLException {
         final Router accountsRouter = Router.router(vertx);
 
-        final HttpClient accountsClient = HttpClientFactory.create(vertx, config.getString("server_accounts_url"), config);
+        final HttpClient accountsClient = HttpClientFactory.create(vertx, accountsUrl, clientConfig);
 
         accountsRouter.route("/*")
                 .method(HttpMethod.GET)
@@ -154,12 +191,12 @@ public class Verticle extends AbstractVerticle {
         mainRouter.mountSubRouter("/v1/accounts", accountsRouter);
     }
 
-    private void configureDesignsRoute(JsonObject config, Router mainRouter) throws MalformedURLException {
+    private void configureDesignsRoute(Router mainRouter, HttpClientConfig clientConfig, String designsCommandUrl, String designsQueryUrl) throws MalformedURLException {
         final Router designsRouter = Router.router(vertx);
 
-        final HttpClient designsCommandClient = HttpClientFactory.create(vertx, config.getString("server_designs_command_url"), config);
+        final HttpClient designsCommandClient = HttpClientFactory.create(vertx, designsCommandUrl, clientConfig);
 
-        final HttpClient designsQueryClient = HttpClientFactory.create(vertx, config.getString("server_designs_query_url"), config);
+        final HttpClient designsQueryClient = HttpClientFactory.create(vertx, designsQueryUrl,clientConfig);
 
         designsRouter.route("/*")
                 .method(HttpMethod.HEAD)
@@ -192,10 +229,10 @@ public class Verticle extends AbstractVerticle {
         mainRouter.mountSubRouter("/v1/designs", designsRouter);
     }
 
-    private void configureWatchRoute(JsonObject config, Router mainRouter, String originPattern) throws MalformedURLException {
+    private void configureWatchRoute(Router mainRouter, HttpClientConfig clientConfig, String originPattern, String designsWatchUrl) throws MalformedURLException {
         final Router designsRouter = Router.router(vertx);
 
-        final HttpClient designsWatchClient = HttpClientFactory.create(vertx, config.getString("server_designs_watch_url"), config);
+        final HttpClient designsWatchClient = HttpClientFactory.create(vertx, designsWatchUrl, clientConfig);
 
         final CorsHandler corsHandler = CorsHandlerFactory.createWithAll(originPattern, asList(COOKIE, AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN, LOCATION), asList(COOKIE, CONTENT_TYPE, X_XSRF_TOKEN, LOCATION));
 

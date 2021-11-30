@@ -1,7 +1,6 @@
 package com.nextbreakpoint.blueprint.designs;
 
 import au.com.dius.pact.provider.junit5.HttpsTestTarget;
-import com.nextbreakpoint.blueprint.common.core.Environment;
 import com.nextbreakpoint.blueprint.common.vertx.CassandraClientFactory;
 import io.vertx.core.json.JsonObject;
 import io.vertx.rxjava.cassandra.CassandraClient;
@@ -21,8 +20,6 @@ public class TestCases {
 
     private final Vertx vertx = new Vertx(io.vertx.core.Vertx.vertx());
 
-    private final Environment environment = Environment.getDefaultEnvironment();
-
     private TestCassandra testCassandra;
 
     private S3Client s3Client;
@@ -36,7 +33,7 @@ public class TestCases {
         RxJavaHooks.setOnIOScheduler(s -> RxHelper.blockingScheduler(vertx));
         RxJavaHooks.setOnNewThreadScheduler(s -> RxHelper.blockingScheduler(vertx));
 
-        CassandraClient session = CassandraClientFactory.create(environment, vertx, createCassandraConfig());
+        CassandraClient session = CassandraClientFactory.create(vertx, createCassandraConfig());
 
         testCassandra = new TestCassandra(session);
 

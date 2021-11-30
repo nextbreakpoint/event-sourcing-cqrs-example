@@ -1,6 +1,5 @@
 package com.nextbreakpoint.blueprint.common.test;
 
-import com.nextbreakpoint.blueprint.common.core.Environment;
 import com.nextbreakpoint.blueprint.common.vertx.HttpClientFactory;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
@@ -16,7 +15,6 @@ import java.net.MalformedURLException;
 import java.util.HashMap;
 
 public class EventSource {
-	private final Environment environment;
 	private final Vertx vertx;
 	private final String serviceUrl;
 	private final JsonObject config;
@@ -29,8 +27,7 @@ public class EventSource {
 	private SSEPacket currentPacket;
 	private Handler<Void> closeHandler;
 
-	public EventSource(Environment environment, Vertx vertx, String serviceUrl, JsonObject config) {
-		this.environment = environment;
+	public EventSource(Vertx vertx, String serviceUrl, JsonObject config) {
 		this.vertx = vertx;
 		this.serviceUrl = serviceUrl;
 		this.config = config;
@@ -45,7 +42,7 @@ public class EventSource {
 		connecting = true;
 
 		if (client == null) {
-			client = HttpClientFactory.create(environment, vertx, serviceUrl, config);
+			client = HttpClientFactory.create(vertx, serviceUrl, config);
 		}
 
 		client.rxRequest(HttpMethod.GET, path)

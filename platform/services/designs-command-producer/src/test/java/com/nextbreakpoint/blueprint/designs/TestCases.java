@@ -55,7 +55,7 @@ public class TestCases {
         RxJavaHooks.setOnIOScheduler(s -> RxHelper.blockingScheduler(vertx));
         RxJavaHooks.setOnNewThreadScheduler(s -> RxHelper.blockingScheduler(vertx));
 
-        KafkaConsumer<String, String> eventsConsumer = KafkaClientFactory.createConsumer(environment, vertx, createConsumerConfig(consumerGroupId));
+        KafkaConsumer<String, String> eventsConsumer = KafkaClientFactory.createConsumer(vertx, createConsumerConfig(consumerGroupId));
 
         eventsPolling = new KafkaTestPolling(eventsConsumer, TestConstants.EVENTS_TOPIC_NAME);
 

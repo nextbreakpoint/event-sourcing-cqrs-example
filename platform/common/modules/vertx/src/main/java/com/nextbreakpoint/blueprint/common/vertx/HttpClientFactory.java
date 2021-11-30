@@ -1,6 +1,5 @@
 package com.nextbreakpoint.blueprint.common.vertx;
 
-import com.nextbreakpoint.blueprint.common.core.Environment;
 import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.net.JksOptions;
@@ -13,13 +12,13 @@ import java.net.URL;
 public class HttpClientFactory {
     private HttpClientFactory() {}
 
-    public static HttpClient create(Environment environment, Vertx vertx, String serviceUrl, JsonObject config) throws MalformedURLException {
-        final Boolean clientKeepAlive = Boolean.parseBoolean(environment.resolve(config.getString("client_keep_alive")));
-        final Boolean verifyHost = Boolean.parseBoolean(environment.resolve(config.getString("client_verify_host")));
-        final String clientKeyStorePath = environment.resolve(config.getString("client_keystore_path"));
-        final String clientKeyStoreSecret = environment.resolve(config.getString("client_keystore_secret"));
-        final String clientTrustStorePath = environment.resolve(config.getString("client_truststore_path"));
-        final String clientTrustStoreSecret = environment.resolve(config.getString("client_truststore_secret"));
+    public static HttpClient create(Vertx vertx, String serviceUrl, JsonObject config) throws MalformedURLException {
+        final Boolean clientKeepAlive = Boolean.parseBoolean(config.getString("client_keep_alive"));
+        final Boolean verifyHost = Boolean.parseBoolean(config.getString("client_verify_host"));
+        final String clientKeyStorePath = config.getString("client_keystore_path");
+        final String clientKeyStoreSecret = config.getString("client_keystore_secret");
+        final String clientTrustStorePath = config.getString("client_truststore_path");
+        final String clientTrustStoreSecret = config.getString("client_truststore_secret");
 
         final URL url = new URL(serviceUrl);
 

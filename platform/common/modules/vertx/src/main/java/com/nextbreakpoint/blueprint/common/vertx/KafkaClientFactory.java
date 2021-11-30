@@ -1,6 +1,5 @@
 package com.nextbreakpoint.blueprint.common.vertx;
 
-import com.nextbreakpoint.blueprint.common.core.Environment;
 import io.vertx.core.json.JsonObject;
 import io.vertx.rxjava.core.Vertx;
 import io.vertx.rxjava.kafka.client.consumer.KafkaConsumer;
@@ -16,16 +15,16 @@ import java.util.Map;
 public class KafkaClientFactory {
     private KafkaClientFactory() {}
 
-    public static <K, V> KafkaProducer<K, V> createProducer(Environment environment, Vertx vertx, JsonObject config) {
-        final String bootstrapServers = environment.resolve(config.getString("kafka_bootstrap_servers", "localhost:9092"));
-        final String keySerializer = environment.resolve(config.getString("kafka_key_serializer", "org.apache.kafka.common.serialization.StringSerializer"));
-        final String valSerializer = environment.resolve(config.getString("kafka_val_serializer", "org.apache.kafka.common.serialization.StringSerializer"));
-        final String acks = environment.resolve(config.getString("kafka_acks", "1"));
+    public static <K, V> KafkaProducer<K, V> createProducer(Vertx vertx, JsonObject config) {
+        final String bootstrapServers = config.getString("kafka_bootstrap_servers", "localhost:9092");
+        final String keySerializer = config.getString("kafka_key_serializer", "org.apache.kafka.common.serialization.StringSerializer");
+        final String valSerializer = config.getString("kafka_val_serializer", "org.apache.kafka.common.serialization.StringSerializer");
+        final String acks = config.getString("kafka_acks", "1");
 
-        final String keystoreLocation = environment.resolve(config.getString("kafka_keystore_location"));
-        final String keystorePassword = environment.resolve(config.getString("kafka_keystore_password"));
-        final String truststoreLocation = environment.resolve(config.getString("kafka_truststore_location"));
-        final String truststorePassword = environment.resolve(config.getString("kafka_truststore_password"));
+        final String keystoreLocation = config.getString("kafka_keystore_location");
+        final String keystorePassword = config.getString("kafka_keystore_password");
+        final String truststoreLocation = config.getString("kafka_truststore_location");
+        final String truststorePassword = config.getString("kafka_truststore_password");
 
         final Map<String, String> producerConfig = new HashMap<>();
         producerConfig.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
@@ -50,18 +49,18 @@ public class KafkaClientFactory {
         return KafkaProducer.create(vertx, producerConfig);
     }
 
-    public static <K, V> KafkaConsumer<K, V> createConsumer(Environment environment, Vertx vertx, JsonObject config) {
-        final String bootstrapServers = environment.resolve(config.getString("kafka_bootstrap_servers", "localhost:9092"));
-        final String keyDeserializer = environment.resolve(config.getString("kafka_key_serializer", "org.apache.kafka.common.serialization.StringDeserializer"));
-        final String valDeserializer = environment.resolve(config.getString("kafka_val_serializer", "org.apache.kafka.common.serialization.StringDeserializer"));
-        final String groupId = environment.resolve(config.getString("kafka_group_id", "test"));
-        final String autoOffsetReset = environment.resolve(config.getString("kafka_auto_offset_reset", "earliest"));
-        final String enableAutoCommit = environment.resolve(config.getString("kafka_enable_auto_commit", "false"));
+    public static <K, V> KafkaConsumer<K, V> createConsumer(Vertx vertx, JsonObject config) {
+        final String bootstrapServers = config.getString("kafka_bootstrap_servers", "localhost:9092");
+        final String keyDeserializer = config.getString("kafka_key_serializer", "org.apache.kafka.common.serialization.StringDeserializer");
+        final String valDeserializer = config.getString("kafka_val_serializer", "org.apache.kafka.common.serialization.StringDeserializer");
+        final String groupId = config.getString("kafka_group_id", "test");
+        final String autoOffsetReset = config.getString("kafka_auto_offset_reset", "earliest");
+        final String enableAutoCommit = config.getString("kafka_enable_auto_commit", "false");
 
-        final String keystoreLocation = environment.resolve(config.getString("kafka_keystore_location"));
-        final String keystorePassword = environment.resolve(config.getString("kafka_keystore_password"));
-        final String truststoreLocation = environment.resolve(config.getString("kafka_truststore_location"));
-        final String truststorePassword = environment.resolve(config.getString("kafka_truststore_password"));
+        final String keystoreLocation = config.getString("kafka_keystore_location");
+        final String keystorePassword = config.getString("kafka_keystore_password");
+        final String truststoreLocation = config.getString("kafka_truststore_location");
+        final String truststorePassword = config.getString("kafka_truststore_password");
 
         final Map<String, String> consumerConfig = new HashMap<>();
         consumerConfig.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);

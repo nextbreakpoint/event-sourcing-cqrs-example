@@ -1,7 +1,6 @@
 package com.nextbreakpoint.blueprint.authentication.handlers;
 
 import com.nextbreakpoint.blueprint.common.core.Authority;
-import com.nextbreakpoint.blueprint.common.core.Environment;
 import com.nextbreakpoint.blueprint.common.vertx.Authentication;
 import com.nextbreakpoint.blueprint.common.vertx.Failure;
 import com.nextbreakpoint.blueprint.common.vertx.JWTProviderFactory;
@@ -45,18 +44,17 @@ public class GitHubSignInHandler implements Handler<RoutingContext> {
     private final String cookieDomain;
     private final String webUrl;
 
-    public GitHubSignInHandler(Environment environment, Vertx vertx, JsonObject config, Router router) throws MalformedURLException {
+    public GitHubSignInHandler(Vertx vertx, JsonObject config, Router router) throws MalformedURLException {
         adminUsers = config.getJsonArray("admin_users")
                 .stream()
                 .map(x -> (String) x)
-                .map(x -> environment.resolve(x))
                 .collect(Collectors.toSet());
-        cookieDomain = environment.resolve(config.getString("cookie_domain"));
-        webUrl = environment.resolve(config.getString("client_web_url"));
-        accountsClient = WebClientFactory.create(environment, vertx, environment.resolve(config.getString("server_accounts_url")), config);
-        githubClient = WebClientFactory.create(environment, vertx, environment.resolve(config.getString("github_url")));
-        jwtProvider = JWTProviderFactory.create(environment, vertx, config);
-        oauthHandler = createOAuth2Handler(environment, vertx, config, router);
+        cookieDomain = config.getString("cookie_domain");
+        webUrl = config.getString("client_web_url");
+        accountsClient = WebClientFactory.create(vertx, config.getString("server_accounts_url"), config);
+        githubClient = WebClientFactory.create(vertx, config.getString("github_url"));
+        jwtProvider = JWTProviderFactory.create(vertx, config);
+        oauthHandler = createOAuth2Handler(vertx, config, router);
     }
 
     @Override
@@ -207,14 +205,14 @@ public class GitHubSignInHandler implements Handler<RoutingContext> {
                 .end();
     }
 
-    protected OAuth2AuthHandler createOAuth2Handler(Environment environment, Vertx vetx, JsonObject config, Router router) {
-        final String clientId = environment.resolve(config.getString("github_client_id"));
-        final String clientSecret = environment.resolve(config.getString("github_client_secret"));
-        final String oauthLoginUrl = environment.resolve(config.getString("oauth_login_url"));
-        final String oauthTokenPath = environment.resolve(config.getString("oauth_token_path"));
-        final String oauthAuthorisePath = environment.resolve(config.getString("oauth_authorize_path"));
-        final String oauthAuthority = environment.resolve(config.getString("oauth_authority"));
-        final String authUrl = environment.resolve(config.getString("client_auth_url"));
+    protected OAuth2AuthHandler createOAuth2Handler(Vertx vetx, JsonObject config, Router router) {
+        final String clientId = config.getString("github_client_id");
+        final String clientSecret = config.getString("github_client_secret");
+        final String oauthLoginUrl = config.getString("oauth_login_url");
+        final String oauthTokenPath = config.getString("oauth_token_path");
+        final String oauthAuthorisePath = config.getString("oauth_authorize_path");
+        final String oauthAuthority = config.getString("oauth_authority");
+        final String authUrl = config.getString("client_auth_url");
 
         final OAuth2Options oauth2Options = new OAuth2Options()
                 .setClientID(clientId)

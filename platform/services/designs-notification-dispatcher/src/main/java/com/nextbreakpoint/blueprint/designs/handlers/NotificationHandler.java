@@ -1,4 +1,4 @@
-package com.nextbreakpoint.blueprint.designs.common;
+package com.nextbreakpoint.blueprint.designs.handlers;
 
 import com.nextbreakpoint.blueprint.common.vertx.Failure;
 import com.nextbreakpoint.blueprint.designs.model.DesignChangedNotification;
@@ -14,29 +14,21 @@ import io.vertx.rxjava.ext.web.RoutingContext;
 
 import java.util.*;
 
-public class NotificationDispatcher implements Handler<RoutingContext> {
-    private final Logger logger = LoggerFactory.getLogger(NotificationDispatcher.class.getName());
+public class NotificationHandler implements Handler<RoutingContext> {
+    private final Logger logger = LoggerFactory.getLogger(NotificationHandler.class.getName());
 
     private Map<String, Set<Watcher>> watcherMap = new HashMap<>();
 
     private final Vertx vertx;
 
-    protected NotificationDispatcher(Vertx vertx) {
+    protected NotificationHandler(Vertx vertx) {
         this.vertx = vertx;
 
         vertx.eventBus().consumer("notifications", this::handleMessage);
     }
 
-    private void handleMessage(Message<Object> message) {
-        try {
-            dispatchNotification(Json.decodeValue((String) message.body(), DesignChangedNotification.class));
-        } catch (Exception e) {
-            logger.error("Failed to process event", e);
-        }
-    }
-
-    public static NotificationDispatcher create(Vertx vertx) {
-        return new NotificationDispatcher(vertx);
+    public static NotificationHandler create(Vertx vertx) {
+        return new NotificationHandler(vertx);
     }
 
     public void handle(RoutingContext routingContext) {
@@ -44,6 +36,14 @@ public class NotificationDispatcher implements Handler<RoutingContext> {
             createWatcher(routingContext);
         } catch (Exception e) {
             routingContext.fail(Failure.requestFailed(e));
+        }
+    }
+
+    private void handleMessage(Message<Object> message) {
+        try {
+            dispatchNotification(Json.decodeValue((String) message.body(), DesignChangedNotification.class));
+        } catch (Exception e) {
+            logger.error("Failed to process event", e);
         }
     }
 

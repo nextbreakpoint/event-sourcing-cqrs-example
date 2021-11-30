@@ -71,8 +71,10 @@ public class Verticle extends AbstractVerticle {
     }
 
     private static JsonObject loadConfig(String configPath) throws IOException {
+        final Environment environment = Environment.getDefaultEnvironment();
+
         try (FileInputStream stream = new FileInputStream(configPath)) {
-            return new JsonObject(IOUtils.toString(stream));
+            return new JsonObject(environment.resolve(IOUtils.toString(stream)));
         }
     }
 
@@ -87,15 +89,13 @@ public class Verticle extends AbstractVerticle {
         try {
             final JsonObject config = vertx.getOrCreateContext().config();
 
-            final Environment environment = Environment.getDefaultEnvironment();
-
             final Executor executor = Executors.newSingleThreadExecutor();
 
-            final int port = Integer.parseInt(environment.resolve(config.getString("host_port")));
+            final int port = Integer.parseInt(config.getString("host_port"));
 
-            final String webUrl = environment.resolve(config.getString("client_web_url"));
+            final String webUrl = config.getString("client_web_url");
 
-            final String originPattern = environment.resolve(config.getString("origin_pattern"));
+            final String originPattern = config.getString("origin_pattern");
 
             final Router mainRouter = Router.router(vertx);
 
@@ -112,9 +112,9 @@ public class Verticle extends AbstractVerticle {
 
             mainRouter.route("/metrics").handler(PrometheusScrapingHandler.create());
 
-            final Handler<RoutingContext> signinHandler = createSignInHandler(environment, config, mainRouter);
+            final Handler<RoutingContext> signinHandler = createSignInHandler(config, mainRouter);
 
-            final Handler<RoutingContext> signoutHandler = createSignOutHandler(environment, config, mainRouter);
+            final Handler<RoutingContext> signoutHandler = createSignOutHandler(config, mainRouter);
 
             final Handler<RoutingContext> apiV1DocsHandler = new OpenApiHandler(vertx.getDelegate(), executor, "api-v1.yaml");
 
@@ -142,7 +142,7 @@ public class Verticle extends AbstractVerticle {
 
                         mainRouter.route().failureHandler(routingContext -> redirectOnFailure(routingContext, webUrl));
 
-                        final HttpServerOptions options = ServerUtil.makeServerOptions(environment, config);
+                        final HttpServerOptions options = ServerUtil.makeServerOptions(config);
 
                         vertx.createHttpServer(options)
                                 .requestHandler(mainRouter)
@@ -165,11 +165,11 @@ public class Verticle extends AbstractVerticle {
         ResponseHelper.redirectToError(routingContext, statusCode -> webUrl + "/error/" + statusCode);
     }
 
-    protected Handler<RoutingContext> createSignInHandler(Environment environment, JsonObject config, Router router) throws MalformedURLException {
-        return new GitHubSignInHandler(environment, vertx, config, router);
+    protected Handler<RoutingContext> createSignInHandler(JsonObject config, Router router) throws MalformedURLException {
+        return new GitHubSignInHandler(vertx, config, router);
     }
 
-    protected Handler<RoutingContext> createSignOutHandler(Environment environment, JsonObject config, Router router) throws MalformedURLException {
-        return new GitHubSignOutHandler(environment, vertx, config, router);
+    protected Handler<RoutingContext> createSignOutHandler(JsonObject config, Router router) throws MalformedURLException {
+        return new GitHubSignOutHandler(vertx, config, router);
     }
 }

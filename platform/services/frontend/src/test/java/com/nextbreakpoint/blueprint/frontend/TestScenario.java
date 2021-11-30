@@ -22,7 +22,9 @@ public class TestScenario {
 
   private GenericContainer service = new GenericContainer(DockerImageName.parse("integration/" + serviceName + ":" + version))
           .withEnv("JAEGER_SERVICE_NAME", serviceName)
-          .withEnv("KEYSTORE_SECRET", "secret")
+          .withEnv("SECRETS_PATH", "/secrets")
+          .withEnv("CONFIG_PATH", "/etc/config.json")
+          .withEnv("PORT", String.valueOf(PORT))
           .withFileSystemBind("../../secrets/ca_cert.pem", "/secrets/ca_cert.pem", BindMode.READ_ONLY)
           .withFileSystemBind("../../secrets/server_cert.pem", "/secrets/server_cert.pem", BindMode.READ_ONLY)
           .withFileSystemBind("../../secrets/server_key.pem", "/secrets/server_key.pem", BindMode.READ_ONLY)
@@ -30,7 +32,7 @@ public class TestScenario {
           .withExposedPorts(PORT)
           .withNetwork(network)
           .withNetworkAliases(serviceName)
-          .waitingFor(Wait.forLogMessage(".* Service listening on port " + PORT + ".*", 1).withStartupTimeout(Duration.ofSeconds(20)));
+          .waitingFor(Wait.forLogMessage("Service listening on port " + PORT + ".*", 1).withStartupTimeout(Duration.ofSeconds(20)));
 
   public void before() {
     if (buildImages) {

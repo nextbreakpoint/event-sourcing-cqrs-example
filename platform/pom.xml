@@ -654,7 +654,7 @@
                 <repository>
                     <id>nexus</id>
                     <name>Nexus</name>
-                    <url>${nexus.host}:${nexus.port}/repository/maven-internal/</url>
+                    <url>http://${nexus.host}:${nexus.port}/repository/maven-internal/</url>
                 </repository>
             </distributionManagement>
         </profile>

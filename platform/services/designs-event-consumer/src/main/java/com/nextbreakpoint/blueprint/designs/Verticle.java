@@ -86,8 +86,10 @@ public class Verticle extends AbstractVerticle {
     }
 
     private static JsonObject loadConfig(String configPath) throws IOException {
+        final Environment environment = Environment.getDefaultEnvironment();
+
         try (FileInputStream stream = new FileInputStream(configPath)) {
-            return new JsonObject(IOUtils.toString(stream));
+            return new JsonObject(environment.resolve(IOUtils.toString(stream)));
         }
     }
 
@@ -128,33 +130,31 @@ public class Verticle extends AbstractVerticle {
         try {
             final JsonObject config = vertx.getOrCreateContext().config();
 
-            final Environment environment = Environment.getDefaultEnvironment();
-
             final Executor executor = Executors.newSingleThreadExecutor();
 
-            final int port = Integer.parseInt(environment.resolve(config.getString("host_port")));
+            final int port = Integer.parseInt(config.getString("host_port"));
 
-            final String originPattern = environment.resolve(config.getString("origin_pattern"));
+            final String originPattern = config.getString("origin_pattern");
 
-            final String renderTopic = environment.resolve(config.getString("render_topic"));
+            final String renderTopic = config.getString("render_topic");
 
-            final String eventsTopic = environment.resolve(config.getString("events_topic"));
+            final String eventsTopic = config.getString("events_topic");
 
-            final String messageSource = environment.resolve(config.getString("message_source"));
+            final String messageSource = config.getString("message_source");
 
-            final String keyspace = environment.resolve(config.getString("cassandra_keyspace"));
+            final String keyspace = config.getString("cassandra_keyspace");
 
-            final KafkaProducer<String, String> kafkaProducer = KafkaClientFactory.createProducer(environment, vertx, config);
+            final KafkaProducer<String, String> kafkaProducer = KafkaClientFactory.createProducer(vertx, config);
 
             final JsonObject consumerConfig1 = new JsonObject(config.getMap());
             consumerConfig1.put("kafka_group_id", config.getValue("kafka_group_id", "test") + "-1");
-            final KafkaConsumer<String, String> kafkaConsumer1 = KafkaClientFactory.createConsumer(environment, vertx, consumerConfig1);
+            final KafkaConsumer<String, String> kafkaConsumer1 = KafkaClientFactory.createConsumer(vertx, consumerConfig1);
 
             final JsonObject consumerConfig2 = new JsonObject(config.getMap());
             consumerConfig2.put("kafka_group_id", config.getValue("kafka_group_id", "test") + "-2");
-            final KafkaConsumer<String, String> kafkaConsumer2 = KafkaClientFactory.createConsumer(environment, vertx, consumerConfig2);
+            final KafkaConsumer<String, String> kafkaConsumer2 = KafkaClientFactory.createConsumer(vertx, consumerConfig2);
 
-            final Supplier<CassandraClient> supplier = () -> CassandraClientFactory.create(environment, vertx, config);
+            final Supplier<CassandraClient> supplier = () -> CassandraClientFactory.create(vertx, config);
 
             final Store store = new CassandraStore(keyspace, supplier);
 
@@ -227,7 +227,7 @@ public class Verticle extends AbstractVerticle {
 
                         mainRouter.route().failureHandler(ResponseHelper::sendFailure);
 
-                        final HttpServerOptions options = ServerUtil.makeServerOptions(environment, config);
+                        final HttpServerOptions options = ServerUtil.makeServerOptions(config);
 
                         vertx.createHttpServer(options)
                                 .requestHandler(mainRouter)

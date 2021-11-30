@@ -82,8 +82,10 @@ public class Verticle extends AbstractVerticle {
     }
 
     private static JsonObject loadConfig(String configPath) throws IOException {
+        final Environment environment = Environment.getDefaultEnvironment();
+
         try (FileInputStream stream = new FileInputStream(configPath)) {
-            return new JsonObject(IOUtils.toString(stream));
+            return new JsonObject(environment.resolve(IOUtils.toString(stream)));
         }
     }
 
@@ -115,35 +117,33 @@ public class Verticle extends AbstractVerticle {
         try {
             final JsonObject config = vertx.getOrCreateContext().config();
 
-            final Environment environment = Environment.getDefaultEnvironment();
-
             final Executor executor = Executors.newSingleThreadExecutor();
 
             final int poolSize = Runtime.getRuntime().availableProcessors();
 
-            final long maxExecuteTime = Integer.parseInt(environment.resolve(config.getString("max_execution_time_in_millis", "2000")));
+            final long maxExecuteTime = Integer.parseInt(config.getString("max_execution_time_in_millis", "5000000"));
 
             final WorkerExecutor workerExecutor = vertx.createSharedWorkerExecutor("worker", poolSize, maxExecuteTime, TimeUnit.MICROSECONDS);
 
-            final int port = Integer.parseInt(environment.resolve(config.getString("host_port")));
+            final int port = Integer.parseInt(config.getString("host_port"));
 
-            final String originPattern = environment.resolve(config.getString("origin_pattern"));
+            final String originPattern = config.getString("origin_pattern");
 
-            final String s3Endpoint = environment.resolve(config.getString("s3_endpoint"));
+            final String s3Endpoint = config.getString("s3_endpoint");
 
-            final String s3Bucket = environment.resolve(config.getString("s3_bucket"));
+            final String s3Bucket = config.getString("s3_bucket");
 
-            final String s3Region = environment.resolve(config.getString("s3_region", "eu-west-1"));
+            final String s3Region = config.getString("s3_region", "eu-west-1");
 
-            final String messageSource = environment.resolve(config.getString("message_source"));
+            final String messageSource = config.getString("message_source");
 
-            final String renderTopic = environment.resolve(config.getString("render_topic"));
+            final String renderTopic = config.getString("render_topic");
 
-            final String eventsTopic = environment.resolve(config.getString("events_topic"));
+            final String eventsTopic = config.getString("events_topic");
 
-            final KafkaProducer<String, String> kafkaProducer = KafkaClientFactory.createProducer(environment, vertx, config);
+            final KafkaProducer<String, String> kafkaProducer = KafkaClientFactory.createProducer(vertx, config);
 
-            final KafkaConsumer<String, String> kafkaConsumer = KafkaClientFactory.createConsumer(environment, vertx, config);
+            final KafkaConsumer<String, String> kafkaConsumer = KafkaClientFactory.createConsumer(vertx, config);
 
             final AwsCredentialsProvider credentialsProvider = AwsCredentialsProviderChain.of(DefaultCredentialsProvider.create());
 
@@ -199,7 +199,7 @@ public class Verticle extends AbstractVerticle {
 
                         mainRouter.route().failureHandler(ResponseHelper::sendFailure);
 
-                        final HttpServerOptions options = ServerUtil.makeServerOptions(environment, config);
+                        final HttpServerOptions options = ServerUtil.makeServerOptions(config);
 
                         vertx.createHttpServer(options)
                                 .requestHandler(mainRouter)

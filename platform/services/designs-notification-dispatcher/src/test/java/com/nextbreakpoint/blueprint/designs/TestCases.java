@@ -44,11 +44,11 @@ public class TestCases {
         RxJavaHooks.setOnIOScheduler(s -> RxHelper.blockingScheduler(vertx));
         RxJavaHooks.setOnNewThreadScheduler(s -> RxHelper.blockingScheduler(vertx));
 
-        KafkaProducer<String, String> producer = KafkaClientFactory.createProducer(environment, vertx, createProducerConfig());
+        KafkaProducer<String, String> producer = KafkaClientFactory.createProducer(vertx, createProducerConfig());
 
         eventEmitter = new KafkaTestEmitter(producer, TestConstants.EVENTS_TOPIC_NAME);
 
-        eventSource = new EventSource(environment, vertx, getServiceUrl(), getEventSourceConfig());
+        eventSource = new EventSource(vertx, getServiceUrl(), getEventSourceConfig());
     }
 
     public void after() {

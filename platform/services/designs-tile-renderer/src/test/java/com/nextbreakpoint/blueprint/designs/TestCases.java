@@ -1,6 +1,5 @@
 package com.nextbreakpoint.blueprint.designs;
 
-import com.nextbreakpoint.blueprint.common.core.Environment;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
@@ -34,8 +33,6 @@ public class TestCases {
 
     private final Vertx vertx = new Vertx(io.vertx.core.Vertx.vertx());
 
-    private final Environment environment = Environment.getDefaultEnvironment();
-
     private KafkaTestPolling eventsPolling;
     private KafkaTestPolling renderPolling;
     private KafkaTestEmitter eventsEmitter;
@@ -54,11 +51,11 @@ public class TestCases {
         RxJavaHooks.setOnIOScheduler(s -> RxHelper.blockingScheduler(vertx));
         RxJavaHooks.setOnNewThreadScheduler(s -> RxHelper.blockingScheduler(vertx));
 
-        KafkaProducer<String, String> producer = KafkaClientFactory.createProducer(environment, vertx, createProducerConfig());
+        KafkaProducer<String, String> producer = KafkaClientFactory.createProducer(vertx, createProducerConfig());
 
-        KafkaConsumer<String, String> eventsConsumer = KafkaClientFactory.createConsumer(environment, vertx, createConsumerConfig(consumerGroupId));
+        KafkaConsumer<String, String> eventsConsumer = KafkaClientFactory.createConsumer(vertx, createConsumerConfig(consumerGroupId));
 
-        KafkaConsumer<String, String> renderConsumer = KafkaClientFactory.createConsumer(environment, vertx, createConsumerConfig(consumerGroupId));
+        KafkaConsumer<String, String> renderConsumer = KafkaClientFactory.createConsumer(vertx, createConsumerConfig(consumerGroupId));
 
         eventsPolling = new KafkaTestPolling(eventsConsumer, TestConstants.EVENTS_TOPIC_NAME);
         renderPolling = new KafkaTestPolling(renderConsumer, TestConstants.RENDER_TOPIC_NAME);

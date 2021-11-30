@@ -79,8 +79,10 @@ public class Verticle extends AbstractVerticle {
     }
 
     private static JsonObject loadConfig(String configPath) throws IOException {
+        final Environment environment = Environment.getDefaultEnvironment();
+
         try (FileInputStream stream = new FileInputStream(configPath)) {
-            return new JsonObject(IOUtils.toString(stream));
+            return new JsonObject(environment.resolve(IOUtils.toString(stream)));
         }
     }
 
@@ -95,23 +97,21 @@ public class Verticle extends AbstractVerticle {
         try {
             final JsonObject config = vertx.getOrCreateContext().config();
 
-            final Environment environment = Environment.getDefaultEnvironment();
-
             final Executor executor = Executors.newSingleThreadExecutor();
 
-            final int port = Integer.parseInt(environment.resolve(config.getString("host_port")));
+            final int port = Integer.parseInt(config.getString("host_port"));
 
-            final String originPattern = environment.resolve(config.getString("origin_pattern"));
+            final String originPattern = config.getString("origin_pattern");
 
-            final JWTAuth jwtProvider = JWTProviderFactory.create(environment, vertx, config);
+            final JWTAuth jwtProvider = JWTProviderFactory.create(vertx, config);
 
-            final String s3Endpoint = environment.resolve(config.getString("s3_endpoint"));
+            final String s3Endpoint = config.getString("s3_endpoint");
 
-            final String s3Bucket = environment.resolve(config.getString("s3_bucket"));
+            final String s3Bucket = config.getString("s3_bucket");
 
-            final String s3Region = environment.resolve(config.getString("s3_region", "eu-west-1"));
+            final String s3Region = config.getString("s3_region", "eu-west-1");
 
-            final Supplier<CassandraClient> supplier = () -> CassandraClientFactory.create(environment, vertx, config);
+            final Supplier<CassandraClient> supplier = () -> CassandraClientFactory.create(vertx, config);
 
             final AwsCredentialsProvider credentialsProvider = AwsCredentialsProviderChain.of(DefaultCredentialsProvider.create());
 
@@ -174,7 +174,7 @@ public class Verticle extends AbstractVerticle {
 
                         mainRouter.route().failureHandler(ResponseHelper::sendFailure);
 
-                        final HttpServerOptions options = ServerUtil.makeServerOptions(environment, config);
+                        final HttpServerOptions options = ServerUtil.makeServerOptions(config);
 
                         vertx.createHttpServer(options)
                                 .requestHandler(mainRouter)

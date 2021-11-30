@@ -1,6 +1,5 @@
 package com.nextbreakpoint.blueprint.authentication.handlers;
 
-import com.nextbreakpoint.blueprint.common.core.Environment;
 import com.nextbreakpoint.blueprint.common.vertx.Authentication;
 import com.nextbreakpoint.blueprint.common.vertx.Failure;
 import io.vertx.core.Handler;
@@ -16,9 +15,9 @@ public class GitHubSignOutHandler implements Handler<RoutingContext> {
     private final String cookieDomain;
     private final String webUrl;
 
-    public GitHubSignOutHandler(Environment environment, Vertx vertx, JsonObject config, Router router) throws MalformedURLException {
-        cookieDomain = environment.resolve(config.getString("cookie_domain"));
-        webUrl = environment.resolve(config.getString("client_web_url"));
+    public GitHubSignOutHandler(Vertx vertx, JsonObject config, Router router) throws MalformedURLException {
+        cookieDomain = config.getString("cookie_domain");
+        webUrl = config.getString("client_web_url");
     }
 
     @Override

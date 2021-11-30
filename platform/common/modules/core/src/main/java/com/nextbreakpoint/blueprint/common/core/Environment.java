@@ -38,9 +38,12 @@ public class Environment {
     }
 
     private String evaluate(String expression) {
-        final String value = getEnv.apply(expression.toUpperCase());
+        String value = getEnv.apply(expression.toUpperCase());
         if (value == null) {
-            return getProperty.apply(expression.toLowerCase());
+            value = getProperty.apply(expression.toLowerCase());
+        }
+        if (value == null) {
+            throw new RuntimeException("Can't resolve expression " + expression);
         }
         return value;
     }

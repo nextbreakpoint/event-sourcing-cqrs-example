@@ -2,7 +2,7 @@ package com.nextbreakpoint.blueprint.designs;
 
 import com.nextbreakpoint.blueprint.common.core.*;
 import com.nextbreakpoint.blueprint.common.vertx.*;
-import com.nextbreakpoint.blueprint.designs.common.NotificationDispatcher;
+import com.nextbreakpoint.blueprint.designs.handlers.NotificationHandler;
 import com.nextbreakpoint.blueprint.designs.controllers.DesignAggregateUpdateCompletedController;
 import com.nextbreakpoint.blueprint.designs.controllers.TileAggregateUpdateCompletedController;
 import com.nextbreakpoint.blueprint.designs.handlers.WatchHandler;
@@ -77,8 +77,10 @@ public class Verticle extends AbstractVerticle {
     }
 
     private static JsonObject loadConfig(String configPath) throws IOException {
+        final Environment environment = Environment.getDefaultEnvironment();
+
         try (FileInputStream stream = new FileInputStream(configPath)) {
-            return new JsonObject(IOUtils.toString(stream));
+            return new JsonObject(environment.resolve(IOUtils.toString(stream)));
         }
     }
 
@@ -110,24 +112,22 @@ public class Verticle extends AbstractVerticle {
         try {
             final JsonObject config = vertx.getOrCreateContext().config();
 
-            final Environment environment = Environment.getDefaultEnvironment();
-
             final Executor executor = Executors.newSingleThreadExecutor();
 
-            final int port = Integer.parseInt(environment.resolve(config.getString("host_port")));
+            final int port = Integer.parseInt(config.getString("host_port"));
 
-            final String originPattern = environment.resolve(config.getString("origin_pattern"));
+            final String originPattern = config.getString("origin_pattern");
 
-            final String eventsTopic = environment.resolve(config.getString("events_topic"));
+            final String eventsTopic = config.getString("events_topic");
 
-            final JWTAuth jwtProvider = JWTProviderFactory.create(environment, vertx, config);
+            final JWTAuth jwtProvider = JWTProviderFactory.create(vertx, config);
 
-            final KafkaConsumer<String, String> kafkaConsumer = KafkaClientFactory.createConsumer(environment, vertx, config);
+            final KafkaConsumer<String, String> kafkaConsumer = KafkaClientFactory.createConsumer(vertx, config);
 
             final Router mainRouter = Router.router(vertx);
 
-            final String consulHost = environment.resolve(config.getString("consul_host"));
-            final Integer consulPort = Integer.parseInt(environment.resolve(config.getString("consul_port")));
+            final String consulHost = config.getString("consul_host");
+            final Integer consulPort = Integer.parseInt(config.getString("consul_port"));
 
             final JsonObject configuration = new JsonObject()
                     .put("host", consulHost)
@@ -144,7 +144,7 @@ public class Verticle extends AbstractVerticle {
 
             final Handler<RoutingContext> watchHandler = new AccessHandler(jwtProvider, new WatchHandler(serviceDiscovery), onAccessDenied, asList(ANONYMOUS, ADMIN, GUEST));
 
-            final Handler<RoutingContext> sseHandler = new AccessHandler(jwtProvider, NotificationDispatcher.create(vertx), onAccessDenied, asList(ANONYMOUS, ADMIN, GUEST));
+            final Handler<RoutingContext> sseHandler = new AccessHandler(jwtProvider, NotificationHandler.create(vertx), onAccessDenied, asList(ANONYMOUS, ADMIN, GUEST));
 
             final Map<String, BlockingHandler<InputMessage>> messageHandlers = new HashMap<>();
 
@@ -200,7 +200,7 @@ public class Verticle extends AbstractVerticle {
 
                         mainRouter.route().failureHandler(ResponseHelper::sendFailure);
 
-                        final HttpServerOptions options = ServerUtil.makeServerOptions(environment, config);
+                        final HttpServerOptions options = ServerUtil.makeServerOptions(config);
 
                         vertx.createHttpServer(options)
                                 .requestHandler(mainRouter)

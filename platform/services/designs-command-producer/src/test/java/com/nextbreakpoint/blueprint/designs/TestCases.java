@@ -105,6 +105,8 @@ public class TestCases {
                 .withBootstrapServers(scenario.getKafkaHost() + ":" + scenario.getKafkaPort())
                 .withKeyDeserializer("org.apache.kafka.common.serialization.StringDeserializer")
                 .withValueDeserializer("org.apache.kafka.common.serialization.StringDeserializer")
+                .withAutoOffsetReset("earliest")
+                .withEnableAutoCommit("false")
                 .withGroupId(groupId)
                 .build();
     }

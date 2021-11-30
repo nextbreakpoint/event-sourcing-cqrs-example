@@ -4,7 +4,7 @@ set -e
 
 export REPOSITORY=${1:-integration}
 export VERSION=${2:-1.0.0}
-export BUILD="true"
+export BUILD="false"
 export TEST="true"
 
 export PACTBROKER_HOST=localhost

@@ -42,7 +42,7 @@ public class TestCases {
         RxJavaHooks.setOnIOScheduler(s -> RxHelper.blockingScheduler(vertx));
         RxJavaHooks.setOnNewThreadScheduler(s -> RxHelper.blockingScheduler(vertx));
 
-        KafkaProducer<String, String> producer = KafkaClientFactory.createProducer(vertx, createProducerConfig());
+        KafkaProducer<String, String> producer = KafkaClientFactory.createProducer(vertx, createProducerConfig("integration"));
 
         eventEmitter = new KafkaTestEmitter(producer, TestConstants.EVENTS_TOPIC_NAME);
 
@@ -73,10 +73,12 @@ public class TestCases {
     }
 
     @NotNull
-    public KafkaProducerConfig createProducerConfig() {
+    public KafkaProducerConfig createProducerConfig(String clientId) {
         return KafkaProducerConfig.builder()
                 .withBootstrapServers(scenario.getKafkaHost() + ":" + scenario.getKafkaPort())
-                .withClientId("integration")
+                .withKeySerializer("org.apache.kafka.common.serialization.StringSerializer")
+                .withValueSerializer("org.apache.kafka.common.serialization.StringSerializer")
+                .withClientId(clientId)
                 .withKafkaAcks("1")
                 .build();
     }

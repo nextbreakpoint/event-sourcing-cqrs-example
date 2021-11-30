@@ -10,6 +10,7 @@ import com.nextbreakpoint.blueprint.common.events.DesignUpdateRequested;
 import com.nextbreakpoint.blueprint.common.test.KafkaTestPolling;
 import com.nextbreakpoint.blueprint.common.vertx.KafkaClientFactory;
 import com.nextbreakpoint.blueprint.common.vertx.KafkaConsumerConfig;
+import com.nextbreakpoint.blueprint.common.vertx.KafkaProducerConfig;
 import io.vertx.core.json.Json;
 import io.vertx.rxjava.core.RxHelper;
 import io.vertx.rxjava.core.Vertx;
@@ -99,10 +100,12 @@ public class TestCases {
     }
 
     @NotNull
-    public KafkaConsumerConfig createConsumerConfig(String group) {
+    public KafkaConsumerConfig createConsumerConfig(String groupId) {
         return KafkaConsumerConfig.builder()
                 .withBootstrapServers(scenario.getKafkaHost() + ":" + scenario.getKafkaPort())
-                .withGroupId(group)
+                .withKeyDeserializer("org.apache.kafka.common.serialization.StringDeserializer")
+                .withValueDeserializer("org.apache.kafka.common.serialization.StringDeserializer")
+                .withGroupId(groupId)
                 .build();
     }
 

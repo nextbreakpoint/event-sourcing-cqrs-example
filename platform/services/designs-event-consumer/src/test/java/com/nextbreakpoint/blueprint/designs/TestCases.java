@@ -53,7 +53,7 @@ public class TestCases {
 
         testCassandra = new TestCassandra(session);
 
-        KafkaProducer<String, String> producer = KafkaClientFactory.createProducer(vertx, createProducerConfig());
+        KafkaProducer<String, String> producer = KafkaClientFactory.createProducer(vertx, createProducerConfig("integration"));
 
         KafkaConsumer<String, String> eventsConsumer = KafkaClientFactory.createConsumer(vertx, createConsumerConfig(consumerGroupId));
 
@@ -102,18 +102,22 @@ public class TestCases {
     }
 
     @NotNull
-    public KafkaConsumerConfig createConsumerConfig(String group) {
+    public KafkaConsumerConfig createConsumerConfig(String groupId) {
         return KafkaConsumerConfig.builder()
                 .withBootstrapServers(scenario.getKafkaHost() + ":" + scenario.getKafkaPort())
-                .withGroupId(group)
+                .withKeyDeserializer("org.apache.kafka.common.serialization.StringDeserializer")
+                .withValueDeserializer("org.apache.kafka.common.serialization.StringDeserializer")
+                .withGroupId(groupId)
                 .build();
     }
 
     @NotNull
-    public KafkaProducerConfig createProducerConfig() {
+    public KafkaProducerConfig createProducerConfig(String clientId) {
         return KafkaProducerConfig.builder()
                 .withBootstrapServers(scenario.getKafkaHost() + ":" + scenario.getKafkaPort())
-                .withClientId("integration")
+                .withKeySerializer("org.apache.kafka.common.serialization.StringSerializer")
+                .withValueSerializer("org.apache.kafka.common.serialization.StringSerializer")
+                .withClientId(clientId)
                 .withKafkaAcks("1")
                 .build();
     }

@@ -1,7 +1,7 @@
-package com.nextbreakpoint.blueprint.designs.common;
+package com.nextbreakpoint.blueprint.designs.aggregate;
 
-import com.datastax.oss.driver.api.core.cql.Row;
 import com.nextbreakpoint.blueprint.common.core.Checksum;
+import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.events.DesignDeleteRequested;
 import com.nextbreakpoint.blueprint.common.events.DesignInsertRequested;
 import com.nextbreakpoint.blueprint.common.events.DesignUpdateRequested;
@@ -10,44 +10,43 @@ import com.nextbreakpoint.blueprint.designs.model.DesignAccumulator;
 import com.nextbreakpoint.blueprint.designs.model.Tiles;
 import io.vertx.core.json.Json;
 
-import java.time.Instant;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public class DesignAggregate {
+public class DesignAggregateStrategy {
     private Tiles TILES_EMPTY = new Tiles(0, 0, Collections.emptySet(), Collections.emptySet());
 
-    public Optional<DesignAccumulator> mergeEvents(DesignAccumulator accumulator, List<Row> rows) {
+    public Optional<DesignAccumulator> mergeEvents(DesignAccumulator accumulator, List<InputMessage> messages) {
         if (accumulator != null) {
-            return Optional.of(rows.stream().map(this::convertRowToAccumulator).reduce(accumulator, this::mergeElement)).filter(a -> a.getStatus() != null);
+            return Optional.of(messages.stream().map(this::convertRowToAccumulator).reduce(accumulator, this::mergeElement)).filter(a -> a.getStatus() != null);
         } else {
-            return rows.stream().map(this::convertRowToAccumulator).reduce(this::mergeElement).filter(a -> a.getStatus() != null);
+            return messages.stream().map(this::convertRowToAccumulator).reduce(this::mergeElement).filter(a -> a.getStatus() != null);
         }
     }
 
-    private DesignAccumulator convertRowToAccumulator(Row row) {
-        final long offset = row.getLong("MESSAGE_OFFSET");
-        final String type = row.getString("MESSAGE_TYPE");
-        final String value = row.getString("MESSAGE_VALUE");
-        final Instant timestamp = row.getInstant("MESSAGE_TIMESTAMP");
+    private DesignAccumulator convertRowToAccumulator(InputMessage message) {
+        final long offset = message.getOffset();
+        final String type = message.getValue().getType();
+        final String value = message.getValue().getData();
+        final long timestamp = message.getTimestamp();
         switch (type) {
             case DesignInsertRequested.TYPE: {
                 DesignInsertRequested event = Json.decodeValue(value, DesignInsertRequested.class);
-                return new DesignAccumulator(event.getEvid(), event.getUuid(), offset, event.getData(), Checksum.of(event.getData()), "CREATED", event.getLevels(), createLevelsMap(event.getLevels()), new Date(timestamp.toEpochMilli()));
+                return new DesignAccumulator(event.getEvid(), event.getUuid(), offset, event.getData(), Checksum.of(event.getData()), "CREATED", event.getLevels(), createLevelsMap(event.getLevels()), new Date(timestamp));
             }
             case DesignUpdateRequested.TYPE: {
                 DesignUpdateRequested event = Json.decodeValue(value, DesignUpdateRequested.class);
-                return new DesignAccumulator(event.getEvid(), event.getUuid(), offset, event.getData(), Checksum.of(event.getData()), "UPDATED", event.getLevels(), null, new Date(timestamp.toEpochMilli()));
+                return new DesignAccumulator(event.getEvid(), event.getUuid(), offset, event.getData(), Checksum.of(event.getData()), "UPDATED", event.getLevels(), null, new Date(timestamp));
             }
             case DesignDeleteRequested.TYPE: {
                 DesignDeleteRequested event = Json.decodeValue(value, DesignDeleteRequested.class);
-                return new DesignAccumulator(event.getEvid(), event.getUuid(), offset, null, null, "DELETED", 0, null, new Date(timestamp.toEpochMilli()));
+                return new DesignAccumulator(event.getEvid(), event.getUuid(), offset, null, null, "DELETED", 0, null, new Date(timestamp));
             }
             case TileRenderCompleted.TYPE: {
                 TileRenderCompleted event = Json.decodeValue(value, TileRenderCompleted.class);
-                return new DesignAccumulator(event.getEvid(), event.getUuid(), offset, null, null, null, 0, createLevelsMap(event), new Date(timestamp.toEpochMilli()));
+                return new DesignAccumulator(event.getEvid(), event.getUuid(), offset, null, null, null, 0, createLevelsMap(event), new Date(timestamp));
             }
             default: {
                 return new DesignAccumulator(null, null, 0, null, null, null, 0, null, null);

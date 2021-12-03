@@ -8,7 +8,6 @@ import com.nextbreakpoint.blueprint.common.events.DesignAggregateUpdateCompleted
 import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
 import com.nextbreakpoint.blueprint.common.vertx.Controller;
 import com.nextbreakpoint.blueprint.common.vertx.KafkaEmitter;
-import com.nextbreakpoint.blueprint.designs.Store;
 import com.nextbreakpoint.blueprint.designs.model.Tile;
 import rx.Observable;
 import rx.Single;
@@ -22,10 +21,8 @@ public class DesignAggregateUpdateCompletedController implements Controller<Inpu
     private final Mapper<InputMessage, DesignAggregateUpdateCompleted> inputMapper;
     private final Mapper<TileRenderRequested, OutputMessage> outputMapper;
     private final KafkaEmitter emitter;
-    private final Store store;
 
-    public DesignAggregateUpdateCompletedController(Store store, Mapper<InputMessage, DesignAggregateUpdateCompleted> inputMapper, Mapper<TileRenderRequested, OutputMessage> outputMapper, KafkaEmitter emitter) {
-        this.store = Objects.requireNonNull(store);
+    public DesignAggregateUpdateCompletedController(Mapper<InputMessage, DesignAggregateUpdateCompleted> inputMapper, Mapper<TileRenderRequested, OutputMessage> outputMapper, KafkaEmitter emitter) {
         this.inputMapper = Objects.requireNonNull(inputMapper);
         this.outputMapper = Objects.requireNonNull(outputMapper);
         this.emitter = Objects.requireNonNull(emitter);

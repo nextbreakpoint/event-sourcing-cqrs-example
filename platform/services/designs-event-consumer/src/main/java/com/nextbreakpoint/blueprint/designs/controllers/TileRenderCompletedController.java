@@ -8,7 +8,7 @@ import com.nextbreakpoint.blueprint.common.events.TileAggregateUpdateRequired;
 import com.nextbreakpoint.blueprint.common.events.TileRenderCompleted;
 import com.nextbreakpoint.blueprint.common.vertx.Controller;
 import com.nextbreakpoint.blueprint.common.vertx.KafkaEmitter;
-import com.nextbreakpoint.blueprint.designs.Store;
+import com.nextbreakpoint.blueprint.designs.aggregate.DesignAggregateManager;
 import rx.Single;
 
 import java.util.Objects;
@@ -17,10 +17,10 @@ public class TileRenderCompletedController implements Controller<InputMessage, V
     private final Mapper<InputMessage, TileRenderCompleted> inputMapper;
     private final Mapper<TileAggregateUpdateRequired, OutputMessage> outputMapper;
     private final KafkaEmitter emitter;
-    private final Store store;
+    private final DesignAggregateManager aggregateManager;
 
-    public TileRenderCompletedController(Store store, Mapper<InputMessage, TileRenderCompleted> inputMapper, Mapper<TileAggregateUpdateRequired, OutputMessage> outputMapper, KafkaEmitter emitter) {
-        this.store = Objects.requireNonNull(store);
+    public TileRenderCompletedController(DesignAggregateManager aggregateManager, Mapper<InputMessage, TileRenderCompleted> inputMapper, Mapper<TileAggregateUpdateRequired, OutputMessage> outputMapper, KafkaEmitter emitter) {
+        this.aggregateManager = Objects.requireNonNull(aggregateManager);
         this.inputMapper = Objects.requireNonNull(inputMapper);
         this.outputMapper = Objects.requireNonNull(outputMapper);
         this.emitter = Objects.requireNonNull(emitter);
@@ -32,7 +32,7 @@ public class TileRenderCompletedController implements Controller<InputMessage, V
     }
 
     private Single<Void> onMessageReceived(InputMessage message) {
-        return store.appendMessage(message)
+        return aggregateManager.appendMessage(message)
                 .map(result -> inputMapper.transform(message))
                 .map(event -> createEvent(message, event))
                 .map(outputMapper::transform)

@@ -17,10 +17,8 @@ public class TileAggregateUpdateRequiredController implements Controller<InputMe
     private final Mapper<InputMessage, TileAggregateUpdateRequired> inputMapper;
     private final Mapper<TileAggregateUpdateRequested, OutputMessage> outputMapper;
     private final KafkaEmitter emitter;
-    private final Store store;
 
-    public TileAggregateUpdateRequiredController(Store store, Mapper<InputMessage, TileAggregateUpdateRequired> inputMapper, Mapper<TileAggregateUpdateRequested, OutputMessage> outputMapper, KafkaEmitter emitter) {
-        this.store = Objects.requireNonNull(store);
+    public TileAggregateUpdateRequiredController(Mapper<InputMessage, TileAggregateUpdateRequired> inputMapper, Mapper<TileAggregateUpdateRequested, OutputMessage> outputMapper, KafkaEmitter emitter) {
         this.inputMapper =  Objects.requireNonNull(inputMapper);
         this.outputMapper = Objects.requireNonNull(outputMapper);
         this.emitter = Objects.requireNonNull(emitter);

@@ -20,7 +20,7 @@ public class DesignAggregateUpdateCompletedOutputMapper implements Mapper<Design
                 event.getUuid().toString(),
                 new Payload(
                         UUID.randomUUID(),
-                        MessageType.DESIGN_AGGREGATE_UPDATE_COMPLETED,
+                        DesignAggregateUpdateCompleted.TYPE,
                         Json.encode(event),
                         messageSource
                 )

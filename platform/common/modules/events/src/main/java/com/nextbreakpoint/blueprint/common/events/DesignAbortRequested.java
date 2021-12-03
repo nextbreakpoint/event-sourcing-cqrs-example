@@ -12,6 +12,8 @@ import java.util.UUID;
 @Data
 @Builder(access = AccessLevel.PUBLIC, setterPrefix = "with")
 public class DesignAbortRequested {
+    public static final String TYPE = "design-abort-requested-v1";
+
     private final UUID evid;
     private final UUID uuid;
     private final String checksum;

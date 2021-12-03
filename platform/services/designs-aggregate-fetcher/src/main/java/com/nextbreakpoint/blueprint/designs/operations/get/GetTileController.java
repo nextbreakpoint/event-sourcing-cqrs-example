@@ -3,6 +3,8 @@ package com.nextbreakpoint.blueprint.designs.operations.get;
 import com.nextbreakpoint.blueprint.common.vertx.Controller;
 import com.nextbreakpoint.blueprint.designs.Store;
 import com.nextbreakpoint.blueprint.designs.common.S3Driver;
+import com.nextbreakpoint.blueprint.designs.model.DesignDocument;
+import com.nextbreakpoint.blueprint.common.core.Image;
 import com.nextbreakpoint.blueprint.designs.operations.load.LoadDesignRequest;
 import com.nextbreakpoint.blueprint.designs.operations.load.LoadDesignResponse;
 import rx.Single;
@@ -23,9 +25,13 @@ public class GetTileController implements Controller<GetTileRequest, GetTileResp
     public Single<GetTileResponse> onNext(GetTileRequest request) {
         return store.loadDesign(new LoadDesignRequest(request.getUuid()))
             .map(LoadDesignResponse::getDesignDocument)
-            .map(result -> result.map(document -> getBucketKey(request, document.getChecksum())))
-            .flatMap(result -> result.map(key -> s3Driver.getObject(key).onErrorReturn(this::handleError)).orElse(Single.just(null)))
-            .map(GetTileResponse::new);
+            .flatMap(result -> result.map(document -> getImage(request, document)).orElse(Single.just(new GetTileResponse(null))));
+    }
+
+    private Single<GetTileResponse> getImage(GetTileRequest request, DesignDocument document) {
+        return s3Driver.getObject(getBucketKey(request, document.getChecksum()))
+                .onErrorReturn(this::handleError)
+                .map(data -> new GetTileResponse(new Image(data, document.getChecksum())));
     }
 
     private String getBucketKey(GetTileRequest request, String checksum) {

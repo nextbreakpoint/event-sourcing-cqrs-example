@@ -3,8 +3,8 @@ package com.nextbreakpoint.blueprint.designs;
 import com.nextbreakpoint.blueprint.common.core.Checksum;
 
 public interface TestConstants {
-    String TILE_RENDER_REQUESTED = "tile-render-requested";
-    String TILE_RENDER_COMPLETED = "tile-render-completed";
+    String TILE_RENDER_REQUESTED = "tile-render-requested-v1";
+    String TILE_RENDER_COMPLETED = "tile-render-completed-v1";
 
     String MESSAGE_SOURCE = "service-designs";
     String EVENTS_TOPIC_NAME = "test-designs-tile-renderer-events";

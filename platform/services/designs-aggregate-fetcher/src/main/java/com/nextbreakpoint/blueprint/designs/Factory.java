@@ -2,6 +2,7 @@ package com.nextbreakpoint.blueprint.designs;
 
 import com.nextbreakpoint.blueprint.common.vertx.*;
 import com.nextbreakpoint.blueprint.designs.common.S3Driver;
+import com.nextbreakpoint.blueprint.common.core.Image;
 import com.nextbreakpoint.blueprint.designs.operations.get.*;
 import com.nextbreakpoint.blueprint.designs.operations.list.*;
 import com.nextbreakpoint.blueprint.designs.operations.load.*;
@@ -35,7 +36,7 @@ public class Factory {
     }
 
     public static Handler<RoutingContext> createGetTileHandler(Store store, S3AsyncClient s3AsyncClient, String s3Bucket) {
-        return TemplateHandler.<RoutingContext, GetTileRequest, GetTileResponse, Optional<byte[]>>builder()
+        return TemplateHandler.<RoutingContext, GetTileRequest, GetTileResponse, Optional<Image>>builder()
                 .withInputMapper(new GetTileRequestMapper())
                 .withController(new GetTileController(store, new S3Driver(s3AsyncClient, s3Bucket)))
                 .withOutputMapper(new GetTileResponseMapper())

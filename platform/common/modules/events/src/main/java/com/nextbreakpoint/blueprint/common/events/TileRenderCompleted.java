@@ -13,6 +13,8 @@ import java.util.UUID;
 @Data
 @Builder(access = AccessLevel.PUBLIC, setterPrefix = "with")
 public class TileRenderCompleted {
+    public static final String TYPE = "tile-render-completed-v1";
+
     private final UUID evid;
     private final UUID uuid;
     private final long esid;

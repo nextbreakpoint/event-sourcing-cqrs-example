@@ -27,7 +27,7 @@ public class TileRenderRequestedOutputMapper implements Mapper<TileRenderRequest
                 keyMapper.apply(event),
                 new Payload(
                         UUID.randomUUID(),
-                        MessageType.TILE_RENDER_REQUESTED,
+                        TileRenderRequested.TYPE,
                         Json.encode(event),
                         messageSource
                 )

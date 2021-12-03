@@ -12,6 +12,8 @@ import java.util.UUID;
 @Data
 @Builder(access = AccessLevel.PUBLIC, setterPrefix = "with")
 public class DesignDeleteRequested {
+    public static final String TYPE = "design-delete-requested-v1";
+
     private final UUID evid;
     private final UUID uuid;
 

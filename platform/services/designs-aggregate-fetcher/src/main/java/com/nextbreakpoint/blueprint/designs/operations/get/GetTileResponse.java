@@ -1,15 +1,17 @@
 package com.nextbreakpoint.blueprint.designs.operations.get;
 
+import com.nextbreakpoint.blueprint.common.core.Image;
+
 import java.util.Optional;
 
 public class GetTileResponse {
-    private final byte[] data;
+    private final Image image;
 
-    public GetTileResponse(byte[] data) {
-        this.data = data;
+    public GetTileResponse(Image image) {
+        this.image = image;
     }
 
-    public Optional<byte[]> getData() {
-        return Optional.ofNullable(data);
+    public Optional<Image> getImage() {
+        return Optional.ofNullable(image);
     }
 }

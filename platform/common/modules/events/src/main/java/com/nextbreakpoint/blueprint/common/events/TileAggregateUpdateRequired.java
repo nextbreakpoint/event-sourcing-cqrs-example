@@ -12,6 +12,8 @@ import java.util.UUID;
 @Data
 @Builder(access = AccessLevel.PUBLIC, setterPrefix = "with")
 public class TileAggregateUpdateRequired {
+    public static final String TYPE = "tile-aggregate-update-required-v1";
+
     private final UUID evid;
     private final UUID uuid;
     private final long esid;

@@ -20,7 +20,7 @@ public class TileRenderAbortedOutputMapper implements Mapper<TileRenderAborted, 
                 event.getUuid().toString(),
                 new Payload(
                         UUID.randomUUID(),
-                        MessageType.TILE_RENDER_ABORTED,
+                        TileRenderAborted.TYPE,
                         Json.encode(event),
                         messageSource
                 )

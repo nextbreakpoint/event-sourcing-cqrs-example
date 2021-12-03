@@ -12,6 +12,8 @@ import java.util.UUID;
 @Data
 @Builder(access = AccessLevel.PUBLIC, setterPrefix = "with")
 public class DesignAggregateUpdateRequested {
+    public static final String TYPE = "design-aggregate-update-requested-v1";
+
     private final UUID evid;
     private final UUID uuid;
     private final long esid;

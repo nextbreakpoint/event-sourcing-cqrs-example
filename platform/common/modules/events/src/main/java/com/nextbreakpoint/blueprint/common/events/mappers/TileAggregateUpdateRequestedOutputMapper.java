@@ -20,7 +20,7 @@ public class TileAggregateUpdateRequestedOutputMapper implements Mapper<TileAggr
                 event.getUuid().toString(),
                 new Payload(
                         UUID.randomUUID(),
-                        MessageType.TILE_AGGREGATE_UPDATE_REQUESTED,
+                        TileAggregateUpdateRequested.TYPE,
                         Json.encode(event),
                         messageSource
                 )

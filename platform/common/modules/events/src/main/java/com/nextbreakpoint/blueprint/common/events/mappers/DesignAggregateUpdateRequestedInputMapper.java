@@ -2,7 +2,6 @@ package com.nextbreakpoint.blueprint.common.events.mappers;
 
 import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
-import com.nextbreakpoint.blueprint.common.core.MessageType;
 import com.nextbreakpoint.blueprint.common.events.DesignAggregateUpdateRequested;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
@@ -14,7 +13,7 @@ public class DesignAggregateUpdateRequestedInputMapper implements Mapper<InputMe
 
     @Override
     public DesignAggregateUpdateRequested transform(InputMessage message) {
-        if (!message.getValue().getType().equals(MessageType.DESIGN_AGGREGATE_UPDATE_REQUESTED)) {
+        if (!message.getValue().getType().equals(DesignAggregateUpdateRequested.TYPE)) {
             throw new IllegalArgumentException("Unexpected message type: " + message.getValue().getType());
         }
         try {

@@ -20,7 +20,7 @@ public class TileRenderCompletedOutputMapper implements Mapper<TileRenderComplet
                 event.getUuid().toString(),
                 new Payload(
                         UUID.randomUUID(),
-                        MessageType.TILE_RENDER_COMPLETED,
+                        TileRenderCompleted.TYPE,
                         Json.encode(event),
                         messageSource
                 )

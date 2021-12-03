@@ -20,7 +20,7 @@ public class DesignDeleteRequestedOutputMapper implements Mapper<DesignDeleteReq
                 event.getUuid().toString(),
                 new Payload(
                         UUID.randomUUID(),
-                        MessageType.DESIGN_DELETE_REQUESTED,
+                        DesignDeleteRequested.TYPE,
                         Json.encode(event),
                         messageSource
                 )

@@ -1,6 +1,8 @@
 package com.nextbreakpoint.blueprint.designs;
 
 import com.nextbreakpoint.blueprint.common.core.*;
+import com.nextbreakpoint.blueprint.common.events.DesignAggregateUpdateCompleted;
+import com.nextbreakpoint.blueprint.common.events.TileAggregateUpdateCompleted;
 import com.nextbreakpoint.blueprint.common.vertx.*;
 import com.nextbreakpoint.blueprint.designs.handlers.NotificationHandler;
 import com.nextbreakpoint.blueprint.designs.controllers.DesignAggregateUpdateCompletedController;
@@ -48,6 +50,8 @@ import static java.util.Arrays.asList;
 public class Verticle extends AbstractVerticle {
     private static final Logger logger = LoggerFactory.getLogger(Verticle.class.getName());
 
+    private KafkaPolling kafkaPolling;
+
     public static void main(String[] args) {
         try {
             final JsonObject config = loadConfig(args.length > 0 ? args[0] : "config/localhost.json");
@@ -94,19 +98,12 @@ public class Verticle extends AbstractVerticle {
     @Override
     public Completable rxStop() {
         return Completable.fromCallable(() -> {
-            if (pollingThread != null) {
-                try {
-                    pollingThread.interrupt();
-                    pollingThread.join();
-                } catch (InterruptedException e) {
-                    logger.warn("Can't stop polling thread", e);
-                }
+            if (kafkaPolling != null) {
+                kafkaPolling.stopPolling();
             }
             return null;
         });
     }
-
-    private Thread pollingThread;
 
     private void initServer(Promise<Void> promise) {
         try {
@@ -198,17 +195,15 @@ public class Verticle extends AbstractVerticle {
 
             final Map<String, BlockingHandler<InputMessage>> messageHandlers = new HashMap<>();
 
-            messageHandlers.put(MessageType.DESIGN_AGGREGATE_UPDATE_COMPLETED, Factory.createDesignAggregateUpdateCompletedHandler(new DesignAggregateUpdateCompletedController(vertx, "notifications")));
+            messageHandlers.put(DesignAggregateUpdateCompleted.TYPE, Factory.createDesignAggregateUpdateCompletedHandler(new DesignAggregateUpdateCompletedController(vertx, "notifications")));
 
-            messageHandlers.put(MessageType.TILE_AGGREGATE_UPDATE_COMPLETED, Factory.createTileAggregateUpdateCompletedHandler(new TileAggregateUpdateCompletedController(vertx, "notifications")));
-
-            final KafkaPolling kafkaPolling = new KafkaPolling(vertx, kafkaConsumer, messageHandlers);
+            messageHandlers.put(TileAggregateUpdateCompleted.TYPE, Factory.createTileAggregateUpdateCompletedHandler(new TileAggregateUpdateCompletedController(vertx, "notifications")));
 
             kafkaConsumer.subscribe(eventsTopic);
 
-            pollingThread = new Thread(() -> kafkaPolling.pollRecords(), "kafka-records-poll");
+            kafkaPolling = new KafkaPolling(kafkaConsumer, messageHandlers);
 
-            pollingThread.start();
+            kafkaPolling.startPolling("kafka-records-poll");
 
             final Handler<RoutingContext> apiV1DocsHandler = new OpenApiHandler(vertx.getDelegate(), executor, "api-v1.yaml");
 

@@ -20,7 +20,7 @@ public class DesignInsertRequestedOutputMapper implements Mapper<DesignInsertReq
                 event.getUuid().toString(),
                 new Payload(
                         UUID.randomUUID(),
-                        MessageType.DESIGN_INSERT_REQUESTED,
+                        DesignInsertRequested.TYPE,
                         Json.encode(event),
                         messageSource
                 )

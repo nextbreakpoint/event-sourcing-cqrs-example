@@ -1,9 +1,9 @@
 package com.nextbreakpoint.blueprint.designs;
 
 public interface TestConstants {
-    String DESIGN_INSERT_REQUESTED = "design-insert-requested";
-    String DESIGN_UPDATE_REQUESTED = "design-update-requested";
-    String DESIGN_DELETE_REQUESTED = "design-delete-requested";
+    String DESIGN_INSERT_REQUESTED = "design-insert-requested-v1";
+    String DESIGN_UPDATE_REQUESTED = "design-update-requested-v1";
+    String DESIGN_DELETE_REQUESTED = "design-delete-requested-v1";
 
     String MESSAGE_SOURCE = "service-designs";
     String EVENTS_TOPIC_NAME = "test-designs-command-producer-events";

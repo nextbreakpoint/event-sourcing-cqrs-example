@@ -1,6 +1,7 @@
 package com.nextbreakpoint.blueprint.designs;
 
 import com.nextbreakpoint.blueprint.common.core.*;
+import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
 import com.nextbreakpoint.blueprint.common.vertx.*;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Handler;
@@ -48,6 +49,8 @@ import static java.util.Arrays.asList;
 
 public class Verticle extends AbstractVerticle {
     private static final Logger logger = LoggerFactory.getLogger(Verticle.class.getName());
+
+    private KafkaPolling kafkaPolling;
 
     public static void main(String[] args) {
         try {
@@ -99,19 +102,12 @@ public class Verticle extends AbstractVerticle {
     @Override
     public Completable rxStop() {
         return Completable.fromCallable(() -> {
-            if (pollingThread != null) {
-                try {
-                    pollingThread.interrupt();
-                    pollingThread.join();
-                } catch (InterruptedException e) {
-                    logger.warn("Can't stop polling thread", e);
-                }
+            if (kafkaPolling != null) {
+                kafkaPolling.stopPolling();
             }
             return null;
         });
     }
-
-    private Thread pollingThread;
 
     private void initServer(Promise<Void> promise) {
         try {
@@ -216,15 +212,13 @@ public class Verticle extends AbstractVerticle {
 
             final Map<String, BlockingHandler<InputMessage>> messageHandlers = new HashMap<>();
 
-            messageHandlers.put(MessageType.TILE_RENDER_REQUESTED, createTileRenderRequestedHandler(eventsTopic, kafkaProducer, messageSource, workerExecutor, s3AsyncClient, s3Bucket));
+            messageHandlers.put(TileRenderRequested.TYPE, createTileRenderRequestedHandler(eventsTopic, kafkaProducer, messageSource, workerExecutor, s3AsyncClient, s3Bucket));
 
             kafkaConsumer.subscribe(renderTopic);
 
-            final KafkaPolling kafkaPolling = new KafkaPolling(vertx, kafkaConsumer, messageHandlers);
+            kafkaPolling = new KafkaPolling(kafkaConsumer, messageHandlers);
 
-            pollingThread = new Thread(() -> kafkaPolling.pollRecords(), "kafka-records-poll");
-
-            pollingThread.start();
+            kafkaPolling.startPolling("kafka-records-poll");
 
             final Handler<RoutingContext> apiV1DocsHandler = new OpenApiHandler(vertx.getDelegate(), executor, "api-v1.yaml");
 

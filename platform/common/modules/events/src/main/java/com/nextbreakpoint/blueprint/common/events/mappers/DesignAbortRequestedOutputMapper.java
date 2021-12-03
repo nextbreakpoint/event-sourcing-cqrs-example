@@ -20,7 +20,7 @@ public class DesignAbortRequestedOutputMapper implements Mapper<DesignAbortReque
                 event.getUuid().toString(),
                 new Payload(
                     UUID.randomUUID(),
-                    MessageType.DESIGN_ABORT_REQUESTED,
+                        DesignAbortRequested.TYPE,
                     Json.encode(event),
                     messageSource
                 )

@@ -2,7 +2,6 @@ package com.nextbreakpoint.blueprint.designs.common;
 
 import com.datastax.oss.driver.api.core.cql.Row;
 import com.nextbreakpoint.blueprint.common.core.Checksum;
-import com.nextbreakpoint.blueprint.common.core.MessageType;
 import com.nextbreakpoint.blueprint.common.events.DesignDeleteRequested;
 import com.nextbreakpoint.blueprint.common.events.DesignInsertRequested;
 import com.nextbreakpoint.blueprint.common.events.DesignUpdateRequested;
@@ -34,19 +33,19 @@ public class DesignAggregate {
         final String value = row.getString("MESSAGE_VALUE");
         final Instant timestamp = row.getInstant("MESSAGE_TIMESTAMP");
         switch (type) {
-            case MessageType.DESIGN_INSERT_REQUESTED: {
+            case DesignInsertRequested.TYPE: {
                 DesignInsertRequested event = Json.decodeValue(value, DesignInsertRequested.class);
                 return new DesignAccumulator(event.getEvid(), event.getUuid(), offset, event.getData(), Checksum.of(event.getData()), "CREATED", event.getLevels(), createLevelsMap(event.getLevels()), new Date(timestamp.toEpochMilli()));
             }
-            case MessageType.DESIGN_UPDATE_REQUESTED: {
+            case DesignUpdateRequested.TYPE: {
                 DesignUpdateRequested event = Json.decodeValue(value, DesignUpdateRequested.class);
                 return new DesignAccumulator(event.getEvid(), event.getUuid(), offset, event.getData(), Checksum.of(event.getData()), "UPDATED", event.getLevels(), null, new Date(timestamp.toEpochMilli()));
             }
-            case MessageType.DESIGN_DELETE_REQUESTED: {
+            case DesignDeleteRequested.TYPE: {
                 DesignDeleteRequested event = Json.decodeValue(value, DesignDeleteRequested.class);
                 return new DesignAccumulator(event.getEvid(), event.getUuid(), offset, null, null, "DELETED", 0, null, new Date(timestamp.toEpochMilli()));
             }
-            case MessageType.TILE_RENDER_COMPLETED: {
+            case TileRenderCompleted.TYPE: {
                 TileRenderCompleted event = Json.decodeValue(value, TileRenderCompleted.class);
                 return new DesignAccumulator(event.getEvid(), event.getUuid(), offset, null, null, null, 0, createLevelsMap(event), new Date(timestamp.toEpochMilli()));
             }

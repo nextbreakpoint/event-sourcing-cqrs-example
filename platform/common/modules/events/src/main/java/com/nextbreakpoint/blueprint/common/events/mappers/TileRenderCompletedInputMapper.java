@@ -2,7 +2,6 @@ package com.nextbreakpoint.blueprint.common.events.mappers;
 
 import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
-import com.nextbreakpoint.blueprint.common.core.MessageType;
 import com.nextbreakpoint.blueprint.common.events.TileRenderCompleted;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
@@ -14,7 +13,7 @@ public class TileRenderCompletedInputMapper implements Mapper<InputMessage, Tile
 
     @Override
     public TileRenderCompleted transform(InputMessage message) {
-        if (!message.getValue().getType().equals(MessageType.TILE_RENDER_COMPLETED)) {
+        if (!message.getValue().getType().equals(TileRenderCompleted.TYPE)) {
             throw new IllegalArgumentException("Unexpected message type: " + message.getValue().getType());
         }
         try {

@@ -20,7 +20,7 @@ public class DesignAggregateUpdateRequestedOutputMapper implements Mapper<Design
                 event.getUuid().toString(),
                 new Payload(
                         UUID.randomUUID(),
-                        MessageType.DESIGN_AGGREGATE_UPDATE_REQUESTED,
+                        DesignAggregateUpdateRequested.TYPE,
                         Json.encode(event),
                         messageSource
                 )

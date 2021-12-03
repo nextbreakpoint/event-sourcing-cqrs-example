@@ -14,7 +14,7 @@ RUN mvn clean verify -s settings.xml -t toolchains.xml -DexcludedGroups=slow $ma
 #COPY --from=native-image accounts /accounts
 FROM openjdk:11-jdk
 COPY --from=build /src/target/libs/* /libs/
-COPY --from=build /src/target/com.nextbreakpoint.blueprint.accounts-1.0.0.jar /libs/
+COPY --from=build /src/target/service.jar /libs/
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod u+x /entrypoint.sh
 #RUN apt-get update -y && apt-get install -y netcat

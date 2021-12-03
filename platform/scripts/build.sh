@@ -2,9 +2,9 @@
 
 set -e
 
-export REPOSITORY=${1:-integration}
-export VERSION=${2:-1.0.0}
-export BUILD="false"
+export REPOSITORY="integration"
+export VERSION="1.0.0-$(git rev-parse --abbrev-ref HEAD)-$(git rev-parse --short HEAD)-$(date +%s)"
+export BUILD="true"
 export TEST="true"
 
 export PACTBROKER_HOST=localhost
@@ -27,22 +27,14 @@ services=(
   frontend
 )
 
-export JAEGER_SERVICE_NAME=integration
-
 export MAVEN_ARGS="-Dnexus.host=${NEXUS_HOST} -Dnexus.port=${NEXUS_PORT} -Dpactbroker.host=${PACTBROKER_HOST} -Dpactbroker.port=${PACTBROKER_PORT}"
 export BUILD_ARGS="-Dnexus.host=host.docker.internal -Dnexus.port=${NEXUS_PORT} -Dpactbroker.host=host.docker.internal -Dpactbroker.port=${PACTBROKER_PORT}"
 
+mvn versions:set versions:commit -DnewVersion=$VERSION -Dcommon=true -Dservices=true -Dplatform=true
+
 if [ "$BUILD" == "true" ]; then
 
-#mvn clean deploy -s settings.xml -Dnexus=true ${MAVEN_ARGS}
-#
-#pushd common
-# mvn clean deploy -s settings.xml -Dnexus=true ${MAVEN_ARGS}
-#popd
-#
-#pushd services
-# mvn clean deploy -s settings.xml -Dnexus=true ${MAVEN_ARGS}
-#popd
+mvn clean deploy -s settings.xml -Dcommon=true -Dservices=true -Dnexus=true ${MAVEN_ARGS}
 
 for service in ${services[@]}; do
   pushd services/$service
@@ -52,25 +44,25 @@ done
 
 fi
 
-export MAVEN_OPTS="--add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.net=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED --add-opens=java.base/java.util.regex=ALL-UNNAMED --add-opens=java.base/java.security=ALL-UNNAMED --add-opens=java.base/sun.net.spi=ALL-UNNAMED" # --add-opens com.nextbreakpoint.blueprint.designsaggregatefetcher/com.nextbreakpoint.blueprint.designs=com.fasterxml.jackson.databind"
+export MAVEN_OPTS="--add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.net=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED --add-opens=java.base/java.util.regex=ALL-UNNAMED --add-opens=java.base/java.security=ALL-UNNAMED --add-opens=java.base/sun.net.spi=ALL-UNNAMED"
 
 if [ "$TEST" == "true" ]; then
 
 for service in ${services[@]}; do
   pushd services/$service
-   mvn clean verify -Dgroups=integration
+   JAEGER_SERVICE_NAME=$service mvn clean verify -Dgroups=integration
   popd
 done
 
 for service in ${services[@]}; do
   pushd services/$service
-   mvn clean verify -Dgroups=pact
+   JAEGER_SERVICE_NAME=$service mvn clean verify -Dgroups=pact
   popd
 done
 
 for service in ${services[@]}; do
   pushd services/$service
-   mvn clean verify -Dgroups=pact-verify
+   JAEGER_SERVICE_NAME=$service mvn clean verify -Dgroups=pact-verify
   popd
 done
 

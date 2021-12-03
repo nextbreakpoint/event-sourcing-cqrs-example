@@ -7,7 +7,7 @@
     <parent>
         <artifactId>com.nextbreakpoint.blueprint.common</artifactId>
         <groupId>com.nextbreakpoint</groupId>
-        <version>1.0.0</version>
+        <version>1.0.0-wip2-93aca77-1638522428</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
     <dependencies>

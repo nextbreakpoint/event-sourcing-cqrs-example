@@ -15,7 +15,7 @@ RUN mvn clean verify -s settings.xml -t toolchains.xml -DexcludedGroups=slow $ma
 FROM openjdk:11-jdk
 COPY --from=build /src/target/libs/* /libs/
 RUN rm /libs/jffi-*-native.jar
-COPY --from=build /src/target/com.nextbreakpoint.blueprint.designs-event-consumer-1.0.0.jar /libs/
+COPY --from=build /src/target/service.jar /libs/
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod u+x /entrypoint.sh
 EXPOSE 8080

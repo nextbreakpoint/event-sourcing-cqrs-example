@@ -14,7 +14,7 @@ RUN mvn clean verify -s settings.xml -t toolchains.xml -DexcludedGroups=slow $ma
 #COPY --from=native-image gateway /gateway
 FROM openjdk:11-jdk
 COPY --from=build /src/target/libs/* /libs/
-COPY --from=build /src/target/com.nextbreakpoint.blueprint.gateway-1.0.0.jar /libs/
+COPY --from=build /src/target/service.jar /libs/
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod u+x /entrypoint.sh
 EXPOSE 8080

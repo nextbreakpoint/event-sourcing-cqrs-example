@@ -10,7 +10,7 @@
     <parent>
         <groupId>com.nextbreakpoint</groupId>
         <artifactId>com.nextbreakpoint.blueprint.service</artifactId>
-        <version>1.0.0</version>
+        <version>1.0.0-wip2-93aca77-1638522428</version>
     </parent>
     <repositories>
         <repository>
@@ -20,6 +20,7 @@
         </repository>
     </repositories>
     <build>
+        <finalName>service</finalName>
         <testResources>
             <testResource>
                 <directory>src/test/resources</directory>

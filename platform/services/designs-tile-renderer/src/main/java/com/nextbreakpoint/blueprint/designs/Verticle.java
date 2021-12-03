@@ -220,9 +220,9 @@ public class Verticle extends AbstractVerticle {
 
             kafkaConsumer.subscribe(renderTopic);
 
-            final KafkaPolling kafkaPolling = new KafkaPolling();
+            final KafkaPolling kafkaPolling = new KafkaPolling(vertx, kafkaConsumer, messageHandlers);
 
-            pollingThread = new Thread(() -> kafkaPolling.pollRecords(kafkaConsumer, messageHandlers), "kafka-records-poll");
+            pollingThread = new Thread(() -> kafkaPolling.pollRecords(), "kafka-records-poll");
 
             pollingThread.start();
 

@@ -202,11 +202,11 @@ public class Verticle extends AbstractVerticle {
 
             messageHandlers.put(MessageType.TILE_AGGREGATE_UPDATE_COMPLETED, Factory.createTileAggregateUpdateCompletedHandler(new TileAggregateUpdateCompletedController(vertx, "notifications")));
 
-            final KafkaPolling kafkaPolling = new KafkaPolling();
+            final KafkaPolling kafkaPolling = new KafkaPolling(vertx, kafkaConsumer, messageHandlers);
 
             kafkaConsumer.subscribe(eventsTopic);
 
-            pollingThread = new Thread(() -> kafkaPolling.pollRecords(kafkaConsumer, messageHandlers), "kafka-records-poll");
+            pollingThread = new Thread(() -> kafkaPolling.pollRecords(), "kafka-records-poll");
 
             pollingThread.start();
 

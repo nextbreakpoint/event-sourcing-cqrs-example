@@ -7,7 +7,7 @@ import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.events.DesignAggregateUpdateRequested;
 import com.nextbreakpoint.blueprint.common.vertx.Controller;
 import com.nextbreakpoint.blueprint.common.vertx.KafkaEmitter;
-import com.nextbreakpoint.blueprint.designs.aggregate.DesignAggregateManager;
+import com.nextbreakpoint.blueprint.designs.aggregate.DesignAggregate;
 import rx.Single;
 
 import java.util.Objects;
@@ -16,10 +16,10 @@ import java.util.UUID;
 public class DesignCommandController implements Controller<InputMessage, Void> {
     private final Mapper<DesignAggregateUpdateRequested, OutputMessage> outputMapper;
     private final KafkaEmitter emitter;
-    private final DesignAggregateManager aggregateManager;
+    private final DesignAggregate aggregate;
 
-    public DesignCommandController(DesignAggregateManager aggregateManager, Mapper<DesignAggregateUpdateRequested, OutputMessage> outputMapper, KafkaEmitter emitter) {
-        this.aggregateManager = Objects.requireNonNull(aggregateManager);
+    public DesignCommandController(DesignAggregate aggregate, Mapper<DesignAggregateUpdateRequested, OutputMessage> outputMapper, KafkaEmitter emitter) {
+        this.aggregate = Objects.requireNonNull(aggregate);
         this.outputMapper = Objects.requireNonNull(outputMapper);
         this.emitter = Objects.requireNonNull(emitter);
     }
@@ -33,7 +33,7 @@ public class DesignCommandController implements Controller<InputMessage, Void> {
     }
 
     private Single<DesignAggregateUpdateRequested> onMessageReceived(InputMessage message) {
-        return aggregateManager.appendMessage(message).map(result -> createEvent(message));
+        return aggregate.appendMessage(message).map(result -> createEvent(message));
     }
 
     private DesignAggregateUpdateRequested createEvent(InputMessage message) {

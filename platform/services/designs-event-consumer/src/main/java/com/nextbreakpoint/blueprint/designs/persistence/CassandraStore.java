@@ -20,6 +20,7 @@ import rx.Single;
 
 import java.time.Instant;
 import java.util.*;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -145,9 +146,9 @@ public class CassandraStore implements Store {
         final int levels = row.getInt("DESIGN_LEVELS");
         final Instant updated = row.getInstant("DESIGN_UPDATED");
         final Map<Integer, UdtValue> tilesMap = row.getMap("DESIGN_TILES", Integer.class, UdtValue.class);
-        final List<Tiles> tilesList = tilesMap.entrySet().stream()
+        final Map<Integer, Tiles> tilesList = tilesMap.entrySet().stream()
                 .map(entry -> convertUDTToTiles(entry.getKey(), entry.getValue()))
-                .collect(Collectors.toList());
+                .collect(Collectors.toMap(Tiles::getLevel, Function.identity()));
         return new Design(evid, uuid, esid, data, checksum, status, levels, tilesList, toDate(updated));
     }
 
@@ -179,7 +180,7 @@ public class CassandraStore implements Store {
     }
 
     private Object[] makeInsertDesignParams(Design design, UserDefinedType levelType) {
-        final Map<Integer, UdtValue> levelsMap = design.getTiles().stream().collect(Collectors.toMap(Tiles::getLevel, x -> convertTilesToUDT(levelType, x)));
+        final Map<Integer, UdtValue> levelsMap = design.getTiles().values().stream().collect(Collectors.toMap(Tiles::getLevel, x -> convertTilesToUDT(levelType, x)));
         return new Object[] { design.getEvid(), design.getUuid(), design.getEsid(), design.getJson(), Checksum.of(design.getJson()), design.getStatus(), design.getLevels(), levelsMap, design.getUpdated().toInstant() };
     }
 

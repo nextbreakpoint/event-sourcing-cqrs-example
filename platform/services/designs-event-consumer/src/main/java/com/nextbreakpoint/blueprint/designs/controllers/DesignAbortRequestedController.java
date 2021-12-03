@@ -8,7 +8,7 @@ import com.nextbreakpoint.blueprint.common.events.DesignAbortRequested;
 import com.nextbreakpoint.blueprint.common.events.TileRenderAborted;
 import com.nextbreakpoint.blueprint.common.vertx.Controller;
 import com.nextbreakpoint.blueprint.common.vertx.KafkaEmitter;
-import com.nextbreakpoint.blueprint.designs.aggregate.DesignAggregateManager;
+import com.nextbreakpoint.blueprint.designs.aggregate.DesignAggregate;
 import com.nextbreakpoint.blueprint.designs.model.Design;
 import com.nextbreakpoint.blueprint.designs.model.Tile;
 import rx.Observable;
@@ -23,10 +23,10 @@ public class DesignAbortRequestedController implements Controller<InputMessage, 
     private final Mapper<InputMessage, DesignAbortRequested> inputMapper;
     private final Mapper<TileRenderAborted, OutputMessage> outputMapper;
     private final KafkaEmitter emitter;
-    private final DesignAggregateManager aggregateManager;
+    private final DesignAggregate aggregate;
 
-    public DesignAbortRequestedController(DesignAggregateManager aggregateManager, Mapper<InputMessage, DesignAbortRequested> inputMapper, Mapper<TileRenderAborted, OutputMessage> outputMapper, KafkaEmitter emitter) {
-        this.aggregateManager = Objects.requireNonNull(aggregateManager);
+    public DesignAbortRequestedController(DesignAggregate aggregate, Mapper<InputMessage, DesignAbortRequested> inputMapper, Mapper<TileRenderAborted, OutputMessage> outputMapper, KafkaEmitter emitter) {
+        this.aggregate = Objects.requireNonNull(aggregate);
         this.inputMapper = Objects.requireNonNull(inputMapper);
         this.outputMapper = Objects.requireNonNull(outputMapper);
         this.emitter = Objects.requireNonNull(emitter);
@@ -46,7 +46,7 @@ public class DesignAbortRequestedController implements Controller<InputMessage, 
     }
 
     private Observable<TileRenderAborted> onTileRenderAborted(DesignAbortRequested event) {
-        return aggregateManager.findDesign(event.getUuid())
+        return aggregate.findDesign(event.getUuid())
                 .map(result -> result.orElseThrow(() -> new RuntimeException("Design not found " + event.getUuid())))
                 .flatMapObservable(design -> generateEvents(event, design));
     }

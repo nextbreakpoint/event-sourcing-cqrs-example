@@ -4,8 +4,8 @@ import com.nextbreakpoint.blueprint.common.core.BlockingHandler;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.events.mappers.*;
 import com.nextbreakpoint.blueprint.common.vertx.*;
-import com.nextbreakpoint.blueprint.designs.aggregate.DesignAggregateManager;
-import com.nextbreakpoint.blueprint.designs.aggregate.DesignAggregateStrategy;
+import com.nextbreakpoint.blueprint.designs.aggregate.DesignAggregate;
+import com.nextbreakpoint.blueprint.designs.aggregate.DesignStateStrategy;
 import com.nextbreakpoint.blueprint.designs.common.Bucket;
 import com.nextbreakpoint.blueprint.designs.controllers.*;
 import io.vertx.rxjava.kafka.client.producer.KafkaProducer;
@@ -18,7 +18,7 @@ public class Factory {
                 .withInputMapper(input -> input)
                 .withOutputMapper(output -> output)
                 .withController(new DesignCommandController(
-                    new DesignAggregateManager(store, new DesignAggregateStrategy()),
+                    new DesignAggregate(store, new DesignStateStrategy()),
                     new DesignAggregateUpdateRequestedOutputMapper(messageSource),
                     new KafkaEmitter(producer, topic, 3)
                 ))
@@ -32,7 +32,7 @@ public class Factory {
                 .withInputMapper(input -> input)
                 .withOutputMapper(output -> output)
                 .withController(new DesignCommandController(
-                    new DesignAggregateManager(store, new DesignAggregateStrategy()),
+                    new DesignAggregate(store, new DesignStateStrategy()),
                     new DesignAggregateUpdateRequestedOutputMapper(messageSource),
                     new KafkaEmitter(producer, topic, 3)
                 ))
@@ -46,7 +46,7 @@ public class Factory {
                 .withInputMapper(input -> input)
                 .withOutputMapper(output -> output)
                 .withController(new DesignCommandController(
-                    new DesignAggregateManager(store, new DesignAggregateStrategy()),
+                    new DesignAggregate(store, new DesignStateStrategy()),
                     new DesignAggregateUpdateRequestedOutputMapper(messageSource),
                     new KafkaEmitter(producer, topic, 3)
                 ))
@@ -60,7 +60,7 @@ public class Factory {
                 .withInputMapper(input -> input)
                 .withOutputMapper(output -> output)
                 .withController(new DesignAbortRequestedController(
-                    new DesignAggregateManager(store, new DesignAggregateStrategy()),
+                    new DesignAggregate(store, new DesignStateStrategy()),
                     new DesignAbortRequestedInputMessageMapper(),
                     new TileRenderAbortedOutputMapper(messageSource),
                     new KafkaEmitter(producer, topic, 3)
@@ -75,7 +75,7 @@ public class Factory {
                 .withInputMapper(input -> input)
                 .withOutputMapper(output -> output)
                 .withController(new DesignAggregateUpdateRequestedController(
-                    new DesignAggregateManager(store, new DesignAggregateStrategy()),
+                    new DesignAggregate(store, new DesignStateStrategy()),
                     new DesignAggregateUpdateRequestedInputMapper(),
                     new DesignAggregateUpdateCompletedOutputMapper(messageSource),
                     new KafkaEmitter(producer, topic, 3)
@@ -118,7 +118,7 @@ public class Factory {
                 .withInputMapper(input -> input)
                 .withOutputMapper(output -> output)
                 .withController(new TileAggregateUpdateRequestedController(
-                    new DesignAggregateManager(store, new DesignAggregateStrategy()),
+                    new DesignAggregate(store, new DesignStateStrategy()),
                     new TileAggregateUpdateRequestedInputMapper(),
                     new TileAggregateUpdateCompletedOutputMapper(messageSource),
                     new KafkaEmitter(producer, topic, 3)
@@ -157,7 +157,7 @@ public class Factory {
                 .withInputMapper(input -> input)
                 .withOutputMapper(output -> output)
                 .withController(new TileRenderCompletedController(
-                    new DesignAggregateManager(store, new DesignAggregateStrategy()),
+                    new DesignAggregate(store, new DesignStateStrategy()),
                     new TileRenderCompletedInputMapper(),
                     new TileAggregateUpdateRequiredOutputMapper(messageSource),
                     new KafkaEmitter(producer, topic, 3)

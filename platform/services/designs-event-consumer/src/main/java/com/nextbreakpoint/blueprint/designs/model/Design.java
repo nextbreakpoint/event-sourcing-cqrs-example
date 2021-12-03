@@ -1,9 +1,6 @@
 package com.nextbreakpoint.blueprint.designs.model;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 public class Design {
     private final UUID evid;
@@ -13,8 +10,8 @@ public class Design {
     private final String checksum;
     private final String status;
     private final int levels;
+    private final Map<Integer, Tiles> tiles;
     private final Date updated;
-    private final List<Tiles> tiles;
 
     public Design(
         UUID evid,
@@ -24,18 +21,18 @@ public class Design {
         String checksum,
         String status,
         int levels,
-        List<Tiles> tiles,
+        Map<Integer, Tiles> tiles,
         Date updated
     ) {
-        this.evid = Objects.requireNonNull(evid);
-        this.uuid = Objects.requireNonNull(uuid);
-        this.esid = Objects.requireNonNull(esid);
-        this.json = Objects.requireNonNull(json);
-        this.checksum = Objects.requireNonNull(checksum);
-        this.status = Objects.requireNonNull(status);
+        this.evid = evid;
+        this.uuid = uuid;
+        this.esid = esid;
+        this.json = json;
+        this.checksum = checksum;
+        this.status = status;
         this.levels = levels;
-        this.tiles = Objects.requireNonNull(tiles);
-        this.updated = Objects.requireNonNull(updated);
+        this.tiles = tiles;
+        this.updated = updated;
     }
 
     public UUID getEvid() {
@@ -66,7 +63,7 @@ public class Design {
         return levels;
     }
 
-    public List<Tiles> getTiles() {
+    public Map<Integer, Tiles> getTiles() {
         return tiles;
     }
 

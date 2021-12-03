@@ -8,7 +8,7 @@ import com.nextbreakpoint.blueprint.common.events.TileAggregateUpdateCompleted;
 import com.nextbreakpoint.blueprint.common.events.TileAggregateUpdateRequested;
 import com.nextbreakpoint.blueprint.common.vertx.Controller;
 import com.nextbreakpoint.blueprint.common.vertx.KafkaEmitter;
-import com.nextbreakpoint.blueprint.designs.aggregate.DesignAggregateManager;
+import com.nextbreakpoint.blueprint.designs.aggregate.DesignAggregate;
 import com.nextbreakpoint.blueprint.designs.model.Design;
 import rx.Single;
 
@@ -18,10 +18,10 @@ public class TileAggregateUpdateRequestedController implements Controller<InputM
     private final Mapper<InputMessage, TileAggregateUpdateRequested> inputMapper;
     private final Mapper<TileAggregateUpdateCompleted, OutputMessage> outputMapper;
     private final KafkaEmitter emitter;
-    private final DesignAggregateManager aggregateManager;
+    private final DesignAggregate aggregate;
 
-    public TileAggregateUpdateRequestedController(DesignAggregateManager aggregateManager, Mapper<InputMessage, TileAggregateUpdateRequested> inputMapper, Mapper<TileAggregateUpdateCompleted, OutputMessage> outputMapper, KafkaEmitter emitter) {
-        this.aggregateManager = Objects.requireNonNull(aggregateManager);
+    public TileAggregateUpdateRequestedController(DesignAggregate aggregate, Mapper<InputMessage, TileAggregateUpdateRequested> inputMapper, Mapper<TileAggregateUpdateCompleted, OutputMessage> outputMapper, KafkaEmitter emitter) {
+        this.aggregate = Objects.requireNonNull(aggregate);
         this.inputMapper =  Objects.requireNonNull(inputMapper);
         this.outputMapper = Objects.requireNonNull(outputMapper);
         this.emitter = Objects.requireNonNull(emitter);
@@ -40,7 +40,7 @@ public class TileAggregateUpdateRequestedController implements Controller<InputM
     }
 
     private Single<TileAggregateUpdateCompleted> onAggregateUpdateRequested(TileAggregateUpdateRequested event) {
-        return aggregateManager.updateDesign(event.getUuid(), event.getEsid())
+        return aggregate.updateDesign(event.getUuid(), event.getEsid())
                 .map(result -> result.orElseThrow(() -> new RuntimeException("Design aggregate not found " + event.getUuid())))
 //                .flatMapObservable(result -> Observable.from(result.map(Collections::singletonList).orElseGet(Collections::emptyList)))
                 .map(this::createEvent);

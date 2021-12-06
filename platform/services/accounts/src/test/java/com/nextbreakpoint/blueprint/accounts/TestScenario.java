@@ -14,7 +14,8 @@ import java.time.Duration;
 import java.util.Collections;
 
 public class TestScenario {
-  private static final int PORT = 30110;
+  private static final int HTTP_PORT = 30110;
+  private static final int DEBUG_PORT = 33110;
   private final String serviceName = "accounts";
   private final String version = TestUtils.getVariable("BUILD_VERSION", System.getProperty("build.version", "0"));
   private final String nexusHost = TestUtils.getVariable("NEXUS_HOST", System.getProperty("nexus.host", "localhost"));
@@ -27,6 +28,7 @@ public class TestScenario {
           .waitingFor(Wait.forLogMessage(".* socket: '/var/run/mysqld/mysqld.sock'  port: 3306.*", 1).withStartupTimeout(Duration.ofSeconds(60)));
 
   private GenericContainer service = new GenericContainer(DockerImageName.parse("integration/" + serviceName + ":" + version))
+          .withEnv("DEBUG_OPTS", "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:" + DEBUG_PORT)
           .withEnv("JAEGER_SERVICE_NAME", serviceName)
           .withEnv("KEYSTORE_SECRET", "secret")
           .withEnv("DATABASE_HOST", "mysql")
@@ -36,11 +38,11 @@ public class TestScenario {
           .withFileSystemBind("../../secrets/keystore_server.jks", "/secrets/keystore_server.jks", BindMode.READ_ONLY)
           .withFileSystemBind("../../secrets/keystore_auth.jceks", "/secrets/keystore_auth.jceks", BindMode.READ_ONLY)
           .withFileSystemBind("config/integration.json", "/etc/config.json", BindMode.READ_ONLY)
-          .withExposedPorts(PORT)
+          .withExposedPorts(HTTP_PORT, DEBUG_PORT)
           .withNetwork(network)
           .withNetworkAliases(serviceName)
           .dependsOn(mysql)
-          .waitingFor(Wait.forLogMessage(".* Service listening on port " + PORT + ".*", 1).withStartupTimeout(Duration.ofSeconds(20)));
+          .waitingFor(Wait.forLogMessage(".* Service listening on port " + HTTP_PORT + ".*", 1).withStartupTimeout(Duration.ofSeconds(20)));
 
   public void before() {
     if (buildImages) {
@@ -49,6 +51,9 @@ public class TestScenario {
 
     mysql.start();
     service.start();
+
+    System.out.println("Debug port: " + service.getMappedPort(DEBUG_PORT));
+    System.out.println("Http port: " + service.getMappedPort(HTTP_PORT));
   }
 
   public void after() {
@@ -65,7 +70,7 @@ public class TestScenario {
   }
 
   public Integer getServicePort() {
-    return service.getMappedPort(PORT);
+    return service.getMappedPort(HTTP_PORT);
   }
 
   public String getMySQLHost() {

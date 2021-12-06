@@ -29,11 +29,13 @@ public class CassandraStore implements Store {
 
     private static final String ERROR_SELECT_DESIGN = "An error occurred while fetching a design";
     private static final String ERROR_INSERT_DESIGN = "An error occurred while inserting a design";
+    private static final String ERROR_DELETE_DESIGN = "An error occurred while deleting a design";
     private static final String ERROR_INSERT_MESSAGE = "An error occurred while inserting a message";
     private static final String ERROR_SELECT_MESSAGES = "An error occurred while fetching messages";
 
     private static final String SELECT_DESIGN = "SELECT DESIGN_EVID, DESIGN_UUID, DESIGN_ESID, DESIGN_DATA, DESIGN_CHECKSUM, DESIGN_STATUS, DESIGN_LEVELS, DESIGN_TILES, DESIGN_UPDATED FROM DESIGN WHERE DESIGN_UUID = ?";
     private static final String INSERT_DESIGN = "INSERT INTO DESIGN (DESIGN_EVID, DESIGN_UUID, DESIGN_ESID, DESIGN_DATA, DESIGN_CHECKSUM, DESIGN_STATUS, DESIGN_LEVELS, DESIGN_TILES, DESIGN_UPDATED) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    private static final String DELETE_DESIGN = "DELETE FROM DESIGN WHERE DESIGN_UUID = ?";
     private static final String INSERT_MESSAGE = "INSERT INTO MESSAGE (MESSAGE_UUID, MESSAGE_OFFSET, MESSAGE_TYPE, MESSAGE_VALUE, MESSAGE_SOURCE, MESSAGE_KEY, MESSAGE_TIMESTAMP) VALUES (?, ?, ?, ?, ?, ?, ?)";
     private static final String SELECT_MESSAGES = "SELECT MESSAGE_UUID, MESSAGE_OFFSET, MESSAGE_TYPE, MESSAGE_VALUE, MESSAGE_SOURCE, MESSAGE_KEY, MESSAGE_TIMESTAMP FROM MESSAGE WHERE MESSAGE_KEY = ? AND MESSAGE_OFFSET <= ? AND MESSAGE_OFFSET > ?";
 
@@ -44,6 +46,7 @@ public class CassandraStore implements Store {
 
     private Single<PreparedStatement> selectDesign;
     private Single<PreparedStatement> insertDesign;
+    private Single<PreparedStatement> deleteDesign;
     private Single<PreparedStatement> insertMessage;
     private Single<PreparedStatement> selectMessages;
     private Single<Metadata> metadata;
@@ -75,6 +78,13 @@ public class CassandraStore implements Store {
     }
 
     @Override
+    public Single<Void> deleteDesign(Design design) {
+        return withSession()
+                .flatMap(session -> deleteDesign(session, makeDeleteDesignParams(design)))
+                .doOnError(err -> handleError(ERROR_DELETE_DESIGN, err));
+    }
+
+    @Override
     public Single<Optional<Design>> findDesign(UUID uuid) {
         return withSession()
                 .flatMap(session -> selectDesign(session, makeSelectDesignParams(uuid)))
@@ -98,6 +108,7 @@ public class CassandraStore implements Store {
             metadata = session.rxMetadata();
             selectDesign = session.rxPrepare(SELECT_DESIGN);
             insertDesign = session.rxPrepare(INSERT_DESIGN);
+            deleteDesign = session.rxPrepare(DELETE_DESIGN);
             insertMessage = session.rxPrepare(INSERT_MESSAGE);
             selectMessages = session.rxPrepare(SELECT_MESSAGES);
         }
@@ -120,6 +131,13 @@ public class CassandraStore implements Store {
 
     private Single<Void> insertDesign(CassandraClient session, Object[] values) {
         return insertDesign
+                .map(pst -> pst.bind(values).setConsistencyLevel(ConsistencyLevel.QUORUM))
+                .flatMap(session::rxExecute)
+                .map(rs -> null);
+    }
+
+    private Single<Void> deleteDesign(CassandraClient session, Object[] values) {
+        return deleteDesign
                 .map(pst -> pst.bind(values).setConsistencyLevel(ConsistencyLevel.QUORUM))
                 .flatMap(session::rxExecute)
                 .map(rs -> null);
@@ -182,6 +200,10 @@ public class CassandraStore implements Store {
     private Object[] makeInsertDesignParams(Design design, UserDefinedType levelType) {
         final Map<Integer, UdtValue> levelsMap = design.getTiles().values().stream().collect(Collectors.toMap(Tiles::getLevel, x -> convertTilesToUDT(levelType, x)));
         return new Object[] { design.getEvid(), design.getUuid(), design.getEsid(), design.getJson(), Checksum.of(design.getJson()), design.getStatus(), design.getLevels(), levelsMap, design.getUpdated().toInstant() };
+    }
+
+    private Object[] makeDeleteDesignParams(Design design) {
+        return new Object[] { design.getUuid() };
     }
 
     private Tiles convertUDTToTiles(Integer level, UdtValue udtValue) {

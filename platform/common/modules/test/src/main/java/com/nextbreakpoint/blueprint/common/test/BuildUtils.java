@@ -24,9 +24,7 @@ public class BuildUtils {
         System.out.println("Building image...");
         List<String> args = List.of(
                 "--build-arg",
-                "nexus_host=" + nexusHost,
-                "--build-arg",
-                "nexus_port=" + nexusPort
+                "maven_args=\"-Dnexus.host=" + nexusHost + " -Dnexus.port=" + nexusPort + "\""
         );
         try {
             if (KubeUtils.buildDockerImage(".", "integration/" + serviceName + ":" + version, args) != 0) {

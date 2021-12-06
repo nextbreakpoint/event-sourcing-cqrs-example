@@ -46,6 +46,10 @@ public class DesignAggregate {
     }
 
     private Single<Optional<Design>> updateDesign(Design design) {
-        return store.updateDesign(design).map(ignore -> Optional.ofNullable(design));
+        if (design.getStatus().equals("DELETED")) {
+            return store.deleteDesign(design).map(ignore -> Optional.ofNullable(design));
+        } else {
+            return store.updateDesign(design).map(ignore -> Optional.ofNullable(design));
+        }
     }
 }

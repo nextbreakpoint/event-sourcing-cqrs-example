@@ -15,5 +15,7 @@ public interface Store {
 
     Single<Void> updateDesign(Design design);
 
+    Single<Void> deleteDesign(Design design);
+
     Single<Optional<Design>> findDesign(UUID uuid);
 }

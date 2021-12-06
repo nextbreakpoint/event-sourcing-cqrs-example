@@ -16,15 +16,15 @@ export NEXUS_USERNAME=admin
 export NEXUS_PASSWORD=password
 
 services=(
-#  gateway
-#  authentication
-#  accounts
-#  designs-notification-dispatcher
-#  designs-command-producer
-#  designs-aggregate-fetcher
+  gateway
+  authentication
+  accounts
+  designs-notification-dispatcher
+  designs-command-producer
+  designs-aggregate-fetcher
   designs-event-consumer
-#  designs-tile-renderer
-#  frontend
+  designs-tile-renderer
+  frontend
 )
 
 export MAVEN_ARGS="-Dnexus.host=${NEXUS_HOST} -Dnexus.port=${NEXUS_PORT} -Dpactbroker.host=${PACTBROKER_HOST} -Dpactbroker.port=${PACTBROKER_PORT}"

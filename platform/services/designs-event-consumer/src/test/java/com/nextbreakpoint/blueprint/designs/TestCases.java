@@ -318,9 +318,7 @@ public class TestCases {
                 .pollInterval(ONE_SECOND)
                 .untilAsserted(() -> {
                     final List<Row> rows = testCassandra.fetchDesign(designId);
-                    assertThat(rows).hasSize(1);
-                    final List<Tiles> tiles = TestUtils.convertToTilesList(TestUtils.createTilesMap(TestConstants.LEVELS));
-                    TestAssertions.assertExpectedDesign(rows.get(0), TestConstants.JSON_1, "DELETED", tiles);
+                    assertThat(rows).hasSize(0);
                 });
 
         await().atMost(TEN_SECONDS)

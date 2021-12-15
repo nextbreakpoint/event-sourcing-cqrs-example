@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.nextbreakpoint</groupId>
         <artifactId>com.nextbreakpoint.blueprint.bom</artifactId>
-        <version>1.0.0-wip2-9e44c74-1638814901</version>
+        <version>1.0.0-wip2-f6ce387-1639582992</version>
     </parent>
     <packaging>pom</packaging>
     <licenses>
@@ -194,11 +194,11 @@
                 <module>gateway</module>
                 <module>authentication</module>
                 <module>accounts</module>
-                <module>designs-aggregate-fetcher</module>
-                <module>designs-command-producer</module>
-                <module>designs-notification-dispatcher</module>
-                <module>designs-event-consumer</module>
-                <module>designs-tile-renderer</module>
+                <module>designs-query</module>
+                <module>designs-command</module>
+                <module>designs-notification</module>
+                <module>designs-aggregate</module>
+                <module>renderer</module>
             </modules>
         </profile>
     </profiles>

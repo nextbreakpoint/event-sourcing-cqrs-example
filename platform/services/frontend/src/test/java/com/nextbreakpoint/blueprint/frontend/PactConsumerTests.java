@@ -352,7 +352,7 @@ public class PactConsumerTests {
 //  }
 
   @Test
-  @PactTestFor(providerName = "designs-aggregate-fetcher", port = "1116", pactMethod = "retrieveDesigns")
+  @PactTestFor(providerName = "designs-query", port = "1116", pactMethod = "retrieveDesigns")
   public void shouldRetrieveDesignsWhenUsingCQRS(MockServer mockServer) throws IOException {
     HttpResponse httpResponse = Request.Get(mockServer.getUrl() + "/v1/designs")
             .addHeader("Accept", "application/json")
@@ -366,7 +366,7 @@ public class PactConsumerTests {
   }
 
   @Test
-  @PactTestFor(providerName = "designs-aggregate-fetcher", port = "1117", pactMethod = "retrieveDesignWhenUsingCQRS")
+  @PactTestFor(providerName = "designs-query", port = "1117", pactMethod = "retrieveDesignWhenUsingCQRS")
   public void shouldRetrieveDesignWhenUsingCQRS(MockServer mockServer) throws IOException {
     HttpResponse httpResponse = Request.Get(mockServer.getUrl() + "/v1/designs/" + TestConstants.DESIGN_UUID_1)
             .addHeader("Accept", "application/json")
@@ -380,7 +380,7 @@ public class PactConsumerTests {
   }
 
   @Test
-  @PactTestFor(providerName = "designs-command-producer", port = "1118", pactMethod = "insertDesignWhenUsingCQRS")
+  @PactTestFor(providerName = "designs-command", port = "1118", pactMethod = "insertDesignWhenUsingCQRS")
   public void shouldInsertDesignWhenUsingCQRS(MockServer mockServer) throws IOException {
     HttpResponse httpResponse = Request.Post(mockServer.getUrl() + "/v1/designs")
             .addHeader("Accept", "application/json")
@@ -394,7 +394,7 @@ public class PactConsumerTests {
   }
 
   @Test
-  @PactTestFor(providerName = "designs-command-producer", port = "1119", pactMethod = "updateDesignWhenUsingCQRS")
+  @PactTestFor(providerName = "designs-command", port = "1119", pactMethod = "updateDesignWhenUsingCQRS")
   public void shouldUpdateDesignWhenUsingCQRS(MockServer mockServer) throws IOException {
     HttpResponse httpResponse = Request.Put(mockServer.getUrl() + "/v1/designs/" + TestConstants.DESIGN_UUID_1)
             .addHeader("Accept", "application/json")
@@ -408,7 +408,7 @@ public class PactConsumerTests {
   }
 
   @Test
-  @PactTestFor(providerName = "designs-command-producer", port = "1120", pactMethod = "deleteDesignWhenUsingCQRS")
+  @PactTestFor(providerName = "designs-command", port = "1120", pactMethod = "deleteDesignWhenUsingCQRS")
   public void shouldDeleteDesignWhenUsingCQRS(MockServer mockServer) throws IOException {
     HttpResponse httpResponse = Request.Delete(mockServer.getUrl() + "/v1/designs/" + TestConstants.DESIGN_UUID_1)
             .addHeader("Accept", "application/json")

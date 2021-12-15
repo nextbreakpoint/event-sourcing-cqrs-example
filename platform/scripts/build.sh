@@ -16,14 +16,14 @@ export NEXUS_USERNAME=admin
 export NEXUS_PASSWORD=password
 
 services=(
-  gateway
-  authentication
+  designs-query
+  designs-command
+  designs-aggregate
+  designs-notification
+  renderer
   accounts
-  designs-notification-dispatcher
-  designs-command-producer
-  designs-aggregate-fetcher
-  designs-event-consumer
-  designs-tile-renderer
+  authentication
+  gateway
   frontend
 )
 

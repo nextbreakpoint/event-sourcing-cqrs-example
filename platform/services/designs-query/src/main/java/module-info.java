@@ -1,4 +1,4 @@
-module com.nextbreakpoint.blueprint.designsaggregatefetcher {
+module com.nextbreakpoint.blueprint.designs.query {
     requires com.nextbreakpoint.blueprint.common.core;
     requires com.nextbreakpoint.blueprint.common.vertx;
     requires com.nextbreakpoint.nextfractal.core;

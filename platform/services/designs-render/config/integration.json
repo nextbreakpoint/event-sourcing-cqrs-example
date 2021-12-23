@@ -1,0 +1,23 @@
+{
+  "host_port": "30124",
+
+  "server_keystore_path": "../../secrets/keystore_server.jks",
+  "server_keystore_secret": "${KEYSTORE_SECRET}",
+
+  "jwt_keystore_path": "../../secrets/keystore_auth.jceks",
+  "jwt_keystore_type": "jceks",
+  "jwt_keystore_secret": "${KEYSTORE_SECRET}",
+
+  "origin_pattern": "https://localhost(:[0-9]+)?",
+
+  "kafka_bootstrap_servers": "${KAFKA_HOST}:${KAFKA_PORT}",
+  "kafka_group_id": "designs-render",
+  "message_source": "service-designs",
+  "events_topic": "${EVENTS_TOPIC}",
+  "render_topic": "${RENDER_TOPIC}",
+
+  "max_execution_time_in_millis": "30000000",
+
+  "s3_endpoint": "http://${MINIO_HOST}:${MINIO_PORT}",
+  "s3_bucket": "${BUCKET_NAME}"
+}

@@ -1,7 +1,7 @@
 openapi: 3.0.1
 info:
-  title: Designs Event Consumer API
-  description: API contract of service Designs Event Consumer
+  title: Designs Aggregate API
+  description: API contract of service Designs Aggregate
   version: 1.0.0
 externalDocs:
   description: Find out more about Swagger
@@ -10,6 +10,6 @@ servers:
   - url: https://localhost/v1
 tags:
   - name: designs
-    description: Everything about processing designs
+    description: Everything about processing events and aggregates
 paths:
   {}

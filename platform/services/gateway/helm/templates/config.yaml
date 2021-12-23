@@ -36,7 +36,7 @@ data:
 
       "server_auth_url": "{{ $root.Values.authApiUrl | default "https://authentication:8080" }}/auth",
       "server_accounts_url": "{{ $root.Values.accountsApiUrl | default "https://accounts:8080" }}/accounts",
-      "server_designs_query_url": "{{ $root.Values.designsAggregateFetcherApiUrl | default "https://designs-query:8080" }}/designs",
-      "server_designs_command_url": "{{ $root.Values.designsCommandProducerApiUrl | default "https://designs-command:8080" }}/designs",
-      "server_designs_watch_url": "{{ $root.Values.designsNotificationDispatcherApiUrl | default "https://designs-notification:8080" }}/watch/designs"
+      "server_designs_query_url": "{{ $root.Values.designsQueryApiUrl | default "https://designs-query:8080" }}/designs",
+      "server_designs_command_url": "{{ $root.Values.designsCommandApiUrl | default "https://designs-command:8080" }}/designs",
+      "server_designs_watch_url": "{{ $root.Values.designsNotifyApiUrl | default "https://designs-notify:8080" }}/watch/designs"
     }

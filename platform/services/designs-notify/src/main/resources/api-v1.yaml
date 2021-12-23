@@ -1,0 +1,103 @@
+openapi: 3.0.1
+info:
+  title: Designs Notify API
+  description: API contract of service Designs Notify
+  version: 1.0.0
+externalDocs:
+  description: Find out more about Swagger
+  url: http://swagger.io
+servers:
+  - url: https://localhost/v1
+tags:
+  - name: designs
+    description: Everything about receiving notifications about designs
+paths:
+  /watch/designs/{offset}/{designId}:
+    get:
+      tags:
+        - designs
+      summary: Retrieve sse events url for a single design
+      operationId: watchDesign
+      parameters:
+        - name: offset
+          in: path
+          description: offset of initial event
+          required: true
+          schema:
+            type: integer
+        - name: designId
+          in: path
+          description: uuid of design to watch
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Started watching
+          content:
+            {}
+  /watch/designs/{offset}:
+    get:
+      tags:
+        - designs
+      summary: Retrieve sse events url for the designs collection
+      operationId: watchDesigns
+      parameters:
+        - name: offset
+          in: path
+          description: offset of initial event
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Started watching
+          content:
+            {}
+  /sse/designs/{offset}/{designId}:
+    get:
+      tags:
+        - designs
+      summary: Receive sse events related to a single design
+      operationId: sseDesign
+      parameters:
+        - name: offset
+          in: path
+          description: offset of initial event
+          required: true
+          schema:
+            type: integer
+        - name: designId
+          in: path
+          description: uuid of design to watch
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Started watching
+          content:
+            {}
+  /sse/designs/{offset}:
+    get:
+      tags:
+        - designs
+      summary: Receive sse events related the designs collection
+      operationId: sseDesigns
+      parameters:
+        - name: offset
+          in: path
+          description: offset of initial event
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Started watching
+          content:
+            {}
+components:
+  schemas:
+    {}

@@ -1,4 +1,4 @@
-module com.nextbreakpoint.blueprint.designscommandproducer {
+module com.nextbreakpoint.blueprint.designs.command {
     requires com.nextbreakpoint.blueprint.common.core;
     requires com.nextbreakpoint.blueprint.common.vertx;
     requires com.nextbreakpoint.blueprint.common.events;

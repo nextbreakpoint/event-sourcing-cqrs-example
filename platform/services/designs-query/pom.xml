@@ -10,7 +10,7 @@
     <parent>
         <groupId>com.nextbreakpoint</groupId>
         <artifactId>com.nextbreakpoint.blueprint.service</artifactId>
-        <version>1.0.0-wip2-f6ce387-1639582992</version>
+        <version>1.0.0-wip2-eac05b2-1640258765</version>
     </parent>
     <repositories>
         <repository>
@@ -64,6 +64,8 @@
                         <DATABASE_KEYSPACE>designs</DATABASE_KEYSPACE>
                         <DATABASE_USERNAME>verticle</DATABASE_USERNAME>
                         <DATABASE_PASSWORD>password</DATABASE_PASSWORD>
+                        <ELASTICSEARCH_HOST>localhost</ELASTICSEARCH_HOST>
+                        <ELASTICSEARCH_PORT>9092</ELASTICSEARCH_PORT>
                         <AWS_ACCESS_KEY_ID>admin</AWS_ACCESS_KEY_ID>
                         <AWS_SECRET_ACCESS_KEY>password</AWS_SECRET_ACCESS_KEY>
                         <MINIO_HOST>localhost</MINIO_HOST>

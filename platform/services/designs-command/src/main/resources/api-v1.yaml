@@ -1,7 +1,7 @@
 openapi: 3.0.1
 info:
-  title: Designs Command Consumer API
-  description: API contract of service Designs Command Consumer
+  title: Designs Command API
+  description: API contract of service Designs Command
   version: 1.0.0
 externalDocs:
   description: Find out more about Swagger

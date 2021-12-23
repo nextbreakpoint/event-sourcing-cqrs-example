@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.nextbreakpoint</groupId>
         <artifactId>com.nextbreakpoint.blueprint.bom</artifactId>
-        <version>1.0.0-wip2-f6ce387-1639582992</version>
+        <version>1.0.0-wip2-eac05b2-1640258765</version>
     </parent>
     <packaging>pom</packaging>
     <licenses>
@@ -196,9 +196,9 @@
                 <module>accounts</module>
                 <module>designs-query</module>
                 <module>designs-command</module>
-                <module>designs-notification</module>
+                <module>designs-notify</module>
                 <module>designs-aggregate</module>
-                <module>renderer</module>
+                <module>designs-render</module>
             </modules>
         </profile>
     </profiles>

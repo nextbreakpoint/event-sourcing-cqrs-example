@@ -17,6 +17,9 @@
   "cassandra_contactPoints": "${DATABASE_HOST}",
   "cassandra_port": "9042",
 
+  "elasticsearch_host": "${ELASTICSEARCH_HOST}",
+  "elasticsearch_port": "9092",
+
   "s3_endpoint": "http://${MINIO_HOST}:${MINIO_PORT}",
   "s3_bucket": "${BUCKET_NAME}"
 }

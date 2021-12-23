@@ -153,7 +153,7 @@ public class PactConsumerTests {
                 .toPact();
     }
 
-    @Pact(consumer = "designs-aggregate", provider = "renderer")
+    @Pact(consumer = "designs-aggregate", provider = "designs-render")
     public MessagePact tileRenderCompleted(MessagePactBuilder builder) {
         final UUID uuid = new UUID(0L, 4L);
 
@@ -303,7 +303,7 @@ public class PactConsumerTests {
     }
 
     @Test
-    @PactTestFor(providerName = "renderer", port = "1114", pactMethod = "tileRenderCompleted", providerType = ProviderType.ASYNCH)
+    @PactTestFor(providerName = "designs-render", port = "1114", pactMethod = "tileRenderCompleted", providerType = ProviderType.ASYNCH)
     @DisplayName("Should update the design after receiving a TileRenderCompleted event")
     public void shouldUpdateTheDesignWhenReceivingATileRenderCompletedMessage(MessagePact messagePact) {
         final DesignInsertRequested designInsertRequested = new DesignInsertRequested(Uuids.timeBased(), new UUID(0L, 4L), TestConstants.JSON_1, TestConstants.LEVELS);

@@ -27,6 +27,6 @@ clientDomain:
 
 authApiUrl:
 accountsApiUrl:
-designsAggregateFetcherApiUrl:
-designsCommandProducerApiUrl:
-designsNotificationDispatcherApiUrl:
+designsQueryApiUrl:
+designsCommandApiUrl:
+designsNotifyApiUrl:

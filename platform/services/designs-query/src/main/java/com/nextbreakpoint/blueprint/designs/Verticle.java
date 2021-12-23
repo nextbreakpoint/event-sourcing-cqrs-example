@@ -4,6 +4,7 @@ import com.nextbreakpoint.blueprint.common.core.Environment;
 import com.nextbreakpoint.blueprint.common.core.IOUtils;
 import com.nextbreakpoint.blueprint.common.vertx.*;
 import com.nextbreakpoint.blueprint.designs.persistence.CassandraStore;
+import com.nextbreakpoint.blueprint.designs.persistence.ElasticsearchStore;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Handler;
 import io.vertx.core.VertxOptions;
@@ -20,6 +21,7 @@ import io.vertx.rxjava.cassandra.CassandraClient;
 import io.vertx.rxjava.core.AbstractVerticle;
 import io.vertx.rxjava.core.Promise;
 import io.vertx.rxjava.core.Vertx;
+import io.vertx.rxjava.core.http.HttpClient;
 import io.vertx.rxjava.ext.auth.jwt.JWTAuth;
 import io.vertx.rxjava.ext.web.Router;
 import io.vertx.rxjava.ext.web.RoutingContext;
@@ -131,6 +133,22 @@ public class Verticle extends AbstractVerticle {
 
             final int cassandraPort = Integer.parseInt(config.getString("cassandra_port", "9042"));
 
+            final String elasticsearchHost = config.getString("elasticsearch_host");
+
+            final int elasticsearchPort = Integer.parseInt(config.getString("elasticsearch_port", "9092"));
+
+//            final String clientKeyStorePath = config.getString("client_keystore_path");
+//
+//            final String clientKeyStoreSecret = config.getString("client_keystore_secret");
+//
+//            final String clientTrustStorePath = config.getString("client_truststore_path");
+//
+//            final String clientTrustStoreSecret = config.getString("client_truststore_secret");
+//
+//            final Boolean keepAlive = Boolean.parseBoolean(config.getString("client_keep_alive"));
+//
+//            final Boolean verifyHost = Boolean.parseBoolean(config.getString("client_verify_host"));
+
             final CassandraClientConfig cassandraConfig = CassandraClientConfig.builder()
                     .withClusterName(clusterName)
                     .withKeyspace(keyspace)
@@ -158,7 +176,22 @@ public class Verticle extends AbstractVerticle {
                     .endpointOverride(URI.create(s3Endpoint))
                     .build();
 
+            final HttpClientConfig clientConfig = HttpClientConfig.builder()
+                    .withKeepAlive(true)
+                    .withVerifyHost(false)
+//                    .withKeyStorePath(clientKeyStorePath)
+//                    .withKeyStoreSecret(clientKeyStoreSecret)
+//                    .withTrustStorePath(clientTrustStorePath)
+//                    .withTrustStoreSecret(clientTrustStoreSecret)
+                    .build();
+
+            final String elaticsearchUrl = elasticsearchHost + ":" + elasticsearchPort;
+
+            final HttpClient elasticsearchClient = HttpClientFactory.create(vertx, elaticsearchUrl, clientConfig);
+
             final Store store = new CassandraStore(supplier);
+
+//            final Store store = new ElasticsearchStore(elasticsearchClient);
 
             final Router mainRouter = Router.router(vertx);
 

@@ -1,7 +1,7 @@
 openapi: 3.0.1
 info:
-  title: Designs Aggregate Fetcher API
-  description: API contract of service Designs Aggregate Fetcher
+  title: Designs Query API
+  description: API contract of service Designs Query
   version: 1.0.0
 externalDocs:
   description: Find out more about Swagger
@@ -10,7 +10,7 @@ servers:
   - url: https://localhost/v1
 tags:
   - name: designs
-    description: Everything about fetching designs
+    description: Everything about querying designs
 paths:
   /designs/{designId}:
     get:

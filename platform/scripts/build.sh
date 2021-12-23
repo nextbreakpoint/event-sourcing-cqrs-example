@@ -19,8 +19,8 @@ services=(
   designs-query
   designs-command
   designs-aggregate
-  designs-notification
-  renderer
+  designs-notify
+  designs-render
   accounts
   authentication
   gateway

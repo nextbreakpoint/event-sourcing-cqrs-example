@@ -199,7 +199,7 @@ public class CassandraStore implements Store {
 
     private Object[] makeInsertDesignParams(Design design, UserDefinedType levelType) {
         final Map<Integer, UdtValue> levelsMap = design.getTiles().values().stream().collect(Collectors.toMap(Tiles::getLevel, x -> convertTilesToUDT(levelType, x)));
-        return new Object[] { design.getEvid(), design.getUuid(), design.getEsid(), design.getJson(), Checksum.of(design.getJson()), design.getStatus(), design.getLevels(), levelsMap, design.getUpdated().toInstant() };
+        return new Object[] { design.getEvid(), design.getUuid(), design.getEsid(), design.getJson(), Checksum.of(design.getJson()), design.getStatus(), design.getLevels(), levelsMap, design.getModified().toInstant() };
     }
 
     private Object[] makeDeleteDesignParams(Design design) {

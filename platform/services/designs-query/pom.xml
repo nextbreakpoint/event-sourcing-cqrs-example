@@ -60,17 +60,17 @@
                         <JAEGER_SAMPLER_PARAM>1</JAEGER_SAMPLER_PARAM>
                         <JAEGER_REPORTER_LOG_SPANS>true</JAEGER_REPORTER_LOG_SPANS>
                         <KEYSTORE_SECRET>secret</KEYSTORE_SECRET>
-                        <DATABASE_HOST>localhost</DATABASE_HOST>
-                        <DATABASE_KEYSPACE>designs</DATABASE_KEYSPACE>
-                        <DATABASE_USERNAME>verticle</DATABASE_USERNAME>
-                        <DATABASE_PASSWORD>password</DATABASE_PASSWORD>
                         <ELASTICSEARCH_HOST>localhost</ELASTICSEARCH_HOST>
-                        <ELASTICSEARCH_PORT>9092</ELASTICSEARCH_PORT>
+                        <ELASTICSEARCH_PORT>9200</ELASTICSEARCH_PORT>
+                        <ELASTICSEARCH_INDEX>designs</ELASTICSEARCH_INDEX>
                         <AWS_ACCESS_KEY_ID>admin</AWS_ACCESS_KEY_ID>
                         <AWS_SECRET_ACCESS_KEY>password</AWS_SECRET_ACCESS_KEY>
                         <MINIO_HOST>localhost</MINIO_HOST>
                         <MINIO_PORT>9000</MINIO_PORT>
                         <BUCKET_NAME>tiles</BUCKET_NAME>
+                        <KAFKA_HOST>localhost</KAFKA_HOST>
+                        <KAFKA_PORT>9093</KAFKA_PORT>
+                        <EVENTS_TOPIC>events</EVENTS_TOPIC>
                     </environmentVariables>
                     <arguments>
                         <argument>-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:35120</argument>
@@ -88,8 +88,9 @@
                         </goals>
                         <configuration>
                             <environmentVariables>
-                                <DATABASE_KEYSPACE>test_designs_aggregate_fetcher</DATABASE_KEYSPACE>
+                                <ELASTICSEARCH_INDEX>test_designs_query</ELASTICSEARCH_INDEX>
                                 <BUCKET_NAME>test-designs-query</BUCKET_NAME>
+                                <EVENTS_TOPIC>test-designs-query-events</EVENTS_TOPIC>
                             </environmentVariables>
                         </configuration>
                     </execution>
@@ -114,12 +115,30 @@
         </dependency>
         <dependency>
             <groupId>io.vertx</groupId>
+            <artifactId>vertx-kafka-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.vertx</groupId>
             <artifactId>vertx-cassandra-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>co.elastic.clients</groupId>
+            <artifactId>elasticsearch-java</artifactId>
         </dependency>
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>s3</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpcore</artifactId>
+            <version>${httpcore.version}</version>
+        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.apache.httpcomponents</groupId>-->
+<!--            <artifactId>httpclient</artifactId>-->
+<!--            <version>${httpclient.version}</version>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>au.com.dius.pact</groupId>
             <artifactId>provider</artifactId>
@@ -129,6 +148,11 @@
             <groupId>au.com.dius.pact.provider</groupId>
             <artifactId>junit5</artifactId>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 </project>

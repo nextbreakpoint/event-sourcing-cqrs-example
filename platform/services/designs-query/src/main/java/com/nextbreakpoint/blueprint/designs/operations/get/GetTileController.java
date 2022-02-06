@@ -1,12 +1,12 @@
 package com.nextbreakpoint.blueprint.designs.operations.get;
 
+import com.nextbreakpoint.blueprint.common.core.Image;
 import com.nextbreakpoint.blueprint.common.vertx.Controller;
 import com.nextbreakpoint.blueprint.designs.Store;
 import com.nextbreakpoint.blueprint.designs.common.S3Driver;
-import com.nextbreakpoint.blueprint.designs.model.DesignDocument;
-import com.nextbreakpoint.blueprint.common.core.Image;
-import com.nextbreakpoint.blueprint.designs.operations.load.LoadDesignRequest;
-import com.nextbreakpoint.blueprint.designs.operations.load.LoadDesignResponse;
+import com.nextbreakpoint.blueprint.designs.model.Design;
+import com.nextbreakpoint.blueprint.designs.persistence.LoadDesignRequest;
+import com.nextbreakpoint.blueprint.designs.persistence.LoadDesignResponse;
 import rx.Single;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 
@@ -24,11 +24,11 @@ public class GetTileController implements Controller<GetTileRequest, GetTileResp
     @Override
     public Single<GetTileResponse> onNext(GetTileRequest request) {
         return store.loadDesign(new LoadDesignRequest(request.getUuid()))
-            .map(LoadDesignResponse::getDesignDocument)
-            .flatMap(result -> result.map(document -> getImage(request, document)).orElse(Single.just(new GetTileResponse(null))));
+            .map(LoadDesignResponse::getDesign)
+            .flatMap(result -> result.map(design -> getImage(request, design)).orElse(Single.just(new GetTileResponse(null))));
     }
 
-    private Single<GetTileResponse> getImage(GetTileRequest request, DesignDocument document) {
+    private Single<GetTileResponse> getImage(GetTileRequest request, Design document) {
         return s3Driver.getObject(getBucketKey(request, document.getChecksum()))
                 .onErrorReturn(this::handleError)
                 .map(data -> new GetTileResponse(new Image(data, document.getChecksum())));

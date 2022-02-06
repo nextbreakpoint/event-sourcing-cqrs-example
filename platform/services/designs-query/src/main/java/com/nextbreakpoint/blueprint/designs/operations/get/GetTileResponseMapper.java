@@ -1,7 +1,7 @@
 package com.nextbreakpoint.blueprint.designs.operations.get;
 
-import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.Image;
+import com.nextbreakpoint.blueprint.common.core.Mapper;
 
 import java.util.Optional;
 

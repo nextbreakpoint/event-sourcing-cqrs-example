@@ -1,9 +1,19 @@
 package com.nextbreakpoint.blueprint.designs;
 
+import co.elastic.clients.elasticsearch.ElasticsearchAsyncClient;
+import co.elastic.clients.json.jackson.JacksonJsonpMapper;
+import co.elastic.clients.transport.ElasticsearchTransport;
+import co.elastic.clients.transport.rest_client.RestClientTransport;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.nextbreakpoint.blueprint.common.core.BlockingHandler;
 import com.nextbreakpoint.blueprint.common.core.Environment;
 import com.nextbreakpoint.blueprint.common.core.IOUtils;
+import com.nextbreakpoint.blueprint.common.core.InputMessage;
+import com.nextbreakpoint.blueprint.common.events.DesignDocumentUpdateRequested;
 import com.nextbreakpoint.blueprint.common.vertx.*;
-import com.nextbreakpoint.blueprint.designs.persistence.CassandraStore;
 import com.nextbreakpoint.blueprint.designs.persistence.ElasticsearchStore;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Handler;
@@ -12,16 +22,16 @@ import io.vertx.core.dns.AddressResolverOptions;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
+import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.json.jackson.DatabindCodec;
 import io.vertx.ext.web.handler.LoggerFormat;
 import io.vertx.ext.web.openapi.RouterBuilder;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.VertxPrometheusOptions;
-import io.vertx.rxjava.cassandra.CassandraClient;
 import io.vertx.rxjava.core.AbstractVerticle;
 import io.vertx.rxjava.core.Promise;
 import io.vertx.rxjava.core.Vertx;
-import io.vertx.rxjava.core.http.HttpClient;
 import io.vertx.rxjava.ext.auth.jwt.JWTAuth;
 import io.vertx.rxjava.ext.web.Router;
 import io.vertx.rxjava.ext.web.RoutingContext;
@@ -29,7 +39,11 @@ import io.vertx.rxjava.ext.web.handler.BodyHandler;
 import io.vertx.rxjava.ext.web.handler.CorsHandler;
 import io.vertx.rxjava.ext.web.handler.LoggerHandler;
 import io.vertx.rxjava.ext.web.handler.TimeoutHandler;
+import io.vertx.rxjava.kafka.client.consumer.KafkaConsumer;
+import io.vertx.rxjava.kafka.client.producer.KafkaProducer;
 import io.vertx.tracing.opentracing.OpenTracingOptions;
+import org.apache.http.HttpHost;
+import org.elasticsearch.client.RestClient;
 import rx.Completable;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProviderChain;
@@ -41,9 +55,10 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
-import java.util.function.Supplier;
 
 import static com.nextbreakpoint.blueprint.common.core.Authority.*;
 import static com.nextbreakpoint.blueprint.common.core.Headers.*;
@@ -51,6 +66,8 @@ import static java.util.Arrays.asList;
 
 public class Verticle extends AbstractVerticle {
     private static final Logger logger = LoggerFactory.getLogger(Verticle.class.getName());
+
+    private KafkaPolling kafkaPolling;
 
     public static void main(String[] args) {
         try {
@@ -95,6 +112,16 @@ public class Verticle extends AbstractVerticle {
                 .toCompletable();
     }
 
+    @Override
+    public Completable rxStop() {
+        return Completable.fromCallable(() -> {
+            if (kafkaPolling != null) {
+                kafkaPolling.stopPolling();
+            }
+            return null;
+        });
+    }
+
     private void initServer(Promise<Void> promise) {
         try {
             final JsonObject config = vertx.getOrCreateContext().config();
@@ -121,44 +148,43 @@ public class Verticle extends AbstractVerticle {
 
             final String s3Region = config.getString("s3_region", "eu-west-1");
 
-            final String clusterName = config.getString("cassandra_cluster");
-
-            final String keyspace = config.getString("cassandra_keyspace");
-
-            final String username = config.getString("cassandra_username");
-
-            final String password = config.getString("cassandra_password");
-
-            final String[] contactPoints = config.getString("cassandra_contactPoints").split(",");
-
-            final int cassandraPort = Integer.parseInt(config.getString("cassandra_port", "9042"));
+            final String elasticsearchIndex = config.getString("elasticsearch_index", "designs");
 
             final String elasticsearchHost = config.getString("elasticsearch_host");
 
             final int elasticsearchPort = Integer.parseInt(config.getString("elasticsearch_port", "9092"));
 
-//            final String clientKeyStorePath = config.getString("client_keystore_path");
-//
-//            final String clientKeyStoreSecret = config.getString("client_keystore_secret");
-//
-//            final String clientTrustStorePath = config.getString("client_truststore_path");
-//
-//            final String clientTrustStoreSecret = config.getString("client_truststore_secret");
-//
-//            final Boolean keepAlive = Boolean.parseBoolean(config.getString("client_keep_alive"));
-//
-//            final Boolean verifyHost = Boolean.parseBoolean(config.getString("client_verify_host"));
+            final String eventsTopic = config.getString("events_topic");
 
-            final CassandraClientConfig cassandraConfig = CassandraClientConfig.builder()
-                    .withClusterName(clusterName)
-                    .withKeyspace(keyspace)
-                    .withUsername(username)
-                    .withPassword(password)
-                    .withContactPoints(contactPoints)
-                    .withPort(cassandraPort)
-                    .build();
+            final String messageSource = config.getString("message_source");
 
-            final Supplier<CassandraClient> supplier = () -> CassandraClientFactory.create(vertx, cassandraConfig);
+            final String bootstrapServers = config.getString("kafka_bootstrap_servers", "localhost:9092");
+
+            final String keySerializer = config.getString("kafka_key_serializer", "org.apache.kafka.common.serialization.StringSerializer");
+
+            final String valSerializer = config.getString("kafka_val_serializer", "org.apache.kafka.common.serialization.StringSerializer");
+
+            final String clientId = config.getString("kafka_client_id", "designs-query");
+
+            final String acks = config.getString("kafka_acks", "1");
+
+            final String keystoreLocation = config.getString("kafka_keystore_location");
+
+            final String keystorePassword = config.getString("kafka_keystore_password");
+
+            final String truststoreLocation = config.getString("kafka_truststore_location");
+
+            final String truststorePassword = config.getString("kafka_truststore_password");
+
+            final String keyDeserializer = config.getString("kafka_key_serializer", "org.apache.kafka.common.serialization.StringDeserializer");
+
+            final String valDeserializer = config.getString("kafka_val_serializer", "org.apache.kafka.common.serialization.StringDeserializer");
+
+            final String groupId = config.getString("kafka_group_id", "test");
+
+            final String autoOffsetReset = config.getString("kafka_auto_offset_reset", "earliest");
+
+            final String enableAutoCommit = config.getString("kafka_enable_auto_commit", "false");
 
             final AwsCredentialsProvider credentialsProvider = AwsCredentialsProviderChain.of(DefaultCredentialsProvider.create());
 
@@ -176,22 +202,47 @@ public class Verticle extends AbstractVerticle {
                     .endpointOverride(URI.create(s3Endpoint))
                     .build();
 
-            final HttpClientConfig clientConfig = HttpClientConfig.builder()
-                    .withKeepAlive(true)
-                    .withVerifyHost(false)
-//                    .withKeyStorePath(clientKeyStorePath)
-//                    .withKeyStoreSecret(clientKeyStoreSecret)
-//                    .withTrustStorePath(clientTrustStorePath)
-//                    .withTrustStoreSecret(clientTrustStoreSecret)
+            final RestClient restClient = RestClient.builder(new HttpHost(elasticsearchHost, elasticsearchPort)).build();
+
+            final ObjectMapper objectMapper = new ObjectMapper();
+            objectMapper.disable(DeserializationFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE);
+            objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+            objectMapper.registerModule(new JavaTimeModule());
+
+            final ElasticsearchTransport transport = new RestClientTransport(restClient, new JacksonJsonpMapper(objectMapper));
+
+            final ElasticsearchAsyncClient client = new ElasticsearchAsyncClient(transport);
+
+            final Store store = new ElasticsearchStore(client, elasticsearchIndex);
+
+            final KafkaProducerConfig producerConfig = KafkaProducerConfig.builder()
+                    .withBootstrapServers(bootstrapServers)
+                    .withKeySerializer(keySerializer)
+                    .withValueSerializer(valSerializer)
+                    .withKeystoreLocation(keystoreLocation)
+                    .withKeystorePassword(keystorePassword)
+                    .withTruststoreLocation(truststoreLocation)
+                    .withTruststorePassword(truststorePassword)
+                    .withClientId(clientId)
+                    .withKafkaAcks(acks)
                     .build();
 
-            final String elaticsearchUrl = elasticsearchHost + ":" + elasticsearchPort;
+            final KafkaProducer<String, String> kafkaProducer = KafkaClientFactory.createProducer(vertx, producerConfig);
 
-            final HttpClient elasticsearchClient = HttpClientFactory.create(vertx, elaticsearchUrl, clientConfig);
+            final KafkaConsumerConfig consumerConfig = KafkaConsumerConfig.builder()
+                    .withBootstrapServers(bootstrapServers)
+                    .withKeyDeserializer(keyDeserializer)
+                    .withValueDeserializer(valDeserializer)
+                    .withKeystoreLocation(keystoreLocation)
+                    .withKeystorePassword(keystorePassword)
+                    .withTruststoreLocation(truststoreLocation)
+                    .withTruststorePassword(truststorePassword)
+                    .withGroupId(groupId)
+                    .withAutoOffsetReset(autoOffsetReset)
+                    .withEnableAutoCommit(enableAutoCommit)
+                    .build();
 
-            final Store store = new CassandraStore(supplier);
-
-//            final Store store = new ElasticsearchStore(elasticsearchClient);
+            final KafkaConsumer<String, String> kafkaConsumer = KafkaClientFactory.createConsumer(vertx, consumerConfig);
 
             final Router mainRouter = Router.router(vertx);
 
@@ -205,6 +256,16 @@ public class Verticle extends AbstractVerticle {
 
             final Handler<RoutingContext> getTileHandler = new AccessHandler(jwtProvider, Factory.createGetTileHandler(store, s3AsyncClient, s3Bucket), onAccessDenied, asList(ADMIN, GUEST, ANONYMOUS));
 
+            final Map<String, BlockingHandler<InputMessage>> messageHandlers = new HashMap<>();
+
+            messageHandlers.put(DesignDocumentUpdateRequested.TYPE, Factory.createDesignDocumentUpdateRequestedHandler(store, eventsTopic, kafkaProducer, messageSource));
+
+            kafkaConsumer.subscribe(eventsTopic);
+
+            kafkaPolling = new KafkaPolling(kafkaConsumer, messageHandlers);
+
+            kafkaPolling.startPolling("kafka-records-poll");
+
             final Handler<RoutingContext> apiV1DocsHandler = new OpenApiHandler(vertx.getDelegate(), executor, "api-v1.yaml");
 
             final URL resource = RouterBuilder.class.getClassLoader().getResource("api-v1.yaml");
@@ -214,6 +275,10 @@ public class Verticle extends AbstractVerticle {
             }
 
             final String url = resource.toURI().toString();
+
+//            DatabindCodec.mapper().disable(DeserializationFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE);
+//            DatabindCodec.mapper().disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+//            DatabindCodec.mapper().registerModule(new JavaTimeModule());
 
             RouterBuilder.create(vertx.getDelegate(), url)
                     .onSuccess(routerBuilder -> {

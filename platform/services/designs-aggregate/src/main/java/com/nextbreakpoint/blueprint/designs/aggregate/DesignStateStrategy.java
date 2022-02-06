@@ -108,12 +108,12 @@ public class DesignStateStrategy {
             return state;
         }
         if (newState.getStatus() == null) {
-            return new Design(state.getEvid(), state.getUuid(), newState.getEsid(), state.getJson(), state.getChecksum(), state.getStatus(), state.getLevels(), createLevelsMap(state, newState), newState.getUpdated());
+            return new Design(state.getEvid(), state.getUuid(), newState.getEsid(), state.getJson(), state.getChecksum(), state.getStatus(), state.getLevels(), createLevelsMap(state, newState), newState.getModified());
         }
         if ("DELETED".equals(newState.getStatus())) {
-            return new Design(newState.getEvid(), newState.getUuid(), newState.getEsid(), state.getJson(), state.getChecksum(), newState.getStatus(), state.getLevels(), state.getTiles(), newState.getUpdated());
+            return new Design(newState.getEvid(), newState.getUuid(), newState.getEsid(), state.getJson(), state.getChecksum(), newState.getStatus(), state.getLevels(), state.getTiles(), newState.getModified());
         } else {
-            return new Design(newState.getEvid(), newState.getUuid(), newState.getEsid(), newState.getJson(), Checksum.of(newState.getJson()), newState.getStatus(), newState.getLevels(), state.getTiles(), newState.getUpdated());
+            return new Design(newState.getEvid(), newState.getUuid(), newState.getEsid(), newState.getJson(), Checksum.of(newState.getJson()), newState.getStatus(), newState.getLevels(), state.getTiles(), newState.getModified());
         }
     }
 }

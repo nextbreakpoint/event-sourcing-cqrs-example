@@ -27,17 +27,7 @@ public class TestCassandra {
     }
 
     @NotNull
-    public List<Row> fetchMessage(UUID uuid) {
-        return session.rxPrepare("SELECT * FROM MESSAGE WHERE MESSAGE_UUID = ?")
-                .map(stmt -> stmt.bind(uuid).setConsistencyLevel(ConsistencyLevel.QUORUM))
-                .flatMap(session::rxExecuteWithFullFetch)
-                .subscribeOn(Schedulers.io())
-                .toBlocking()
-                .value();
-    }
-
-    @NotNull
-    public List<Row> fetchDesign(UUID designId) {
+    public List<Row> fetchDesigns(UUID designId) {
         return session.rxPrepare("SELECT * FROM DESIGN WHERE DESIGN_UUID = ?")
                 .map(stmt -> stmt.bind(designId).setConsistencyLevel(ConsistencyLevel.QUORUM))
                 .flatMap(session::rxExecuteWithFullFetch)
@@ -63,4 +53,31 @@ public class TestCassandra {
                 .toBlocking()
                 .value();
     }
+
+//    public void insertDesign(Design design) {
+//        session.rxMetadata()
+//                .map(metadata -> metadata.getKeyspace("designs").orElseThrow())
+//                .map(keyspaceMetadata -> keyspaceMetadata.getUserDefinedType("LEVEL").orElseThrow(() -> new RuntimeException("UDT not found: LEVEL")))
+//                .flatMap(levelType -> insertDesign(design, levelType))
+//                .toCompletable()
+//                .await();
+//    }
+//
+//    private Single<ResultSet> insertDesign(Design design, UserDefinedType levelType) {
+//        return session.rxPrepare("INSERT INTO DESIGN (DESIGN_UUID, DESIGN_EVID, DESIGN_ESID, DESIGN_DATA, DESIGN_CHECKSUM, DESIGN_STATUS, DESIGN_LEVELS, DESIGN_TILES, DESIGN_UPDATED) VALUES (?,?,?,?,?,?,?,?,?)")
+//                .map(stmt -> stmt.bind(createInsertParams(design, levelType)).setConsistencyLevel(ConsistencyLevel.QUORUM))
+//                .flatMap(session::rxExecute);
+//    }
+//
+//    private Object[] createInsertParams(Design design, UserDefinedType levelType) {
+//        final Map<Integer, UdtValue> levelsMap = design.getTiles().stream().collect(Collectors.toMap(Tiles::getLevel, x -> convertTilesToUDT(levelType, x)));
+//        return new Object[] { design.getUuid(), design.getEvid(), design.getEsid(), design.getJson(), Checksum.of(design.getJson()), design.getStatus(), design.getLevels(), levelsMap, design.getUpdated().toInstant() };
+//    }
+//
+//    private UdtValue convertTilesToUDT(UserDefinedType levelType, Tiles tiles) {
+//        return levelType.newValue()
+//                .setInt("REQUESTED", tiles.getRequested())
+//                .setSet("COMPLETED", tiles.getCompleted(), Integer.class)
+//                .setSet("FAILED", tiles.getFailed(), Integer.class);
+//    }
 }

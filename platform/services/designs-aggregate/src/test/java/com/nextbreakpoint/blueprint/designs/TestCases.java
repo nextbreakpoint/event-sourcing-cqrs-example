@@ -154,7 +154,7 @@ public class TestCases {
         await().atMost(TEN_SECONDS)
                 .pollInterval(ONE_SECOND)
                 .untilAsserted(() -> {
-                    final List<Row> rows = testCassandra.fetchDesign(designId);
+                    final List<Row> rows = testCassandra.fetchDesigns(designId);
                     assertThat(rows).hasSize(1);
                     final List<Tiles> tiles = TestUtils.convertToTilesList(TestUtils.createTilesMap(TestConstants.LEVELS));
                     TestAssertions.assertExpectedDesign(rows.get(0), TestConstants.JSON_1, "CREATED", tiles);
@@ -233,7 +233,7 @@ public class TestCases {
         await().atMost(TEN_SECONDS)
                 .pollInterval(ONE_SECOND)
                 .untilAsserted(() -> {
-                    final List<Row> rows = testCassandra.fetchDesign(designId);
+                    final List<Row> rows = testCassandra.fetchDesigns(designId);
                     assertThat(rows).hasSize(1);
                     final List<Tiles> tiles = TestUtils.convertToTilesList(TestUtils.createTilesMap(TestConstants.LEVELS));
                     TestAssertions.assertExpectedDesign(rows.get(0), TestConstants.JSON_2, "UPDATED", tiles);
@@ -317,7 +317,7 @@ public class TestCases {
         await().atMost(TEN_SECONDS)
                 .pollInterval(ONE_SECOND)
                 .untilAsserted(() -> {
-                    final List<Row> rows = testCassandra.fetchDesign(designId);
+                    final List<Row> rows = testCassandra.fetchDesigns(designId);
                     assertThat(rows).hasSize(0);
                 });
 
@@ -394,7 +394,7 @@ public class TestCases {
         await().atMost(TEN_SECONDS)
                 .pollInterval(ONE_SECOND)
                 .untilAsserted(() -> {
-                    final List<Row> rows = testCassandra.fetchDesign(designId);
+                    final List<Row> rows = testCassandra.fetchDesigns(designId);
                     assertThat(rows).hasSize(1);
                     final List<Tiles> tiles = TestUtils.convertToTilesList(TestUtils.createTilesMap(TestConstants.LEVELS));
                     TestAssertions.assertExpectedDesign(rows.get(0), TestConstants.JSON_1, "CREATED", tiles);
@@ -468,7 +468,7 @@ public class TestCases {
         await().atMost(ONE_MINUTE)
                 .pollInterval(TEN_SECONDS)
                 .untilAsserted(() -> {
-                    final List<Row> rows = testCassandra.fetchDesign(designId);
+                    final List<Row> rows = testCassandra.fetchDesigns(designId);
                     assertThat(rows).hasSize(1);
                     final Map<Integer, Tiles> tilesMap = TestUtils.createTilesMap(TestConstants.LEVELS);
                     tilesMap.put(0, new Tiles(0, 1, Set.of(), Set.of(0)));

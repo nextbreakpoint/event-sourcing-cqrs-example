@@ -96,7 +96,7 @@
                         </goals>
                         <configuration>
                             <environmentVariables>
-                                <DATABASE_KEYSPACE>test_designs_event_consumer</DATABASE_KEYSPACE>
+                                <DATABASE_KEYSPACE>test_designs_aggregate</DATABASE_KEYSPACE>
                                 <EVENTS_TOPIC>test-designs-aggregate-events</EVENTS_TOPIC>
                                 <RENDER_TOPIC>test-designs-aggregate-render</RENDER_TOPIC>
                             </environmentVariables>

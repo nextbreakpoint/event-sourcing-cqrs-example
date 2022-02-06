@@ -51,6 +51,10 @@
             <artifactId>jackson-databind</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
+        </dependency>
+        <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-core</artifactId>
         </dependency>
@@ -105,6 +109,11 @@
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>io.ktor</groupId>
@@ -196,8 +205,8 @@
                 <module>accounts</module>
                 <module>designs-query</module>
                 <module>designs-command</module>
-                <module>designs-notify</module>
                 <module>designs-aggregate</module>
+                <module>designs-notify</module>
                 <module>designs-render</module>
             </modules>
         </profile>

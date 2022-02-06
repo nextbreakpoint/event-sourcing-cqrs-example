@@ -1,4 +1,4 @@
-package com.nextbreakpoint.blueprint.designs.operations.load;
+package com.nextbreakpoint.blueprint.designs.persistence;
 
 import java.util.Objects;
 import java.util.UUID;

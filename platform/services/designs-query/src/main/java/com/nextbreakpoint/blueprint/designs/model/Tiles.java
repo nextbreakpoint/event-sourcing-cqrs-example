@@ -1,15 +1,29 @@
-package com.nextbreakpoint.blueprint.designs;
+package com.nextbreakpoint.blueprint.designs.model;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Data;
 
 import java.util.Objects;
 import java.util.Set;
 
+@Data
+@Builder(access = AccessLevel.PUBLIC, setterPrefix = "with")
 public class Tiles {
     private final int level;
     private final int requested;
     private final Set<Integer> completed;
     private final Set<Integer> failed;
 
-    public Tiles(int level, int requested, Set<Integer> completed, Set<Integer> failed) {
+    @JsonCreator
+    public Tiles(
+        @JsonProperty("level") int level,
+        @JsonProperty("requested") int requested,
+        @JsonProperty("completed") Set<Integer> completed,
+        @JsonProperty("failed") Set<Integer> failed
+    ) {
         this.level = level;
         this.requested = requested;
         this.completed = completed;

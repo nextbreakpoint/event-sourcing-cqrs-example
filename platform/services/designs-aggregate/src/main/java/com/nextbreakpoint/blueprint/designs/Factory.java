@@ -132,7 +132,12 @@ public class Factory {
         return TemplateHandler.<InputMessage, InputMessage, Void, Void>builder()
                 .withInputMapper(input -> input)
                 .withOutputMapper(output -> output)
-                .withController(new TileAggregateUpdateCompletedController())
+                .withController(new TileAggregateUpdateCompletedController(
+                    new DesignAggregate(store, new DesignStateStrategy()),
+                    new TileAggregateUpdateCompletedInputMapper(),
+                    new DesignDocumentUpdateRequestedOutputMapper(messageSource),
+                    new KafkaEmitter(producer, topic, 3)
+                ))
                 .onSuccess(new MessageConsumed())
                 .onFailure(new MessageFailed())
                 .build();

@@ -41,12 +41,12 @@ CREATE TABLE IF NOT EXISTS DESIGN (
 );
 
 
-CREATE KEYSPACE IF NOT EXISTS test_designs_event_consumer WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };
+CREATE KEYSPACE IF NOT EXISTS test_designs_aggregate WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };
 
-GRANT ALL PERMISSIONS on KEYSPACE test_designs_event_consumer TO admin;
-GRANT ALL PERMISSIONS on KEYSPACE test_designs_event_consumer TO verticle;
+GRANT ALL PERMISSIONS on KEYSPACE test_designs_aggregate TO admin;
+GRANT ALL PERMISSIONS on KEYSPACE test_designs_aggregate TO verticle;
 
-USE test_designs_event_consumer;
+USE test_designs_aggregate;
 
 CREATE TYPE IF NOT EXISTS LEVEL (
     REQUESTED INT,
@@ -80,12 +80,12 @@ CREATE TABLE IF NOT EXISTS DESIGN (
     PRIMARY KEY (DESIGN_UUID)
 );
 
-CREATE KEYSPACE IF NOT EXISTS test_designs_aggregate_fetcher WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };
+CREATE KEYSPACE IF NOT EXISTS test_designs_query WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };
 
-GRANT ALL PERMISSIONS on KEYSPACE test_designs_aggregate_fetcher TO admin;
-GRANT ALL PERMISSIONS on KEYSPACE test_designs_aggregate_fetcher TO verticle;
+GRANT ALL PERMISSIONS on KEYSPACE test_designs_query TO admin;
+GRANT ALL PERMISSIONS on KEYSPACE test_designs_query TO verticle;
 
-USE test_designs_aggregate_fetcher;
+USE test_designs_query;
 
 CREATE TYPE IF NOT EXISTS LEVEL (
     REQUESTED INT,

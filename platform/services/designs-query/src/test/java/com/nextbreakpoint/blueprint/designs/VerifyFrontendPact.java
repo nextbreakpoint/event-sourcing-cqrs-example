@@ -10,13 +10,14 @@ import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.nextbreakpoint.blueprint.common.core.Authority;
 import com.nextbreakpoint.blueprint.common.core.Checksum;
 import com.nextbreakpoint.blueprint.common.core.Headers;
+import com.nextbreakpoint.blueprint.designs.model.Design;
 import io.vertx.core.json.JsonObject;
 import org.apache.http.HttpRequest;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import java.util.ArrayList;
-import java.util.Date;
+import java.time.Instant;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Tag("slow")
@@ -26,7 +27,9 @@ import java.util.List;
 @Consumer("frontend")
 @PactBroker
 public class VerifyFrontendPact {
-  private static final TestCases testCases = new TestCases();
+  private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ISO_INSTANT;
+
+  private static final TestCases testCases = new TestCases("PactTests");
 
   @BeforeAll
   public static void before() {
@@ -66,18 +69,18 @@ public class VerifyFrontendPact {
     final String json1 = new JsonObject(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT1)).toString();
     final String json2 = new JsonObject(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT2)).toString();
 
-    final Design design1 = new Design(Uuids.timeBased(), TestConstants.DESIGN_UUID_1, 0, json1, Checksum.of(json1), "CREATED", TestConstants.LEVELS, new ArrayList<>(), new Date());
-    final Design design2 = new Design(Uuids.timeBased(), TestConstants.DESIGN_UUID_2, 1, json2, Checksum.of(json1), "UPDATED", TestConstants.LEVELS, new ArrayList<>(), new Date());
+    final Design design1 = new Design(Uuids.timeBased(), TestConstants.DESIGN_UUID_1, 0, json1, Checksum.of(json1), "CREATED", TestConstants.LEVELS, TestUtils.getTiles(TestConstants.LEVELS, 0f), FORMATTER.format(Instant.now()));
+    final Design design2 = new Design(Uuids.timeBased(), TestConstants.DESIGN_UUID_2, 1, json2, Checksum.of(json1), "UPDATED", TestConstants.LEVELS, TestUtils.getTiles(TestConstants.LEVELS, 50f), FORMATTER.format(Instant.now()));
 
     List.of(design1, design2).forEach(testCases::insertDesign);
   }
 
   @State("design exists for uuid")
   public void designExistsForUuid() {
-    final String json1 = new JsonObject(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT1)).toString();
+    final String json = new JsonObject(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT1)).toString();
 
-    final Design design1 = new Design(Uuids.timeBased(), TestConstants.DESIGN_UUID_1, 0, json1, Checksum.of(json1), "CREATED", TestConstants.LEVELS, new ArrayList<>(), new Date());
+    final Design design = new Design(Uuids.timeBased(), TestConstants.DESIGN_UUID_1, 0, json, Checksum.of(json), "CREATED", TestConstants.LEVELS, TestUtils.getTiles(TestConstants.LEVELS, 0f), FORMATTER.format(Instant.now()));
 
-    List.of(design1).forEach(testCases::insertDesign);
+    List.of(design).forEach(testCases::insertDesign);
   }
 }

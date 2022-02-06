@@ -58,6 +58,17 @@ public class ContainerUtils {
                 .withExposedPorts(9042);
     }
 
+    public static GenericContainer createElasticsearchContainer(Network network) {
+        return new GenericContainer(DockerImageName.parse("nextbreakpoint/cassandra:3.11.10-1"))
+                .withEnv("CASSANDRA_DC", "datacenter1")
+                .withEnv("CASSANDRA_RACK", "rack1")
+                .withEnv("JVM_OPTS", "-Xms2G -Xmx2G")
+                .withFileSystemBind("../../scripts/init.cql", "/docker-entrypoint-initdb.d/init.cql", BindMode.READ_ONLY)
+                .withNetwork(network)
+                .withNetworkAliases("cassandra")
+                .withExposedPorts(9042);
+    }
+
     public static GenericContainer createMinioContainer(Network network) {
         return new GenericContainer(DockerImageName.parse("minio/minio:latest"))
                 .withEnv("MINIO_ROOT_USER", "admin")

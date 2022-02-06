@@ -3,16 +3,20 @@ module com.nextbreakpoint.blueprint.designs.query {
     requires com.nextbreakpoint.blueprint.common.vertx;
     requires com.nextbreakpoint.nextfractal.core;
     requires com.nextbreakpoint.nextfractal.mandelbrot;
+    requires com.nextbreakpoint.blueprint.common.events;
     requires io.vertx.core;
     requires io.vertx.web;
     requires io.vertx.web.openapi;
     requires io.vertx.metrics.micrometer;
     requires io.vertx.tracing.opentracing;
     requires io.vertx.client.cassandra;
+    requires io.vertx.client.kafka;
     requires vertx.rx.java;
+    requires static lombok;
     requires rxjava;
     requires com.fasterxml.jackson.core;
     requires com.fasterxml.jackson.databind;
+    requires com.fasterxml.jackson.datatype.jsr310;
     requires org.apache.logging.log4j;
     requires com.datastax.oss.driver.core;
     requires java.sql;
@@ -22,5 +26,8 @@ module com.nextbreakpoint.blueprint.designs.query {
     requires software.amazon.awssdk.auth;
     requires software.amazon.awssdk.regions;
     requires software.amazon.awssdk.services.s3;
+    requires elasticsearch.rest.client;
+    requires elasticsearch.java;
+    requires org.apache.httpcomponents.httpcore;
     opens com.nextbreakpoint.blueprint.designs.model to com.fasterxml.jackson.databind;
 }

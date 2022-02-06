@@ -4,14 +4,13 @@ import com.jayway.restassured.config.LogConfig;
 import com.jayway.restassured.config.RedirectConfig;
 import com.jayway.restassured.config.RestAssuredConfig;
 import com.jayway.restassured.config.SSLConfig;
+import com.nextbreakpoint.blueprint.designs.model.Design;
+import com.nextbreakpoint.blueprint.designs.model.Tiles;
 import org.jetbrains.annotations.NotNull;
 import rx.Observable;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -62,6 +61,13 @@ public class TestUtils {
     }
 
     @NotNull
+    public static List<Tiles> getTiles(int levels, float completePercentage) {
+        return IntStream.range(0, levels)
+                .mapToObj(level -> makeTiles(level, completePercentage))
+                .collect(Collectors.toList());
+    }
+
+    @NotNull
     private static Observable<String> generateKeys(Design design, int level) {
         if (design.getLevels() > level) {
             return rx.Observable.from(generateTiles(level))
@@ -82,5 +88,26 @@ public class TestUtils {
                                 .map(col -> new Tile(level, row, col))
                 )
                 .collect(Collectors.toList());
+    }
+
+    @NotNull
+    private static Tiles makeTiles(int level, float completePercentage) {
+        final int total = (int) Math.rint(Math.pow(2, level));
+
+        final int completedCount = (int) Math.rint(completePercentage * total);
+
+        final Set<Integer> completed = TestUtils.generateTiles(level)
+                .stream()
+                .limit(completedCount)
+                .map(tile -> tile.getCol() << 16 | tile.getRow())
+                .collect(Collectors.toSet());
+
+        final Set<Integer> failed = TestUtils.generateTiles(level)
+                .stream()
+                .skip(completedCount)
+                .map(tile -> tile.getCol() << 16 | tile.getRow())
+                .collect(Collectors.toSet());
+
+        return new Tiles(level, total, completed, failed);
     }
 }

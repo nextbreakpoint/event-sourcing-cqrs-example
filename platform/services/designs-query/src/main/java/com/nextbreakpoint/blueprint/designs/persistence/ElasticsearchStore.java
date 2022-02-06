@@ -1,32 +1,37 @@
 package com.nextbreakpoint.blueprint.designs.persistence;
 
-import com.datastax.oss.driver.api.core.cql.Row;
+import co.elastic.clients.elasticsearch.ElasticsearchAsyncClient;
+import co.elastic.clients.elasticsearch._types.InlineGet;
+import co.elastic.clients.elasticsearch._types.SortOrder;
+import co.elastic.clients.elasticsearch._types.query_dsl.MatchAllQuery;
+import co.elastic.clients.elasticsearch.core.SearchRequest;
+import co.elastic.clients.elasticsearch.core.UpdateRequest;
+import co.elastic.clients.elasticsearch.core.search.Hit;
 import com.nextbreakpoint.blueprint.designs.Store;
-import com.nextbreakpoint.blueprint.designs.model.DesignDocument;
-import com.nextbreakpoint.blueprint.designs.operations.list.ListDesignsRequest;
-import com.nextbreakpoint.blueprint.designs.operations.list.ListDesignsResponse;
-import com.nextbreakpoint.blueprint.designs.operations.load.LoadDesignRequest;
-import com.nextbreakpoint.blueprint.designs.operations.load.LoadDesignResponse;
+import com.nextbreakpoint.blueprint.designs.model.Design;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
-import io.vertx.rxjava.core.http.HttpClient;
+import rx.Observable;
 import rx.Single;
 
-import java.time.Instant;
-import java.time.format.DateTimeFormatter;
+import java.io.IOException;
 import java.util.Objects;
-import java.util.UUID;
+import java.util.Optional;
 
 public class ElasticsearchStore implements Store {
     private final Logger logger = LoggerFactory.getLogger(ElasticsearchStore.class.getName());
 
     private static final String ERROR_LOAD_DESIGN = "An error occurred while loading a design";
     private static final String ERROR_LIST_DESIGNS = "An error occurred while loading designs";
+    private static final String ERROR_INSERT_DESIGN = "An error occurred while inserting design";
 
-    private final HttpClient httpClient;
+    private final ElasticsearchAsyncClient client;
 
-    public ElasticsearchStore(HttpClient httpClient) {
-        this.httpClient = Objects.requireNonNull(httpClient);
+    private final String indexName;
+
+    public ElasticsearchStore(ElasticsearchAsyncClient client, String indexName) {
+        this.client = Objects.requireNonNull(client);
+        this.indexName = Objects.requireNonNull(indexName);;
     }
 
     @Override
@@ -43,44 +48,78 @@ public class ElasticsearchStore implements Store {
                 .doOnError(err -> handleError(ERROR_LIST_DESIGNS, err));
     }
 
-    private Single<HttpClient> withHttpClient() {
-        return Single.just(httpClient);
+    @Override
+    public Single<InsertDesignResponse> insertDesign(InsertDesignRequest request) {
+        return withHttpClient()
+                .flatMap(client -> doInsertDesign(client, request))
+                .doOnError(err -> handleError(ERROR_INSERT_DESIGN, err));
     }
 
-    private Single<LoadDesignResponse> doLoadDesign(HttpClient client, LoadDesignRequest request) {
-        return null;
+    private Single<ElasticsearchAsyncClient> withHttpClient() {
+        return Single.just(client);
     }
 
-    private Single<ListDesignsResponse> doListDesigns(HttpClient client, ListDesignsRequest request) {
-        return null;
+    private Single<LoadDesignResponse> doLoadDesign(ElasticsearchAsyncClient client, LoadDesignRequest request) {
+        try {
+            return Observable.from(client.search(builder -> createLoadDesignRequest(builder, request), Design.class))
+                    .flatMap(search -> Observable.from(search.hits().hits()))
+                    .map(Hit::source)
+                    .limit(1)
+                    .toList()
+                    .map(results -> results.stream().findFirst().orElse(null))
+                    .map(LoadDesignResponse::new)
+                    .toSingle();
+        } catch (IOException e) {
+            return Single.error(e);
+        }
     }
 
-    private boolean isNotDeleted(DesignDocument designDocument) {
-        return !designDocument.getStatus().equals("DELETED");
+    private Single<ListDesignsResponse> doListDesigns(ElasticsearchAsyncClient client, ListDesignsRequest request) {
+        try {
+            return Observable.from(client.search(builder -> createListDesignsRequest(builder, request), Design.class))
+                    .flatMap(search -> Observable.from(search.hits().hits()))
+                    .map(Hit::source)
+                    .toList()
+                    .map(ListDesignsResponse::new)
+                    .toSingle();
+        } catch (IOException e) {
+            return Single.error(e);
+        }
     }
 
-    private DesignDocument toDesignDocument(Row row) {
-        final UUID uuid = row.getUuid("DESIGN_UUID");
-        final String json = row.getString("DESIGN_DATA");
-        final String checksum = row.getString("DESIGN_CHECKSUM");
-        final String status = row.getString("DESIGN_STATUS");
-        final Instant timestamp = row.getInstant("DESIGN_UPDATED");
-        return new DesignDocument(Objects.requireNonNull(uuid).toString(), json, checksum, status, formatDate(timestamp));
+    private Single<InsertDesignResponse> doInsertDesign(ElasticsearchAsyncClient client, InsertDesignRequest request) {
+        try {
+            return Observable.from(client.<Design, Design>update(builder -> createInsertDesignRequest(builder, request), Design.class))
+                    .flatMap(update -> Observable.just(Optional.ofNullable(update.get()).map(InlineGet::source)))
+                    .map(design -> new InsertDesignResponse())
+                    .toSingle();
+        } catch (IOException e) {
+            return Single.error(e);
+        }
     }
 
-    private DesignDocument toDesignDocumentWithoutData(Row row) {
-        final UUID uuid = row.getUuid("DESIGN_UUID");
-        final String checksum = row.getString("DESIGN_CHECKSUM");
-        final String status = row.getString("DESIGN_STATUS");
-        final Instant timestamp = row.getInstant("DESIGN_UPDATED");
-        return new DesignDocument(Objects.requireNonNull(uuid).toString(), null, checksum, status, formatDate(timestamp));
+    private SearchRequest.Builder createLoadDesignRequest(SearchRequest.Builder builder, LoadDesignRequest request) {
+        return builder
+                .index(indexName)
+                .query(q -> q.term(t -> t.field("uuid").value(v -> v.stringValue(request.getUuid().toString()))));
+    }
+
+    private SearchRequest.Builder createListDesignsRequest(SearchRequest.Builder builder, ListDesignsRequest request) {
+        return builder
+                .index(indexName)
+                .query(q -> q.matchAll(MatchAllQuery.of(a -> a)))
+                .sort(x -> x.field(f -> f.field("modified").order(SortOrder.Asc).format("strict_date_optional_time_nanos")) );
+    }
+
+    private UpdateRequest.Builder<Design, Design> createInsertDesignRequest(UpdateRequest.Builder<Design, Design> builder, InsertDesignRequest request) {
+        return builder
+                .index(indexName)
+                .id(request.getDesign().getUuid().toString())
+                .doc(request.getDesign())
+                .docAsUpsert(true);
     }
 
     private void handleError(String message, Throwable err) {
         logger.error(message, err);
-    }
-
-    private String formatDate(Instant instant) {
-        return DateTimeFormatter.ISO_INSTANT.format(instant);
     }
 }

@@ -1,6 +1,7 @@
 package com.nextbreakpoint.blueprint.designs.operations.load;
 
 import com.nextbreakpoint.blueprint.common.core.Mapper;
+import com.nextbreakpoint.blueprint.designs.persistence.LoadDesignRequest;
 import io.vertx.rxjava.ext.web.RoutingContext;
 
 import java.util.UUID;

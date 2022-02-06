@@ -5,6 +5,11 @@ import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.http.ContentType;
 import com.nextbreakpoint.blueprint.common.core.Authority;
 import com.nextbreakpoint.blueprint.common.core.Checksum;
+import com.nextbreakpoint.blueprint.common.core.OutputMessage;
+import com.nextbreakpoint.blueprint.common.events.DesignDocumentUpdateRequested;
+import com.nextbreakpoint.blueprint.common.events.mappers.DesignDocumentUpdateRequestedOutputMapper;
+import com.nextbreakpoint.blueprint.designs.model.Design;
+import com.nextbreakpoint.blueprint.designs.model.Tiles;
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.*;
 
@@ -13,7 +18,12 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.util.*;
+import java.time.Instant;
+import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -25,7 +35,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Tag("integration")
 @DisplayName("Verify behaviour of designs-query service")
 public class IntegrationTests {
-  private static final TestCases testCases = new TestCases();
+  private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ISO_INSTANT;
+
+  private static final TestCases testCases = new TestCases("IntegrationTests");
 
   private static final String JSON_1 = new JsonObject(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT1)).toString();
   private static final String JSON_2 = new JsonObject(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT2)).toString();
@@ -44,10 +56,10 @@ public class IntegrationTests {
 
   @BeforeEach
   public void setup() {
-    final Design design1 = new Design(Uuids.timeBased(), TestConstants.DESIGN_UUID_1, 0, JSON_1, Checksum.of(JSON_1), "CREATED", TestConstants.LEVELS, new ArrayList<>(), new Date());
-    final Design design2 = new Design(Uuids.timeBased(), TestConstants.DESIGN_UUID_2, 1, JSON_2, Checksum.of(JSON_2), "UPDATED", TestConstants.LEVELS, new ArrayList<>(), new Date());
-    final Design design3 = new Design(Uuids.timeBased(), TestConstants.DESIGN_UUID_3, 2, JSON_3, Checksum.of(JSON_3), "UPDATED", TestConstants.LEVELS, new ArrayList<>(), new Date());
-    final Design design4 = new Design(Uuids.timeBased(), TestConstants.DESIGN_UUID_4, 4, JSON_4, Checksum.of(JSON_4), "DELETED", TestConstants.LEVELS, new ArrayList<>(), new Date());
+    final Design design1 = new Design(Uuids.timeBased(), TestConstants.DESIGN_UUID_1, 0, JSON_1, Checksum.of(JSON_1), "CREATED", TestConstants.LEVELS, TestUtils.getTiles(TestConstants.LEVELS, 0f), FORMATTER.format(Instant.now()));
+    final Design design2 = new Design(Uuids.timeBased(), TestConstants.DESIGN_UUID_2, 1, JSON_2, Checksum.of(JSON_2), "UPDATED", TestConstants.LEVELS, TestUtils.getTiles(TestConstants.LEVELS, 20f), FORMATTER.format(Instant.now()));
+    final Design design3 = new Design(Uuids.timeBased(), TestConstants.DESIGN_UUID_3, 2, JSON_3, Checksum.of(JSON_3), "UPDATED", TestConstants.LEVELS, TestUtils.getTiles(TestConstants.LEVELS, 50f), FORMATTER.format(Instant.now()));
+    final Design design4 = new Design(Uuids.timeBased(), TestConstants.DESIGN_UUID_4, 4, JSON_4, Checksum.of(JSON_4), "DELETED", TestConstants.LEVELS, TestUtils.getTiles(TestConstants.LEVELS, 100f), FORMATTER.format(Instant.now()));
 
     testCases.deleteDesigns();
 
@@ -57,6 +69,20 @@ public class IntegrationTests {
   @AfterEach
   public void reset() {
     RestAssured.reset();
+  }
+
+  @Test
+  @DisplayName("Should update the design after receiving a DesignDocumentUpdateRequested event")
+  public void shouldUpdateTheDesignWhenReceivingADesignDocumentUpdateRequested() {
+    final UUID designId = UUID.randomUUID();
+
+    final List<DesignDocumentUpdateRequested.Tiles> tiles = TestUtils.getTiles(TestConstants.LEVELS, 100f).stream().map(this::createTiles).collect(Collectors.toList());
+
+    final DesignDocumentUpdateRequested designDocumentUpdateRequested = new DesignDocumentUpdateRequested(Uuids.timeBased(), designId, 0, TestConstants.JSON_1, TestConstants.CHECKSUM_1, "UPDATED", TestConstants.LEVELS, tiles, Date.from(Instant.now()));
+
+    final OutputMessage designDocumentUpdateRequestedMessage = new DesignDocumentUpdateRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designDocumentUpdateRequested);
+
+    testCases.shouldUpdateTheDesignWhenReceivingADesignDocumentUpdateRequestedMessage(designDocumentUpdateRequestedMessage);
   }
 
   @Test
@@ -122,21 +148,26 @@ public class IntegrationTests {
   public void shouldAllowGetOnDesignsWhenUserIsAnonymous() throws MalformedURLException {
     final String authorization = testCases.makeAuthorization("test", Authority.ANONYMOUS);;
 
-    Document[] results = listDesigns(authorization);
+    Design[] results = listDesigns(authorization);
 
-    List<Document> sortedResults = Stream.of(results)
-            .sorted(Comparator.comparing(Document::getUuid))
+    List<Design> sortedResults = Stream.of(results)
+            .sorted(Comparator.comparing(Design::getUuid))
             .collect(Collectors.toList());
 
-    assertThat(sortedResults.get(0).getUuid()).isEqualTo(TestConstants.DESIGN_UUID_1.toString());
-    assertThat(sortedResults.get(1).getUuid()).isEqualTo(TestConstants.DESIGN_UUID_2.toString());
-    assertThat(sortedResults.get(2).getUuid()).isEqualTo(TestConstants.DESIGN_UUID_3.toString());
+    assertThat(sortedResults).hasSize(4);
+
+    assertThat(sortedResults.get(0).getUuid()).isEqualTo(TestConstants.DESIGN_UUID_1);
+    assertThat(sortedResults.get(1).getUuid()).isEqualTo(TestConstants.DESIGN_UUID_2);
+    assertThat(sortedResults.get(2).getUuid()).isEqualTo(TestConstants.DESIGN_UUID_3);
+    assertThat(sortedResults.get(3).getUuid()).isEqualTo(TestConstants.DESIGN_UUID_4);
     assertThat(sortedResults.get(0).getChecksum()).isEqualTo(Checksum.of(JSON_1));
     assertThat(sortedResults.get(1).getChecksum()).isEqualTo(Checksum.of(JSON_2));
     assertThat(sortedResults.get(2).getChecksum()).isEqualTo(Checksum.of(JSON_3));
+    assertThat(sortedResults.get(3).getChecksum()).isEqualTo(Checksum.of(JSON_4));
     assertThat(sortedResults.get(0).getModified()).isNotNull();
     assertThat(sortedResults.get(1).getModified()).isNotNull();
     assertThat(sortedResults.get(2).getModified()).isNotNull();
+    assertThat(sortedResults.get(3).getModified()).isNotNull();
   }
 
   @Test
@@ -144,10 +175,10 @@ public class IntegrationTests {
   public void shouldAllowGetOnDesignsSlashIdWhenUserIsAnonymous() throws MalformedURLException {
     final String authorization = testCases.makeAuthorization("test", Authority.ANONYMOUS);;
 
-    Document result = loadDesign(authorization, TestConstants.DESIGN_UUID_1);
+    Design result = loadDesign(authorization, TestConstants.DESIGN_UUID_1);
 
     String json1 = new JsonObject(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT1)).toString();
-    assertThat(result.getUuid()).isEqualTo(TestConstants.DESIGN_UUID_1.toString());
+    assertThat(result.getUuid()).isEqualTo(TestConstants.DESIGN_UUID_1);
     assertThat(result.getJson()).isEqualTo(json1);
     assertThat(result.getModified()).isNotNull();
     assertThat(result.getChecksum()).isNotNull();
@@ -170,21 +201,26 @@ public class IntegrationTests {
   public void shouldAllowGetOnDesignsWhenUserIsAdmin() throws MalformedURLException {
     final String authorization = testCases.makeAuthorization("test", Authority.ADMIN);;
 
-    Document[] results = listDesigns(authorization);
+    Design[] results = listDesigns(authorization);
 
-    List<Document> sortedResults = Stream.of(results)
-            .sorted(Comparator.comparing(Document::getUuid))
+    List<Design> sortedResults = Stream.of(results)
+            .sorted(Comparator.comparing(Design::getUuid))
             .collect(Collectors.toList());
 
-    assertThat(sortedResults.get(0).getUuid()).isEqualTo(TestConstants.DESIGN_UUID_1.toString());
-    assertThat(sortedResults.get(1).getUuid()).isEqualTo(TestConstants.DESIGN_UUID_2.toString());
-    assertThat(sortedResults.get(2).getUuid()).isEqualTo(TestConstants.DESIGN_UUID_3.toString());
+    assertThat(sortedResults).hasSize(4);
+
+    assertThat(sortedResults.get(0).getUuid()).isEqualTo(TestConstants.DESIGN_UUID_1);
+    assertThat(sortedResults.get(1).getUuid()).isEqualTo(TestConstants.DESIGN_UUID_2);
+    assertThat(sortedResults.get(2).getUuid()).isEqualTo(TestConstants.DESIGN_UUID_3);
+    assertThat(sortedResults.get(3).getUuid()).isEqualTo(TestConstants.DESIGN_UUID_4);
     assertThat(sortedResults.get(0).getChecksum()).isEqualTo(Checksum.of(JSON_1));
     assertThat(sortedResults.get(1).getChecksum()).isEqualTo(Checksum.of(JSON_2));
     assertThat(sortedResults.get(2).getChecksum()).isEqualTo(Checksum.of(JSON_3));
+    assertThat(sortedResults.get(3).getChecksum()).isEqualTo(Checksum.of(JSON_4));
     assertThat(sortedResults.get(0).getModified()).isNotNull();
     assertThat(sortedResults.get(1).getModified()).isNotNull();
     assertThat(sortedResults.get(2).getModified()).isNotNull();
+    assertThat(sortedResults.get(3).getModified()).isNotNull();
   }
 
   @Test
@@ -192,10 +228,10 @@ public class IntegrationTests {
   public void shouldAllowGetOnDesignsSlashIdWhenUserIsAdmin() throws MalformedURLException {
     final String authorization = testCases.makeAuthorization("test", Authority.ADMIN);;
 
-    Document result = loadDesign(authorization, TestConstants.DESIGN_UUID_1);
+    Design result = loadDesign(authorization, TestConstants.DESIGN_UUID_1);
 
     String json1 = new JsonObject(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT1)).toString();
-    assertThat(result.getUuid()).isEqualTo(TestConstants.DESIGN_UUID_1.toString());
+    assertThat(result.getUuid()).isEqualTo(TestConstants.DESIGN_UUID_1);
     assertThat(result.getJson()).isEqualTo(json1);
     assertThat(result.getModified()).isNotNull();
     assertThat(result.getChecksum()).isNotNull();
@@ -218,21 +254,26 @@ public class IntegrationTests {
   public void shouldAllowGetOnDesignsWhenUserIsGuest() throws MalformedURLException {
     final String authorization = testCases.makeAuthorization("test", Authority.GUEST);;
 
-    Document[] results = listDesigns(authorization);
+    Design[] results = listDesigns(authorization);
 
-    List<Document> sortedResults = Stream.of(results)
-            .sorted(Comparator.comparing(Document::getUuid))
+    List<Design> sortedResults = Stream.of(results)
+            .sorted(Comparator.comparing(Design::getUuid))
             .collect(Collectors.toList());
 
-    assertThat(sortedResults.get(0).getUuid()).isEqualTo(TestConstants.DESIGN_UUID_1.toString());
-    assertThat(sortedResults.get(1).getUuid()).isEqualTo(TestConstants.DESIGN_UUID_2.toString());
-    assertThat(sortedResults.get(2).getUuid()).isEqualTo(TestConstants.DESIGN_UUID_3.toString());
+    assertThat(sortedResults).hasSize(4);
+
+    assertThat(sortedResults.get(0).getUuid()).isEqualTo(TestConstants.DESIGN_UUID_1);
+    assertThat(sortedResults.get(1).getUuid()).isEqualTo(TestConstants.DESIGN_UUID_2);
+    assertThat(sortedResults.get(2).getUuid()).isEqualTo(TestConstants.DESIGN_UUID_3);
+    assertThat(sortedResults.get(3).getUuid()).isEqualTo(TestConstants.DESIGN_UUID_4);
     assertThat(sortedResults.get(0).getChecksum()).isEqualTo(Checksum.of(JSON_1));
     assertThat(sortedResults.get(1).getChecksum()).isEqualTo(Checksum.of(JSON_2));
     assertThat(sortedResults.get(2).getChecksum()).isEqualTo(Checksum.of(JSON_3));
+    assertThat(sortedResults.get(3).getChecksum()).isEqualTo(Checksum.of(JSON_4));
     assertThat(sortedResults.get(0).getModified()).isNotNull();
     assertThat(sortedResults.get(1).getModified()).isNotNull();
     assertThat(sortedResults.get(2).getModified()).isNotNull();
+    assertThat(sortedResults.get(3).getModified()).isNotNull();
   }
 
   @Test
@@ -240,10 +281,10 @@ public class IntegrationTests {
   public void shouldAllowGetOnDesignsSlashIdWhenUserIsGuest() throws MalformedURLException {
     final String authorization = testCases.makeAuthorization("test", Authority.GUEST);;
 
-    Document result = loadDesign(authorization, TestConstants.DESIGN_UUID_1);
+    Design result = loadDesign(authorization, TestConstants.DESIGN_UUID_1);
 
     String json1 = new JsonObject(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT1)).toString();
-    assertThat(result.getUuid()).isEqualTo(TestConstants.DESIGN_UUID_1.toString());
+    assertThat(result.getUuid()).isEqualTo(TestConstants.DESIGN_UUID_1);
     assertThat(result.getJson()).isEqualTo(json1);
     assertThat(result.getModified()).isNotNull();
     assertThat(result.getChecksum()).isNotNull();
@@ -286,7 +327,7 @@ public class IntegrationTests {
   }
 
   @Test
-  @DisplayName("Should return NOT_FOUND when /v1/designs/id has been deleted")
+  @DisplayName("Should not return NOT_FOUND when /v1/designs/id has been deleted")
   public void shouldReturnNotFoundWhenDeisgnHasBeenDeleted() throws MalformedURLException {
     final String authorization = testCases.makeAuthorization("test", Authority.ANONYMOUS);;
 
@@ -294,11 +335,11 @@ public class IntegrationTests {
             .with().header(AUTHORIZATION, authorization)
             .and().accept(ContentType.JSON)
             .when().get(testCases.makeBaseURL("/v1/designs/" + TestConstants.DESIGN_UUID_4))
-            .then().assertThat().statusCode(404);
+            .then().assertThat().statusCode(200);
   }
 
   @Test
-  @DisplayName("Should return NOT_FOUND when /v1/designs/designId/level/col/row/256.png has been deleted")
+  @DisplayName("Should not return NOT_FOUND when /v1/designs/designId/level/col/row/256.png has been deleted")
   public void shouldReturnNotFoundWhenDesignSlashLocationSlashSizeHasBeenDeleted() throws MalformedURLException {
     final String authorization = testCases.makeAuthorization("test", Authority.ANONYMOUS);;
 
@@ -306,25 +347,25 @@ public class IntegrationTests {
             .with().header(AUTHORIZATION, authorization)
             .and().accept("image/png")
             .when().get(testCases.makeBaseURL("/v1/designs/" + TestConstants.DESIGN_UUID_4 + "/0/0/0/256.png"))
-            .then().assertThat().statusCode(404);
+            .then().assertThat().statusCode(200);
   }
 
-  private static Document[] listDesigns(String authorization) throws MalformedURLException {
+  private static Design[] listDesigns(String authorization) throws MalformedURLException {
     return given().config(TestUtils.getRestAssuredConfig())
             .with().header(AUTHORIZATION, authorization)
             .and().accept(ContentType.JSON)
             .when().get(testCases.makeBaseURL("/v1/designs"))
             .then().assertThat().statusCode(200)
-            .extract().body().as(Document[].class);
+            .extract().body().as(Design[].class);
   }
 
-  private static Document loadDesign(String authorization, UUID uuid) throws MalformedURLException {
+  private static Design loadDesign(String authorization, UUID uuid) throws MalformedURLException {
     return given().config(TestUtils.getRestAssuredConfig())
             .with().header(AUTHORIZATION, authorization)
             .and().accept(ContentType.JSON)
             .when().get(testCases.makeBaseURL("/v1/designs/" + uuid))
             .then().assertThat().statusCode(200)
-            .extract().body().as(Document.class);
+            .extract().body().as(Design.class);
   }
 
   private static byte[] getTile(String authorization, UUID uuid) throws MalformedURLException {
@@ -335,5 +376,14 @@ public class IntegrationTests {
             .then().assertThat().statusCode(200)
             .and().assertThat().contentType("image/png")
             .extract().response().asByteArray();
+  }
+
+  private DesignDocumentUpdateRequested.Tiles createTiles(Tiles tiles) {
+    return DesignDocumentUpdateRequested.Tiles.builder()
+            .withLevel(tiles.getLevel())
+            .withRequested(tiles.getRequested())
+            .withCompleted(tiles.getCompleted())
+            .withFailed(tiles.getFailed())
+            .build();
   }
 }

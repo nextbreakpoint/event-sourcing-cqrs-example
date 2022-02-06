@@ -11,7 +11,7 @@ public class Design {
     private final String status;
     private final int levels;
     private final Map<Integer, Tiles> tiles;
-    private final Date updated;
+    private final Date modified;
 
     public Design(
         UUID evid,
@@ -22,7 +22,7 @@ public class Design {
         String status,
         int levels,
         Map<Integer, Tiles> tiles,
-        Date updated
+        Date modified
     ) {
         this.evid = evid;
         this.uuid = uuid;
@@ -32,7 +32,7 @@ public class Design {
         this.status = status;
         this.levels = levels;
         this.tiles = tiles;
-        this.updated = updated;
+        this.modified = modified;
     }
 
     public UUID getEvid() {
@@ -67,7 +67,7 @@ public class Design {
         return tiles;
     }
 
-    public Date getUpdated() {
-        return updated;
+    public Date getModified() {
+        return modified;
     }
 }

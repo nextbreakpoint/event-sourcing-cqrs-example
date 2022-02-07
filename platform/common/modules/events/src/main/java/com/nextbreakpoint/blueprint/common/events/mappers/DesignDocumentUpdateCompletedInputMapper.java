@@ -1,12 +1,12 @@
 package com.nextbreakpoint.blueprint.common.events.mappers;
 
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
+import com.nextbreakpoint.blueprint.common.core.Json;
 import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.events.DesignDocumentUpdateCompleted;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.DecodeException;
-import io.vertx.core.json.Json;
 
 public class DesignDocumentUpdateCompletedInputMapper implements Mapper<InputMessage, DesignDocumentUpdateCompleted> {
     private final Logger logger = LoggerFactory.getLogger(DesignDocumentUpdateCompletedInputMapper.class.getName());

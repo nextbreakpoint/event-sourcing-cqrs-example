@@ -1,10 +1,10 @@
 package com.nextbreakpoint.blueprint.designs;
 
 import au.com.dius.pact.core.model.messaging.Message;
+import com.nextbreakpoint.blueprint.common.core.Json;
 import com.nextbreakpoint.blueprint.common.core.KafkaRecord;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.test.PayloadUtils;
-import io.vertx.core.json.Json;
 import org.jetbrains.annotations.NotNull;
 
 public class TestUtils {

@@ -6,7 +6,10 @@ import com.nextbreakpoint.blueprint.designs.model.Design;
 import rx.Single;
 import rx.schedulers.Schedulers;
 
-import java.util.*;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
 
 public class DesignAggregate {
     private final DesignStateStrategy strategy;

@@ -2,7 +2,7 @@ package com.nextbreakpoint.blueprint.common.test;
 
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.core.Payload;
-import io.vertx.core.json.Json;
+import com.nextbreakpoint.blueprint.common.core.Json;
 import io.vertx.rxjava.kafka.client.consumer.KafkaConsumer;
 import io.vertx.rxjava.kafka.client.consumer.KafkaConsumerRecord;
 import io.vertx.rxjava.kafka.client.consumer.KafkaConsumerRecords;

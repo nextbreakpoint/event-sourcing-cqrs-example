@@ -1,6 +1,8 @@
 package com.nextbreakpoint.blueprint.designs.model;
 
-import java.util.*;
+import java.time.LocalDateTime;
+import java.util.Map;
+import java.util.UUID;
 
 public class Design {
     private final UUID evid;
@@ -11,7 +13,7 @@ public class Design {
     private final String status;
     private final int levels;
     private final Map<Integer, Tiles> tiles;
-    private final Date modified;
+    private final LocalDateTime modified;
 
     public Design(
         UUID evid,
@@ -22,7 +24,7 @@ public class Design {
         String status,
         int levels,
         Map<Integer, Tiles> tiles,
-        Date modified
+        LocalDateTime modified
     ) {
         this.evid = evid;
         this.uuid = uuid;
@@ -67,7 +69,7 @@ public class Design {
         return tiles;
     }
 
-    public Date getModified() {
+    public LocalDateTime getModified() {
         return modified;
     }
 }

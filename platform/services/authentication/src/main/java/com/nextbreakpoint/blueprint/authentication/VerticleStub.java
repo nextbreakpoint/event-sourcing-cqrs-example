@@ -6,12 +6,10 @@ import io.vertx.core.Handler;
 import io.vertx.core.Launcher;
 import io.vertx.core.json.JsonObject;
 import io.vertx.rxjava.ext.auth.jwt.JWTAuth;
-import io.vertx.rxjava.ext.web.Router;
 import io.vertx.rxjava.ext.web.RoutingContext;
 import io.vertx.rxjava.ext.web.client.WebClient;
 import io.vertx.rxjava.ext.web.handler.OAuth2AuthHandler;
 
-import java.net.MalformedURLException;
 import java.util.Set;
 
 public class VerticleStub extends Verticle {

@@ -1,9 +1,14 @@
 package com.nextbreakpoint.blueprint.designs;
 
+import au.com.dius.pact.core.model.messaging.Message;
 import com.jayway.restassured.config.LogConfig;
 import com.jayway.restassured.config.RedirectConfig;
 import com.jayway.restassured.config.RestAssuredConfig;
 import com.jayway.restassured.config.SSLConfig;
+import com.nextbreakpoint.blueprint.common.core.Json;
+import com.nextbreakpoint.blueprint.common.core.KafkaRecord;
+import com.nextbreakpoint.blueprint.common.core.OutputMessage;
+import com.nextbreakpoint.blueprint.common.test.PayloadUtils;
 import com.nextbreakpoint.blueprint.designs.model.Design;
 import com.nextbreakpoint.blueprint.designs.model.Tiles;
 import org.jetbrains.annotations.NotNull;
@@ -92,9 +97,9 @@ public class TestUtils {
 
     @NotNull
     private static Tiles makeTiles(int level, float completePercentage) {
-        final int total = (int) Math.rint(Math.pow(2, level));
+        final int requested = (int) Math.rint(Math.pow(2, level * 2));
 
-        final int completedCount = (int) Math.rint(completePercentage * total);
+        final int completedCount = (int) Math.rint(completePercentage * requested);
 
         final Set<Integer> completed = TestUtils.generateTiles(level)
                 .stream()
@@ -108,6 +113,12 @@ public class TestUtils {
                 .map(tile -> tile.getCol() << 16 | tile.getRow())
                 .collect(Collectors.toSet());
 
-        return new Tiles(level, total, completed, failed);
+        return new Tiles(level, requested, completed, failed);
+    }
+
+    @NotNull
+    public static OutputMessage toOutputMessage(Message message) {
+        final KafkaRecord kafkaRecord = Json.decodeValue(message.contentsAsString(), KafkaRecord.class);
+        return OutputMessage.from(kafkaRecord.getKey(), PayloadUtils.mapToPayload(kafkaRecord.getValue()));
     }
 }

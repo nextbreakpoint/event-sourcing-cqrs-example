@@ -1,7 +1,8 @@
 package com.nextbreakpoint.blueprint.authentication.handlers;
 
 import com.nextbreakpoint.blueprint.common.core.Authority;
-import com.nextbreakpoint.blueprint.common.vertx.*;
+import com.nextbreakpoint.blueprint.common.vertx.Authentication;
+import com.nextbreakpoint.blueprint.common.vertx.Failure;
 import io.vertx.core.Handler;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;

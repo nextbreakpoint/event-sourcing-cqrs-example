@@ -3,8 +3,7 @@ package com.nextbreakpoint.blueprint.designs;
 import com.nextbreakpoint.blueprint.common.core.Checksum;
 
 public interface TestConstants {
-    String DESIGN_AGGREGATE_UPDATE_COMPLETED = "design-aggregate-update-completed-v1";
-    String TILE_AGGREGATE_UPDATE_COMPLETED = "tile-aggregate-update-completed-v1";
+    String DESIGN_DOCUMET_UPDATE_COMPLETED = "design-document-update-completed-v1";
 
     String MESSAGE_SOURCE = "service-designs";
     String EVENTS_TOPIC_NAME = "test-designs-notify-events";

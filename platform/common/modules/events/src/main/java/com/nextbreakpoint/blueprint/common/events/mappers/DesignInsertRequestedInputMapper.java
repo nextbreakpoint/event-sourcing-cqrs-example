@@ -1,12 +1,12 @@
 package com.nextbreakpoint.blueprint.common.events.mappers;
 
-import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
+import com.nextbreakpoint.blueprint.common.core.Json;
+import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.events.DesignInsertRequested;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.DecodeException;
-import io.vertx.core.json.Json;
 
 public class DesignInsertRequestedInputMapper implements Mapper<InputMessage, DesignInsertRequested> {
     private final Logger logger = LoggerFactory.getLogger(DesignInsertRequestedInputMapper.class.getName());

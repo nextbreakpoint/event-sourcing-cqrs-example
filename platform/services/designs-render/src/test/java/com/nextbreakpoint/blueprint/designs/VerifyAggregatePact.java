@@ -11,12 +11,12 @@ import au.com.dius.pact.provider.junitsupport.Provider;
 import au.com.dius.pact.provider.junitsupport.State;
 import au.com.dius.pact.provider.junitsupport.loader.PactBroker;
 import com.datastax.oss.driver.api.core.uuid.Uuids;
+import com.nextbreakpoint.blueprint.common.core.Json;
 import com.nextbreakpoint.blueprint.common.core.KafkaRecord;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.events.TileRenderCompleted;
 import com.nextbreakpoint.blueprint.common.events.mappers.TileRenderCompletedOutputMapper;
 import com.nextbreakpoint.blueprint.common.test.PayloadUtils;
-import io.vertx.core.json.Json;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -87,6 +87,6 @@ public class VerifyAggregatePact {
 
         final OutputMessage tileRenderCompletedMessage = new TileRenderCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(tileRenderCompleted);
 
-        return Json.encode(new KafkaRecord(tileRenderCompletedMessage.getKey(), PayloadUtils.payloadToMap(tileRenderCompletedMessage.getValue())));
+        return Json.encodeValue(new KafkaRecord(tileRenderCompletedMessage.getKey(), PayloadUtils.payloadToMap(tileRenderCompletedMessage.getValue())));
     }
 }

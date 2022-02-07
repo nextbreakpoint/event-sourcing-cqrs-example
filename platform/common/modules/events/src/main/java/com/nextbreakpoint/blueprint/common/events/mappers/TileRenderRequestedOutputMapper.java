@@ -1,8 +1,10 @@
 package com.nextbreakpoint.blueprint.common.events.mappers;
 
-import com.nextbreakpoint.blueprint.common.core.*;
+import com.nextbreakpoint.blueprint.common.core.Json;
+import com.nextbreakpoint.blueprint.common.core.Mapper;
+import com.nextbreakpoint.blueprint.common.core.OutputMessage;
+import com.nextbreakpoint.blueprint.common.core.Payload;
 import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
-import io.vertx.core.json.Json;
 
 import java.util.Objects;
 import java.util.UUID;
@@ -28,7 +30,7 @@ public class TileRenderRequestedOutputMapper implements Mapper<TileRenderRequest
                 new Payload(
                         UUID.randomUUID(),
                         TileRenderRequested.TYPE,
-                        Json.encode(event),
+                        Json.encodeValue(event),
                         messageSource
                 )
         );

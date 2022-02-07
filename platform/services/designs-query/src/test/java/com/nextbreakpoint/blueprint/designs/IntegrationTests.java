@@ -19,9 +19,10 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -74,15 +75,29 @@ public class IntegrationTests {
   @Test
   @DisplayName("Should update the design after receiving a DesignDocumentUpdateRequested event")
   public void shouldUpdateTheDesignWhenReceivingADesignDocumentUpdateRequested() {
-    final UUID designId = UUID.randomUUID();
+    final UUID designId1 = UUID.randomUUID();
+    final UUID designId2 = UUID.randomUUID();
 
-    final List<DesignDocumentUpdateRequested.Tiles> tiles = TestUtils.getTiles(TestConstants.LEVELS, 100f).stream().map(this::createTiles).collect(Collectors.toList());
+    final List<DesignDocumentUpdateRequested.Tiles> tiles1 = TestUtils.getTiles(TestConstants.LEVELS, 0f).stream().map(this::createTiles).collect(Collectors.toList());
+    final List<DesignDocumentUpdateRequested.Tiles> tiles2 = TestUtils.getTiles(TestConstants.LEVELS, 50f).stream().map(this::createTiles).collect(Collectors.toList());
+    final List<DesignDocumentUpdateRequested.Tiles> tiles3 = TestUtils.getTiles(TestConstants.LEVELS, 100f).stream().map(this::createTiles).collect(Collectors.toList());
+    final List<DesignDocumentUpdateRequested.Tiles> tiles4 = TestUtils.getTiles(TestConstants.LEVELS, 100f).stream().map(this::createTiles).collect(Collectors.toList());
 
-    final DesignDocumentUpdateRequested designDocumentUpdateRequested = new DesignDocumentUpdateRequested(Uuids.timeBased(), designId, 0, TestConstants.JSON_1, TestConstants.CHECKSUM_1, "UPDATED", TestConstants.LEVELS, tiles, Date.from(Instant.now()));
+    final DesignDocumentUpdateRequested designDocumentUpdateRequested1 = new DesignDocumentUpdateRequested(Uuids.timeBased(), designId1, 0, TestConstants.JSON_1, TestConstants.CHECKSUM_1, "CREATED", TestConstants.LEVELS, tiles1, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
+    final DesignDocumentUpdateRequested designDocumentUpdateRequested2 = new DesignDocumentUpdateRequested(Uuids.timeBased(), designId1, 1, TestConstants.JSON_1, TestConstants.CHECKSUM_1, "UPDATED", TestConstants.LEVELS, tiles2, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
+    final DesignDocumentUpdateRequested designDocumentUpdateRequested3 = new DesignDocumentUpdateRequested(Uuids.timeBased(), designId1, 2, TestConstants.JSON_1, TestConstants.CHECKSUM_1, "UPDATED", TestConstants.LEVELS, tiles3, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
+    final DesignDocumentUpdateRequested designDocumentUpdateRequested4 = new DesignDocumentUpdateRequested(Uuids.timeBased(), designId2, 3, TestConstants.JSON_2, TestConstants.CHECKSUM_2, "UPDATED", TestConstants.LEVELS, tiles4, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
 
-    final OutputMessage designDocumentUpdateRequestedMessage = new DesignDocumentUpdateRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designDocumentUpdateRequested);
+    final DesignDocumentUpdateRequestedOutputMapper outputMapper = new DesignDocumentUpdateRequestedOutputMapper(TestConstants.MESSAGE_SOURCE);
 
-    testCases.shouldUpdateTheDesignWhenReceivingADesignDocumentUpdateRequestedMessage(designDocumentUpdateRequestedMessage);
+    final OutputMessage designDocumentUpdateRequestedMessage1 = outputMapper.transform(designDocumentUpdateRequested1);
+    final OutputMessage designDocumentUpdateRequestedMessage2 = outputMapper.transform(designDocumentUpdateRequested2);
+    final OutputMessage designDocumentUpdateRequestedMessage3 = outputMapper.transform(designDocumentUpdateRequested3);
+    final OutputMessage designDocumentUpdateRequestedMessage4 = outputMapper.transform(designDocumentUpdateRequested4);
+
+    final List<OutputMessage> outputMessages = List.of(designDocumentUpdateRequestedMessage1, designDocumentUpdateRequestedMessage2, designDocumentUpdateRequestedMessage3, designDocumentUpdateRequestedMessage4);
+
+    testCases.shouldUpdateTheDesignWhenReceivingADesignDocumentUpdateRequestedMessage(outputMessages);
   }
 
   @Test

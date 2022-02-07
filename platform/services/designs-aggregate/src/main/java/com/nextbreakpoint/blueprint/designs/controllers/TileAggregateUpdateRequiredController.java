@@ -8,7 +8,6 @@ import com.nextbreakpoint.blueprint.common.events.TileAggregateUpdateRequested;
 import com.nextbreakpoint.blueprint.common.events.TileAggregateUpdateRequired;
 import com.nextbreakpoint.blueprint.common.vertx.Controller;
 import com.nextbreakpoint.blueprint.common.vertx.KafkaEmitter;
-import com.nextbreakpoint.blueprint.designs.Store;
 import rx.Single;
 
 import java.util.Objects;

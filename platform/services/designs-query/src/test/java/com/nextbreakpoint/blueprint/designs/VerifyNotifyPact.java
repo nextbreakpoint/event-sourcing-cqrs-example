@@ -14,8 +14,8 @@ import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.nextbreakpoint.blueprint.common.core.Json;
 import com.nextbreakpoint.blueprint.common.core.KafkaRecord;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
-import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
-import com.nextbreakpoint.blueprint.common.events.mappers.TileRenderRequestedOutputMapper;
+import com.nextbreakpoint.blueprint.common.events.DesignDocumentUpdateCompleted;
+import com.nextbreakpoint.blueprint.common.events.mappers.DesignDocumentUpdateCompletedOutputMapper;
 import com.nextbreakpoint.blueprint.common.test.PayloadUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -27,12 +27,12 @@ import java.util.UUID;
 
 @Tag("slow")
 @Tag("pact-verify")
-@DisplayName("Verify contract between designs-aggregate and designs-render")
-@Provider("designs-aggregate")
-@Consumer("designs-render")
+@DisplayName("Verify contract between designs-query and designs-notify")
+@Provider("designs-query")
+@Consumer("designs-notify")
 @PactBroker
-public class VerifyRenderPact {
-    public VerifyRenderPact() {
+public class VerifyNotifyPact {
+    public VerifyNotifyPact() {
         TestScenario scenario = new TestScenario();
 
         System.setProperty("pact.showStacktrace", "true");
@@ -57,21 +57,21 @@ public class VerifyRenderPact {
     public void kafkaTopicExists() {
     }
 
-    @PactVerifyProvider("tile render requested for tile 0/00000000.png of design 00000000-0000-0000-0000-000000000004 with checksum 1")
-    public String produceTileRenderRequested1() {
-        return produceTileRenderRequested(new UUID(0L, 4L), 0, 0, 0, TestConstants.JSON_1, TestConstants.CHECKSUM_1);
+    @PactVerifyProvider("design document update completed for design 00000000-0000-0000-0000-000000000001")
+    public String produceDesignDocumentUpdateCompleted1() {
+        return produceDesignDocumentUpdateCompleted(new UUID(0L, 1L));
     }
 
-    @PactVerifyProvider("tile render requested for tile 1/00010002.png of design 00000000-0000-0000-0000-000000000004 with checksum 2")
-    public String produceTileRenderRequested2() {
-        return produceTileRenderRequested(new UUID(0L, 4L), 1, 1, 2, TestConstants.JSON_2, TestConstants.CHECKSUM_2);
+    @PactVerifyProvider("design document update completed for design 00000000-0000-0000-0000-000000000002")
+    public String produceDesignDocumentUpdateCompleted2() {
+        return produceDesignDocumentUpdateCompleted(new UUID(0L, 2L));
     }
 
-    private String produceTileRenderRequested(UUID uuid, int level, int row, int col, String data, String checksum) {
-        final TileRenderRequested tileRenderRequested = new TileRenderRequested(Uuids.timeBased(), uuid, 0, data, checksum, level,  row, col);
+    private String produceDesignDocumentUpdateCompleted(UUID uuid) {
+        final DesignDocumentUpdateCompleted designDocumentUpdateCompleted = new DesignDocumentUpdateCompleted(Uuids.timeBased(), uuid);
 
-        final OutputMessage tileRenderRequestedMessage = new TileRenderRequestedOutputMapper(TestConstants.MESSAGE_SOURCE, event -> TestUtils.createBucketKey(tileRenderRequested)).transform(tileRenderRequested);
+        final OutputMessage designDocumentUpdateCompletedMessage = new DesignDocumentUpdateCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designDocumentUpdateCompleted);
 
-        return Json.encodeValue(new KafkaRecord(tileRenderRequestedMessage.getKey(), PayloadUtils.payloadToMap(tileRenderRequestedMessage.getValue())));
+        return Json.encodeValue(new KafkaRecord(designDocumentUpdateCompletedMessage.getKey(), PayloadUtils.payloadToMap(designDocumentUpdateCompletedMessage.getValue())));
     }
 }

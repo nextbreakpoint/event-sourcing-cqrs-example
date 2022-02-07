@@ -1,12 +1,12 @@
 package com.nextbreakpoint.blueprint.common.events.mappers;
 
-import com.nextbreakpoint.blueprint.common.core.Mapper;
+import com.nextbreakpoint.blueprint.common.core.DecodeException;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
+import com.nextbreakpoint.blueprint.common.core.Json;
+import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.events.DesignDeleteRequested;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
-import io.vertx.core.json.DecodeException;
-import io.vertx.core.json.Json;
 
 public class DesignDeleteRequestedInputMapper implements Mapper<InputMessage, DesignDeleteRequested> {
     private final Logger logger = LoggerFactory.getLogger(DesignDeleteRequestedInputMapper.class.getName());

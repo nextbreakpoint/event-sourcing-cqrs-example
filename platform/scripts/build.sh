@@ -32,6 +32,8 @@ export BUILD_ARGS="-Dnexus.host=host.docker.internal -Dnexus.port=${NEXUS_PORT} 
 
 mvn versions:set versions:commit -DnewVersion=$VERSION -Dcommon=true -Dservices=true -Dplatform=true
 
+#mvn clean package -DskipTests=true -s settings.xml -Dcommon=true -Dservices=true -Dnexus=true ${MAVEN_ARGS}
+
 if [ "$BUILD" == "true" ]; then
 
 mvn clean deploy -s settings.xml -Dcommon=true -Dservices=true -Dnexus=true ${MAVEN_ARGS}

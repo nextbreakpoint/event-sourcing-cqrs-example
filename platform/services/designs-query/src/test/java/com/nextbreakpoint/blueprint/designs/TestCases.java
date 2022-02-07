@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
+import com.nextbreakpoint.blueprint.common.core.Json;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.events.DesignDocumentUpdateRequested;
 import com.nextbreakpoint.blueprint.common.test.KafkaTestEmitter;
@@ -18,7 +19,6 @@ import com.nextbreakpoint.blueprint.common.vertx.KafkaClientFactory;
 import com.nextbreakpoint.blueprint.common.vertx.KafkaConsumerConfig;
 import com.nextbreakpoint.blueprint.common.vertx.KafkaProducerConfig;
 import com.nextbreakpoint.blueprint.designs.model.Design;
-import io.vertx.core.json.Json;
 import io.vertx.rxjava.core.RxHelper;
 import io.vertx.rxjava.core.Vertx;
 import io.vertx.rxjava.kafka.client.consumer.KafkaConsumer;
@@ -179,30 +179,64 @@ public class TestCases {
                 .await();
     }
 
-    public void shouldUpdateTheDesignWhenReceivingADesignDocumentUpdateRequestedMessage(OutputMessage designDocumentUpdateRequestedMessage) {
-        final DesignDocumentUpdateRequested designDocumentUpdateRequested = Json.decodeValue(designDocumentUpdateRequestedMessage.getValue().getData(), DesignDocumentUpdateRequested.class);
+    public void shouldUpdateTheDesignWhenReceivingADesignDocumentUpdateRequestedMessage(List<OutputMessage> designDocumentUpdateRequestedMessages) {
+        final DesignDocumentUpdateRequested designDocumentUpdateRequested1 = Json.decodeValue(designDocumentUpdateRequestedMessages.get(0).getValue().getData(), DesignDocumentUpdateRequested.class);
+        final DesignDocumentUpdateRequested designDocumentUpdateRequested2 = Json.decodeValue(designDocumentUpdateRequestedMessages.get(1).getValue().getData(), DesignDocumentUpdateRequested.class);
+        final DesignDocumentUpdateRequested designDocumentUpdateRequested3 = Json.decodeValue(designDocumentUpdateRequestedMessages.get(2).getValue().getData(), DesignDocumentUpdateRequested.class);
+        final DesignDocumentUpdateRequested designDocumentUpdateRequested4 = Json.decodeValue(designDocumentUpdateRequestedMessages.get(3).getValue().getData(), DesignDocumentUpdateRequested.class);
 
-        final UUID designId = designDocumentUpdateRequested.getUuid();
+        final UUID designId1 = designDocumentUpdateRequested1.getUuid();
+        final UUID designId2 = designDocumentUpdateRequested4.getUuid();
 
-        System.out.println("designId = " + designId);
+        System.out.println("designId1 = " + designId1);
+        System.out.println("designId2 = " + designId2);
+
+        assertThat(designId1).isEqualTo(designDocumentUpdateRequested2.getUuid());
+        assertThat(designId1).isEqualTo(designDocumentUpdateRequested3.getUuid());
+        assertThat(designId2).isNotEqualTo(designDocumentUpdateRequested3.getUuid());
 
         eventsPolling.clearMessages();
 
-        eventEmitter.send(designDocumentUpdateRequestedMessage);
+        eventEmitter.send(designDocumentUpdateRequestedMessages.get(0));
+        eventEmitter.send(designDocumentUpdateRequestedMessages.get(1));
+        eventEmitter.send(designDocumentUpdateRequestedMessages.get(2));
+        eventEmitter.send(designDocumentUpdateRequestedMessages.get(3));
 
         await().atMost(TEN_SECONDS)
                 .pollInterval(ONE_SECOND)
                 .untilAsserted(() -> {
-                    final List<InputMessage> messages = eventsPolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_DOCUMENT_UPDATE_REQUESTED);
-                    assertThat(messages).hasSize(1);
+                    final List<InputMessage> messages1 = eventsPolling.findMessages(designId1.toString(), TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_DOCUMENT_UPDATE_REQUESTED);
+                    assertThat(messages1).hasSize(3);
+                    TestAssertions.assertExpectedDesignDocumentUpdateRequestedMessage(designId1, messages1.get(0), designDocumentUpdateRequested1.getJson(), designDocumentUpdateRequested1.getChecksum(), designDocumentUpdateRequested1.getStatus());
+                    TestAssertions.assertExpectedDesignDocumentUpdateRequestedMessage(designId1, messages1.get(1), designDocumentUpdateRequested2.getJson(), designDocumentUpdateRequested2.getChecksum(), designDocumentUpdateRequested2.getStatus());
+                    TestAssertions.assertExpectedDesignDocumentUpdateRequestedMessage(designId1, messages1.get(2), designDocumentUpdateRequested3.getJson(), designDocumentUpdateRequested3.getChecksum(), designDocumentUpdateRequested3.getStatus());
+                    final List<InputMessage> messages2 = eventsPolling.findMessages(designId2.toString(), TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_DOCUMENT_UPDATE_REQUESTED);
+                    assertThat(messages2).hasSize(1);
+                    TestAssertions.assertExpectedDesignDocumentUpdateRequestedMessage(designId2, messages2.get(0), designDocumentUpdateRequested4.getJson(), designDocumentUpdateRequested4.getChecksum(), designDocumentUpdateRequested4.getStatus());
                 });
 
         await().atMost(TEN_SECONDS)
                 .pollInterval(ONE_SECOND)
                 .untilAsserted(() -> {
-                    final List<Design> rows = testElasticsearch.findDesigns(designId);
-                    assertThat(rows).hasSize(1);
-//                    TestAssertions.assertExpectedMessage(rows.get(0), designAggregateUpdateCompleted);
+                    final List<InputMessage> messages1 = eventsPolling.findMessages(designId1.toString(), TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_DOCUMENT_UPDATE_COMPLETED);
+                    assertThat(messages1).hasSize(3);
+                    TestAssertions.assertExpectedDesignDocumentUpdateCompletedMessage(designId1, messages1.get(0));
+                    TestAssertions.assertExpectedDesignDocumentUpdateCompletedMessage(designId1, messages1.get(1));
+                    TestAssertions.assertExpectedDesignDocumentUpdateCompletedMessage(designId1, messages1.get(2));
+                    final List<InputMessage> messages2 = eventsPolling.findMessages(designId2.toString(), TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_DOCUMENT_UPDATE_COMPLETED);
+                    assertThat(messages2).hasSize(1);
+                    TestAssertions.assertExpectedDesignDocumentUpdateCompletedMessage(designId2, messages2.get(0));
+                });
+
+        await().atMost(TEN_SECONDS)
+                .pollInterval(ONE_SECOND)
+                .untilAsserted(() -> {
+                    final List<Design> designs1 = testElasticsearch.findDesigns(designId1);
+                    assertThat(designs1).hasSize(1);
+                    TestAssertions.assertExpectedDesign(designs1.get(0), designId1, designDocumentUpdateRequested3.getJson(), designDocumentUpdateRequested3.getChecksum(), designDocumentUpdateRequested3.getStatus());
+                    final List<Design> designs2 = testElasticsearch.findDesigns(designId2);
+                    assertThat(designs2).hasSize(1);
+                    TestAssertions.assertExpectedDesign(designs2.get(0), designId2, designDocumentUpdateRequested4.getJson(), designDocumentUpdateRequested4.getChecksum(), designDocumentUpdateRequested4.getStatus());
                 });
     }
 }

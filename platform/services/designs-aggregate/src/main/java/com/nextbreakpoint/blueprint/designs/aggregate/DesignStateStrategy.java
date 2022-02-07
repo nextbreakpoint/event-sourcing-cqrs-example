@@ -2,14 +2,17 @@ package com.nextbreakpoint.blueprint.designs.aggregate;
 
 import com.nextbreakpoint.blueprint.common.core.Checksum;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
+import com.nextbreakpoint.blueprint.common.core.Json;
 import com.nextbreakpoint.blueprint.common.events.DesignDeleteRequested;
 import com.nextbreakpoint.blueprint.common.events.DesignInsertRequested;
 import com.nextbreakpoint.blueprint.common.events.DesignUpdateRequested;
 import com.nextbreakpoint.blueprint.common.events.TileRenderCompleted;
 import com.nextbreakpoint.blueprint.designs.model.Design;
 import com.nextbreakpoint.blueprint.designs.model.Tiles;
-import io.vertx.core.json.Json;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -34,24 +37,28 @@ public class DesignStateStrategy {
         switch (type) {
             case DesignInsertRequested.TYPE: {
                 DesignInsertRequested event = Json.decodeValue(value, DesignInsertRequested.class);
-                return new Design(event.getEvid(), event.getUuid(), offset, event.getData(), Checksum.of(event.getData()), "CREATED", event.getLevels(), createLevelsMap(event.getLevels()), new Date(timestamp));
+                return new Design(event.getEvid(), event.getUuid(), offset, event.getData(), Checksum.of(event.getData()), "CREATED", event.getLevels(), createLevelsMap(event.getLevels()), toDateTime(timestamp));
             }
             case DesignUpdateRequested.TYPE: {
                 DesignUpdateRequested event = Json.decodeValue(value, DesignUpdateRequested.class);
-                return new Design(event.getEvid(), event.getUuid(), offset, event.getData(), Checksum.of(event.getData()), "UPDATED", event.getLevels(), null, new Date(timestamp));
+                return new Design(event.getEvid(), event.getUuid(), offset, event.getData(), Checksum.of(event.getData()), "UPDATED", event.getLevels(), null, toDateTime(timestamp));
             }
             case DesignDeleteRequested.TYPE: {
                 DesignDeleteRequested event = Json.decodeValue(value, DesignDeleteRequested.class);
-                return new Design(event.getEvid(), event.getUuid(), offset, null, null, "DELETED", 0, null, new Date(timestamp));
+                return new Design(event.getEvid(), event.getUuid(), offset, null, null, "DELETED", 0, null, toDateTime(timestamp));
             }
             case TileRenderCompleted.TYPE: {
                 TileRenderCompleted event = Json.decodeValue(value, TileRenderCompleted.class);
-                return new Design(event.getEvid(), event.getUuid(), offset, null, null, null, 0, createLevelsMap(event), new Date(timestamp));
+                return new Design(event.getEvid(), event.getUuid(), offset, null, null, null, 0, createLevelsMap(event), toDateTime(timestamp));
             }
             default: {
                 return new Design(null, null, 0, null, null, null, 0, null, null);
             }
         }
+    }
+
+    private LocalDateTime toDateTime(long timestamp) {
+        return LocalDateTime.ofInstant(Instant.ofEpochMilli(timestamp), ZoneId.of("UTC"));
     }
 
     private Map<Integer, Tiles> createLevelsMap(int levels) {

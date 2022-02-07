@@ -1,6 +1,7 @@
 package com.nextbreakpoint.blueprint.designs;
 
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
+import com.nextbreakpoint.blueprint.common.core.Json;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
 import com.nextbreakpoint.blueprint.common.test.KafkaTestEmitter;
@@ -8,7 +9,6 @@ import com.nextbreakpoint.blueprint.common.test.KafkaTestPolling;
 import com.nextbreakpoint.blueprint.common.vertx.KafkaClientFactory;
 import com.nextbreakpoint.blueprint.common.vertx.KafkaConsumerConfig;
 import com.nextbreakpoint.blueprint.common.vertx.KafkaProducerConfig;
-import io.vertx.core.json.Json;
 import io.vertx.rxjava.core.RxHelper;
 import io.vertx.rxjava.core.Vertx;
 import io.vertx.rxjava.kafka.client.consumer.KafkaConsumer;

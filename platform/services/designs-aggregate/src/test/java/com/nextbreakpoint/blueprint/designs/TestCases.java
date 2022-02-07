@@ -2,6 +2,7 @@ package com.nextbreakpoint.blueprint.designs;
 
 import com.datastax.oss.driver.api.core.cql.Row;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
+import com.nextbreakpoint.blueprint.common.core.Json;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.events.DesignInsertRequested;
 import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
@@ -9,7 +10,6 @@ import com.nextbreakpoint.blueprint.common.test.KafkaTestEmitter;
 import com.nextbreakpoint.blueprint.common.test.KafkaTestPolling;
 import com.nextbreakpoint.blueprint.common.vertx.*;
 import com.nextbreakpoint.blueprint.designs.model.Tiles;
-import io.vertx.core.json.Json;
 import io.vertx.rxjava.cassandra.CassandraClient;
 import io.vertx.rxjava.core.RxHelper;
 import io.vertx.rxjava.core.Vertx;
@@ -19,7 +19,10 @@ import org.jetbrains.annotations.NotNull;
 import rx.plugins.RxJavaHooks;
 import rx.schedulers.Schedulers;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
@@ -463,6 +466,14 @@ public class TestCases {
                     final List<InputMessage> messages3 = eventsPolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, TestConstants.TILE_AGGREGATE_UPDATE_COMPLETED);
                     assertThat(messages3).hasSize(1);
                     messages3.forEach(message -> TestAssertions.assertExpectedTileAggregateUpdateCompletedMessage(designId, message));
+                });
+
+        await().atMost(ONE_MINUTE)
+                .pollInterval(TEN_SECONDS)
+                .untilAsserted(() -> {
+                    final List<InputMessage> messages = eventsPolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_DOCUMENT_UPDATE_REQUESTED);
+                    assertThat(messages).hasSize(1);
+                    messages.forEach(message -> TestAssertions.assertExpectedDesignDocumentUpdateRequestedMessage(designId, message, TestConstants.JSON_1, TestConstants.CHECKSUM_1, "CREATED"));
                 });
 
         await().atMost(ONE_MINUTE)

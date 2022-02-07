@@ -1,12 +1,10 @@
 package com.nextbreakpoint.blueprint.designs;
 
 import com.nextbreakpoint.blueprint.common.core.*;
-import com.nextbreakpoint.blueprint.common.events.DesignAggregateUpdateCompleted;
-import com.nextbreakpoint.blueprint.common.events.TileAggregateUpdateCompleted;
+import com.nextbreakpoint.blueprint.common.events.DesignDocumentUpdateCompleted;
 import com.nextbreakpoint.blueprint.common.vertx.*;
+import com.nextbreakpoint.blueprint.designs.controllers.DesignDocumentUpdateCompletedController;
 import com.nextbreakpoint.blueprint.designs.handlers.NotificationHandler;
-import com.nextbreakpoint.blueprint.designs.controllers.DesignAggregateUpdateCompletedController;
-import com.nextbreakpoint.blueprint.designs.controllers.TileAggregateUpdateCompletedController;
 import com.nextbreakpoint.blueprint.designs.handlers.WatchHandler;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Handler;
@@ -195,9 +193,7 @@ public class Verticle extends AbstractVerticle {
 
             final Map<String, BlockingHandler<InputMessage>> messageHandlers = new HashMap<>();
 
-            messageHandlers.put(DesignAggregateUpdateCompleted.TYPE, Factory.createDesignAggregateUpdateCompletedHandler(new DesignAggregateUpdateCompletedController(vertx, "notifications")));
-
-            messageHandlers.put(TileAggregateUpdateCompleted.TYPE, Factory.createTileAggregateUpdateCompletedHandler(new TileAggregateUpdateCompletedController(vertx, "notifications")));
+            messageHandlers.put(DesignDocumentUpdateCompleted.TYPE, Factory.createDesignDocumentUpdateCompletedHandler(new DesignDocumentUpdateCompletedController(vertx, "notifications")));
 
             kafkaConsumer.subscribe(eventsTopic);
 

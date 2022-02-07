@@ -1,8 +1,10 @@
 package com.nextbreakpoint.blueprint.common.events.mappers;
 
-import com.nextbreakpoint.blueprint.common.core.*;
+import com.nextbreakpoint.blueprint.common.core.Json;
+import com.nextbreakpoint.blueprint.common.core.Mapper;
+import com.nextbreakpoint.blueprint.common.core.OutputMessage;
+import com.nextbreakpoint.blueprint.common.core.Payload;
 import com.nextbreakpoint.blueprint.common.events.DesignAbortRequested;
-import io.vertx.core.json.Json;
 
 import java.util.Objects;
 import java.util.UUID;
@@ -21,7 +23,7 @@ public class DesignAbortRequestedOutputMapper implements Mapper<DesignAbortReque
                 new Payload(
                     UUID.randomUUID(),
                         DesignAbortRequested.TYPE,
-                    Json.encode(event),
+                    Json.encodeValue(event),
                     messageSource
                 )
         );

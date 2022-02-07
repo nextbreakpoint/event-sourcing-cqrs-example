@@ -1,7 +1,7 @@
 package com.nextbreakpoint.blueprint.common.test;
 
 import com.nextbreakpoint.blueprint.common.core.Payload;
-import io.vertx.core.json.Json;
+import com.nextbreakpoint.blueprint.common.core.Json;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -15,7 +15,7 @@ public class PayloadUtils {
         String type = (String) value.get("type");
         String source = (String) value.get("source");
         Map data = (Map) value.get("data");
-        return new Payload(UUID.fromString(uuid), type, Json.encode(data), source);
+        return new Payload(UUID.fromString(uuid), type, Json.encodeValue(data), source);
     }
 
     public static Map<String, Object> payloadToMap(Payload payload) {

@@ -26,7 +26,7 @@ public class TestScenario {
   private Network network = Network.builder().driver("bridge").build();
 
   private GenericContainer elasticsearch = ContainerUtils.createElasticsearchContainer(network)
-          .waitingFor(Wait.forLogMessage(".* Initializing test_designs_query.design.*", 1).withStartupTimeout(Duration.ofSeconds(60)));
+          .waitingFor(Wait.forLogMessage(".*Cluster health status changed from \\[YELLOW\\] to \\[GREEN\\].*", 1).withStartupTimeout(Duration.ofSeconds(60)));
 
   private GenericContainer zookeeper = ContainerUtils.createZookeeperContainer(network)
           .waitingFor(Wait.forLogMessage(".* binding to port /0.0.0.0:2181.*", 1).withStartupTimeout(Duration.ofSeconds(60)));
@@ -42,6 +42,7 @@ public class TestScenario {
           .withEnv("DEBUG_OPTS", "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:" + DEBUG_PORT)
           .withEnv("JAEGER_SERVICE_NAME", serviceName)
           .withEnv("KEYSTORE_SECRET", "secret")
+          .withEnv("ELASTICSEARCH_HOST", "elasticsearch")
           .withEnv("ELASTICSEARCH_INDEX", TestConstants.DESIGNS_INDEX_NAME)
           .withEnv("BUCKET_NAME", TestConstants.BUCKET)
           .withEnv("MINIO_HOST", "minio")
@@ -66,6 +67,7 @@ public class TestScenario {
     }
 
     if (useContainers) {
+      elasticsearch.start();
       zookeeper.start();
       kafka.start();
       minio.start();
@@ -82,6 +84,7 @@ public class TestScenario {
       minio.stop();
       kafka.stop();
       zookeeper.stop();
+      elasticsearch.stop();
     }
   }
 

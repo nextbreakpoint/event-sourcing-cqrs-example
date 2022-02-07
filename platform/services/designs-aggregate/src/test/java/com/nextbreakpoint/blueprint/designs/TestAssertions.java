@@ -3,10 +3,10 @@ package com.nextbreakpoint.blueprint.designs;
 import com.datastax.oss.driver.api.core.cql.Row;
 import com.datastax.oss.driver.api.core.data.UdtValue;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
+import com.nextbreakpoint.blueprint.common.core.Json;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.events.*;
 import com.nextbreakpoint.blueprint.designs.model.Tiles;
-import io.vertx.core.json.Json;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.Instant;
@@ -160,6 +160,22 @@ public class TestAssertions {
         assertThat(actualEvent.getUuid()).isEqualTo(designId);
         assertThat(actualEvent.getEsid()).isNotNull();
         assertThat(actualEvent.getEvid()).isNotNull();
+    }
+
+    public static void assertExpectedDesignDocumentUpdateRequestedMessage(UUID designId, InputMessage actualMessage, String data, String checksum, String status) {
+        assertThat(actualMessage.getTimestamp()).isNotNull();
+        assertThat(actualMessage.getOffset()).isNotNull();
+        assertThat(actualMessage.getValue().getSource()).isEqualTo(TestConstants.MESSAGE_SOURCE);
+        assertThat(actualMessage.getKey()).isEqualTo(designId.toString());
+        assertThat(actualMessage.getValue().getUuid()).isNotNull();
+        assertThat(actualMessage.getValue().getType()).isEqualTo(TestConstants.DESIGN_DOCUMENT_UPDATE_REQUESTED);
+        DesignDocumentUpdateRequested actualEvent = Json.decodeValue(actualMessage.getValue().getData(), DesignDocumentUpdateRequested.class);
+        assertThat(actualEvent.getUuid()).isEqualTo(designId);
+        assertThat(actualEvent.getEsid()).isNotNull();
+        assertThat(actualEvent.getEvid()).isNotNull();
+        assertThat(actualEvent.getJson()).isEqualTo(data);
+        assertThat(actualEvent.getStatus()).isEqualTo(status);
+        assertThat(actualEvent.getChecksum()).isEqualTo(checksum);
     }
 
     @NotNull

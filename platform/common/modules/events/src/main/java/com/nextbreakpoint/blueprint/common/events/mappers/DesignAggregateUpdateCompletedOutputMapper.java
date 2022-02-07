@@ -1,8 +1,10 @@
 package com.nextbreakpoint.blueprint.common.events.mappers;
 
-import com.nextbreakpoint.blueprint.common.core.*;
+import com.nextbreakpoint.blueprint.common.core.Json;
+import com.nextbreakpoint.blueprint.common.core.Mapper;
+import com.nextbreakpoint.blueprint.common.core.OutputMessage;
+import com.nextbreakpoint.blueprint.common.core.Payload;
 import com.nextbreakpoint.blueprint.common.events.DesignAggregateUpdateCompleted;
-import io.vertx.core.json.Json;
 
 import java.util.Objects;
 import java.util.UUID;
@@ -21,7 +23,7 @@ public class DesignAggregateUpdateCompletedOutputMapper implements Mapper<Design
                 new Payload(
                         UUID.randomUUID(),
                         DesignAggregateUpdateCompleted.TYPE,
-                        Json.encode(event),
+                        Json.encodeValue(event),
                         messageSource
                 )
         );

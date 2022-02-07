@@ -10,7 +10,7 @@
     <parent>
         <groupId>com.nextbreakpoint</groupId>
         <artifactId>com.nextbreakpoint.blueprint.service</artifactId>
-        <version>1.0.0-wip2-eac05b2-1640258765</version>
+        <version>1.0.0-wip2-8d646d5-1644276659</version>
     </parent>
     <repositories>
         <repository>
@@ -31,6 +31,26 @@
             </testResource>
         </testResources>
         <plugins>
+            <plugin>
+                <groupId>au.com.dius.pact.provider</groupId>
+                <artifactId>maven</artifactId>
+                <version>${pact-provider-maven.version}</version>
+                <executions>
+                    <execution>
+                        <id>publish</id>
+                        <phase>post-integration-test</phase>
+                        <goals>
+                            <goal>publish</goal>
+                        </goals>
+                        <configuration>
+                            <pactDirectory>${project.build.directory}/pacts</pactDirectory>
+                            <pactBrokerUrl>http://${pactbroker.host}:${pactbroker.port}</pactBrokerUrl>
+                            <skipPactPublish>false</skipPactPublish>
+                            <trimSnapshot>true</trimSnapshot>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
@@ -150,9 +170,19 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>au.com.dius.pact</groupId>
+            <artifactId>consumer</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>au.com.dius.pact.consumer</groupId>
+            <artifactId>junit5</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <scope>compile</scope>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 </project>

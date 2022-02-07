@@ -6,7 +6,11 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 
-import java.util.*;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
 
 @Data
 @Builder(access = AccessLevel.PUBLIC, setterPrefix = "with")
@@ -21,7 +25,7 @@ public class DesignDocumentUpdateRequested {
     private final String status;
     private final int levels;
     private final List<Tiles> tiles;
-    private final Date modified;
+    private final LocalDateTime modified;
 
     @JsonCreator
     public DesignDocumentUpdateRequested(
@@ -33,7 +37,7 @@ public class DesignDocumentUpdateRequested {
         @JsonProperty("status") String status,
         @JsonProperty("levels") int levels,
         @JsonProperty("tiles") List<Tiles> tiles,
-        @JsonProperty("modified") Date modified
+        @JsonProperty("modified") LocalDateTime modified
     ) {
         this.evid = Objects.requireNonNull(evid);
         this.uuid = Objects.requireNonNull(uuid);
@@ -78,7 +82,7 @@ public class DesignDocumentUpdateRequested {
         return tiles;
     }
 
-    public Date getModified() {
+    public LocalDateTime getModified() {
         return modified;
     }
 

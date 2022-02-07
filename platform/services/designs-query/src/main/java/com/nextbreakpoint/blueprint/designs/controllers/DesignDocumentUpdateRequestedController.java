@@ -19,7 +19,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class DesignDocumentUpdateRequestedController implements Controller<InputMessage, Void> {
-    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ISO_INSTANT;
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
 
     private final Store store;
     private final Mapper<InputMessage, DesignDocumentUpdateRequested> inputMapper;
@@ -48,7 +48,7 @@ public class DesignDocumentUpdateRequestedController implements Controller<Input
 
     private Observable<DesignDocumentUpdateCompleted> onDesignDocumentUpdateRequested(DesignDocumentUpdateRequested event) {
         return store.insertDesign(new InsertDesignRequest(event.getUuid(), createDesign(event)))
-                .map(result -> new DesignDocumentUpdateCompleted(event.getUuid(), event.getEvid()))
+                .map(result -> new DesignDocumentUpdateCompleted(event.getEvid(), event.getUuid()))
                 .toObservable();
     }
 
@@ -62,7 +62,7 @@ public class DesignDocumentUpdateRequestedController implements Controller<Input
                 .withStatus(event.getStatus())
                 .withLevels(event.getLevels())
                 .withTiles(event.getTiles().stream().map(this::createTiles).collect(Collectors.toList()))
-                .withModified(FORMATTER.format(event.getModified().toInstant()))
+                .withModified(FORMATTER.format(event.getModified()))
                 .build();
     }
 

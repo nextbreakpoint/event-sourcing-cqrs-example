@@ -3,7 +3,7 @@ package com.nextbreakpoint.blueprint.common.vertx;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
-import io.vertx.core.json.Json;
+import com.nextbreakpoint.blueprint.common.core.Json;
 import io.vertx.rxjava.kafka.client.producer.KafkaProducer;
 import io.vertx.rxjava.kafka.client.producer.KafkaProducerRecord;
 import rx.Single;
@@ -38,6 +38,6 @@ public class KafkaEmitter implements Controller<OutputMessage, Void> {
     }
 
     private KafkaProducerRecord<String, String> createKafkaRecord(OutputMessage message) {
-        return KafkaProducerRecord.create(topicName, message.getKey(), Json.encode(message.getValue()));
+        return KafkaProducerRecord.create(topicName, message.getKey(), Json.encodeValue(message.getValue()));
     }
 }

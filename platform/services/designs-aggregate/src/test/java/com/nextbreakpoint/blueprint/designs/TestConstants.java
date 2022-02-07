@@ -13,6 +13,7 @@ public interface TestConstants {
     String TILE_AGGREGATE_UPDATE_REQUIRED = "tile-aggregate-update-required-v1";
     String TILE_AGGREGATE_UPDATE_REQUESTED = "tile-aggregate-update-requested-v1";
     String TILE_AGGREGATE_UPDATE_COMPLETED = "tile-aggregate-update-completed-v1";
+    String DESIGN_DOCUMENT_UPDATE_REQUESTED = "design-document-update-requested-v1";
 
     String MESSAGE_SOURCE = "service-designs";
     String EVENTS_TOPIC_NAME = "test-designs-aggregate-events";

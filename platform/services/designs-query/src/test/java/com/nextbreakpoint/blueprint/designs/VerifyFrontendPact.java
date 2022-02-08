@@ -69,8 +69,8 @@ public class VerifyFrontendPact {
     final String json1 = new JsonObject(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT1)).toString();
     final String json2 = new JsonObject(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT2)).toString();
 
-    final Design design1 = new Design(Uuids.timeBased(), TestConstants.DESIGN_UUID_1, 0, json1, Checksum.of(json1), "CREATED", TestConstants.LEVELS, TestUtils.getTiles(TestConstants.LEVELS, 0f), FORMATTER.format(Instant.now()));
-    final Design design2 = new Design(Uuids.timeBased(), TestConstants.DESIGN_UUID_2, 1, json2, Checksum.of(json1), "UPDATED", TestConstants.LEVELS, TestUtils.getTiles(TestConstants.LEVELS, 50f), FORMATTER.format(Instant.now()));
+    final Design design1 = new Design(Uuids.timeBased(), TestConstants.DESIGN_UUID_1, 0, json1, Checksum.of(json1), "CREATED", TestConstants.LEVELS, TestUtils.getTiles(TestConstants.LEVELS, 0.0f), FORMATTER.format(Instant.now()));
+    final Design design2 = new Design(Uuids.timeBased(), TestConstants.DESIGN_UUID_2, 1, json2, Checksum.of(json1), "UPDATED", TestConstants.LEVELS, TestUtils.getTiles(TestConstants.LEVELS, 0.5f), FORMATTER.format(Instant.now()));
 
     List.of(design1, design2).forEach(testCases::insertDesign);
   }
@@ -79,7 +79,7 @@ public class VerifyFrontendPact {
   public void designExistsForUuid() {
     final String json = new JsonObject(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT1)).toString();
 
-    final Design design = new Design(Uuids.timeBased(), TestConstants.DESIGN_UUID_1, 0, json, Checksum.of(json), "CREATED", TestConstants.LEVELS, TestUtils.getTiles(TestConstants.LEVELS, 0f), FORMATTER.format(Instant.now()));
+    final Design design = new Design(Uuids.timeBased(), TestConstants.DESIGN_UUID_1, 0, json, Checksum.of(json), "CREATED", TestConstants.LEVELS, TestUtils.getTiles(TestConstants.LEVELS, 0.0f), FORMATTER.format(Instant.now()));
 
     List.of(design).forEach(testCases::insertDesign);
   }

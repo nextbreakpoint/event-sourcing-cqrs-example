@@ -65,15 +65,15 @@ public class PactConsumerTests {
                 .object("value", payload2);
 
         return builder.given("kafka topic exists")
-                .expectsToReceive("design aggregate update completed for design 00000000-0000-0000-0000-000000000001")
+                .expectsToReceive("design document update completed for design 00000000-0000-0000-0000-000000000001")
                 .withContent(message1)
-                .expectsToReceive("design aggregate update completed for design 00000000-0000-0000-0000-000000000002")
+                .expectsToReceive("design document update completed for design 00000000-0000-0000-0000-000000000002")
                 .withContent(message2)
                 .toPact();
     }
 
     @Test
-    @PactTestFor(providerName = "designs-aggregate", port = "1111", pactMethod = "designDocumentUpdateCompleted", providerType = ProviderType.ASYNCH)
+    @PactTestFor(providerName = "designs-query", port = "1111", pactMethod = "designDocumentUpdateCompleted", providerType = ProviderType.ASYNCH)
     @DisplayName("Should notify watchers of all resources after receiving a DesignDocumentUpdateCompleted event")
     public void shouldNotifyWatchersOfAllResourcesWhenReceivingADesignDocumentUpdateCompletedEvent(MessagePact messagePact) {
         final OutputMessage designDocumentUpdateCompletedMessage1 = TestUtils.toOutputMessage(messagePact.getMessages().get(0));
@@ -84,7 +84,7 @@ public class PactConsumerTests {
     }
 
     @Test
-    @PactTestFor(providerName = "designs-aggregate", port = "1112", pactMethod = "designDocumentUpdateCompleted", providerType = ProviderType.ASYNCH)
+    @PactTestFor(providerName = "designs-query", port = "1112", pactMethod = "designDocumentUpdateCompleted", providerType = ProviderType.ASYNCH)
     @DisplayName("Should notify watchers of single resource after receiving a DesignDocumentUpdateCompleted event")
     public void shouldNotifyWatchersOfSingleResourceWhenReceivingAnDesignDocumentUpdateCompletedEvent(MessagePact messagePact) {
         final OutputMessage designDocumentUpdateCompletedMessage1 = TestUtils.toOutputMessage(messagePact.getMessages().get(0));

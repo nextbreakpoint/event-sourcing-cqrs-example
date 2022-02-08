@@ -1,6 +1,7 @@
 package com.nextbreakpoint.blueprint.common.events;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -37,7 +38,7 @@ public class DesignDocumentUpdateRequested {
         @JsonProperty("status") String status,
         @JsonProperty("levels") int levels,
         @JsonProperty("tiles") List<Tiles> tiles,
-        @JsonProperty("modified") LocalDateTime modified
+        @JsonProperty("modified") @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'") LocalDateTime modified
     ) {
         this.evid = Objects.requireNonNull(evid);
         this.uuid = Objects.requireNonNull(uuid);

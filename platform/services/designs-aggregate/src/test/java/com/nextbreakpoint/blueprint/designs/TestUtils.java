@@ -92,12 +92,6 @@ public class TestUtils {
                 .map(tile -> tile.getCol() << 16 | tile.getRow())
                 .collect(Collectors.toSet());
 
-        final Set<Integer> failed = TestUtils.generateTiles(level)
-                .stream()
-                .skip(completedCount)
-                .map(tile -> tile.getCol() << 16 | tile.getRow())
-                .collect(Collectors.toSet());
-
-        return new Tiles(level, requested, completed, failed);
+        return new Tiles(level, requested, completed, new HashSet<>());
     }
 }

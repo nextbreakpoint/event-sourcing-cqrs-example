@@ -57,10 +57,10 @@ public class IntegrationTests {
 
   @BeforeEach
   public void setup() {
-    final Design design1 = new Design(Uuids.timeBased(), TestConstants.DESIGN_UUID_1, 0, JSON_1, Checksum.of(JSON_1), "CREATED", TestConstants.LEVELS, TestUtils.getTiles(TestConstants.LEVELS, 0f), FORMATTER.format(Instant.now()));
-    final Design design2 = new Design(Uuids.timeBased(), TestConstants.DESIGN_UUID_2, 1, JSON_2, Checksum.of(JSON_2), "UPDATED", TestConstants.LEVELS, TestUtils.getTiles(TestConstants.LEVELS, 20f), FORMATTER.format(Instant.now()));
-    final Design design3 = new Design(Uuids.timeBased(), TestConstants.DESIGN_UUID_3, 2, JSON_3, Checksum.of(JSON_3), "UPDATED", TestConstants.LEVELS, TestUtils.getTiles(TestConstants.LEVELS, 50f), FORMATTER.format(Instant.now()));
-    final Design design4 = new Design(Uuids.timeBased(), TestConstants.DESIGN_UUID_4, 4, JSON_4, Checksum.of(JSON_4), "DELETED", TestConstants.LEVELS, TestUtils.getTiles(TestConstants.LEVELS, 100f), FORMATTER.format(Instant.now()));
+    final Design design1 = new Design(Uuids.timeBased(), TestConstants.DESIGN_UUID_1, 0, JSON_1, Checksum.of(JSON_1), "CREATED", TestConstants.LEVELS, TestUtils.getTiles(TestConstants.LEVELS, 0.0f), FORMATTER.format(Instant.now()));
+    final Design design2 = new Design(Uuids.timeBased(), TestConstants.DESIGN_UUID_2, 1, JSON_2, Checksum.of(JSON_2), "UPDATED", TestConstants.LEVELS, TestUtils.getTiles(TestConstants.LEVELS, 0.2f), FORMATTER.format(Instant.now()));
+    final Design design3 = new Design(Uuids.timeBased(), TestConstants.DESIGN_UUID_3, 2, JSON_3, Checksum.of(JSON_3), "UPDATED", TestConstants.LEVELS, TestUtils.getTiles(TestConstants.LEVELS, 0.5f), FORMATTER.format(Instant.now()));
+    final Design design4 = new Design(Uuids.timeBased(), TestConstants.DESIGN_UUID_4, 4, JSON_4, Checksum.of(JSON_4), "DELETED", TestConstants.LEVELS, TestUtils.getTiles(TestConstants.LEVELS, 1.0f), FORMATTER.format(Instant.now()));
 
     testCases.deleteDesigns();
 
@@ -78,10 +78,10 @@ public class IntegrationTests {
     final UUID designId1 = UUID.randomUUID();
     final UUID designId2 = UUID.randomUUID();
 
-    final List<DesignDocumentUpdateRequested.Tiles> tiles1 = TestUtils.getTiles(TestConstants.LEVELS, 0f).stream().map(this::createTiles).collect(Collectors.toList());
-    final List<DesignDocumentUpdateRequested.Tiles> tiles2 = TestUtils.getTiles(TestConstants.LEVELS, 50f).stream().map(this::createTiles).collect(Collectors.toList());
-    final List<DesignDocumentUpdateRequested.Tiles> tiles3 = TestUtils.getTiles(TestConstants.LEVELS, 100f).stream().map(this::createTiles).collect(Collectors.toList());
-    final List<DesignDocumentUpdateRequested.Tiles> tiles4 = TestUtils.getTiles(TestConstants.LEVELS, 100f).stream().map(this::createTiles).collect(Collectors.toList());
+    final List<DesignDocumentUpdateRequested.Tiles> tiles1 = TestUtils.getTiles(TestConstants.LEVELS, 0.0f).stream().map(this::createTiles).collect(Collectors.toList());
+    final List<DesignDocumentUpdateRequested.Tiles> tiles2 = TestUtils.getTiles(TestConstants.LEVELS, 0.5f).stream().map(this::createTiles).collect(Collectors.toList());
+    final List<DesignDocumentUpdateRequested.Tiles> tiles3 = TestUtils.getTiles(TestConstants.LEVELS, 1.0f).stream().map(this::createTiles).collect(Collectors.toList());
+    final List<DesignDocumentUpdateRequested.Tiles> tiles4 = TestUtils.getTiles(TestConstants.LEVELS, 1.0f).stream().map(this::createTiles).collect(Collectors.toList());
 
     final DesignDocumentUpdateRequested designDocumentUpdateRequested1 = new DesignDocumentUpdateRequested(Uuids.timeBased(), designId1, 0, TestConstants.JSON_1, TestConstants.CHECKSUM_1, "CREATED", TestConstants.LEVELS, tiles1, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
     final DesignDocumentUpdateRequested designDocumentUpdateRequested2 = new DesignDocumentUpdateRequested(Uuids.timeBased(), designId1, 1, TestConstants.JSON_1, TestConstants.CHECKSUM_1, "UPDATED", TestConstants.LEVELS, tiles2, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));

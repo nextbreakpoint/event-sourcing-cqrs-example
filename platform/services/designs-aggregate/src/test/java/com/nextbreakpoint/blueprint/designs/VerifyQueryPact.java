@@ -65,22 +65,22 @@ public class VerifyQueryPact {
 
     @PactVerifyProvider("design document update requested for design 00000000-0000-0000-0000-000000000001 and 0% tiles completed")
     public String produceDesignAggregateUpdateRequested1() {
-        return produceDesignAggregateUpdateRequested(new UUID(0L, 1L), TestConstants.JSON_1, TestConstants.CHECKSUM_1, "CREATED", 0f);
+        return produceDesignAggregateUpdateRequested(new UUID(0L, 1L), TestConstants.JSON_1, TestConstants.CHECKSUM_1, "CREATED", 0.0f);
     }
 
     @PactVerifyProvider("design document update requested for design 00000000-0000-0000-0000-000000000001 and 50% tiles completed")
     public String produceDesignAggregateUpdateRequested2() {
-        return produceDesignAggregateUpdateRequested(new UUID(0L, 1L), TestConstants.JSON_1, TestConstants.CHECKSUM_1, "UPDATED", 50f);
+        return produceDesignAggregateUpdateRequested(new UUID(0L, 1L), TestConstants.JSON_1, TestConstants.CHECKSUM_1, "UPDATED", 0.5f);
     }
 
     @PactVerifyProvider("design document update requested for design 00000000-0000-0000-0000-000000000001 and 100% tiles completed")
     public String produceDesignAggregateUpdateRequested3() {
-        return produceDesignAggregateUpdateRequested(new UUID(0L, 1L), TestConstants.JSON_1, TestConstants.CHECKSUM_1, "UPDATED", 100f);
+        return produceDesignAggregateUpdateRequested(new UUID(0L, 1L), TestConstants.JSON_1, TestConstants.CHECKSUM_1, "UPDATED", 1.0f);
     }
 
     @PactVerifyProvider("design document update requested for design 00000000-0000-0000-0000-000000000002 and 100% tiles completed")
     public String produceDesignAggregateUpdateRequested4() {
-        return produceDesignAggregateUpdateRequested(new UUID(0L, 2L), TestConstants.JSON_2, TestConstants.CHECKSUM_2, "UPDATED", 100f);
+        return produceDesignAggregateUpdateRequested(new UUID(0L, 2L), TestConstants.JSON_2, TestConstants.CHECKSUM_2, "UPDATED", 1.0f);
     }
 
     private String produceDesignAggregateUpdateRequested(UUID uuid, String data, String checksum, String status, float completePercentage) {

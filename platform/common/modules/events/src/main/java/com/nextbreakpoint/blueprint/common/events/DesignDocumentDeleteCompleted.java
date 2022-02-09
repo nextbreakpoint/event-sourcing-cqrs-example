@@ -11,15 +11,15 @@ import java.util.UUID;
 
 @Data
 @Builder(access = AccessLevel.PUBLIC, setterPrefix = "with")
-public class DesignDocumentUpdateCompleted {
-    public static final String TYPE = "design-document-update-completed-v1";
+public class DesignDocumentDeleteCompleted {
+    public static final String TYPE = "design-document-delete-completed-v1";
 
     private final UUID evid;
     private final UUID uuid;
     private final long esid;
 
     @JsonCreator
-    public DesignDocumentUpdateCompleted(
+    public DesignDocumentDeleteCompleted(
         @JsonProperty("evid") UUID evid,
         @JsonProperty("uuid") UUID uuid,
         @JsonProperty("esid") long esid

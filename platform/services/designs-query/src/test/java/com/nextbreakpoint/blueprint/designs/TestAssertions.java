@@ -2,6 +2,8 @@ package com.nextbreakpoint.blueprint.designs;
 
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.core.Json;
+import com.nextbreakpoint.blueprint.common.events.DesignDocumentDeleteCompleted;
+import com.nextbreakpoint.blueprint.common.events.DesignDocumentDeleteRequested;
 import com.nextbreakpoint.blueprint.common.events.DesignDocumentUpdateCompleted;
 import com.nextbreakpoint.blueprint.common.events.DesignDocumentUpdateRequested;
 import com.nextbreakpoint.blueprint.designs.model.Design;
@@ -41,6 +43,33 @@ public class TestAssertions {
         assertThat(actualMessage.getValue().getType()).isEqualTo(TestConstants.DESIGN_DOCUMENT_UPDATE_COMPLETED);
         DesignDocumentUpdateCompleted actualEvent = Json.decodeValue(actualMessage.getValue().getData(), DesignDocumentUpdateCompleted.class);
         assertThat(actualEvent.getUuid()).isEqualTo(designId);
+        assertThat(actualEvent.getEsid()).isNotNull();
+        assertThat(actualEvent.getEvid()).isNotNull();
+    }
+
+    public static void assertExpectedDesignDocumentDeleteRequestedMessage(UUID designId, InputMessage actualMessage) {
+        assertThat(actualMessage.getTimestamp()).isNotNull();
+        assertThat(actualMessage.getOffset()).isNotNull();
+        assertThat(actualMessage.getValue().getSource()).isEqualTo(TestConstants.MESSAGE_SOURCE);
+        assertThat(actualMessage.getKey()).isEqualTo(designId.toString());
+        assertThat(actualMessage.getValue().getUuid()).isNotNull();
+        assertThat(actualMessage.getValue().getType()).isEqualTo(TestConstants.DESIGN_DOCUMENT_DELETE_REQUESTED);
+        DesignDocumentDeleteRequested actualEvent = Json.decodeValue(actualMessage.getValue().getData(), DesignDocumentDeleteRequested.class);
+        assertThat(actualEvent.getUuid()).isEqualTo(designId);
+        assertThat(actualEvent.getEsid()).isNotNull();
+        assertThat(actualEvent.getEvid()).isNotNull();
+    }
+
+    public static void assertExpectedDesignDocumentDeleteCompletedMessage(UUID designId, InputMessage actualMessage) {
+        assertThat(actualMessage.getTimestamp()).isNotNull();
+        assertThat(actualMessage.getOffset()).isNotNull();
+        assertThat(actualMessage.getValue().getSource()).isEqualTo(TestConstants.MESSAGE_SOURCE);
+        assertThat(actualMessage.getKey()).isEqualTo(designId.toString());
+        assertThat(actualMessage.getValue().getUuid()).isNotNull();
+        assertThat(actualMessage.getValue().getType()).isEqualTo(TestConstants.DESIGN_DOCUMENT_DELETE_COMPLETED);
+        DesignDocumentDeleteCompleted actualEvent = Json.decodeValue(actualMessage.getValue().getData(), DesignDocumentDeleteCompleted.class);
+        assertThat(actualEvent.getUuid()).isEqualTo(designId);
+        assertThat(actualEvent.getEsid()).isNotNull();
         assertThat(actualEvent.getEvid()).isNotNull();
     }
 

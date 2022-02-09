@@ -9,4 +9,6 @@ public interface Store {
     Single<ListDesignsResponse> listDesigns(ListDesignsRequest request);
 
     Single<InsertDesignResponse> insertDesign(InsertDesignRequest request);
+
+    Single<DeleteDesignResponse> deleteDesign(DeleteDesignRequest request);
 }

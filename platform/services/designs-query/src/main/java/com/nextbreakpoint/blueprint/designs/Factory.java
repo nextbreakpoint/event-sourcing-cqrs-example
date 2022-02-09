@@ -3,10 +3,13 @@ package com.nextbreakpoint.blueprint.designs;
 import com.nextbreakpoint.blueprint.common.core.BlockingHandler;
 import com.nextbreakpoint.blueprint.common.core.Image;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
+import com.nextbreakpoint.blueprint.common.events.mappers.DesignDocumentDeleteCompletedOutputMapper;
+import com.nextbreakpoint.blueprint.common.events.mappers.DesignDocumentDeleteRequestedInputMapper;
 import com.nextbreakpoint.blueprint.common.events.mappers.DesignDocumentUpdateCompletedOutputMapper;
 import com.nextbreakpoint.blueprint.common.events.mappers.DesignDocumentUpdateRequestedInputMapper;
 import com.nextbreakpoint.blueprint.common.vertx.*;
 import com.nextbreakpoint.blueprint.designs.common.S3Driver;
+import com.nextbreakpoint.blueprint.designs.controllers.DesignDocumentDeleteRequestedController;
 import com.nextbreakpoint.blueprint.designs.controllers.DesignDocumentUpdateRequestedController;
 import com.nextbreakpoint.blueprint.designs.operations.get.*;
 import com.nextbreakpoint.blueprint.designs.operations.list.ListDesignsController;
@@ -67,6 +70,21 @@ public class Factory {
                         store,
                         new DesignDocumentUpdateRequestedInputMapper(),
                         new DesignDocumentUpdateCompletedOutputMapper(messageSource),
+                        new KafkaEmitter(producer, topic, 3)
+                ))
+                .onSuccess(new MessageConsumed())
+                .onFailure(new MessageFailed())
+                .build();
+    }
+
+    public static BlockingHandler<InputMessage> createDesignDocumentDeleteRequestedHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
+        return TemplateHandler.<InputMessage, InputMessage, Void, Void>builder()
+                .withInputMapper(input -> input)
+                .withOutputMapper(output -> output)
+                .withController(new DesignDocumentDeleteRequestedController(
+                        store,
+                        new DesignDocumentDeleteRequestedInputMapper(),
+                        new DesignDocumentDeleteCompletedOutputMapper(messageSource),
                         new KafkaEmitter(producer, topic, 3)
                 ))
                 .onSuccess(new MessageConsumed())

@@ -42,7 +42,7 @@ public class DesignDocumentUpdateRequested {
     ) {
         this.evid = Objects.requireNonNull(evid);
         this.uuid = Objects.requireNonNull(uuid);
-        this.esid = Objects.requireNonNull(esid);
+        this.esid = esid;
         this.json = Objects.requireNonNull(json);
         this.checksum = Objects.requireNonNull(checksum);
         this.status = Objects.requireNonNull(status);

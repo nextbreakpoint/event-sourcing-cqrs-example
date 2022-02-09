@@ -4,6 +4,7 @@ import com.nextbreakpoint.blueprint.common.core.Checksum;
 
 public interface TestConstants {
     String DESIGN_DOCUMET_UPDATE_COMPLETED = "design-document-update-completed-v1";
+    String DESIGN_DOCUMET_DELETE_COMPLETED = "design-document-delete-completed-v1";
 
     String MESSAGE_SOURCE = "service-designs";
     String EVENTS_TOPIC_NAME = "test-designs-notify-events";

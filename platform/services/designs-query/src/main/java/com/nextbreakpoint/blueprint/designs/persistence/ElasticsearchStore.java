@@ -2,8 +2,10 @@ package com.nextbreakpoint.blueprint.designs.persistence;
 
 import co.elastic.clients.elasticsearch.ElasticsearchAsyncClient;
 import co.elastic.clients.elasticsearch._types.InlineGet;
+import co.elastic.clients.elasticsearch._types.Refresh;
 import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch._types.query_dsl.MatchAllQuery;
+import co.elastic.clients.elasticsearch.core.DeleteRequest;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.UpdateRequest;
 import co.elastic.clients.elasticsearch.core.search.Hit;
@@ -24,6 +26,7 @@ public class ElasticsearchStore implements Store {
     private static final String ERROR_LOAD_DESIGN = "An error occurred while loading a design";
     private static final String ERROR_LIST_DESIGNS = "An error occurred while loading designs";
     private static final String ERROR_INSERT_DESIGN = "An error occurred while inserting design";
+    private static final String ERROR_DELETE_DESIGN = "An error occurred while deleting design";
 
     private final ElasticsearchAsyncClient client;
 
@@ -53,6 +56,13 @@ public class ElasticsearchStore implements Store {
         return withHttpClient()
                 .flatMap(client -> doInsertDesign(client, request))
                 .doOnError(err -> handleError(ERROR_INSERT_DESIGN, err));
+    }
+
+    @Override
+    public Single<DeleteDesignResponse> deleteDesign(DeleteDesignRequest request) {
+        return withHttpClient()
+                .flatMap(client -> doDeleteDesign(client, request))
+                .doOnError(err -> handleError(ERROR_DELETE_DESIGN, err));
     }
 
     private Single<ElasticsearchAsyncClient> withHttpClient() {
@@ -98,6 +108,16 @@ public class ElasticsearchStore implements Store {
         }
     }
 
+    private Single<DeleteDesignResponse> doDeleteDesign(ElasticsearchAsyncClient client, DeleteDesignRequest request) {
+        try {
+            return Observable.from(client.delete(builder -> createDeleteDesignRequest(builder, request)))
+                    .map(delete -> new DeleteDesignResponse())
+                    .toSingle();
+        } catch (IOException e) {
+            return Single.error(e);
+        }
+    }
+
     private SearchRequest.Builder createLoadDesignRequest(SearchRequest.Builder builder, LoadDesignRequest request) {
         return builder
                 .index(indexName)
@@ -114,9 +134,17 @@ public class ElasticsearchStore implements Store {
     private UpdateRequest.Builder<Design, Design> createInsertDesignRequest(UpdateRequest.Builder<Design, Design> builder, InsertDesignRequest request) {
         return builder
                 .index(indexName)
+                .refresh(Refresh.True)
                 .id(request.getDesign().getUuid().toString())
                 .doc(request.getDesign())
                 .docAsUpsert(true);
+    }
+
+    private DeleteRequest.Builder createDeleteDesignRequest(DeleteRequest.Builder builder, DeleteDesignRequest request) {
+        return builder
+                .index(indexName)
+                .refresh(Refresh.True)
+                .id(request.getUuid().toString());
     }
 
     private void handleError(String message, Throwable err) {

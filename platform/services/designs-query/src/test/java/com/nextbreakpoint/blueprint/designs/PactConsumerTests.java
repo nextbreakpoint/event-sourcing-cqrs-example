@@ -71,6 +71,7 @@ public class PactConsumerTests {
         PactDslJsonBody event1 = new PactDslJsonBody()
                 .uuid("uuid", uuid1)
                 .stringMatcher("evid", TestConstants.UUID1_REGEXP)
+                .numberType("esid")
                 .stringValue("json", TestConstants.JSON_1)
                 .stringValue("checksum", TestConstants.CHECKSUM_1)
                 .stringValue("status", "CREATED")
@@ -128,6 +129,7 @@ public class PactConsumerTests {
         PactDslJsonBody event2 = new PactDslJsonBody()
                 .uuid("uuid", uuid1)
                 .stringMatcher("evid", TestConstants.UUID1_REGEXP)
+                .numberType("esid")
                 .stringValue("json", TestConstants.JSON_1)
                 .stringValue("checksum", TestConstants.CHECKSUM_1)
                 .stringValue("status", "UPDATED")
@@ -196,6 +198,7 @@ public class PactConsumerTests {
         PactDslJsonBody event3 = new PactDslJsonBody()
                 .uuid("uuid", uuid1)
                 .stringMatcher("evid", TestConstants.UUID1_REGEXP)
+                .numberType("esid")
                 .stringValue("json", TestConstants.JSON_1)
                 .stringValue("checksum", TestConstants.CHECKSUM_1)
                 .stringValue("status", "UPDATED")
@@ -264,6 +267,7 @@ public class PactConsumerTests {
         PactDslJsonBody event4 = new PactDslJsonBody()
                 .uuid("uuid", uuid2)
                 .stringMatcher("evid", TestConstants.UUID1_REGEXP)
+                .numberType("esid")
                 .stringValue("json", TestConstants.JSON_2)
                 .stringValue("checksum", TestConstants.CHECKSUM_2)
                 .stringValue("status", "UPDATED")
@@ -294,17 +298,124 @@ public class PactConsumerTests {
                 .toPact();
     }
 
+    @Pact(consumer = "designs-query", provider = "designs-aggregate")
+    public MessagePact designDocumentDeleteRequested(MessagePactBuilder builder) {
+        final UUID uuid = new UUID(0L, 3L);
+
+        PactDslJsonArray tiles = new PactDslJsonArray()
+                .object()
+                .numberValue("level", 0)
+                .numberValue("requested", 1)
+                .array("completed")
+                .numberValue(0)
+                .closeArray()
+                .array("failed")
+                .closeArray()
+                .closeObject()
+                .object()
+                .numberValue("level", 1)
+                .numberValue("requested", 4)
+                .array("completed")
+                .numberValue(0)
+                .numberValue(65537)
+                .numberValue(65536)
+                .numberValue(1)
+                .closeArray()
+                .array("failed")
+                .closeArray()
+                .closeObject()
+                .object()
+                .numberValue("level", 2)
+                .numberValue("requested", 16)
+                .array("completed")
+                .numberValue(0)
+                .numberValue(65537)
+                .numberValue(131074)
+                .numberValue(196611)
+                .numberValue(65536)
+                .numberValue(1)
+                .numberValue(196610)
+                .numberValue(131075)
+                .numberValue(131072)
+                .numberValue(196609)
+                .numberValue(2)
+                .numberValue(65539)
+                .numberValue(196608)
+                .numberValue(131073)
+                .numberValue(65538)
+                .numberValue(3)
+                .closeArray()
+                .array("failed")
+                .closeArray()
+                .closeObject()
+                .asArray();
+
+        PactDslJsonBody event1 = new PactDslJsonBody()
+                .uuid("uuid", uuid)
+                .stringMatcher("evid", TestConstants.UUID1_REGEXP)
+                .numberType("esid")
+                .stringValue("json", TestConstants.JSON_2)
+                .stringValue("checksum", TestConstants.CHECKSUM_2)
+                .stringValue("status", "CREATED")
+                .numberValue("levels", TestConstants.LEVELS)
+                .date("modified", "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+                .object("tiles", tiles);
+
+        PactDslJsonBody payload1 = new PactDslJsonBody()
+                .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
+                .object("data", event1)
+                .stringValue("type", TestConstants.DESIGN_DOCUMENT_UPDATE_REQUESTED)
+                .stringValue("source", TestConstants.MESSAGE_SOURCE);
+
+        PactDslJsonBody message1 = new PactDslJsonBody()
+                .stringValue("key", uuid.toString())
+                .object("value", payload1);
+
+        PactDslJsonBody event2 = new PactDslJsonBody()
+                .uuid("uuid", uuid)
+                .stringMatcher("evid", TestConstants.UUID1_REGEXP)
+                .numberType("esid");
+
+        PactDslJsonBody payload2 = new PactDslJsonBody()
+                .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
+                .object("data", event2)
+                .stringValue("type", TestConstants.DESIGN_DOCUMENT_DELETE_REQUESTED)
+                .stringValue("source", TestConstants.MESSAGE_SOURCE);
+
+        PactDslJsonBody message2 = new PactDslJsonBody()
+                .stringValue("key", uuid.toString())
+                .object("value", payload2);
+
+        return builder
+                .given("kafka topic exists")
+                .expectsToReceive("design document update requested for design 00000000-0000-0000-0000-000000000003 and 100% tiles completed")
+                .withContent(message1)
+                .expectsToReceive("design document delete requested for design 00000000-0000-0000-0000-000000000003")
+                .withContent(message2)
+                .toPact();
+    }
+
     @Test
     @PactTestFor(providerName = "designs-query", port = "1111", pactMethod = "designDocumentUpdateRequested", providerType = ProviderType.ASYNCH)
     @DisplayName("Should update the design after receiving a DesignDocumentUpdateRequested event")
     public void shouldUpdateTheDesignWhenReceivingADesignDocumentUpdateRequestedMessage(MessagePact messagePact) {
-        final OutputMessage designDocumentUpdateRequested1 = TestUtils.toOutputMessage(messagePact.getMessages().get(0));
-        final OutputMessage designDocumentUpdateRequested2 = TestUtils.toOutputMessage(messagePact.getMessages().get(1));
-        final OutputMessage designDocumentUpdateRequested3 = TestUtils.toOutputMessage(messagePact.getMessages().get(2));
-        final OutputMessage designDocumentUpdateRequested4 = TestUtils.toOutputMessage(messagePact.getMessages().get(3));
+        final OutputMessage designDocumentUpdateRequestedMessage1 = TestUtils.toOutputMessage(messagePact.getMessages().get(0));
+        final OutputMessage designDocumentUpdateRequestedMessage2 = TestUtils.toOutputMessage(messagePact.getMessages().get(1));
+        final OutputMessage designDocumentUpdateRequestedMessage3 = TestUtils.toOutputMessage(messagePact.getMessages().get(2));
+        final OutputMessage designDocumentUpdateRequestedMessage4 = TestUtils.toOutputMessage(messagePact.getMessages().get(3));
 
-        final List<OutputMessage> outputMessages = List.of(designDocumentUpdateRequested1, designDocumentUpdateRequested2, designDocumentUpdateRequested3, designDocumentUpdateRequested4);
+        final List<OutputMessage> outputMessages = List.of(designDocumentUpdateRequestedMessage1, designDocumentUpdateRequestedMessage2, designDocumentUpdateRequestedMessage3, designDocumentUpdateRequestedMessage4);
 
         testCases.shouldUpdateTheDesignWhenReceivingADesignDocumentUpdateRequestedMessage(outputMessages);
+    }
+
+    @Test
+    @PactTestFor(providerName = "designs-query", port = "1112", pactMethod = "designDocumentDeleteRequested", providerType = ProviderType.ASYNCH)
+    @DisplayName("Should delete the design after receiving a DesignDocumentDeleteRequested event")
+    public void shouldDeleteTheDesignWhenReceivingADesignDocumentDeleteRequestedMessage(MessagePact messagePact) {
+        final OutputMessage designDocumentUpdateRequestedMessage = TestUtils.toOutputMessage(messagePact.getMessages().get(0));
+        final OutputMessage designDocumentDeleteRequestedMessage = TestUtils.toOutputMessage(messagePact.getMessages().get(1));
+
+        testCases.shouldDeleteTheDesignWhenReceivingADesignDocumentDeleteRequestedMessage(designDocumentUpdateRequestedMessage, designDocumentDeleteRequestedMessage);
     }
 }

@@ -14,7 +14,9 @@ import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.nextbreakpoint.blueprint.common.core.Json;
 import com.nextbreakpoint.blueprint.common.core.KafkaRecord;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
+import com.nextbreakpoint.blueprint.common.events.DesignDocumentDeleteRequested;
 import com.nextbreakpoint.blueprint.common.events.DesignDocumentUpdateRequested;
+import com.nextbreakpoint.blueprint.common.events.mappers.DesignDocumentDeleteRequestedOutputMapper;
 import com.nextbreakpoint.blueprint.common.events.mappers.DesignDocumentUpdateRequestedOutputMapper;
 import com.nextbreakpoint.blueprint.common.test.PayloadUtils;
 import com.nextbreakpoint.blueprint.designs.model.Tiles;
@@ -64,26 +66,36 @@ public class VerifyQueryPact {
     }
 
     @PactVerifyProvider("design document update requested for design 00000000-0000-0000-0000-000000000001 and 0% tiles completed")
-    public String produceDesignAggregateUpdateRequested1() {
-        return produceDesignAggregateUpdateRequested(new UUID(0L, 1L), TestConstants.JSON_1, TestConstants.CHECKSUM_1, "CREATED", 0.0f);
+    public String produceDesignDocumentUpdateRequested1() {
+        return produceDesignDocumentUpdateRequested(new UUID(0L, 1L), TestConstants.JSON_1, TestConstants.CHECKSUM_1, "CREATED", 0.0f);
     }
 
     @PactVerifyProvider("design document update requested for design 00000000-0000-0000-0000-000000000001 and 50% tiles completed")
-    public String produceDesignAggregateUpdateRequested2() {
-        return produceDesignAggregateUpdateRequested(new UUID(0L, 1L), TestConstants.JSON_1, TestConstants.CHECKSUM_1, "UPDATED", 0.5f);
+    public String produceDesignDocumentUpdateRequested2() {
+        return produceDesignDocumentUpdateRequested(new UUID(0L, 1L), TestConstants.JSON_1, TestConstants.CHECKSUM_1, "UPDATED", 0.5f);
     }
 
     @PactVerifyProvider("design document update requested for design 00000000-0000-0000-0000-000000000001 and 100% tiles completed")
-    public String produceDesignAggregateUpdateRequested3() {
-        return produceDesignAggregateUpdateRequested(new UUID(0L, 1L), TestConstants.JSON_1, TestConstants.CHECKSUM_1, "UPDATED", 1.0f);
+    public String produceDesignDocumentUpdateRequested3() {
+        return produceDesignDocumentUpdateRequested(new UUID(0L, 1L), TestConstants.JSON_1, TestConstants.CHECKSUM_1, "UPDATED", 1.0f);
     }
 
     @PactVerifyProvider("design document update requested for design 00000000-0000-0000-0000-000000000002 and 100% tiles completed")
-    public String produceDesignAggregateUpdateRequested4() {
-        return produceDesignAggregateUpdateRequested(new UUID(0L, 2L), TestConstants.JSON_2, TestConstants.CHECKSUM_2, "UPDATED", 1.0f);
+    public String produceDesignDocumentUpdateRequested4() {
+        return produceDesignDocumentUpdateRequested(new UUID(0L, 2L), TestConstants.JSON_2, TestConstants.CHECKSUM_2, "UPDATED", 1.0f);
     }
 
-    private String produceDesignAggregateUpdateRequested(UUID uuid, String data, String checksum, String status, float completePercentage) {
+    @PactVerifyProvider("design document update requested for design 00000000-0000-0000-0000-000000000003 and 100% tiles completed")
+    public String produceDesignDocumentUpdateRequested5() {
+        return produceDesignDocumentUpdateRequested(new UUID(0L, 3L), TestConstants.JSON_2, TestConstants.CHECKSUM_2, "CREATED", 1.0f);
+    }
+
+    @PactVerifyProvider("design document delete requested for design 00000000-0000-0000-0000-000000000003")
+    public String produceDesignDocumentDeleteRequested5() {
+        return produceDesignDocumentDeleteRequested(new UUID(0L, 3L));
+    }
+
+    private String produceDesignDocumentUpdateRequested(UUID uuid, String data, String checksum, String status, float completePercentage) {
         final List<DesignDocumentUpdateRequested.Tiles> tiles = TestUtils.getTiles(TestConstants.LEVELS, completePercentage).stream().map(this::createTiles).collect(Collectors.toList());
 
         final DesignDocumentUpdateRequested designDocumentUpdateRequested = new DesignDocumentUpdateRequested(Uuids.timeBased(), uuid, 0, data, checksum, status, TestConstants.LEVELS, tiles, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
@@ -91,6 +103,14 @@ public class VerifyQueryPact {
         final OutputMessage designDocumentUpdateRequestedMessage = new DesignDocumentUpdateRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designDocumentUpdateRequested);
 
         return Json.encodeValue(new KafkaRecord(designDocumentUpdateRequestedMessage.getKey(), PayloadUtils.payloadToMap(designDocumentUpdateRequestedMessage.getValue())));
+    }
+
+    private String produceDesignDocumentDeleteRequested(UUID uuid) {
+        final DesignDocumentDeleteRequested designDocumentDeleteRequested = new DesignDocumentDeleteRequested(Uuids.timeBased(), uuid, 0);
+
+        final OutputMessage designDocumentDeleteRequestedMessage = new DesignDocumentDeleteRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designDocumentDeleteRequested);
+
+        return Json.encodeValue(new KafkaRecord(designDocumentDeleteRequestedMessage.getKey(), PayloadUtils.payloadToMap(designDocumentDeleteRequestedMessage.getValue())));
     }
 
     private DesignDocumentUpdateRequested.Tiles createTiles(Tiles tiles) {

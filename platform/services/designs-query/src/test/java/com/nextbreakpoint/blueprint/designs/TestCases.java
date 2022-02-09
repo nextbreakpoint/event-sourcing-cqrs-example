@@ -12,6 +12,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.core.Json;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
+import com.nextbreakpoint.blueprint.common.events.DesignDocumentDeleteRequested;
 import com.nextbreakpoint.blueprint.common.events.DesignDocumentUpdateRequested;
 import com.nextbreakpoint.blueprint.common.test.KafkaTestEmitter;
 import com.nextbreakpoint.blueprint.common.test.KafkaTestPolling;
@@ -33,9 +34,11 @@ import software.amazon.awssdk.services.s3.S3Client;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
+import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
 
+import static java.time.temporal.ChronoUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.awaitility.Durations.ONE_SECOND;
@@ -228,7 +231,7 @@ public class TestCases {
                     TestAssertions.assertExpectedDesignDocumentUpdateCompletedMessage(designId2, messages2.get(0));
                 });
 
-        await().atMost(TEN_SECONDS)
+        await().atMost(Duration.of(20, SECONDS))
                 .pollInterval(ONE_SECOND)
                 .untilAsserted(() -> {
                     final List<Design> designs1 = testElasticsearch.findDesigns(designId1);
@@ -237,6 +240,71 @@ public class TestCases {
                     final List<Design> designs2 = testElasticsearch.findDesigns(designId2);
                     assertThat(designs2).hasSize(1);
                     TestAssertions.assertExpectedDesign(designs2.get(0), designId2, designDocumentUpdateRequested4.getJson(), designDocumentUpdateRequested4.getChecksum(), designDocumentUpdateRequested4.getStatus());
+                });
+    }
+
+    public void shouldDeleteTheDesignWhenReceivingADesignDocumentDeleteRequestedMessage(OutputMessage designDocumentUpdateRequestedMessage, OutputMessage designDocumentDeleteRequestedMessage) {
+        final DesignDocumentUpdateRequested designDocumentUpdateRequested = Json.decodeValue(designDocumentUpdateRequestedMessage.getValue().getData(), DesignDocumentUpdateRequested.class);
+        final DesignDocumentDeleteRequested designDocumentDeleteRequested = Json.decodeValue(designDocumentDeleteRequestedMessage.getValue().getData(), DesignDocumentDeleteRequested.class);
+
+        final UUID designId = designDocumentUpdateRequested.getUuid();
+
+        System.out.println("designId1 = " + designId);
+
+        assertThat(designId).isEqualTo(designDocumentUpdateRequested.getUuid());
+        assertThat(designId).isEqualTo(designDocumentDeleteRequested.getUuid());
+
+        eventsPolling.clearMessages();
+
+        eventEmitter.send(designDocumentUpdateRequestedMessage);
+
+        await().atMost(TEN_SECONDS)
+                .pollInterval(ONE_SECOND)
+                .untilAsserted(() -> {
+                    final List<InputMessage> messages = eventsPolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_DOCUMENT_UPDATE_REQUESTED);
+                    assertThat(messages).hasSize(1);
+                    TestAssertions.assertExpectedDesignDocumentUpdateRequestedMessage(designId, messages.get(0), designDocumentUpdateRequested.getJson(), designDocumentUpdateRequested.getChecksum(), designDocumentUpdateRequested.getStatus());
+                });
+
+        await().atMost(TEN_SECONDS)
+                .pollInterval(ONE_SECOND)
+                .untilAsserted(() -> {
+                    final List<InputMessage> messages = eventsPolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_DOCUMENT_UPDATE_COMPLETED);
+                    assertThat(messages).hasSize(1);
+                    TestAssertions.assertExpectedDesignDocumentUpdateCompletedMessage(designId, messages.get(0));
+                });
+
+        await().atMost(Duration.of(20, SECONDS))
+                .pollInterval(ONE_SECOND)
+                .untilAsserted(() -> {
+                    final List<Design> designs = testElasticsearch.findDesigns(designId);
+                    assertThat(designs).hasSize(1);
+                    TestAssertions.assertExpectedDesign(designs.get(0), designId, designDocumentUpdateRequested.getJson(), designDocumentUpdateRequested.getChecksum(), designDocumentUpdateRequested.getStatus());
+                });
+
+        eventEmitter.send(designDocumentDeleteRequestedMessage);
+
+        await().atMost(TEN_SECONDS)
+                .pollInterval(ONE_SECOND)
+                .untilAsserted(() -> {
+                    final List<InputMessage> messages = eventsPolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_DOCUMENT_DELETE_REQUESTED);
+                    assertThat(messages).hasSize(1);
+                    TestAssertions.assertExpectedDesignDocumentDeleteRequestedMessage(designId, messages.get(0));
+                });
+
+        await().atMost(TEN_SECONDS)
+                .pollInterval(ONE_SECOND)
+                .untilAsserted(() -> {
+                    final List<InputMessage> messages = eventsPolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_DOCUMENT_DELETE_COMPLETED);
+                    assertThat(messages).hasSize(1);
+                    TestAssertions.assertExpectedDesignDocumentDeleteCompletedMessage(designId, messages.get(0));
+                });
+
+        await().atMost(Duration.of(20, SECONDS))
+                .pollInterval(ONE_SECOND)
+                .untilAsserted(() -> {
+                    final List<Design> designs = testElasticsearch.findDesigns(designId);
+                    assertThat(designs).isEmpty();
                 });
     }
 }

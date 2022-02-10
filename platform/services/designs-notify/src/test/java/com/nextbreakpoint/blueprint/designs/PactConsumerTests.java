@@ -38,7 +38,8 @@ public class PactConsumerTests {
 
         PactDslJsonBody event1 = new PactDslJsonBody()
                 .uuid("designId", uuid1)
-                .stringMatcher("eventId", TestConstants.UUID1_REGEXP);
+                .stringMatcher("eventId", TestConstants.UUID1_REGEXP)
+                .numberType("revision");
 
         PactDslJsonBody payload1 = new PactDslJsonBody()
                 .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
@@ -52,7 +53,8 @@ public class PactConsumerTests {
 
         PactDslJsonBody event2 = new PactDslJsonBody()
                 .uuid("designId", uuid2)
-                .stringMatcher("eventId", TestConstants.UUID1_REGEXP);
+                .stringMatcher("eventId", TestConstants.UUID1_REGEXP)
+                .numberType("revision");
 
         PactDslJsonBody payload2 = new PactDslJsonBody()
                 .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
@@ -79,7 +81,8 @@ public class PactConsumerTests {
 
         PactDslJsonBody event1 = new PactDslJsonBody()
                 .uuid("designId", uuid1)
-                .stringMatcher("eventId", TestConstants.UUID1_REGEXP);
+                .stringMatcher("eventId", TestConstants.UUID1_REGEXP)
+                .numberType("revision");
 
         PactDslJsonBody payload1 = new PactDslJsonBody()
                 .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
@@ -93,7 +96,8 @@ public class PactConsumerTests {
 
         PactDslJsonBody event2 = new PactDslJsonBody()
                 .uuid("designId", uuid2)
-                .stringMatcher("eventId", TestConstants.UUID1_REGEXP);
+                .stringMatcher("eventId", TestConstants.UUID1_REGEXP)
+                .numberType("revision");
 
         PactDslJsonBody payload2 = new PactDslJsonBody()
                 .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
@@ -114,7 +118,7 @@ public class PactConsumerTests {
     }
 
     @Test
-    @PactTestFor(providerName = "designs-aggregate", port = "1111", pactMethod = "designDocumentUpdateCompleted", providerType = ProviderType.ASYNCH)
+    @PactTestFor(providerName = "designs-query", port = "1111", pactMethod = "designDocumentUpdateCompleted", providerType = ProviderType.ASYNCH)
     @DisplayName("Should notify watchers of all resources after receiving a DesignDocumentUpdateCompleted event")
     public void shouldNotifyWatchersOfAllResourcesWhenReceivingADesignDocumentUpdateCompletedEvent(MessagePact messagePact) {
         final OutputMessage designDocumentUpdateCompletedMessage1 = TestUtils.toOutputMessage(messagePact.getMessages().get(0));
@@ -124,7 +128,7 @@ public class PactConsumerTests {
     }
 
     @Test
-    @PactTestFor(providerName = "designs-aggregate", port = "1112", pactMethod = "designDocumentUpdateCompleted", providerType = ProviderType.ASYNCH)
+    @PactTestFor(providerName = "designs-query", port = "1112", pactMethod = "designDocumentUpdateCompleted", providerType = ProviderType.ASYNCH)
     @DisplayName("Should notify watchers of single resource after receiving a DesignDocumentUpdateCompleted event")
     public void shouldNotifyWatchersOfSingleResourceWhenReceivingAnDesignDocumentUpdateCompletedEvent(MessagePact messagePact) {
         final OutputMessage designDocumentUpdateCompletedMessage1 = TestUtils.toOutputMessage(messagePact.getMessages().get(0));
@@ -134,7 +138,7 @@ public class PactConsumerTests {
     }
 
     @Test
-    @PactTestFor(providerName = "designs-aggregate", port = "1113", pactMethod = "designDocumentDeleteCompleted", providerType = ProviderType.ASYNCH)
+    @PactTestFor(providerName = "designs-query", port = "1113", pactMethod = "designDocumentDeleteCompleted", providerType = ProviderType.ASYNCH)
     @DisplayName("Should notify watchers of all resources after receiving a DesignDocumentDeleteCompleted event")
     public void shouldNotifyWatchersOfAllResourcesWhenReceivingADesignDocumentDeleteCompletedEvent(MessagePact messagePact) {
         final OutputMessage designDocumentDeleteCompletedMessage1 = TestUtils.toOutputMessage(messagePact.getMessages().get(0));
@@ -144,7 +148,7 @@ public class PactConsumerTests {
     }
 
     @Test
-    @PactTestFor(providerName = "designs-aggregate", port = "1114", pactMethod = "designDocumentDeleteCompleted", providerType = ProviderType.ASYNCH)
+    @PactTestFor(providerName = "designs-query", port = "1114", pactMethod = "designDocumentDeleteCompleted", providerType = ProviderType.ASYNCH)
     @DisplayName("Should notify watchers of single resource after receiving a DesignDocumentDeleteCompleted event")
     public void shouldNotifyWatchersOfSingleResourceWhenReceivingAnDesignDocumentDeleteCompletedEvent(MessagePact messagePact) {
         final OutputMessage designDocumentDeleteCompletedMessage1 = TestUtils.toOutputMessage(messagePact.getMessages().get(0));

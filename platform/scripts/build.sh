@@ -3,8 +3,8 @@
 set -e
 
 export REPOSITORY="integration"
-export VERSION="1.0.0-$(git rev-parse --abbrev-ref HEAD)-$(git rev-parse --short HEAD)-$(date +%s)"
-export BUILD="true"
+export VERSION="1.0.0-wip2-9091c58-1644529275" #"1.0.0-$(git rev-parse --abbrev-ref HEAD)-$(git rev-parse --short HEAD)-$(date +%s)"
+export BUILD="false"
 export TEST="true"
 
 export PACTBROKER_HOST=localhost
@@ -50,11 +50,11 @@ export MAVEN_OPTS="--add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.
 
 if [ "$TEST" == "true" ]; then
 
-for service in ${services[@]}; do
-  pushd services/$service
-   JAEGER_SERVICE_NAME=$service mvn clean verify -Dgroups=integration
-  popd
-done
+#for service in ${services[@]}; do
+#  pushd services/$service
+#   JAEGER_SERVICE_NAME=$service mvn clean verify -Dgroups=integration
+#  popd
+#done
 
 for service in ${services[@]}; do
   pushd services/$service

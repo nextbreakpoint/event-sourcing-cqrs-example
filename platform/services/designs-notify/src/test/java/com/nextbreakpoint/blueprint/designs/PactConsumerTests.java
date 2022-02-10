@@ -37,8 +37,8 @@ public class PactConsumerTests {
         UUID uuid2 = new UUID(0L, 2L);
 
         PactDslJsonBody event1 = new PactDslJsonBody()
-                .uuid("uuid", uuid1)
-                .stringMatcher("evid", TestConstants.UUID1_REGEXP);
+                .uuid("designId", uuid1)
+                .stringMatcher("eventId", TestConstants.UUID1_REGEXP);
 
         PactDslJsonBody payload1 = new PactDslJsonBody()
                 .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
@@ -51,8 +51,8 @@ public class PactConsumerTests {
                 .object("value", payload1);
 
         PactDslJsonBody event2 = new PactDslJsonBody()
-                .uuid("uuid", uuid2)
-                .stringMatcher("evid", TestConstants.UUID1_REGEXP);
+                .uuid("designId", uuid2)
+                .stringMatcher("eventId", TestConstants.UUID1_REGEXP);
 
         PactDslJsonBody payload2 = new PactDslJsonBody()
                 .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
@@ -78,8 +78,8 @@ public class PactConsumerTests {
         UUID uuid2 = new UUID(0L, 2L);
 
         PactDslJsonBody event1 = new PactDslJsonBody()
-                .uuid("uuid", uuid1)
-                .stringMatcher("evid", TestConstants.UUID1_REGEXP);
+                .uuid("designId", uuid1)
+                .stringMatcher("eventId", TestConstants.UUID1_REGEXP);
 
         PactDslJsonBody payload1 = new PactDslJsonBody()
                 .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
@@ -92,8 +92,8 @@ public class PactConsumerTests {
                 .object("value", payload1);
 
         PactDslJsonBody event2 = new PactDslJsonBody()
-                .uuid("uuid", uuid2)
-                .stringMatcher("evid", TestConstants.UUID1_REGEXP);
+                .uuid("designId", uuid2)
+                .stringMatcher("eventId", TestConstants.UUID1_REGEXP);
 
         PactDslJsonBody payload2 = new PactDslJsonBody()
                 .stringMatcher("uuid", TestConstants.UUID6_REGEXP)

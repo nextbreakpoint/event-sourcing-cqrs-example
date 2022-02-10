@@ -19,7 +19,7 @@ public class DesignDeleteRequestedOutputMapper implements Mapper<DesignDeleteReq
     @Override
     public OutputMessage transform(DesignDeleteRequested event) {
         return new OutputMessage(
-                event.getUuid().toString(),
+                event.getDesignId().toString(),
                 new Payload(
                         UUID.randomUUID(),
                         DesignDeleteRequested.TYPE,

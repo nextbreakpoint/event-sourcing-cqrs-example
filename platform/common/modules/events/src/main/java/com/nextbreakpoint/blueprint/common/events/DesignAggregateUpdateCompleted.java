@@ -14,9 +14,9 @@ import java.util.UUID;
 public class DesignAggregateUpdateCompleted {
     public static final String TYPE = "design-aggregate-update-completed-v1";
 
-    private final UUID evid;
-    private final UUID uuid;
-    private final long esid;
+    private final UUID eventId;
+    private final UUID designId;
+    private final long revision;
     private final String data;
     private final String checksum;
     private final int levels;
@@ -24,33 +24,33 @@ public class DesignAggregateUpdateCompleted {
 
     @JsonCreator
     public DesignAggregateUpdateCompleted(
-        @JsonProperty("evid") UUID evid,
-        @JsonProperty("uuid") UUID uuid,
-        @JsonProperty("esid") long esid,
+        @JsonProperty("eventId") UUID eventId,
+        @JsonProperty("designId") UUID designId,
+        @JsonProperty("revision") long revision,
         @JsonProperty("data") String data,
         @JsonProperty("checksum") String checksum,
         @JsonProperty("levels") int levels,
         @JsonProperty("status") String status
     ) {
-        this.evid = Objects.requireNonNull(evid);
-        this.uuid = Objects.requireNonNull(uuid);
-        this.esid = esid;
+        this.eventId = Objects.requireNonNull(eventId);
+        this.designId = Objects.requireNonNull(designId);
+        this.revision = revision;
         this.data = Objects.requireNonNull(data);
         this.checksum = Objects.requireNonNull(checksum);
         this.levels = levels;
         this.status = status;
     }
 
-    public UUID getEvid() {
-        return evid;
+    public UUID getEventId() {
+        return eventId;
     }
 
-    public UUID getUuid() {
-        return uuid;
+    public UUID getDesignId() {
+        return designId;
     }
 
-    public long getEsid() {
-        return esid;
+    public long getRevision() {
+        return revision;
     }
 
     public String getData() {

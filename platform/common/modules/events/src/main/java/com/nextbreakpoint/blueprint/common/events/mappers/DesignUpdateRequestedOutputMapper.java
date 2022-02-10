@@ -19,7 +19,7 @@ public class DesignUpdateRequestedOutputMapper implements Mapper<DesignUpdateReq
     @Override
     public OutputMessage transform(DesignUpdateRequested event) {
         return new OutputMessage(
-                event.getUuid().toString(),
+                event.getDesignId().toString(),
                 new Payload(
                         UUID.randomUUID(),
                         DesignUpdateRequested.TYPE,

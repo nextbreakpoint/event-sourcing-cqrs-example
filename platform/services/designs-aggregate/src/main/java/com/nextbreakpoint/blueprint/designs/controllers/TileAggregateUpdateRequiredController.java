@@ -38,9 +38,9 @@ public class TileAggregateUpdateRequiredController implements Controller<InputMe
 
     private TileAggregateUpdateRequested createEvent(TileAggregateUpdateRequired event) {
         return TileAggregateUpdateRequested.builder()
-                .withEvid(Uuids.timeBased())
-                .withUuid(event.getUuid())
-                .withEsid(event.getEsid())
+                .withEventId(Uuids.timeBased())
+                .withDesignId(event.getDesignId())
+                .withRevision(event.getRevision())
                 .build();
     }
 }

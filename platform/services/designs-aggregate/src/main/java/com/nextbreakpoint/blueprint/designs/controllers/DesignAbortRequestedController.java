@@ -46,8 +46,8 @@ public class DesignAbortRequestedController implements Controller<InputMessage, 
     }
 
     private Observable<TileRenderAborted> onTileRenderAborted(DesignAbortRequested event) {
-        return aggregate.findDesign(event.getUuid())
-                .map(result -> result.orElseThrow(() -> new RuntimeException("Design not found " + event.getUuid())))
+        return aggregate.findDesign(event.getDesignId())
+                .map(result -> result.orElseThrow(() -> new RuntimeException("Design not found " + event.getDesignId())))
                 .flatMapObservable(design -> generateEvents(event, design));
     }
 
@@ -72,9 +72,9 @@ public class DesignAbortRequestedController implements Controller<InputMessage, 
 
     private TileRenderAborted createEvent(DesignAbortRequested event, Design design, Tile tile) {
         return TileRenderAborted.builder()
-                .withEvid(Uuids.timeBased())
-                .withUuid(event.getUuid())
-                .withEsid(design.getEsid())
+                .withEventId(Uuids.timeBased())
+                .withDesignId(event.getDesignId())
+                .withRevision(design.getRevision())
                 .withChecksum(event.getChecksum())
                 .withLevel(tile.getLevel())
                 .withRow(tile.getRow())

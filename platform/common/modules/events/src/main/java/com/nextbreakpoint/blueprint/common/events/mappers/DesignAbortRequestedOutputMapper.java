@@ -19,7 +19,7 @@ public class DesignAbortRequestedOutputMapper implements Mapper<DesignAbortReque
     @Override
     public OutputMessage transform(DesignAbortRequested event) {
         return new OutputMessage(
-                event.getUuid().toString(),
+                event.getDesignId().toString(),
                 new Payload(
                     UUID.randomUUID(),
                         DesignAbortRequested.TYPE,

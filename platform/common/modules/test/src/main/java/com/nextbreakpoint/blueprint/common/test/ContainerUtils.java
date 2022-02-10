@@ -63,7 +63,7 @@ public class ContainerUtils {
                 .withEnv("ES_JAVA_OPTS", "-Xms2G -Xmx2G")
                 .withEnv("discovery.type", "single-node")
                 .withEnv("xpack.security.enabled", "false")
-                .withFileSystemBind("../../scripts/elasticsearch-init.sh", "/docker-entrypoint-initdb.d/init.sh", BindMode.READ_ONLY)
+                .withFileSystemBind("../../scripts/init.sh", "/docker-entrypoint-initdb.d/init.sh", BindMode.READ_ONLY)
                 .withNetwork(network)
                 .withNetworkAliases("elasticsearch")
                 .withExposedPorts(9200);

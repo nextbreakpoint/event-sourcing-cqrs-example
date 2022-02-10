@@ -14,27 +14,27 @@ import java.util.UUID;
 public class DesignAbortRequested {
     public static final String TYPE = "design-abort-requested-v1";
 
-    private final UUID evid;
-    private final UUID uuid;
+    private final UUID eventId;
+    private final UUID designId;
     private final String checksum;
 
     @JsonCreator
     public DesignAbortRequested(
-        @JsonProperty("evid") UUID evid,
-        @JsonProperty("uuid") UUID uuid,
+        @JsonProperty("eventId") UUID eventId,
+        @JsonProperty("designId") UUID designId,
         @JsonProperty("checksum") String checksum
     ) {
-        this.evid = Objects.requireNonNull(evid);
-        this.uuid = Objects.requireNonNull(uuid);
+        this.eventId = Objects.requireNonNull(eventId);
+        this.designId = Objects.requireNonNull(designId);
         this.checksum = Objects.requireNonNull(checksum);
     }
 
-    public UUID getEvid() {
-        return evid;
+    public UUID getEventId() {
+        return eventId;
     }
 
-    public UUID getUuid() {
-        return uuid;
+    public UUID getDesignId() {
+        return designId;
     }
 
     public String getChecksum() {

@@ -130,7 +130,7 @@ public class TestCases {
     public void shouldUpdateTheDesignWhenReceivingADesignInsertRequestedMessage(OutputMessage designInsertRequestedMessage) {
         final DesignInsertRequested designInsertRequested = Json.decodeValue(designInsertRequestedMessage.getValue().getData(), DesignInsertRequested.class);
 
-        final UUID designId = designInsertRequested.getUuid();
+        final UUID designId = designInsertRequested.getDesignId();
 
         System.out.println("designId = " + designId);
 
@@ -204,7 +204,7 @@ public class TestCases {
     public void shouldUpdateTheDesignWhenReceivingADesignUpdateRequestedMessage(OutputMessage designInsertRequestedMessage, OutputMessage designUpdateRequestedMessage) {
         final DesignInsertRequested designInsertRequested = Json.decodeValue(designInsertRequestedMessage.getValue().getData(), DesignInsertRequested.class);
 
-        final UUID designId = designInsertRequested.getUuid();
+        final UUID designId = designInsertRequested.getDesignId();
 
         System.out.println("designId = " + designId);
 
@@ -288,7 +288,7 @@ public class TestCases {
     public void shouldUpdateTheDesignWhenReceivingADesignDeleteRequestedMessage(OutputMessage designInsertRequestedMessage, OutputMessage designDeleteRequestedMessage) {
         final DesignInsertRequested designInsertRequested = Json.decodeValue(designInsertRequestedMessage.getValue().getData(), DesignInsertRequested.class);
 
-        final UUID designId = designInsertRequested.getUuid();
+        final UUID designId = designInsertRequested.getDesignId();
 
         System.out.println("designId = " + designId);
 
@@ -367,7 +367,7 @@ public class TestCases {
     public void shouldUpdateTheDesignWhenReceivingATileRenderCompletedMessage(OutputMessage designInsertRequestedMessage, List<OutputMessage> tileRenderCompletedMessages) {
         final DesignInsertRequested designInsertRequested = Json.decodeValue(designInsertRequestedMessage.getValue().getData(), DesignInsertRequested.class);
 
-        final UUID designId = designInsertRequested.getUuid();
+        final UUID designId = designInsertRequested.getDesignId();
 
         System.out.println("designId = " + designId);
 

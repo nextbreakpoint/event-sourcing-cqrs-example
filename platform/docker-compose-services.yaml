@@ -146,7 +146,7 @@ services:
         soft: 65536
         hard: 65536
     volumes:
-      - ./scripts/elasticsearch-init.sh:/docker-entrypoint-initdb.d/init.sh:ro
+      - ./scripts/init.sh:/docker-entrypoint-initdb.d/init.sh:ro
   kibana:
     restart: unless-stopped
     image: docker.elastic.co/kibana/kibana:7.16.2

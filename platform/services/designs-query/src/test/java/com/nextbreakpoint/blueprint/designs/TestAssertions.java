@@ -23,10 +23,10 @@ public class TestAssertions {
         assertThat(actualMessage.getValue().getUuid()).isNotNull();
         assertThat(actualMessage.getValue().getType()).isEqualTo(TestConstants.DESIGN_DOCUMENT_UPDATE_REQUESTED);
         DesignDocumentUpdateRequested actualEvent = Json.decodeValue(actualMessage.getValue().getData(), DesignDocumentUpdateRequested.class);
-        assertThat(actualEvent.getUuid()).isEqualTo(designId);
-        assertThat(actualEvent.getEsid()).isNotNull();
-        assertThat(actualEvent.getEvid()).isNotNull();
-        assertThat(actualEvent.getJson()).isEqualTo(data);
+        assertThat(actualEvent.getDesignId()).isEqualTo(designId);
+        assertThat(actualEvent.getRevision()).isNotNull();
+        assertThat(actualEvent.getEventId()).isNotNull();
+        assertThat(actualEvent.getData()).isEqualTo(data);
         assertThat(actualEvent.getStatus()).isEqualTo(status);
         assertThat(actualEvent.getChecksum()).isEqualTo(checksum);
         assertThat(actualEvent.getLevels()).isEqualTo(TestConstants.LEVELS);
@@ -42,9 +42,9 @@ public class TestAssertions {
         assertThat(actualMessage.getValue().getUuid()).isNotNull();
         assertThat(actualMessage.getValue().getType()).isEqualTo(TestConstants.DESIGN_DOCUMENT_UPDATE_COMPLETED);
         DesignDocumentUpdateCompleted actualEvent = Json.decodeValue(actualMessage.getValue().getData(), DesignDocumentUpdateCompleted.class);
-        assertThat(actualEvent.getUuid()).isEqualTo(designId);
-        assertThat(actualEvent.getEsid()).isNotNull();
-        assertThat(actualEvent.getEvid()).isNotNull();
+        assertThat(actualEvent.getDesignId()).isEqualTo(designId);
+        assertThat(actualEvent.getRevision()).isNotNull();
+        assertThat(actualEvent.getEventId()).isNotNull();
     }
 
     public static void assertExpectedDesignDocumentDeleteRequestedMessage(UUID designId, InputMessage actualMessage) {
@@ -55,9 +55,9 @@ public class TestAssertions {
         assertThat(actualMessage.getValue().getUuid()).isNotNull();
         assertThat(actualMessage.getValue().getType()).isEqualTo(TestConstants.DESIGN_DOCUMENT_DELETE_REQUESTED);
         DesignDocumentDeleteRequested actualEvent = Json.decodeValue(actualMessage.getValue().getData(), DesignDocumentDeleteRequested.class);
-        assertThat(actualEvent.getUuid()).isEqualTo(designId);
-        assertThat(actualEvent.getEsid()).isNotNull();
-        assertThat(actualEvent.getEvid()).isNotNull();
+        assertThat(actualEvent.getDesignId()).isEqualTo(designId);
+        assertThat(actualEvent.getRevision()).isNotNull();
+        assertThat(actualEvent.getEventId()).isNotNull();
     }
 
     public static void assertExpectedDesignDocumentDeleteCompletedMessage(UUID designId, InputMessage actualMessage) {
@@ -68,17 +68,17 @@ public class TestAssertions {
         assertThat(actualMessage.getValue().getUuid()).isNotNull();
         assertThat(actualMessage.getValue().getType()).isEqualTo(TestConstants.DESIGN_DOCUMENT_DELETE_COMPLETED);
         DesignDocumentDeleteCompleted actualEvent = Json.decodeValue(actualMessage.getValue().getData(), DesignDocumentDeleteCompleted.class);
-        assertThat(actualEvent.getUuid()).isEqualTo(designId);
-        assertThat(actualEvent.getEsid()).isNotNull();
-        assertThat(actualEvent.getEvid()).isNotNull();
+        assertThat(actualEvent.getDesignId()).isEqualTo(designId);
+        assertThat(actualEvent.getRevision()).isNotNull();
+        assertThat(actualEvent.getEventId()).isNotNull();
     }
 
     public static void assertExpectedDesign(Design design, UUID designId, String data, String checksum, String status) {
-        assertThat(design.getUuid()).isEqualTo(designId);
-        assertThat(design.getEvid()).isNotNull();
-        assertThat(design.getEsid()).isNotNull();
-        assertThat(design.getEvid()).isNotNull();
-        assertThat(design.getJson()).isEqualTo(data);
+        assertThat(design.getDesignId()).isEqualTo(designId);
+        assertThat(design.getEventId()).isNotNull();
+        assertThat(design.getRevision()).isNotNull();
+        assertThat(design.getEventId()).isNotNull();
+        assertThat(design.getData()).isEqualTo(data);
         assertThat(design.getStatus()).isEqualTo(status);
         assertThat(design.getChecksum()).isEqualTo(checksum);
         assertThat(design.getLevels()).isEqualTo(TestConstants.LEVELS);

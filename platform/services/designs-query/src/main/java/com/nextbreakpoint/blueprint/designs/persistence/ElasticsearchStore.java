@@ -121,7 +121,7 @@ public class ElasticsearchStore implements Store {
     private SearchRequest.Builder createLoadDesignRequest(SearchRequest.Builder builder, LoadDesignRequest request) {
         return builder
                 .index(indexName)
-                .query(q -> q.term(t -> t.field("uuid").value(v -> v.stringValue(request.getUuid().toString()))));
+                .query(q -> q.term(t -> t.field("designId").value(v -> v.stringValue(request.getUuid().toString()))));
     }
 
     private SearchRequest.Builder createListDesignsRequest(SearchRequest.Builder builder, ListDesignsRequest request) {
@@ -135,7 +135,7 @@ public class ElasticsearchStore implements Store {
         return builder
                 .index(indexName)
                 .refresh(Refresh.True)
-                .id(request.getDesign().getUuid().toString())
+                .id(request.getDesign().getDesignId().toString())
                 .doc(request.getDesign())
                 .docAsUpsert(true);
     }

@@ -60,9 +60,9 @@ public class CassandraStore implements Store {
     }
 
     @Override
-    public Single<List<InputMessage>> findMessages(UUID uuid, long fromEsid, long toEsid) {
+    public Single<List<InputMessage>> findMessages(UUID uuid, long fromRevision, long toRevision) {
         return withSession()
-                .flatMap(session -> selectMessages(session, makeSelectMessagesParams(uuid, fromEsid, toEsid)))
+                .flatMap(session -> selectMessages(session, makeSelectMessagesParams(uuid, fromRevision, toRevision)))
                 .doOnError(err -> handleError(ERROR_SELECT_MESSAGES, err));
     }
 
@@ -158,9 +158,9 @@ public class CassandraStore implements Store {
     }
 
     private Design convertRowToDesign(Row row) {
-        final UUID evid = row.getUuid("DESIGN_EVID");
-        final UUID uuid = row.getUuid("DESIGN_UUID");
-        final long esid = row.getLong("DESIGN_ESID");
+        final UUID eventId = row.getUuid("DESIGN_EVID");
+        final UUID designId = row.getUuid("DESIGN_UUID");
+        final long revision = row.getLong("DESIGN_ESID");
         final String data = row.getString("DESIGN_DATA");
         final String checksum = row.getString("DESIGN_CHECKSUM");
         final String status = row.getString("DESIGN_STATUS");
@@ -170,7 +170,7 @@ public class CassandraStore implements Store {
         final Map<Integer, Tiles> tilesList = tilesMap.entrySet().stream()
                 .map(entry -> convertUDTToTiles(entry.getKey(), entry.getValue()))
                 .collect(Collectors.toMap(Tiles::getLevel, Function.identity()));
-        return new Design(evid, uuid, esid, data, checksum, status, levels, tilesList, toDate(updated));
+        return new Design(eventId, designId, revision, data, checksum, status, levels, tilesList, toDate(updated));
     }
 
     private InputMessage convertRowToMessage(Row row) {
@@ -188,8 +188,8 @@ public class CassandraStore implements Store {
         return LocalDateTime.ofInstant(instant != null ? instant : Instant.ofEpochMilli(0), ZoneId.of("UTC"));
     }
 
-    private Object[] makeSelectMessagesParams(UUID uuid, long fromEesid, long toEsid) {
-        return new Object[] { uuid.toString(), toEsid, fromEesid };
+    private Object[] makeSelectMessagesParams(UUID uuid, long fromRevision, long toRevision) {
+        return new Object[] { uuid.toString(), toRevision, fromRevision };
     }
 
     private Object[] makeInsertMessageParams(InputMessage message) {
@@ -202,11 +202,11 @@ public class CassandraStore implements Store {
 
     private Object[] makeInsertDesignParams(Design design, UserDefinedType levelType) {
         final Map<Integer, UdtValue> levelsMap = design.getTiles().values().stream().collect(Collectors.toMap(Tiles::getLevel, x -> convertTilesToUDT(levelType, x)));
-        return new Object[] { design.getEvid(), design.getUuid(), design.getEsid(), design.getJson(), Checksum.of(design.getJson()), design.getStatus(), design.getLevels(), levelsMap, design.getModified().toInstant(ZoneOffset.UTC) };
+        return new Object[] { design.getEventId(), design.getDesignId(), design.getRevision(), design.getData(), Checksum.of(design.getData()), design.getStatus(), design.getLevels(), levelsMap, design.getModified().toInstant(ZoneOffset.UTC) };
     }
 
     private Object[] makeDeleteDesignParams(Design design) {
-        return new Object[] { design.getUuid() };
+        return new Object[] { design.getDesignId() };
     }
 
     private Tiles convertUDTToTiles(Integer level, UdtValue udtValue) {

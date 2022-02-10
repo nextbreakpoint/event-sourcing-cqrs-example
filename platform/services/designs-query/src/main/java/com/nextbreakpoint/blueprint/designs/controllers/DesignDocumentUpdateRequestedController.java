@@ -47,17 +47,17 @@ public class DesignDocumentUpdateRequestedController implements Controller<Input
     }
 
     private Observable<DesignDocumentUpdateCompleted> onDesignDocumentUpdateRequested(DesignDocumentUpdateRequested event) {
-        return store.insertDesign(new InsertDesignRequest(event.getUuid(), createDesign(event)))
-                .map(result -> new DesignDocumentUpdateCompleted(event.getEvid(), event.getUuid(), event.getEsid()))
+        return store.insertDesign(new InsertDesignRequest(event.getDesignId(), createDesign(event)))
+                .map(result -> new DesignDocumentUpdateCompleted(event.getEventId(), event.getDesignId(), event.getRevision()))
                 .toObservable();
     }
 
     private Design createDesign(DesignDocumentUpdateRequested event) {
         return Design.builder()
-                .withEvid(event.getEvid())
-                .withUuid(event.getUuid())
-                .withEsid(event.getEsid())
-                .withJson(event.getJson())
+                .withEventId(event.getEventId())
+                .withDesignId(event.getDesignId())
+                .withRevision(event.getRevision())
+                .withData(event.getData())
                 .withChecksum(event.getChecksum())
                 .withStatus(event.getStatus())
                 .withLevels(event.getLevels())

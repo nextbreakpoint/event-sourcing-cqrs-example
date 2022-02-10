@@ -40,17 +40,17 @@ public class TileAggregateUpdateRequestedController implements Controller<InputM
     }
 
     private Single<TileAggregateUpdateCompleted> onAggregateUpdateRequested(TileAggregateUpdateRequested event) {
-        return aggregate.updateDesign(event.getUuid(), event.getEsid())
-                .map(result -> result.orElseThrow(() -> new RuntimeException("Design aggregate not found " + event.getUuid())))
+        return aggregate.updateDesign(event.getDesignId(), event.getRevision())
+                .map(result -> result.orElseThrow(() -> new RuntimeException("Design aggregate not found " + event.getDesignId())))
 //                .flatMapObservable(result -> Observable.from(result.map(Collections::singletonList).orElseGet(Collections::emptyList)))
                 .map(this::createEvent);
     }
 
     private TileAggregateUpdateCompleted createEvent(Design design) {
         return TileAggregateUpdateCompleted.builder()
-                .withEvid(Uuids.timeBased())
-                .withUuid(design.getUuid())
-                .withEsid(design.getEsid())
+                .withEventId(Uuids.timeBased())
+                .withDesignId(design.getDesignId())
+                .withRevision(design.getRevision())
                 .build();
     }
 }

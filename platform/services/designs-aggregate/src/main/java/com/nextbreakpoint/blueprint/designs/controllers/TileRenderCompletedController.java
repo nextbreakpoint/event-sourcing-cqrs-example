@@ -41,9 +41,9 @@ public class TileRenderCompletedController implements Controller<InputMessage, V
 
     private TileAggregateUpdateRequired createEvent(InputMessage message, TileRenderCompleted event) {
         return TileAggregateUpdateRequired.builder()
-                .withEvid(Uuids.timeBased())
-                .withUuid(event.getUuid())
-                .withEsid(message.getOffset())
+                .withEventId(Uuids.timeBased())
+                .withDesignId(event.getDesignId())
+                .withRevision(message.getOffset())
                 .build();
     }
 }

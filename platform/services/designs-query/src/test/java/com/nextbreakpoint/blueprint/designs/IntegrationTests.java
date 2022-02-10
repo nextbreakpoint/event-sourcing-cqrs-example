@@ -190,15 +190,15 @@ public class IntegrationTests {
     Design[] results = listDesigns(authorization);
 
     List<Design> sortedResults = Stream.of(results)
-            .sorted(Comparator.comparing(Design::getUuid))
+            .sorted(Comparator.comparing(Design::getDesignId))
             .collect(Collectors.toList());
 
     assertThat(sortedResults).hasSize(4);
 
-    assertThat(sortedResults.get(0).getUuid()).isEqualTo(TestConstants.DESIGN_UUID_1);
-    assertThat(sortedResults.get(1).getUuid()).isEqualTo(TestConstants.DESIGN_UUID_2);
-    assertThat(sortedResults.get(2).getUuid()).isEqualTo(TestConstants.DESIGN_UUID_3);
-    assertThat(sortedResults.get(3).getUuid()).isEqualTo(TestConstants.DESIGN_UUID_4);
+    assertThat(sortedResults.get(0).getDesignId()).isEqualTo(TestConstants.DESIGN_UUID_1);
+    assertThat(sortedResults.get(1).getDesignId()).isEqualTo(TestConstants.DESIGN_UUID_2);
+    assertThat(sortedResults.get(2).getDesignId()).isEqualTo(TestConstants.DESIGN_UUID_3);
+    assertThat(sortedResults.get(3).getDesignId()).isEqualTo(TestConstants.DESIGN_UUID_4);
     assertThat(sortedResults.get(0).getChecksum()).isEqualTo(Checksum.of(JSON_1));
     assertThat(sortedResults.get(1).getChecksum()).isEqualTo(Checksum.of(JSON_2));
     assertThat(sortedResults.get(2).getChecksum()).isEqualTo(Checksum.of(JSON_3));
@@ -217,8 +217,8 @@ public class IntegrationTests {
     Design result = loadDesign(authorization, TestConstants.DESIGN_UUID_1);
 
     String json1 = new JsonObject(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT1)).toString();
-    assertThat(result.getUuid()).isEqualTo(TestConstants.DESIGN_UUID_1);
-    assertThat(result.getJson()).isEqualTo(json1);
+    assertThat(result.getDesignId()).isEqualTo(TestConstants.DESIGN_UUID_1);
+    assertThat(result.getData()).isEqualTo(json1);
     assertThat(result.getModified()).isNotNull();
     assertThat(result.getChecksum()).isNotNull();
   }
@@ -243,15 +243,15 @@ public class IntegrationTests {
     Design[] results = listDesigns(authorization);
 
     List<Design> sortedResults = Stream.of(results)
-            .sorted(Comparator.comparing(Design::getUuid))
+            .sorted(Comparator.comparing(Design::getDesignId))
             .collect(Collectors.toList());
 
     assertThat(sortedResults).hasSize(4);
 
-    assertThat(sortedResults.get(0).getUuid()).isEqualTo(TestConstants.DESIGN_UUID_1);
-    assertThat(sortedResults.get(1).getUuid()).isEqualTo(TestConstants.DESIGN_UUID_2);
-    assertThat(sortedResults.get(2).getUuid()).isEqualTo(TestConstants.DESIGN_UUID_3);
-    assertThat(sortedResults.get(3).getUuid()).isEqualTo(TestConstants.DESIGN_UUID_4);
+    assertThat(sortedResults.get(0).getDesignId()).isEqualTo(TestConstants.DESIGN_UUID_1);
+    assertThat(sortedResults.get(1).getDesignId()).isEqualTo(TestConstants.DESIGN_UUID_2);
+    assertThat(sortedResults.get(2).getDesignId()).isEqualTo(TestConstants.DESIGN_UUID_3);
+    assertThat(sortedResults.get(3).getDesignId()).isEqualTo(TestConstants.DESIGN_UUID_4);
     assertThat(sortedResults.get(0).getChecksum()).isEqualTo(Checksum.of(JSON_1));
     assertThat(sortedResults.get(1).getChecksum()).isEqualTo(Checksum.of(JSON_2));
     assertThat(sortedResults.get(2).getChecksum()).isEqualTo(Checksum.of(JSON_3));
@@ -270,8 +270,8 @@ public class IntegrationTests {
     Design result = loadDesign(authorization, TestConstants.DESIGN_UUID_1);
 
     String json1 = new JsonObject(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT1)).toString();
-    assertThat(result.getUuid()).isEqualTo(TestConstants.DESIGN_UUID_1);
-    assertThat(result.getJson()).isEqualTo(json1);
+    assertThat(result.getDesignId()).isEqualTo(TestConstants.DESIGN_UUID_1);
+    assertThat(result.getData()).isEqualTo(json1);
     assertThat(result.getModified()).isNotNull();
     assertThat(result.getChecksum()).isNotNull();
   }
@@ -296,15 +296,15 @@ public class IntegrationTests {
     Design[] results = listDesigns(authorization);
 
     List<Design> sortedResults = Stream.of(results)
-            .sorted(Comparator.comparing(Design::getUuid))
+            .sorted(Comparator.comparing(Design::getDesignId))
             .collect(Collectors.toList());
 
     assertThat(sortedResults).hasSize(4);
 
-    assertThat(sortedResults.get(0).getUuid()).isEqualTo(TestConstants.DESIGN_UUID_1);
-    assertThat(sortedResults.get(1).getUuid()).isEqualTo(TestConstants.DESIGN_UUID_2);
-    assertThat(sortedResults.get(2).getUuid()).isEqualTo(TestConstants.DESIGN_UUID_3);
-    assertThat(sortedResults.get(3).getUuid()).isEqualTo(TestConstants.DESIGN_UUID_4);
+    assertThat(sortedResults.get(0).getDesignId()).isEqualTo(TestConstants.DESIGN_UUID_1);
+    assertThat(sortedResults.get(1).getDesignId()).isEqualTo(TestConstants.DESIGN_UUID_2);
+    assertThat(sortedResults.get(2).getDesignId()).isEqualTo(TestConstants.DESIGN_UUID_3);
+    assertThat(sortedResults.get(3).getDesignId()).isEqualTo(TestConstants.DESIGN_UUID_4);
     assertThat(sortedResults.get(0).getChecksum()).isEqualTo(Checksum.of(JSON_1));
     assertThat(sortedResults.get(1).getChecksum()).isEqualTo(Checksum.of(JSON_2));
     assertThat(sortedResults.get(2).getChecksum()).isEqualTo(Checksum.of(JSON_3));
@@ -323,8 +323,8 @@ public class IntegrationTests {
     Design result = loadDesign(authorization, TestConstants.DESIGN_UUID_1);
 
     String json1 = new JsonObject(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT1)).toString();
-    assertThat(result.getUuid()).isEqualTo(TestConstants.DESIGN_UUID_1);
-    assertThat(result.getJson()).isEqualTo(json1);
+    assertThat(result.getDesignId()).isEqualTo(TestConstants.DESIGN_UUID_1);
+    assertThat(result.getData()).isEqualTo(json1);
     assertThat(result.getModified()).isNotNull();
     assertThat(result.getChecksum()).isNotNull();
   }

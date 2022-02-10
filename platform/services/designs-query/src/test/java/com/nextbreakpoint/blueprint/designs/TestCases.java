@@ -188,15 +188,15 @@ public class TestCases {
         final DesignDocumentUpdateRequested designDocumentUpdateRequested3 = Json.decodeValue(designDocumentUpdateRequestedMessages.get(2).getValue().getData(), DesignDocumentUpdateRequested.class);
         final DesignDocumentUpdateRequested designDocumentUpdateRequested4 = Json.decodeValue(designDocumentUpdateRequestedMessages.get(3).getValue().getData(), DesignDocumentUpdateRequested.class);
 
-        final UUID designId1 = designDocumentUpdateRequested1.getUuid();
-        final UUID designId2 = designDocumentUpdateRequested4.getUuid();
+        final UUID designId1 = designDocumentUpdateRequested1.getDesignId();
+        final UUID designId2 = designDocumentUpdateRequested4.getDesignId();
 
         System.out.println("designId1 = " + designId1);
         System.out.println("designId2 = " + designId2);
 
-        assertThat(designId1).isEqualTo(designDocumentUpdateRequested2.getUuid());
-        assertThat(designId1).isEqualTo(designDocumentUpdateRequested3.getUuid());
-        assertThat(designId2).isNotEqualTo(designDocumentUpdateRequested3.getUuid());
+        assertThat(designId1).isEqualTo(designDocumentUpdateRequested2.getDesignId());
+        assertThat(designId1).isEqualTo(designDocumentUpdateRequested3.getDesignId());
+        assertThat(designId2).isNotEqualTo(designDocumentUpdateRequested3.getDesignId());
 
         eventsPolling.clearMessages();
 
@@ -210,12 +210,12 @@ public class TestCases {
                 .untilAsserted(() -> {
                     final List<InputMessage> messages1 = eventsPolling.findMessages(designId1.toString(), TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_DOCUMENT_UPDATE_REQUESTED);
                     assertThat(messages1).hasSize(3);
-                    TestAssertions.assertExpectedDesignDocumentUpdateRequestedMessage(designId1, messages1.get(0), designDocumentUpdateRequested1.getJson(), designDocumentUpdateRequested1.getChecksum(), designDocumentUpdateRequested1.getStatus());
-                    TestAssertions.assertExpectedDesignDocumentUpdateRequestedMessage(designId1, messages1.get(1), designDocumentUpdateRequested2.getJson(), designDocumentUpdateRequested2.getChecksum(), designDocumentUpdateRequested2.getStatus());
-                    TestAssertions.assertExpectedDesignDocumentUpdateRequestedMessage(designId1, messages1.get(2), designDocumentUpdateRequested3.getJson(), designDocumentUpdateRequested3.getChecksum(), designDocumentUpdateRequested3.getStatus());
+                    TestAssertions.assertExpectedDesignDocumentUpdateRequestedMessage(designId1, messages1.get(0), designDocumentUpdateRequested1.getData(), designDocumentUpdateRequested1.getChecksum(), designDocumentUpdateRequested1.getStatus());
+                    TestAssertions.assertExpectedDesignDocumentUpdateRequestedMessage(designId1, messages1.get(1), designDocumentUpdateRequested2.getData(), designDocumentUpdateRequested2.getChecksum(), designDocumentUpdateRequested2.getStatus());
+                    TestAssertions.assertExpectedDesignDocumentUpdateRequestedMessage(designId1, messages1.get(2), designDocumentUpdateRequested3.getData(), designDocumentUpdateRequested3.getChecksum(), designDocumentUpdateRequested3.getStatus());
                     final List<InputMessage> messages2 = eventsPolling.findMessages(designId2.toString(), TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_DOCUMENT_UPDATE_REQUESTED);
                     assertThat(messages2).hasSize(1);
-                    TestAssertions.assertExpectedDesignDocumentUpdateRequestedMessage(designId2, messages2.get(0), designDocumentUpdateRequested4.getJson(), designDocumentUpdateRequested4.getChecksum(), designDocumentUpdateRequested4.getStatus());
+                    TestAssertions.assertExpectedDesignDocumentUpdateRequestedMessage(designId2, messages2.get(0), designDocumentUpdateRequested4.getData(), designDocumentUpdateRequested4.getChecksum(), designDocumentUpdateRequested4.getStatus());
                 });
 
         await().atMost(TEN_SECONDS)
@@ -236,10 +236,10 @@ public class TestCases {
                 .untilAsserted(() -> {
                     final List<Design> designs1 = testElasticsearch.findDesigns(designId1);
                     assertThat(designs1).hasSize(1);
-                    TestAssertions.assertExpectedDesign(designs1.get(0), designId1, designDocumentUpdateRequested3.getJson(), designDocumentUpdateRequested3.getChecksum(), designDocumentUpdateRequested3.getStatus());
+                    TestAssertions.assertExpectedDesign(designs1.get(0), designId1, designDocumentUpdateRequested3.getData(), designDocumentUpdateRequested3.getChecksum(), designDocumentUpdateRequested3.getStatus());
                     final List<Design> designs2 = testElasticsearch.findDesigns(designId2);
                     assertThat(designs2).hasSize(1);
-                    TestAssertions.assertExpectedDesign(designs2.get(0), designId2, designDocumentUpdateRequested4.getJson(), designDocumentUpdateRequested4.getChecksum(), designDocumentUpdateRequested4.getStatus());
+                    TestAssertions.assertExpectedDesign(designs2.get(0), designId2, designDocumentUpdateRequested4.getData(), designDocumentUpdateRequested4.getChecksum(), designDocumentUpdateRequested4.getStatus());
                 });
     }
 
@@ -247,12 +247,12 @@ public class TestCases {
         final DesignDocumentUpdateRequested designDocumentUpdateRequested = Json.decodeValue(designDocumentUpdateRequestedMessage.getValue().getData(), DesignDocumentUpdateRequested.class);
         final DesignDocumentDeleteRequested designDocumentDeleteRequested = Json.decodeValue(designDocumentDeleteRequestedMessage.getValue().getData(), DesignDocumentDeleteRequested.class);
 
-        final UUID designId = designDocumentUpdateRequested.getUuid();
+        final UUID designId = designDocumentUpdateRequested.getDesignId();
 
         System.out.println("designId1 = " + designId);
 
-        assertThat(designId).isEqualTo(designDocumentUpdateRequested.getUuid());
-        assertThat(designId).isEqualTo(designDocumentDeleteRequested.getUuid());
+        assertThat(designId).isEqualTo(designDocumentUpdateRequested.getDesignId());
+        assertThat(designId).isEqualTo(designDocumentDeleteRequested.getDesignId());
 
         eventsPolling.clearMessages();
 
@@ -263,7 +263,7 @@ public class TestCases {
                 .untilAsserted(() -> {
                     final List<InputMessage> messages = eventsPolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_DOCUMENT_UPDATE_REQUESTED);
                     assertThat(messages).hasSize(1);
-                    TestAssertions.assertExpectedDesignDocumentUpdateRequestedMessage(designId, messages.get(0), designDocumentUpdateRequested.getJson(), designDocumentUpdateRequested.getChecksum(), designDocumentUpdateRequested.getStatus());
+                    TestAssertions.assertExpectedDesignDocumentUpdateRequestedMessage(designId, messages.get(0), designDocumentUpdateRequested.getData(), designDocumentUpdateRequested.getChecksum(), designDocumentUpdateRequested.getStatus());
                 });
 
         await().atMost(TEN_SECONDS)
@@ -279,7 +279,7 @@ public class TestCases {
                 .untilAsserted(() -> {
                     final List<Design> designs = testElasticsearch.findDesigns(designId);
                     assertThat(designs).hasSize(1);
-                    TestAssertions.assertExpectedDesign(designs.get(0), designId, designDocumentUpdateRequested.getJson(), designDocumentUpdateRequested.getChecksum(), designDocumentUpdateRequested.getStatus());
+                    TestAssertions.assertExpectedDesign(designs.get(0), designId, designDocumentUpdateRequested.getData(), designDocumentUpdateRequested.getChecksum(), designDocumentUpdateRequested.getStatus());
                 });
 
         eventEmitter.send(designDocumentDeleteRequestedMessage);

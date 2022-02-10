@@ -39,17 +39,17 @@ public class TileAggregateUpdateCompletedController implements Controller<InputM
     }
 
     private Single<DesignDocumentUpdateRequested> onAggregateUpdateCompleted(TileAggregateUpdateCompleted event) {
-        return aggregate.findDesign(event.getUuid())
-                .map(result -> result.orElseThrow(() -> new RuntimeException("Design aggregate not found " + event.getUuid())))
+        return aggregate.findDesign(event.getDesignId())
+                .map(result -> result.orElseThrow(() -> new RuntimeException("Design aggregate not found " + event.getDesignId())))
                 .map(this::createEvent);
     }
 
     private DesignDocumentUpdateRequested createEvent(Design design) {
         return DesignDocumentUpdateRequested.builder()
-                .withEvid(design.getEvid())
-                .withUuid(design.getUuid())
-                .withEsid(design.getEsid())
-                .withJson(design.getJson())
+                .withEventId(design.getEventId())
+                .withDesignId(design.getDesignId())
+                .withRevision(design.getRevision())
+                .withData(design.getData())
                 .withChecksum(design.getChecksum())
                 .withStatus(design.getStatus())
                 .withLevels(design.getLevels())

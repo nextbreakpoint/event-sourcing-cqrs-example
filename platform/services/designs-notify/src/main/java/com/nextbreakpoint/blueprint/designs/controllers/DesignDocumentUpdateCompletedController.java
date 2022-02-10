@@ -21,8 +21,8 @@ public class DesignDocumentUpdateCompletedController implements Controller<Desig
     @Override
     public Single<Void> onNext(DesignDocumentUpdateCompleted event) {
         DesignChangedNotification notification = DesignChangedNotification.builder()
-                .withKey(event.getUuid().toString())
-                .withTimestamp(event.getEvid().timestamp())
+                .withKey(event.getDesignId().toString())
+                .withTimestamp(event.getEventId().timestamp())
                 .build();
         vertx.eventBus().publish(address, Json.encodeValue(notification));
         return Single.just(null);

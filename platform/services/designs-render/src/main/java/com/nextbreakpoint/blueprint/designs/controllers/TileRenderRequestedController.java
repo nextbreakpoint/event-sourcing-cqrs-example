@@ -58,9 +58,9 @@ public class TileRenderRequestedController implements Controller<InputMessage, V
 
     private TileRenderCompleted createEvent(TileRenderRequested event, String status) {
         return TileRenderCompleted.builder()
-                .withEvid(Uuids.timeBased())
-                .withUuid(event.getUuid())
-                .withEsid(event.getEsid())
+                .withEventId(Uuids.timeBased())
+                .withDesignId(event.getDesignId())
+                .withRevision(event.getRevision())
                 .withChecksum(event.getChecksum())
                 .withLevel(event.getLevel())
                 .withRow(event.getRow())

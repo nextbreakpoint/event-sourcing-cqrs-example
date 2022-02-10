@@ -18,10 +18,10 @@ import java.util.UUID;
 public class DesignDocumentUpdateRequested {
     public static final String TYPE = "design-document-update-requested-v1";
 
-    private final UUID evid;
-    private final UUID uuid;
-    private final long esid;
-    private final String json;
+    private final UUID eventId;
+    private final UUID designId;
+    private final long revision;
+    private final String data;
     private final String checksum;
     private final String status;
     private final int levels;
@@ -30,20 +30,20 @@ public class DesignDocumentUpdateRequested {
 
     @JsonCreator
     public DesignDocumentUpdateRequested(
-        @JsonProperty("evid") UUID evid,
-        @JsonProperty("uuid") UUID uuid,
-        @JsonProperty("esid") long esid,
-        @JsonProperty("json") String json,
+        @JsonProperty("eventId") UUID eventId,
+        @JsonProperty("designId") UUID designId,
+        @JsonProperty("revision") long revision,
+        @JsonProperty("data") String data,
         @JsonProperty("checksum") String checksum,
         @JsonProperty("status") String status,
         @JsonProperty("levels") int levels,
         @JsonProperty("tiles") List<Tiles> tiles,
         @JsonProperty("modified") @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'") LocalDateTime modified
     ) {
-        this.evid = Objects.requireNonNull(evid);
-        this.uuid = Objects.requireNonNull(uuid);
-        this.esid = esid;
-        this.json = Objects.requireNonNull(json);
+        this.eventId = Objects.requireNonNull(eventId);
+        this.designId = Objects.requireNonNull(designId);
+        this.revision = revision;
+        this.data = Objects.requireNonNull(data);
         this.checksum = Objects.requireNonNull(checksum);
         this.status = Objects.requireNonNull(status);
         this.levels = levels;
@@ -51,20 +51,20 @@ public class DesignDocumentUpdateRequested {
         this.modified = Objects.requireNonNull(modified);
     }
 
-    public UUID getEvid() {
-        return evid;
+    public UUID getEventId() {
+        return eventId;
     }
 
-    public UUID getUuid() {
-        return uuid;
+    public UUID getDesignId() {
+        return designId;
     }
 
-    public long getEsid() {
-        return esid;
+    public long getRevision() {
+        return revision;
     }
 
-    public String getJson() {
-        return json;
+    public String getData() {
+        return data;
     }
 
     public String getChecksum() {

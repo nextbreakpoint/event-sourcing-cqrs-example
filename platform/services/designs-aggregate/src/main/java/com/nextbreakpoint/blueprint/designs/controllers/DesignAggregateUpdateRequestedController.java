@@ -37,17 +37,17 @@ public class DesignAggregateUpdateRequestedController implements Controller<Inpu
     }
 
     private Single<DesignAggregateUpdateCompleted> onAggregateUpdateRequested(DesignAggregateUpdateRequested event) {
-        return aggregate.updateDesign(event.getUuid(), event.getEsid())
-                .map(result -> result.orElseThrow(() -> new RuntimeException("Design aggregate not found " + event.getUuid())))
+        return aggregate.updateDesign(event.getDesignId(), event.getRevision())
+                .map(result -> result.orElseThrow(() -> new RuntimeException("Design aggregate not found " + event.getDesignId())))
                 .map(this::createEvent);
     }
 
     private DesignAggregateUpdateCompleted createEvent(Design design) {
         return DesignAggregateUpdateCompleted.builder()
-                .withEvid(Uuids.timeBased())
-                .withUuid(design.getUuid())
-                .withEsid(design.getEsid())
-                .withData(design.getJson())
+                .withEventId(Uuids.timeBased())
+                .withDesignId(design.getDesignId())
+                .withRevision(design.getRevision())
+                .withData(design.getData())
                 .withChecksum(design.getChecksum())
                 .withLevels(design.getLevels())
                 .withStatus(design.getStatus())

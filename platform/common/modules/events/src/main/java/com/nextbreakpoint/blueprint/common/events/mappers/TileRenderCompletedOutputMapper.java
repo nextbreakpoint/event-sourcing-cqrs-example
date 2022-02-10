@@ -19,7 +19,7 @@ public class TileRenderCompletedOutputMapper implements Mapper<TileRenderComplet
     @Override
     public OutputMessage transform(TileRenderCompleted event) {
         return new OutputMessage(
-                event.getUuid().toString(),
+                event.getDesignId().toString(),
                 new Payload(
                         UUID.randomUUID(),
                         TileRenderCompleted.TYPE,

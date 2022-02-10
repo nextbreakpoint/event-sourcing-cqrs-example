@@ -14,30 +14,30 @@ import java.util.UUID;
 public class TileAggregateUpdateRequired {
     public static final String TYPE = "tile-aggregate-update-required-v1";
 
-    private final UUID evid;
-    private final UUID uuid;
-    private final long esid;
+    private final UUID eventId;
+    private final UUID designId;
+    private final long revision;
 
     @JsonCreator
     public TileAggregateUpdateRequired(
-        @JsonProperty("evid") UUID evid,
-        @JsonProperty("uuid") UUID uuid,
-        @JsonProperty("esid") long esid
+        @JsonProperty("eventId") UUID eventId,
+        @JsonProperty("designId") UUID designId,
+        @JsonProperty("revision") long revision
     ) {
-        this.evid = Objects.requireNonNull(evid);
-        this.uuid = Objects.requireNonNull(uuid);
-        this.esid = esid;
+        this.eventId = Objects.requireNonNull(eventId);
+        this.designId = Objects.requireNonNull(designId);
+        this.revision = revision;
     }
 
-    public UUID getEvid() {
-        return evid;
+    public UUID getEventId() {
+        return eventId;
     }
 
-    public UUID getUuid() {
-        return uuid;
+    public UUID getDesignId() {
+        return designId;
     }
 
-    public long getEsid() {
-        return esid;
+    public long getRevision() {
+        return revision;
     }
 }

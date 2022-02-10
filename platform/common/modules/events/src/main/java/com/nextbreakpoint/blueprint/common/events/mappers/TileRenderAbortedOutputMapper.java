@@ -19,7 +19,7 @@ public class TileRenderAbortedOutputMapper implements Mapper<TileRenderAborted, 
     @Override
     public OutputMessage transform(TileRenderAborted event) {
         return new OutputMessage(
-                event.getUuid().toString(),
+                event.getDesignId().toString(),
                 new Payload(
                         UUID.randomUUID(),
                         TileRenderAborted.TYPE,

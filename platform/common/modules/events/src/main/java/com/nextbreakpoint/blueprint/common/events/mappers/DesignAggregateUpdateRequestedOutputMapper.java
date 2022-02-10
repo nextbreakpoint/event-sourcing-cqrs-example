@@ -19,7 +19,7 @@ public class DesignAggregateUpdateRequestedOutputMapper implements Mapper<Design
     @Override
     public OutputMessage transform(DesignAggregateUpdateRequested event) {
         return new OutputMessage(
-                event.getUuid().toString(),
+                event.getDesignId().toString(),
                 new Payload(
                         UUID.randomUUID(),
                         DesignAggregateUpdateRequested.TYPE,

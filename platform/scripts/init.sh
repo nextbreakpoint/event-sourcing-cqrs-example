@@ -12,10 +12,10 @@ cat <<EOF >/tmp/data.json
   },
   "mappings": {
     "properties": {
-      "uuid": {
+      "designId": {
         "type": "keyword"
       },
-      "json": {
+      "data": {
         "type": "text"
       },
       "checksum": {

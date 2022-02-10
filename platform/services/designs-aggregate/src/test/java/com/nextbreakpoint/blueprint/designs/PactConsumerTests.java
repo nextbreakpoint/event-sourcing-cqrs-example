@@ -43,8 +43,8 @@ public class PactConsumerTests {
         final UUID uuid = new UUID(0L, 1L);
 
         PactDslJsonBody event1 = new PactDslJsonBody()
-                .uuid("uuid", uuid)
-                .stringMatcher("evid", TestConstants.UUID1_REGEXP)
+                .uuid("designId", uuid)
+                .stringMatcher("eventId", TestConstants.UUID1_REGEXP)
                 .stringValue("data", TestConstants.JSON_1)
                 .numberValue("levels", TestConstants.LEVELS);
 
@@ -70,8 +70,8 @@ public class PactConsumerTests {
         final UUID uuid = new UUID(0L, 2L);
 
         PactDslJsonBody event1 = new PactDslJsonBody()
-                .uuid("uuid", uuid)
-                .stringMatcher("evid", TestConstants.UUID1_REGEXP)
+                .uuid("designId", uuid)
+                .stringMatcher("eventId", TestConstants.UUID1_REGEXP)
                 .stringValue("data", TestConstants.JSON_1)
                 .numberValue("levels", TestConstants.LEVELS);
 
@@ -86,8 +86,8 @@ public class PactConsumerTests {
                 .object("value", payload1);
 
         PactDslJsonBody event2 = new PactDslJsonBody()
-                .uuid("uuid", uuid)
-                .stringMatcher("evid", TestConstants.UUID1_REGEXP)
+                .uuid("designId", uuid)
+                .stringMatcher("eventId", TestConstants.UUID1_REGEXP)
                 .stringValue("data", TestConstants.JSON_2)
                 .numberValue("levels", TestConstants.LEVELS);
 
@@ -115,8 +115,8 @@ public class PactConsumerTests {
         final UUID uuid = new UUID(0L, 3L);
 
         PactDslJsonBody event1 = new PactDslJsonBody()
-                .uuid("uuid", uuid)
-                .stringMatcher("evid", TestConstants.UUID1_REGEXP)
+                .uuid("designId", uuid)
+                .stringMatcher("eventId", TestConstants.UUID1_REGEXP)
                 .stringValue("data", TestConstants.JSON_1)
                 .numberValue("levels", TestConstants.LEVELS);
 
@@ -131,8 +131,8 @@ public class PactConsumerTests {
                 .object("value", payload1);
 
         PactDslJsonBody event2 = new PactDslJsonBody()
-                .uuid("uuid", uuid)
-                .stringMatcher("evid", TestConstants.UUID1_REGEXP);
+                .uuid("designId", uuid)
+                .stringMatcher("eventId", TestConstants.UUID1_REGEXP);
 
         PactDslJsonBody payload2 = new PactDslJsonBody()
                 .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
@@ -158,9 +158,9 @@ public class PactConsumerTests {
         final UUID uuid = new UUID(0L, 4L);
 
         PactDslJsonBody event1 = new PactDslJsonBody()
-                .uuid("uuid", uuid)
-                .stringMatcher("evid", TestConstants.UUID1_REGEXP)
-                .numberType("esid")
+                .uuid("designId", uuid)
+                .stringMatcher("eventId", TestConstants.UUID1_REGEXP)
+                .numberType("revision")
                 .stringValue("checksum", TestConstants.CHECKSUM_1)
                 .numberValue("level", 0)
                 .numberValue("row", 0)
@@ -178,9 +178,9 @@ public class PactConsumerTests {
                 .object("value", payload1);
 
         PactDslJsonBody event2 = new PactDslJsonBody()
-                .uuid("uuid", uuid)
-                .stringMatcher("evid", TestConstants.UUID1_REGEXP)
-                .numberType("esid")
+                .uuid("designId", uuid)
+                .stringMatcher("eventId", TestConstants.UUID1_REGEXP)
+                .numberType("revision")
                 .stringValue("checksum", TestConstants.CHECKSUM_1)
                 .numberValue("level", 1)
                 .numberValue("row", 0)
@@ -198,9 +198,9 @@ public class PactConsumerTests {
                 .object("value", payload2);
 
         PactDslJsonBody event3 = new PactDslJsonBody()
-                .uuid("uuid", uuid)
-                .stringMatcher("evid", TestConstants.UUID1_REGEXP)
-                .numberType("esid")
+                .uuid("designId", uuid)
+                .stringMatcher("eventId", TestConstants.UUID1_REGEXP)
+                .numberType("revision")
                 .stringValue("checksum", TestConstants.CHECKSUM_1)
                 .numberValue("level", 1)
                 .numberValue("row", 1)
@@ -218,9 +218,9 @@ public class PactConsumerTests {
                 .object("value", payload3);
 
         PactDslJsonBody event4 = new PactDslJsonBody()
-                .uuid("uuid", uuid)
-                .stringMatcher("evid", TestConstants.UUID1_REGEXP)
-                .numberType("esid")
+                .uuid("designId", uuid)
+                .stringMatcher("eventId", TestConstants.UUID1_REGEXP)
+                .numberType("revision")
                 .stringValue("checksum", TestConstants.CHECKSUM_1)
                 .numberValue("level", 2)
                 .numberValue("row", 2)
@@ -238,9 +238,9 @@ public class PactConsumerTests {
                 .object("value", payload4);
 
         PactDslJsonBody event5 = new PactDslJsonBody()
-                .uuid("uuid", uuid)
-                .stringMatcher("evid", TestConstants.UUID1_REGEXP)
-                .numberType("esid")
+                .uuid("designId", uuid)
+                .stringMatcher("eventId", TestConstants.UUID1_REGEXP)
+                .numberType("revision")
                 .stringValue("checksum", TestConstants.CHECKSUM_2)
                 .numberValue("level", 2)
                 .numberValue("row", 3)

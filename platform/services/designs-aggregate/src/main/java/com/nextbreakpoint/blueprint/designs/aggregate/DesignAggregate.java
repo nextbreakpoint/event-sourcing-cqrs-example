@@ -29,15 +29,15 @@ public class DesignAggregate {
         return store.findDesign(uuid);
     }
 
-    public Single<Optional<Design>> updateDesign(UUID uuid, long esid) {
-        return store.findDesign(uuid).flatMap(result -> updateDesign(uuid, esid, result.orElse(null)));
+    public Single<Optional<Design>> updateDesign(UUID uuid, long revision) {
+        return store.findDesign(uuid).flatMap(result -> updateDesign(uuid, revision, result.orElse(null)));
     }
 
-    private Single<Optional<Design>> updateDesign(UUID uuid, long esid, Design design) {
+    private Single<Optional<Design>> updateDesign(UUID uuid, long revision, Design design) {
         if (design == null) {
-            return store.findMessages(uuid, -1, esid).flatMap(messages -> updateDesign(messages, null));
+            return store.findMessages(uuid, -1, revision).flatMap(messages -> updateDesign(messages, null));
         } else {
-            return store.findMessages(uuid, design.getEsid(), esid).flatMap(messages -> updateDesign(messages, design));
+            return store.findMessages(uuid, design.getRevision(), revision).flatMap(messages -> updateDesign(messages, design));
         }
     }
 

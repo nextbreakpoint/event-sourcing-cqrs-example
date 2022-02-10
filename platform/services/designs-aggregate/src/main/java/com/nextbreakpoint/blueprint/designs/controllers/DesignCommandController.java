@@ -38,9 +38,9 @@ public class DesignCommandController implements Controller<InputMessage, Void> {
 
     private DesignAggregateUpdateRequested createEvent(InputMessage message) {
         return DesignAggregateUpdateRequested.builder()
-                .withEvid(Uuids.timeBased())
-                .withUuid(UUID.fromString(message.getKey()))
-                .withEsid(message.getOffset())
+                .withEventId(Uuids.timeBased())
+                .withDesignId(UUID.fromString(message.getKey()))
+                .withRevision(message.getOffset())
                 .build();
     }
 }

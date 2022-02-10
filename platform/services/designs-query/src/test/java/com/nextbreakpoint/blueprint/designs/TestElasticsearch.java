@@ -62,7 +62,7 @@ public class TestElasticsearch {
     private SearchRequest.Builder createLoadDesignRequest(SearchRequest.Builder builder, UUID designId) {
         return builder
                 .index(indexName)
-                .query(q -> q.term(t -> t.field("uuid").value(v -> v.stringValue(designId.toString()))));
+                .query(q -> q.term(t -> t.field("designId").value(v -> v.stringValue(designId.toString()))));
     }
 
     private DeleteByQueryRequest.Builder createDeleteDesignsRequest(DeleteByQueryRequest.Builder builder) {
@@ -76,7 +76,7 @@ public class TestElasticsearch {
         return builder
                 .index(indexName)
                 .refresh(Refresh.True)
-                .id(design.getUuid().toString())
+                .id(design.getDesignId().toString())
                 .doc(design)
                 .docAsUpsert(true);
     }

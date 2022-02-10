@@ -140,7 +140,7 @@ public class TestCases {
         await().atMost(Duration.ofSeconds(30))
                 .pollInterval(ONE_SECOND)
                 .untilAsserted(() -> {
-                    final List<InputMessage> messages = eventsPolling.findMessages(tileRenderRequested1.getUuid().toString(), TestConstants.MESSAGE_SOURCE, TestConstants.TILE_RENDER_COMPLETED);
+                    final List<InputMessage> messages = eventsPolling.findMessages(tileRenderRequested1.getDesignId().toString(), TestConstants.MESSAGE_SOURCE, TestConstants.TILE_RENDER_COMPLETED);
                     assertThat(messages).hasSize(2);
                     InputMessage message1 = messages.get(0);
                     InputMessage message2 = messages.get(1);

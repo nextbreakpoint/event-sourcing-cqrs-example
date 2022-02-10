@@ -14,23 +14,23 @@ import java.util.UUID;
 public class DesignDeleteRequested {
     public static final String TYPE = "design-delete-requested-v1";
 
-    private final UUID evid;
-    private final UUID uuid;
+    private final UUID eventId;
+    private final UUID designId;
 
     @JsonCreator
     public DesignDeleteRequested(
-        @JsonProperty("evid") UUID evid,
-        @JsonProperty("uuid") UUID uuid
+        @JsonProperty("eventId") UUID eventId,
+        @JsonProperty("designId") UUID designId
     ) {
-        this.evid = Objects.requireNonNull(evid);
-        this.uuid = Objects.requireNonNull(uuid);
+        this.eventId = Objects.requireNonNull(eventId);
+        this.designId = Objects.requireNonNull(designId);
     }
 
-    public UUID getEvid() {
-        return evid;
+    public UUID getEventId() {
+        return eventId;
     }
 
-    public UUID getUuid() {
-        return uuid;
+    public UUID getDesignId() {
+        return designId;
     }
 }

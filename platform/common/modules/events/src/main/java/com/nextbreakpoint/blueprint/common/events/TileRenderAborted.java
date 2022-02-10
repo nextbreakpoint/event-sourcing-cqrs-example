@@ -14,9 +14,9 @@ import java.util.UUID;
 public class TileRenderAborted {
     public static final String TYPE = "tile-render-aborted-v1";
 
-    private final UUID evid;
-    private final UUID uuid;
-    private final long esid;
+    private final UUID eventId;
+    private final UUID designId;
+    private final long revision;
     private final String checksum;
     private final int level;
     private final int row;
@@ -24,33 +24,33 @@ public class TileRenderAborted {
 
     @JsonCreator
     public TileRenderAborted(
-        @JsonProperty("evid") UUID evid,
-        @JsonProperty("uuid") UUID uuid,
-        @JsonProperty("esid") long esid,
+        @JsonProperty("eventId") UUID eventId,
+        @JsonProperty("designId") UUID designId,
+        @JsonProperty("revision") long revision,
         @JsonProperty("checksum") String checksum,
         @JsonProperty("level") int level,
         @JsonProperty("row") int row,
         @JsonProperty("col") int col
     ) {
-        this.evid = Objects.requireNonNull(evid);
-        this.uuid = Objects.requireNonNull(uuid);
-        this.esid = esid;
+        this.eventId = Objects.requireNonNull(eventId);
+        this.designId = Objects.requireNonNull(designId);
+        this.revision = revision;
         this.checksum = Objects.requireNonNull(checksum);
         this.level = level;
         this.row = row;
         this.col = col;
     }
 
-    public UUID getEvid() {
-        return evid;
+    public UUID getEventId() {
+        return eventId;
     }
 
-    public UUID getUuid() {
-        return uuid;
+    public UUID getDesignId() {
+        return designId;
     }
 
-    public long getEsid() {
-        return esid;
+    public long getRevision() {
+        return revision;
     }
 
     public String getChecksum() {

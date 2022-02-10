@@ -20,7 +20,7 @@ public class TileRenderRequestedOutputMapper implements Mapper<TileRenderRequest
     }
 
     public TileRenderRequestedOutputMapper(String messageSource) {
-        this(messageSource, event -> event.getUuid().toString());
+        this(messageSource, event -> event.getDesignId().toString());
     }
 
     @Override

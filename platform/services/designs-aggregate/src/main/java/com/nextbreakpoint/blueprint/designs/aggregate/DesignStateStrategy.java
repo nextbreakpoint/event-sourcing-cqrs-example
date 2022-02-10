@@ -37,19 +37,19 @@ public class DesignStateStrategy {
         switch (type) {
             case DesignInsertRequested.TYPE: {
                 DesignInsertRequested event = Json.decodeValue(value, DesignInsertRequested.class);
-                return new Design(event.getEvid(), event.getUuid(), offset, event.getData(), Checksum.of(event.getData()), "CREATED", event.getLevels(), createLevelsMap(event.getLevels()), toDateTime(timestamp));
+                return new Design(event.getEventId(), event.getDesignId(), offset, event.getData(), Checksum.of(event.getData()), "CREATED", event.getLevels(), createLevelsMap(event.getLevels()), toDateTime(timestamp));
             }
             case DesignUpdateRequested.TYPE: {
                 DesignUpdateRequested event = Json.decodeValue(value, DesignUpdateRequested.class);
-                return new Design(event.getEvid(), event.getUuid(), offset, event.getData(), Checksum.of(event.getData()), "UPDATED", event.getLevels(), null, toDateTime(timestamp));
+                return new Design(event.getEventId(), event.getDesignId(), offset, event.getData(), Checksum.of(event.getData()), "UPDATED", event.getLevels(), null, toDateTime(timestamp));
             }
             case DesignDeleteRequested.TYPE: {
                 DesignDeleteRequested event = Json.decodeValue(value, DesignDeleteRequested.class);
-                return new Design(event.getEvid(), event.getUuid(), offset, null, null, "DELETED", 0, null, toDateTime(timestamp));
+                return new Design(event.getEventId(), event.getDesignId(), offset, null, null, "DELETED", 0, null, toDateTime(timestamp));
             }
             case TileRenderCompleted.TYPE: {
                 TileRenderCompleted event = Json.decodeValue(value, TileRenderCompleted.class);
-                return new Design(event.getEvid(), event.getUuid(), offset, null, null, null, 0, createLevelsMap(event), toDateTime(timestamp));
+                return new Design(event.getEventId(), event.getDesignId(), offset, null, null, null, 0, createLevelsMap(event), toDateTime(timestamp));
             }
             default: {
                 return new Design(null, null, 0, null, null, null, 0, null, null);
@@ -115,12 +115,12 @@ public class DesignStateStrategy {
             return state;
         }
         if (newState.getStatus() == null) {
-            return new Design(state.getEvid(), state.getUuid(), newState.getEsid(), state.getJson(), state.getChecksum(), state.getStatus(), state.getLevels(), createLevelsMap(state, newState), newState.getModified());
+            return new Design(state.getEventId(), state.getDesignId(), newState.getRevision(), state.getData(), state.getChecksum(), state.getStatus(), state.getLevels(), createLevelsMap(state, newState), newState.getModified());
         }
         if ("DELETED".equals(newState.getStatus())) {
-            return new Design(newState.getEvid(), newState.getUuid(), newState.getEsid(), state.getJson(), state.getChecksum(), newState.getStatus(), state.getLevels(), state.getTiles(), newState.getModified());
+            return new Design(newState.getEventId(), newState.getDesignId(), newState.getRevision(), state.getData(), state.getChecksum(), newState.getStatus(), state.getLevels(), state.getTiles(), newState.getModified());
         } else {
-            return new Design(newState.getEvid(), newState.getUuid(), newState.getEsid(), newState.getJson(), Checksum.of(newState.getJson()), newState.getStatus(), newState.getLevels(), state.getTiles(), newState.getModified());
+            return new Design(newState.getEventId(), newState.getDesignId(), newState.getRevision(), newState.getData(), Checksum.of(newState.getData()), newState.getStatus(), newState.getLevels(), state.getTiles(), newState.getModified());
         }
     }
 }

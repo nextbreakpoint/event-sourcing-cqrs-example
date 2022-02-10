@@ -19,7 +19,7 @@ public class DesignInsertRequestedOutputMapper implements Mapper<DesignInsertReq
     @Override
     public OutputMessage transform(DesignInsertRequested event) {
         return new OutputMessage(
-                event.getUuid().toString(),
+                event.getDesignId().toString(),
                 new Payload(
                         UUID.randomUUID(),
                         DesignInsertRequested.TYPE,

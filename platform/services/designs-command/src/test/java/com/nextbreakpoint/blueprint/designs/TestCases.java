@@ -131,8 +131,8 @@ public class TestCases {
                     assertThat(decodedMessage.getValue().getSource()).isNotNull();
                     assertThat(decodedMessage.getTimestamp()).isGreaterThanOrEqualTo(timestamp);
                     DesignInsertRequested decodedEvent = Json.decodeValue(decodedMessage.getValue().getData(), DesignInsertRequested.class);
-                    assertThat(decodedEvent.getUuid()).isNotNull();
-                    assertThat(decodedMessage.getKey()).isEqualTo(decodedEvent.getUuid().toString());
+                    assertThat(decodedEvent.getDesignId()).isNotNull();
+                    assertThat(decodedMessage.getKey()).isEqualTo(decodedEvent.getDesignId().toString());
                     Design decodedDesign = Json.decodeValue(decodedEvent.getData(), Design.class);
                     assertThat(decodedDesign.getManifest()).isEqualTo(TestConstants.MANIFEST);
                     assertThat(decodedDesign.getMetadata()).isEqualTo(TestConstants.METADATA);
@@ -165,8 +165,8 @@ public class TestCases {
                     assertThat(decodedMessage.getValue().getSource()).isNotNull();
                     assertThat(decodedMessage.getTimestamp()).isGreaterThanOrEqualTo(timestamp);
                     DesignUpdateRequested decodedEvent = Json.decodeValue(decodedMessage.getValue().getData(), DesignUpdateRequested.class);
-                    assertThat(decodedEvent.getUuid()).isNotNull();
-                    assertThat(decodedMessage.getKey()).isEqualTo(decodedEvent.getUuid().toString());
+                    assertThat(decodedEvent.getDesignId()).isNotNull();
+                    assertThat(decodedMessage.getKey()).isEqualTo(decodedEvent.getDesignId().toString());
                     Design decodedDesign = Json.decodeValue(decodedEvent.getData(), Design.class);
                     assertThat(decodedDesign.getManifest()).isEqualTo(TestConstants.MANIFEST);
                     assertThat(decodedDesign.getMetadata()).isEqualTo(TestConstants.METADATA);
@@ -199,8 +199,8 @@ public class TestCases {
                     assertThat(decodedMessage.getValue().getSource()).isNotNull();
                     assertThat(decodedMessage.getTimestamp()).isGreaterThanOrEqualTo(timestamp);
                     DesignDeleteRequested decodedEvent = Json.decodeValue(decodedMessage.getValue().getData(), DesignDeleteRequested.class);
-                    assertThat(decodedEvent.getUuid()).isNotNull();
-                    assertThat(decodedMessage.getKey()).isEqualTo(decodedEvent.getUuid().toString());
+                    assertThat(decodedEvent.getDesignId()).isNotNull();
+                    assertThat(decodedMessage.getKey()).isEqualTo(decodedEvent.getDesignId().toString());
                 });
 
         return uuid;

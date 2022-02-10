@@ -19,7 +19,7 @@ public class DesignDocumentUpdateCompletedOutputMapper implements Mapper<DesignD
     @Override
     public OutputMessage transform(DesignDocumentUpdateCompleted event) {
         return new OutputMessage(
-                event.getUuid().toString(),
+                event.getDesignId().toString(),
                 new Payload(
                         UUID.randomUUID(),
                         DesignDocumentUpdateCompleted.TYPE,

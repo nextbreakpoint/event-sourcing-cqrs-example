@@ -19,7 +19,7 @@ public class TileAggregateUpdateCompletedOutputMapper implements Mapper<TileAggr
     @Override
     public OutputMessage transform(TileAggregateUpdateCompleted event) {
         return new OutputMessage(
-                event.getUuid().toString(),
+                event.getDesignId().toString(),
                 new Payload(
                         UUID.randomUUID(),
                         TileAggregateUpdateCompleted.TYPE,

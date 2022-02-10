@@ -13,10 +13,10 @@ import java.util.UUID;
 @Data
 @Builder(access = AccessLevel.PUBLIC, setterPrefix = "with")
 public class Design {
-    private final UUID evid;
-    private final UUID uuid;
-    private final long esid;
-    private final String json;
+    private final UUID eventId;
+    private final UUID designId;
+    private final long revision;
+    private final String data;
     private final String checksum;
     private final String status;
     private final int levels;
@@ -25,20 +25,20 @@ public class Design {
 
     @JsonCreator
     public Design(
-        @JsonProperty("evid") UUID evid,
-        @JsonProperty("uuid") UUID uuid,
-        @JsonProperty("esid") long esid,
-        @JsonProperty("json") String json,
+        @JsonProperty("eventId") UUID eventId,
+        @JsonProperty("designId") UUID designId,
+        @JsonProperty("revision") long revision,
+        @JsonProperty("data") String data,
         @JsonProperty("checksum") String checksum,
         @JsonProperty("status") String status,
         @JsonProperty("levels") int levels,
         @JsonProperty("tiles") List<Tiles> tiles,
         @JsonProperty("modified") String modified
     ) {
-        this.evid = Objects.requireNonNull(evid);
-        this.uuid = Objects.requireNonNull(uuid);
-        this.esid = Objects.requireNonNull(esid);
-        this.json = Objects.requireNonNull(json);
+        this.eventId = Objects.requireNonNull(eventId);
+        this.designId = Objects.requireNonNull(designId);
+        this.revision = revision;
+        this.data = Objects.requireNonNull(data);
         this.checksum = Objects.requireNonNull(checksum);
         this.status = Objects.requireNonNull(status);
         this.levels = levels;
@@ -46,20 +46,20 @@ public class Design {
         this.modified = Objects.requireNonNull(modified);
     }
 
-    public UUID getEvid() {
-        return evid;
+    public UUID getEventId() {
+        return eventId;
     }
 
-    public UUID getUuid() {
-        return uuid;
+    public UUID getDesignId() {
+        return designId;
     }
 
-    public long getEsid() {
-        return esid;
+    public long getRevision() {
+        return revision;
     }
 
-    public String getJson() {
-        return json;
+    public String getData() {
+        return data;
     }
 
     public String getChecksum() {
@@ -87,26 +87,26 @@ public class Design {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Design that = (Design) o;
-        return getEsid() == that.getEsid() && getLevels() == that.getLevels() && Objects.equals(getEvid(), that.getEvid()) && Objects.equals(getUuid(), that.getUuid()) && Objects.equals(getJson(), that.getJson()) && Objects.equals(getChecksum(), that.getChecksum()) && Objects.equals(getStatus(), that.getStatus()) && Objects.equals(getModified(), that.getModified()) && Objects.equals(getTiles(), that.getTiles());
+        return getRevision() == that.getRevision() && getLevels() == that.getLevels() && Objects.equals(getEventId(), that.getEventId()) && Objects.equals(getDesignId(), that.getDesignId()) && Objects.equals(getData(), that.getData()) && Objects.equals(getChecksum(), that.getChecksum()) && Objects.equals(getStatus(), that.getStatus()) && Objects.equals(getModified(), that.getModified()) && Objects.equals(getTiles(), that.getTiles());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getEvid(), getUuid(), getEsid(), getJson(), getChecksum(), getStatus(), getLevels(), getModified(), getTiles());
+        return Objects.hash(getEventId(), getDesignId(), getRevision(), getData(), getChecksum(), getStatus(), getLevels(), getModified(), getTiles());
     }
 
     @Override
     public String toString() {
         return "Design{" +
-                "evid=" + evid +
-                ", uuid=" + uuid +
-                ", esid=" + esid +
-                ", json='" + json + '\'' +
+                "eventId=" + eventId +
+                ", designId=" + designId +
+                ", revision=" + revision +
+                ", json='" + data + '\'' +
                 ", checksum='" + checksum + '\'' +
                 ", status='" + status + '\'' +
                 ", levels=" + levels +
-                ", updated=" + modified +
                 ", tiles=" + tiles +
+                ", updated=" + modified +
                 '}';
     }
 }

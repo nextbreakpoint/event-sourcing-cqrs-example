@@ -5,10 +5,10 @@ import java.util.Map;
 import java.util.UUID;
 
 public class Design {
-    private final UUID evid;
-    private final UUID uuid;
-    private final long esid;
-    private final String json;
+    private final UUID eventId;
+    private final UUID designId;
+    private final long revision;
+    private final String data;
     private final String checksum;
     private final String status;
     private final int levels;
@@ -16,20 +16,20 @@ public class Design {
     private final LocalDateTime modified;
 
     public Design(
-        UUID evid,
-        UUID uuid,
-        long esid,
-        String json,
+        UUID eventId,
+        UUID designId,
+        long revision,
+        String data,
         String checksum,
         String status,
         int levels,
         Map<Integer, Tiles> tiles,
         LocalDateTime modified
     ) {
-        this.evid = evid;
-        this.uuid = uuid;
-        this.esid = esid;
-        this.json = json;
+        this.eventId = eventId;
+        this.designId = designId;
+        this.revision = revision;
+        this.data = data;
         this.checksum = checksum;
         this.status = status;
         this.levels = levels;
@@ -37,20 +37,20 @@ public class Design {
         this.modified = modified;
     }
 
-    public UUID getEvid() {
-        return evid;
+    public UUID getEventId() {
+        return eventId;
     }
 
-    public UUID getUuid() {
-        return uuid;
+    public UUID getDesignId() {
+        return designId;
     }
 
-    public long getEsid() {
-        return esid;
+    public long getRevision() {
+        return revision;
     }
 
-    public String getJson() {
-        return json;
+    public String getData() {
+        return data;
     }
 
     public String getChecksum() {

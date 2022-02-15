@@ -7,9 +7,7 @@ import com.nextbreakpoint.blueprint.common.core.Authority;
 import com.nextbreakpoint.blueprint.common.core.Checksum;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.core.Tracing;
-import com.nextbreakpoint.blueprint.common.events.DesignDocumentDeleteRequested;
 import com.nextbreakpoint.blueprint.common.events.DesignDocumentUpdateRequested;
-import com.nextbreakpoint.blueprint.common.events.mappers.DesignDocumentDeleteRequestedOutputMapper;
 import com.nextbreakpoint.blueprint.common.events.mappers.DesignDocumentUpdateRequestedOutputMapper;
 import com.nextbreakpoint.blueprint.designs.model.Design;
 import com.nextbreakpoint.blueprint.designs.model.DesignDocument;
@@ -87,10 +85,10 @@ public class IntegrationTests {
     final List<DesignDocumentUpdateRequested.Tiles> tiles3 = TestUtils.getTiles(TestConstants.LEVELS, 1.0f).stream().map(this::createTiles).collect(Collectors.toList());
     final List<DesignDocumentUpdateRequested.Tiles> tiles4 = TestUtils.getTiles(TestConstants.LEVELS, 1.0f).stream().map(this::createTiles).collect(Collectors.toList());
 
-    final DesignDocumentUpdateRequested designDocumentUpdateRequested1 = new DesignDocumentUpdateRequested(Uuids.timeBased(), designId1, 0, TestConstants.JSON_1, TestConstants.CHECKSUM_1, "CREATED", TestConstants.LEVELS, tiles1, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
-    final DesignDocumentUpdateRequested designDocumentUpdateRequested2 = new DesignDocumentUpdateRequested(Uuids.timeBased(), designId1, 1, TestConstants.JSON_1, TestConstants.CHECKSUM_1, "UPDATED", TestConstants.LEVELS, tiles2, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
-    final DesignDocumentUpdateRequested designDocumentUpdateRequested3 = new DesignDocumentUpdateRequested(Uuids.timeBased(), designId1, 2, TestConstants.JSON_1, TestConstants.CHECKSUM_1, "UPDATED", TestConstants.LEVELS, tiles3, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
-    final DesignDocumentUpdateRequested designDocumentUpdateRequested4 = new DesignDocumentUpdateRequested(Uuids.timeBased(), designId2, 3, TestConstants.JSON_2, TestConstants.CHECKSUM_2, "UPDATED", TestConstants.LEVELS, tiles4, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
+    final DesignDocumentUpdateRequested designDocumentUpdateRequested1 = new DesignDocumentUpdateRequested(TestConstants.USER_ID, Uuids.timeBased(), designId1, UUID.randomUUID(), 0, TestConstants.JSON_1, TestConstants.CHECKSUM_1, "CREATED", TestConstants.LEVELS, tiles1, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
+    final DesignDocumentUpdateRequested designDocumentUpdateRequested2 = new DesignDocumentUpdateRequested(TestConstants.USER_ID, Uuids.timeBased(), designId1, UUID.randomUUID(), 1, TestConstants.JSON_1, TestConstants.CHECKSUM_1, "UPDATED", TestConstants.LEVELS, tiles2, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
+    final DesignDocumentUpdateRequested designDocumentUpdateRequested3 = new DesignDocumentUpdateRequested(TestConstants.USER_ID, Uuids.timeBased(), designId1, UUID.randomUUID(), 2, TestConstants.JSON_1, TestConstants.CHECKSUM_1, "UPDATED", TestConstants.LEVELS, tiles3, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
+    final DesignDocumentUpdateRequested designDocumentUpdateRequested4 = new DesignDocumentUpdateRequested(TestConstants.USER_ID, Uuids.timeBased(), designId2, UUID.randomUUID(), 3, TestConstants.JSON_2, TestConstants.CHECKSUM_2, "UPDATED", TestConstants.LEVELS, tiles4, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
 
     final DesignDocumentUpdateRequestedOutputMapper outputMapper = new DesignDocumentUpdateRequestedOutputMapper(TestConstants.MESSAGE_SOURCE);
 
@@ -105,25 +103,21 @@ public class IntegrationTests {
   }
 
   @Test
-  @DisplayName("Should delete the design after receiving a DesignDocumentDeleteRequested event")
+  @DisplayName("Should delete the design after receiving a DesignDocumentUpdateRequested event")
   public void shouldDeleteTheDesignWhenReceivingADesignDocumentDeleteRequested() {
     final UUID designId = UUID.randomUUID();
 
     final List<DesignDocumentUpdateRequested.Tiles> tiles = TestUtils.getTiles(TestConstants.LEVELS, 100.0f).stream().map(this::createTiles).collect(Collectors.toList());
 
-    final DesignDocumentUpdateRequested designDocumentUpdateRequested = new DesignDocumentUpdateRequested(Uuids.timeBased(), designId, 0, TestConstants.JSON_2, TestConstants.CHECKSUM_2, "CREATED", TestConstants.LEVELS, tiles, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
+    final DesignDocumentUpdateRequested designDocumentUpdateRequested1 = new DesignDocumentUpdateRequested(TestConstants.USER_ID, Uuids.timeBased(), designId, UUID.randomUUID(), 0, TestConstants.JSON_2, TestConstants.CHECKSUM_2, "CREATED", TestConstants.LEVELS, tiles, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
+    final DesignDocumentUpdateRequested designDocumentUpdateRequested2 = new DesignDocumentUpdateRequested(TestConstants.USER_ID, Uuids.timeBased(), designId, UUID.randomUUID(), 0, TestConstants.JSON_2, TestConstants.CHECKSUM_2, "DELETED", TestConstants.LEVELS, tiles, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
 
-    final DesignDocumentUpdateRequestedOutputMapper outputMapper1 = new DesignDocumentUpdateRequestedOutputMapper(TestConstants.MESSAGE_SOURCE);
+    final DesignDocumentUpdateRequestedOutputMapper outputMapper = new DesignDocumentUpdateRequestedOutputMapper(TestConstants.MESSAGE_SOURCE);
 
-    final OutputMessage designDocumentUpdateRequestedMessage = outputMapper1.transform(Tracing.of(UUID.randomUUID()), designDocumentUpdateRequested);
+    final OutputMessage designDocumentUpdateRequestedMessage1 = outputMapper.transform(Tracing.of(UUID.randomUUID()), designDocumentUpdateRequested1);
+    final OutputMessage designDocumentUpdateRequestedMessage2 = outputMapper.transform(Tracing.of(UUID.randomUUID()), designDocumentUpdateRequested2);
 
-    final DesignDocumentDeleteRequested designDocumentDeleteRequested = new DesignDocumentDeleteRequested(Uuids.timeBased(), designId, 0);
-
-    final DesignDocumentDeleteRequestedOutputMapper outputMapper2 = new DesignDocumentDeleteRequestedOutputMapper(TestConstants.MESSAGE_SOURCE);
-
-    final OutputMessage designDocumentDeleteRequestedMessage = outputMapper2.transform(Tracing.of(UUID.randomUUID()), designDocumentDeleteRequested);
-
-    testCases.shouldDeleteTheDesignWhenReceivingADesignDocumentDeleteRequestedMessage(designDocumentUpdateRequestedMessage, designDocumentDeleteRequestedMessage);
+    testCases.shouldDeleteTheDesignWhenReceivingADesignDocumentDeleteRequestedMessage(designDocumentUpdateRequestedMessage1, designDocumentUpdateRequestedMessage2);
   }
 
   @Test

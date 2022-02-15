@@ -382,8 +382,8 @@ public class TestCases {
                 .pollInterval(ONE_SECOND)
                 .untilAsserted(() -> {
                     final List<InputMessage> messages = eventsPolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_INSERT_REQUESTED);
-                    offset[0] = messages.get(0).getOffset();
                     assertThat(messages).hasSize(1);
+                    offset[0] = messages.get(0).getOffset();
                 });
 
         await().atMost(TEN_SECONDS)

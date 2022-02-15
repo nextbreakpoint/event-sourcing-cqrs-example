@@ -404,12 +404,18 @@ public class PactConsumerTests {
         PactDslJsonBody event2 = new PactDslJsonBody()
                 .uuid("designId", uuid)
                 .stringMatcher("eventId", TestConstants.UUID1_REGEXP)
-                .numberType("revision");
+                .numberType("revision")
+                .stringValue("data", TestConstants.JSON_2)
+                .stringValue("checksum", TestConstants.CHECKSUM_2)
+                .stringValue("status", "DELETED")
+                .numberValue("levels", TestConstants.LEVELS)
+                .date("modified", "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+                .object("tiles", tiles);
 
         PactDslJsonBody payload2 = new PactDslJsonBody()
                 .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
                 .object("data", event2)
-                .stringValue("type", TestConstants.DESIGN_DOCUMENT_DELETE_REQUESTED)
+                .stringValue("type", TestConstants.DESIGN_DOCUMENT_UPDATE_REQUESTED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
 
         PactDslJsonBody trace2 = new PactDslJsonBody()
@@ -449,9 +455,9 @@ public class PactConsumerTests {
     @PactTestFor(providerName = "designs-query", port = "1112", pactMethod = "designDocumentDeleteRequested", providerType = ProviderType.ASYNCH)
     @DisplayName("Should delete the design after receiving a DesignDocumentDeleteRequested event")
     public void shouldDeleteTheDesignWhenReceivingADesignDocumentDeleteRequestedMessage(MessagePact messagePact) {
-        final OutputMessage designDocumentUpdateRequestedMessage = TestUtils.toOutputMessage(messagePact.getMessages().get(0));
-        final OutputMessage designDocumentDeleteRequestedMessage = TestUtils.toOutputMessage(messagePact.getMessages().get(1));
+        final OutputMessage designDocumentUpdateRequestedMessage1 = TestUtils.toOutputMessage(messagePact.getMessages().get(0));
+        final OutputMessage designDocumentUpdateRequestedMessage2 = TestUtils.toOutputMessage(messagePact.getMessages().get(1));
 
-        testCases.shouldDeleteTheDesignWhenReceivingADesignDocumentDeleteRequestedMessage(designDocumentUpdateRequestedMessage, designDocumentDeleteRequestedMessage);
+        testCases.shouldDeleteTheDesignWhenReceivingADesignDocumentDeleteRequestedMessage(designDocumentUpdateRequestedMessage1, designDocumentUpdateRequestedMessage2);
     }
 }

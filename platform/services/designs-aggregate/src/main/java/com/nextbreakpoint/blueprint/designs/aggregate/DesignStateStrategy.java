@@ -15,46 +15,27 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class DesignStateStrategy {
     private Tiles TILES_EMPTY = new Tiles(0, 0, Collections.emptySet(), Collections.emptySet());
 
-    public Optional<Design> mergeEvents(Design state, List<InputMessage> messages) {
-        if (state != null) {
-            return Optional.of(messages.stream().map(this::convertMessageToState).reduce(state, this::mergeState)).filter(a -> a.getStatus() != null);
-        } else {
-            return messages.stream().map(this::convertMessageToState).reduce(this::mergeState).filter(a -> a.getStatus() != null);
-        }
+    public Optional<Design> applyEvents(Design state, List<InputMessage> messages) {
+        return applyEvents(state != null ? () -> new Accumulator(state) : this::createState, messages);
     }
 
-    private Design convertMessageToState(InputMessage message) {
-        final long offset = message.getOffset();
-        final String type = message.getValue().getType();
-        final String value = message.getValue().getData();
-        final long timestamp = message.getTimestamp();
-        switch (type) {
-            case DesignInsertRequested.TYPE: {
-                DesignInsertRequested event = Json.decodeValue(value, DesignInsertRequested.class);
-                return new Design(event.getEventId(), event.getDesignId(), offset, event.getData(), Checksum.of(event.getData()), "CREATED", event.getLevels(), createLevelsMap(event.getLevels()), toDateTime(timestamp));
-            }
-            case DesignUpdateRequested.TYPE: {
-                DesignUpdateRequested event = Json.decodeValue(value, DesignUpdateRequested.class);
-                return new Design(event.getEventId(), event.getDesignId(), offset, event.getData(), Checksum.of(event.getData()), "UPDATED", event.getLevels(), null, toDateTime(timestamp));
-            }
-            case DesignDeleteRequested.TYPE: {
-                DesignDeleteRequested event = Json.decodeValue(value, DesignDeleteRequested.class);
-                return new Design(event.getEventId(), event.getDesignId(), offset, null, null, "DELETED", 0, null, toDateTime(timestamp));
-            }
-            case TileRenderCompleted.TYPE: {
-                TileRenderCompleted event = Json.decodeValue(value, TileRenderCompleted.class);
-                return new Design(event.getEventId(), event.getDesignId(), offset, null, null, null, 0, createLevelsMap(event), toDateTime(timestamp));
-            }
-            default: {
-                return new Design(null, null, 0, null, null, null, 0, null, null);
-            }
-        }
+    private Optional<Design> applyEvents(Supplier<Accumulator> supplier, List<InputMessage> messages) {
+        return Optional.of(mergeEvents(messages, supplier)).filter(state -> state.design != null).map(state -> state.design);
+    }
+
+    private Accumulator mergeEvents(List<InputMessage> messages, Supplier<Accumulator> supplier) {
+        return messages.stream().collect(supplier, this::mergeEvent, (a, b) -> {});
+    }
+
+    private Accumulator createState() {
+        return new Accumulator(null);
     }
 
     private LocalDateTime toDateTime(long timestamp) {
@@ -81,21 +62,21 @@ public class DesignStateStrategy {
         return level == event.getLevel() && isCompleted(event) ? Collections.emptySet() : Set.of((0xFFFF & event.getRow()) << 16 | (0xFFFF & event.getCol()));
     }
 
-    private Map<Integer, Tiles> createLevelsMap(Design state, Design newState) {
+    private Map<Integer, Tiles> createLevelsMap(Design state, Map<Integer, Tiles> elementTiles) {
         return IntStream.range(0, state.getLevels())
-                .mapToObj(level -> new Tiles(level, getTilesCount(level), mergeCompleted(state, newState, level), mergeFailed(state, newState, level)))
+                .mapToObj(level -> new Tiles(level, getTilesCount(level), mergeCompleted(level, state.getTiles(), elementTiles), mergeFailed(level, state.getTiles(), elementTiles)))
                 .collect(Collectors.toMap(Tiles::getLevel, Function.identity()));
     }
 
-    private Set<Integer> mergeCompleted(Design state, Design element, int level) {
-        Set<Integer> combined = new HashSet<>(state.getTiles().getOrDefault(level, TILES_EMPTY).getCompleted());
-        combined.addAll(element.getTiles().getOrDefault(level, TILES_EMPTY).getCompleted());
+    private Set<Integer> mergeCompleted(int level, Map<Integer, Tiles> tiles, Map<Integer, Tiles> elementTiles) {
+        Set<Integer> combined = new HashSet<>(tiles.getOrDefault(level, TILES_EMPTY).getCompleted());
+        combined.addAll(elementTiles.getOrDefault(level, TILES_EMPTY).getCompleted());
         return combined;
     }
 
-    private Set<Integer> mergeFailed(Design state, Design element, int level) {
-        Set<Integer> combined = new HashSet<>(state.getTiles().getOrDefault(level, TILES_EMPTY).getFailed());
-        combined.addAll(element.getTiles().getOrDefault(level, TILES_EMPTY).getFailed());
+    private Set<Integer> mergeFailed(int level, Map<Integer, Tiles> tiles, Map<Integer, Tiles> elementTiles) {
+        Set<Integer> combined = new HashSet<>(tiles.getOrDefault(level, TILES_EMPTY).getFailed());
+        combined.addAll(elementTiles.getOrDefault(level, TILES_EMPTY).getFailed());
         return combined;
     }
 
@@ -107,20 +88,42 @@ public class DesignStateStrategy {
         return (int) Math.rint(Math.pow(2, level * 2));
     }
 
-    private Design mergeState(Design state, Design newState) {
-        if (state.getStatus() == null) {
-            return state;
+    private void mergeEvent(Accumulator state, InputMessage message) {
+        final long offset = message.getOffset();
+        final String type = message.getValue().getType();
+        final String value = message.getValue().getData();
+        final long timestamp = message.getTimestamp();
+        switch (type) {
+            case DesignInsertRequested.TYPE: {
+                DesignInsertRequested event = Json.decodeValue(value, DesignInsertRequested.class);
+                state.design = new Design(event.getUserId(), event.getEventId(), event.getDesignId(), event.getChangeId(), offset, event.getData(), Checksum.of(event.getData()), "CREATED", event.getLevels(), createLevelsMap(event.getLevels()), toDateTime(timestamp));
+                break;
+            }
+            case DesignUpdateRequested.TYPE: {
+                DesignUpdateRequested event = Json.decodeValue(value, DesignUpdateRequested.class);
+                state.design = new Design(event.getUserId(), event.getEventId(), event.getDesignId(), event.getChangeId(), offset, event.getData(), Checksum.of(event.getData()), "UPDATED", event.getLevels(), state.design.getTiles(), toDateTime(timestamp));
+                break;
+            }
+            case DesignDeleteRequested.TYPE: {
+                DesignDeleteRequested event = Json.decodeValue(value, DesignDeleteRequested.class);
+                state.design = new Design(event.getUserId(), event.getEventId(), event.getDesignId(), event.getChangeId(), offset, state.design.getData(), state.design.getChecksum(), "DELETED", state.design.getLevels(), state.design.getTiles(), toDateTime(timestamp));
+                break;
+            }
+            case TileRenderCompleted.TYPE: {
+                TileRenderCompleted event = Json.decodeValue(value, TileRenderCompleted.class);
+                state.design = new Design(state.design.getUserId(), event.getEventId(), event.getDesignId(), state.design.getChangeId(), offset, state.design.getData(), state.design.getChecksum(), state.design.getStatus(), state.design.getLevels(), createLevelsMap(state.design, createLevelsMap(event)), toDateTime(timestamp));
+                break;
+            }
+            default: {
+            }
         }
-        if (newState.getStatus() == null && newState.getTiles() == null) {
-            return state;
-        }
-        if (newState.getStatus() == null) {
-            return new Design(state.getEventId(), state.getDesignId(), newState.getRevision(), state.getData(), state.getChecksum(), state.getStatus(), state.getLevels(), createLevelsMap(state, newState), newState.getModified());
-        }
-        if ("DELETED".equals(newState.getStatus())) {
-            return new Design(newState.getEventId(), newState.getDesignId(), newState.getRevision(), state.getData(), state.getChecksum(), newState.getStatus(), state.getLevels(), state.getTiles(), newState.getModified());
-        } else {
-            return new Design(newState.getEventId(), newState.getDesignId(), newState.getRevision(), newState.getData(), Checksum.of(newState.getData()), newState.getStatus(), newState.getLevels(), state.getTiles(), newState.getModified());
+    }
+
+    private class Accumulator {
+        private Design design;
+
+        public Accumulator(Design design) {
+            this.design = design;
         }
     }
 }

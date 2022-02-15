@@ -18,8 +18,10 @@ import java.util.UUID;
 public class DesignDocumentUpdateRequested {
     public static final String TYPE = "design-document-update-requested-v1";
 
+    private final UUID userId;
     private final UUID eventId;
     private final UUID designId;
+    private final UUID changeId;
     private final long revision;
     private final String data;
     private final String checksum;
@@ -30,8 +32,10 @@ public class DesignDocumentUpdateRequested {
 
     @JsonCreator
     public DesignDocumentUpdateRequested(
+        @JsonProperty("userId") UUID userId,
         @JsonProperty("eventId") UUID eventId,
         @JsonProperty("designId") UUID designId,
+        @JsonProperty("changeId") UUID changeId,
         @JsonProperty("revision") long revision,
         @JsonProperty("data") String data,
         @JsonProperty("checksum") String checksum,
@@ -40,8 +44,10 @@ public class DesignDocumentUpdateRequested {
         @JsonProperty("tiles") List<Tiles> tiles,
         @JsonProperty("modified") @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'") LocalDateTime modified
     ) {
+        this.userId = Objects.requireNonNull(userId);
         this.eventId = Objects.requireNonNull(eventId);
         this.designId = Objects.requireNonNull(designId);
+        this.changeId = Objects.requireNonNull(changeId);
         this.revision = revision;
         this.data = Objects.requireNonNull(data);
         this.checksum = Objects.requireNonNull(checksum);

@@ -12,6 +12,12 @@ cat <<EOF >/tmp/data.json
   },
   "mappings": {
     "properties": {
+      "userId": {
+        "type": "keyword"
+      },
+      "changeId": {
+        "type": "keyword"
+      },
       "designId": {
         "type": "keyword"
       },

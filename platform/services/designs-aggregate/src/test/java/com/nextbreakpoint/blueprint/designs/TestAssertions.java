@@ -206,7 +206,9 @@ public class TestAssertions {
         assertThat(actualMessage.getTrace().getSpanId()).isNotNull();
         assertThat(actualMessage.getTrace().getParent()).isNotNull();
         DesignDocumentUpdateRequested actualEvent = Json.decodeValue(actualMessage.getValue().getData(), DesignDocumentUpdateRequested.class);
+        assertThat(actualEvent.getUserId()).isEqualTo(TestConstants.USER_ID);
         assertThat(actualEvent.getDesignId()).isEqualTo(designId);
+        assertThat(actualEvent.getChangeId()).isNotNull();
         assertThat(actualEvent.getRevision()).isNotNull();
         assertThat(actualEvent.getEventId()).isNotNull();
         assertThat(actualEvent.getData()).isEqualTo(data);

@@ -5,8 +5,10 @@ import java.util.Map;
 import java.util.UUID;
 
 public class Design {
+    private final UUID userId;
     private final UUID eventId;
     private final UUID designId;
+    private final UUID changeId;
     private final long revision;
     private final String data;
     private final String checksum;
@@ -16,8 +18,10 @@ public class Design {
     private final LocalDateTime modified;
 
     public Design(
+        UUID userId,
         UUID eventId,
         UUID designId,
+        UUID changeId,
         long revision,
         String data,
         String checksum,
@@ -26,8 +30,10 @@ public class Design {
         Map<Integer, Tiles> tiles,
         LocalDateTime modified
     ) {
+        this.userId = userId;
         this.eventId = eventId;
         this.designId = designId;
+        this.changeId = changeId;
         this.revision = revision;
         this.data = data;
         this.checksum = checksum;
@@ -37,12 +43,20 @@ public class Design {
         this.modified = modified;
     }
 
+    public UUID getUserId() {
+        return userId;
+    }
+
     public UUID getEventId() {
         return eventId;
     }
 
     public UUID getDesignId() {
         return designId;
+    }
+
+    public UUID getChangeId() {
+        return changeId;
     }
 
     public long getRevision() {

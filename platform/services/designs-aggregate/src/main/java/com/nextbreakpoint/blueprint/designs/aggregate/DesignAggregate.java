@@ -42,7 +42,7 @@ public class DesignAggregate {
     }
 
     private Single<Optional<Design>> updateDesign(List<InputMessage> messages, Design state) {
-        return Single.fromCallable(() -> strategy.mergeEvents(state, messages))
+        return Single.fromCallable(() -> strategy.applyEvents(state, messages))
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.computation())
                 .flatMap(result -> result.map(this::updateDesign).orElseGet(() -> Single.just(Optional.empty())));

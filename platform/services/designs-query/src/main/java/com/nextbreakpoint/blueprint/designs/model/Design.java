@@ -106,7 +106,7 @@ public class Design {
                 ", status='" + status + '\'' +
                 ", levels=" + levels +
                 ", tiles=" + tiles +
-                ", updated=" + modified +
+                ", modified=" + modified +
                 '}';
     }
 }

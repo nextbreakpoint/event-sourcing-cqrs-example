@@ -37,11 +37,11 @@ public class CassandraStore implements Store {
     private static final String ERROR_INSERT_MESSAGE = "An error occurred while inserting a message";
     private static final String ERROR_SELECT_MESSAGES = "An error occurred while fetching messages";
 
-    private static final String SELECT_DESIGN = "SELECT DESIGN_EVID, DESIGN_UUID, DESIGN_ESID, DESIGN_DATA, DESIGN_CHECKSUM, DESIGN_STATUS, DESIGN_LEVELS, DESIGN_TILES, DESIGN_UPDATED FROM DESIGN WHERE DESIGN_UUID = ?";
-    private static final String INSERT_DESIGN = "INSERT INTO DESIGN (DESIGN_EVID, DESIGN_UUID, DESIGN_ESID, DESIGN_DATA, DESIGN_CHECKSUM, DESIGN_STATUS, DESIGN_LEVELS, DESIGN_TILES, DESIGN_UPDATED) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    private static final String SELECT_DESIGN = "SELECT DESIGN_USER_ID, DESIGN_EVENT_ID, DESIGN_CHANGE_ID, DESIGN_UUID, DESIGN_REVISION, DESIGN_DATA, DESIGN_CHECKSUM, DESIGN_STATUS, DESIGN_LEVELS, DESIGN_TILES, DESIGN_UPDATED FROM DESIGN WHERE DESIGN_UUID = ?";
+    private static final String INSERT_DESIGN = "INSERT INTO DESIGN (DESIGN_USER_ID, DESIGN_EVENT_ID, DESIGN_CHANGE_ID, DESIGN_UUID, DESIGN_REVISION, DESIGN_DATA, DESIGN_CHECKSUM, DESIGN_STATUS, DESIGN_LEVELS, DESIGN_TILES, DESIGN_UPDATED) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     private static final String DELETE_DESIGN = "DELETE FROM DESIGN WHERE DESIGN_UUID = ?";
-    private static final String INSERT_MESSAGE = "INSERT INTO MESSAGE (MESSAGE_UUID, MESSAGE_OFFSET, MESSAGE_TYPE, MESSAGE_VALUE, MESSAGE_SOURCE, MESSAGE_KEY, MESSAGE_TIMESTAMP) VALUES (?, ?, ?, ?, ?, ?, ?)";
-    private static final String SELECT_MESSAGES = "SELECT MESSAGE_UUID, MESSAGE_OFFSET, MESSAGE_TYPE, MESSAGE_VALUE, MESSAGE_SOURCE, MESSAGE_KEY, MESSAGE_TIMESTAMP FROM MESSAGE WHERE MESSAGE_KEY = ? AND MESSAGE_OFFSET <= ? AND MESSAGE_OFFSET > ?";
+    private static final String INSERT_MESSAGE = "INSERT INTO MESSAGE (MESSAGE_UUID, MESSAGE_OFFSET, MESSAGE_TYPE, MESSAGE_VALUE, MESSAGE_SOURCE, MESSAGE_KEY, MESSAGE_TIMESTAMP, MESSAGE_TRACE_ID, MESSAGE_SPAN_ID, MESSAGE_PARENT) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    private static final String SELECT_MESSAGES = "SELECT MESSAGE_UUID, MESSAGE_OFFSET, MESSAGE_TYPE, MESSAGE_VALUE, MESSAGE_SOURCE, MESSAGE_KEY, MESSAGE_TIMESTAMP, MESSAGE_TRACE_ID, MESSAGE_SPAN_ID, MESSAGE_PARENT FROM MESSAGE WHERE MESSAGE_KEY = ? AND MESSAGE_OFFSET <= ? AND MESSAGE_OFFSET > ?";
 
     private final String keyspace;
     private final Supplier<CassandraClient> supplier;
@@ -159,19 +159,21 @@ public class CassandraStore implements Store {
     }
 
     private Design convertRowToDesign(Row row) {
-        final UUID eventId = row.getUuid("DESIGN_EVID");
+        final UUID userId = row.getUuid("DESIGN_USER_ID");
+        final UUID eventId = row.getUuid("DESIGN_EVENT_ID");
+        final UUID changeId = row.getUuid("DESIGN_CHANGE_ID");
         final UUID designId = row.getUuid("DESIGN_UUID");
-        final long revision = row.getLong("DESIGN_ESID");
+        final long revision = row.getLong("DESIGN_REVISION");
         final String data = row.getString("DESIGN_DATA");
         final String checksum = row.getString("DESIGN_CHECKSUM");
         final String status = row.getString("DESIGN_STATUS");
         final int levels = row.getInt("DESIGN_LEVELS");
         final Instant updated = row.getInstant("DESIGN_UPDATED");
         final Map<Integer, UdtValue> tilesMap = row.getMap("DESIGN_TILES", Integer.class, UdtValue.class);
-        final Map<Integer, Tiles> tilesList = tilesMap.entrySet().stream()
+        final Map<Integer, Tiles> tilesList = tilesMap != null ? tilesMap.entrySet().stream()
                 .map(entry -> convertUDTToTiles(entry.getKey(), entry.getValue()))
-                .collect(Collectors.toMap(Tiles::getLevel, Function.identity()));
-        return new Design(eventId, designId, revision, data, checksum, status, levels, tilesList, toDate(updated));
+                .collect(Collectors.toMap(Tiles::getLevel, Function.identity())) : Map.of();
+        return new Design(userId, eventId, designId, changeId, revision, data, checksum, status, levels, tilesList, toDate(updated));
     }
 
     private InputMessage convertRowToMessage(Row row) {
@@ -180,12 +182,15 @@ public class CassandraStore implements Store {
         final String type = row.getString("MESSAGE_TYPE");
         final String value = row.getString("MESSAGE_VALUE");
         final String source = row.getString("MESSAGE_SOURCE");
-//        final UUID traceId = row.getUuid("MESSAGE_TRACE_ID");
-//        final UUID spanId = row.getUuid("MESSAGE_SPAN_ID");
-//        final UUID parent = row.getUuid("MESSAGE_PARENT");
+        final UUID traceId = row.getUuid("MESSAGE_TRACE_ID");
+        final UUID spanId = row.getUuid("MESSAGE_SPAN_ID");
+        final UUID parent = row.getUuid("MESSAGE_PARENT");
         final long offset = row.getLong("MESSAGE_OFFSET");
         final Instant timestamp = row.getInstant("MESSAGE_TIMESTAMP");
-        return new InputMessage(key, offset, new Payload(uuid, type, value, source), Tracing.of(UUID.randomUUID()), timestamp.toEpochMilli());
+        final Payload payload = new Payload(uuid, type, value, source);
+        final Tracing trace = new Tracing(traceId, spanId, parent);
+        final long messageTimestamp = timestamp != null ? timestamp.toEpochMilli() : 0L;
+        return new InputMessage(key, offset, payload, trace, messageTimestamp);
     }
 
     private LocalDateTime toDate(Instant instant) {
@@ -197,7 +202,18 @@ public class CassandraStore implements Store {
     }
 
     private Object[] makeInsertMessageParams(InputMessage message) {
-        return new Object[] { message.getValue().getUuid(), message.getOffset(), message.getValue().getType(), message.getValue().getData(), message.getValue().getSource(), message.getKey(), Instant.ofEpochMilli(message.getTimestamp()) };
+        return new Object[] {
+                message.getValue().getUuid(),
+                message.getOffset(),
+                message.getValue().getType(),
+                message.getValue().getData(),
+                message.getValue().getSource(),
+                message.getKey(),
+                Instant.ofEpochMilli(message.getTimestamp()),
+                message.getTrace().getTraceId(),
+                message.getTrace().getSpanId(),
+                message.getTrace().getParent()
+        };
     }
 
     private Object[] makeSelectDesignParams(UUID uuid) {
@@ -205,8 +221,22 @@ public class CassandraStore implements Store {
     }
 
     private Object[] makeInsertDesignParams(Design design, UserDefinedType levelType) {
-        final Map<Integer, UdtValue> levelsMap = design.getTiles().values().stream().collect(Collectors.toMap(Tiles::getLevel, x -> convertTilesToUDT(levelType, x)));
-        return new Object[] { design.getEventId(), design.getDesignId(), design.getRevision(), design.getData(), Checksum.of(design.getData()), design.getStatus(), design.getLevels(), levelsMap, design.getModified().toInstant(ZoneOffset.UTC) };
+        final Map<Integer, UdtValue> levelsMap = design.getTiles().values().stream()
+                .collect(Collectors.toMap(Tiles::getLevel, x -> convertTilesToUDT(levelType, x)));
+
+        return new Object[] {
+                design.getUserId(),
+                design.getEventId(),
+                design.getChangeId(),
+                design.getDesignId(),
+                design.getRevision(),
+                design.getData(),
+                Checksum.of(design.getData()),
+                design.getStatus(),
+                design.getLevels(),
+                levelsMap,
+                design.getModified().toInstant(ZoneOffset.UTC)
+        };
     }
 
     private Object[] makeDeleteDesignParams(Design design) {

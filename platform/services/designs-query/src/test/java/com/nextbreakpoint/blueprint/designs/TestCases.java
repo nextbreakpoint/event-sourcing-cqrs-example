@@ -12,7 +12,6 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.core.Json;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
-import com.nextbreakpoint.blueprint.common.events.DesignDocumentDeleteRequested;
 import com.nextbreakpoint.blueprint.common.events.DesignDocumentUpdateRequested;
 import com.nextbreakpoint.blueprint.common.test.KafkaTestEmitter;
 import com.nextbreakpoint.blueprint.common.test.KafkaTestPolling;
@@ -243,27 +242,26 @@ public class TestCases {
                 });
     }
 
-    public void shouldDeleteTheDesignWhenReceivingADesignDocumentDeleteRequestedMessage(OutputMessage designDocumentUpdateRequestedMessage, OutputMessage designDocumentDeleteRequestedMessage) {
-        final DesignDocumentUpdateRequested designDocumentUpdateRequested = Json.decodeValue(designDocumentUpdateRequestedMessage.getValue().getData(), DesignDocumentUpdateRequested.class);
-        final DesignDocumentDeleteRequested designDocumentDeleteRequested = Json.decodeValue(designDocumentDeleteRequestedMessage.getValue().getData(), DesignDocumentDeleteRequested.class);
+    public void shouldDeleteTheDesignWhenReceivingADesignDocumentDeleteRequestedMessage(OutputMessage designDocumentUpdateRequestedMessage1, OutputMessage designDocumentUpdateRequestedMessage2) {
+        final DesignDocumentUpdateRequested designDocumentUpdateRequested1 = Json.decodeValue(designDocumentUpdateRequestedMessage1.getValue().getData(), DesignDocumentUpdateRequested.class);
+        final DesignDocumentUpdateRequested designDocumentUpdateRequested2 = Json.decodeValue(designDocumentUpdateRequestedMessage2.getValue().getData(), DesignDocumentUpdateRequested.class);
 
-        final UUID designId = designDocumentUpdateRequested.getDesignId();
+        final UUID designId = designDocumentUpdateRequested1.getDesignId();
 
         System.out.println("designId1 = " + designId);
 
-        assertThat(designId).isEqualTo(designDocumentUpdateRequested.getDesignId());
-        assertThat(designId).isEqualTo(designDocumentDeleteRequested.getDesignId());
+        assertThat(designId).isEqualTo(designDocumentUpdateRequested2.getDesignId());
 
         eventsPolling.clearMessages();
 
-        eventEmitter.send(designDocumentUpdateRequestedMessage);
+        eventEmitter.send(designDocumentUpdateRequestedMessage1);
 
         await().atMost(TEN_SECONDS)
                 .pollInterval(ONE_SECOND)
                 .untilAsserted(() -> {
                     final List<InputMessage> messages = eventsPolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_DOCUMENT_UPDATE_REQUESTED);
                     assertThat(messages).hasSize(1);
-                    TestAssertions.assertExpectedDesignDocumentUpdateRequestedMessage(messages.get(0), designId, designDocumentUpdateRequested.getData(), designDocumentUpdateRequested.getChecksum(), designDocumentUpdateRequested.getStatus());
+                    TestAssertions.assertExpectedDesignDocumentUpdateRequestedMessage(messages.get(0), designId, designDocumentUpdateRequested1.getData(), designDocumentUpdateRequested1.getChecksum(), designDocumentUpdateRequested1.getStatus());
                 });
 
         await().atMost(TEN_SECONDS)
@@ -279,25 +277,27 @@ public class TestCases {
                 .untilAsserted(() -> {
                     final List<Design> designs = testElasticsearch.findDesigns(designId);
                     assertThat(designs).hasSize(1);
-                    TestAssertions.assertExpectedDesign(designs.get(0), designId, designDocumentUpdateRequested.getData(), designDocumentUpdateRequested.getChecksum(), designDocumentUpdateRequested.getStatus());
+                    TestAssertions.assertExpectedDesign(designs.get(0), designId, designDocumentUpdateRequested1.getData(), designDocumentUpdateRequested1.getChecksum(), designDocumentUpdateRequested1.getStatus());
                 });
 
-        eventEmitter.send(designDocumentDeleteRequestedMessage);
+        eventsPolling.clearMessages();
+
+        eventEmitter.send(designDocumentUpdateRequestedMessage2);
 
         await().atMost(TEN_SECONDS)
                 .pollInterval(ONE_SECOND)
                 .untilAsserted(() -> {
-                    final List<InputMessage> messages = eventsPolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_DOCUMENT_DELETE_REQUESTED);
+                    final List<InputMessage> messages = eventsPolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_DOCUMENT_UPDATE_REQUESTED);
                     assertThat(messages).hasSize(1);
-                    TestAssertions.assertExpectedDesignDocumentDeleteRequestedMessage(messages.get(0), designId);
+                    TestAssertions.assertExpectedDesignDocumentUpdateRequestedMessage(messages.get(0), designId, designDocumentUpdateRequested2.getData(), designDocumentUpdateRequested2.getChecksum(), designDocumentUpdateRequested2.getStatus());
                 });
 
         await().atMost(TEN_SECONDS)
                 .pollInterval(ONE_SECOND)
                 .untilAsserted(() -> {
-                    final List<InputMessage> messages = eventsPolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_DOCUMENT_DELETE_COMPLETED);
+                    final List<InputMessage> messages = eventsPolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_DOCUMENT_UPDATE_COMPLETED);
                     assertThat(messages).hasSize(1);
-                    TestAssertions.assertExpectedDesignDocumentDeleteCompletedMessage(messages.get(0), designId);
+                    TestAssertions.assertExpectedDesignDocumentUpdateCompletedMessage(messages.get(0), designId);
                 });
 
         await().atMost(Duration.of(20, SECONDS))

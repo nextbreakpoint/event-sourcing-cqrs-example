@@ -1,8 +1,6 @@
 package com.nextbreakpoint.blueprint.designs.controllers;
 
-import com.nextbreakpoint.blueprint.common.core.InputMessage;
-import com.nextbreakpoint.blueprint.common.core.Mapper;
-import com.nextbreakpoint.blueprint.common.core.OutputMessage;
+import com.nextbreakpoint.blueprint.common.core.*;
 import com.nextbreakpoint.blueprint.common.events.DesignDocumentUpdateCompleted;
 import com.nextbreakpoint.blueprint.common.events.DesignDocumentUpdateRequested;
 import com.nextbreakpoint.blueprint.common.vertx.Controller;
@@ -23,10 +21,10 @@ public class DesignDocumentUpdateRequestedController implements Controller<Input
 
     private final Store store;
     private final Mapper<InputMessage, DesignDocumentUpdateRequested> inputMapper;
-    private final Mapper<DesignDocumentUpdateCompleted, OutputMessage> outputMapper;
+    private final MessageMapper<DesignDocumentUpdateCompleted, OutputMessage> outputMapper;
     private final KafkaEmitter emitter;
 
-    public DesignDocumentUpdateRequestedController(Store store, Mapper<InputMessage, DesignDocumentUpdateRequested> inputMapper, Mapper<DesignDocumentUpdateCompleted, OutputMessage> outputMapper, KafkaEmitter emitter) {
+    public DesignDocumentUpdateRequestedController(Store store, Mapper<InputMessage, DesignDocumentUpdateRequested> inputMapper, MessageMapper<DesignDocumentUpdateCompleted, OutputMessage> outputMapper, KafkaEmitter emitter) {
         this.store = Objects.requireNonNull(store);
         this.inputMapper = Objects.requireNonNull(inputMapper);
         this.outputMapper = Objects.requireNonNull(outputMapper);
@@ -38,7 +36,7 @@ public class DesignDocumentUpdateRequestedController implements Controller<Input
         return Single.just(message)
                 .map(inputMapper::transform)
                 .flatMapObservable(this::onDesignDocumentUpdateRequested)
-                .map(outputMapper::transform)
+                .map(event -> outputMapper.transform(Tracing.from(message.getTrace()), event))
                 .flatMapSingle(emitter::onNext)
                 .ignoreElements()
                 .toCompletable()

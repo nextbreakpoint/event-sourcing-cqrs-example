@@ -47,9 +47,15 @@ public class PactConsumerTests {
                 .stringValue("type", TestConstants.DESIGN_DOCUMET_UPDATE_COMPLETED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
 
+        PactDslJsonBody trace1 = new PactDslJsonBody()
+                .stringMatcher("traceId", TestConstants.UUID6_REGEXP)
+                .stringMatcher("spanId", TestConstants.UUID6_REGEXP)
+                .stringMatcher("parent", TestConstants.UUID6_REGEXP);
+
         PactDslJsonBody message1 = new PactDslJsonBody()
                 .stringValue("key", uuid1.toString())
-                .object("value", payload1);
+                .object("value", payload1)
+                .object("headers", trace1);
 
         PactDslJsonBody event2 = new PactDslJsonBody()
                 .uuid("designId", uuid2)
@@ -62,9 +68,15 @@ public class PactConsumerTests {
                 .stringValue("type", TestConstants.DESIGN_DOCUMET_UPDATE_COMPLETED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
 
+        PactDslJsonBody trace2 = new PactDslJsonBody()
+                .stringMatcher("traceId", TestConstants.UUID6_REGEXP)
+                .stringMatcher("spanId", TestConstants.UUID6_REGEXP)
+                .stringMatcher("parent", TestConstants.UUID6_REGEXP);
+
         PactDslJsonBody message2 = new PactDslJsonBody()
                 .stringValue("key", uuid2.toString())
-                .object("value", payload2);
+                .object("value", payload2)
+                .object("headers", trace2);
 
         return builder.given("kafka topic exists")
                 .expectsToReceive("design document update completed for design 00000000-0000-0000-0000-000000000001")
@@ -90,9 +102,15 @@ public class PactConsumerTests {
                 .stringValue("type", TestConstants.DESIGN_DOCUMET_DELETE_COMPLETED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
 
+        PactDslJsonBody trace1 = new PactDslJsonBody()
+                .stringMatcher("traceId", TestConstants.UUID6_REGEXP)
+                .stringMatcher("spanId", TestConstants.UUID6_REGEXP)
+                .stringMatcher("parent", TestConstants.UUID6_REGEXP);
+
         PactDslJsonBody message1 = new PactDslJsonBody()
                 .stringValue("key", uuid1.toString())
-                .object("value", payload1);
+                .object("value", payload1)
+                .object("headers", trace1);
 
         PactDslJsonBody event2 = new PactDslJsonBody()
                 .uuid("designId", uuid2)
@@ -105,9 +123,15 @@ public class PactConsumerTests {
                 .stringValue("type", TestConstants.DESIGN_DOCUMET_DELETE_COMPLETED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
 
+        PactDslJsonBody trace2 = new PactDslJsonBody()
+                .stringMatcher("traceId", TestConstants.UUID6_REGEXP)
+                .stringMatcher("spanId", TestConstants.UUID6_REGEXP)
+                .stringMatcher("parent", TestConstants.UUID6_REGEXP);
+
         PactDslJsonBody message2 = new PactDslJsonBody()
                 .stringValue("key", uuid2.toString())
-                .object("value", payload2);
+                .object("value", payload2)
+                .object("headers", trace2);
 
         return builder.given("kafka topic exists")
                 .expectsToReceive("design document delete completed for design 00000000-0000-0000-0000-000000000001")

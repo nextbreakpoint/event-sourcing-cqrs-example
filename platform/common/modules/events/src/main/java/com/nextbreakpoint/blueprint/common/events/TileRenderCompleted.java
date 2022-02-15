@@ -43,36 +43,4 @@ public class TileRenderCompleted {
         this.col = col;
         this.status = Objects.requireNonNull(status);
     }
-
-    public UUID getEventId() {
-        return eventId;
-    }
-
-    public UUID getDesignId() {
-        return designId;
-    }
-
-    public long getRevision() {
-        return revision;
-    }
-
-    public String getChecksum() {
-        return checksum;
-    }
-
-    public int getLevel() {
-        return level;
-    }
-
-    public int getRow() {
-        return row;
-    }
-
-    public int getCol() {
-        return col;
-    }
-
-    public String getStatus() {
-        return status;
-    }
 }

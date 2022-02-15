@@ -1,15 +1,12 @@
 package com.nextbreakpoint.blueprint.common.events.mappers;
 
-import com.nextbreakpoint.blueprint.common.core.Json;
-import com.nextbreakpoint.blueprint.common.core.Mapper;
-import com.nextbreakpoint.blueprint.common.core.OutputMessage;
-import com.nextbreakpoint.blueprint.common.core.Payload;
+import com.nextbreakpoint.blueprint.common.core.*;
 import com.nextbreakpoint.blueprint.common.events.TileAggregateUpdateRequested;
 
 import java.util.Objects;
 import java.util.UUID;
 
-public class TileAggregateUpdateRequestedOutputMapper implements Mapper<TileAggregateUpdateRequested, OutputMessage> {
+public class TileAggregateUpdateRequestedOutputMapper implements MessageMapper<TileAggregateUpdateRequested, OutputMessage> {
     private final String messageSource;
 
     public TileAggregateUpdateRequestedOutputMapper(String messageSource) {
@@ -17,7 +14,7 @@ public class TileAggregateUpdateRequestedOutputMapper implements Mapper<TileAggr
     }
 
     @Override
-    public OutputMessage transform(TileAggregateUpdateRequested event) {
+    public OutputMessage transform(Tracing trace, TileAggregateUpdateRequested event) {
         return new OutputMessage(
                 event.getDesignId().toString(),
                 new Payload(
@@ -25,7 +22,8 @@ public class TileAggregateUpdateRequestedOutputMapper implements Mapper<TileAggr
                         TileAggregateUpdateRequested.TYPE,
                         Json.encodeValue(event),
                         messageSource
-                )
+                ),
+                trace
         );
     }
 }

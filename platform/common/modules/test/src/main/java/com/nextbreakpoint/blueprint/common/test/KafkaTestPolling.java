@@ -3,15 +3,16 @@ package com.nextbreakpoint.blueprint.common.test;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.core.Payload;
 import com.nextbreakpoint.blueprint.common.core.Json;
+import com.nextbreakpoint.blueprint.common.core.Tracing;
+import io.vertx.rxjava.core.buffer.Buffer;
 import io.vertx.rxjava.kafka.client.consumer.KafkaConsumer;
 import io.vertx.rxjava.kafka.client.consumer.KafkaConsumerRecord;
 import io.vertx.rxjava.kafka.client.consumer.KafkaConsumerRecords;
+import io.vertx.rxjava.kafka.client.producer.KafkaHeader;
 import rx.schedulers.Schedulers;
 
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -20,6 +21,7 @@ public class KafkaTestPolling {
     private final List<InputMessage> messages = new ArrayList<>();
 
     private final KafkaConsumer<String, String> kafkaConsumer;
+
     private String topicName;
 
     public KafkaTestPolling(KafkaConsumer<String, String> kafkaConsumer, String topicName) {
@@ -83,7 +85,11 @@ public class KafkaTestPolling {
     }
 
     private InputMessage convertToMessage(KafkaConsumerRecord<String, String> record) {
-        return new InputMessage(record.key(), record.offset(), Json.decodeValue(record.value(), Payload.class), record.timestamp());
+        Map<String, String> headers = record.headers().stream()
+                .peek(header -> System.out.println("header: " + header.key() + "=" + header.value()))
+                .collect(Collectors.toMap(KafkaHeader::key, kafkaHeader -> getString(kafkaHeader.value())));
+
+        return new InputMessage(record.key(), record.offset(), Json.decodeValue(record.value(), Payload.class), Tracing.from(headers), record.timestamp());
     }
 
     private void pollMessages() {
@@ -94,5 +100,9 @@ public class KafkaTestPolling {
                 .doOnError(Throwable::printStackTrace)
                 .doAfterTerminate(this::pollMessages)
                 .subscribe();
+    }
+
+    private String getString(Buffer value) {
+        return value != null ? value.toString() : null;
     }
 }

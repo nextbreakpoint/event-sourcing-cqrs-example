@@ -8,8 +8,10 @@ public class DeleteDesignEventMapper implements Mapper<DeleteDesignRequest, Desi
     @Override
     public DesignDeleteRequested transform(DeleteDesignRequest request) {
         return DesignDeleteRequested.builder()
+                .withUserId(request.getOwner())
                 .withEventId(Uuids.timeBased())
                 .withDesignId(request.getUuid())
+                .withChangeId(request.getChange())
                 .build();
     }
 }

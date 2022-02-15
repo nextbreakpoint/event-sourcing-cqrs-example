@@ -17,9 +17,10 @@ public class Factory {
         return TemplateHandler.<InputMessage, InputMessage, Void, Void>builder()
                 .withInputMapper(input -> input)
                 .withOutputMapper(output -> output)
-                .withController(new DesignCommandController(
+                .withController(new DesignInsertRequestedController(
                     new DesignAggregate(store, new DesignStateStrategy()),
-                    new DesignAggregateUpdateRequestedOutputMapper(messageSource),
+                        new DesignInsertRequestedInputMapper(),
+                        new DesignAggregateUpdateRequestedOutputMapper(messageSource),
                     new KafkaEmitter(producer, topic, 3)
                 ))
                 .onSuccess(new MessageConsumed())
@@ -31,8 +32,9 @@ public class Factory {
         return TemplateHandler.<InputMessage, InputMessage, Void, Void>builder()
                 .withInputMapper(input -> input)
                 .withOutputMapper(output -> output)
-                .withController(new DesignCommandController(
+                .withController(new DesignUpdateRequestedController(
                     new DesignAggregate(store, new DesignStateStrategy()),
+                    new DesignUpdateRequestedInputMapper(),
                     new DesignAggregateUpdateRequestedOutputMapper(messageSource),
                     new KafkaEmitter(producer, topic, 3)
                 ))
@@ -45,8 +47,9 @@ public class Factory {
         return TemplateHandler.<InputMessage, InputMessage, Void, Void>builder()
                 .withInputMapper(input -> input)
                 .withOutputMapper(output -> output)
-                .withController(new DesignCommandController(
+                .withController(new DesignDeleteRequestedController(
                     new DesignAggregate(store, new DesignStateStrategy()),
+                    new DesignDeleteRequestedInputMapper(),
                     new DesignAggregateUpdateRequestedOutputMapper(messageSource),
                     new KafkaEmitter(producer, topic, 3)
                 ))

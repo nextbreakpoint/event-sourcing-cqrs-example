@@ -1,9 +1,7 @@
 package com.nextbreakpoint.blueprint.designs.controllers;
 
 import com.datastax.oss.driver.api.core.uuid.Uuids;
-import com.nextbreakpoint.blueprint.common.core.InputMessage;
-import com.nextbreakpoint.blueprint.common.core.Mapper;
-import com.nextbreakpoint.blueprint.common.core.OutputMessage;
+import com.nextbreakpoint.blueprint.common.core.*;
 import com.nextbreakpoint.blueprint.common.events.DesignAbortRequested;
 import com.nextbreakpoint.blueprint.common.events.TileRenderAborted;
 import com.nextbreakpoint.blueprint.common.vertx.Controller;
@@ -21,11 +19,11 @@ import java.util.stream.IntStream;
 
 public class DesignAbortRequestedController implements Controller<InputMessage, Void> {
     private final Mapper<InputMessage, DesignAbortRequested> inputMapper;
-    private final Mapper<TileRenderAborted, OutputMessage> outputMapper;
+    private final MessageMapper<TileRenderAborted, OutputMessage> outputMapper;
     private final KafkaEmitter emitter;
     private final DesignAggregate aggregate;
 
-    public DesignAbortRequestedController(DesignAggregate aggregate, Mapper<InputMessage, DesignAbortRequested> inputMapper, Mapper<TileRenderAborted, OutputMessage> outputMapper, KafkaEmitter emitter) {
+    public DesignAbortRequestedController(DesignAggregate aggregate, Mapper<InputMessage, DesignAbortRequested> inputMapper, MessageMapper<TileRenderAborted, OutputMessage> outputMapper, KafkaEmitter emitter) {
         this.aggregate = Objects.requireNonNull(aggregate);
         this.inputMapper = Objects.requireNonNull(inputMapper);
         this.outputMapper = Objects.requireNonNull(outputMapper);
@@ -37,7 +35,7 @@ public class DesignAbortRequestedController implements Controller<InputMessage, 
         return Single.just(message)
                 .map(inputMapper::transform)
                 .flatMapObservable(this::onTileRenderAborted)
-                .map(outputMapper::transform)
+                .map(event -> outputMapper.transform(Tracing.from(message.getTrace()), event))
                 .flatMapSingle(emitter::onNext)
                 .ignoreElements()
                 .toCompletable()

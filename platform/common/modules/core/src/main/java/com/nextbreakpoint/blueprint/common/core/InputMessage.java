@@ -10,17 +10,20 @@ public class InputMessage {
     private Long offset;
     private Long timestamp;
     private Payload value;
+    private Tracing trace;
 
     @JsonCreator
     public InputMessage(
             @JsonProperty("key") String key,
             @JsonProperty("offset") Long offset,
             @JsonProperty("value") Payload value,
+            @JsonProperty("trace") Tracing trace,
             @JsonProperty("timestamp") Long timestamp
     ) {
         this.key = Objects.requireNonNull(key);
-        this.offset = Objects.requireNonNull(offset);;
+        this.offset = Objects.requireNonNull(offset);
         this.value = Objects.requireNonNull(value);
+        this.trace = Objects.requireNonNull(trace);
         this.timestamp = Objects.requireNonNull(timestamp);
     }
 
@@ -40,12 +43,17 @@ public class InputMessage {
         return value;
     }
 
+    public Tracing getTrace() {
+        return trace;
+    }
+
     @Override
     public String toString() {
         return "[" +
                 "key='" + key + '\'' +
                 ", offset=" + offset +
                 ", value=" + value +
+                ", trace=" + trace +
                 ", timestamp=" + timestamp +
                 "]";
     }

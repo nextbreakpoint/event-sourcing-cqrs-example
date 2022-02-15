@@ -1,9 +1,7 @@
 package com.nextbreakpoint.blueprint.designs.controllers;
 
 import com.datastax.oss.driver.api.core.uuid.Uuids;
-import com.nextbreakpoint.blueprint.common.core.InputMessage;
-import com.nextbreakpoint.blueprint.common.core.Mapper;
-import com.nextbreakpoint.blueprint.common.core.OutputMessage;
+import com.nextbreakpoint.blueprint.common.core.*;
 import com.nextbreakpoint.blueprint.common.events.TileRenderCompleted;
 import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
 import com.nextbreakpoint.blueprint.common.vertx.Controller;
@@ -24,13 +22,13 @@ public class TileRenderRequestedController implements Controller<InputMessage, V
     private final Logger logger = LoggerFactory.getLogger(TileRenderRequestedController.class.getName());
 
     private Mapper<InputMessage, TileRenderRequested> inputMapper;
-    private final Mapper<TileRenderCompleted, OutputMessage> outputMapper;
+    private final MessageMapper<TileRenderCompleted, OutputMessage> outputMapper;
     private final KafkaEmitter emitter;
     private final WorkerExecutor executor;
     private final S3Driver s3Driver;
     private final TileRenderer renderer;
 
-    public TileRenderRequestedController(Mapper<InputMessage, TileRenderRequested> inputMapper, Mapper<TileRenderCompleted, OutputMessage> outputMapper, KafkaEmitter emitter, WorkerExecutor executor, S3Driver s3Driver, TileRenderer renderer) {
+    public TileRenderRequestedController(Mapper<InputMessage, TileRenderRequested> inputMapper, MessageMapper<TileRenderCompleted, OutputMessage> outputMapper, KafkaEmitter emitter, WorkerExecutor executor, S3Driver s3Driver, TileRenderer renderer) {
         this.inputMapper = Objects.requireNonNull(inputMapper);;
         this.outputMapper = Objects.requireNonNull(outputMapper);
         this.emitter = Objects.requireNonNull(emitter);
@@ -44,7 +42,7 @@ public class TileRenderRequestedController implements Controller<InputMessage, V
         return Single.just(message)
                 .map(inputMapper::transform)
                 .flatMap(this::onTileRenderRequested)
-                .map(outputMapper::transform)
+                .map(event -> outputMapper.transform(Tracing.from(message.getTrace()), event))
                 .flatMap(emitter::onNext);
     }
 

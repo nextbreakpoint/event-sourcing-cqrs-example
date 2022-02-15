@@ -1,15 +1,12 @@
 package com.nextbreakpoint.blueprint.common.events.mappers;
 
-import com.nextbreakpoint.blueprint.common.core.Json;
-import com.nextbreakpoint.blueprint.common.core.Mapper;
-import com.nextbreakpoint.blueprint.common.core.OutputMessage;
-import com.nextbreakpoint.blueprint.common.core.Payload;
+import com.nextbreakpoint.blueprint.common.core.*;
 import com.nextbreakpoint.blueprint.common.events.TileRenderCompleted;
 
 import java.util.Objects;
 import java.util.UUID;
 
-public class TileRenderCompletedOutputMapper implements Mapper<TileRenderCompleted, OutputMessage> {
+public class TileRenderCompletedOutputMapper implements MessageMapper<TileRenderCompleted, OutputMessage> {
     private final String messageSource;
 
     public TileRenderCompletedOutputMapper(String messageSource) {
@@ -17,7 +14,7 @@ public class TileRenderCompletedOutputMapper implements Mapper<TileRenderComplet
     }
 
     @Override
-    public OutputMessage transform(TileRenderCompleted event) {
+    public OutputMessage transform(Tracing trace, TileRenderCompleted event) {
         return new OutputMessage(
                 event.getDesignId().toString(),
                 new Payload(
@@ -25,7 +22,8 @@ public class TileRenderCompletedOutputMapper implements Mapper<TileRenderComplet
                         TileRenderCompleted.TYPE,
                         Json.encodeValue(event),
                         messageSource
-                )
+                ),
+                trace
         );
     }
 }

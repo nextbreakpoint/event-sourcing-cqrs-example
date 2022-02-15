@@ -9,6 +9,7 @@ import au.com.dius.pact.core.model.annotations.Pact;
 import au.com.dius.pact.core.model.messaging.MessagePact;
 import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
+import com.nextbreakpoint.blueprint.common.core.Tracing;
 import com.nextbreakpoint.blueprint.common.events.DesignInsertRequested;
 import com.nextbreakpoint.blueprint.common.events.mappers.DesignInsertRequestedOutputMapper;
 import org.junit.jupiter.api.*;
@@ -54,9 +55,15 @@ public class PactConsumerTests {
                 .stringValue("type", TestConstants.DESIGN_INSERT_REQUESTED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
 
+        PactDslJsonBody trace1 = new PactDslJsonBody()
+                .stringMatcher("traceId", TestConstants.UUID6_REGEXP)
+                .stringMatcher("spanId", TestConstants.UUID6_REGEXP)
+                .stringMatcher("parent", TestConstants.UUID6_REGEXP);
+
         PactDslJsonBody message1 = new PactDslJsonBody()
                 .stringValue("key", uuid.toString())
-                .object("value", payload1);
+                .object("value", payload1)
+                .object("headers", trace1);
 
         return builder
                 .given("kafka topic exists")
@@ -81,15 +88,26 @@ public class PactConsumerTests {
                 .stringValue("type", TestConstants.DESIGN_INSERT_REQUESTED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
 
+        PactDslJsonBody trace1 = new PactDslJsonBody()
+                .stringMatcher("traceId", TestConstants.UUID6_REGEXP)
+                .stringMatcher("spanId", TestConstants.UUID6_REGEXP)
+                .stringMatcher("parent", TestConstants.UUID6_REGEXP);
+
         PactDslJsonBody message1 = new PactDslJsonBody()
                 .stringValue("key", uuid.toString())
-                .object("value", payload1);
+                .object("value", payload1)
+                .object("headers", trace1);
 
         PactDslJsonBody event2 = new PactDslJsonBody()
                 .uuid("designId", uuid)
                 .stringMatcher("eventId", TestConstants.UUID1_REGEXP)
                 .stringValue("data", TestConstants.JSON_2)
                 .numberValue("levels", TestConstants.LEVELS);
+
+        PactDslJsonBody trace2 = new PactDslJsonBody()
+                .stringMatcher("traceId", TestConstants.UUID6_REGEXP)
+                .stringMatcher("spanId", TestConstants.UUID6_REGEXP)
+                .stringMatcher("parent", TestConstants.UUID6_REGEXP);
 
         PactDslJsonBody payload2 = new PactDslJsonBody()
                 .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
@@ -99,7 +117,8 @@ public class PactConsumerTests {
 
         PactDslJsonBody message2 = new PactDslJsonBody()
                 .stringValue("key", uuid.toString())
-                .object("value", payload2);
+                .object("value", payload2)
+                .object("headers", trace2);
 
         return builder
                 .given("kafka topic exists")
@@ -126,9 +145,15 @@ public class PactConsumerTests {
                 .stringValue("type", TestConstants.DESIGN_INSERT_REQUESTED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
 
+        PactDslJsonBody trace1 = new PactDslJsonBody()
+                .stringMatcher("traceId", TestConstants.UUID6_REGEXP)
+                .stringMatcher("spanId", TestConstants.UUID6_REGEXP)
+                .stringMatcher("parent", TestConstants.UUID6_REGEXP);
+
         PactDslJsonBody message1 = new PactDslJsonBody()
                 .stringValue("key", uuid.toString())
-                .object("value", payload1);
+                .object("value", payload1)
+                .object("headers", trace1);
 
         PactDslJsonBody event2 = new PactDslJsonBody()
                 .uuid("designId", uuid)
@@ -140,9 +165,15 @@ public class PactConsumerTests {
                 .stringValue("type", TestConstants.DESIGN_DELETE_REQUESTED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
 
+        PactDslJsonBody trace2 = new PactDslJsonBody()
+                .stringMatcher("traceId", TestConstants.UUID6_REGEXP)
+                .stringMatcher("spanId", TestConstants.UUID6_REGEXP)
+                .stringMatcher("parent", TestConstants.UUID6_REGEXP);
+
         PactDslJsonBody message2 = new PactDslJsonBody()
                 .stringValue("key", uuid.toString())
-                .object("value", payload2);
+                .object("value", payload2)
+                .object("headers", trace2);
 
         return builder
                 .given("kafka topic exists")
@@ -173,9 +204,15 @@ public class PactConsumerTests {
                 .stringValue("type", TestConstants.TILE_RENDER_COMPLETED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
 
+        PactDslJsonBody trace1 = new PactDslJsonBody()
+                .stringMatcher("traceId", TestConstants.UUID6_REGEXP)
+                .stringMatcher("spanId", TestConstants.UUID6_REGEXP)
+                .stringMatcher("parent", TestConstants.UUID6_REGEXP);
+
         PactDslJsonBody message1 = new PactDslJsonBody()
                 .stringValue("key", uuid.toString())
-                .object("value", payload1);
+                .object("value", payload1)
+                .object("headers", trace1);
 
         PactDslJsonBody event2 = new PactDslJsonBody()
                 .uuid("designId", uuid)
@@ -193,9 +230,15 @@ public class PactConsumerTests {
                 .stringValue("type", TestConstants.TILE_RENDER_COMPLETED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
 
+        PactDslJsonBody trace2 = new PactDslJsonBody()
+                .stringMatcher("traceId", TestConstants.UUID6_REGEXP)
+                .stringMatcher("spanId", TestConstants.UUID6_REGEXP)
+                .stringMatcher("parent", TestConstants.UUID6_REGEXP);
+
         PactDslJsonBody message2 = new PactDslJsonBody()
                 .stringValue("key", uuid.toString())
-                .object("value", payload2);
+                .object("value", payload2)
+                .object("headers", trace2);
 
         PactDslJsonBody event3 = new PactDslJsonBody()
                 .uuid("designId", uuid)
@@ -213,9 +256,15 @@ public class PactConsumerTests {
                 .stringValue("type", TestConstants.TILE_RENDER_COMPLETED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
 
+        PactDslJsonBody trace3 = new PactDslJsonBody()
+                .stringMatcher("traceId", TestConstants.UUID6_REGEXP)
+                .stringMatcher("spanId", TestConstants.UUID6_REGEXP)
+                .stringMatcher("parent", TestConstants.UUID6_REGEXP);
+
         PactDslJsonBody message3 = new PactDslJsonBody()
                 .stringValue("key", uuid.toString())
-                .object("value", payload3);
+                .object("value", payload3)
+                .object("headers", trace3);
 
         PactDslJsonBody event4 = new PactDslJsonBody()
                 .uuid("designId", uuid)
@@ -233,9 +282,15 @@ public class PactConsumerTests {
                 .stringValue("type", TestConstants.TILE_RENDER_COMPLETED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
 
+        PactDslJsonBody trace4 = new PactDslJsonBody()
+                .stringMatcher("traceId", TestConstants.UUID6_REGEXP)
+                .stringMatcher("spanId", TestConstants.UUID6_REGEXP)
+                .stringMatcher("parent", TestConstants.UUID6_REGEXP);
+
         PactDslJsonBody message4 = new PactDslJsonBody()
                 .stringValue("key", uuid.toString())
-                .object("value", payload4);
+                .object("value", payload4)
+                .object("headers", trace4);
 
         PactDslJsonBody event5 = new PactDslJsonBody()
                 .uuid("designId", uuid)
@@ -253,9 +308,15 @@ public class PactConsumerTests {
                 .stringValue("type", TestConstants.TILE_RENDER_COMPLETED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
 
+        PactDslJsonBody trace5 = new PactDslJsonBody()
+                .stringMatcher("traceId", TestConstants.UUID6_REGEXP)
+                .stringMatcher("spanId", TestConstants.UUID6_REGEXP)
+                .stringMatcher("parent", TestConstants.UUID6_REGEXP);
+
         PactDslJsonBody message5 = new PactDslJsonBody()
                 .stringValue("key", uuid.toString())
-                .object("value", payload5);
+                .object("value", payload5)
+                .object("headers", trace5);
 
         return builder.given("kafka topic exists")
                 .expectsToReceive("tile render completed with status FAILED for tile 0/00000000.png of design 00000000-0000-0000-0000-000000000004 with checksum 1")
@@ -306,9 +367,9 @@ public class PactConsumerTests {
     @PactTestFor(providerName = "designs-render", port = "1114", pactMethod = "tileRenderCompleted", providerType = ProviderType.ASYNCH)
     @DisplayName("Should update the design after receiving a TileRenderCompleted event")
     public void shouldUpdateTheDesignWhenReceivingATileRenderCompletedMessage(MessagePact messagePact) {
-        final DesignInsertRequested designInsertRequested = new DesignInsertRequested(Uuids.timeBased(), new UUID(0L, 4L), TestConstants.JSON_1, TestConstants.LEVELS);
+        final DesignInsertRequested designInsertRequested = new DesignInsertRequested(TestConstants.USER_ID, Uuids.timeBased(), new UUID(0L, 4L), UUID.randomUUID(), TestConstants.JSON_1, TestConstants.LEVELS);
 
-        final OutputMessage designInsertRequestedMessage = new DesignInsertRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designInsertRequested);
+        final OutputMessage designInsertRequestedMessage = new DesignInsertRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(Tracing.of(UUID.randomUUID()), designInsertRequested);
 
         final OutputMessage tileRenderCompletedMessage1 = TestUtils.toOutputMessage(messagePact.getMessages().get(0));
 

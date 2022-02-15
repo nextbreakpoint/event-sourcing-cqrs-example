@@ -8,8 +8,10 @@ public class UpdateDesignEventMapper implements Mapper<UpdateDesignRequest, Desi
     @Override
     public DesignUpdateRequested transform(UpdateDesignRequest request) {
         return DesignUpdateRequested.builder()
+                .withUserId(request.getOwner())
                 .withEventId(Uuids.timeBased())
                 .withDesignId(request.getUuid())
+                .withChangeId(request.getChange())
                 .withData(request.getJson())
                 .withLevels(request.getLevels())
                 .build();

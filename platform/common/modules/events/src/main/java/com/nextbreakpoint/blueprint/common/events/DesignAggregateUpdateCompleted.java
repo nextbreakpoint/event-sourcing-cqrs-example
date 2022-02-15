@@ -40,32 +40,4 @@ public class DesignAggregateUpdateCompleted {
         this.levels = levels;
         this.status = status;
     }
-
-    public UUID getEventId() {
-        return eventId;
-    }
-
-    public UUID getDesignId() {
-        return designId;
-    }
-
-    public long getRevision() {
-        return revision;
-    }
-
-    public String getData() {
-        return data;
-    }
-
-    public String getChecksum() {
-        return checksum;
-    }
-
-    public int getLevels() {
-        return levels;
-    }
-
-    public String getStatus() {
-        return status;
-    }
 }

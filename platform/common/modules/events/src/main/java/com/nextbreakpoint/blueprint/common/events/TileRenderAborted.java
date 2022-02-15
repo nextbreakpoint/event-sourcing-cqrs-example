@@ -40,32 +40,4 @@ public class TileRenderAborted {
         this.row = row;
         this.col = col;
     }
-
-    public UUID getEventId() {
-        return eventId;
-    }
-
-    public UUID getDesignId() {
-        return designId;
-    }
-
-    public long getRevision() {
-        return revision;
-    }
-
-    public String getChecksum() {
-        return checksum;
-    }
-
-    public int getLevel() {
-        return level;
-    }
-
-    public int getRow() {
-        return row;
-    }
-
-    public int getCol() {
-        return col;
-    }
 }

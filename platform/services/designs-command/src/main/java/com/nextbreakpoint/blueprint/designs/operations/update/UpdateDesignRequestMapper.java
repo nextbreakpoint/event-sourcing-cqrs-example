@@ -37,6 +37,10 @@ public class UpdateDesignRequestMapper implements Mapper<RoutingContext, UpdateD
                 .put("script", script)
                 .encode();
 
-        return new UpdateDesignRequest(UUID.fromString(uuid), json, levels);
+        final JsonObject principal = context.user().principal();
+
+        final UUID owner = UUID.fromString(principal.getString("user"));
+
+        return new UpdateDesignRequest(owner, UUID.randomUUID(), UUID.fromString(uuid), json, levels);
     }
 }

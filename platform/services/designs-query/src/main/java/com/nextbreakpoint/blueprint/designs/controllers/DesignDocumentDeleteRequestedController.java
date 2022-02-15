@@ -1,8 +1,6 @@
 package com.nextbreakpoint.blueprint.designs.controllers;
 
-import com.nextbreakpoint.blueprint.common.core.InputMessage;
-import com.nextbreakpoint.blueprint.common.core.Mapper;
-import com.nextbreakpoint.blueprint.common.core.OutputMessage;
+import com.nextbreakpoint.blueprint.common.core.*;
 import com.nextbreakpoint.blueprint.common.events.DesignDocumentDeleteCompleted;
 import com.nextbreakpoint.blueprint.common.events.DesignDocumentDeleteRequested;
 import com.nextbreakpoint.blueprint.common.vertx.Controller;
@@ -17,10 +15,10 @@ import java.util.Objects;
 public class DesignDocumentDeleteRequestedController implements Controller<InputMessage, Void> {
     private final Store store;
     private final Mapper<InputMessage, DesignDocumentDeleteRequested> inputMapper;
-    private final Mapper<DesignDocumentDeleteCompleted, OutputMessage> outputMapper;
+    private final MessageMapper<DesignDocumentDeleteCompleted, OutputMessage> outputMapper;
     private final KafkaEmitter emitter;
 
-    public DesignDocumentDeleteRequestedController(Store store, Mapper<InputMessage, DesignDocumentDeleteRequested> inputMapper, Mapper<DesignDocumentDeleteCompleted, OutputMessage> outputMapper, KafkaEmitter emitter) {
+    public DesignDocumentDeleteRequestedController(Store store, Mapper<InputMessage, DesignDocumentDeleteRequested> inputMapper, MessageMapper<DesignDocumentDeleteCompleted, OutputMessage> outputMapper, KafkaEmitter emitter) {
         this.store = Objects.requireNonNull(store);
         this.inputMapper = Objects.requireNonNull(inputMapper);
         this.outputMapper = Objects.requireNonNull(outputMapper);
@@ -32,7 +30,7 @@ public class DesignDocumentDeleteRequestedController implements Controller<Input
         return Single.just(message)
                 .map(inputMapper::transform)
                 .flatMapObservable(this::onDesignDocumentDeleteRequested)
-                .map(outputMapper::transform)
+                .map(event -> outputMapper.transform(Tracing.from(message.getTrace()), event))
                 .flatMapSingle(emitter::onNext)
                 .ignoreElements()
                 .toCompletable()

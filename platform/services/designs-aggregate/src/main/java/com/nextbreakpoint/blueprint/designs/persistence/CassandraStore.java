@@ -10,6 +10,7 @@ import com.datastax.oss.driver.api.core.type.UserDefinedType;
 import com.nextbreakpoint.blueprint.common.core.Checksum;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.core.Payload;
+import com.nextbreakpoint.blueprint.common.core.Tracing;
 import com.nextbreakpoint.blueprint.designs.Store;
 import com.nextbreakpoint.blueprint.designs.model.Design;
 import com.nextbreakpoint.blueprint.designs.model.Tiles;
@@ -178,10 +179,13 @@ public class CassandraStore implements Store {
         final UUID uuid = row.getUuid("MESSAGE_UUID");
         final String type = row.getString("MESSAGE_TYPE");
         final String value = row.getString("MESSAGE_VALUE");
-        final long offset = row.getLong("MESSAGE_OFFSET");
         final String source = row.getString("MESSAGE_SOURCE");
+//        final UUID traceId = row.getUuid("MESSAGE_TRACE_ID");
+//        final UUID spanId = row.getUuid("MESSAGE_SPAN_ID");
+//        final UUID parent = row.getUuid("MESSAGE_PARENT");
+        final long offset = row.getLong("MESSAGE_OFFSET");
         final Instant timestamp = row.getInstant("MESSAGE_TIMESTAMP");
-        return new InputMessage(key, offset, new Payload(uuid, type, value, source), timestamp.toEpochMilli());
+        return new InputMessage(key, offset, new Payload(uuid, type, value, source), Tracing.of(UUID.randomUUID()), timestamp.toEpochMilli());
     }
 
     private LocalDateTime toDate(Instant instant) {

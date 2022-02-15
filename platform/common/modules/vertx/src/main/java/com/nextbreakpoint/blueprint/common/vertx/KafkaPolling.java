@@ -1,20 +1,20 @@
 package com.nextbreakpoint.blueprint.common.vertx;
 
-import com.nextbreakpoint.blueprint.common.core.BlockingHandler;
-import com.nextbreakpoint.blueprint.common.core.InputMessage;
-import com.nextbreakpoint.blueprint.common.core.Payload;
+import com.nextbreakpoint.blueprint.common.core.*;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
-import com.nextbreakpoint.blueprint.common.core.Json;
 import io.vertx.kafka.client.common.TopicPartition;
+import io.vertx.rxjava.core.buffer.Buffer;
 import io.vertx.rxjava.kafka.client.consumer.KafkaConsumer;
 import io.vertx.rxjava.kafka.client.consumer.KafkaConsumerRecord;
 import io.vertx.rxjava.kafka.client.consumer.KafkaConsumerRecords;
+import io.vertx.rxjava.kafka.client.producer.KafkaHeader;
 import rx.schedulers.Schedulers;
 
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class KafkaPolling {
     private static final Logger logger = LoggerFactory.getLogger(KafkaPolling.class.getName());
@@ -157,6 +157,9 @@ public class KafkaPolling {
                 return;
             }
 
+            Map<String, String> headers = record.headers().stream()
+                    .collect(Collectors.toMap(KafkaHeader::key, kafkaHeader -> getString(kafkaHeader.value())));
+
             final Payload payload = Json.decodeValue(record.value(), Payload.class);
 
             final BlockingHandler<InputMessage> handler = messageHandlers.get(payload.getType());
@@ -167,7 +170,7 @@ public class KafkaPolling {
                 return;
             }
 
-            final InputMessage message = new InputMessage(record.key(), record.offset(), payload, record.timestamp());
+            final InputMessage message = new InputMessage(record.key(), record.offset(), payload, Tracing.from(headers), record.timestamp());
 
 //            logger.debug("Received message: " + message);
 
@@ -181,6 +184,10 @@ public class KafkaPolling {
 
             retryPartition(record, topicPartition);
         }
+    }
+
+    private String getString(Buffer value) {
+        return value != null ? value.toString() : null;
     }
 
     private KafkaConsumerRecords<String, String> pollRecords() {

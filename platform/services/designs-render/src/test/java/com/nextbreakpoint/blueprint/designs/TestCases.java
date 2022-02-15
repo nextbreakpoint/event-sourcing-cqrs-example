@@ -144,8 +144,8 @@ public class TestCases {
                     assertThat(messages).hasSize(2);
                     InputMessage message1 = messages.get(0);
                     InputMessage message2 = messages.get(1);
-                    TestAssertions.assertExpectedTileRenderCompletedMessage(tileRenderRequested1, message1);
-                    TestAssertions.assertExpectedTileRenderCompletedMessage(tileRenderRequested2, message2);
+                    TestAssertions.assertExpectedTileRenderCompletedMessage(message1, tileRenderRequested1);
+                    TestAssertions.assertExpectedTileRenderCompletedMessage(message2, tileRenderRequested2);
                 });
 
         final S3Client s3Client = TestS3.createS3Client(URI.create("http://" + scenario.getMinioHost() + ":" + scenario.getMinioPort()));

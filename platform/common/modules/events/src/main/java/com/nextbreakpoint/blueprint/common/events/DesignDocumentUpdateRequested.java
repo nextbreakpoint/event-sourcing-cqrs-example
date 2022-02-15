@@ -51,42 +51,6 @@ public class DesignDocumentUpdateRequested {
         this.modified = Objects.requireNonNull(modified);
     }
 
-    public UUID getEventId() {
-        return eventId;
-    }
-
-    public UUID getDesignId() {
-        return designId;
-    }
-
-    public long getRevision() {
-        return revision;
-    }
-
-    public String getData() {
-        return data;
-    }
-
-    public String getChecksum() {
-        return checksum;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public int getLevels() {
-        return levels;
-    }
-
-    public List<Tiles> getTiles() {
-        return tiles;
-    }
-
-    public LocalDateTime getModified() {
-        return modified;
-    }
-
     @Data
     @Builder(access = AccessLevel.PUBLIC, setterPrefix = "with")
     public static class Tiles {
@@ -106,22 +70,6 @@ public class DesignDocumentUpdateRequested {
             this.requested = requested;
             this.completed = completed;
             this.failed = failed;
-        }
-
-        public int getLevel() {
-            return level;
-        }
-
-        public int getRequested() {
-            return requested;
-        }
-
-        public Set<Integer> getCompleted() {
-            return completed;
-        }
-
-        public Set<Integer> getFailed() {
-            return failed;
         }
     }
 }

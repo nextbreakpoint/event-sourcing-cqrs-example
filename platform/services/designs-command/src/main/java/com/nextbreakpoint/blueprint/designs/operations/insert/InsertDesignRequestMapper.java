@@ -31,6 +31,10 @@ public class InsertDesignRequestMapper implements Mapper<RoutingContext, InsertD
                 .put("script", script)
                 .encode();
 
-        return new InsertDesignRequest(UUID.randomUUID(), json, levels);
+        final JsonObject principal = context.user().principal();
+
+        final UUID owner = UUID.fromString(principal.getString("user"));
+
+        return new InsertDesignRequest(owner, UUID.randomUUID(), UUID.randomUUID(), json, levels);
     }
 }

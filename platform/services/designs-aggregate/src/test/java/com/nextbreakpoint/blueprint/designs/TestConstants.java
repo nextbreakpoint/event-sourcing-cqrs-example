@@ -2,6 +2,8 @@ package com.nextbreakpoint.blueprint.designs;
 
 import com.nextbreakpoint.blueprint.common.core.Checksum;
 
+import java.util.UUID;
+
 public interface TestConstants {
     String DESIGN_INSERT_REQUESTED = "design-insert-requested-v1";
     String DESIGN_UPDATE_REQUESTED = "design-update-requested-v1";
@@ -30,4 +32,6 @@ public interface TestConstants {
     String UUID6_REGEXP = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
 
     String DATABASE_KEYSPACE = "test_designs_aggregate";
+
+    UUID USER_ID = new UUID(0L, 1L);
 }

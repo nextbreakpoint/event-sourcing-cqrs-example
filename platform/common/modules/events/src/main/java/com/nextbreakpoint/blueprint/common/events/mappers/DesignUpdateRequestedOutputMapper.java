@@ -1,15 +1,12 @@
 package com.nextbreakpoint.blueprint.common.events.mappers;
 
-import com.nextbreakpoint.blueprint.common.core.Json;
-import com.nextbreakpoint.blueprint.common.core.Mapper;
-import com.nextbreakpoint.blueprint.common.core.OutputMessage;
-import com.nextbreakpoint.blueprint.common.core.Payload;
+import com.nextbreakpoint.blueprint.common.core.*;
 import com.nextbreakpoint.blueprint.common.events.DesignUpdateRequested;
 
 import java.util.Objects;
 import java.util.UUID;
 
-public class DesignUpdateRequestedOutputMapper implements Mapper<DesignUpdateRequested, OutputMessage> {
+public class DesignUpdateRequestedOutputMapper implements MessageMapper<DesignUpdateRequested, OutputMessage> {
     private final String messageSource;
 
     public DesignUpdateRequestedOutputMapper(String messageSource) {
@@ -17,7 +14,7 @@ public class DesignUpdateRequestedOutputMapper implements Mapper<DesignUpdateReq
     }
 
     @Override
-    public OutputMessage transform(DesignUpdateRequested event) {
+    public OutputMessage transform(Tracing trace, DesignUpdateRequested event) {
         return new OutputMessage(
                 event.getDesignId().toString(),
                 new Payload(
@@ -25,7 +22,8 @@ public class DesignUpdateRequestedOutputMapper implements Mapper<DesignUpdateReq
                         DesignUpdateRequested.TYPE,
                         Json.encodeValue(event),
                         messageSource
-                )
+                ),
+                trace
         );
     }
 }

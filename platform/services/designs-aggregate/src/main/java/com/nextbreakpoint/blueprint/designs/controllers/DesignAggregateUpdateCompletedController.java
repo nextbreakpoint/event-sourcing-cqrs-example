@@ -1,9 +1,7 @@
 package com.nextbreakpoint.blueprint.designs.controllers;
 
 import com.datastax.oss.driver.api.core.uuid.Uuids;
-import com.nextbreakpoint.blueprint.common.core.InputMessage;
-import com.nextbreakpoint.blueprint.common.core.Mapper;
-import com.nextbreakpoint.blueprint.common.core.OutputMessage;
+import com.nextbreakpoint.blueprint.common.core.*;
 import com.nextbreakpoint.blueprint.common.events.DesignAggregateUpdateCompleted;
 import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
 import com.nextbreakpoint.blueprint.common.vertx.Controller;
@@ -19,10 +17,10 @@ import java.util.stream.IntStream;
 
 public class DesignAggregateUpdateCompletedController implements Controller<InputMessage, Void> {
     private final Mapper<InputMessage, DesignAggregateUpdateCompleted> inputMapper;
-    private final Mapper<TileRenderRequested, OutputMessage> outputMapper;
+    private final MessageMapper<TileRenderRequested, OutputMessage> outputMapper;
     private final KafkaEmitter emitter;
 
-    public DesignAggregateUpdateCompletedController(Mapper<InputMessage, DesignAggregateUpdateCompleted> inputMapper, Mapper<TileRenderRequested, OutputMessage> outputMapper, KafkaEmitter emitter) {
+    public DesignAggregateUpdateCompletedController(Mapper<InputMessage, DesignAggregateUpdateCompleted> inputMapper, MessageMapper<TileRenderRequested, OutputMessage> outputMapper, KafkaEmitter emitter) {
         this.inputMapper = Objects.requireNonNull(inputMapper);
         this.outputMapper = Objects.requireNonNull(outputMapper);
         this.emitter = Objects.requireNonNull(emitter);
@@ -33,7 +31,7 @@ public class DesignAggregateUpdateCompletedController implements Controller<Inpu
         return Single.just(message)
                 .map(inputMapper::transform)
                 .flatMapObservable(this::onAggregateUpdateCompleted)
-                .map(outputMapper::transform)
+                .map(event -> outputMapper.transform(Tracing.from(message.getTrace()), event))
                 .flatMapSingle(emitter::onNext)
                 .ignoreElements()
                 .toCompletable()

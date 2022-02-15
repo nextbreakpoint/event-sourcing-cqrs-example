@@ -2,7 +2,7 @@ FROM maven:3-openjdk-11 AS build
 ARG maven_args
 ADD . /src
 WORKDIR /src
-RUN mvn clean verify -s settings.xml -t toolchains.xml -DexcludedGroups=slow $maven_args
+RUN mvn clean verify -s settings.xml -t toolchains.xml $maven_args -DexcludedGroups=slow
 
 #FROM oracle/graalvm-ce:20.3.0-java11 as native-image
 #COPY --from=build /src/target/libs/* /libs/

@@ -41,7 +41,7 @@ public class PactConsumerTests {
 
         PactDslJsonBody event1 = new PactDslJsonBody()
                 .uuid("designId", uuid)
-                .stringMatcher("eventId", TestConstants.UUID_REGEXP)
+                .stringMatcher("eventId", TestConstants.UUID1_REGEXP)
                 .numberType("revision")
                 .stringValue("data", TestConstants.JSON_1)
                 .stringValue("checksum", TestConstants.CHECKSUM_1)
@@ -50,18 +50,24 @@ public class PactConsumerTests {
                 .numberValue("col", 0);
 
         PactDslJsonBody payload1 = new PactDslJsonBody()
-                .stringMatcher("uuid", TestConstants.UUID_REGEXP)
+                .stringMatcher("uuid", TestConstants.UUID1_REGEXP)
                 .object("data", event1)
                 .stringValue("type", TestConstants.TILE_RENDER_REQUESTED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
 
+        PactDslJsonBody trace1 = new PactDslJsonBody()
+                .stringMatcher("traceId", TestConstants.UUID6_REGEXP)
+                .stringMatcher("spanId", TestConstants.UUID6_REGEXP)
+                .stringMatcher("parent", TestConstants.UUID6_REGEXP);
+
         PactDslJsonBody message1 = new PactDslJsonBody()
                 .stringValue("key", TestConstants.CHECKSUM_1 + "/0/00000000.png")
-                .object("value", payload1);
+                .object("value", payload1)
+                .object("headers", trace1);
 
         PactDslJsonBody event2 = new PactDslJsonBody()
                 .uuid("designId", uuid)
-                .stringMatcher("eventId", TestConstants.UUID_REGEXP)
+                .stringMatcher("eventId", TestConstants.UUID1_REGEXP)
                 .numberType("revision")
                 .stringValue("data", TestConstants.JSON_2)
                 .stringValue("checksum", TestConstants.CHECKSUM_2)
@@ -70,14 +76,20 @@ public class PactConsumerTests {
                 .numberValue("col", 2);
 
         PactDslJsonBody payload2 = new PactDslJsonBody()
-                .stringMatcher("uuid", TestConstants.UUID_REGEXP)
+                .stringMatcher("uuid", TestConstants.UUID1_REGEXP)
                 .object("data", event2)
                 .stringValue("type", TestConstants.TILE_RENDER_REQUESTED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
 
+        PactDslJsonBody trace2 = new PactDslJsonBody()
+                .stringMatcher("traceId", TestConstants.UUID6_REGEXP)
+                .stringMatcher("spanId", TestConstants.UUID6_REGEXP)
+                .stringMatcher("parent", TestConstants.UUID6_REGEXP);
+
         PactDslJsonBody message2 = new PactDslJsonBody()
                 .stringValue("key", TestConstants.CHECKSUM_2 + "/1/00010002.png")
-                .object("value", payload2);
+                .object("value", payload2)
+                .object("headers", trace2);
 
         return builder.given("kafka topic exists")
                 .expectsToReceive("tile render requested for tile 0/00000000.png of design 00000000-0000-0000-0000-000000000004 with checksum 1")

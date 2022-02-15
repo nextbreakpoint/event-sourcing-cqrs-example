@@ -4,10 +4,6 @@ import au.com.dius.pact.provider.junit5.HttpsTestTarget;
 import com.jayway.restassured.http.ContentType;
 import com.nextbreakpoint.blueprint.common.core.Authority;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
-import com.nextbreakpoint.blueprint.common.core.Json;
-import com.nextbreakpoint.blueprint.common.events.DesignDeleteRequested;
-import com.nextbreakpoint.blueprint.common.events.DesignInsertRequested;
-import com.nextbreakpoint.blueprint.common.events.DesignUpdateRequested;
 import com.nextbreakpoint.blueprint.common.test.KafkaTestPolling;
 import com.nextbreakpoint.blueprint.common.vertx.KafkaClientFactory;
 import com.nextbreakpoint.blueprint.common.vertx.KafkaConsumerConfig;
@@ -111,7 +107,7 @@ public class TestCases {
     }
 
     public String shouldPublishDesignInsertRequestedEventWhenReceivingAInsertDesignRequest() throws MalformedURLException {
-        final String authorization = scenario.makeAuthorization("test", Authority.ADMIN);
+        final String authorization = scenario.makeAuthorization(TestConstants.USER_ID.toString(), Authority.ADMIN);
 
         long timestamp = System.currentTimeMillis();
 
@@ -125,25 +121,14 @@ public class TestCases {
                     final List<InputMessage> messages = eventsPolling.findMessages(uuid, TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_INSERT_REQUESTED);
                     assertThat(messages).hasSize(1);
                     InputMessage decodedMessage = messages.get(0);
-                    assertThat(decodedMessage.getValue().getType()).isEqualTo(TestConstants.DESIGN_INSERT_REQUESTED);
-                    assertThat(decodedMessage.getValue().getUuid()).isNotNull();
-                    assertThat(decodedMessage.getKey()).isNotNull();
-                    assertThat(decodedMessage.getValue().getSource()).isNotNull();
-                    assertThat(decodedMessage.getTimestamp()).isGreaterThanOrEqualTo(timestamp);
-                    DesignInsertRequested decodedEvent = Json.decodeValue(decodedMessage.getValue().getData(), DesignInsertRequested.class);
-                    assertThat(decodedEvent.getDesignId()).isNotNull();
-                    assertThat(decodedMessage.getKey()).isEqualTo(decodedEvent.getDesignId().toString());
-                    Design decodedDesign = Json.decodeValue(decodedEvent.getData(), Design.class);
-                    assertThat(decodedDesign.getManifest()).isEqualTo(TestConstants.MANIFEST);
-                    assertThat(decodedDesign.getMetadata()).isEqualTo(TestConstants.METADATA);
-                    assertThat(decodedDesign.getScript()).isEqualTo(TestConstants.SCRIPT);
+                    TestAssertions.assertExpectedDesignInsertRequestedMessage(decodedMessage, uuid);
                 });
 
         return uuid;
     }
 
     public String shouldPublishDesignUpdateRequestedEventWhenReceivingAUpdateDesignRequest() throws MalformedURLException {
-        final String authorization = scenario.makeAuthorization("test", Authority.ADMIN);
+        final String authorization = scenario.makeAuthorization(TestConstants.USER_ID.toString(), Authority.ADMIN);
 
         long timestamp = System.currentTimeMillis();
 
@@ -159,25 +144,14 @@ public class TestCases {
                     final List<InputMessage> messages = eventsPolling.findMessages(uuid, TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_UPDATE_REQUESTED);
                     assertThat(messages).hasSize(1);
                     InputMessage decodedMessage = messages.get(0);
-                    assertThat(decodedMessage.getValue().getType()).isEqualTo(TestConstants.DESIGN_UPDATE_REQUESTED);
-                    assertThat(decodedMessage.getValue().getUuid()).isNotNull();
-                    assertThat(decodedMessage.getKey()).isNotNull();
-                    assertThat(decodedMessage.getValue().getSource()).isNotNull();
-                    assertThat(decodedMessage.getTimestamp()).isGreaterThanOrEqualTo(timestamp);
-                    DesignUpdateRequested decodedEvent = Json.decodeValue(decodedMessage.getValue().getData(), DesignUpdateRequested.class);
-                    assertThat(decodedEvent.getDesignId()).isNotNull();
-                    assertThat(decodedMessage.getKey()).isEqualTo(decodedEvent.getDesignId().toString());
-                    Design decodedDesign = Json.decodeValue(decodedEvent.getData(), Design.class);
-                    assertThat(decodedDesign.getManifest()).isEqualTo(TestConstants.MANIFEST);
-                    assertThat(decodedDesign.getMetadata()).isEqualTo(TestConstants.METADATA);
-                    assertThat(decodedDesign.getScript()).isEqualTo(TestConstants.SCRIPT);
+                    TestAssertions.assertExpectedDesignUpdateRequestedMessage(decodedMessage, uuid);
                 });
 
         return uuid;
     }
 
     public String shouldPublishDesignDeleteRequestedEventWhenReceivingADeleteDesignRequest() throws MalformedURLException {
-        final String authorization = scenario.makeAuthorization("test", Authority.ADMIN);
+        final String authorization = scenario.makeAuthorization(TestConstants.USER_ID.toString(), Authority.ADMIN);
 
         long timestamp = System.currentTimeMillis();
 
@@ -193,14 +167,7 @@ public class TestCases {
                     final List<InputMessage> messages = eventsPolling.findMessages(uuid, TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_DELETE_REQUESTED);
                     assertThat(messages).hasSize(1);
                     InputMessage decodedMessage = messages.get(0);
-                    assertThat(decodedMessage.getValue().getType()).isEqualTo(TestConstants.DESIGN_DELETE_REQUESTED);
-                    assertThat(decodedMessage.getValue().getUuid()).isNotNull();
-                    assertThat(decodedMessage.getKey()).isNotNull();
-                    assertThat(decodedMessage.getValue().getSource()).isNotNull();
-                    assertThat(decodedMessage.getTimestamp()).isGreaterThanOrEqualTo(timestamp);
-                    DesignDeleteRequested decodedEvent = Json.decodeValue(decodedMessage.getValue().getData(), DesignDeleteRequested.class);
-                    assertThat(decodedEvent.getDesignId()).isNotNull();
-                    assertThat(decodedMessage.getKey()).isEqualTo(decodedEvent.getDesignId().toString());
+                    TestAssertions.assertExpectedDesignDeleteRequestedMessage(decodedMessage, uuid);
                 });
 
         return uuid;

@@ -1,6 +1,7 @@
 package com.nextbreakpoint.blueprint.designs.operations.delete;
 
 import com.nextbreakpoint.blueprint.common.core.Mapper;
+import io.vertx.core.json.JsonObject;
 import io.vertx.rxjava.ext.web.RoutingContext;
 
 import java.util.UUID;
@@ -14,6 +15,10 @@ public class DeleteDesignRequestMapper implements Mapper<RoutingContext, DeleteD
             throw new IllegalStateException("the required parameter designId is missing");
         }
 
-        return new DeleteDesignRequest(UUID.fromString(uuid));
+        final JsonObject principal = context.user().principal();
+
+        final UUID owner = UUID.fromString(principal.getString("user"));
+
+        return new DeleteDesignRequest(owner, UUID.randomUUID(), UUID.fromString(uuid));
     }
 }

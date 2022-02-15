@@ -8,8 +8,10 @@ public class InsertDesignEventMapper implements Mapper<InsertDesignRequest, Desi
     @Override
     public DesignInsertRequested transform(InsertDesignRequest request) {
         return DesignInsertRequested.builder()
+                .withUserId(request.getOwner())
                 .withEventId(Uuids.timeBased())
                 .withDesignId(request.getUuid())
+                .withChangeId(request.getChange())
                 .withData(request.getJson())
                 .withLevels(request.getLevels())
                 .build();

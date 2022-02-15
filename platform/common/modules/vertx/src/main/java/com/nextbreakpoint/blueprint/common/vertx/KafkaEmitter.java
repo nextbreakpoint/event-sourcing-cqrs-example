@@ -4,11 +4,15 @@ import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
 import com.nextbreakpoint.blueprint.common.core.Json;
+import io.vertx.rxjava.kafka.client.producer.KafkaHeader;
 import io.vertx.rxjava.kafka.client.producer.KafkaProducer;
 import io.vertx.rxjava.kafka.client.producer.KafkaProducerRecord;
 import rx.Single;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class KafkaEmitter implements Controller<OutputMessage, Void> {
     private final Logger logger = LoggerFactory.getLogger(KafkaEmitter.class.getName());
@@ -28,7 +32,19 @@ public class KafkaEmitter implements Controller<OutputMessage, Void> {
         return Single.just(message)
 //                .doOnEach(outputMessage -> logger.debug("Sending message: " + outputMessage))
                 .map(this::createKafkaRecord)
+                .map(record -> addHeaders(message, record))
                 .flatMap(this::writeRecord);
+    }
+
+    private KafkaProducerRecord<String, String> addHeaders(OutputMessage message, KafkaProducerRecord<String, String> record) {
+        record.addHeaders(makeHeaders(message));
+        return record;
+    }
+
+    private List<KafkaHeader> makeHeaders(OutputMessage message) {
+        return message.getTrace().toHeaders().entrySet().stream()
+                .map(e -> KafkaHeader.header(e.getKey(), e.getValue()))
+                .collect(Collectors.toList());
     }
 
     private Single<Void> writeRecord(KafkaProducerRecord<String, String> record) {

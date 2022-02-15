@@ -8,14 +8,17 @@ import java.util.Objects;
 public class OutputMessage {
     private String key;
     private Payload value;
+    private Tracing trace;
 
     @JsonCreator
     public OutputMessage(
         @JsonProperty("key") String key,
-        @JsonProperty("value") Payload value
+        @JsonProperty("value") Payload value,
+        @JsonProperty("trace") Tracing trace
     ) {
         this.key = Objects.requireNonNull(key);
         this.value = Objects.requireNonNull(value);
+        this.trace = Objects.requireNonNull(trace);
     }
 
     public String getKey() {
@@ -26,12 +29,16 @@ public class OutputMessage {
         return value;
     }
 
-    public static OutputMessage from(InputMessage inputMessage) {
-        return new OutputMessage(inputMessage.getKey(), inputMessage.getValue());
+    public Tracing getTrace() {
+        return trace;
     }
 
-    public static OutputMessage from(String key, Payload value) {
-        return new OutputMessage(key, value);
+    public static OutputMessage from(InputMessage inputMessage) {
+        return new OutputMessage(inputMessage.getKey(), inputMessage.getValue(), Tracing.from(inputMessage.getTrace()));
+    }
+
+    public static OutputMessage from(String key, Payload value, Tracing trace) {
+        return new OutputMessage(key, value, trace);
     }
 
     @Override
@@ -39,6 +46,7 @@ public class OutputMessage {
         return "[" +
                 "key='" + key + '\'' +
                 ", value=" + value +
+                ", trace=" + trace +
                 "]";
     }
 }

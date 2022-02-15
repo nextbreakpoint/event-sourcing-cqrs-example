@@ -1,15 +1,12 @@
 package com.nextbreakpoint.blueprint.common.events.mappers;
 
-import com.nextbreakpoint.blueprint.common.core.Json;
-import com.nextbreakpoint.blueprint.common.core.Mapper;
-import com.nextbreakpoint.blueprint.common.core.OutputMessage;
-import com.nextbreakpoint.blueprint.common.core.Payload;
+import com.nextbreakpoint.blueprint.common.core.*;
 import com.nextbreakpoint.blueprint.common.events.DesignDeleteRequested;
 
 import java.util.Objects;
 import java.util.UUID;
 
-public class DesignDeleteRequestedOutputMapper implements Mapper<DesignDeleteRequested, OutputMessage> {
+public class DesignDeleteRequestedOutputMapper implements MessageMapper<DesignDeleteRequested, OutputMessage> {
     private final String messageSource;
 
     public DesignDeleteRequestedOutputMapper(String messageSource) {
@@ -17,7 +14,7 @@ public class DesignDeleteRequestedOutputMapper implements Mapper<DesignDeleteReq
     }
 
     @Override
-    public OutputMessage transform(DesignDeleteRequested event) {
+    public OutputMessage transform(Tracing trace, DesignDeleteRequested event) {
         return new OutputMessage(
                 event.getDesignId().toString(),
                 new Payload(
@@ -25,7 +22,8 @@ public class DesignDeleteRequestedOutputMapper implements Mapper<DesignDeleteReq
                         DesignDeleteRequested.TYPE,
                         Json.encodeValue(event),
                         messageSource
-                )
+                ),
+                trace
         );
     }
 }

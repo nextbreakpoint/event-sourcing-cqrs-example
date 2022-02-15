@@ -28,16 +28,4 @@ public class TileAggregateUpdateCompleted {
         this.designId = Objects.requireNonNull(designId);
         this.revision = revision;
     }
-
-    public UUID getEventId() {
-        return eventId;
-    }
-
-    public UUID getDesignId() {
-        return designId;
-    }
-
-    public long getRevision() {
-        return revision;
-    }
 }

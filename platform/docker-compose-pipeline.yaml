@@ -28,7 +28,6 @@ services:
         published: 9292
         protocol: tcp
         mode: host
-      # - 20000-20010:20000-20010/tcp
     networks:
       - pipeline
   postgres:

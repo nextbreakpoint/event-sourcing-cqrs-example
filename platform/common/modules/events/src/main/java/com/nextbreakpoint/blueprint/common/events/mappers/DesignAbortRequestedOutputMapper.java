@@ -1,15 +1,12 @@
 package com.nextbreakpoint.blueprint.common.events.mappers;
 
-import com.nextbreakpoint.blueprint.common.core.Json;
-import com.nextbreakpoint.blueprint.common.core.Mapper;
-import com.nextbreakpoint.blueprint.common.core.OutputMessage;
-import com.nextbreakpoint.blueprint.common.core.Payload;
+import com.nextbreakpoint.blueprint.common.core.*;
 import com.nextbreakpoint.blueprint.common.events.DesignAbortRequested;
 
 import java.util.Objects;
 import java.util.UUID;
 
-public class DesignAbortRequestedOutputMapper implements Mapper<DesignAbortRequested, OutputMessage> {
+public class DesignAbortRequestedOutputMapper implements MessageMapper<DesignAbortRequested, OutputMessage> {
     private final String messageSource;
 
     public DesignAbortRequestedOutputMapper(String messageSource) {
@@ -17,15 +14,16 @@ public class DesignAbortRequestedOutputMapper implements Mapper<DesignAbortReque
     }
 
     @Override
-    public OutputMessage transform(DesignAbortRequested event) {
+    public OutputMessage transform(Tracing trace, DesignAbortRequested event) {
         return new OutputMessage(
                 event.getDesignId().toString(),
                 new Payload(
-                    UUID.randomUUID(),
+                        UUID.randomUUID(),
                         DesignAbortRequested.TYPE,
-                    Json.encodeValue(event),
-                    messageSource
-                )
+                        Json.encodeValue(event),
+                        messageSource
+                ),
+                trace
         );
     }
 }

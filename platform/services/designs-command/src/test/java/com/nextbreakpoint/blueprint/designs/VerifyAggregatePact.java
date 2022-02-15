@@ -14,6 +14,7 @@ import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.nextbreakpoint.blueprint.common.core.Json;
 import com.nextbreakpoint.blueprint.common.core.KafkaRecord;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
+import com.nextbreakpoint.blueprint.common.core.Tracing;
 import com.nextbreakpoint.blueprint.common.events.DesignDeleteRequested;
 import com.nextbreakpoint.blueprint.common.events.DesignInsertRequested;
 import com.nextbreakpoint.blueprint.common.events.DesignUpdateRequested;
@@ -88,26 +89,26 @@ public class VerifyAggregatePact {
     }
 
     private String produceDesignInsertRequested(UUID uuid, String data, int levels) {
-        final DesignInsertRequested designInsertRequested = new DesignInsertRequested(Uuids.timeBased(), uuid, data, levels);
+        final DesignInsertRequested designInsertRequested = new DesignInsertRequested(TestConstants.USER_ID, Uuids.timeBased(), uuid, UUID.randomUUID(), data, levels);
 
-        final OutputMessage designInsertRequestedMessage = new DesignInsertRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designInsertRequested);
+        final OutputMessage designInsertRequestedMessage = new DesignInsertRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(Tracing.of(UUID.randomUUID()), designInsertRequested);
 
-        return Json.encodeValue(new KafkaRecord(designInsertRequestedMessage.getKey(), PayloadUtils.payloadToMap(designInsertRequestedMessage.getValue())));
+        return Json.encodeValue(new KafkaRecord(designInsertRequestedMessage.getKey(), PayloadUtils.payloadToMap(designInsertRequestedMessage.getValue()), designInsertRequestedMessage.getTrace().toHeaders()));
     }
 
     private String produceDesignUpdateRequested(UUID uuid, String data, int levels) {
-        final DesignUpdateRequested designUpdateRequested = new DesignUpdateRequested(Uuids.timeBased(), uuid, data, levels);
+        final DesignUpdateRequested designUpdateRequested = new DesignUpdateRequested(TestConstants.USER_ID, Uuids.timeBased(), uuid, UUID.randomUUID(), data, levels);
 
-        final OutputMessage designUpdateRequestedMessage = new DesignUpdateRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designUpdateRequested);
+        final OutputMessage designUpdateRequestedMessage = new DesignUpdateRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(Tracing.of(UUID.randomUUID()), designUpdateRequested);
 
-        return Json.encodeValue(new KafkaRecord(designUpdateRequestedMessage.getKey(), PayloadUtils.payloadToMap(designUpdateRequestedMessage.getValue())));
+        return Json.encodeValue(new KafkaRecord(designUpdateRequestedMessage.getKey(), PayloadUtils.payloadToMap(designUpdateRequestedMessage.getValue()), designUpdateRequestedMessage.getTrace().toHeaders()));
     }
 
     private String produceDesignDeleteRequested(UUID uuid) {
-        final DesignDeleteRequested designDeleteRequested = new DesignDeleteRequested(Uuids.timeBased(), uuid);
+        final DesignDeleteRequested designDeleteRequested = new DesignDeleteRequested(TestConstants.USER_ID, Uuids.timeBased(), uuid, UUID.randomUUID());
 
-        final OutputMessage designDeleteRequestedMessage = new DesignDeleteRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designDeleteRequested);
+        final OutputMessage designDeleteRequestedMessage = new DesignDeleteRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(Tracing.of(UUID.randomUUID()), designDeleteRequested);
 
-        return Json.encodeValue(new KafkaRecord(designDeleteRequestedMessage.getKey(), PayloadUtils.payloadToMap(designDeleteRequestedMessage.getValue())));
+        return Json.encodeValue(new KafkaRecord(designDeleteRequestedMessage.getKey(), PayloadUtils.payloadToMap(designDeleteRequestedMessage.getValue()), designDeleteRequestedMessage.getTrace().toHeaders()));
     }
 }

@@ -48,9 +48,9 @@ public class PactConsumerTests {
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
 
         PactDslJsonBody trace1 = new PactDslJsonBody()
-                .stringMatcher("traceId", TestConstants.UUID6_REGEXP)
-                .stringMatcher("spanId", TestConstants.UUID6_REGEXP)
-                .stringMatcher("parent", TestConstants.UUID6_REGEXP);
+                .stringMatcher("X-TRACE-TRACE-ID", TestConstants.UUID6_REGEXP)
+                .stringMatcher("X-TRACE-SPAN-ID", TestConstants.UUID6_REGEXP)
+                .stringMatcher("X-TRACE-PARENT", TestConstants.UUID6_REGEXP);
 
         PactDslJsonBody message1 = new PactDslJsonBody()
                 .stringValue("key", uuid1.toString())
@@ -69,9 +69,9 @@ public class PactConsumerTests {
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
 
         PactDslJsonBody trace2 = new PactDslJsonBody()
-                .stringMatcher("traceId", TestConstants.UUID6_REGEXP)
-                .stringMatcher("spanId", TestConstants.UUID6_REGEXP)
-                .stringMatcher("parent", TestConstants.UUID6_REGEXP);
+                .stringMatcher("X-TRACE-TRACE-ID", TestConstants.UUID6_REGEXP)
+                .stringMatcher("X-TRACE-SPAN-ID", TestConstants.UUID6_REGEXP)
+                .stringMatcher("X-TRACE-PARENT", TestConstants.UUID6_REGEXP);
 
         PactDslJsonBody message2 = new PactDslJsonBody()
                 .stringValue("key", uuid2.toString())
@@ -103,9 +103,9 @@ public class PactConsumerTests {
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
 
         PactDslJsonBody trace1 = new PactDslJsonBody()
-                .stringMatcher("traceId", TestConstants.UUID6_REGEXP)
-                .stringMatcher("spanId", TestConstants.UUID6_REGEXP)
-                .stringMatcher("parent", TestConstants.UUID6_REGEXP);
+                .stringMatcher("X-TRACE-TRACE-ID", TestConstants.UUID6_REGEXP)
+                .stringMatcher("X-TRACE-SPAN-ID", TestConstants.UUID6_REGEXP)
+                .stringMatcher("X-TRACE-PARENT", TestConstants.UUID6_REGEXP);
 
         PactDslJsonBody message1 = new PactDslJsonBody()
                 .stringValue("key", uuid1.toString())
@@ -124,9 +124,9 @@ public class PactConsumerTests {
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
 
         PactDslJsonBody trace2 = new PactDslJsonBody()
-                .stringMatcher("traceId", TestConstants.UUID6_REGEXP)
-                .stringMatcher("spanId", TestConstants.UUID6_REGEXP)
-                .stringMatcher("parent", TestConstants.UUID6_REGEXP);
+                .stringMatcher("X-TRACE-TRACE-ID", TestConstants.UUID6_REGEXP)
+                .stringMatcher("X-TRACE-SPAN-ID", TestConstants.UUID6_REGEXP)
+                .stringMatcher("X-TRACE-PARENT", TestConstants.UUID6_REGEXP);
 
         PactDslJsonBody message2 = new PactDslJsonBody()
                 .stringValue("key", uuid2.toString())

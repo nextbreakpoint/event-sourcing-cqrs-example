@@ -24,6 +24,9 @@ public class TestScenario {
 
   private Network network = Network.builder().driver("bridge").build();
 
+  private GenericContainer cassandra = ContainerUtils.createCassandraContainer(network)
+          .waitingFor(Wait.forLogMessage(".* Initializing test_designs_command.message.*", 1).withStartupTimeout(Duration.ofSeconds(60)));
+
   private GenericContainer zookeeper = ContainerUtils.createZookeeperContainer(network)
           .waitingFor(Wait.forLogMessage(".* binding to port /0.0.0.0:2181.*", 1).withStartupTimeout(Duration.ofSeconds(60)));
 
@@ -35,8 +38,13 @@ public class TestScenario {
           .withEnv("DEBUG_OPTS", "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:" + DEBUG_PORT)
           .withEnv("JAEGER_SERVICE_NAME", serviceName)
           .withEnv("KEYSTORE_SECRET", "secret")
+          .withEnv("DATABASE_HOST", "cassandra")
+          .withEnv("DATABASE_KEYSPACE", TestConstants.DATABASE_KEYSPACE)
+          .withEnv("DATABASE_USERNAME", "verticle")
+          .withEnv("DATABASE_PASSWORD", "password")
           .withEnv("KAFKA_HOST", "kafka")
           .withEnv("KAFKA_PORT", "9092")
+          .withEnv("COMMANDS_TOPIC", TestConstants.COMMANDS_TOPIC_NAME)
           .withEnv("EVENTS_TOPIC", TestConstants.EVENTS_TOPIC_NAME)
           .withFileSystemBind("../../secrets/keystore_server.jks", "/secrets/keystore_server.jks", BindMode.READ_ONLY)
           .withFileSystemBind("../../secrets/keystore_auth.jceks", "/secrets/keystore_auth.jceks", BindMode.READ_ONLY)
@@ -44,7 +52,7 @@ public class TestScenario {
           .withExposedPorts(HTTP_PORT, DEBUG_PORT)
           .withNetwork(network)
           .withNetworkAliases(serviceName)
-          .dependsOn(zookeeper, kafka)
+          .dependsOn(zookeeper, kafka, cassandra)
           .waitingFor(Wait.forLogMessage(".* Service listening on port " + HTTP_PORT + ".*", 1).withStartupTimeout(Duration.ofSeconds(20)));
 
   public void before() {
@@ -52,6 +60,7 @@ public class TestScenario {
       BuildUtils.of(nexusHost, nexusPort, serviceName, version).buildDockerImage();
     }
 
+    cassandra.start();
     zookeeper.start();
     kafka.start();
     service.start();
@@ -64,6 +73,7 @@ public class TestScenario {
     service.stop();
     kafka.stop();
     zookeeper.stop();
+    cassandra.stop();
   }
 
   public String getVersion() {
@@ -84,6 +94,14 @@ public class TestScenario {
 
   public Integer getKafkaPort() {
     return kafka.getMappedPort(9093);
+  }
+
+  public String getCassandraHost() {
+    return cassandra.getHost();
+  }
+
+  public Integer getCassandraPort() {
+    return cassandra.getMappedPort(9042);
   }
 
   public String makeAuthorization(String user, String role) {

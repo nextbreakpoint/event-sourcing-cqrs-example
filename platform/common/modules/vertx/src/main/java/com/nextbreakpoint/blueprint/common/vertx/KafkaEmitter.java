@@ -1,15 +1,14 @@
 package com.nextbreakpoint.blueprint.common.vertx;
 
+import com.nextbreakpoint.blueprint.common.core.Json;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
-import com.nextbreakpoint.blueprint.common.core.Json;
 import io.vertx.rxjava.kafka.client.producer.KafkaHeader;
 import io.vertx.rxjava.kafka.client.producer.KafkaProducer;
 import io.vertx.rxjava.kafka.client.producer.KafkaProducerRecord;
 import rx.Single;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;

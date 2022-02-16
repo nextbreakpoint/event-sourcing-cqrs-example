@@ -12,7 +12,10 @@ import io.vertx.rxjava.kafka.client.producer.KafkaHeader;
 import rx.schedulers.Schedulers;
 
 import java.time.Duration;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 

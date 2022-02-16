@@ -10,7 +10,7 @@
     <parent>
         <groupId>com.nextbreakpoint</groupId>
         <artifactId>com.nextbreakpoint.blueprint.service</artifactId>
-        <version>1.0.0-wip2-24c52fc-1644967410</version>
+        <version>1.0.0-wip2-40869cb-1645032870</version>
     </parent>
     <repositories>
         <repository>
@@ -74,7 +74,7 @@
                         <DATABASE_HOST>localhost</DATABASE_HOST>
                         <DATABASE_USERNAME>verticle</DATABASE_USERNAME>
                         <DATABASE_PASSWORD>password</DATABASE_PASSWORD>
-                        <DATABASE_KEYSPACE>designs</DATABASE_KEYSPACE>
+                        <DATABASE_KEYSPACE>designs_aggregate</DATABASE_KEYSPACE>
                         <KAFKA_HOST>localhost</KAFKA_HOST>
                         <KAFKA_PORT>9093</KAFKA_PORT>
                         <EVENTS_TOPIC>events</EVENTS_TOPIC>

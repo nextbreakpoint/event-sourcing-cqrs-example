@@ -1,11 +1,16 @@
 package com.nextbreakpoint.blueprint.designs;
 
+import com.datastax.oss.driver.api.core.cql.Row;
+import com.nextbreakpoint.blueprint.common.commands.DesignDeleteCommand;
+import com.nextbreakpoint.blueprint.common.commands.DesignInsertCommand;
+import com.nextbreakpoint.blueprint.common.commands.DesignUpdateCommand;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.core.Json;
 import com.nextbreakpoint.blueprint.common.events.DesignDeleteRequested;
 import com.nextbreakpoint.blueprint.common.events.DesignInsertRequested;
 import com.nextbreakpoint.blueprint.common.events.DesignUpdateRequested;
 
+import java.time.Instant;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -24,7 +29,7 @@ public class TestAssertions {
         assertThat(actualMessage.getValue()).isNotNull();
         assertThat(actualMessage.getTrace().getTraceId()).isNotNull();
         assertThat(actualMessage.getTrace().getSpanId()).isNotNull();
-        assertThat(actualMessage.getTrace().getParent()).isNull();
+        assertThat(actualMessage.getTrace().getParent()).isNotNull();
         DesignInsertRequested actualEvent = Json.decodeValue(actualMessage.getValue().getData(), DesignInsertRequested.class);
         assertThat(actualEvent.getEventId()).isNotNull();
         assertThat(actualEvent.getUserId()).isEqualTo(TestConstants.USER_ID);
@@ -49,7 +54,7 @@ public class TestAssertions {
         assertThat(actualMessage.getValue()).isNotNull();
         assertThat(actualMessage.getTrace().getTraceId()).isNotNull();
         assertThat(actualMessage.getTrace().getSpanId()).isNotNull();
-        assertThat(actualMessage.getTrace().getParent()).isNull();
+        assertThat(actualMessage.getTrace().getParent()).isNotNull();
         DesignUpdateRequested actualEvent = Json.decodeValue(actualMessage.getValue().getData(), DesignUpdateRequested.class);
         assertThat(actualEvent.getEventId()).isNotNull();
         assertThat(actualEvent.getUserId()).isEqualTo(TestConstants.USER_ID);
@@ -74,11 +79,62 @@ public class TestAssertions {
         assertThat(actualMessage.getValue()).isNotNull();
         assertThat(actualMessage.getTrace().getTraceId()).isNotNull();
         assertThat(actualMessage.getTrace().getSpanId()).isNotNull();
-        assertThat(actualMessage.getTrace().getParent()).isNull();
+        assertThat(actualMessage.getTrace().getParent()).isNotNull();
         DesignDeleteRequested actualEvent = Json.decodeValue(actualMessage.getValue().getData(), DesignDeleteRequested.class);
         assertThat(actualEvent.getEventId()).isNotNull();
         assertThat(actualEvent.getUserId()).isEqualTo(TestConstants.USER_ID);
         assertThat(actualEvent.getChangeId()).isNotNull();
         assertThat(actualEvent.getDesignId()).isEqualTo(UUID.fromString(designId));
+    }
+
+    public static void assertExpectedDesignInsertCommand(Row row, String uuid) {
+        final String actualType = row.getString("MESSAGE_TYPE");
+        final String actualValue = row.getString("MESSAGE_VALUE");
+        final UUID actualUuid = row.getUuid("MESSAGE_UUID");
+        final String actualSource = row.getString("MESSAGE_SOURCE");
+        final String actualKey = row.getString("MESSAGE_KEY");
+        final Instant actualTimestamp = row.getInstant("MESSAGE_TIMESTAMP");
+        final Long actualOffset = row.getLong("MESSAGE_OFFSET");
+        assertThat(actualOffset).isNotNull();
+        assertThat(actualUuid).isNotNull();
+        assertThat(actualValue).isNotNull();
+        assertThat(actualType).isEqualTo(DesignInsertCommand.TYPE);
+        assertThat(actualSource).isNotNull();
+        assertThat(actualKey).isEqualTo(uuid);
+        assertThat(actualTimestamp).isNotNull();
+    }
+
+    public static void assertExpectedDesignUpdateCommand(Row row, String uuid) {
+        final String actualType = row.getString("MESSAGE_TYPE");
+        final String actualValue = row.getString("MESSAGE_VALUE");
+        final UUID actualUuid = row.getUuid("MESSAGE_UUID");
+        final String actualSource = row.getString("MESSAGE_SOURCE");
+        final String actualKey = row.getString("MESSAGE_KEY");
+        final Instant actualTimestamp = row.getInstant("MESSAGE_TIMESTAMP");
+        final Long actualOffset = row.getLong("MESSAGE_OFFSET");
+        assertThat(actualOffset).isNotNull();
+        assertThat(actualUuid).isNotNull();
+        assertThat(actualValue).isNotNull();
+        assertThat(actualType).isEqualTo(DesignUpdateCommand.TYPE);
+        assertThat(actualSource).isNotNull();
+        assertThat(actualKey).isEqualTo(uuid);
+        assertThat(actualTimestamp).isNotNull();
+    }
+
+    public static void assertExpectedDesignDeleteCommand(Row row, String uuid) {
+        final String actualType = row.getString("MESSAGE_TYPE");
+        final String actualValue = row.getString("MESSAGE_VALUE");
+        final UUID actualUuid = row.getUuid("MESSAGE_UUID");
+        final String actualSource = row.getString("MESSAGE_SOURCE");
+        final String actualKey = row.getString("MESSAGE_KEY");
+        final Instant actualTimestamp = row.getInstant("MESSAGE_TIMESTAMP");
+        final Long actualOffset = row.getLong("MESSAGE_OFFSET");
+        assertThat(actualOffset).isNotNull();
+        assertThat(actualUuid).isNotNull();
+        assertThat(actualValue).isNotNull();
+        assertThat(actualType).isEqualTo(DesignDeleteCommand.TYPE);
+        assertThat(actualSource).isNotNull();
+        assertThat(actualKey).isEqualTo(uuid);
+        assertThat(actualTimestamp).isNotNull();
     }
 }

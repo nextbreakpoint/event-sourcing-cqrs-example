@@ -1,13 +1,13 @@
 package com.nextbreakpoint.blueprint.designs.operations.delete;
 
 import com.datastax.oss.driver.api.core.uuid.Uuids;
+import com.nextbreakpoint.blueprint.common.commands.DesignDeleteCommand;
 import com.nextbreakpoint.blueprint.common.core.Mapper;
-import com.nextbreakpoint.blueprint.common.events.DesignDeleteRequested;
 
-public class DeleteDesignEventMapper implements Mapper<DeleteDesignRequest, DesignDeleteRequested> {
+public class DeleteDesignCommandMapper implements Mapper<DeleteDesignRequest, DesignDeleteCommand> {
     @Override
-    public DesignDeleteRequested transform(DeleteDesignRequest request) {
-        return DesignDeleteRequested.builder()
+    public DesignDeleteCommand transform(DeleteDesignRequest request) {
+        return DesignDeleteCommand.builder()
                 .withUserId(request.getOwner())
                 .withEventId(Uuids.timeBased())
                 .withDesignId(request.getUuid())

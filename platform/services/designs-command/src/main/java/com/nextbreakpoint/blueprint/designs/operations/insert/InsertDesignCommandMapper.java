@@ -1,13 +1,13 @@
-package com.nextbreakpoint.blueprint.designs.operations.update;
+package com.nextbreakpoint.blueprint.designs.operations.insert;
 
 import com.datastax.oss.driver.api.core.uuid.Uuids;
+import com.nextbreakpoint.blueprint.common.commands.DesignInsertCommand;
 import com.nextbreakpoint.blueprint.common.core.Mapper;
-import com.nextbreakpoint.blueprint.common.events.DesignUpdateRequested;
 
-public class UpdateDesignEventMapper implements Mapper<UpdateDesignRequest, DesignUpdateRequested> {
+public class InsertDesignCommandMapper implements Mapper<InsertDesignRequest, DesignInsertCommand> {
     @Override
-    public DesignUpdateRequested transform(UpdateDesignRequest request) {
-        return DesignUpdateRequested.builder()
+    public DesignInsertCommand transform(InsertDesignRequest request) {
+        return DesignInsertCommand.builder()
                 .withUserId(request.getOwner())
                 .withEventId(Uuids.timeBased())
                 .withDesignId(request.getUuid())

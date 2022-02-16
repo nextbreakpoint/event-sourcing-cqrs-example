@@ -16,18 +16,12 @@ data:
     CREATE ROLE IF NOT EXISTS admin WITH PASSWORD = 'password' AND LOGIN = true;
     CREATE ROLE IF NOT EXISTS verticle WITH PASSWORD = 'password' AND LOGIN = true;
 
-    CREATE KEYSPACE IF NOT EXISTS designs WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };
+    CREATE KEYSPACE IF NOT EXISTS designs_aggregate WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };
 
-    GRANT ALL PERMISSIONS on KEYSPACE designs TO admin;
-    GRANT ALL PERMISSIONS on KEYSPACE designs TO verticle;
+    GRANT ALL PERMISSIONS on KEYSPACE designs_aggregate TO admin;
+    GRANT ALL PERMISSIONS on KEYSPACE designs_aggregate TO verticle;
 
-    USE designs;
-
-    CREATE TYPE IF NOT EXISTS LEVEL (
-      REQUESTED INT,
-      COMPLETED SET<INT>,
-      FAILED SET<INT>
-    );
+    USE designs_aggregate;
 
     CREATE TABLE IF NOT EXISTS MESSAGE (
       MESSAGE_KEY TEXT,
@@ -45,6 +39,12 @@ data:
 
     CREATE INDEX IF NOT EXISTS MESSAGE_UUID_IDX ON MESSAGE (MESSAGE_UUID);
 
+    CREATE TYPE IF NOT EXISTS LEVEL (
+      REQUESTED INT,
+      COMPLETED SET<INT>,
+      FAILED SET<INT>
+    );
+
     CREATE TABLE IF NOT EXISTS DESIGN (
       DESIGN_UUID UUID,
       DESIGN_EVENT_ID TIMEUUID,
@@ -60,3 +60,25 @@ data:
       PRIMARY KEY (DESIGN_UUID)
     );
 
+    CREATE KEYSPACE IF NOT EXISTS designs_command WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };
+
+    GRANT ALL PERMISSIONS on KEYSPACE designs_command TO admin;
+    GRANT ALL PERMISSIONS on KEYSPACE designs_command TO verticle;
+
+    USE designs_command;
+
+    CREATE TABLE IF NOT EXISTS MESSAGE (
+      MESSAGE_KEY TEXT,
+      MESSAGE_VALUE TEXT,
+      MESSAGE_OFFSET BIGINT,
+      MESSAGE_UUID UUID,
+      MESSAGE_TYPE TEXT,
+      MESSAGE_SOURCE TEXT,
+      MESSAGE_TIMESTAMP TIMESTAMP,
+      MESSAGE_TRACE_ID UUID,
+      MESSAGE_SPAN_ID UUID,
+      MESSAGE_PARENT UUID,
+      PRIMARY KEY (MESSAGE_KEY, MESSAGE_OFFSET)
+    ) WITH CLUSTERING ORDER BY (MESSAGE_OFFSET ASC);
+
+    CREATE INDEX IF NOT EXISTS MESSAGE_UUID_IDX ON MESSAGE (MESSAGE_UUID);

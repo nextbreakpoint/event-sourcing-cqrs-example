@@ -7,7 +7,7 @@ import io.vertx.rxjava.core.Vertx;
 import io.vertx.rxjava.core.http.Cookie;
 import io.vertx.rxjava.ext.auth.jwt.JWTAuth;
 
-import java.util.*;
+import java.util.List;
 
 public class VertxUtils {
     private VertxUtils() {}

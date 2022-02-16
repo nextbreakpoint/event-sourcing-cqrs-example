@@ -8,11 +8,12 @@
     <parent>
         <groupId>com.nextbreakpoint</groupId>
         <artifactId>com.nextbreakpoint.blueprint.bom</artifactId>
-        <version>1.0.0-wip2-24c52fc-1644967410</version>
+        <version>1.0.0-wip2-40869cb-1645032870</version>
     </parent>
     <modules>
         <module>modules/core</module>
         <module>modules/events</module>
+        <module>modules/commands</module>
         <module>modules/vertx</module>
         <module>modules/test</module>
     </modules>

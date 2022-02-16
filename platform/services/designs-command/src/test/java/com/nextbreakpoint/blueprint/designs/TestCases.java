@@ -1,12 +1,16 @@
 package com.nextbreakpoint.blueprint.designs;
 
 import au.com.dius.pact.provider.junit5.HttpsTestTarget;
+import com.datastax.oss.driver.api.core.cql.Row;
 import com.jayway.restassured.http.ContentType;
 import com.nextbreakpoint.blueprint.common.core.Authority;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.test.KafkaTestPolling;
+import com.nextbreakpoint.blueprint.common.vertx.CassandraClientConfig;
+import com.nextbreakpoint.blueprint.common.vertx.CassandraClientFactory;
 import com.nextbreakpoint.blueprint.common.vertx.KafkaClientFactory;
 import com.nextbreakpoint.blueprint.common.vertx.KafkaConsumerConfig;
+import io.vertx.rxjava.cassandra.CassandraClient;
 import io.vertx.rxjava.core.RxHelper;
 import io.vertx.rxjava.core.Vertx;
 import io.vertx.rxjava.kafka.client.consumer.KafkaConsumer;
@@ -33,7 +37,10 @@ public class TestCases {
 
     private final Vertx vertx = new Vertx(io.vertx.core.Vertx.vertx());
 
+    private KafkaTestPolling commandsPolling;
     private KafkaTestPolling eventsPolling;
+
+    private TestCassandra testCassandra;
 
     private String consumerGroupId;
 
@@ -48,11 +55,21 @@ public class TestCases {
         RxJavaHooks.setOnIOScheduler(s -> RxHelper.blockingScheduler(vertx));
         RxJavaHooks.setOnNewThreadScheduler(s -> RxHelper.blockingScheduler(vertx));
 
+        CassandraClient session = CassandraClientFactory.create(vertx, createCassandraConfig());
+
+        testCassandra = new TestCassandra(session);
+
+        KafkaConsumer<String, String> commandsConsumer = KafkaClientFactory.createConsumer(vertx, createConsumerConfig(consumerGroupId));
+
         KafkaConsumer<String, String> eventsConsumer = KafkaClientFactory.createConsumer(vertx, createConsumerConfig(consumerGroupId));
 
+        commandsPolling = new KafkaTestPolling(commandsConsumer, TestConstants.COMMANDS_TOPIC_NAME);
         eventsPolling = new KafkaTestPolling(eventsConsumer, TestConstants.EVENTS_TOPIC_NAME);
 
+        commandsPolling.startPolling();
         eventsPolling.startPolling();
+
+        testCassandra.deleteMessages();
     }
 
     public void after() {
@@ -95,6 +112,18 @@ public class TestCases {
     }
 
     @NotNull
+    public CassandraClientConfig createCassandraConfig() {
+        return CassandraClientConfig.builder()
+                .withClusterName("datacenter1")
+                .withKeyspace(TestConstants.DATABASE_KEYSPACE)
+                .withUsername("admin")
+                .withPassword("password")
+                .withContactPoints(new String[] { scenario.getCassandraHost() })
+                .withPort(scenario.getCassandraPort())
+                .build();
+    }
+
+    @NotNull
     public KafkaConsumerConfig createConsumerConfig(String groupId) {
         return KafkaConsumerConfig.builder()
                 .withBootstrapServers(scenario.getKafkaHost() + ":" + scenario.getKafkaPort())
@@ -111,9 +140,25 @@ public class TestCases {
 
         long timestamp = System.currentTimeMillis();
 
+        commandsPolling.clearMessages();
         eventsPolling.clearMessages();
 
         final String uuid = submitInsertDesignRequest(authorization, TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT));
+
+        await().atMost(TEN_SECONDS)
+                .pollInterval(ONE_SECOND)
+                .untilAsserted(() -> {
+                    final List<InputMessage> messages = commandsPolling.findMessages(uuid, TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_INSERT_COMMAND);
+                    assertThat(messages).hasSize(1);
+                });
+
+        await().atMost(TEN_SECONDS)
+                .pollInterval(ONE_SECOND)
+                .untilAsserted(() -> {
+                    final List<Row> rows = testCassandra.fetchMessages(UUID.fromString(uuid));
+                    assertThat(rows).hasSize(1);
+                    TestAssertions.assertExpectedDesignInsertCommand(rows.get(0), uuid);
+                });
 
         await().atMost(TEN_SECONDS)
                 .pollInterval(ONE_SECOND)
@@ -132,11 +177,27 @@ public class TestCases {
 
         long timestamp = System.currentTimeMillis();
 
+        commandsPolling.clearMessages();
         eventsPolling.clearMessages();
 
         final String uuid = UUID.randomUUID().toString();
 
         submitUpdateDesignRequest(authorization, TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT), uuid);
+
+        await().atMost(TEN_SECONDS)
+                .pollInterval(ONE_SECOND)
+                .untilAsserted(() -> {
+                    final List<InputMessage> messages = commandsPolling.findMessages(uuid, TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_UPDATE_COMMAND);
+                    assertThat(messages).hasSize(1);
+                });
+
+        await().atMost(TEN_SECONDS)
+                .pollInterval(ONE_SECOND)
+                .untilAsserted(() -> {
+                    final List<Row> rows = testCassandra.fetchMessages(UUID.fromString(uuid));
+                    assertThat(rows).hasSize(1);
+                    TestAssertions.assertExpectedDesignUpdateCommand(rows.get(0), uuid);
+                });
 
         await().atMost(TEN_SECONDS)
                 .pollInterval(ONE_SECOND)
@@ -155,11 +216,27 @@ public class TestCases {
 
         long timestamp = System.currentTimeMillis();
 
+        commandsPolling.clearMessages();
         eventsPolling.clearMessages();
 
         final String uuid = UUID.randomUUID().toString();
 
         submitDeleteDesignRequest(authorization, uuid);
+
+        await().atMost(TEN_SECONDS)
+                .pollInterval(ONE_SECOND)
+                .untilAsserted(() -> {
+                    final List<InputMessage> messages = commandsPolling.findMessages(uuid, TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_DELETE_COMMAND);
+                    assertThat(messages).hasSize(1);
+                });
+
+        await().atMost(TEN_SECONDS)
+                .pollInterval(ONE_SECOND)
+                .untilAsserted(() -> {
+                    final List<Row> rows = testCassandra.fetchMessages(UUID.fromString(uuid));
+                    assertThat(rows).hasSize(1);
+                    TestAssertions.assertExpectedDesignDeleteCommand(rows.get(0), uuid);
+                });
 
         await().atMost(TEN_SECONDS)
                 .pollInterval(ONE_SECOND)

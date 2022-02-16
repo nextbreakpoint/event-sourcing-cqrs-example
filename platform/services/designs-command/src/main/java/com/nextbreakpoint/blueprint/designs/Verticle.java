@@ -1,8 +1,14 @@
 package com.nextbreakpoint.blueprint.designs;
 
+import com.nextbreakpoint.blueprint.common.commands.DesignDeleteCommand;
+import com.nextbreakpoint.blueprint.common.commands.DesignInsertCommand;
+import com.nextbreakpoint.blueprint.common.commands.DesignUpdateCommand;
+import com.nextbreakpoint.blueprint.common.core.BlockingHandler;
 import com.nextbreakpoint.blueprint.common.core.Environment;
 import com.nextbreakpoint.blueprint.common.core.IOUtils;
+import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.vertx.*;
+import com.nextbreakpoint.blueprint.designs.persistence.CassandraStore;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Handler;
 import io.vertx.core.VertxOptions;
@@ -15,6 +21,7 @@ import io.vertx.ext.web.handler.LoggerFormat;
 import io.vertx.ext.web.openapi.RouterBuilder;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.VertxPrometheusOptions;
+import io.vertx.rxjava.cassandra.CassandraClient;
 import io.vertx.rxjava.core.AbstractVerticle;
 import io.vertx.rxjava.core.Promise;
 import io.vertx.rxjava.core.Vertx;
@@ -25,6 +32,7 @@ import io.vertx.rxjava.ext.web.handler.BodyHandler;
 import io.vertx.rxjava.ext.web.handler.CorsHandler;
 import io.vertx.rxjava.ext.web.handler.LoggerHandler;
 import io.vertx.rxjava.ext.web.handler.TimeoutHandler;
+import io.vertx.rxjava.kafka.client.consumer.KafkaConsumer;
 import io.vertx.rxjava.kafka.client.producer.KafkaProducer;
 import io.vertx.tracing.opentracing.OpenTracingOptions;
 import rx.Completable;
@@ -32,16 +40,22 @@ import rx.Completable;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.function.Supplier;
 
 import static com.nextbreakpoint.blueprint.common.core.Authority.ADMIN;
 import static com.nextbreakpoint.blueprint.common.core.Headers.*;
+import static com.nextbreakpoint.blueprint.designs.Factory.*;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
 public class Verticle extends AbstractVerticle {
     private static final Logger logger = LoggerFactory.getLogger(Verticle.class.getName());
+
+    private KafkaPolling kafkaPolling;
 
     public static void main(String[] args) {
         try {
@@ -86,6 +100,16 @@ public class Verticle extends AbstractVerticle {
                 .toCompletable();
     }
 
+    @Override
+    public Completable rxStop() {
+        return Completable.fromCallable(() -> {
+            if (kafkaPolling != null) {
+                kafkaPolling.stopPolling();
+            }
+            return null;
+        });
+    }
+
     private void initServer(Promise<Void> promise) {
         try {
             final JsonObject config = vertx.getOrCreateContext().config();
@@ -100,6 +124,8 @@ public class Verticle extends AbstractVerticle {
 
             final String jksStoreSecret = config.getString("server_keystore_secret");
 
+            final String commandsTopic = config.getString("commands_topic");
+
             final String eventsTopic = config.getString("events_topic");
 
             final String messageSource = config.getString("message_source");
@@ -109,6 +135,18 @@ public class Verticle extends AbstractVerticle {
             final String jwtKeystorePath = config.getString("jwt_keystore_path");
 
             final String jwtKeystoreSecret = config.getString("jwt_keystore_secret");
+
+            final String clusterName = config.getString("cassandra_cluster");
+
+            final String keyspace = config.getString("cassandra_keyspace");
+
+            final String username = config.getString("cassandra_username");
+
+            final String password = config.getString("cassandra_password");
+
+            final String[] contactPoints = config.getString("cassandra_contactPoints").split(",");
+
+            final int cassandraPort = Integer.parseInt(config.getString("cassandra_port", "9042"));
 
             final String bootstrapServers = config.getString("kafka_bootstrap_servers", "localhost:9092");
 
@@ -127,6 +165,16 @@ public class Verticle extends AbstractVerticle {
             final String truststoreLocation = config.getString("kafka_truststore_location");
 
             final String truststorePassword = config.getString("kafka_truststore_password");
+
+            final String keyDeserializer = config.getString("kafka_key_serializer", "org.apache.kafka.common.serialization.StringDeserializer");
+
+            final String valDeserializer = config.getString("kafka_val_serializer", "org.apache.kafka.common.serialization.StringDeserializer");
+
+            final String groupId = config.getString("kafka_group_id", "test");
+
+            final String autoOffsetReset = config.getString("kafka_auto_offset_reset", "earliest");
+
+            final String enableAutoCommit = config.getString("kafka_enable_auto_commit", "false");
 
             final JWTProviderConfig jwtProviderConfig = JWTProviderConfig.builder()
                     .withKeyStoreType(jwtKeystoreType)
@@ -150,17 +198,57 @@ public class Verticle extends AbstractVerticle {
 
             final KafkaProducer<String, String> kafkaProducer = KafkaClientFactory.createProducer(vertx, producerConfig);
 
+            final KafkaConsumerConfig consumerConfig = KafkaConsumerConfig.builder()
+                    .withBootstrapServers(bootstrapServers)
+                    .withKeyDeserializer(keyDeserializer)
+                    .withValueDeserializer(valDeserializer)
+                    .withKeystoreLocation(keystoreLocation)
+                    .withKeystorePassword(keystorePassword)
+                    .withTruststoreLocation(truststoreLocation)
+                    .withTruststorePassword(truststorePassword)
+                    .withGroupId(groupId)
+                    .withAutoOffsetReset(autoOffsetReset)
+                    .withEnableAutoCommit(enableAutoCommit)
+                    .build();
+
+            final KafkaConsumer<String, String> kafkaConsumer = KafkaClientFactory.createConsumer(vertx, consumerConfig);
+
+            final CassandraClientConfig cassandraConfig = CassandraClientConfig.builder()
+                    .withClusterName(clusterName)
+                    .withKeyspace(keyspace)
+                    .withUsername(username)
+                    .withPassword(password)
+                    .withContactPoints(contactPoints)
+                    .withPort(cassandraPort)
+                    .build();
+
+            final Supplier<CassandraClient> supplier = () -> CassandraClientFactory.create(vertx, cassandraConfig);
+
+            final Store store = new CassandraStore(keyspace, supplier);
+
             final Router mainRouter = Router.router(vertx);
+
+            kafkaConsumer.subscribe(commandsTopic);
+
+            final Map<String, BlockingHandler<InputMessage>> messageHandlers = new HashMap<>();
+
+            messageHandlers.put(DesignInsertCommand.TYPE, createDesignInsertCommandHandler(store, eventsTopic, kafkaProducer, messageSource));
+            messageHandlers.put(DesignUpdateCommand.TYPE, createDesignUpdateCommandHandler(store, eventsTopic, kafkaProducer, messageSource));
+            messageHandlers.put(DesignDeleteCommand.TYPE, createDesignDeleteCommandHandler(store, eventsTopic, kafkaProducer, messageSource));
+
+            kafkaPolling = new KafkaPolling(kafkaConsumer, messageHandlers);
+
+            kafkaPolling.startPolling("kafka-records-poll");
 
             final CorsHandler corsHandler = CorsHandlerFactory.createWithAll(originPattern, asList(COOKIE, AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN), asList(COOKIE, CONTENT_TYPE, X_XSRF_TOKEN));
 
             final Handler<RoutingContext> onAccessDenied = routingContext -> routingContext.fail(Failure.accessDenied("Authorisation failed"));
 
-            final Handler<RoutingContext> insertDesignHandler = new AccessHandler(jwtProvider, Factory.createInsertDesignHandler(kafkaProducer, eventsTopic, messageSource), onAccessDenied, singletonList(ADMIN));
+            final Handler<RoutingContext> insertDesignHandler = new AccessHandler(jwtProvider, Factory.createInsertDesignHandler(kafkaProducer, commandsTopic, messageSource), onAccessDenied, singletonList(ADMIN));
 
-            final Handler<RoutingContext> updateDesignHandler = new AccessHandler(jwtProvider, Factory.createUpdateDesignHandler(kafkaProducer, eventsTopic, messageSource), onAccessDenied, singletonList(ADMIN));
+            final Handler<RoutingContext> updateDesignHandler = new AccessHandler(jwtProvider, Factory.createUpdateDesignHandler(kafkaProducer, commandsTopic, messageSource), onAccessDenied, singletonList(ADMIN));
 
-            final Handler<RoutingContext> deleteDesignHandler = new AccessHandler(jwtProvider, Factory.createDeleteDesignHandler(kafkaProducer, eventsTopic, messageSource), onAccessDenied, singletonList(ADMIN));
+            final Handler<RoutingContext> deleteDesignHandler = new AccessHandler(jwtProvider, Factory.createDeleteDesignHandler(kafkaProducer, commandsTopic, messageSource), onAccessDenied, singletonList(ADMIN));
 
             final Handler<RoutingContext> apiV1DocsHandler = new OpenApiHandler(vertx.getDelegate(), executor, "api-v1.yaml");
 

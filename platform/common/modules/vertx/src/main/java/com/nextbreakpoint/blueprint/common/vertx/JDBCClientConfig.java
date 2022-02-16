@@ -1,6 +1,9 @@
 package com.nextbreakpoint.blueprint.common.vertx;
 
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
 
 @Data
 @Builder(access = AccessLevel.PUBLIC, setterPrefix = "with")

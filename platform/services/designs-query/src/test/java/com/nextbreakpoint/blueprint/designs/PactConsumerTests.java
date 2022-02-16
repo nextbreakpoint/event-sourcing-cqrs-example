@@ -70,6 +70,8 @@ public class PactConsumerTests {
 
         PactDslJsonBody event1 = new PactDslJsonBody()
                 .uuid("designId", uuid1)
+                .uuid("userId", TestConstants.USER_ID)
+                .stringMatcher("changeId", TestConstants.UUID6_REGEXP)
                 .stringMatcher("eventId", TestConstants.UUID1_REGEXP)
                 .numberType("revision")
                 .stringValue("data", TestConstants.JSON_1)
@@ -134,6 +136,8 @@ public class PactConsumerTests {
 
         PactDslJsonBody event2 = new PactDslJsonBody()
                 .uuid("designId", uuid1)
+                .uuid("userId", TestConstants.USER_ID)
+                .stringMatcher("changeId", TestConstants.UUID6_REGEXP)
                 .stringMatcher("eventId", TestConstants.UUID1_REGEXP)
                 .numberType("revision")
                 .stringValue("data", TestConstants.JSON_1)
@@ -209,6 +213,8 @@ public class PactConsumerTests {
 
         PactDslJsonBody event3 = new PactDslJsonBody()
                 .uuid("designId", uuid1)
+                .uuid("userId", TestConstants.USER_ID)
+                .stringMatcher("changeId", TestConstants.UUID6_REGEXP)
                 .stringMatcher("eventId", TestConstants.UUID1_REGEXP)
                 .numberType("revision")
                 .stringValue("data", TestConstants.JSON_1)
@@ -284,6 +290,8 @@ public class PactConsumerTests {
 
         PactDslJsonBody event4 = new PactDslJsonBody()
                 .uuid("designId", uuid2)
+                .uuid("userId", TestConstants.USER_ID)
+                .stringMatcher("changeId", TestConstants.UUID6_REGEXP)
                 .stringMatcher("eventId", TestConstants.UUID1_REGEXP)
                 .numberType("revision")
                 .stringValue("data", TestConstants.JSON_2)
@@ -376,6 +384,8 @@ public class PactConsumerTests {
 
         PactDslJsonBody event1 = new PactDslJsonBody()
                 .uuid("designId", uuid)
+                .uuid("userId", TestConstants.USER_ID)
+                .stringMatcher("changeId", TestConstants.UUID6_REGEXP)
                 .stringMatcher("eventId", TestConstants.UUID1_REGEXP)
                 .numberType("revision")
                 .stringValue("data", TestConstants.JSON_2)
@@ -403,6 +413,8 @@ public class PactConsumerTests {
 
         PactDslJsonBody event2 = new PactDslJsonBody()
                 .uuid("designId", uuid)
+                .uuid("userId", TestConstants.USER_ID)
+                .stringMatcher("changeId", TestConstants.UUID6_REGEXP)
                 .stringMatcher("eventId", TestConstants.UUID1_REGEXP)
                 .numberType("revision")
                 .stringValue("data", TestConstants.JSON_2)

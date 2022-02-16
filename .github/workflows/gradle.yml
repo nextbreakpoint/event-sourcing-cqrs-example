@@ -1,0 +1,33 @@
+name: Blueprint
+on:
+  push:
+    branches:
+      - master
+      - wip2
+  pull_request:
+  release:
+    types:
+      - published
+jobs:
+  build:
+    runs-on: ubuntu-18.04
+    if: github.actor == github.event.repository.owner.login
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v1
+    - name: Setup JDK 11
+      uses: actions/setup-java@v1
+      with:
+        java-version: 11
+    - name: Start Pipeline
+      run: pipeline/pipeline-start.sh
+      working-directory: platform
+    - name: Configure Nexus
+      run: pipeline/configure-nexus.sh
+      working-directory: platform
+    - name: Build Platform
+      run: pipeline/build.sh
+      working-directory: platform
+    - name: Stop Pipeline
+      run: pipeline/pipeline-stop.sh
+      working-directory: platform

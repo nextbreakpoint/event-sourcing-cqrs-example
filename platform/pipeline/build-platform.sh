@@ -1,6 +1,10 @@
-#!/bin/sh
+#!/bin/bash
 
+set -x
 set -e
+
+CMD="docker exec -it $(docker container ls -f name=pipeline-nexus-1 -q) cat /opt/sonatype/sonatype-work/nexus3/admin.password"
+until $CMD; do sleep 5; done
 
 export REPOSITORY="integration"
 export VERSION="1.0.0-$(git rev-parse --abbrev-ref HEAD)-$(git rev-parse --short HEAD)-$(date +%s)"
@@ -13,7 +17,7 @@ export PACTBROKER_PORT="9292"
 export NEXUS_HOST=localhost
 export NEXUS_PORT="38081"
 export NEXUS_USERNAME=admin
-export NEXUS_PASSWORD=password
+export NEXUS_PASSWORD=$($CMD)
 
 services=(
   designs-query
@@ -28,15 +32,15 @@ services=(
 )
 
 export MAVEN_ARGS="-q -e -Dnexus.host=${NEXUS_HOST} -Dnexus.port=${NEXUS_PORT} -Dpactbroker.host=${PACTBROKER_HOST} -Dpactbroker.port=${PACTBROKER_PORT}"
-export BUILD_ARGS="-q -e -Dnexus.host=host.docker.internal -Dnexus.port=${NEXUS_PORT} -Dpactbroker.host=host.docker.internal -Dpactbroker.port=${PACTBROKER_PORT}"
+export BUILD_ARGS="-q -e -Dnexus.host=172.17.0.1 -Dnexus.port=${NEXUS_PORT} -Dpactbroker.host=172.17.0.1 -Dpactbroker.port=${PACTBROKER_PORT}"
 
 mvn versions:set versions:commit -DnewVersion=$VERSION -Dcommon=true -Dservices=true -Dplatform=true
-
-mvn clean package -s settings.xml ${MAVEN_ARGS} -Dcommon=true -Dservices=true -Dnexus=true -DskipTests=true
 
 if [ "$BUILD" == "true" ]; then
 
 mvn clean deploy -s settings.xml ${MAVEN_ARGS} -Dcommon=true -Dservices=true -Dnexus=true
+
+mvn package -s settings.xml ${MAVEN_ARGS} -Dcommon=true -Dservices=true -Dnexus=true -DskipTests=true
 
 for service in ${services[@]}; do
   pushd services/$service

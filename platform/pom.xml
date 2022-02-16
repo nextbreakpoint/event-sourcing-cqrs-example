@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.nextbreakpoint</groupId>
     <artifactId>com.nextbreakpoint.blueprint.bom</artifactId>
-    <version>1.0.0-wip2-40869cb-1645032870</version>
+    <version>1.0.0-wip2-be6e5ec-1645045942</version>
     <packaging>pom</packaging>
     <licenses>
         <license>
@@ -69,7 +69,7 @@
         <pactbroker.host>localhost</pactbroker.host>
         <pactbroker.port>9292</pactbroker.port>
         <nexus.host>localhost</nexus.host>
-        <nexus.port>8082</nexus.port>
+        <nexus.port>38081</nexus.port>
     </properties>
     <build>
         <plugins>
@@ -147,7 +147,7 @@
                         <configuration>
                             <rules>
                                 <requireMavenVersion>
-                                    <version>3.6.*</version>
+                                    <version>3.6</version>
                                 </requireMavenVersion>
                                 <requireJavaVersion>
                                     <version>11</version>

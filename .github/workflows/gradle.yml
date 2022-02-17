@@ -25,7 +25,7 @@ jobs:
     - name: Configure Nexus
       run: pipeline/configure-nexus.sh
       working-directory: platform
-    - name: Build Image
+    - name: Build Images
       run: pipeline/build-images.sh
       working-directory: platform
     - name: Build Platform

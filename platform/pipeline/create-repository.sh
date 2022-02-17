@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 export NEXUS_HOST=localhost
 export NEXUS_PORT=38081
 export NEXUS_USERNAME=admin

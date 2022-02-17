@@ -1,6 +1,5 @@
 #!/bin/bash
 
-set -x
 set -e
 
 sudo apt-get update -y && sudo apt-get install -y ca-certificates curl gnupg lsb-release openjdk-11-jdk maven

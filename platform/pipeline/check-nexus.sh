@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 declare -i n=1
 
 delay=5

@@ -24,11 +24,17 @@ jobs:
         check-latest: true
     - name: List JDKs
       run: ls /usr/lib/jvm
+    - name: Copy Toolchains
+      run: cp toolchains.xml ~/.m2/toolchains.xml
+      working-directory: platform
     - name: Start Pipeline
       run: pipeline/pipeline-start.sh
       working-directory: platform
     - name: Configure Nexus
       run: pipeline/configure-nexus.sh
+      working-directory: platform
+    - name: Create Secrets
+      run: pipeline/create-secrets.sh
       working-directory: platform
     - name: Build Images
       run: pipeline/build-images.sh

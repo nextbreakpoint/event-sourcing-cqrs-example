@@ -20,6 +20,8 @@ public class TestScenario {
   private final String nexusHost = TestUtils.getVariable("NEXUS_HOST", System.getProperty("nexus.host", "localhost"));
   private final String nexusPort = TestUtils.getVariable("NEXUS_PORT", System.getProperty("nexus.port", "8081"));
   private final boolean buildImages = TestUtils.getVariable("BUILD_IMAGES", System.getProperty("build.images", "false")).equals("true");
+  private final boolean useContainers = TestUtils.getVariable("USE_CONTAINERS", System.getProperty("use.containers", "true")).equals("true");
+  private final String dockerHost = TestUtils.getVariable("DOCKER_HOST", System.getProperty("docker.host", "host.docker.internal"));
 
   private Network network = Network.builder().driver("bridge").build();
 
@@ -30,9 +32,9 @@ public class TestScenario {
           .withEnv("ADMIN_EMAIL", "admin@localhost")
           .withEnv("GITHUB_CLIENT_ID", "111")
           .withEnv("GITHUB_CLIENT_SECRET", "222")
-          .withEnv("ACCOUNTS_URL", "http://host.docker.internal:39001")
-          .withEnv("GITHUB_API_URL", "http://host.docker.internal:39002")
-          .withEnv("GITHUB_OAUTH_URL", "http://host.docker.internal:39002")
+          .withEnv("ACCOUNTS_URL", "http://" + dockerHost + ":39001")
+          .withEnv("GITHUB_API_URL", "http://" + dockerHost + ":39002")
+          .withEnv("GITHUB_OAUTH_URL", "http://" + dockerHost + ":39002")
           .withFileSystemBind("../../secrets/truststore_client.jks", "/secrets/truststore_client.jks", BindMode.READ_ONLY)
           .withFileSystemBind("../../secrets/keystore_client.jks", "/secrets/keystore_client.jks", BindMode.READ_ONLY)
           .withFileSystemBind("../../secrets/keystore_server.jks", "/secrets/keystore_server.jks", BindMode.READ_ONLY)
@@ -48,14 +50,26 @@ public class TestScenario {
       BuildUtils.of(nexusHost, nexusPort, serviceName, version).buildDockerImage();
     }
 
-    service.start();
+    if (useContainers) {
+      service.start();
 
-    System.out.println("Debug port: " + service.getMappedPort(DEBUG_PORT));
-    System.out.println("Http port: " + service.getMappedPort(HTTP_PORT));
+      System.out.println("Debug port: " + service.getMappedPort(DEBUG_PORT));
+      System.out.println("Http port: " + service.getMappedPort(HTTP_PORT));
+    }
   }
 
   public void after() {
-    service.stop();
+    if (useContainers) {
+      service.stop();
+    }
+  }
+
+  private String getHost(GenericContainer container) {
+    return useContainers ? container.getHost() : "localhost";
+  }
+
+  private int getPort(GenericContainer container, int port) {
+    return useContainers ? container.getMappedPort(port) : port;
   }
 
   public String getVersion() {
@@ -63,11 +77,11 @@ public class TestScenario {
   }
 
   public String getServiceHost() {
-    return service.getHost();
+    return getHost(service);
   }
 
   public Integer getServicePort() {
-    return service.getMappedPort(HTTP_PORT);
+    return getPort(service, HTTP_PORT);
   }
 
   public String makeAuthorization(String user, String role) {

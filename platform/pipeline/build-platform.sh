@@ -3,13 +3,12 @@
 set -x
 set -e
 
-CMD="docker exec -it $(docker container ls -f name=pipeline-nexus-1 -q) cat /opt/sonatype/sonatype-work/nexus3/admin.password"
-until $CMD; do sleep 5; done
-
 export REPOSITORY="integration"
 export VERSION="1.0.0-$(git rev-parse --abbrev-ref HEAD)-$(git rev-parse --short HEAD)-$(date +%s)"
 export BUILD="true"
 export TEST="true"
+
+export TEST_DOCKER_HOST="172.17.0.1"
 
 export PACTBROKER_HOST=localhost
 export PACTBROKER_PORT="9292"
@@ -17,7 +16,7 @@ export PACTBROKER_PORT="9292"
 export NEXUS_HOST=localhost
 export NEXUS_PORT="38081"
 export NEXUS_USERNAME=admin
-export NEXUS_PASSWORD=$($CMD)
+export NEXUS_PASSWORD=$(./pipeline/get-nexus-password.sh)
 
 services=(
   designs-query
@@ -32,7 +31,7 @@ services=(
 )
 
 export MAVEN_ARGS="-q -e -Dnexus.host=${NEXUS_HOST} -Dnexus.port=${NEXUS_PORT} -Dpactbroker.host=${PACTBROKER_HOST} -Dpactbroker.port=${PACTBROKER_PORT}"
-export BUILD_ARGS="-q -e -Dnexus.host=172.17.0.1 -Dnexus.port=${NEXUS_PORT} -Dpactbroker.host=172.17.0.1 -Dpactbroker.port=${PACTBROKER_PORT}"
+export BUILD_ARGS="-q -e -Dnexus.host=${TEST_DOCKER_HOST} -Dnexus.port=${NEXUS_PORT} -Dpactbroker.host=${TEST_DOCKER_HOST} -Dpactbroker.port=${PACTBROKER_PORT}"
 
 mvn versions:set versions:commit -DnewVersion=$VERSION -Dcommon=true -Dservices=true -Dplatform=true
 
@@ -40,7 +39,7 @@ if [ "$BUILD" == "true" ]; then
 
 mvn clean deploy -s settings.xml ${MAVEN_ARGS} -Dcommon=true -Dservices=true -Dnexus=true
 
-mvn package -s settings.xml ${MAVEN_ARGS} -Dcommon=true -Dservices=true -Dnexus=true -DskipTests=true
+#mvn package -s settings.xml ${MAVEN_ARGS} -Dcommon=true -Dservices=true -Dnexus=true -DskipTests=true
 
 for service in ${services[@]}; do
   pushd services/$service
@@ -56,19 +55,19 @@ if [ "$TEST" == "true" ]; then
 
 for service in ${services[@]}; do
   pushd services/$service
-   JAEGER_SERVICE_NAME=$service mvn clean verify -Dgroups=integration
+   JAEGER_SERVICE_NAME=$service mvn clean verify -Dgroups=integration -Ddocker.host=${TEST_DOCKER_HOST}
   popd
 done
 
 for service in ${services[@]}; do
   pushd services/$service
-   JAEGER_SERVICE_NAME=$service mvn clean verify -Dgroups=pact
+   JAEGER_SERVICE_NAME=$service mvn clean verify -Dgroups=pact -Ddocker.host=${TEST_DOCKER_HOST}
   popd
 done
 
 for service in ${services[@]}; do
   pushd services/$service
-   JAEGER_SERVICE_NAME=$service mvn clean verify -Dgroups=pact-verify
+   JAEGER_SERVICE_NAME=$service mvn clean verify -Dgroups=pact-verify -Ddocker.host=${TEST_DOCKER_HOST}
   popd
 done
 

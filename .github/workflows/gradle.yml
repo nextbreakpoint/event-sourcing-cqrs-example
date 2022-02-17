@@ -25,8 +25,11 @@ jobs:
     - name: Configure Nexus
       run: pipeline/configure-nexus.sh
       working-directory: platform
+    - name: Build Image
+      run: pipeline/build-images.sh
+      working-directory: platform
     - name: Build Platform
-      run: pipeline/build.sh
+      run: pipeline/build-platform.sh
       working-directory: platform
     - name: Stop Pipeline
       run: pipeline/pipeline-stop.sh

@@ -21,6 +21,8 @@ public class TestScenario {
   private final String nexusHost = TestUtils.getVariable("NEXUS_HOST", System.getProperty("nexus.host", "localhost"));
   private final String nexusPort = TestUtils.getVariable("NEXUS_PORT", System.getProperty("nexus.port", "8081"));
   private final boolean buildImages = TestUtils.getVariable("BUILD_IMAGES", System.getProperty("build.images", "false")).equals("true");
+  private final boolean useContainers = TestUtils.getVariable("USE_CONTAINERS", System.getProperty("use.containers", "true")).equals("true");
+  private final String dockerHost = TestUtils.getVariable("DOCKER_HOST", System.getProperty("docker.host", "host.docker.internal"));
 
   private Network network = Network.builder().driver("bridge").build();
 
@@ -49,16 +51,28 @@ public class TestScenario {
       BuildUtils.of(nexusHost, nexusPort, serviceName, version).buildDockerImage();
     }
 
-    mysql.start();
-    service.start();
+    if (useContainers) {
+      mysql.start();
+      service.start();
 
-    System.out.println("Debug port: " + service.getMappedPort(DEBUG_PORT));
-    System.out.println("Http port: " + service.getMappedPort(HTTP_PORT));
+      System.out.println("Debug port: " + service.getMappedPort(DEBUG_PORT));
+      System.out.println("Http port: " + service.getMappedPort(HTTP_PORT));
+    }
   }
 
   public void after() {
-    service.stop();
-    mysql.stop();
+    if (useContainers) {
+      service.stop();
+      mysql.stop();
+    }
+  }
+
+  private String getHost(GenericContainer container) {
+    return useContainers ? container.getHost() : "localhost";
+  }
+
+  private int getPort(GenericContainer container, int port) {
+    return useContainers ? container.getMappedPort(port) : port;
   }
 
   public String getVersion() {
@@ -66,19 +80,19 @@ public class TestScenario {
   }
 
   public String getServiceHost() {
-    return service.getHost();
+    return getHost(service);
   }
 
   public Integer getServicePort() {
-    return service.getMappedPort(HTTP_PORT);
+    return getPort(service, HTTP_PORT);
   }
 
   public String getMySQLHost() {
-    return mysql.getHost();
+    return getHost(mysql);
   }
 
   public Integer getMySQLPort() {
-    return mysql.getMappedPort(3306);
+    return getPort(mysql, 3306);
   }
 
   public String makeAuthorization(String user, String role) {

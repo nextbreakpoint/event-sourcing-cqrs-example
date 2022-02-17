@@ -3,6 +3,8 @@
 set -x
 set -e
 
+cp toolchains.xml ~/.m2/toolchains.xml
+
 export REPOSITORY="integration"
 export VERSION="1.0.0-$(git rev-parse --abbrev-ref HEAD)-$(git rev-parse --short HEAD)-$(date +%s)"
 export BUILD="true"

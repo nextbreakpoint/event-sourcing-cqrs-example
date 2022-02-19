@@ -19,6 +19,7 @@ module com.nextbreakpoint.blueprint.designs.query {
     requires com.fasterxml.jackson.datatype.jsr310;
     requires org.apache.logging.log4j;
     requires com.datastax.oss.driver.core;
+    requires jakarta.json;
     requires java.sql;
     requires java.desktop;
     requires jdk.compiler;

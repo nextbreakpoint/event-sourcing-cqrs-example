@@ -7,7 +7,7 @@ export VERSION="1.0.0-$(git rev-parse --abbrev-ref HEAD)-$(git rev-parse --short
 export BUILD="true"
 export TEST="true"
 
-export TEST_DOCKER_HOST=localhost
+export TEST_DOCKER_HOST=host.docker.internal
 
 export PACTBROKER_HOST=localhost
 export PACTBROKER_PORT="9292"

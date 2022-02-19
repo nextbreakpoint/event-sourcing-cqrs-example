@@ -38,7 +38,7 @@ public interface TestConstants {
     String UUID1_REGEXP = "[0-9a-f]{8}-[0-9a-f]{4}-[1][0-9a-f]{3}-[0-9a-f]{4}-[0-9a-f]{12}";
     String UUID6_REGEXP = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
 
-    String DESIGNS_INDEX_NAME = "test_designs_query_events";
+    String DESIGNS_INDEX_NAME = "test_designs_query";
 
     UUID USER_ID = new UUID(0L, 1L);
 }

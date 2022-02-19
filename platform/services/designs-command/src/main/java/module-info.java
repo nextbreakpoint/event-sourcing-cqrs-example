@@ -11,6 +11,7 @@ module com.nextbreakpoint.blueprint.designs.command {
     requires com.datastax.oss.driver.core;
     requires vertx.rx.java;
     requires rxjava;
+    requires java.sql;
     requires com.fasterxml.jackson.core;
     requires com.fasterxml.jackson.databind;
     requires org.apache.logging.log4j;

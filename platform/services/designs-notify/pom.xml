@@ -10,7 +10,7 @@
     <parent>
         <groupId>com.nextbreakpoint</groupId>
         <artifactId>com.nextbreakpoint.blueprint.service</artifactId>
-        <version>1.0.0-wip2-138c3ab-1645112949</version>
+        <version>1.0.0-wip2-3879601-1645172599</version>
     </parent>
     <repositories>
         <repository>
@@ -81,7 +81,7 @@
                         <argument>--module-path</argument>
                         <modulepath/>
                         <argument>--module</argument>
-                        <argument>com.nextbreakpoint.blueprint.designsnotificationdispatcher/com.nextbreakpoint.blueprint.designs.Verticle</argument>
+                        <argument>com.nextbreakpoint.blueprint.designs.notify/com.nextbreakpoint.blueprint.designs.Verticle</argument>
                     </arguments>
                 </configuration>
                 <executions>

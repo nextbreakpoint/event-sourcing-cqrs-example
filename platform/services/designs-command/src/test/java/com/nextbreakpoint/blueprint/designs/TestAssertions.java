@@ -35,7 +35,7 @@ public class TestAssertions {
         assertThat(actualEvent.getUserId()).isEqualTo(TestConstants.USER_ID);
         assertThat(actualEvent.getChangeId()).isNotNull();
         assertThat(actualEvent.getDesignId()).isEqualTo(UUID.fromString(designId));
-        assertThat(actualEvent.getLevels()).isEqualTo(8);
+        assertThat(actualEvent.getLevels()).isEqualTo(3);
         assertThat(actualEvent.getData()).isNotNull();
         Design decodedDesign = Json.decodeValue(actualEvent.getData(), Design.class);
         assertThat(decodedDesign.getManifest()).isEqualTo(TestConstants.MANIFEST);
@@ -60,7 +60,7 @@ public class TestAssertions {
         assertThat(actualEvent.getUserId()).isEqualTo(TestConstants.USER_ID);
         assertThat(actualEvent.getChangeId()).isNotNull();
         assertThat(actualEvent.getDesignId()).isEqualTo(UUID.fromString(designId));
-        assertThat(actualEvent.getLevels()).isEqualTo(8);
+        assertThat(actualEvent.getLevels()).isEqualTo(3);
         assertThat(actualEvent.getData()).isNotNull();
         Design decodedDesign = Json.decodeValue(actualEvent.getData(), Design.class);
         assertThat(decodedDesign.getManifest()).isEqualTo(TestConstants.MANIFEST);

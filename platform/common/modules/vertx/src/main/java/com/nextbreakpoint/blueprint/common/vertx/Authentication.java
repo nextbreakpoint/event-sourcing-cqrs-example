@@ -38,16 +38,12 @@ public class Authentication {
     }
 
     public static String makeAnonymousAuthorization(JWTAuth jwtProvider) {
-        return generateToken(jwtProvider, NULL_USER_UUID, Arrays.asList(Authority.ANONYMOUS));
+        return generateToken(jwtProvider, NULL_USER_UUID, List.of(Authority.ANONYMOUS));
     }
 
     public static String generateToken(JWTAuth jwtProvider, String userUuid, List<String> authorities) {
         logger.debug("Generate new JWT token for user " + userUuid);
         return jwtProvider.generateToken(makeUserObject(userUuid), makeJWTOptions(authorities));
-    }
-
-    public static JsonObject makeUserObject(String userUuid) {
-        return new JsonObject().put("user", userUuid);
     }
 
     public static Single<User> isUserAuthorized(JWTAuth jwtProvider, RoutingContext routingContext, List<String> roles) {
@@ -61,17 +57,26 @@ public class Authentication {
                 .setMaxAge(COOKIE_MAX_AGE);
     }
 
-    public static Optional<String> hasRole(User user, List<String> roles) {
+    private static Single<User> userHasRole(List<String> roles, User user) {
+        return hasRole(user, roles).map(role -> Single.just(user))
+                .orElseGet(() -> Single.error(Failure.accessDenied("User doesn't have required role")));
+    }
+
+    private static JsonObject makeUserObject(String userUuid) {
+        return new JsonObject().put("user", userUuid);
+    }
+
+    private static Optional<String> hasRole(User user, List<String> roles) {
         return roles.stream().filter(role -> user.rxIsAuthorized(role).toBlocking().value()).findFirst();
     }
 
-    public static Single<User> getUser(JWTAuth jwtProvider, RoutingContext routingContext) {
+    private static Single<User> getUser(JWTAuth jwtProvider, RoutingContext routingContext) {
         return fromCallable(() -> getToken(routingContext))
                 .flatMap(authorization -> makeAuthInfo(jwtProvider, authorization))
                 .flatMap(jwtProvider::rxAuthenticate);
     }
 
-    public static String getToken(RoutingContext routingContext) {
+    private static String getToken(RoutingContext routingContext) {
         final String authorization = routingContext.request().getHeader(Headers.AUTHORIZATION);
         if (authorization != null && authorization.startsWith("Bearer ")) {
             logger.debug("Authorisation header is present");
@@ -85,11 +90,6 @@ public class Authentication {
         }
         logger.debug("Authorisation header and token cookie not present");
         return null;
-    }
-
-    protected static Single<User> userHasRole(List<String> roles, User user) {
-        return hasRole(user, roles).map(role -> Single.just(user))
-                .orElseGet(() -> Single.error(Failure.accessDenied("User doesn't have required role")));
     }
 
     private static JWTOptions makeJWTOptions(List<String> authorities) {

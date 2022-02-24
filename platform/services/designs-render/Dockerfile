@@ -14,6 +14,7 @@ RUN mvn clean verify -s settings.xml -t toolchains.xml $maven_args -DexcludedGro
 #COPY --from=native-image designs-render /designs-render
 FROM openjdk:11-jdk
 COPY --from=build /src/target/libs/* /libs/
+COPY --from=build /src/target/libs/com.nextbreakpoint.nextfractal.* /modules/
 RUN rm /libs/jffi-*-native.jar
 COPY --from=build /src/target/service.jar /libs/
 COPY entrypoint.sh /entrypoint.sh

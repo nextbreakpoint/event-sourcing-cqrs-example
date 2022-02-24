@@ -2,8 +2,8 @@ module com.nextbreakpoint.blueprint.designs.render {
     requires com.nextbreakpoint.blueprint.common.core;
     requires com.nextbreakpoint.blueprint.common.events;
     requires com.nextbreakpoint.blueprint.common.vertx;
-    requires transitive com.nextbreakpoint.nextfractal.core;
-    requires transitive com.nextbreakpoint.nextfractal.mandelbrot;
+    requires com.nextbreakpoint.nextfractal.core;
+    requires com.nextbreakpoint.nextfractal.mandelbrot;
     requires io.vertx.core;
     requires io.vertx.web;
     requires io.vertx.web.openapi;

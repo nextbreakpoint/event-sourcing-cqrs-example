@@ -27,7 +27,7 @@ Create Maven repository:
 
 Build platform:
 
-    ./scripts/build.sh 
+    ./scripts/build-platform.sh 
 
 Stop pipeline (when finished):
 
@@ -56,7 +56,7 @@ Start platform:
 
 Open browser:
 
-    open https://localhost:8080/designs/designs.html
+    open https://localhost:8080/browse/designs.html
 
 Stop platform (when finished):
 

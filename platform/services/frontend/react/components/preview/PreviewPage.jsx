@@ -76,7 +76,7 @@ let PreviewPage = class PreviewPage extends React.Component {
         let script = this.state.script ? this.state.script : this.props.design.script
         let metadata = this.state.metadata ? this.state.metadata : this.props.design.metadata
 
-        const design = { manifest: this.props.design.manifest, script: script, metadata: metadata }
+        const design = { manifest: this.props.design.manifest, script: script, metadata: metadata, levels: 8 }
 
         component.props.handleHideUpdateDialog()
         component.props.handleHideErrorMessage()

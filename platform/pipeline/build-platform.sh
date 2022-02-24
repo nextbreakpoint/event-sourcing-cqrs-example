@@ -4,6 +4,7 @@ set -e
 
 export REPOSITORY="integration"
 export VERSION="1.0.0-$(git rev-parse --abbrev-ref HEAD)-$(git rev-parse --short HEAD)-$(date +%s)"
+export DEPLOY="true"
 export BUILD="true"
 export TEST="true"
 
@@ -34,9 +35,11 @@ export BUILD_ARGS="-q -e -Dnexus.host=${TEST_DOCKER_HOST} -Dnexus.port=${NEXUS_P
 
 mvn versions:set versions:commit -q -e -DnewVersion=$VERSION -Dcommon=true -Dservices=true -Dplatform=true
 
-if [ "$BUILD" == "true" ]; then
+if [ "$DEPLOY" == "true" ]; then
+  mvn clean deploy -s settings.xml ${MAVEN_ARGS} -Dcommon=true -Dservices=true -Dnexus=true
+fi
 
-mvn clean deploy -q -e -s settings.xml ${MAVEN_ARGS} -Dcommon=true -Dservices=true -Dnexus=true
+if [ "$BUILD" == "true" ]; then
 
 #mvn package -q -e -s settings.xml ${MAVEN_ARGS} -Dcommon=true -Dservices=true -Dnexus=true -DskipTests=true
 

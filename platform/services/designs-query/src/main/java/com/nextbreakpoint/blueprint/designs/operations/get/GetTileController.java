@@ -11,6 +11,7 @@ import rx.Single;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 
 import java.util.Objects;
+import java.util.Optional;
 
 public class GetTileController implements Controller<GetTileRequest, GetTileResponse> {
     private Store store;
@@ -30,18 +31,18 @@ public class GetTileController implements Controller<GetTileRequest, GetTileResp
 
     private Single<GetTileResponse> getImage(GetTileRequest request, Design document) {
         return s3Driver.getObject(getBucketKey(request, document.getChecksum()))
-                .onErrorReturn(this::handleError)
-                .map(data -> new GetTileResponse(new Image(data, document.getChecksum())));
+                .onErrorReturn(null)
+                .map(data -> getImage(document, data));
+    }
+
+    private GetTileResponse getImage(Design document, byte[] data) {
+        return Optional.ofNullable(data)
+                .map(bytes -> new Image(bytes, document.getChecksum()))
+                .map(GetTileResponse::new)
+                .orElseGet(() -> new GetTileResponse(null));
     }
 
     private String getBucketKey(GetTileRequest request, String checksum) {
         return String.format("%s/%d/%04d%04d.png", checksum, request.getLevel(), request.getRow(), request.getCol());
-    }
-
-    private byte[] handleError(Throwable err) {
-        if (err.getCause() != null && err.getCause() instanceof NoSuchKeyException) {
-            return null;
-        }
-        throw new RuntimeException(err);
     }
 }

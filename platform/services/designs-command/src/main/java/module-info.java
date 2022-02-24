@@ -3,6 +3,8 @@ module com.nextbreakpoint.blueprint.designs.command {
     requires com.nextbreakpoint.blueprint.common.vertx;
     requires com.nextbreakpoint.blueprint.common.events;
     requires com.nextbreakpoint.blueprint.common.commands;
+    requires com.nextbreakpoint.nextfractal.core;
+    requires com.nextbreakpoint.nextfractal.mandelbrot;
     requires io.vertx.core;
     requires io.vertx.web;
     requires io.vertx.web.openapi;

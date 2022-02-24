@@ -12,4 +12,5 @@ java \
     --add-opens java.base/sun.nio.ch=ALL-UNNAMED \
     --add-opens java.base/sun.net.dns=ALL-UNNAMED \
     -Dvertx.logger-delegate-factory-class-name=io.vertx.core.logging.SLF4JLogDelegateFactory \
+    -Dnextfractal.module.path=/modules \
     $DEBUG_OPTS com.nextbreakpoint.blueprint.designs.Verticle $@

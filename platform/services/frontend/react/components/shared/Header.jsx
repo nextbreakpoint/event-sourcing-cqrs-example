@@ -35,7 +35,7 @@ let Header = class Header extends React.Component {
     }
 
     handleNavigateContentDesigns = () => {
-        window.location = this.props.config.web_url + "/content/designs.html"
+        window.location = this.props.config.web_url + "/browse/designs.html"
     }
 
     handleNavigateAdminDesigns = () => {

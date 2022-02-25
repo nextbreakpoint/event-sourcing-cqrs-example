@@ -54,13 +54,18 @@ footer p {
     margin: 0;
 }
 
-.elements {
-    display: inline-block;
+.elements-grid {
+    display: block;
     position: relative;
     text-align: center;
     font-size: 0;
     width: 100%;
     z-index: 5;
+    overflow: hidden;
+}
+
+.elements-row {
+    display: block;
 }
 
 .element {

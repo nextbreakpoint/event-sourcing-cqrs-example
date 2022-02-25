@@ -5,7 +5,7 @@ import { withStyles } from '@material-ui/core/styles'
 
 let Footer = class Footer extends React.Component {
     render() {
-        return <footer><span>Powered by NextBreakpoint</span></footer>
+        return <footer><span>Powered by <a href="https://nextbreakpoint.com">NextBreakpoint</a></span></footer>
     }
 }
 

@@ -7,6 +7,7 @@ import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
+import Link from '@material-ui/core/Link';
 import IconButton from '@material-ui/core/IconButton';
 import Menu from '@material-ui/core/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
@@ -61,34 +62,15 @@ let Header = class Header extends React.Component {
     }
 
     render() {
-        const { classes, title } = this.props
+        const { classes, titleLink, titleText, titleText2, browseLink, browseText } = this.props
         const { anchorEl } = this.state
         const open = Boolean(anchorEl)
 
         return (
             <AppBar position="static">
                 <Toolbar>
-                  <IconButton className={classes.menuButton} color="inherit" aria-label="Menu">
-                    <MenuIcon onClick={this.handleMenu}/>
-                  </IconButton>
-                  <Menu
-                    id="menu-appbar"
-                    anchorEl={anchorEl}
-                    anchorOrigin={{
-                      vertical: 'top',
-                      horizontal: 'right',
-                    }}
-                    transformOrigin={{
-                      vertical: 'top',
-                      horizontal: 'right',
-                    }}
-                    open={open}
-                    onClose={this.handleClose}
-                  >
-                    <MenuItem onClick={this.handleNavigateContentDesigns}>Browse</MenuItem>
-                    <MenuItem onClick={this.handleNavigateAdminDesigns}>Admin</MenuItem>
-                  </Menu>
-                  <Typography variant="title" color="inherit" className={classes.grow}>{title}</Typography>
+                  <Typography variant="title" color="inherit" className={classes.grow}>{browseLink != null && <span><Link href={browseLink}>{browseText}</Link></span>}</Typography>
+                  <Typography variant="title" color="inherit" className={classes.grow}>{titleLink != null && <span><Link href={titleLink}>{titleText}</Link>{titleText2 != null && <span> | {titleText2}</span>}</span>}{titleLink == null && <span>{titleText}{titleText2 != null && <span> | {titleText2}</span>}</span>}</Typography>
                   {this.props.account.role == 'anonymous' && <Button color="inherit" onClick={this.handleLogin}>Login</Button>}
                   {this.props.account.role != 'anonymous' && <Button color="inherit" onClick={this.handleLogout}>Logout</Button>}
                 </Toolbar>
@@ -96,6 +78,28 @@ let Header = class Header extends React.Component {
         )
     }
 }
+
+//                   <IconButton className={classes.menuButton} color="inherit" aria-label="Menu">
+//                     <MenuIcon onClick={this.handleMenu}/>
+//                   </IconButton>
+//                   <Menu
+//                     id="menu-appbar"
+//                     anchorEl={anchorEl}
+//                     anchorOrigin={{
+//                       vertical: 'top',
+//                       horizontal: 'right',
+//                     }}
+//                     transformOrigin={{
+//                       vertical: 'top',
+//                       horizontal: 'right',
+//                     }}
+//                     open={open}
+//                     onClose={this.handleClose}
+//                   >
+//                     <MenuItem onClick={this.handleNavigateContentDesigns}>Browse</MenuItem>
+//                     <MenuItem onClick={this.handleNavigateAdminDesigns}>Admin</MenuItem>
+//                   </Menu>
+
 
 const styles = theme => ({
   root: {
@@ -114,7 +118,11 @@ const styles = theme => ({
 
 Header.propTypes = {
     landing: PropTypes.string.isRequired,
-    title: PropTypes.string.isRequired,
+    titleLink: PropTypes.string.isRequired,
+    titleText: PropTypes.string.isRequired,
+    titleText2: PropTypes.string.isRequired,
+    browseLink: PropTypes.string.isRequired,
+    browseText: PropTypes.string.isRequired,
     classes: PropTypes.object.isRequired,
     theme: PropTypes.object.isRequired
 }

@@ -1,17 +1,20 @@
 body {
-    font-size: 14pt;
+    font-family: "Roboto";
     color: #080808;
 }
 
 header {
+    font-size: 1.8em;
+    padding: 10px;
 }
 
 footer {
+    font-size: 1.6em;
     padding: 24px;
-    text-align: right;
+    text-align: center;
 }
 
-.preview-container {
+.container {
     display: inline-block;
     position: relative;
     text-align: center;
@@ -34,6 +37,17 @@ footer {
 
 a, a:active, a:hover, a:visited {
     color: #222222;
+    text-decoration: none;
+}
+
+header a, header a:active, header a:hover, header a:visited {
+    color: #FFFFFF;
+    text-decoration: underline;
+}
+
+footer a, footer a:active, footer a:hover, footer a:visited {
+    color: #222222;
+    text-decoration: underline;
 }
 
 .leaflet-container {

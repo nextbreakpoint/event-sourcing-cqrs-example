@@ -114,7 +114,7 @@ let PreviewPage = class PreviewPage extends React.Component {
     }
 
     renderMapLayer = (url) => {
-        return <TileLayer url={url} attribution='&copy; Andrea Medeghini' detectRetina={true} bounds={[[-180, -180],[180, 180]]} noWrap={true} minZoom={1} maxZoom={7} tileSize={256} updateWhenIdle={true} updateWhenZooming={false} updateInterval={500} keepBuffer={2}/>
+        return <TileLayer url={url} detectRetina={true} bounds={[[-180, -180],[180, 180]]} noWrap={true} minZoom={1} maxZoom={2} tileSize={256} updateWhenIdle={true} updateWhenZooming={false} updateInterval={500} keepBuffer={2}/>
     }
 
     render() {
@@ -125,11 +125,11 @@ let PreviewPage = class PreviewPage extends React.Component {
                 <CssBaseline />
                 <Grid container justify="space-between" alignItems="center">
                     <Grid item xs={12}>
-                        <Header landing={'/admin/designs/' + this.props.uuid + '.html'} title={'Design | ' + this.props.uuid}/>
+                        <Header landing={'/admin/designs/' + this.props.uuid + '.html'} titleLink={"/admin/designs.html"} titleText={"Designs"} titleText2={this.props.uuid} browseLink={"/browse/designs/" + this.props.uuid + ".html"} browseText={"The Beauty of Chaos"}/>
                     </Grid>
                     <Grid item xs={12}>
-                        <div className="preview-container">
-                            <Map center={[0, 0]} zoom={2} className="preview">
+                        <div className="container">
+                            <Map center={[0, 0]} zoom={2} className="preview" attributionControl={false} dragging={false} zoomControl={false} scrollWheelZoom={false} touchZoom={false}>
                                 {this.renderMapLayer(url)}
                             </Map>
                         </div>
@@ -138,13 +138,6 @@ let PreviewPage = class PreviewPage extends React.Component {
                         <Footer/>
                     </Grid>
                 </Grid>
-                {this.props.account.role == 'admin' && (
-                    <div className={this.props.classes.fabcontainer}>
-                        <Button variant="fab" className={this.props.classes.fab} color="primary" onClick={this.props.handleShowUpdateDialog}>
-                            <EditIcon />
-                        </Button>
-                    </div>
-                )}
                 {this.props.account.role == 'admin' && (
                     <Dialog className={this.props.classes.dialog} open={this.props.show_update_design} onClose={this.props.handleHideUpdateDialog} scroll={"paper"} TransitionComponent={SlideTransition}>
                         <DialogTitle>Update Design</DialogTitle>
@@ -249,3 +242,11 @@ const mapDispatchToProps = dispatch => ({
 })
 
 export default withStyles(styles, { withTheme: true })(connect(mapStateToProps, mapDispatchToProps)(PreviewPage))
+
+{/*                 {this.props.account.role == 'admin' && ( */}
+{/*                     <div className={this.props.classes.fabcontainer}> */}
+{/*                         <Button variant="fab" className={this.props.classes.fab} color="primary" onClick={this.props.handleShowUpdateDialog}> */}
+{/*                             <EditIcon /> */}
+{/*                         </Button> */}
+{/*                     </div> */}
+{/*                 )} */}

@@ -196,7 +196,7 @@ let DesignsPage = class DesignsPage extends React.Component {
                 <CssBaseline />
                 <Grid container justify="space-between" alignItems="center">
                     <Grid item xs={12}>
-                        <Header landing={'/admin/designs.html'} title={"Designs"}/>
+                        <Header landing={'/admin/designs.html'} titleText={"Designs"} browseLink={"/browse/designs.html"} browseText={"The Beauty of Chaos"}/>
                     </Grid>
                     <Grid item xs={12}>
                         <DesignsTable/>
@@ -205,19 +205,6 @@ let DesignsPage = class DesignsPage extends React.Component {
                         <Footer/>
                     </Grid>
                 </Grid>
-                {this.props.account.role == 'admin' && (
-                    <div className={this.props.classes.fabcontainer}>
-                        <Button variant="fab" className={this.props.classes.fab} color="primary" onClick={this.props.handleShowCreateDialog}>
-                            <AddIcon />
-                        </Button>
-                        <Button variant="fab" className={this.props.classes.fab} color="secondary" onClick={this.handleModify} disabled={this.props.selected.length != 1}>
-                            <EditIcon />
-                        </Button>
-                        <Button variant="fab" className={this.props.classes.fab} color="inherit" onClick={this.props.handleShowConfirmDelete} disabled={this.props.selected.length == 0}>
-                            <DeleteIcon />
-                        </Button>
-                    </div>
-                )}
                 {this.props.account.role == 'admin' && (
                     <Dialog className={this.props.classes.dialog} open={this.props.show_create_design} onClose={this.props.handleHideCreateDialog} scroll={"paper"} TransitionComponent={SlideTransition}>
                         <DialogTitle>Create New Design</DialogTitle>
@@ -351,3 +338,16 @@ const mapDispatchToProps = dispatch => ({
 
 export default withStyles(styles, { withTheme: true })(connect(mapStateToProps, mapDispatchToProps)(DesignsPage))
 
+{/*                 {this.props.account.role == 'admin' && ( */}
+{/*                     <div className={this.props.classes.fabcontainer}> */}
+{/*                         <Button variant="fab" className={this.props.classes.fab} color="primary" onClick={this.props.handleShowCreateDialog}> */}
+{/*                             <AddIcon /> */}
+{/*                         </Button> */}
+{/*                         <Button variant="fab" className={this.props.classes.fab} color="secondary" onClick={this.handleModify} disabled={this.props.selected.length != 1}> */}
+{/*                             <EditIcon /> */}
+{/*                         </Button> */}
+{/*                         <Button variant="fab" className={this.props.classes.fab} color="inherit" onClick={this.props.handleShowConfirmDelete} disabled={this.props.selected.length == 0}> */}
+{/*                             <DeleteIcon /> */}
+{/*                         </Button> */}
+{/*                     </div> */}
+{/*                 )} */}

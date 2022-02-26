@@ -7,7 +7,7 @@
     <parent>
         <artifactId>com.nextbreakpoint.blueprint.common</artifactId>
         <groupId>com.nextbreakpoint</groupId>
-        <version>1.0.0-wip2-e43b011-1645878458</version>
+        <version>1.0.0-wip2-4afdb01-1645873611</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
     <dependencies>
@@ -37,4 +37,16 @@
             <scope>provided</scope>
         </dependency>
     </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>versions-maven-plugin</artifactId>
+                <version>${versions-maven-plugin.version}</version>
+                <configuration>
+                    <rulesUri>file://${project.basedir}/../../maven-version-rules.xml</rulesUri>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>

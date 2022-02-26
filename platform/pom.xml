@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.nextbreakpoint</groupId>
     <artifactId>com.nextbreakpoint.blueprint.bom</artifactId>
-    <version>1.0.0-wip2-4afdb01-1645877558</version>
+    <version>1.0.0-wip2-e43b011-1645878458</version>
     <packaging>pom</packaging>
     <licenses>
         <license>
@@ -21,38 +21,38 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <nextfractal.version>2.1.4</nextfractal.version>
-        <vertx.version>4.0.3</vertx.version>
-        <jackson.version>2.12.2</jackson.version>
+        <vertx.version>4.2.5</vertx.version>
+        <jackson.version>2.13.1</jackson.version>
         <activation.version>1.1.1</activation.version>
-        <jaxb-api.version>2.3.1</jaxb-api.version>
-        <cassandra-driver-core.version>3.10.2</cassandra-driver-core.version>
-        <mysql-connector.version>8.0.23</mysql-connector.version>
-        <micrometer.version>1.6.4</micrometer.version>
-        <log4j2.version>2.14.1</log4j2.version>
-        <gson.version>2.8.6</gson.version>
+        <jaxb-api.version>2.4.0-b180830.0359</jaxb-api.version>
+        <cassandra-driver-core.version>4.0.0</cassandra-driver-core.version>
+        <mysql-connector.version>8.0.28</mysql-connector.version>
+        <micrometer.version>1.8.3</micrometer.version>
+        <log4j2.version>2.17.1</log4j2.version>
+        <gson.version>2.9.0</gson.version>
         <httpcore.version>4.4.15</httpcore.version>
         <httpclient.version>4.5.13</httpclient.version>
-        <awssdk.version>2.16.28</awssdk.version>
-        <elasticsearch-java.version>7.16.2</elasticsearch-java.version>
-        <junit5jupiter.version>5.7.1</junit5jupiter.version>
-        <junit5platform.version>1.7.1</junit5platform.version>
-        <mockito.version>3.8.0</mockito.version>
-        <assertj.version>3.19.0</assertj.version>
+        <awssdk.version>2.17.138</awssdk.version>
+        <elasticsearch-java.version>8.0.0</elasticsearch-java.version>
+        <junit5jupiter.version>5.8.2</junit5jupiter.version>
+        <junit5platform.version>1.8.2</junit5platform.version>
+        <mockito.version>4.3.1</mockito.version>
+        <assertj.version>3.22.0</assertj.version>
         <restassured.version>2.9.0</restassured.version>
         <hamcrest.version>2.2</hamcrest.version>
         <restito.version>0.9.4</restito.version>
-        <awaitility.version>4.0.3</awaitility.version>
-        <testcontainers.version>1.16.2</testcontainers.version>
-        <ktor.version>1.5.2</ktor.version>
+        <awaitility.version>4.1.1</awaitility.version>
+        <testcontainers.version>1.16.3</testcontainers.version>
+        <ktor.version>2.0.0-beta-1</ktor.version>
         <lombok.version>1.18.22</lombok.version>
-        <pact-jvm-provider.version>4.1.0</pact-jvm-provider.version>
-        <pact-jvm-consumer.version>4.1.0</pact-jvm-consumer.version>
+        <pact-jvm-provider.version>4.3.5</pact-jvm-provider.version>
+        <pact-jvm-consumer.version>4.3.5</pact-jvm-consumer.version>
         <maven-jar-plugin.version>3.1.1</maven-jar-plugin.version>
         <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
         <maven-source-plugin.version>3.2.1</maven-source-plugin.version>
         <maven-javadoc-plugin.version>2.10.4</maven-javadoc-plugin.version>
-        <maven-surefire-plugin.version>2.22.2</maven-surefire-plugin.version>
-        <maven-failsafe-plugin.version>2.22.2</maven-failsafe-plugin.version>
+        <maven-surefire-plugin.version>3.0.0-M5</maven-surefire-plugin.version>
+        <maven-failsafe-plugin.version>3.0.0-M5</maven-failsafe-plugin.version>
         <maven-toolchains-plugin.version>3.0.0</maven-toolchains-plugin.version>
         <maven-shade-plugin.version>3.2.1</maven-shade-plugin.version>
         <maven-dependency-plugin.version>3.1.2</maven-dependency-plugin.version>

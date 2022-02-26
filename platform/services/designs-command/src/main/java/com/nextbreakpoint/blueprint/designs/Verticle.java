@@ -37,9 +37,12 @@ import io.vertx.rxjava.kafka.client.producer.KafkaProducer;
 import io.vertx.tracing.opentracing.OpenTracingOptions;
 import rx.Completable;
 
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executor;
@@ -258,55 +261,57 @@ public class Verticle extends AbstractVerticle {
                 throw new Exception("Cannot find resource api-v1.yaml");
             }
 
-            final String url = resource.toURI().toString();
+            final File tempFile = File.createTempFile("openapi-", ".yaml");
 
-            RouterBuilder.create(vertx.getDelegate(), url)
-                .onSuccess(routerBuilder -> {
-                    routerBuilder.operation("insertDesign")
-                            .handler(context -> insertDesignHandler.handle(RoutingContext.newInstance(context)));
+            IOUtils.copy(resource.openStream(), new FileOutputStream(tempFile), StandardCharsets.UTF_8);
 
-                    routerBuilder.operation("updateDesign")
-                            .handler(context -> updateDesignHandler.handle(RoutingContext.newInstance(context)));
+            RouterBuilder.create(vertx.getDelegate(), "file://" + tempFile.getAbsolutePath())
+                    .onSuccess(routerBuilder -> {
+                        routerBuilder.operation("insertDesign")
+                                .handler(context -> insertDesignHandler.handle(RoutingContext.newInstance(context)));
 
-                    routerBuilder.operation("deleteDesign")
-                            .handler(context -> deleteDesignHandler.handle(RoutingContext.newInstance(context)));
+                        routerBuilder.operation("updateDesign")
+                                .handler(context -> updateDesignHandler.handle(RoutingContext.newInstance(context)));
 
-                    final Router apiRouter = Router.newInstance(routerBuilder.createRouter());
+                        routerBuilder.operation("deleteDesign")
+                                .handler(context -> deleteDesignHandler.handle(RoutingContext.newInstance(context)));
 
-                    mainRouter.route().handler(MDCHandler.create());
-                    mainRouter.route().handler(LoggerHandler.create(true, LoggerFormat.DEFAULT));
-                    mainRouter.route().handler(BodyHandler.create());
-                    //mainRouter.route().handler(CookieHandler.create());
-                    mainRouter.route().handler(TimeoutHandler.create(30000));
+                        final Router apiRouter = Router.newInstance(routerBuilder.createRouter());
 
-                    mainRouter.route("/*").handler(corsHandler);
+                        mainRouter.route().handler(MDCHandler.create());
+                        mainRouter.route().handler(LoggerHandler.create(true, LoggerFormat.DEFAULT));
+                        mainRouter.route().handler(BodyHandler.create());
+                        //mainRouter.route().handler(CookieHandler.create());
+                        mainRouter.route().handler(TimeoutHandler.create(30000));
 
-                    mainRouter.mountSubRouter("/v1", apiRouter);
+                        mainRouter.route("/*").handler(corsHandler);
 
-                    mainRouter.get("/v1/apidocs").handler(apiV1DocsHandler);
+                        mainRouter.mountSubRouter("/v1", apiRouter);
 
-                    mainRouter.options("/*").handler(ResponseHelper::sendNoContent);
+                        mainRouter.get("/v1/apidocs").handler(apiV1DocsHandler);
 
-                    mainRouter.route().failureHandler(ResponseHelper::sendFailure);
+                        mainRouter.options("/*").handler(ResponseHelper::sendNoContent);
 
-                    final ServerConfig serverConfig = ServerConfig.builder()
-                            .withJksStorePath(jksStorePath)
-                            .withJksStoreSecret(jksStoreSecret)
-                            .build();
+                        mainRouter.route().failureHandler(ResponseHelper::sendFailure);
 
-                    final HttpServerOptions options = Server.makeOptions(serverConfig);
+                        final ServerConfig serverConfig = ServerConfig.builder()
+                                .withJksStorePath(jksStorePath)
+                                .withJksStoreSecret(jksStoreSecret)
+                                .build();
 
-                    vertx.createHttpServer(options)
-                            .requestHandler(mainRouter)
-                            .rxListen(port)
-                            .doOnSuccess(result -> logger.info("Service listening on port " + port))
-                            .doOnError(err -> logger.error("Can't create server", err))
-                            .subscribe(result -> promise.complete(), promise::fail);
-                })
-                .onFailure(err -> {
-                    logger.error("Can't create router", err);
-                    promise.fail(err);
-                });
+                        final HttpServerOptions options = Server.makeOptions(serverConfig);
+
+                        vertx.createHttpServer(options)
+                                .requestHandler(mainRouter)
+                                .rxListen(port)
+                                .doOnSuccess(result -> logger.info("Service listening on port " + port))
+                                .doOnError(err -> logger.error("Can't create server", err))
+                                .subscribe(result -> promise.complete(), promise::fail);
+                    })
+                    .onFailure(err -> {
+                        logger.error("Can't create router", err);
+                        promise.fail(err);
+                    });
         } catch (Exception e) {
             logger.error("Failed to start server", e);
             promise.fail(e);

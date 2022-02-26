@@ -2,8 +2,8 @@
 
 set -e
 
-export REPOSITORY=${1:-"integration"}
-export VERSION=${2:-"1.0.0-$(git rev-parse --abbrev-ref HEAD)-$(git rev-parse --short HEAD)-$(date +%s)"}
+export REPOSITORY="integration"
+export VERSION="1.0.0-$(git rev-parse --abbrev-ref HEAD)-$(git rev-parse --short HEAD)-$(date +%s)"
 export DEPLOY="true"
 export BUILD="true"
 export TEST="true"
@@ -14,20 +14,113 @@ export PACTBROKER_HOST=localhost
 export PACTBROKER_PORT="9292"
 
 export NEXUS_HOST=localhost
-export NEXUS_PORT="38081"
+export NEXUS_PORT="8081"
 export NEXUS_USERNAME=admin
 export NEXUS_PASSWORD=password
 
+POSITIONAL_ARGS=()
+
+for i in "$@"; do
+  case $i in
+    --version=*)
+      VERSION="${i#*=}"
+      shift
+      ;;
+    --docker-repository=*)
+      REPOSITORY="${i#*=}"
+      shift
+      ;;
+    --docker-host=*)
+      TEST_DOCKER_HOST="${i#*=}"
+      shift
+      ;;
+    --pactbroker-host=*)
+      PACTBROKER_HOST="${i#*=}"
+      shift
+      ;;
+    --pactbroker-port=*)
+      PACTBROKER_PORT="${i#*=}"
+      shift
+      ;;
+    --nexus-host=*)
+      NEXUS_HOST="${i#*=}"
+      shift
+      ;;
+    --nexus-port=*)
+      NEXUS_PORT="${i#*=}"
+      shift
+      ;;
+    --nexus-username=*)
+      NEXUS_USERNAME="${i#*=}"
+      shift
+      ;;
+    --nexus-password=*)
+      NEXUS_PASSWORD="${i#*=}"
+      shift
+      ;;
+    --skip-deploy)
+      DEPLOY="false"
+      shift
+      ;;
+    --skip-build)
+      BUILD="false"
+      shift
+      ;;
+    --skip-test)
+      TEST="false"
+      shift
+      ;;
+    -*|--*)
+      echo "Unknown option $i"
+      exit 1
+      ;;
+    *)
+      POSITIONAL_ARGS+=("$1")
+      shift
+      ;;
+  esac
+done
+
+if [[ -z $NEXUS_USERNAME ]]; then
+  echo "Missing required parameter --nexus-username"
+  exit 1
+fi
+
+if [[ -z $NEXUS_PASSWORD ]]; then
+  echo "Missing required parameter --nexus-password"
+  exit 1
+fi
+
+echo "Nexus server is ${NEXUS_HOST}:${NEXUS_PORT}"
+
+echo "Pact server is ${PACTBROKER_HOST}:${PACTBROKER_PORT}"
+
+echo "Docker host is ${TEST_DOCKER_HOST}"
+
+echo "Images version is ${REPOSITORY}:${VERSION}"
+
+if [[ -$DEPLOY == "false" ]]; then
+  echo "Skipping deploy"
+fi
+
+if [[ $BUILD == "false" ]]; then
+  echo "Skipping build"
+fi
+
+if [[ $TEST == "false" ]]; then
+  echo "Skipping test"
+fi
+
 services=(
   designs-query
-  designs-command
-  designs-aggregate
-  designs-notify
-  designs-render
-  accounts
-  authentication
-  gateway
-  frontend
+#  designs-command
+#  designs-aggregate
+#  designs-notify
+#  designs-render
+#  accounts
+#  authentication
+#  gateway
+#  frontend
 )
 
 export MAVEN_ARGS="-q -e -Dnexus.host=${NEXUS_HOST} -Dnexus.port=${NEXUS_PORT} -Dpactbroker.host=${PACTBROKER_HOST} -Dpactbroker.port=${PACTBROKER_PORT}"

@@ -14,24 +14,26 @@ Start pipeline:
 
     docker compose -f docker-compose-pipeline.yaml -p pipeline up -d
 
-Export variables:
+Export Nexus password:
 
-    export NEXUS_HOST=localhost
-    export NEXUS_PORT=38081
-    export NEXUS_USERNAME=admin
     export NEXUS_PASSWORD=$(docker exec $(docker container ls -f name=pipeline-nexus-1 -q) cat /opt/sonatype/sonatype-work/nexus3/admin.password)
 
-Create Maven repository:
+Create Maven repository (required only once):
 
-    curl -u ${NEXUS_USERNAME}:${NEXUS_PASSWORD} -X POST "http://${NEXUS_HOST}:${NEXUS_PORT}/service/rest/v1/repositories/maven/hosted" -H "accept: application/json" -H "Content-Type: application/json" -d "{ \"name\": \"maven-internal\", \"online\": true, \"storage\": { \"blobStoreName\": \"default\", \"strictContentTypeValidation\": true, \"writePolicy\": \"allow_once\" }, \"cleanup\": { \"policyNames\": [ \"string\" ] }, \"component\": { \"proprietaryComponents\": true }, \"maven\": { \"versionPolicy\": \"MIXED\", \"layoutPolicy\": \"STRICT\" }}"
+    ./scripts/create-repository.sh --nexus-host=localhost --nexus-port=38081 --nexus-username=admin --nexus-password=${NEXUS_PASSWORD} 
 
 Build platform:
 
-    ./scripts/build-platform.sh 
+    ./scripts/build-platform.sh --nexus-host=localhost --nexus-port=38081 --nexus-username=admin --nexus-password=${NEXUS_PASSWORD} 
 
 Stop pipeline (when finished):
 
     docker compose -f docker-compose-pipeline.yaml -p pipeline down
+
+Update dependencies (if needed):
+
+    mvn versions:update-properties
+    mvn versions:commit
 
 ## Run on Docker
 
@@ -105,9 +107,9 @@ Export variables:
     export NEXUS_USERNAME=admin
     export NEXUS_PASSWORD=$(kubectl -n blueprint exec $(kubectl -n blueprint get pod -l app=nexus -o json | jq -r '.items[0].metadata.name') -c nexus -- cat /opt/sonatype/sonatype-work/nexus3/admin.password)
 
-Create Maven repository:
+Create Maven repository (required only once):
 
-    curl -u ${NEXUS_USERNAME}:${NEXUS_PASSWORD} -X POST "http://${NEXUS_HOST}:${NEXUS_PORT}/service/rest/v1/repositories/maven/hosted" -H "accept: application/json" -H "Content-Type: application/json" -d "{ \"name\": \"maven-internal\", \"online\": true, \"storage\": { \"blobStoreName\": \"default\", \"strictContentTypeValidation\": true, \"writePolicy\": \"allow_once\" }, \"cleanup\": { \"policyNames\": [ \"string\" ] }, \"component\": { \"proprietaryComponents\": true }, \"maven\": { \"versionPolicy\": \"MIXED\", \"layoutPolicy\": \"STRICT\" }}"
+    ./scripts/create-repository.sh --nexus-host=${NEXUS_HOST} --nexus-port=${NEXUS_PORT} --nexus-username=${NEXUS_USERNAME} --nexus-password=${NEXUS_PASSWORD}
 
 Configure Docker:
 
@@ -115,7 +117,7 @@ Configure Docker:
 
 Build platform:
 
-    ./scripts/build.sh 
+    ./scripts/build-platform.sh --nexus-host=${NEXUS_HOST} --nexus-port=${NEXUS_PORT} --nexus-username=${NEXUS_USERNAME} --nexus-password=${NEXUS_PASSWORD} --docker-host=172.17.0.1
 
 ## Run on Minikube
 
@@ -284,3 +286,6 @@ Only one replica per partition is allowed for designs-command-consumer. Only one
 docker run -it --network services_services -e MINIO_ACCESS_KEY=admin -e MINIO_SECRET_KEY=password --entrypoint sh minio/mc:latest -c "mc config host add integration http://minio:9000 admin password && mc rm -r --force integration/tiles && mc mb integration/tiles"
 
 docker run -it --network services_services -e MINIO_ACCESS_KEY=admin -e MINIO_SECRET_KEY=password --entrypoint sh minio/mc:latest -c "mc config host add integration http://minio:9000 admin password && mc mb integration/tiles"
+
+
+mvn -s settings.xml -Dcommon=true -Dservices=true -Dplatform=true -Dnexus=true -DskipTests=true -Dnexus.host=localhost -Dnexus.port=38081 -Dpactbroker.host=localhost -Dpactbroker.port=9292 clean package

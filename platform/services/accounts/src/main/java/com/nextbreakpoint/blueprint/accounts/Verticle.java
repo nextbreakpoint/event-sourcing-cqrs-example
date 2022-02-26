@@ -31,9 +31,12 @@ import io.vertx.rxjava.micrometer.PrometheusScrapingHandler;
 import io.vertx.tracing.opentracing.OpenTracingOptions;
 import rx.Completable;
 
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -165,9 +168,11 @@ public class Verticle extends AbstractVerticle {
                 throw new Exception("Cannot find resource api-v1.yaml");
             }
 
-            final String url = resource.toURI().toString();
+            final File tempFile = File.createTempFile("openapi-", ".yaml");
 
-            RouterBuilder.create(vertx.getDelegate(), url)
+            IOUtils.copy(resource.openStream(), new FileOutputStream(tempFile), StandardCharsets.UTF_8);
+
+            RouterBuilder.create(vertx.getDelegate(), "file://" + tempFile.getAbsolutePath())
                     .onSuccess(routerBuilder -> {
                         routerBuilder.operation("listAccounts")
                                 .handler(context -> listAccountsHandler.handle(RoutingContext.newInstance(context)));

@@ -79,7 +79,7 @@ public class ElasticsearchStore implements Store {
                     .map(results -> results.stream().findFirst().orElse(null))
                     .map(LoadDesignResponse::new)
                     .toSingle();
-        } catch (IOException e) {
+        } catch (Exception e) {
             return Single.error(e);
         }
     }
@@ -92,7 +92,7 @@ public class ElasticsearchStore implements Store {
                     .toList()
                     .map(ListDesignsResponse::new)
                     .toSingle();
-        } catch (IOException e) {
+        } catch (Exception e) {
             return Single.error(e);
         }
     }
@@ -103,7 +103,7 @@ public class ElasticsearchStore implements Store {
                     .flatMap(update -> Observable.just(Optional.ofNullable(update.get()).map(InlineGet::source)))
                     .map(design -> new InsertDesignResponse())
                     .toSingle();
-        } catch (IOException e) {
+        } catch (Exception e) {
             return Single.error(e);
         }
     }
@@ -113,7 +113,7 @@ public class ElasticsearchStore implements Store {
             return Observable.from(client.delete(builder -> createDeleteDesignRequest(builder, request)))
                     .map(delete -> new DeleteDesignResponse())
                     .toSingle();
-        } catch (IOException e) {
+        } catch (Exception e) {
             return Single.error(e);
         }
     }

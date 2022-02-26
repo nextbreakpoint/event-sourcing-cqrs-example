@@ -6,9 +6,62 @@ export PACTBROKER_HOST=localhost
 export PACTBROKER_PORT="9292"
 
 export NEXUS_HOST=localhost
-export NEXUS_PORT="38081"
+export NEXUS_PORT="8081"
 export NEXUS_USERNAME=admin
 export NEXUS_PASSWORD=password
+
+POSITIONAL_ARGS=()
+
+for i in "$@"; do
+  case $i in
+    --pactbroker-host=*)
+      PACTBROKER_HOST="${i#*=}"
+      shift
+      ;;
+    --pactbroker-port=*)
+      PACTBROKER_PORT="${i#*=}"
+      shift
+      ;;
+    --nexus-host=*)
+      NEXUS_HOST="${i#*=}"
+      shift
+      ;;
+    --nexus-port=*)
+      NEXUS_PORT="${i#*=}"
+      shift
+      ;;
+    --nexus-username=*)
+      NEXUS_USERNAME="${i#*=}"
+      shift
+      ;;
+    --nexus-password=*)
+      NEXUS_PASSWORD="${i#*=}"
+      shift
+      ;;
+    -*|--*)
+      echo "Unknown option $i"
+      exit 1
+      ;;
+    *)
+      POSITIONAL_ARGS+=("$1")
+      shift
+      ;;
+  esac
+done
+
+if [[ -z $NEXUS_USERNAME ]]; then
+  echo "Missing required parameter --nexus-username"
+  exit 1
+fi
+
+if [[ -z $NEXUS_PASSWORD ]]; then
+  echo "Missing required parameter --nexus-password"
+  exit 1
+fi
+
+echo "Nexus server is ${NEXUS_HOST}:${NEXUS_PORT}"
+
+echo "Pact server is ${PACTBROKER_HOST}:${PACTBROKER_PORT}"
 
 services=(
   designs-query

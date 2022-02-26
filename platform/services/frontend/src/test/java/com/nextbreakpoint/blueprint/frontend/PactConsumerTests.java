@@ -10,9 +10,8 @@ import au.com.dius.pact.core.model.RequestResponsePact;
 import au.com.dius.pact.core.model.annotations.Pact;
 import com.jayway.jsonpath.JsonPath;
 import io.vertx.core.json.JsonObject;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.fluent.Request;
-import org.apache.http.entity.StringEntity;
+import org.apache.hc.client5.http.fluent.Request;
+import org.apache.hc.core5.http.io.entity.StringEntity;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -199,7 +198,7 @@ public class PactConsumerTests {
                             .stringValue("uuid", TestConstants.DESIGN_UUID_1.toString())
                             .stringMatcher("json", ".+")
                             .stringMatcher("checksum", ".+")
-                            .timestamp("modified", "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+                            .datetime("modified", "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
             )
             .toPact();
   }
@@ -277,13 +276,16 @@ public class PactConsumerTests {
   @Test
   @PactTestFor(providerName = "accounts", port = "1110", pactMethod = "retrieveAccount")
   public void shouldRetrieveAccount(MockServer mockServer) throws IOException {
-    HttpResponse httpResponse = Request.Get(mockServer.getUrl() + "/v1/accounts/" + TestConstants.ACCOUNT_UUID)
+    Request.get(mockServer.getUrl() + "/v1/accounts/" + TestConstants.ACCOUNT_UUID)
             .addHeader("Accept", "application/json")
             .addHeader("Authorization", "Bearer abcdef")
-            .execute().returnResponse();
-    assertThat(httpResponse.getStatusLine().getStatusCode()).isEqualTo(200);
-    assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.uuid").toString()).isEqualTo(TestConstants.ACCOUNT_UUID.toString());
-    assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.role").toString()).isEqualTo("guest");
+            .execute()
+            .handleResponse(httpResponse -> {
+              assertThat(httpResponse.getCode()).isEqualTo(200);
+              assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.uuid").toString()).isEqualTo(TestConstants.ACCOUNT_UUID.toString());
+              assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.role").toString()).isEqualTo("guest");
+              return null;
+            });
   }
 
 //  @Test
@@ -354,68 +356,83 @@ public class PactConsumerTests {
   @Test
   @PactTestFor(providerName = "designs-query", port = "1116", pactMethod = "retrieveDesigns")
   public void shouldRetrieveDesignsWhenUsingCQRS(MockServer mockServer) throws IOException {
-    HttpResponse httpResponse = Request.Get(mockServer.getUrl() + "/v1/designs")
+    Request.get(mockServer.getUrl() + "/v1/designs")
             .addHeader("Accept", "application/json")
             .addHeader("Authorization", "Bearer abcdef")
-            .execute().returnResponse();
-    assertThat(httpResponse.getStatusLine().getStatusCode()).isEqualTo(200);
-    assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.[0].uuid").toString()).isEqualTo(TestConstants.DESIGN_UUID_1.toString());
-    assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.[0].checksum").toString()).isNotBlank();
-    assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.[1].uuid").toString()).isEqualTo(TestConstants.DESIGN_UUID_2.toString());
-    assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.[1].checksum").toString()).isNotBlank();
+            .execute()
+            .handleResponse(httpResponse -> {
+              assertThat(httpResponse.getCode()).isEqualTo(200);
+              assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.[0].uuid").toString()).isEqualTo(TestConstants.DESIGN_UUID_1.toString());
+              assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.[0].checksum").toString()).isNotBlank();
+              assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.[1].uuid").toString()).isEqualTo(TestConstants.DESIGN_UUID_2.toString());
+              assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.[1].checksum").toString()).isNotBlank();
+              return null;
+            });
   }
 
   @Test
   @PactTestFor(providerName = "designs-query", port = "1117", pactMethod = "retrieveDesignWhenUsingCQRS")
   public void shouldRetrieveDesignWhenUsingCQRS(MockServer mockServer) throws IOException {
-    HttpResponse httpResponse = Request.Get(mockServer.getUrl() + "/v1/designs/" + TestConstants.DESIGN_UUID_1)
+    Request.get(mockServer.getUrl() + "/v1/designs/" + TestConstants.DESIGN_UUID_1)
             .addHeader("Accept", "application/json")
             .addHeader("Authorization", "Bearer abcdef")
-            .execute().returnResponse();
-    assertThat(httpResponse.getStatusLine().getStatusCode()).isEqualTo(200);
-    assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.uuid").toString()).isEqualTo(TestConstants.DESIGN_UUID_1.toString());
-    assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.json").toString()).isNotBlank();
-    assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.checksum").toString()).isNotBlank();
-    assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.modified").toString()).isNotBlank();
+            .execute()
+            .handleResponse(httpResponse -> {
+              assertThat(httpResponse.getCode()).isEqualTo(200);
+              assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.uuid").toString()).isEqualTo(TestConstants.DESIGN_UUID_1.toString());
+              assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.json").toString()).isNotBlank();
+              assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.checksum").toString()).isNotBlank();
+              assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.modified").toString()).isNotBlank();
+              return null;
+            });
   }
 
   @Test
   @PactTestFor(providerName = "designs-command", port = "1118", pactMethod = "insertDesignWhenUsingCQRS")
   public void shouldInsertDesignWhenUsingCQRS(MockServer mockServer) throws IOException {
-    HttpResponse httpResponse = Request.Post(mockServer.getUrl() + "/v1/designs")
+    Request.post(mockServer.getUrl() + "/v1/designs")
             .addHeader("Accept", "application/json")
             .addHeader("Content-Type", "application/json")
             .addHeader("Authorization", "Bearer abcdef")
             .body(new StringEntity(new JsonObject(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT)).toString()))
-            .execute().returnResponse();
-    assertThat(httpResponse.getStatusLine().getStatusCode()).isEqualTo(202);
-    assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.uuid").toString()).isNotBlank();
-    assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.status").toString()).isNotBlank();
+            .execute()
+            .handleResponse(httpResponse -> {
+              assertThat(httpResponse.getCode()).isEqualTo(202);
+              assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.uuid").toString()).isNotBlank();
+              assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.status").toString()).isNotBlank();
+              return null;
+            });
   }
 
   @Test
   @PactTestFor(providerName = "designs-command", port = "1119", pactMethod = "updateDesignWhenUsingCQRS")
   public void shouldUpdateDesignWhenUsingCQRS(MockServer mockServer) throws IOException {
-    HttpResponse httpResponse = Request.Put(mockServer.getUrl() + "/v1/designs/" + TestConstants.DESIGN_UUID_1)
+    Request.put(mockServer.getUrl() + "/v1/designs/" + TestConstants.DESIGN_UUID_1)
             .addHeader("Accept", "application/json")
             .addHeader("Content-Type", "application/json")
             .addHeader("Authorization", "Bearer abcdef")
             .body(new StringEntity(new JsonObject(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT)).toString()))
-            .execute().returnResponse();
-    assertThat(httpResponse.getStatusLine().getStatusCode()).isEqualTo(202);
-    assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.uuid").toString()).isEqualTo(TestConstants.DESIGN_UUID_1.toString());
-    assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.status").toString()).isNotBlank();
+            .execute()
+            .handleResponse(httpResponse -> {
+              assertThat(httpResponse.getCode()).isEqualTo(202);
+              assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.uuid").toString()).isEqualTo(TestConstants.DESIGN_UUID_1.toString());
+              assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.status").toString()).isNotBlank();
+              return null;
+            });
   }
 
   @Test
   @PactTestFor(providerName = "designs-command", port = "1120", pactMethod = "deleteDesignWhenUsingCQRS")
   public void shouldDeleteDesignWhenUsingCQRS(MockServer mockServer) throws IOException {
-    HttpResponse httpResponse = Request.Delete(mockServer.getUrl() + "/v1/designs/" + TestConstants.DESIGN_UUID_1)
+    Request.delete(mockServer.getUrl() + "/v1/designs/" + TestConstants.DESIGN_UUID_1)
             .addHeader("Accept", "application/json")
             .addHeader("Authorization", "Bearer abcdef")
-            .execute().returnResponse();
-    assertThat(httpResponse.getStatusLine().getStatusCode()).isEqualTo(202);
-    assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.uuid").toString()).isEqualTo(TestConstants.DESIGN_UUID_1.toString());
-    assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.status").toString()).isNotBlank();
+            .execute()
+            .handleResponse(httpResponse -> {
+              assertThat(httpResponse.getCode()).isEqualTo(202);
+              assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.uuid").toString()).isEqualTo(TestConstants.DESIGN_UUID_1.toString());
+              assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.status").toString()).isNotBlank();
+              return null;
+            });
   }
 }

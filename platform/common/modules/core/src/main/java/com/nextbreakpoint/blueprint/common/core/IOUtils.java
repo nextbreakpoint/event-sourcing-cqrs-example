@@ -4,69 +4,38 @@ import java.io.*;
 import java.nio.charset.Charset;
 
 public final class IOUtils {
-    private static final int EOF = -1;
-    private static final int DEFAULT_BUFFER_SIZE = 1024;
-
     public static String toString(InputStream inputStream, Charset charset) {
         if (inputStream == null) {
             return "";
         } else {
-            try {
-                StringWriter writer = new StringWriter();
+            try (StringWriter writer = new StringWriter()) {
+                try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream, charset))) {
+                    char[] chars = new char[1024];
 
-                String result;
-                try {
-                    InputStreamReader reader = new InputStreamReader(inputStream, charset);
-
-                    try {
-                        BufferedReader bufferedReader = new BufferedReader(reader);
-
-                        try {
-                            char[] chars = new char[1024];
-
-                            while (true) {
-                                int readChars;
-                                if ((readChars = bufferedReader.read(chars)) == -1) {
-                                    result = writer.toString();
-                                    break;
-                                }
-
-                                writer.write(chars, 0, readChars);
-                            }
-                        } catch (Throwable e) {
-                            try {
-                                bufferedReader.close();
-                            } catch (Throwable x) {
-                                e.addSuppressed(x);
-                            }
-
-                            throw e;
-                        }
-
-                        bufferedReader.close();
-                    } catch (Throwable e) {
-                        try {
-                            reader.close();
-                        } catch (Throwable x) {
-                            e.addSuppressed(x);
-                        }
-
-                        throw e;
+                    for (int readChars; (readChars = bufferedReader.read(chars)) != -1;) {
+                        writer.write(chars, 0, readChars);
                     }
-
-                    reader.close();
-                } catch (Throwable e) {
-                    try {
-                        writer.close();
-                    } catch (Throwable x) {
-                        e.addSuppressed(x);
-                    }
-
-                    throw e;
                 }
 
-                writer.close();
-                return result;
+                return writer.toString();
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        }
+    }
+
+    public static void copy(InputStream inputStream, OutputStream outputStream, Charset charset) {
+        if (inputStream == null) {
+            return;
+        } else {
+            try (OutputStreamWriter writer = new OutputStreamWriter(outputStream)) {
+                try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream, charset))) {
+                    char[] chars = new char[1024];
+
+                    for (int readChars; (readChars = bufferedReader.read(chars)) != -1;) {
+                        writer.write(chars, 0, readChars);
+                    }
+                }
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }

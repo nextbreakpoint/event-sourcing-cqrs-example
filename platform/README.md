@@ -32,7 +32,7 @@ Stop pipeline (when finished):
 
 Update dependencies (if needed):
 
-    mvn versions:update-properties -Dcommon=true -Dservices=true -Dplatform=true 
+    mvn versions:update-properties
     mvn versions:commit
 
 ## Run on Docker

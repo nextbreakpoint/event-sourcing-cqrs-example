@@ -9,7 +9,7 @@ import au.com.dius.pact.provider.junitsupport.loader.PactBroker;
 import com.nextbreakpoint.blueprint.common.core.Authority;
 import com.nextbreakpoint.blueprint.common.core.Headers;
 import com.nextbreakpoint.blueprint.common.vertx.Authentication;
-import org.apache.http.HttpRequest;
+import org.apache.hc.core5.http.HttpRequest;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -17,6 +17,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.List;
 
 @Tag("slow")
 @Tag("pact-verify")

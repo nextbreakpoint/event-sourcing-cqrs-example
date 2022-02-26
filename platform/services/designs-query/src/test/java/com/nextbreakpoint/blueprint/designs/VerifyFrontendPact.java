@@ -12,7 +12,7 @@ import com.nextbreakpoint.blueprint.common.core.Checksum;
 import com.nextbreakpoint.blueprint.common.core.Headers;
 import com.nextbreakpoint.blueprint.designs.model.Design;
 import io.vertx.core.json.JsonObject;
-import org.apache.http.HttpRequest;
+import org.apache.hc.core5.http.HttpRequest;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 

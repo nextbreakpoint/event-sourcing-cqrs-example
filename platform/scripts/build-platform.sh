@@ -112,15 +112,15 @@ if [[ $TEST == "false" ]]; then
 fi
 
 services=(
-#  designs-query
+  designs-query
   designs-command
-#  designs-aggregate
-#  designs-notify
-#  designs-render
-#  accounts
-#  authentication
-#  gateway
-#  frontend
+  designs-aggregate
+  designs-notify
+  designs-render
+  accounts
+  authentication
+  gateway
+  frontend
 )
 
 export MAVEN_ARGS="-q -e -Dnexus.host=${NEXUS_HOST} -Dnexus.port=${NEXUS_PORT} -Dpactbroker.host=${PACTBROKER_HOST} -Dpactbroker.port=${PACTBROKER_PORT}"

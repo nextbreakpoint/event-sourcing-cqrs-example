@@ -112,8 +112,8 @@ if [[ $TEST == "false" ]]; then
 fi
 
 services=(
-  designs-query
-#  designs-command
+#  designs-query
+  designs-command
 #  designs-aggregate
 #  designs-notify
 #  designs-render

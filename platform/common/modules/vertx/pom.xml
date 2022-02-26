@@ -80,7 +80,7 @@
                 <artifactId>versions-maven-plugin</artifactId>
                 <version>${versions-maven-plugin.version}</version>
                 <configuration>
-                    <rulesUri>file://${project.basedir}/../../maven-version-rules.xml</rulesUri>
+                    <rulesUri>file://${project.basedir}/../../../maven-version-rules.xml</rulesUri>
                 </configuration>
             </plugin>
         </plugins>

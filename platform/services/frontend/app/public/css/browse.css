@@ -15,7 +15,7 @@ p, div {
 }
 
 header {
-    font-size: 16pt;
+    font-size: 20pt;
     left: 1%;
     top: 0;
     position: fixed;
@@ -35,7 +35,7 @@ header p {
 }
 
 footer {
-    font-size: 14pt;
+    font-size: 18pt;
     right: 1%;
     bottom: 0;
     position: fixed;

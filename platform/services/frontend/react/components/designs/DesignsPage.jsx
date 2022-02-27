@@ -196,7 +196,7 @@ let DesignsPage = class DesignsPage extends React.Component {
                 <CssBaseline />
                 <Grid container justify="space-between" alignItems="center">
                     <Grid item xs={12}>
-                        <Header landing={'/admin/designs.html'} titleText={"Designs"} browseLink={"/browse/designs.html"} browseText={"The Beauty of Chaos"}/>
+                        <Header landing={'/admin/designs.html'} titleText={"Fractals"} browseLink={"/browse/designs.html"} browseText={"The Beauty of Chaos"}/>
                     </Grid>
                     <Grid item xs={12}>
                         <DesignsTable/>

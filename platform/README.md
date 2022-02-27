@@ -37,7 +37,7 @@ Update dependencies (if needed):
 
 ## Run on Docker
 
-Export GitHub secrets:
+Export GitHub secrets (very important):
 
     export GITHUB_ACCOUNT_ID=your-account-id
     export GITHUB_CLIENT_ID=your-client-id

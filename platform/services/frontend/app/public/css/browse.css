@@ -24,7 +24,7 @@ header {
     z-index: 10;
     margin-top: 1%;
     padding: 2%;
-    background: #ffffff;
+    background: #fdfdfd;
     opacity: 0.6;
     border-radius: 50pt;
 }
@@ -44,7 +44,7 @@ footer {
     z-index: 10;
     margin-bottom: 1%;
     padding: 1.5%;
-    background: #ffffff;
+    background: #fdfdfd;
     opacity: 0.6;
     border-radius: 50pt;
 }

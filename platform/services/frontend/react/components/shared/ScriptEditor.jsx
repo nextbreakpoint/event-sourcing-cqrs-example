@@ -127,9 +127,12 @@ let ScriptEditor = class ScriptEditor extends React.Component {
 
 const styles = {
   editor: {
-    border: '2px solid #f0f0f0',
-    minHeight: '40em',
-    borderRadius: '0.5em'
+    border: '2px solid #b0b0b0',
+    padding: '2%',
+    height: '500px',
+    overflow: 'scroll',
+    borderRadius: '0.4em',
+    backgroundColor: '#fdfdfd'
   },
   keyword: {
     color: 'blue'

@@ -267,9 +267,6 @@ let DesignsPage = class DesignsPage extends React.Component {
 
 const styles = theme => ({
   fabcontainer: {
-    marginLeft: '-25%',
-    width: '50%',
-    left: '50%',
     position: 'fixed',
     zIndex: 1000,
     bottom: theme.spacing.unit * 2,

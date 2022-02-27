@@ -127,33 +127,25 @@ let PreviewPage = class PreviewPage extends React.Component {
                     <Grid item xs={12}>
                         <Header landing={'/admin/designs/' + this.props.uuid + '.html'} titleLink={"/admin/designs.html"} titleText={"Fractals"} titleText2={this.props.uuid} browseLink={"/browse/designs/" + this.props.uuid + ".html"} browseText={"The Beauty of Chaos"}/>
                     </Grid>
-                    <Grid item xs={12}>
-                        <div className="container">
+                    <Grid container xs={12} justify="space-between" alignItems="center" className="container">
+                        <Grid item xs={5}>
                             <Map center={[0, 0]} zoom={2} className="preview" attributionControl={false} dragging={false} zoomControl={false} scrollWheelZoom={false} touchZoom={false}>
                                 {this.renderMapLayer(url)}
                             </Map>
-                        </div>
+                        </Grid>
+                        <Grid item xs={7}>
+                            <DesignForm script={this.props.design.script} metadata={this.props.design.metadata} onScriptChanged={this.handleScriptChanged} onMetadataChanged={this.handleMetadataChanged}/>
+                            <div style={styles.controls}>
+                                <Button variant="outlined" color="primary" onClick={this.handleUpdate}>
+                                  Update
+                                </Button>
+                            </div>
+                        </Grid>
                     </Grid>
                     <Grid item xs={12}>
                         <Footer/>
                     </Grid>
                 </Grid>
-                {this.props.account.role == 'admin' && (
-                    <Dialog className={this.props.classes.dialog} open={this.props.show_update_design} onClose={this.props.handleHideUpdateDialog} scroll={"paper"} TransitionComponent={SlideTransition}>
-                        <DialogTitle>Update Design</DialogTitle>
-                        <DialogContent>
-                            <DesignForm script={this.props.design.script} metadata={this.props.design.metadata} onScriptChanged={this.handleScriptChanged} onMetadataChanged={this.handleMetadataChanged}/>
-                        </DialogContent>
-                        <DialogActions>
-                            <Button variant="outlined" color="primary" onClick={this.props.handleHideUpdateDialog} color="primary">
-                              Cancel
-                            </Button>
-                            <Button variant="outlined" color="primary" onClick={this.handleUpdate} color="primary" autoFocus>
-                              Update
-                            </Button>
-                        </DialogActions>
-                    </Dialog>
-                )}
                 <Snackbar
                   anchorOrigin={{
                     vertical: 'top',
@@ -195,7 +187,14 @@ PreviewPage.propTypes = {
     uuid: PropTypes.string.isRequired
 }
 
-const styles = theme => ({
+const styles = {
+    controls: {
+      padding: '2%',
+      textAlign: 'right'
+    }
+}
+
+const themeStyles = theme => ({
   fabcontainer: {
     marginLeft: '-25%',
     width: '50%',
@@ -241,7 +240,7 @@ const mapDispatchToProps = dispatch => ({
     }
 })
 
-export default withStyles(styles, { withTheme: true })(connect(mapStateToProps, mapDispatchToProps)(PreviewPage))
+export default withStyles(themeStyles, { withTheme: true })(connect(mapStateToProps, mapDispatchToProps)(PreviewPage))
 
 {/*                 {this.props.account.role == 'admin' && ( */}
 {/*                     <div className={this.props.classes.fabcontainer}> */}
@@ -249,4 +248,20 @@ export default withStyles(styles, { withTheme: true })(connect(mapStateToProps, 
 {/*                             <EditIcon /> */}
 {/*                         </Button> */}
 {/*                     </div> */}
+{/*                 )} */}
+{/*                 {this.props.account.role == 'admin' && ( */}
+{/*                     <Dialog className={this.props.classes.dialog} open={this.props.show_update_design} onClose={this.props.handleHideUpdateDialog} scroll={"paper"} TransitionComponent={SlideTransition}> */}
+{/*                         <DialogTitle>Update Design</DialogTitle> */}
+{/*                         <DialogContent> */}
+{/*                             <DesignForm script={this.props.design.script} metadata={this.props.design.metadata} onScriptChanged={this.handleScriptChanged} onMetadataChanged={this.handleMetadataChanged}/> */}
+{/*                         </DialogContent> */}
+{/*                         <DialogActions> */}
+{/*                             <Button variant="outlined" color="primary" onClick={this.props.handleHideUpdateDialog}> */}
+{/*                               Cancel */}
+{/*                             </Button> */}
+{/*                             <Button variant="outlined" color="primary" onClick={this.handleUpdate} autoFocus> */}
+{/*                               Update */}
+{/*                             </Button> */}
+{/*                         </DialogActions> */}
+{/*                     </Dialog> */}
 {/*                 )} */}

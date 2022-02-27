@@ -115,7 +115,7 @@ echo "Docker host is ${TEST_DOCKER_HOST}"
 
 echo "Images version is ${REPOSITORY}:${VERSION}"
 
-if [[ -$DEPLOY == "false" ]]; then
+if [[ $DEPLOY == "false" ]]; then
   echo "Skipping deploy"
 fi
 

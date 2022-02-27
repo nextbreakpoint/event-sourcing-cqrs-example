@@ -19,7 +19,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.List;
 
-@Tag("slow")
+@Tag("docker")
 @Tag("pact-verify")
 @DisplayName("Verify contract between accounts and authentication")
 @Provider("accounts")

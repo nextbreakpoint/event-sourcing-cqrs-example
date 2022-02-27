@@ -15,7 +15,7 @@ import static com.xebialabs.restito.semantics.Condition.*;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.startsWith;
 
-@Tag("slow")
+@Tag("docker")
 @Tag("integration")
 @DisplayName("Verify behaviour of authentication service")
 public class IntegrationTests {

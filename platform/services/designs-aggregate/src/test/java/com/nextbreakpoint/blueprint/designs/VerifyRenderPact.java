@@ -26,7 +26,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.UUID;
 
-@Tag("slow")
+@Tag("docker")
 @Tag("pact-verify")
 @DisplayName("Verify contract between designs-aggregate and designs-render")
 @Provider("designs-aggregate")

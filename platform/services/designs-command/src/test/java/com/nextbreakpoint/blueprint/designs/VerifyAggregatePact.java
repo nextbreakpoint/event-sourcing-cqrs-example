@@ -28,7 +28,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import java.net.MalformedURLException;
 import java.util.UUID;
 
-@Tag("slow")
+@Tag("docker")
 @Tag("pact-verify")
 @DisplayName("Verify contract between designs-command and designs-aggregate")
 @Provider("designs-command")

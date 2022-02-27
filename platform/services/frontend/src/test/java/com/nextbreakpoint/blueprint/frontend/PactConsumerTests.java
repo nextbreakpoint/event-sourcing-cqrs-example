@@ -24,7 +24,7 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@Tag("slow")
+@Tag("docker")
 @Tag("pact")
 @DisplayName("Test frontend pact")
 @ExtendWith(PactConsumerTestExt.class)

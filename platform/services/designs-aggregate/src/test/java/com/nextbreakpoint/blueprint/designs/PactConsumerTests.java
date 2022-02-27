@@ -22,7 +22,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@Tag("slow")
+@Tag("docker")
 @Tag("pact")
 @DisplayName("Test designs-aggregate pact")
 @ExtendWith(PactConsumerTestExt.class)

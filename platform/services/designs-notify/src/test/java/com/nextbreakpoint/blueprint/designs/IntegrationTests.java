@@ -10,7 +10,7 @@ import org.junit.jupiter.api.*;
 import java.util.List;
 import java.util.UUID;
 
-@Tag("slow")
+@Tag("docker")
 @Tag("integration")
 @DisplayName("Verify behaviour of designs-notify service")
 public class IntegrationTests {

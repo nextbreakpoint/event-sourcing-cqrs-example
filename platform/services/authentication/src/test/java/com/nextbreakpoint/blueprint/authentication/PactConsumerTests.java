@@ -26,7 +26,7 @@ import static com.xebialabs.restito.semantics.Action.*;
 import static com.xebialabs.restito.semantics.Condition.*;
 import static org.hamcrest.CoreMatchers.startsWith;
 
-@Tag("slow")
+@Tag("docker")
 @Tag("pact")
 @DisplayName("Test authentication pact")
 @ExtendWith(PactConsumerTestExt.class)

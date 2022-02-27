@@ -34,7 +34,7 @@ import static com.jayway.restassured.RestAssured.given;
 import static com.nextbreakpoint.blueprint.common.core.Headers.AUTHORIZATION;
 import static org.assertj.core.api.Assertions.assertThat;
 
-@Tag("slow")
+@Tag("docker")
 @Tag("integration")
 @DisplayName("Verify behaviour of designs-query service")
 public class IntegrationTests {

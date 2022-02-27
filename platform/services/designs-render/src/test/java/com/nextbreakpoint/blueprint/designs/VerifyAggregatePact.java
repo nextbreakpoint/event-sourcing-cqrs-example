@@ -26,7 +26,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.UUID;
 
-@Tag("slow")
+@Tag("docker")
 @Tag("pact-verify")
 @Provider("designs-render")
 @Consumer("designs-aggregate")

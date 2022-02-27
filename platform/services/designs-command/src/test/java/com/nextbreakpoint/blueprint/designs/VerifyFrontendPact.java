@@ -15,7 +15,7 @@ import org.apache.hc.core5.http.HttpRequest;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-@Tag("slow")
+@Tag("docker")
 @Tag("pact-verify")
 @DisplayName("Verify contract between designs-command and frontend")
 @Provider("designs-command")

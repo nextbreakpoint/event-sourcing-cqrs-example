@@ -10,7 +10,7 @@ import java.util.UUID;
 
 import static com.jayway.restassured.RestAssured.given;
 
-@Tag("slow")
+@Tag("docker")
 @Tag("integration")
 @DisplayName("Verify behaviour of designs-command service")
 public class IntegrationTests {

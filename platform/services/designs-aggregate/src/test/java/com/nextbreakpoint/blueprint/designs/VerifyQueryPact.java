@@ -32,7 +32,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-@Tag("slow")
+@Tag("docker")
 @Tag("pact-verify")
 @DisplayName("Verify contract between designs-aggregate and designs-query")
 @Provider("designs-aggregate")

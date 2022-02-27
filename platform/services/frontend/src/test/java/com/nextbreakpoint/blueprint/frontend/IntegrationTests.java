@@ -22,7 +22,7 @@ import static com.xebialabs.restito.semantics.Condition.withHeader;
 import static org.hamcrest.CoreMatchers.equalTo;
 
 @Disabled
-@Tag("slow")
+@Tag("docker")
 @Tag("integration")
 @DisplayName("Verify behaviour of frontend service")
 public class IntegrationTests {

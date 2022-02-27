@@ -18,7 +18,7 @@ import static com.nextbreakpoint.blueprint.common.core.Headers.AUTHORIZATION;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.CoreMatchers.notNullValue;
 
-@Tag("slow")
+@Tag("docker")
 @Tag("integration")
 @DisplayName("Verify behaviour of accounts service")
 public class IntegrationTests {

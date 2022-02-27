@@ -23,7 +23,6 @@ services:
       PACT_BROKER_DATABASE_PASSWORD: 'password'
       PACT_BROKER_DATABASE_HOST: 'postgres'
       PACT_BROKER_DATABASE_NAME: 'pactbroker'
-      RUBYOPT: "-E utf-8"
     ports:
       - target: 9292
         published: 9292

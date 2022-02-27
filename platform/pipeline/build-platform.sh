@@ -32,7 +32,7 @@ export BUILD_ARGS="-q -e -Dnexus.host=${TEST_DOCKER_HOST} -Dnexus.port=${NEXUS_P
 
 mvn versions:set versions:commit -q -e -DnewVersion=$VERSION -Dcommon=true -Dservices=true -Dplatform=true
 
-mvn clean deploy -s settings.xml ${MAVEN_ARGS} -Dcommon=true -Dservices=true -Dnexus=true
+mvn clean deploy -q -e -s settings.xml ${MAVEN_ARGS} -Dcommon=true -Dservices=true -Dnexus=true
 
 for service in ${services[@]}; do
   pushd services/$service

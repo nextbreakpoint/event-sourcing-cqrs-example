@@ -150,15 +150,15 @@ services=(
 export MAVEN_ARGS="-q -e -Dnexus.host=${NEXUS_HOST} -Dnexus.port=${NEXUS_PORT} -Dpactbroker.host=${PACTBROKER_HOST} -Dpactbroker.port=${PACTBROKER_PORT}"
 export BUILD_ARGS="-q -e -Dnexus.host=${TEST_DOCKER_HOST} -Dnexus.port=${NEXUS_PORT} -Dpactbroker.host=${TEST_DOCKER_HOST} -Dpactbroker.port=${PACTBROKER_PORT}"
 
-mvn versions:set versions:commit -DnewVersion=$VERSION -Dcommon=true -Dservices=true -Dplatform=true
+mvn versions:set versions:commit -q -e -DnewVersion=$VERSION -Dcommon=true -Dservices=true -Dplatform=true
 
 if [ "$DEPLOY" == "true" ]; then
-  mvn clean deploy -s settings.xml ${MAVEN_ARGS} -Dcommon=true -Dservices=true -Dnexus=true
+  mvn clean deploy -q -e -s settings.xml ${MAVEN_ARGS} -Dcommon=true -Dservices=true -Dnexus=true
 fi
 
 if [ "$BUILD" == "true" ]; then
 
-#mvn package -s settings.xml ${MAVEN_ARGS} -Dcommon=true -Dservices=true -Dnexus=true -DskipTests=true
+#mvn package -q -e -s settings.xml ${MAVEN_ARGS} -Dcommon=true -Dservices=true -Dnexus=true -DskipTests=true
 
 for service in ${services[@]}; do
   pushd services/$service
@@ -174,7 +174,7 @@ if [ "$INTEGRATION_TESTS" == "true" ]; then
 
 for service in ${services[@]}; do
   pushd services/$service
-   JAEGER_SERVICE_NAME=$service mvn clean verify -Dgroups=integration -Ddocker.host=${TEST_DOCKER_HOST}
+   JAEGER_SERVICE_NAME=$service mvn clean verify -q -e -Dgroups=integration -Ddocker.host=${TEST_DOCKER_HOST}
   popd
 done
 
@@ -184,7 +184,7 @@ if [ "$PACT_TESTS" == "true" ]; then
 
 for service in ${services[@]}; do
   pushd services/$service
-   JAEGER_SERVICE_NAME=$service mvn clean verify -Dgroups=pact -Ddocker.host=${TEST_DOCKER_HOST}
+   JAEGER_SERVICE_NAME=$service mvn clean verify -q -e -Dgroups=pact -Ddocker.host=${TEST_DOCKER_HOST}
   popd
 done
 
@@ -194,7 +194,7 @@ if [ "$PACT_VERIFY" == "true" ]; then
 
 for service in ${services[@]}; do
   pushd services/$service
-   JAEGER_SERVICE_NAME=$service mvn clean verify -Dgroups=pact-verify -Ddocker.host=${TEST_DOCKER_HOST}
+   JAEGER_SERVICE_NAME=$service mvn clean verify -q -e -Dgroups=pact-verify -Ddocker.host=${TEST_DOCKER_HOST}
   popd
 done
 

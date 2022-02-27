@@ -1,14 +1,17 @@
 package com.nextbreakpoint.blueprint.frontend;
 
 import au.com.dius.pact.consumer.MockServer;
+import au.com.dius.pact.consumer.dsl.PactBuilder;
 import au.com.dius.pact.consumer.dsl.PactDslJsonArray;
 import au.com.dius.pact.consumer.dsl.PactDslJsonBody;
-import au.com.dius.pact.consumer.dsl.PactDslWithProvider;
 import au.com.dius.pact.consumer.junit5.PactConsumerTestExt;
 import au.com.dius.pact.consumer.junit5.PactTestFor;
-import au.com.dius.pact.core.model.RequestResponsePact;
+import au.com.dius.pact.core.model.PactSpecVersion;
+import au.com.dius.pact.core.model.V4Pact;
 import au.com.dius.pact.core.model.annotations.Pact;
+import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
+import com.nextbreakpoint.blueprint.common.core.IOUtils;
 import io.vertx.core.json.JsonObject;
 import org.apache.hc.client5.http.fluent.Request;
 import org.apache.hc.core5.http.io.entity.StringEntity;
@@ -26,67 +29,69 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DisplayName("Test frontend pact")
 @ExtendWith(PactConsumerTestExt.class)
 public class PactConsumerTests {
-  private static final TestScenario scenario = new TestScenario();
+    private static final TestScenario scenario = new TestScenario();
 
-  @BeforeAll
-  public static void before() {
-    scenario.before();
-  }
+    @BeforeAll
+    public static void before() {
+        System.setProperty("pact_do_not_track", "true");
 
-  @AfterAll
-  public static void after() {
-    scenario.after();
-  }
+        scenario.before();
+    }
 
-  @Pact(consumer = "frontend")
-  public RequestResponsePact retrieveAccount(PactDslWithProvider builder) {
-    final Map<String, String> headers = new HashMap<>();
-    headers.put("Content-Type", "application/json");
-    return builder
-            .given("account exists for uuid")
-            .uponReceiving("request to fetch account")
-            .method("GET")
-            .path("/v1/accounts/" + TestConstants.ACCOUNT_UUID)
-            .matchHeader("Accept", "application/json")
-            .matchHeader("Authorization", "Bearer .+")
-            .willRespondWith()
-            .headers(headers)
-            .status(200)
-            .body(
-                    new PactDslJsonBody()
-                            .stringValue("uuid", TestConstants.ACCOUNT_UUID.toString())
-                            .stringValue("role", "guest")
-            )
-            .toPact();
-  }
+    @AfterAll
+    public static void after() {
+        scenario.after();
+    }
 
-  @Pact(consumer = "frontend")
-  public RequestResponsePact retrieveDesigns(PactDslWithProvider builder) {
-    final Map<String, String> headers = new HashMap<>();
-    headers.put("Content-Type", "application/json");
-    return builder
-            .given("there are some designs")
-            .uponReceiving("request to retrieve designs")
-            .method("GET")
-            .path("/v1/designs")
-            .matchHeader("Accept", "application/json")
-            .matchHeader("Authorization", "Bearer .+")
-            .willRespondWith()
-            .headers(headers)
-            .status(200)
-            .body(
-                    new PactDslJsonArray()
-                            .object()
-                            .stringValue("uuid", TestConstants.DESIGN_UUID_1.toString())
-                            .stringMatcher("checksum", ".+")
-                            .closeObject()
-                            .object()
-                            .stringValue("uuid", TestConstants.DESIGN_UUID_2.toString())
-                            .stringMatcher("checksum", ".+")
-                            .closeObject()
-            )
-            .toPact();
-  }
+    @Pact(consumer = "frontend")
+    public V4Pact retrieveAccount(PactBuilder builder) {
+        final Map<String, String> headers = new HashMap<>();
+        headers.put("Content-Type", "application/json");
+        return builder.usingLegacyDsl()
+                .given("account exists for uuid")
+                .uponReceiving("request to fetch account")
+                .method("GET")
+                .path("/v1/accounts/" + TestConstants.ACCOUNT_UUID)
+                .matchHeader("Accept", "application/json")
+                .matchHeader("Authorization", "Bearer .+")
+                .willRespondWith()
+                .headers(headers)
+                .status(200)
+                .body(
+                        new PactDslJsonBody()
+                                .stringValue("uuid", TestConstants.ACCOUNT_UUID.toString())
+                                .stringValue("role", "guest")
+                )
+                .toPact(V4Pact.class);
+    }
+
+    @Pact(consumer = "frontend")
+    public V4Pact retrieveDesigns(PactBuilder builder) {
+        final Map<String, String> headers = new HashMap<>();
+        headers.put("Content-Type", "application/json");
+        return builder.usingLegacyDsl()
+                .given("there are some designs")
+                .uponReceiving("request to retrieve designs")
+                .method("GET")
+                .path("/v1/designs")
+                .matchHeader("Accept", "application/json")
+                .matchHeader("Authorization", "Bearer .+")
+                .willRespondWith()
+                .headers(headers)
+                .status(200)
+                .body(
+                        new PactDslJsonArray()
+                                .object()
+                                .stringValue("uuid", TestConstants.DESIGN_UUID_1.toString())
+                                .stringMatcher("checksum", ".+")
+                                .closeObject()
+                                .object()
+                                .stringValue("uuid", TestConstants.DESIGN_UUID_2.toString())
+                                .stringMatcher("checksum", ".+")
+                                .closeObject()
+                )
+                .toPact(V4Pact.class);
+    }
 
 //  @Pact(consumer = "frontend")
 //  public RequestResponsePact retrieveDesign(PactDslWithProvider builder) {
@@ -179,114 +184,115 @@ public class PactConsumerTests {
 //            .toPact();
 //  }
 
-  @Pact(consumer = "frontend")
-  public RequestResponsePact retrieveDesignWhenUsingCQRS(PactDslWithProvider builder) {
-    final Map<String, String> headers = new HashMap<>();
-    headers.put("Content-Type", "application/json");
-    return builder
-            .given("design exists for uuid")
-            .uponReceiving("request to fetch design")
-            .method("GET")
-            .path("/v1/designs/" + TestConstants.DESIGN_UUID_1)
-            .matchHeader("Accept", "application/json")
-            .matchHeader("Authorization", "Bearer .+")
-            .willRespondWith()
-            .headers(headers)
-            .status(200)
-            .body(
-                    new PactDslJsonBody()
-                            .stringValue("uuid", TestConstants.DESIGN_UUID_1.toString())
-                            .stringMatcher("json", ".+")
-                            .stringMatcher("checksum", ".+")
-                            .datetime("modified", "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
-            )
-            .toPact();
-  }
+    @Pact(consumer = "frontend")
+    public V4Pact retrieveDesignWhenUsingCQRS(PactBuilder builder) {
+        final Map<String, String> headers = new HashMap<>();
+        headers.put("Content-Type", "application/json");
+        return builder.usingLegacyDsl()
+                .given("design exists for uuid")
+                .uponReceiving("request to fetch design")
+                .method("GET")
+                .path("/v1/designs/" + TestConstants.DESIGN_UUID_1)
+                .matchHeader("Accept", "application/json")
+                .matchHeader("Authorization", "Bearer .+")
+                .willRespondWith()
+                .headers(headers)
+                .status(200)
+                .body(
+                        new PactDslJsonBody()
+                                .stringValue("uuid", TestConstants.DESIGN_UUID_1.toString())
+                                .stringMatcher("json", ".+")
+                                .stringMatcher("checksum", ".+")
+                                .datetime("modified", "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+                )
+                .toPact(V4Pact.class);
+    }
 
-  @Pact(consumer = "frontend")
-  public RequestResponsePact insertDesignWhenUsingCQRS(PactDslWithProvider builder) {
-    final Map<String, String> headers = new HashMap<>();
-    headers.put("Content-Type", "application/json");
-    return builder
-            .given("kafka topic exists")
-            .uponReceiving("request to insert design")
-            .method("POST")
-            .path("/v1/designs")
-            .matchHeader("Accept", "application/json")
-            .matchHeader("Content-Type", "application/json")
-            .matchHeader("Authorization", "Bearer .+")
-            .body(new JsonObject(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT)).toString())
-            .willRespondWith()
-            .headers(headers)
-            .status(202)
-            .body(
-                    new PactDslJsonBody()
-                            .stringMatcher("uuid", ".+")
-                            .stringMatcher("status", ".+")
-            )
-            .toPact();
-  }
+    @Pact(consumer = "frontend")
+    public V4Pact insertDesignWhenUsingCQRS(PactBuilder builder) {
+        final Map<String, String> headers = new HashMap<>();
+        headers.put("Content-Type", "application/json");
+        return builder.usingLegacyDsl()
+                .given("kafka topic exists")
+                .uponReceiving("request to insert design")
+                .method("POST")
+                .path("/v1/designs")
+                .matchHeader("Accept", "application/json")
+                .matchHeader("Content-Type", "application/json")
+                .matchHeader("Authorization", "Bearer .+")
+                .body(new JsonObject(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT)).toString())
+                .willRespondWith()
+                .headers(headers)
+                .status(202)
+                .body(
+                        new PactDslJsonBody()
+                                .stringMatcher("uuid", ".+")
+                                .stringMatcher("status", ".+")
+                )
+                .toPact(V4Pact.class);
+    }
 
-  @Pact(consumer = "frontend")
-  public RequestResponsePact updateDesignWhenUsingCQRS(PactDslWithProvider builder) {
-    final Map<String, String> headers = new HashMap<>();
-    headers.put("Content-Type", "application/json");
-    return builder
-            .given("kafka topic exists")
-            .uponReceiving("request to update design")
-            .method("PUT")
-            .path("/v1/designs/" + TestConstants.DESIGN_UUID_1)
-            .matchHeader("Accept", "application/json")
-            .matchHeader("Content-Type", "application/json")
-            .matchHeader("Authorization", "Bearer .+")
-            .body(new JsonObject(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT)).toString())
-            .willRespondWith()
-            .headers(headers)
-            .status(202)
-            .body(
-                    new PactDslJsonBody()
-                            .stringValue("uuid", TestConstants.DESIGN_UUID_1.toString())
-                            .stringMatcher("status", ".+")
-            )
-            .toPact();
-  }
+    @Pact(consumer = "frontend")
+    public V4Pact updateDesignWhenUsingCQRS(PactBuilder builder) {
+        final Map<String, String> headers = new HashMap<>();
+        headers.put("Content-Type", "application/json");
+        return builder.usingLegacyDsl()
+                .given("kafka topic exists")
+                .uponReceiving("request to update design")
+                .method("PUT")
+                .path("/v1/designs/" + TestConstants.DESIGN_UUID_1)
+                .matchHeader("Accept", "application/json")
+                .matchHeader("Content-Type", "application/json")
+                .matchHeader("Authorization", "Bearer .+")
+                .body(new JsonObject(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT)).toString())
+                .willRespondWith()
+                .headers(headers)
+                .status(202)
+                .body(
+                        new PactDslJsonBody()
+                                .stringValue("uuid", TestConstants.DESIGN_UUID_1.toString())
+                                .stringMatcher("status", ".+")
+                )
+                .toPact(V4Pact.class);
+    }
 
-  @Pact(consumer = "frontend")
-  public RequestResponsePact deleteDesignWhenUsingCQRS(PactDslWithProvider builder) {
-    final Map<String, String> headers = new HashMap<>();
-    headers.put("Content-Type", "application/json");
-    return builder
-            .given("kafka topic exists")
-            .uponReceiving("request to delete design")
-            .method("DELETE")
-            .path("/v1/designs/" + TestConstants.DESIGN_UUID_1)
-            .matchHeader("Accept", "application/json")
-            .matchHeader("Authorization", "Bearer .+")
-            .willRespondWith()
-            .headers(headers)
-            .status(202)
-            .body(
-                    new PactDslJsonBody()
-                            .stringValue("uuid", TestConstants.DESIGN_UUID_1.toString())
-                            .stringMatcher("status", ".+")
-            )
-            .toPact();
-  }
+    @Pact(consumer = "frontend")
+    public V4Pact deleteDesignWhenUsingCQRS(PactBuilder builder) {
+        final Map<String, String> headers = new HashMap<>();
+        headers.put("Content-Type", "application/json");
+        return builder.usingLegacyDsl()
+                .given("kafka topic exists")
+                .uponReceiving("request to delete design")
+                .method("DELETE")
+                .path("/v1/designs/" + TestConstants.DESIGN_UUID_1)
+                .matchHeader("Accept", "application/json")
+                .matchHeader("Authorization", "Bearer .+")
+                .willRespondWith()
+                .headers(headers)
+                .status(202)
+                .body(
+                        new PactDslJsonBody()
+                                .stringValue("uuid", TestConstants.DESIGN_UUID_1.toString())
+                                .stringMatcher("status", ".+")
+                )
+                .toPact(V4Pact.class);
+    }
 
-  @Test
-  @PactTestFor(providerName = "accounts", port = "1110", pactMethod = "retrieveAccount")
-  public void shouldRetrieveAccount(MockServer mockServer) throws IOException {
-    Request.get(mockServer.getUrl() + "/v1/accounts/" + TestConstants.ACCOUNT_UUID)
-            .addHeader("Accept", "application/json")
-            .addHeader("Authorization", "Bearer abcdef")
-            .execute()
-            .handleResponse(httpResponse -> {
-              assertThat(httpResponse.getCode()).isEqualTo(200);
-              assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.uuid").toString()).isEqualTo(TestConstants.ACCOUNT_UUID.toString());
-              assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.role").toString()).isEqualTo("guest");
-              return null;
-            });
-  }
+    @Test
+    @PactTestFor(providerName = "accounts", port = "1110", pactMethod = "retrieveAccount", pactVersion = PactSpecVersion.V4)
+    public void shouldRetrieveAccount(MockServer mockServer) throws IOException {
+        Request.get(mockServer.getUrl() + "/v1/accounts/" + TestConstants.ACCOUNT_UUID)
+                .addHeader("Accept", "application/json")
+                .addHeader("Authorization", "Bearer abcdef")
+                .execute()
+                .handleResponse(httpResponse -> {
+                    assertThat(httpResponse.getCode()).isEqualTo(200);
+                    final DocumentContext content = JsonPath.parse(httpResponse.getEntity().getContent());
+                    assertThat(content.read("$.uuid").toString()).isEqualTo(TestConstants.ACCOUNT_UUID.toString());
+                    assertThat(content.read("$.role").toString()).isEqualTo("guest");
+                    return null;
+                });
+    }
 
 //  @Test
 //  @PactTestFor(providerName = "designs", port = "1111", pactMethod = "retrieveDesigns")
@@ -296,10 +302,10 @@ public class PactConsumerTests {
 //            .addHeader("Authorization", "Bearer abcdef")
 //            .execute().returnResponse();
 //    assertThat(httpResponse.getStatusLine().getStatusCode()).isEqualTo(200);
-//    assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.[0].uuid").toString()).isEqualTo(DESIGN_UUID_1.toString());
-//    assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.[0].checksum").toString()).isNotBlank();
-//    assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.[1].uuid").toString()).isEqualTo(DESIGN_UUID_2.toString());
-//    assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.[1].checksum").toString()).isNotBlank();
+//    assertThat(JsonPath.read(content, "$.[0].uuid").toString()).isEqualTo(DESIGN_UUID_1.toString());
+//    assertThat(JsonPath.read(content, "$.[0].checksum").toString()).isNotBlank();
+//    assertThat(JsonPath.read(content, "$.[1].uuid").toString()).isEqualTo(DESIGN_UUID_2.toString());
+//    assertThat(JsonPath.read(content, "$.[1].checksum").toString()).isNotBlank();
 //  }
 //
 //  @Test
@@ -310,10 +316,10 @@ public class PactConsumerTests {
 //            .addHeader("Authorization", "Bearer abcdef")
 //            .execute().returnResponse();
 //    assertThat(httpResponse.getStatusLine().getStatusCode()).isEqualTo(200);
-//    assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.uuid").toString()).isEqualTo(DESIGN_UUID_1.toString());
-//    assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.json").toString()).isNotBlank();
-//    assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.checksum").toString()).isNotBlank();
-//    assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.modified").toString()).isNotBlank();
+//    assertThat(JsonPath.read(content, "$.uuid").toString()).isEqualTo(DESIGN_UUID_1.toString());
+//    assertThat(JsonPath.read(content, "$.json").toString()).isNotBlank();
+//    assertThat(JsonPath.read(content, "$.checksum").toString()).isNotBlank();
+//    assertThat(JsonPath.read(content, "$.modified").toString()).isNotBlank();
 //  }
 //
 //  @Test
@@ -326,7 +332,7 @@ public class PactConsumerTests {
 //            .body(new StringEntity(new JsonObject(createPostData(MANIFEST, METADATA, SCRIPT)).toString()))
 //            .execute().returnResponse();
 //    assertThat(httpResponse.getStatusLine().getStatusCode()).isEqualTo(201);
-//    assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.uuid").toString()).isNotBlank();
+//    assertThat(JsonPath.read(content, "$.uuid").toString()).isNotBlank();
 //  }
 //
 //  @Test
@@ -339,7 +345,7 @@ public class PactConsumerTests {
 //            .body(new StringEntity(new JsonObject(createPostData(MANIFEST, METADATA, SCRIPT)).toString()))
 //            .execute().returnResponse();
 //    assertThat(httpResponse.getStatusLine().getStatusCode()).isEqualTo(200);
-//    assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.uuid").toString()).isEqualTo(DESIGN_UUID_1.toString());
+//    assertThat(JsonPath.read(content, "$.uuid").toString()).isEqualTo(DESIGN_UUID_1.toString());
 //  }
 //
 //  @Test
@@ -350,89 +356,94 @@ public class PactConsumerTests {
 //            .addHeader("Authorization", "Bearer abcdef")
 //            .execute().returnResponse();
 //    assertThat(httpResponse.getStatusLine().getStatusCode()).isEqualTo(200);
-//    assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.uuid").toString()).isEqualTo(DESIGN_UUID_1.toString());
+//    assertThat(JsonPath.read(content, "$.uuid").toString()).isEqualTo(DESIGN_UUID_1.toString());
 //  }
 
-  @Test
-  @PactTestFor(providerName = "designs-query", port = "1116", pactMethod = "retrieveDesigns")
-  public void shouldRetrieveDesignsWhenUsingCQRS(MockServer mockServer) throws IOException {
-    Request.get(mockServer.getUrl() + "/v1/designs")
-            .addHeader("Accept", "application/json")
-            .addHeader("Authorization", "Bearer abcdef")
-            .execute()
-            .handleResponse(httpResponse -> {
-              assertThat(httpResponse.getCode()).isEqualTo(200);
-              assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.[0].uuid").toString()).isEqualTo(TestConstants.DESIGN_UUID_1.toString());
-              assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.[0].checksum").toString()).isNotBlank();
-              assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.[1].uuid").toString()).isEqualTo(TestConstants.DESIGN_UUID_2.toString());
-              assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.[1].checksum").toString()).isNotBlank();
-              return null;
-            });
-  }
+    @Test
+    @PactTestFor(providerName = "designs-query", port = "1116", pactMethod = "retrieveDesigns", pactVersion = PactSpecVersion.V4)
+    public void shouldRetrieveDesignsWhenUsingCQRS(MockServer mockServer) throws IOException {
+        Request.get(mockServer.getUrl() + "/v1/designs")
+                .addHeader("Accept", "application/json")
+                .addHeader("Authorization", "Bearer abcdef")
+                .execute()
+                .handleResponse(httpResponse -> {
+                    assertThat(httpResponse.getCode()).isEqualTo(200);
+                    final DocumentContext content = JsonPath.parse(httpResponse.getEntity().getContent());
+                    assertThat(content.read("$.[0].uuid").toString()).isEqualTo(TestConstants.DESIGN_UUID_1.toString());
+                    assertThat(content.read("$.[0].checksum").toString()).isNotBlank();
+                    assertThat(content.read("$.[1].uuid").toString()).isEqualTo(TestConstants.DESIGN_UUID_2.toString());
+                    assertThat(content.read("$.[1].checksum").toString()).isNotBlank();
+                    return null;
+                });
+    }
 
-  @Test
-  @PactTestFor(providerName = "designs-query", port = "1117", pactMethod = "retrieveDesignWhenUsingCQRS")
-  public void shouldRetrieveDesignWhenUsingCQRS(MockServer mockServer) throws IOException {
-    Request.get(mockServer.getUrl() + "/v1/designs/" + TestConstants.DESIGN_UUID_1)
-            .addHeader("Accept", "application/json")
-            .addHeader("Authorization", "Bearer abcdef")
-            .execute()
-            .handleResponse(httpResponse -> {
-              assertThat(httpResponse.getCode()).isEqualTo(200);
-              assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.uuid").toString()).isEqualTo(TestConstants.DESIGN_UUID_1.toString());
-              assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.json").toString()).isNotBlank();
-              assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.checksum").toString()).isNotBlank();
-              assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.modified").toString()).isNotBlank();
-              return null;
-            });
-  }
+    @Test
+    @PactTestFor(providerName = "designs-query", port = "1117", pactMethod = "retrieveDesignWhenUsingCQRS", pactVersion = PactSpecVersion.V4)
+    public void shouldRetrieveDesignWhenUsingCQRS(MockServer mockServer) throws IOException {
+        Request.get(mockServer.getUrl() + "/v1/designs/" + TestConstants.DESIGN_UUID_1)
+                .addHeader("Accept", "application/json")
+                .addHeader("Authorization", "Bearer abcdef")
+                .execute()
+                .handleResponse(httpResponse -> {
+                    assertThat(httpResponse.getCode()).isEqualTo(200);
+                    final DocumentContext content = JsonPath.parse(httpResponse.getEntity().getContent());
+                    assertThat(content.read("$.uuid").toString()).isEqualTo(TestConstants.DESIGN_UUID_1.toString());
+                    assertThat(content.read("$.json").toString()).isNotBlank();
+                    assertThat(content.read("$.checksum").toString()).isNotBlank();
+                    assertThat(content.read("$.modified").toString()).isNotBlank();
+                    return null;
+                });
+    }
 
-  @Test
-  @PactTestFor(providerName = "designs-command", port = "1118", pactMethod = "insertDesignWhenUsingCQRS")
-  public void shouldInsertDesignWhenUsingCQRS(MockServer mockServer) throws IOException {
-    Request.post(mockServer.getUrl() + "/v1/designs")
-            .addHeader("Accept", "application/json")
-            .addHeader("Content-Type", "application/json")
-            .addHeader("Authorization", "Bearer abcdef")
-            .body(new StringEntity(new JsonObject(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT)).toString()))
-            .execute()
-            .handleResponse(httpResponse -> {
-              assertThat(httpResponse.getCode()).isEqualTo(202);
-              assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.uuid").toString()).isNotBlank();
-              assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.status").toString()).isNotBlank();
-              return null;
-            });
-  }
+    @Test
+    @PactTestFor(providerName = "designs-command", port = "1118", pactMethod = "insertDesignWhenUsingCQRS", pactVersion = PactSpecVersion.V4)
+    public void shouldInsertDesignWhenUsingCQRS(MockServer mockServer) throws IOException {
+        Request.post(mockServer.getUrl() + "/v1/designs")
+                .addHeader("Accept", "application/json")
+                .addHeader("Content-Type", "application/json")
+                .addHeader("Authorization", "Bearer abcdef")
+                .body(new StringEntity(new JsonObject(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT)).toString()))
+                .execute()
+                .handleResponse(httpResponse -> {
+                    assertThat(httpResponse.getCode()).isEqualTo(202);
+                    final DocumentContext content = JsonPath.parse(httpResponse.getEntity().getContent());
+                    assertThat(content.read("$.uuid").toString()).isNotBlank();
+                    assertThat(content.read("$.status").toString()).isNotBlank();
+                    return null;
+                });
+    }
 
-  @Test
-  @PactTestFor(providerName = "designs-command", port = "1119", pactMethod = "updateDesignWhenUsingCQRS")
-  public void shouldUpdateDesignWhenUsingCQRS(MockServer mockServer) throws IOException {
-    Request.put(mockServer.getUrl() + "/v1/designs/" + TestConstants.DESIGN_UUID_1)
-            .addHeader("Accept", "application/json")
-            .addHeader("Content-Type", "application/json")
-            .addHeader("Authorization", "Bearer abcdef")
-            .body(new StringEntity(new JsonObject(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT)).toString()))
-            .execute()
-            .handleResponse(httpResponse -> {
-              assertThat(httpResponse.getCode()).isEqualTo(202);
-              assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.uuid").toString()).isEqualTo(TestConstants.DESIGN_UUID_1.toString());
-              assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.status").toString()).isNotBlank();
-              return null;
-            });
-  }
+    @Test
+    @PactTestFor(providerName = "designs-command", port = "1119", pactMethod = "updateDesignWhenUsingCQRS", pactVersion = PactSpecVersion.V4)
+    public void shouldUpdateDesignWhenUsingCQRS(MockServer mockServer) throws IOException {
+        Request.put(mockServer.getUrl() + "/v1/designs/" + TestConstants.DESIGN_UUID_1)
+                .addHeader("Accept", "application/json")
+                .addHeader("Content-Type", "application/json")
+                .addHeader("Authorization", "Bearer abcdef")
+                .body(new StringEntity(new JsonObject(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT)).toString()))
+                .execute()
+                .handleResponse(httpResponse -> {
+                    assertThat(httpResponse.getCode()).isEqualTo(202);
+                    final DocumentContext content = JsonPath.parse(httpResponse.getEntity().getContent());
+                    assertThat(content.read("$.uuid").toString()).isEqualTo(TestConstants.DESIGN_UUID_1.toString());
+                    assertThat(content.read("$.status").toString()).isNotBlank();
+                    return null;
+                });
+    }
 
-  @Test
-  @PactTestFor(providerName = "designs-command", port = "1120", pactMethod = "deleteDesignWhenUsingCQRS")
-  public void shouldDeleteDesignWhenUsingCQRS(MockServer mockServer) throws IOException {
-    Request.delete(mockServer.getUrl() + "/v1/designs/" + TestConstants.DESIGN_UUID_1)
-            .addHeader("Accept", "application/json")
-            .addHeader("Authorization", "Bearer abcdef")
-            .execute()
-            .handleResponse(httpResponse -> {
-              assertThat(httpResponse.getCode()).isEqualTo(202);
-              assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.uuid").toString()).isEqualTo(TestConstants.DESIGN_UUID_1.toString());
-              assertThat(JsonPath.read(httpResponse.getEntity().getContent(), "$.status").toString()).isNotBlank();
-              return null;
-            });
-  }
+    @Test
+    @PactTestFor(providerName = "designs-command", port = "1120", pactMethod = "deleteDesignWhenUsingCQRS", pactVersion = PactSpecVersion.V4)
+    public void shouldDeleteDesignWhenUsingCQRS(MockServer mockServer) throws IOException {
+        Request.delete(mockServer.getUrl() + "/v1/designs/" + TestConstants.DESIGN_UUID_1)
+                .addHeader("Accept", "application/json")
+                .addHeader("Authorization", "Bearer abcdef")
+                .execute()
+                .handleResponse(httpResponse -> {
+                    assertThat(httpResponse.getCode()).isEqualTo(202);
+                    final DocumentContext content = JsonPath.parse(httpResponse.getEntity().getContent());
+                    assertThat(content.read("$.uuid").toString()).isEqualTo(TestConstants.DESIGN_UUID_1.toString());
+                    assertThat(content.read("$.status").toString()).isNotBlank();
+                    return null;
+                });
+    }
 }

@@ -10,7 +10,7 @@
 
   "origin_pattern": "https://localhost(:[0-9]+)?",
 
-  "jdbc_url": "jdbc:mysql://${DATABASE_HOST}:3306/${DATABASE_NAME}?useSSL=false&allowPublicKeyRetrieval=true&nullNamePatternMatchesAll=true",
+  "jdbc_url": "jdbc:mysql://${DATABASE_HOST}:3306/${DATABASE_NAME}?useSSL=false&allowPublicKeyRetrieval=true&nullNamePatternMatchesAll=true&generateSimpleParameterMetadata=true",
   "jdbc_driver": "com.mysql.cj.jdbc.Driver",
   "jdbc_username": "${DATABASE_USERNAME}",
   "jdbc_password": "${DATABASE_PASSWORD}",

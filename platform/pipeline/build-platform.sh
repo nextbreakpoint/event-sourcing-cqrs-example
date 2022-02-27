@@ -4,9 +4,6 @@ set -e
 
 export REPOSITORY="integration"
 export VERSION="1.0.0-$(git rev-parse --abbrev-ref HEAD)-$(git rev-parse --short HEAD)-$(date +%s)"
-export DEPLOY="true"
-export BUILD="true"
-export TEST="true"
 
 export TEST_DOCKER_HOST="172.17.0.1"
 
@@ -35,13 +32,7 @@ export BUILD_ARGS="-q -e -Dnexus.host=${TEST_DOCKER_HOST} -Dnexus.port=${NEXUS_P
 
 mvn versions:set versions:commit -q -e -DnewVersion=$VERSION -Dcommon=true -Dservices=true -Dplatform=true
 
-if [ "$DEPLOY" == "true" ]; then
-  mvn clean deploy -s settings.xml ${MAVEN_ARGS} -Dcommon=true -Dservices=true -Dnexus=true
-fi
-
-if [ "$BUILD" == "true" ]; then
-
-#mvn package -q -e -s settings.xml ${MAVEN_ARGS} -Dcommon=true -Dservices=true -Dnexus=true -DskipTests=true
+mvn clean deploy -s settings.xml ${MAVEN_ARGS} -Dcommon=true -Dservices=true -Dnexus=true
 
 for service in ${services[@]}; do
   pushd services/$service
@@ -49,11 +40,7 @@ for service in ${services[@]}; do
   popd
 done
 
-fi
-
 export MAVEN_OPTS="--add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.net=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED --add-opens=java.base/java.util.regex=ALL-UNNAMED --add-opens=java.base/java.security=ALL-UNNAMED --add-opens=java.base/sun.net.spi=ALL-UNNAMED"
-
-if [ "$TEST" == "true" ]; then
 
 for service in ${services[@]}; do
   pushd services/$service
@@ -73,4 +60,3 @@ for service in ${services[@]}; do
   popd
 done
 
-fi

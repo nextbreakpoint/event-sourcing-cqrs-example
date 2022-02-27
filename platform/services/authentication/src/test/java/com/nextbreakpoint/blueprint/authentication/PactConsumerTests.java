@@ -1,12 +1,13 @@
 package com.nextbreakpoint.blueprint.authentication;
 
 import au.com.dius.pact.consumer.MockServer;
+import au.com.dius.pact.consumer.dsl.PactBuilder;
 import au.com.dius.pact.consumer.dsl.PactDslJsonArray;
 import au.com.dius.pact.consumer.dsl.PactDslJsonBody;
-import au.com.dius.pact.consumer.dsl.PactDslWithProvider;
 import au.com.dius.pact.consumer.junit5.PactConsumerTestExt;
 import au.com.dius.pact.consumer.junit5.PactTestFor;
-import au.com.dius.pact.core.model.RequestResponsePact;
+import au.com.dius.pact.core.model.PactSpecVersion;
+import au.com.dius.pact.core.model.V4Pact;
 import au.com.dius.pact.core.model.annotations.Pact;
 import com.jayway.restassured.RestAssured;
 import com.xebialabs.restito.server.StubServer;
@@ -36,6 +37,8 @@ public class PactConsumerTests {
 
   @BeforeAll
   public static void before() {
+    System.setProperty("pact_do_not_track", "true");
+
     testCases.before();
 
     if (githubStub != null) {
@@ -62,10 +65,10 @@ public class PactConsumerTests {
   }
 
   @Pact(consumer = "authentication")
-  public RequestResponsePact accountExists(PactDslWithProvider builder) {
+  public V4Pact accountExists(PactBuilder builder) {
     final Map<String, String> headers = new HashMap<>();
     headers.put("Content-Type", "application/json");
-    return builder
+    return builder.usingLegacyDsl()
             .given("account exists for uuid")
             .uponReceiving("request to retrieve accounts")
             .method("GET")
@@ -93,14 +96,14 @@ public class PactConsumerTests {
                             .stringValue("uuid", TestConstants.ACCOUNT_UUID.toString())
                             .stringValue("role", "guest")
             )
-            .toPact();
+            .toPact(V4Pact.class);
   }
 
   @Pact(consumer = "authentication")
-  public RequestResponsePact accountDoesNotExist(PactDslWithProvider builder) {
+  public V4Pact accountDoesNotExist(PactBuilder builder) {
     final Map<String, String> headers = new HashMap<>();
     headers.put("Content-Type", "application/json");
-    return builder
+    return builder.usingLegacyDsl()
             .given("account doesn't exist")
             .uponReceiving("request to retrieve empty accounts")
             .method("GET")
@@ -134,11 +137,11 @@ public class PactConsumerTests {
                             .stringMatcher("uuid", ".+")
                             .stringValue("role", "guest")
             )
-            .toPact();
+            .toPact(V4Pact.class);
   }
 
   @Test
-  @PactTestFor(providerName = "accounts", hostInterface = "0.0.0.0", port = "39001", pactMethod = "accountDoesNotExist")
+  @PactTestFor(providerName = "accounts", hostInterface = "0.0.0.0", port = "39001", pactMethod = "accountDoesNotExist", pactVersion = PactSpecVersion.V4)
   @DisplayName("should create an account and redirect to designs when authenticated user doesn't have an account")
   public void shouldCreateAnAccountAndRedirectToDesignsWhenAuthenticatedUserDoNotHaveAnAccount(MockServer mockServer) throws IOException {
     whenHttp(githubStub)
@@ -173,7 +176,7 @@ public class PactConsumerTests {
   }
 
   @Test
-  @PactTestFor(providerName = "accounts", hostInterface = "0.0.0.0", port = "39001", pactMethod = "accountExists")
+  @PactTestFor(providerName = "accounts", hostInterface = "0.0.0.0", port = "39001", pactMethod = "accountExists", pactVersion = PactSpecVersion.V4)
   @DisplayName("should not create an account and redirect to designs when authenticated user already has an account")
   public void shouldNotCreateAnAccountAndRedirectToDesignsWhenAuthenticatedUserAlreadyHasAnAccount(MockServer mockServer) throws IOException {
     whenHttp(githubStub)

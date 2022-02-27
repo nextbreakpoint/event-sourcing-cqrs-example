@@ -5,14 +5,18 @@ import au.com.dius.pact.consumer.dsl.PactDslJsonBody;
 import au.com.dius.pact.consumer.junit5.PactConsumerTestExt;
 import au.com.dius.pact.consumer.junit5.PactTestFor;
 import au.com.dius.pact.consumer.junit5.ProviderType;
+import au.com.dius.pact.core.model.PactSpecVersion;
+import au.com.dius.pact.core.model.V4Pact;
 import au.com.dius.pact.core.model.annotations.Pact;
-import au.com.dius.pact.core.model.messaging.MessagePact;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @Tag("slow")
 @Tag("pact")
@@ -23,6 +27,8 @@ public class PactConsumerTests {
 
     @BeforeAll
     public static void before() {
+        System.setProperty("pact_do_not_track", "true");
+
         testCases.before();
     }
 
@@ -32,7 +38,7 @@ public class PactConsumerTests {
     }
 
     @Pact(consumer = "designs-notify")
-    public MessagePact designDocumentUpdateCompleted(MessagePactBuilder builder) {
+    public V4Pact designDocumentUpdateCompleted(MessagePactBuilder builder) {
         UUID uuid1 = new UUID(0L, 1L);
         UUID uuid2 = new UUID(0L, 2L);
 
@@ -87,21 +93,25 @@ public class PactConsumerTests {
     }
 
     @Test
-    @PactTestFor(providerName = "designs-query", port = "1111", pactMethod = "designDocumentUpdateCompleted", providerType = ProviderType.ASYNCH)
+    @PactTestFor(providerName = "designs-query", port = "1111", pactMethod = "designDocumentUpdateCompleted", providerType = ProviderType.ASYNCH, pactVersion = PactSpecVersion.V4)
     @DisplayName("Should notify watchers of all resources after receiving a DesignDocumentUpdateCompleted event")
-    public void shouldNotifyWatchersOfAllResourcesWhenReceivingADesignDocumentUpdateCompletedEvent(MessagePact messagePact) {
-        final OutputMessage designDocumentUpdateCompletedMessage1 = TestUtils.toOutputMessage(messagePact.getMessages().get(0));
-        final OutputMessage designDocumentUpdateCompletedMessage2 = TestUtils.toOutputMessage(messagePact.getMessages().get(1));
+    public void shouldNotifyWatchersOfAllResourcesWhenReceivingADesignDocumentUpdateCompletedEvent(V4Pact pact) {
+        assertThat(pact.getInteractions()).hasSize(2);
+
+        final OutputMessage designDocumentUpdateCompletedMessage1 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(0).asAsynchronousMessage()));
+        final OutputMessage designDocumentUpdateCompletedMessage2 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(1).asAsynchronousMessage()));
 
         testCases.shouldNotifyWatchersOfAllResourcesWhenReceivingAnEvent(List.of(designDocumentUpdateCompletedMessage1, designDocumentUpdateCompletedMessage2));
     }
 
     @Test
-    @PactTestFor(providerName = "designs-query", port = "1112", pactMethod = "designDocumentUpdateCompleted", providerType = ProviderType.ASYNCH)
+    @PactTestFor(providerName = "designs-query", port = "1112", pactMethod = "designDocumentUpdateCompleted", providerType = ProviderType.ASYNCH, pactVersion = PactSpecVersion.V4)
     @DisplayName("Should notify watchers of single resource after receiving a DesignDocumentUpdateCompleted event")
-    public void shouldNotifyWatchersOfSingleResourceWhenReceivingAnDesignDocumentUpdateCompletedEvent(MessagePact messagePact) {
-        final OutputMessage designDocumentUpdateCompletedMessage1 = TestUtils.toOutputMessage(messagePact.getMessages().get(0));
-        final OutputMessage designDocumentUpdateCompletedMessage2 = TestUtils.toOutputMessage(messagePact.getMessages().get(1));
+    public void shouldNotifyWatchersOfSingleResourceWhenReceivingAnDesignDocumentUpdateCompletedEvent(V4Pact pact) {
+        assertThat(pact.getInteractions()).hasSize(2);
+
+        final OutputMessage designDocumentUpdateCompletedMessage1 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(0).asAsynchronousMessage()));
+        final OutputMessage designDocumentUpdateCompletedMessage2 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(1).asAsynchronousMessage()));
 
         testCases.shouldNotifyWatchersOfSingleResourceWhenReceivingAnEvent(List.of(designDocumentUpdateCompletedMessage1, designDocumentUpdateCompletedMessage2));
     }

@@ -5,14 +5,18 @@ import au.com.dius.pact.consumer.dsl.PactDslJsonBody;
 import au.com.dius.pact.consumer.junit5.PactConsumerTestExt;
 import au.com.dius.pact.consumer.junit5.PactTestFor;
 import au.com.dius.pact.consumer.junit5.ProviderType;
+import au.com.dius.pact.core.model.PactSpecVersion;
+import au.com.dius.pact.core.model.V4Pact;
 import au.com.dius.pact.core.model.annotations.Pact;
-import au.com.dius.pact.core.model.messaging.MessagePact;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @Tag("slow")
 @Tag("pact")
@@ -23,6 +27,8 @@ public class PactConsumerTests {
 
     @BeforeAll
     public static void before() {
+        System.setProperty("pact_do_not_track", "true");
+
         testCases.before();
 
         System.setProperty("pact.showStacktrace", "true");
@@ -36,7 +42,7 @@ public class PactConsumerTests {
     }
 
     @Pact(consumer = "designs-render")
-    public MessagePact tileRenderRequested(MessagePactBuilder builder) {
+    public V4Pact tileRenderRequested(MessagePactBuilder builder) {
         final UUID uuid = new UUID(0L, 5L);
 
         PactDslJsonBody event1 = new PactDslJsonBody()
@@ -100,12 +106,13 @@ public class PactConsumerTests {
     }
 
     @Test
-    @PactTestFor(providerName = "designs-aggregate", port = "1111", pactMethod = "tileRenderRequested", providerType = ProviderType.ASYNCH)
+    @PactTestFor(providerName = "designs-aggregate", port = "1111", pactMethod = "tileRenderRequested", providerType = ProviderType.ASYNCH, pactVersion = PactSpecVersion.V4)
     @DisplayName("Should start rendering an image after receiving a TileRenderRequested event")
-    public void shouldStartRenderingAnImageWhenReceivingATileRenderRequestedMessage(MessagePact messagePact) {
-        final OutputMessage tileRenderRequestedMessage1 = TestUtils.toOutputMessage(messagePact.getMessages().get(0));
+    public void shouldStartRenderingAnImageWhenReceivingATileRenderRequestedMessage(V4Pact pact) {
+        assertThat(pact.getInteractions()).hasSize(2);
 
-        final OutputMessage tileRenderRequestedMessage2 = TestUtils.toOutputMessage(messagePact.getMessages().get(1));
+        final OutputMessage tileRenderRequestedMessage1 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(0).asAsynchronousMessage()));
+        final OutputMessage tileRenderRequestedMessage2 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(1).asAsynchronousMessage()));
 
         testCases.shouldStartRenderingAnImageWhenReceivingATileRenderRequestedMessage(List.of(tileRenderRequestedMessage1, tileRenderRequestedMessage2));
     }

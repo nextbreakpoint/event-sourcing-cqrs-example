@@ -8,7 +8,9 @@ import org.testcontainers.containers.Network;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.DockerImageName;
 
+import java.io.ByteArrayOutputStream;
 import java.time.Duration;
+import java.util.Optional;
 
 public class TestScenario {
   private static final int PORT = 30400;
@@ -19,10 +21,11 @@ public class TestScenario {
   private final boolean buildImages = TestUtils.getVariable("BUILD_IMAGES", System.getProperty("build.images", "false")).equals("true");
   private final boolean useContainers = TestUtils.getVariable("USE_CONTAINERS", System.getProperty("use.containers", "true")).equals("true");
   private final String dockerHost = TestUtils.getVariable("DOCKER_HOST", System.getProperty("docker.host", "host.docker.internal"));
+  private final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
   private Network network = Network.builder().driver("bridge").build();
 
-  private GenericContainer service = new GenericContainer(DockerImageName.parse("integration/" + serviceName + ":" + version))
+  private GenericContainer<?> service = new GenericContainer<>(DockerImageName.parse("integration/" + serviceName + ":" + version))
           .withEnv("JAEGER_SERVICE_NAME", serviceName)
           .withEnv("SECRETS_PATH", "/secrets")
           .withEnv("CONFIG_PATH", "/etc/config.json")
@@ -33,6 +36,7 @@ public class TestScenario {
           .withFileSystemBind("config/integration.json", "/etc/config.json", BindMode.READ_ONLY)
           .withExposedPorts(PORT)
           .withNetwork(network)
+          .withLogConsumer(frame -> outputStream.writeBytes(Optional.ofNullable(frame.getBytes()).orElse(new byte[0])))
           .withNetworkAliases(serviceName)
           .waitingFor(Wait.forLogMessage("Service listening on port " + PORT + ".*", 1).withStartupTimeout(Duration.ofSeconds(20)));
 
@@ -48,6 +52,9 @@ public class TestScenario {
 
   public void after() {
     if (useContainers) {
+      System.out.println("Service logs:");
+      System.out.println(outputStream);
+
       service.stop();
     }
   }

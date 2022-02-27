@@ -6,14 +6,18 @@ import au.com.dius.pact.consumer.dsl.PactDslJsonBody;
 import au.com.dius.pact.consumer.junit5.PactConsumerTestExt;
 import au.com.dius.pact.consumer.junit5.PactTestFor;
 import au.com.dius.pact.consumer.junit5.ProviderType;
+import au.com.dius.pact.core.model.PactSpecVersion;
+import au.com.dius.pact.core.model.V4Pact;
 import au.com.dius.pact.core.model.annotations.Pact;
-import au.com.dius.pact.core.model.messaging.MessagePact;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @Tag("slow")
 @Tag("pact")
@@ -24,6 +28,8 @@ public class PactConsumerTests {
 
     @BeforeAll
     public static void before() {
+        System.setProperty("pact_do_not_track", "true");
+
         testCases.before();
 
         System.setProperty("pact.showStacktrace", "true");
@@ -37,7 +43,7 @@ public class PactConsumerTests {
     }
 
     @Pact(consumer = "designs-query", provider = "designs-aggregate")
-    public MessagePact designDocumentUpdateRequested(MessagePactBuilder builder) {
+    public V4Pact designDocumentUpdateRequested(MessagePactBuilder builder) {
         final UUID uuid1 = new UUID(0L, 1L);
         final UUID uuid2 = new UUID(0L, 2L);
 
@@ -331,7 +337,7 @@ public class PactConsumerTests {
     }
 
     @Pact(consumer = "designs-query", provider = "designs-aggregate")
-    public MessagePact designDocumentDeleteRequested(MessagePactBuilder builder) {
+    public V4Pact designDocumentDeleteRequested(MessagePactBuilder builder) {
         final UUID uuid = new UUID(0L, 3L);
 
         PactDslJsonArray tiles = new PactDslJsonArray()
@@ -450,13 +456,15 @@ public class PactConsumerTests {
     }
 
     @Test
-    @PactTestFor(providerName = "designs-query", port = "1111", pactMethod = "designDocumentUpdateRequested", providerType = ProviderType.ASYNCH)
+    @PactTestFor(providerName = "designs-query", port = "1111", pactMethod = "designDocumentUpdateRequested", providerType = ProviderType.ASYNCH, pactVersion = PactSpecVersion.V4)
     @DisplayName("Should update the design after receiving a DesignDocumentUpdateRequested event")
-    public void shouldUpdateTheDesignWhenReceivingADesignDocumentUpdateRequestedMessage(MessagePact messagePact) {
-        final OutputMessage designDocumentUpdateRequestedMessage1 = TestUtils.toOutputMessage(messagePact.getMessages().get(0));
-        final OutputMessage designDocumentUpdateRequestedMessage2 = TestUtils.toOutputMessage(messagePact.getMessages().get(1));
-        final OutputMessage designDocumentUpdateRequestedMessage3 = TestUtils.toOutputMessage(messagePact.getMessages().get(2));
-        final OutputMessage designDocumentUpdateRequestedMessage4 = TestUtils.toOutputMessage(messagePact.getMessages().get(3));
+    public void shouldUpdateTheDesignWhenReceivingADesignDocumentUpdateRequestedMessage(V4Pact pact) {
+        assertThat(pact.getInteractions()).hasSize(4);
+
+        final OutputMessage designDocumentUpdateRequestedMessage1 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(0).asAsynchronousMessage()));
+        final OutputMessage designDocumentUpdateRequestedMessage2 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(1).asAsynchronousMessage()));
+        final OutputMessage designDocumentUpdateRequestedMessage3 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(2).asAsynchronousMessage()));
+        final OutputMessage designDocumentUpdateRequestedMessage4 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(3).asAsynchronousMessage()));
 
         final List<OutputMessage> outputMessages = List.of(designDocumentUpdateRequestedMessage1, designDocumentUpdateRequestedMessage2, designDocumentUpdateRequestedMessage3, designDocumentUpdateRequestedMessage4);
 
@@ -464,11 +472,13 @@ public class PactConsumerTests {
     }
 
     @Test
-    @PactTestFor(providerName = "designs-query", port = "1112", pactMethod = "designDocumentDeleteRequested", providerType = ProviderType.ASYNCH)
+    @PactTestFor(providerName = "designs-query", port = "1112", pactMethod = "designDocumentDeleteRequested", providerType = ProviderType.ASYNCH, pactVersion = PactSpecVersion.V4)
     @DisplayName("Should delete the design after receiving a DesignDocumentDeleteRequested event")
-    public void shouldDeleteTheDesignWhenReceivingADesignDocumentDeleteRequestedMessage(MessagePact messagePact) {
-        final OutputMessage designDocumentUpdateRequestedMessage1 = TestUtils.toOutputMessage(messagePact.getMessages().get(0));
-        final OutputMessage designDocumentUpdateRequestedMessage2 = TestUtils.toOutputMessage(messagePact.getMessages().get(1));
+    public void shouldDeleteTheDesignWhenReceivingADesignDocumentDeleteRequestedMessage(V4Pact pact) {
+        assertThat(pact.getInteractions()).hasSize(2);
+
+        final OutputMessage designDocumentUpdateRequestedMessage1 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(0).asAsynchronousMessage()));
+        final OutputMessage designDocumentUpdateRequestedMessage2 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(1).asAsynchronousMessage()));
 
         testCases.shouldDeleteTheDesignWhenReceivingADesignDocumentDeleteRequestedMessage(designDocumentUpdateRequestedMessage1, designDocumentUpdateRequestedMessage2);
     }

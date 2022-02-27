@@ -6,7 +6,9 @@ export REPOSITORY="integration"
 export VERSION="1.0.0-$(git rev-parse --abbrev-ref HEAD)-$(git rev-parse --short HEAD)-$(date +%s)"
 export DEPLOY="true"
 export BUILD="true"
-export TEST="true"
+export PACT_TESTS="true"
+export PACT_VERIFY="true"
+export INTEGRATION_TESTS="true"
 
 export TEST_DOCKER_HOST=host.docker.internal
 
@@ -66,8 +68,22 @@ for i in "$@"; do
       BUILD="false"
       shift
       ;;
-    --skip-test)
-      TEST="false"
+    --skip-tests)
+      PACT_TESTS="false"
+      PACT_VERIFY="false"
+      INTEGRATION_TESTS="false"
+      shift
+      ;;
+    --skip-pact-tests)
+      PACT_TESTS="false"
+      shift
+      ;;
+    --skip-pact-verify)
+      PACT_VERIFY="false"
+      shift
+      ;;
+    --skip-integration-tests)
+      INTEGRATION_TESTS="false"
       shift
       ;;
     -*|--*)
@@ -107,8 +123,16 @@ if [[ $BUILD == "false" ]]; then
   echo "Skipping build"
 fi
 
-if [[ $TEST == "false" ]]; then
-  echo "Skipping test"
+if [[ $INTEGRATION_TESTS == "false" ]]; then
+  echo "Skipping integration tests"
+fi
+
+if [[ $PACT_TESTS == "false" ]]; then
+  echo "Skipping pact tests"
+fi
+
+if [[ $PACT_VERIFY == "false" ]]; then
+  echo "Skipping pact verification"
 fi
 
 services=(
@@ -146,7 +170,7 @@ fi
 
 export MAVEN_OPTS="--add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.net=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED --add-opens=java.base/java.util.regex=ALL-UNNAMED --add-opens=java.base/java.security=ALL-UNNAMED --add-opens=java.base/sun.net.spi=ALL-UNNAMED"
 
-if [ "$TEST" == "true" ]; then
+if [ "$INTEGRATION_TESTS" == "true" ]; then
 
 for service in ${services[@]}; do
   pushd services/$service
@@ -154,11 +178,19 @@ for service in ${services[@]}; do
   popd
 done
 
+fi
+
+if [ "$PACT_TESTS" == "true" ]; then
+
 for service in ${services[@]}; do
   pushd services/$service
    JAEGER_SERVICE_NAME=$service mvn clean verify -Dgroups=pact -Ddocker.host=${TEST_DOCKER_HOST}
   popd
 done
+
+fi
+
+if [ "$PACT_VERIFY" == "true" ]; then
 
 for service in ${services[@]}; do
   pushd services/$service

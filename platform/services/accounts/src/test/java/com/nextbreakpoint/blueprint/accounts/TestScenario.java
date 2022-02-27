@@ -7,11 +7,15 @@ import com.nextbreakpoint.blueprint.common.test.VertxUtils;
 import org.testcontainers.containers.BindMode;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
+import org.testcontainers.containers.output.OutputFrame;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.DockerImageName;
 
+import java.io.ByteArrayOutputStream;
 import java.time.Duration;
 import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
 public class TestScenario {
   private static final int HTTP_PORT = 30110;
@@ -23,13 +27,14 @@ public class TestScenario {
   private final boolean buildImages = TestUtils.getVariable("BUILD_IMAGES", System.getProperty("build.images", "false")).equals("true");
   private final boolean useContainers = TestUtils.getVariable("USE_CONTAINERS", System.getProperty("use.containers", "true")).equals("true");
   private final String dockerHost = TestUtils.getVariable("DOCKER_HOST", System.getProperty("docker.host", "host.docker.internal"));
+  private final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
   private Network network = Network.builder().driver("bridge").build();
 
-  private GenericContainer mysql = ContainerUtils.createMySqlContainer(network, TestConstants.DATABASE_PASSWORD, "../../scripts/init.sql")
+  private GenericContainer<?> mysql = ContainerUtils.createMySqlContainer(network, TestConstants.DATABASE_PASSWORD, "../../scripts/init.sql")
           .waitingFor(Wait.forLogMessage(".* socket: '/var/run/mysqld/mysqld.sock'  port: 3306.*", 1).withStartupTimeout(Duration.ofSeconds(60)));
 
-  private GenericContainer service = new GenericContainer(DockerImageName.parse("integration/" + serviceName + ":" + version))
+  private GenericContainer<?> service = new GenericContainer<>(DockerImageName.parse("integration/" + serviceName + ":" + version))
           .withEnv("DEBUG_OPTS", "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:" + DEBUG_PORT)
           .withEnv("JAEGER_SERVICE_NAME", serviceName)
           .withEnv("KEYSTORE_SECRET", "secret")
@@ -43,6 +48,7 @@ public class TestScenario {
           .withExposedPorts(HTTP_PORT, DEBUG_PORT)
           .withNetwork(network)
           .withNetworkAliases(serviceName)
+          .withLogConsumer(frame -> outputStream.writeBytes(Optional.ofNullable(frame.getBytes()).orElse(new byte[0])))
           .dependsOn(mysql)
           .waitingFor(Wait.forLogMessage(".* Service listening on port " + HTTP_PORT + ".*", 1).withStartupTimeout(Duration.ofSeconds(20)));
 
@@ -62,6 +68,9 @@ public class TestScenario {
 
   public void after() {
     if (useContainers) {
+      System.out.println("Service logs:");
+      System.out.println(outputStream);
+
       service.stop();
       mysql.stop();
     }

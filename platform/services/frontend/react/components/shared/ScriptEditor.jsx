@@ -132,7 +132,8 @@ const styles = {
     height: '500px',
     overflow: 'scroll',
     borderRadius: '0.4em',
-    backgroundColor: '#fdfdfd'
+    backgroundColor: '#fdfdfd',
+    textAlign: 'left'
   },
   keyword: {
     color: 'blue'

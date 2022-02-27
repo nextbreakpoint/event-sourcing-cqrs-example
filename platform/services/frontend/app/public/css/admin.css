@@ -14,6 +14,10 @@ footer {
     text-align: center;
 }
 
+.controls .button {
+    margin: 1%;
+}
+
 .container {
     background-color: #ededed;
 }
@@ -24,6 +28,21 @@ footer {
     position: relative;
     margin: 0;
     overflow: hidden;
+}
+
+.controls {
+    padding: 2%;
+    text-align: right;
+}
+
+.script {
+    padding-left: 2%;
+    padding-right: 1%;
+}
+
+.metadata {
+    padding-left: 1%;
+    padding-right: 2%;
 }
 
 .list-image {
@@ -53,8 +72,4 @@ footer a, footer a:active, footer a:hover, footer a:visited {
     margin: 0px;
     text-align: center;
     background: transparent;
-}
-
-.editor {
-    border: 0;
 }

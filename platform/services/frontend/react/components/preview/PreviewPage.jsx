@@ -76,6 +76,43 @@ let PreviewPage = class PreviewPage extends React.Component {
         let script = this.state.script ? this.state.script : this.props.design.script
         let metadata = this.state.metadata ? this.state.metadata : this.props.design.metadata
 
+        const design = { manifest: this.props.design.manifest, script: script, metadata: metadata, levels: 2 }
+
+        component.props.handleHideUpdateDialog()
+        component.props.handleHideErrorMessage()
+
+        axios.put(component.props.config.api_url + '/v1/designs/' + this.props.uuid, design, config)
+            .then(function (content) {
+                if (content.status == 202 || content.status == 200) {
+                    //component.props.handleDesignLoadedSuccess(design, timestamp)
+                    component.props.handleShowErrorMessage("Your request has been processed")
+                } else {
+                    console.log("Can't create a new design: status = " + response.status)
+                    component.props.handleShowErrorMessage("Can't update the design")
+                }
+            })
+            .catch(function (error) {
+                console.log("Can't update the design: " + error)
+                component.props.handleShowErrorMessage("Can't update the design")
+            })
+    }
+
+    handleRender = (e) => {
+        e.preventDefault()
+
+        let component = this
+
+        let config = {
+            timeout: 30000,
+            metadata: {'content-type': 'application/json'},
+            withCredentials: true
+        }
+
+        let timestamp = Date.now()
+
+        let script = this.state.script ? this.state.script : this.props.design.script
+        let metadata = this.state.metadata ? this.state.metadata : this.props.design.metadata
+
         const design = { manifest: this.props.design.manifest, script: script, metadata: metadata, levels: 8 }
 
         component.props.handleHideUpdateDialog()
@@ -135,9 +172,12 @@ let PreviewPage = class PreviewPage extends React.Component {
                         </Grid>
                         <Grid item xs={7}>
                             <DesignForm script={this.props.design.script} metadata={this.props.design.metadata} onScriptChanged={this.handleScriptChanged} onMetadataChanged={this.handleMetadataChanged}/>
-                            <div style={styles.controls}>
-                                <Button variant="outlined" color="primary" onClick={this.handleUpdate}>
+                            <div className="controls">
+                                <Button className="button" variant="outlined" color="primary" onClick={this.handleUpdate}>
                                   Update
+                                </Button>
+                                <Button className="button" variant="outlined" color="primary" onClick={this.handleRender}>
+                                  Render
                                 </Button>
                             </div>
                         </Grid>
@@ -187,12 +227,7 @@ PreviewPage.propTypes = {
     uuid: PropTypes.string.isRequired
 }
 
-const styles = {
-    controls: {
-      padding: '2%',
-      textAlign: 'right'
-    }
-}
+const styles = {}
 
 const themeStyles = theme => ({
   fabcontainer: {

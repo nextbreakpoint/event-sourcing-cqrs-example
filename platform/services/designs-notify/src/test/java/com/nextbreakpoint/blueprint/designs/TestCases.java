@@ -15,6 +15,7 @@ import rx.plugins.RxJavaHooks;
 import rx.schedulers.Schedulers;
 
 import java.net.MalformedURLException;
+import java.time.Duration;
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -119,7 +120,7 @@ public class TestCases {
                 System.out.println("closed");
             });
 
-            await().atMost(TEN_SECONDS)
+            await().atMost(Duration.ofSeconds(30))
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
                         assertThat(notifications).isNotEmpty();
@@ -173,7 +174,7 @@ public class TestCases {
                 System.out.println("closed");
             });
 
-            await().atMost(TEN_SECONDS)
+            await().atMost(Duration.ofSeconds(30))
                     .pollInterval(ONE_SECOND)
                     .untilAsserted(() -> {
                         assertThat(notifications).isNotEmpty();

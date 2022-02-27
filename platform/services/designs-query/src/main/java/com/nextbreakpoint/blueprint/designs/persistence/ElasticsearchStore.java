@@ -16,7 +16,6 @@ import io.vertx.core.impl.logging.LoggerFactory;
 import rx.Observable;
 import rx.Single;
 
-import java.io.IOException;
 import java.util.Objects;
 import java.util.Optional;
 

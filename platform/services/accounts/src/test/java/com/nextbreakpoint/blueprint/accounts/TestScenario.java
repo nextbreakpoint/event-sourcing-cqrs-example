@@ -7,14 +7,12 @@ import com.nextbreakpoint.blueprint.common.test.VertxUtils;
 import org.testcontainers.containers.BindMode;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
-import org.testcontainers.containers.output.OutputFrame;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.DockerImageName;
 
 import java.io.ByteArrayOutputStream;
 import java.time.Duration;
 import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 
 public class TestScenario {

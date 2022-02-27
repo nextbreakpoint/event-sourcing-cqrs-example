@@ -8,7 +8,6 @@ import com.nextbreakpoint.blueprint.designs.model.Design;
 import com.nextbreakpoint.blueprint.designs.persistence.LoadDesignRequest;
 import com.nextbreakpoint.blueprint.designs.persistence.LoadDesignResponse;
 import rx.Single;
-import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 
 import java.util.Objects;
 import java.util.Optional;

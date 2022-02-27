@@ -11,6 +11,6 @@ public class MessageConsumed implements BiConsumer<InputMessage, Void> {
 
     @Override
     public void accept(InputMessage message, Void ignore) {
-        logger.info("Message consumed " + message);
+        logger.debug("Message consumed " + message);
     }
 }

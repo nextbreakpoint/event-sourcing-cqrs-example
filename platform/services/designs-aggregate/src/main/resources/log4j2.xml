@@ -9,6 +9,6 @@
         <Root level="INFO">
             <AppenderRef ref="Console"/>
         </Root>
-        <Logger name="com.nextbreakpoint" level="DEBUG"/>
+        <Logger name="com.nextbreakpoint" level="INFO"/>
     </Loggers>
 </Configuration>

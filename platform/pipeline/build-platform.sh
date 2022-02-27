@@ -48,6 +48,8 @@ for service in ${services[@]}; do
   popd
 done
 
+export pact_do_not_track=true
+
 for service in ${services[@]}; do
   pushd services/$service
    JAEGER_SERVICE_NAME=$service mvn clean verify -q -e -Dgroups=pact -Ddocker.host=${TEST_DOCKER_HOST}

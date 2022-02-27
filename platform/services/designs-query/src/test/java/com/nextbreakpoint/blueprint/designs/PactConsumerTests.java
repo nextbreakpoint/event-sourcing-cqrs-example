@@ -28,8 +28,6 @@ public class PactConsumerTests {
 
     @BeforeAll
     public static void before() {
-        System.setProperty("pact_do_not_track", "true");
-
         testCases.before();
 
         System.setProperty("pact.showStacktrace", "true");

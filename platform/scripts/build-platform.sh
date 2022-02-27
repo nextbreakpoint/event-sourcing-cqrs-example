@@ -180,6 +180,8 @@ done
 
 fi
 
+export pact_do_not_track=true
+
 if [ "$PACT_TESTS" == "true" ]; then
 
 for service in ${services[@]}; do

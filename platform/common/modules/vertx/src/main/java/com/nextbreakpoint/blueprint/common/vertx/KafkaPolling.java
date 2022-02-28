@@ -132,7 +132,7 @@ public class KafkaPolling {
         if (System.currentTimeMillis() - timestamp > maximumLatency) {
             timestamp = System.currentTimeMillis();
 
-            logger.info("Received " + queue.size() + " " + (queue.size() > 0 ? "messages" : "message"));
+            logger.debug("Received " + queue.size() + " " + (queue.size() > 0 ? "messages" : "message"));
 
             queue.getRecords().forEach(record -> processRecord(suspendedPartitions, record));
 

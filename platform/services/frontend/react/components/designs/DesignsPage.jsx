@@ -86,7 +86,7 @@ let DesignsPage = class DesignsPage extends React.Component {
         }
 
         let manifest = "{\"pluginId\":\"Mandelbrot\"}"
-        let design = { "manifest": manifest, "script": this.state.script, "metadata": this.state.metadata }
+        let design = { manifest: manifest, script: this.state.script, metadata: this.state.metadata, levels: 3 }
 
         component.props.handleHideCreateDialog()
         component.props.handleHideErrorMessage()

@@ -64,7 +64,7 @@ const styles = {
   editor: {
     border: '2px solid #b0b0b0',
     padding: '2%',
-    height: '500px',
+    height: '600px',
     overflow: 'scroll',
     borderRadius: '0.4em',
     backgroundColor: '#fdfdfd',

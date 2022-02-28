@@ -76,7 +76,7 @@ let PreviewPage = class PreviewPage extends React.Component {
         let script = this.state.script ? this.state.script : this.props.design.script
         let metadata = this.state.metadata ? this.state.metadata : this.props.design.metadata
 
-        const design = { manifest: this.props.design.manifest, script: script, metadata: metadata, levels: 2 }
+        const design = { manifest: this.props.design.manifest, script: script, metadata: metadata, levels: 3 }
 
         component.props.handleHideUpdateDialog()
         component.props.handleHideErrorMessage()
@@ -165,12 +165,12 @@ let PreviewPage = class PreviewPage extends React.Component {
                         <Header landing={'/admin/designs/' + this.props.uuid + '.html'} titleLink={"/admin/designs.html"} titleText={"Fractals"} titleText2={this.props.uuid} browseLink={"/browse/designs/" + this.props.uuid + ".html"} browseText={"The Beauty of Chaos"}/>
                     </Grid>
                     <Grid container xs={12} justify="space-between" alignItems="center" className="container">
-                        <Grid item xs={5}>
+                        <Grid item xs={6}>
                             <Map center={[0, 0]} zoom={2} className="preview" attributionControl={false} dragging={false} zoomControl={false} scrollWheelZoom={false} touchZoom={false}>
                                 {this.renderMapLayer(url)}
                             </Map>
                         </Grid>
-                        <Grid item xs={7}>
+                        <Grid item xs={6}>
                             <DesignForm script={this.props.design.script} metadata={this.props.design.metadata} onScriptChanged={this.handleScriptChanged} onMetadataChanged={this.handleMetadataChanged}/>
                             <div className="controls">
                                 <Button className="button" variant="outlined" color="primary" onClick={this.handleUpdate}>

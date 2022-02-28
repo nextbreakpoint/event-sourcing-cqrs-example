@@ -100,25 +100,27 @@ public class TestCases {
         try {
             notifications.clear();
 
-            eventSource.connect("/v1/sse/designs/0", null, result -> {
-                final SSENotification notification = new SSENotification("CONNECT", result.succeeded() ? "SUCCESS" : "FAILURE");
-                System.out.println(notification);
-                notifications.add(notification);
-                if (result.succeeded()) {
-                    eventEmitter.sendAsync(messages.get(0));
-                    eventEmitter.sendAsync(messages.get(1));
-                }
-            }).onEvent("update", sseEvent -> {
-                final SSENotification notification = new SSENotification("UPDATE", sseEvent);
-                System.out.println(notification);
-                notifications.add(notification);
-            }).onEvent("open", sseEvent -> {
-                final SSENotification notification = new SSENotification("OPEN", sseEvent);
-                System.out.println(notification);
-                notifications.add(notification);
-            }).onClose(nothing -> {
-                System.out.println("closed");
-            });
+            eventSource
+                .onClose(nothing -> System.out.println("closed"))
+                .onEvent("update", sseEvent -> {
+                    final SSENotification notification = new SSENotification("UPDATE", sseEvent);
+                    System.out.println(notification);
+                    notifications.add(notification);
+                })
+                .onEvent("open", sseEvent -> {
+                    final SSENotification notification = new SSENotification("OPEN", sseEvent);
+                    System.out.println(notification);
+                    notifications.add(notification);
+                })
+                .connect("/v1/sse/designs/0", null, result -> {
+                    final SSENotification notification = new SSENotification("CONNECT", result.succeeded() ? "SUCCESS" : "FAILURE");
+                    System.out.println(notification);
+                    notifications.add(notification);
+                    if (result.succeeded()) {
+                        eventEmitter.sendAsync(messages.get(0));
+                        eventEmitter.sendAsync(messages.get(1));
+                    }
+                });
 
             await().atMost(Duration.ofSeconds(30))
                     .pollInterval(ONE_SECOND)
@@ -154,25 +156,27 @@ public class TestCases {
 
             notifications.clear();
 
-            eventSource.connect("/v1/sse/designs/0/" + designId, null, result -> {
-                final SSENotification notification = new SSENotification("CONNECT", result.succeeded() ? "SUCCESS" : "FAILURE");
-                System.out.println(notification);
-                notifications.add(notification);
-                if (result.succeeded()) {
-                    eventEmitter.sendAsync(messages.get(0));
-                    eventEmitter.sendAsync(messages.get(1));
-                }
-            }).onEvent("update", sseEvent -> {
-                final SSENotification notification = new SSENotification("UPDATE", sseEvent);
-                System.out.println(notification);
-                notifications.add(notification);
-            }).onEvent("open", sseEvent -> {
-                final SSENotification notification = new SSENotification("OPEN", sseEvent);
-                System.out.println(notification);
-                notifications.add(notification);
-            }).onClose(nothing -> {
-                System.out.println("closed");
-            });
+            eventSource
+                .onClose(nothing -> System.out.println("closed"))
+                .onEvent("update", sseEvent -> {
+                    final SSENotification notification = new SSENotification("UPDATE", sseEvent);
+                    System.out.println(notification);
+                    notifications.add(notification);
+                })
+                .onEvent("open", sseEvent -> {
+                    final SSENotification notification = new SSENotification("OPEN", sseEvent);
+                    System.out.println(notification);
+                    notifications.add(notification);
+                })
+                .connect("/v1/sse/designs/0/" + designId, null, result -> {
+                    final SSENotification notification = new SSENotification("CONNECT", result.succeeded() ? "SUCCESS" : "FAILURE");
+                    System.out.println(notification);
+                    notifications.add(notification);
+                    if (result.succeeded()) {
+                        eventEmitter.sendAsync(messages.get(0));
+                        eventEmitter.sendAsync(messages.get(1));
+                    }
+                });
 
             await().atMost(Duration.ofSeconds(30))
                     .pollInterval(ONE_SECOND)

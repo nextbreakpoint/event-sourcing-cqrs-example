@@ -17,7 +17,7 @@ services:
       - nexus-data:/nexus-data
   pact-server:
     restart: unless-stopped
-    image: pactfoundation/pact-broker:2.94.0.0
+    image: pactfoundation/pact-broker:2.79.0.1
     environment:
       PACT_BROKER_DATABASE_USERNAME: 'pactbrokeruser'
       PACT_BROKER_DATABASE_PASSWORD: 'password'

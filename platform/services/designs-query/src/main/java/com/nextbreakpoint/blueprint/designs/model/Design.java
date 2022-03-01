@@ -15,7 +15,7 @@ import java.util.UUID;
 public class Design {
     private final UUID eventId;
     private final UUID designId;
-    private final long revision;
+    private final String revision;
     private final String data;
     private final String checksum;
     private final String status;
@@ -27,7 +27,7 @@ public class Design {
     public Design(
         @JsonProperty("eventId") UUID eventId,
         @JsonProperty("designId") UUID designId,
-        @JsonProperty("revision") long revision,
+        @JsonProperty("revision") String revision,
         @JsonProperty("data") String data,
         @JsonProperty("checksum") String checksum,
         @JsonProperty("status") String status,
@@ -37,7 +37,7 @@ public class Design {
     ) {
         this.eventId = Objects.requireNonNull(eventId);
         this.designId = Objects.requireNonNull(designId);
-        this.revision = revision;
+        this.revision = Objects.requireNonNull(revision);
         this.data = Objects.requireNonNull(data);
         this.checksum = Objects.requireNonNull(checksum);
         this.status = Objects.requireNonNull(status);
@@ -54,7 +54,7 @@ public class Design {
         return designId;
     }
 
-    public long getRevision() {
+    public String getRevision() {
         return revision;
     }
 

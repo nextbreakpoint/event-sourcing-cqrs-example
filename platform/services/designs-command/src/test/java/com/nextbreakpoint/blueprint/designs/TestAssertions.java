@@ -20,10 +20,10 @@ public class TestAssertions {
 
     public static void assertExpectedDesignInsertRequestedMessage(InputMessage actualMessage, String designId) {
         assertThat(actualMessage.getTimestamp()).isNotNull();
-        assertThat(actualMessage.getOffset()).isNotNull();
         assertThat(actualMessage.getKey()).isEqualTo(designId);
         assertThat(actualMessage.getValue()).isNotNull();
         assertThat(actualMessage.getValue().getSource()).isEqualTo(TestConstants.MESSAGE_SOURCE);
+        assertThat(actualMessage.getValue().getToken()).isNotNull();
         assertThat(actualMessage.getValue().getUuid()).isNotNull();
         assertThat(actualMessage.getValue().getType()).isEqualTo(TestConstants.DESIGN_INSERT_REQUESTED);
         assertThat(actualMessage.getValue()).isNotNull();
@@ -45,10 +45,10 @@ public class TestAssertions {
 
     public static void assertExpectedDesignUpdateRequestedMessage(InputMessage actualMessage, String designId) {
         assertThat(actualMessage.getTimestamp()).isNotNull();
-        assertThat(actualMessage.getOffset()).isNotNull();
         assertThat(actualMessage.getKey()).isEqualTo(designId);
         assertThat(actualMessage.getValue()).isNotNull();
         assertThat(actualMessage.getValue().getSource()).isEqualTo(TestConstants.MESSAGE_SOURCE);
+        assertThat(actualMessage.getValue().getToken()).isNotNull();
         assertThat(actualMessage.getValue().getUuid()).isNotNull();
         assertThat(actualMessage.getValue().getType()).isEqualTo(TestConstants.DESIGN_UPDATE_REQUESTED);
         assertThat(actualMessage.getValue()).isNotNull();
@@ -70,10 +70,10 @@ public class TestAssertions {
 
     public static void assertExpectedDesignDeleteRequestedMessage(InputMessage actualMessage, String designId) {
         assertThat(actualMessage.getTimestamp()).isNotNull();
-        assertThat(actualMessage.getOffset()).isNotNull();
         assertThat(actualMessage.getKey()).isEqualTo(designId);
         assertThat(actualMessage.getValue()).isNotNull();
         assertThat(actualMessage.getValue().getSource()).isEqualTo(TestConstants.MESSAGE_SOURCE);
+        assertThat(actualMessage.getValue().getToken()).isNotNull();
         assertThat(actualMessage.getValue().getUuid()).isNotNull();
         assertThat(actualMessage.getValue().getType()).isEqualTo(TestConstants.DESIGN_DELETE_REQUESTED);
         assertThat(actualMessage.getValue()).isNotNull();
@@ -91,12 +91,12 @@ public class TestAssertions {
         final String actualType = row.getString("MESSAGE_TYPE");
         final String actualValue = row.getString("MESSAGE_VALUE");
         final UUID actualUuid = row.getUuid("MESSAGE_UUID");
+        final String actualToken = row.getString("MESSAGE_TOKEN");
         final String actualSource = row.getString("MESSAGE_SOURCE");
         final String actualKey = row.getString("MESSAGE_KEY");
         final Instant actualTimestamp = row.getInstant("MESSAGE_TIMESTAMP");
-        final Long actualOffset = row.getLong("MESSAGE_OFFSET");
-        assertThat(actualOffset).isNotNull();
         assertThat(actualUuid).isNotNull();
+        assertThat(actualToken).isNotNull();
         assertThat(actualValue).isNotNull();
         assertThat(actualType).isEqualTo(DesignInsertCommand.TYPE);
         assertThat(actualSource).isNotNull();
@@ -108,12 +108,12 @@ public class TestAssertions {
         final String actualType = row.getString("MESSAGE_TYPE");
         final String actualValue = row.getString("MESSAGE_VALUE");
         final UUID actualUuid = row.getUuid("MESSAGE_UUID");
+        final String actualToken = row.getString("MESSAGE_TOKEN");
         final String actualSource = row.getString("MESSAGE_SOURCE");
         final String actualKey = row.getString("MESSAGE_KEY");
         final Instant actualTimestamp = row.getInstant("MESSAGE_TIMESTAMP");
-        final Long actualOffset = row.getLong("MESSAGE_OFFSET");
-        assertThat(actualOffset).isNotNull();
         assertThat(actualUuid).isNotNull();
+        assertThat(actualToken).isNotNull();
         assertThat(actualValue).isNotNull();
         assertThat(actualType).isEqualTo(DesignUpdateCommand.TYPE);
         assertThat(actualSource).isNotNull();
@@ -125,12 +125,12 @@ public class TestAssertions {
         final String actualType = row.getString("MESSAGE_TYPE");
         final String actualValue = row.getString("MESSAGE_VALUE");
         final UUID actualUuid = row.getUuid("MESSAGE_UUID");
+        final String actualToken = row.getString("MESSAGE_TOKEN");
         final String actualSource = row.getString("MESSAGE_SOURCE");
         final String actualKey = row.getString("MESSAGE_KEY");
         final Instant actualTimestamp = row.getInstant("MESSAGE_TIMESTAMP");
-        final Long actualOffset = row.getLong("MESSAGE_OFFSET");
-        assertThat(actualOffset).isNotNull();
         assertThat(actualUuid).isNotNull();
+        assertThat(actualToken).isNotNull();
         assertThat(actualValue).isNotNull();
         assertThat(actualType).isEqualTo(DesignDeleteCommand.TYPE);
         assertThat(actualSource).isNotNull();

@@ -1,6 +1,5 @@
 package com.nextbreakpoint.blueprint.designs.controllers;
 
-import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.nextbreakpoint.blueprint.common.core.*;
 import com.nextbreakpoint.blueprint.common.events.DesignAggregateUpdateCompleted;
 import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
@@ -64,7 +63,7 @@ public class DesignAggregateUpdateCompletedController implements Controller<Inpu
 
     private TileRenderRequested createEvent(DesignAggregateUpdateCompleted event, Tile tile) {
         return TileRenderRequested.builder()
-                .withEventId(Uuids.timeBased())
+                .withEventId(TimeUUID.next())
                 .withDesignId(event.getDesignId())
                 .withRevision(event.getRevision())
                 .withData(event.getData())

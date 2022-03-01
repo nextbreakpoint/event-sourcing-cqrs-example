@@ -9,7 +9,7 @@ public class Design {
     private final UUID eventId;
     private final UUID designId;
     private final UUID changeId;
-    private final long revision;
+    private final String revision;
     private final String data;
     private final String checksum;
     private final String status;
@@ -22,7 +22,7 @@ public class Design {
         UUID eventId,
         UUID designId,
         UUID changeId,
-        long revision,
+        String revision,
         String data,
         String checksum,
         String status,
@@ -59,7 +59,7 @@ public class Design {
         return changeId;
     }
 
-    public long getRevision() {
+    public String getRevision() {
         return revision;
     }
 

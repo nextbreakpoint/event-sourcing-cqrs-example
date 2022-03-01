@@ -1,6 +1,5 @@
 package com.nextbreakpoint.blueprint.designs.controllers;
 
-import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.nextbreakpoint.blueprint.common.core.*;
 import com.nextbreakpoint.blueprint.common.events.DesignAggregateUpdateRequested;
 import com.nextbreakpoint.blueprint.common.events.DesignDeleteRequested;
@@ -10,6 +9,7 @@ import com.nextbreakpoint.blueprint.designs.aggregate.DesignAggregate;
 import rx.Single;
 
 import java.util.Objects;
+import java.util.UUID;
 
 public class DesignDeleteRequestedController implements Controller<InputMessage, Void> {
     private final Mapper<InputMessage, DesignDeleteRequested> inputMapper;
@@ -29,7 +29,7 @@ public class DesignDeleteRequestedController implements Controller<InputMessage,
         return Single.just(message)
                 .flatMap(this::onMessageReceived)
                 .map(inputMapper::transform)
-                .flatMap(event -> onDesignDeleteRequested(event, message.getOffset()))
+                .flatMap(event -> onDesignDeleteRequested(event, message.getValue().getToken()))
                 .map(event -> outputMapper.transform(Tracing.from(message.getTrace()), event))
                 .flatMap(emitter::onNext);
     }
@@ -38,15 +38,15 @@ public class DesignDeleteRequestedController implements Controller<InputMessage,
         return aggregate.appendMessage(message).map(result -> message);
     }
 
-    private Single<DesignAggregateUpdateRequested> onDesignDeleteRequested(DesignDeleteRequested event, Long offset) {
-        return Single.just(createEvent(event, offset));
+    private Single<DesignAggregateUpdateRequested> onDesignDeleteRequested(DesignDeleteRequested event, String revision) {
+        return Single.just(createEvent(event, revision));
     }
 
-    private DesignAggregateUpdateRequested createEvent(DesignDeleteRequested event, Long offset) {
+    private DesignAggregateUpdateRequested createEvent(DesignDeleteRequested event, String revision) {
         return DesignAggregateUpdateRequested.builder()
-                .withEventId(Uuids.timeBased())
+                .withEventId(TimeUUID.next())
                 .withDesignId(event.getDesignId())
-                .withRevision(offset)
+                .withRevision(revision)
                 .build();
     }
 }

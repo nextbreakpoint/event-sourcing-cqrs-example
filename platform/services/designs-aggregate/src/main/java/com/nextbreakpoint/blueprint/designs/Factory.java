@@ -64,7 +64,7 @@ public class Factory {
                 .withOutputMapper(output -> output)
                 .withController(new DesignAbortRequestedController(
                     new DesignAggregate(store, new DesignStateStrategy()),
-                    new DesignAbortRequestedInputMessageMapper(),
+                    new DesignAbortRequestedInputMapper(),
                     new TileRenderAbortedOutputMapper(messageSource),
                     new KafkaEmitter(producer, topic, 3)
                 ))

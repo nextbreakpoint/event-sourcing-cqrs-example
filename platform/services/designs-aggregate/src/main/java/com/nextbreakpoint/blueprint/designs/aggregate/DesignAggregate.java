@@ -12,6 +12,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 public class DesignAggregate {
+    private static final String REVISION_NULL = UUID.fromString("00000000-0000-1000-0000-000000000000").toString();
+
     private final DesignStateStrategy strategy;
 
     private final Store store;
@@ -29,13 +31,13 @@ public class DesignAggregate {
         return store.findDesign(uuid);
     }
 
-    public Single<Optional<Design>> updateDesign(UUID uuid, long revision) {
+    public Single<Optional<Design>> updateDesign(UUID uuid, String revision) {
         return store.findDesign(uuid).flatMap(result -> updateDesign(uuid, revision, result.orElse(null)));
     }
 
-    private Single<Optional<Design>> updateDesign(UUID uuid, long revision, Design design) {
+    private Single<Optional<Design>> updateDesign(UUID uuid, String revision, Design design) {
         if (design == null) {
-            return store.findMessages(uuid, -1, revision).flatMap(messages -> updateDesign(messages, null));
+            return store.findMessages(uuid, REVISION_NULL, revision).flatMap(messages -> updateDesign(messages, null));
         } else {
             return store.findMessages(uuid, design.getRevision(), revision).flatMap(messages -> updateDesign(messages, design));
         }

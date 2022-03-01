@@ -22,7 +22,7 @@ public class DesignDocumentUpdateRequested {
     private final UUID eventId;
     private final UUID designId;
     private final UUID changeId;
-    private final long revision;
+    private final String revision;
     private final String data;
     private final String checksum;
     private final String status;
@@ -36,7 +36,7 @@ public class DesignDocumentUpdateRequested {
         @JsonProperty("eventId") UUID eventId,
         @JsonProperty("designId") UUID designId,
         @JsonProperty("changeId") UUID changeId,
-        @JsonProperty("revision") long revision,
+        @JsonProperty("revision") String revision,
         @JsonProperty("data") String data,
         @JsonProperty("checksum") String checksum,
         @JsonProperty("status") String status,
@@ -48,7 +48,7 @@ public class DesignDocumentUpdateRequested {
         this.eventId = Objects.requireNonNull(eventId);
         this.designId = Objects.requireNonNull(designId);
         this.changeId = Objects.requireNonNull(changeId);
-        this.revision = revision;
+        this.revision = Objects.requireNonNull(revision);
         this.data = Objects.requireNonNull(data);
         this.checksum = Objects.requireNonNull(checksum);
         this.status = Objects.requireNonNull(status);

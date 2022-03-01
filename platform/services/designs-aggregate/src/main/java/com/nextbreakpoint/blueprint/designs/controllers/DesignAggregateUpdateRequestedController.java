@@ -1,6 +1,5 @@
 package com.nextbreakpoint.blueprint.designs.controllers;
 
-import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.nextbreakpoint.blueprint.common.core.*;
 import com.nextbreakpoint.blueprint.common.events.DesignAggregateUpdateCompleted;
 import com.nextbreakpoint.blueprint.common.events.DesignAggregateUpdateRequested;
@@ -42,7 +41,7 @@ public class DesignAggregateUpdateRequestedController implements Controller<Inpu
 
     private DesignAggregateUpdateCompleted createEvent(Design design) {
         return DesignAggregateUpdateCompleted.builder()
-                .withEventId(Uuids.timeBased())
+                .withEventId(TimeUUID.next())
                 .withDesignId(design.getDesignId())
                 .withRevision(design.getRevision())
                 .withData(design.getData())

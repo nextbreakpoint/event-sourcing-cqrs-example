@@ -18,8 +18,8 @@ public class CassandraStore implements Store {
 
     private static final String ERROR_INSERT_MESSAGE = "An error occurred while inserting a message";
 
-    private static final String INSERT_MESSAGE = "INSERT INTO MESSAGE (MESSAGE_UUID, MESSAGE_OFFSET, MESSAGE_TYPE, MESSAGE_VALUE, MESSAGE_SOURCE, MESSAGE_KEY, MESSAGE_TIMESTAMP, MESSAGE_TRACE_ID, MESSAGE_SPAN_ID, MESSAGE_PARENT) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-    private static final String SELECT_MESSAGES = "SELECT MESSAGE_UUID, MESSAGE_OFFSET, MESSAGE_TYPE, MESSAGE_VALUE, MESSAGE_SOURCE, MESSAGE_KEY, MESSAGE_TIMESTAMP, MESSAGE_TRACE_ID, MESSAGE_SPAN_ID, MESSAGE_PARENT FROM MESSAGE WHERE MESSAGE_KEY = ? AND MESSAGE_OFFSET <= ? AND MESSAGE_OFFSET > ?";
+    private static final String INSERT_MESSAGE = "INSERT INTO MESSAGE (MESSAGE_UUID, MESSAGE_TOKEN, MESSAGE_TYPE, MESSAGE_VALUE, MESSAGE_SOURCE, MESSAGE_KEY, MESSAGE_TIMESTAMP, MESSAGE_TRACE_ID, MESSAGE_SPAN_ID, MESSAGE_PARENT) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    private static final String SELECT_MESSAGES = "SELECT MESSAGE_UUID, MESSAGE_TOKEN, MESSAGE_TYPE, MESSAGE_VALUE, MESSAGE_SOURCE, MESSAGE_KEY, MESSAGE_TIMESTAMP, MESSAGE_TRACE_ID, MESSAGE_SPAN_ID, MESSAGE_PARENT FROM MESSAGE WHERE MESSAGE_KEY = ? AND MESSAGE_TOKEN <= ? AND MESSAGE_TOKEN > ?";
 
     private final String keyspace;
     private final Supplier<CassandraClient> supplier;
@@ -63,7 +63,7 @@ public class CassandraStore implements Store {
     private Object[] makeInsertMessageParams(InputMessage message) {
         return new Object[] {
                 message.getValue().getUuid(),
-                message.getOffset(),
+                message.getValue().getToken(),
                 message.getValue().getType(),
                 message.getValue().getData(),
                 message.getValue().getSource(),

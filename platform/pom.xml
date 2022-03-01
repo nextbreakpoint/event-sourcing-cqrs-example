@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.nextbreakpoint</groupId>
     <artifactId>com.nextbreakpoint.blueprint.bom</artifactId>
-    <version>1.0.0-wip2-2afee9a-1646046583</version>
+    <version>1.0.0-wip2-2daf512-1646175719</version>
     <packaging>pom</packaging>
     <licenses>
         <license>

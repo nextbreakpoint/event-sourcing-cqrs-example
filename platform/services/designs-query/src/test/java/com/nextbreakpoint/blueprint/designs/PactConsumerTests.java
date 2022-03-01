@@ -77,7 +77,7 @@ public class PactConsumerTests {
                 .uuid("userId", TestConstants.USER_ID)
                 .stringMatcher("changeId", TestConstants.UUID6_REGEXP)
                 .stringMatcher("eventId", TestConstants.UUID1_REGEXP)
-                .numberType("revision")
+                .stringMatcher("revision", TestConstants.UUID1_REGEXP)
                 .stringValue("data", TestConstants.JSON_1)
                 .stringValue("checksum", TestConstants.CHECKSUM_1)
                 .stringValue("status", "CREATED")
@@ -87,6 +87,7 @@ public class PactConsumerTests {
 
         PactDslJsonBody payload1 = new PactDslJsonBody()
                 .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
+                .stringMatcher("token", TestConstants.UUID1_REGEXP)
                 .object("data", event1)
                 .stringValue("type", TestConstants.DESIGN_DOCUMENT_UPDATE_REQUESTED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
@@ -143,7 +144,7 @@ public class PactConsumerTests {
                 .uuid("userId", TestConstants.USER_ID)
                 .stringMatcher("changeId", TestConstants.UUID6_REGEXP)
                 .stringMatcher("eventId", TestConstants.UUID1_REGEXP)
-                .numberType("revision")
+                .stringMatcher("revision", TestConstants.UUID1_REGEXP)
                 .stringValue("data", TestConstants.JSON_1)
                 .stringValue("checksum", TestConstants.CHECKSUM_1)
                 .stringValue("status", "UPDATED")
@@ -153,6 +154,7 @@ public class PactConsumerTests {
 
         PactDslJsonBody payload2 = new PactDslJsonBody()
                 .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
+                .stringMatcher("token", TestConstants.UUID1_REGEXP)
                 .object("data", event2)
                 .stringValue("type", TestConstants.DESIGN_DOCUMENT_UPDATE_REQUESTED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
@@ -220,7 +222,7 @@ public class PactConsumerTests {
                 .uuid("userId", TestConstants.USER_ID)
                 .stringMatcher("changeId", TestConstants.UUID6_REGEXP)
                 .stringMatcher("eventId", TestConstants.UUID1_REGEXP)
-                .numberType("revision")
+                .stringMatcher("revision", TestConstants.UUID1_REGEXP)
                 .stringValue("data", TestConstants.JSON_1)
                 .stringValue("checksum", TestConstants.CHECKSUM_1)
                 .stringValue("status", "UPDATED")
@@ -230,6 +232,7 @@ public class PactConsumerTests {
 
         PactDslJsonBody payload3 = new PactDslJsonBody()
                 .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
+                .stringMatcher("token", TestConstants.UUID1_REGEXP)
                 .object("data", event3)
                 .stringValue("type", TestConstants.DESIGN_DOCUMENT_UPDATE_REQUESTED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
@@ -297,7 +300,7 @@ public class PactConsumerTests {
                 .uuid("userId", TestConstants.USER_ID)
                 .stringMatcher("changeId", TestConstants.UUID6_REGEXP)
                 .stringMatcher("eventId", TestConstants.UUID1_REGEXP)
-                .numberType("revision")
+                .stringMatcher("revision", TestConstants.UUID1_REGEXP)
                 .stringValue("data", TestConstants.JSON_2)
                 .stringValue("checksum", TestConstants.CHECKSUM_2)
                 .stringValue("status", "UPDATED")
@@ -307,6 +310,7 @@ public class PactConsumerTests {
 
         PactDslJsonBody payload4 = new PactDslJsonBody()
                 .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
+                .stringMatcher("token", TestConstants.UUID1_REGEXP)
                 .object("data", event4)
                 .stringValue("type", TestConstants.DESIGN_DOCUMENT_UPDATE_REQUESTED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
@@ -391,7 +395,7 @@ public class PactConsumerTests {
                 .uuid("userId", TestConstants.USER_ID)
                 .stringMatcher("changeId", TestConstants.UUID6_REGEXP)
                 .stringMatcher("eventId", TestConstants.UUID1_REGEXP)
-                .numberType("revision")
+                .stringMatcher("revision", TestConstants.UUID1_REGEXP)
                 .stringValue("data", TestConstants.JSON_2)
                 .stringValue("checksum", TestConstants.CHECKSUM_2)
                 .stringValue("status", "CREATED")
@@ -401,6 +405,7 @@ public class PactConsumerTests {
 
         PactDslJsonBody payload1 = new PactDslJsonBody()
                 .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
+                .stringMatcher("token", TestConstants.UUID1_REGEXP)
                 .object("data", event1)
                 .stringValue("type", TestConstants.DESIGN_DOCUMENT_UPDATE_REQUESTED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
@@ -420,7 +425,7 @@ public class PactConsumerTests {
                 .uuid("userId", TestConstants.USER_ID)
                 .stringMatcher("changeId", TestConstants.UUID6_REGEXP)
                 .stringMatcher("eventId", TestConstants.UUID1_REGEXP)
-                .numberType("revision")
+                .stringMatcher("revision", TestConstants.UUID1_REGEXP)
                 .stringValue("data", TestConstants.JSON_2)
                 .stringValue("checksum", TestConstants.CHECKSUM_2)
                 .stringValue("status", "DELETED")
@@ -430,6 +435,7 @@ public class PactConsumerTests {
 
         PactDslJsonBody payload2 = new PactDslJsonBody()
                 .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
+                .stringMatcher("token", TestConstants.UUID1_REGEXP)
                 .object("data", event2)
                 .stringValue("type", TestConstants.DESIGN_DOCUMENT_UPDATE_REQUESTED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);

@@ -92,7 +92,9 @@ public class KafkaTestPolling {
 //                .peek(header -> System.out.println("header: " + header.key() + "=" + header.value()))
                 .collect(Collectors.toMap(KafkaHeader::key, kafkaHeader -> getString(kafkaHeader.value())));
 
-        return new InputMessage(record.key(), record.offset(), Json.decodeValue(record.value(), Payload.class), Tracing.from(headers), record.timestamp());
+        final Payload payload = Json.decodeValue(record.value(), Payload.class);
+
+        return new InputMessage(record.key(), payload, Tracing.from(headers), record.timestamp());
     }
 
     private void pollMessages() {

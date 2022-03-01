@@ -27,7 +27,7 @@ public class UpdateDesignController implements Controller<UpdateDesignRequest, U
     public Single<UpdateDesignResponse> onNext(UpdateDesignRequest request) {
         return Single.just(request)
                 .map(this.inputMapper::transform)
-                .doOnSuccess(command -> logger.info("Processing command " + command))
+                .doOnSuccess(command -> logger.info("Processing update command " + command.getDesignId()))
                 .map(command -> outputMapper.transform(Tracing.of(null), command))
                 .flatMap(emitter::onNext)
                 .map(ignore -> new UpdateDesignResponse(request.getUuid(), ResultStatus.SUCCESS))

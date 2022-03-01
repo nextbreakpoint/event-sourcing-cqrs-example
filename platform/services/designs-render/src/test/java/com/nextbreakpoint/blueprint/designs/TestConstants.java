@@ -2,6 +2,8 @@ package com.nextbreakpoint.blueprint.designs;
 
 import com.nextbreakpoint.blueprint.common.core.Checksum;
 
+import java.util.UUID;
+
 public interface TestConstants {
     String TILE_RENDER_REQUESTED = "tile-render-requested-v1";
     String TILE_RENDER_COMPLETED = "tile-render-completed-v1";
@@ -19,4 +21,7 @@ public interface TestConstants {
 
     String UUID1_REGEXP = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
     String UUID6_REGEXP = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
+
+    String REVISION_0 = UUID.fromString("00000000-0000-1000-0000-000000000000").toString();
+    String REVISION_1 = UUID.fromString("00000000-0000-1000-0000-000000000001").toString();
 }

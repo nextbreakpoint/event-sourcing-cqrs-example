@@ -12,5 +12,6 @@ module com.nextbreakpoint.blueprint.common.test {
     requires static kafka.clients;
     requires static rxjava;
     requires static testcontainers;
+    requires static java.driver.core;
     exports com.nextbreakpoint.blueprint.common.test;
 }

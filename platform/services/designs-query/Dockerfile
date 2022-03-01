@@ -14,7 +14,6 @@ RUN mvn clean verify -s settings.xml -t toolchains.xml $maven_args -DexcludedGro
 #COPY --from=native-image designs-query /designs-query
 FROM openjdk:11-jdk
 COPY --from=build /src/target/libs/* /libs/
-RUN rm /libs/jffi-*-native.jar
 COPY --from=build /src/target/service.jar /libs/
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod u+x /entrypoint.sh

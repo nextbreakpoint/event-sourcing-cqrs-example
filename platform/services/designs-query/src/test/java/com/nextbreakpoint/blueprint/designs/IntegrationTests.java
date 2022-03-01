@@ -1,12 +1,8 @@
 package com.nextbreakpoint.blueprint.designs;
 
-import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.http.ContentType;
-import com.nextbreakpoint.blueprint.common.core.Authority;
-import com.nextbreakpoint.blueprint.common.core.Checksum;
-import com.nextbreakpoint.blueprint.common.core.OutputMessage;
-import com.nextbreakpoint.blueprint.common.core.Tracing;
+import com.nextbreakpoint.blueprint.common.core.*;
 import com.nextbreakpoint.blueprint.common.events.DesignDocumentUpdateRequested;
 import com.nextbreakpoint.blueprint.common.events.mappers.DesignDocumentUpdateRequestedOutputMapper;
 import com.nextbreakpoint.blueprint.designs.model.Design;
@@ -59,10 +55,10 @@ public class IntegrationTests {
 
   @BeforeEach
   public void setup() {
-    final Design design1 = new Design(Uuids.timeBased(), TestConstants.DESIGN_UUID_1, 0, JSON_1, Checksum.of(JSON_1), "CREATED", TestConstants.LEVELS, TestUtils.getTiles(TestConstants.LEVELS, 0.0f), FORMATTER.format(Instant.now()));
-    final Design design2 = new Design(Uuids.timeBased(), TestConstants.DESIGN_UUID_2, 1, JSON_2, Checksum.of(JSON_2), "UPDATED", TestConstants.LEVELS, TestUtils.getTiles(TestConstants.LEVELS, 0.2f), FORMATTER.format(Instant.now()));
-    final Design design3 = new Design(Uuids.timeBased(), TestConstants.DESIGN_UUID_3, 2, JSON_3, Checksum.of(JSON_3), "UPDATED", TestConstants.LEVELS, TestUtils.getTiles(TestConstants.LEVELS, 0.5f), FORMATTER.format(Instant.now()));
-    final Design design4 = new Design(Uuids.timeBased(), TestConstants.DESIGN_UUID_4, 4, JSON_4, Checksum.of(JSON_4), "DELETED", TestConstants.LEVELS, TestUtils.getTiles(TestConstants.LEVELS, 1.0f), FORMATTER.format(Instant.now()));
+    final Design design1 = new Design(TimeUUID.next(), TestConstants.DESIGN_UUID_1, TestConstants.REVISION_0, JSON_1, Checksum.of(JSON_1), "CREATED", TestConstants.LEVELS, TestUtils.getTiles(TestConstants.LEVELS, 0.0f), FORMATTER.format(Instant.now()));
+    final Design design2 = new Design(TimeUUID.next(), TestConstants.DESIGN_UUID_2, TestConstants.REVISION_0, JSON_2, Checksum.of(JSON_2), "UPDATED", TestConstants.LEVELS, TestUtils.getTiles(TestConstants.LEVELS, 0.2f), FORMATTER.format(Instant.now()));
+    final Design design3 = new Design(TimeUUID.next(), TestConstants.DESIGN_UUID_3, TestConstants.REVISION_0, JSON_3, Checksum.of(JSON_3), "UPDATED", TestConstants.LEVELS, TestUtils.getTiles(TestConstants.LEVELS, 0.5f), FORMATTER.format(Instant.now()));
+    final Design design4 = new Design(TimeUUID.next(), TestConstants.DESIGN_UUID_4, TestConstants.REVISION_0, JSON_4, Checksum.of(JSON_4), "DELETED", TestConstants.LEVELS, TestUtils.getTiles(TestConstants.LEVELS, 1.0f), FORMATTER.format(Instant.now()));
 
     testCases.deleteDesigns();
 
@@ -85,10 +81,10 @@ public class IntegrationTests {
     final List<DesignDocumentUpdateRequested.Tiles> tiles3 = TestUtils.getTiles(TestConstants.LEVELS, 1.0f).stream().map(this::createTiles).collect(Collectors.toList());
     final List<DesignDocumentUpdateRequested.Tiles> tiles4 = TestUtils.getTiles(TestConstants.LEVELS, 1.0f).stream().map(this::createTiles).collect(Collectors.toList());
 
-    final DesignDocumentUpdateRequested designDocumentUpdateRequested1 = new DesignDocumentUpdateRequested(TestConstants.USER_ID, Uuids.timeBased(), designId1, UUID.randomUUID(), 0, TestConstants.JSON_1, TestConstants.CHECKSUM_1, "CREATED", TestConstants.LEVELS, tiles1, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
-    final DesignDocumentUpdateRequested designDocumentUpdateRequested2 = new DesignDocumentUpdateRequested(TestConstants.USER_ID, Uuids.timeBased(), designId1, UUID.randomUUID(), 1, TestConstants.JSON_1, TestConstants.CHECKSUM_1, "UPDATED", TestConstants.LEVELS, tiles2, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
-    final DesignDocumentUpdateRequested designDocumentUpdateRequested3 = new DesignDocumentUpdateRequested(TestConstants.USER_ID, Uuids.timeBased(), designId1, UUID.randomUUID(), 2, TestConstants.JSON_1, TestConstants.CHECKSUM_1, "UPDATED", TestConstants.LEVELS, tiles3, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
-    final DesignDocumentUpdateRequested designDocumentUpdateRequested4 = new DesignDocumentUpdateRequested(TestConstants.USER_ID, Uuids.timeBased(), designId2, UUID.randomUUID(), 3, TestConstants.JSON_2, TestConstants.CHECKSUM_2, "UPDATED", TestConstants.LEVELS, tiles4, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
+    final DesignDocumentUpdateRequested designDocumentUpdateRequested1 = new DesignDocumentUpdateRequested(TestConstants.USER_ID, TimeUUID.next(), designId1, UUID.randomUUID(), TestConstants.REVISION_0, TestConstants.JSON_1, TestConstants.CHECKSUM_1, "CREATED", TestConstants.LEVELS, tiles1, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
+    final DesignDocumentUpdateRequested designDocumentUpdateRequested2 = new DesignDocumentUpdateRequested(TestConstants.USER_ID, TimeUUID.next(), designId1, UUID.randomUUID(), TestConstants.REVISION_1, TestConstants.JSON_1, TestConstants.CHECKSUM_1, "UPDATED", TestConstants.LEVELS, tiles2, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
+    final DesignDocumentUpdateRequested designDocumentUpdateRequested3 = new DesignDocumentUpdateRequested(TestConstants.USER_ID, TimeUUID.next(), designId1, UUID.randomUUID(), TestConstants.REVISION_2, TestConstants.JSON_1, TestConstants.CHECKSUM_1, "UPDATED", TestConstants.LEVELS, tiles3, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
+    final DesignDocumentUpdateRequested designDocumentUpdateRequested4 = new DesignDocumentUpdateRequested(TestConstants.USER_ID, TimeUUID.next(), designId2, UUID.randomUUID(), TestConstants.REVISION_0, TestConstants.JSON_2, TestConstants.CHECKSUM_2, "UPDATED", TestConstants.LEVELS, tiles4, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
 
     final DesignDocumentUpdateRequestedOutputMapper outputMapper = new DesignDocumentUpdateRequestedOutputMapper(TestConstants.MESSAGE_SOURCE);
 
@@ -109,8 +105,8 @@ public class IntegrationTests {
 
     final List<DesignDocumentUpdateRequested.Tiles> tiles = TestUtils.getTiles(TestConstants.LEVELS, 100.0f).stream().map(this::createTiles).collect(Collectors.toList());
 
-    final DesignDocumentUpdateRequested designDocumentUpdateRequested1 = new DesignDocumentUpdateRequested(TestConstants.USER_ID, Uuids.timeBased(), designId, UUID.randomUUID(), 0, TestConstants.JSON_2, TestConstants.CHECKSUM_2, "CREATED", TestConstants.LEVELS, tiles, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
-    final DesignDocumentUpdateRequested designDocumentUpdateRequested2 = new DesignDocumentUpdateRequested(TestConstants.USER_ID, Uuids.timeBased(), designId, UUID.randomUUID(), 0, TestConstants.JSON_2, TestConstants.CHECKSUM_2, "DELETED", TestConstants.LEVELS, tiles, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
+    final DesignDocumentUpdateRequested designDocumentUpdateRequested1 = new DesignDocumentUpdateRequested(TestConstants.USER_ID, TimeUUID.next(), designId, UUID.randomUUID(), TestConstants.REVISION_0, TestConstants.JSON_2, TestConstants.CHECKSUM_2, "CREATED", TestConstants.LEVELS, tiles, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
+    final DesignDocumentUpdateRequested designDocumentUpdateRequested2 = new DesignDocumentUpdateRequested(TestConstants.USER_ID, TimeUUID.next(), designId, UUID.randomUUID(), TestConstants.REVISION_1, TestConstants.JSON_2, TestConstants.CHECKSUM_2, "DELETED", TestConstants.LEVELS, tiles, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
 
     final DesignDocumentUpdateRequestedOutputMapper outputMapper = new DesignDocumentUpdateRequestedOutputMapper(TestConstants.MESSAGE_SOURCE);
 

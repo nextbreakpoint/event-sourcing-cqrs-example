@@ -19,6 +19,7 @@ public class DesignDocumentUpdateCompletedOutputMapper implements MessageMapper<
                 event.getDesignId().toString(),
                 new Payload(
                         UUID.randomUUID(),
+                        TimeUUID.next().toString(),
                         DesignDocumentUpdateCompleted.TYPE,
                         Json.encodeValue(event),
                         messageSource

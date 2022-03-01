@@ -1,7 +1,7 @@
 package com.nextbreakpoint.blueprint.designs;
 
-import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
+import com.nextbreakpoint.blueprint.common.core.TimeUUID;
 import com.nextbreakpoint.blueprint.common.core.Tracing;
 import com.nextbreakpoint.blueprint.common.events.DesignDeleteRequested;
 import com.nextbreakpoint.blueprint.common.events.DesignInsertRequested;
@@ -37,7 +37,7 @@ public class IntegrationTests {
     public void shouldUpdateTheDesignWhenReceivingADesignInsertRequestedMessage() {
         final UUID designId = UUID.randomUUID();
 
-        final DesignInsertRequested designInsertRequested = new DesignInsertRequested(TestConstants.USER_ID, Uuids.timeBased(), designId, UUID.randomUUID(), TestConstants.JSON_1, TestConstants.LEVELS);
+        final DesignInsertRequested designInsertRequested = new DesignInsertRequested(TestConstants.USER_ID, TimeUUID.next(), designId, UUID.randomUUID(), TestConstants.JSON_1, TestConstants.LEVELS);
 
         final OutputMessage designInsertRequestedMessage = new DesignInsertRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(Tracing.of(UUID.randomUUID()), designInsertRequested);
 
@@ -49,11 +49,11 @@ public class IntegrationTests {
     public void shouldUpdateTheDesignWhenReceivingADesignUpdateRequestedMessage() {
         final UUID designId = UUID.randomUUID();
 
-        final DesignInsertRequested designInsertRequested = new DesignInsertRequested(TestConstants.USER_ID, Uuids.timeBased(), designId, UUID.randomUUID(), TestConstants.JSON_1, TestConstants.LEVELS);
+        final DesignInsertRequested designInsertRequested = new DesignInsertRequested(TestConstants.USER_ID, TimeUUID.next(), designId, UUID.randomUUID(), TestConstants.JSON_1, TestConstants.LEVELS);
 
         final OutputMessage designInsertRequestedMessage = new DesignInsertRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(Tracing.of(UUID.randomUUID()), designInsertRequested);
 
-        final DesignUpdateRequested designUpdateRequested = new DesignUpdateRequested(TestConstants.USER_ID, Uuids.timeBased(), designId, UUID.randomUUID(), TestConstants.JSON_2, TestConstants.LEVELS);
+        final DesignUpdateRequested designUpdateRequested = new DesignUpdateRequested(TestConstants.USER_ID, TimeUUID.next(), designId, UUID.randomUUID(), TestConstants.JSON_2, TestConstants.LEVELS);
 
         final OutputMessage designUpdateRequestedMessage = new DesignUpdateRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(Tracing.of(UUID.randomUUID()), designUpdateRequested);
 
@@ -65,11 +65,11 @@ public class IntegrationTests {
     public void shouldUpdateTheDesignWhenReceivingADesignDeleteRequestedMessage() {
         final UUID designId = UUID.randomUUID();
 
-        final DesignInsertRequested designInsertRequested = new DesignInsertRequested(TestConstants.USER_ID, Uuids.timeBased(), designId, UUID.randomUUID(), TestConstants.JSON_1, TestConstants.LEVELS);
+        final DesignInsertRequested designInsertRequested = new DesignInsertRequested(TestConstants.USER_ID, TimeUUID.next(), designId, UUID.randomUUID(), TestConstants.JSON_1, TestConstants.LEVELS);
 
         final OutputMessage designInsertRequestedMessage = new DesignInsertRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(Tracing.of(UUID.randomUUID()), designInsertRequested);
 
-        final DesignDeleteRequested designDeleteRequested = new DesignDeleteRequested(TestConstants.USER_ID, Uuids.timeBased(), designId, UUID.randomUUID());
+        final DesignDeleteRequested designDeleteRequested = new DesignDeleteRequested(TestConstants.USER_ID, TimeUUID.next(), designId, UUID.randomUUID());
 
         final OutputMessage designDeleteRequestedMessage = new DesignDeleteRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(Tracing.of(UUID.randomUUID()), designDeleteRequested);
 
@@ -81,15 +81,15 @@ public class IntegrationTests {
     public void shouldUpdateTheDesignWhenReceivingATileRenderCompletedMessage() {
         final UUID designId = UUID.randomUUID();
 
-        final DesignInsertRequested designInsertRequested = new DesignInsertRequested(TestConstants.USER_ID, Uuids.timeBased(), designId, UUID.randomUUID(), TestConstants.JSON_1, TestConstants.LEVELS);
+        final DesignInsertRequested designInsertRequested = new DesignInsertRequested(TestConstants.USER_ID, TimeUUID.next(), designId, UUID.randomUUID(), TestConstants.JSON_1, TestConstants.LEVELS);
 
         final OutputMessage designInsertRequestedMessage = new DesignInsertRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(Tracing.of(UUID.randomUUID()), designInsertRequested);
 
-        final TileRenderCompleted tileRenderCompleted1 = new TileRenderCompleted(Uuids.timeBased(), designId, 0, TestConstants.CHECKSUM_1, 0, 0, 0, "FAILED");
-        final TileRenderCompleted tileRenderCompleted2 = new TileRenderCompleted(Uuids.timeBased(), designId, 0, TestConstants.CHECKSUM_1, 1, 0, 0, "COMPLETED");
-        final TileRenderCompleted tileRenderCompleted3 = new TileRenderCompleted(Uuids.timeBased(), designId, 0, TestConstants.CHECKSUM_1, 1, 1, 0, "COMPLETED");
-        final TileRenderCompleted tileRenderCompleted4 = new TileRenderCompleted(Uuids.timeBased(), designId, 0, TestConstants.CHECKSUM_1, 2, 2, 1, "COMPLETED");
-        final TileRenderCompleted tileRenderCompleted5 = new TileRenderCompleted(Uuids.timeBased(), designId, 0, TestConstants.CHECKSUM_1, 2, 3, 1, "FAILED");
+        final TileRenderCompleted tileRenderCompleted1 = new TileRenderCompleted(TimeUUID.next(), designId, TestConstants.REVISION_0, TestConstants.CHECKSUM_1, 0, 0, 0, "FAILED");
+        final TileRenderCompleted tileRenderCompleted2 = new TileRenderCompleted(TimeUUID.next(), designId, TestConstants.REVISION_1, TestConstants.CHECKSUM_1, 1, 0, 0, "COMPLETED");
+        final TileRenderCompleted tileRenderCompleted3 = new TileRenderCompleted(TimeUUID.next(), designId, TestConstants.REVISION_2, TestConstants.CHECKSUM_1, 1, 1, 0, "COMPLETED");
+        final TileRenderCompleted tileRenderCompleted4 = new TileRenderCompleted(TimeUUID.next(), designId, TestConstants.REVISION_3, TestConstants.CHECKSUM_1, 2, 2, 1, "COMPLETED");
+        final TileRenderCompleted tileRenderCompleted5 = new TileRenderCompleted(TimeUUID.next(), designId, TestConstants.REVISION_4, TestConstants.CHECKSUM_1, 2, 3, 1, "FAILED");
 
         final OutputMessage tileRenderCompletedMessage1 = new TileRenderCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(Tracing.of(UUID.randomUUID()), tileRenderCompleted1);
         final OutputMessage tileRenderCompletedMessage2 = new TileRenderCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(Tracing.of(UUID.randomUUID()), tileRenderCompleted2);

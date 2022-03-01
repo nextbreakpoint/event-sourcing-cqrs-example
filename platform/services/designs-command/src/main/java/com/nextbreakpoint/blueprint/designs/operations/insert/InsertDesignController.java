@@ -27,7 +27,7 @@ public class InsertDesignController implements Controller<InsertDesignRequest, I
     public Single<InsertDesignResponse> onNext(InsertDesignRequest request) {
         return Single.just(request)
                 .map(this.inputMapper::transform)
-                .doOnSuccess(command -> logger.info("Processing command " + command))
+                .doOnSuccess(command -> logger.info("Processing insert command " + command.getDesignId()))
                 .map(command -> outputMapper.transform(Tracing.of(null), command))
                 .flatMap(emitter::onNext)
                 .map(ignore -> new InsertDesignResponse(request.getUuid(), ResultStatus.SUCCESS))

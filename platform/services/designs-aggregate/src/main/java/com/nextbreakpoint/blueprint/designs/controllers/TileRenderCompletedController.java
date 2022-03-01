@@ -1,6 +1,5 @@
 package com.nextbreakpoint.blueprint.designs.controllers;
 
-import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.nextbreakpoint.blueprint.common.core.*;
 import com.nextbreakpoint.blueprint.common.events.TileAggregateUpdateRequired;
 import com.nextbreakpoint.blueprint.common.events.TileRenderCompleted;
@@ -10,6 +9,7 @@ import com.nextbreakpoint.blueprint.designs.aggregate.DesignAggregate;
 import rx.Single;
 
 import java.util.Objects;
+import java.util.UUID;
 
 public class TileRenderCompletedController implements Controller<InputMessage, Void> {
     private final Mapper<InputMessage, TileRenderCompleted> inputMapper;
@@ -32,16 +32,16 @@ public class TileRenderCompletedController implements Controller<InputMessage, V
     private Single<Void> onMessageReceived(InputMessage message) {
         return aggregate.appendMessage(message)
                 .map(result -> inputMapper.transform(message))
-                .map(event -> createEvent(message, event))
+                .map(event -> createEvent(event, message.getValue().getToken()))
                 .map(event -> outputMapper.transform(Tracing.from(message.getTrace()), event))
                 .flatMap(emitter::onNext);
     }
 
-    private TileAggregateUpdateRequired createEvent(InputMessage message, TileRenderCompleted event) {
+    private TileAggregateUpdateRequired createEvent(TileRenderCompleted event, String revision) {
         return TileAggregateUpdateRequired.builder()
-                .withEventId(Uuids.timeBased())
+                .withEventId(TimeUUID.next())
                 .withDesignId(event.getDesignId())
-                .withRevision(message.getOffset())
+                .withRevision(revision)
                 .build();
     }
 }

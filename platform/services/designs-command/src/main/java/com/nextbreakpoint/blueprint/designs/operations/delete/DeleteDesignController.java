@@ -27,7 +27,7 @@ public class DeleteDesignController implements Controller<DeleteDesignRequest, D
     public Single<DeleteDesignResponse> onNext(DeleteDesignRequest request) {
         return Single.just(request)
                 .map(this.inputMapper::transform)
-                .doOnSuccess(command -> logger.info("Processing command " + command))
+                .doOnSuccess(command -> logger.info("Processing delete command " + command.getDesignId()))
                 .map(command -> outputMapper.transform(Tracing.of(null), command))
                 .flatMap(emitter::onNext)
                 .map(ignore -> new DeleteDesignResponse(request.getUuid(), ResultStatus.SUCCESS))

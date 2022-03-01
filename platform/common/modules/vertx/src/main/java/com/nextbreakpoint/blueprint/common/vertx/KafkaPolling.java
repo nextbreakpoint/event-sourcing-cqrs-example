@@ -173,7 +173,7 @@ public class KafkaPolling {
                 return;
             }
 
-            final InputMessage message = new InputMessage(record.key(), record.offset(), payload, Tracing.from(headers), record.timestamp());
+            final InputMessage message = new InputMessage(record.key(), payload, Tracing.from(headers), record.timestamp());
 
 //            logger.debug("Received message: " + message);
 

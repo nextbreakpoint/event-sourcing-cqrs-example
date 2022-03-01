@@ -1,7 +1,7 @@
 package com.nextbreakpoint.blueprint.designs;
 
-import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
+import com.nextbreakpoint.blueprint.common.core.TimeUUID;
 import com.nextbreakpoint.blueprint.common.core.Tracing;
 import com.nextbreakpoint.blueprint.common.events.DesignDocumentUpdateCompleted;
 import com.nextbreakpoint.blueprint.common.events.mappers.DesignDocumentUpdateCompletedOutputMapper;
@@ -33,9 +33,9 @@ public class IntegrationTests {
 
         final UUID designId2 = UUID.randomUUID();
 
-        final DesignDocumentUpdateCompleted designDocumentUpdateCompleted1 = new DesignDocumentUpdateCompleted(Uuids.timeBased(), designId1, 0);
+        final DesignDocumentUpdateCompleted designDocumentUpdateCompleted1 = new DesignDocumentUpdateCompleted(TimeUUID.next(), designId1, TestConstants.REVISION_0);
 
-        final DesignDocumentUpdateCompleted designDocumentUpdateCompleted2 = new DesignDocumentUpdateCompleted(Uuids.timeBased(), designId2, 0);
+        final DesignDocumentUpdateCompleted designDocumentUpdateCompleted2 = new DesignDocumentUpdateCompleted(TimeUUID.next(), designId2, TestConstants.REVISION_0);
 
         final OutputMessage designDocumentUpdateCompletedMessage1 = new DesignDocumentUpdateCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(Tracing.of(UUID.randomUUID()), designDocumentUpdateCompleted1);
 
@@ -51,9 +51,9 @@ public class IntegrationTests {
 
         final UUID designId2 = UUID.randomUUID();
 
-        final DesignDocumentUpdateCompleted designDocumentUpdateCompleted1 = new DesignDocumentUpdateCompleted(Uuids.timeBased(), designId1, 0);
+        final DesignDocumentUpdateCompleted designDocumentUpdateCompleted1 = new DesignDocumentUpdateCompleted(TimeUUID.next(), designId1, TestConstants.REVISION_0);
 
-        final DesignDocumentUpdateCompleted designDocumentUpdateCompleted2 = new DesignDocumentUpdateCompleted(Uuids.timeBased(), designId2, 0);
+        final DesignDocumentUpdateCompleted designDocumentUpdateCompleted2 = new DesignDocumentUpdateCompleted(TimeUUID.next(), designId2, TestConstants.REVISION_0);
 
         final OutputMessage designDocumentUpdateCompletedMessage1 = new DesignDocumentUpdateCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(Tracing.of(UUID.randomUUID()), designDocumentUpdateCompleted1);
 

@@ -24,12 +24,12 @@ public class TestAssertions {
         final String actualType = row.getString("MESSAGE_TYPE");
         final String actualValue = row.getString("MESSAGE_VALUE");
         final UUID actualUuid = row.getUuid("MESSAGE_UUID");
+        final String actualToken = row.getString("MESSAGE_TOKEN");
         final String actualSource = row.getString("MESSAGE_SOURCE");
         final String actualKey = row.getString("MESSAGE_KEY");
         final Instant actualTimestamp = row.getInstant("MESSAGE_TIMESTAMP");
-        final Long actualOffset = row.getLong("MESSAGE_OFFSET");
-        assertThat(actualOffset).isNotNull();
         assertThat(actualUuid).isEqualTo(message.getValue().getUuid());
+        assertThat(actualToken).isEqualTo(message.getValue().getToken());
         assertThat(actualValue).isEqualTo(message.getValue().getData());
         assertThat(actualType).isEqualTo(message.getValue().getType());
         assertThat(actualSource).isEqualTo(message.getValue().getSource());
@@ -55,10 +55,10 @@ public class TestAssertions {
 
     public static void assertExpectedDesignAggregateUpdateRequestedMessage(InputMessage actualMessage, UUID designId) {
         assertThat(actualMessage.getTimestamp()).isNotNull();
-        assertThat(actualMessage.getOffset()).isNotNull();
         assertThat(actualMessage.getKey()).isEqualTo(designId.toString());
         assertThat(actualMessage.getValue()).isNotNull();
         assertThat(actualMessage.getValue().getSource()).isEqualTo(TestConstants.MESSAGE_SOURCE);
+        assertThat(actualMessage.getValue().getToken()).isNotNull();
         assertThat(actualMessage.getValue().getUuid()).isNotNull();
         assertThat(actualMessage.getValue().getType()).isEqualTo(TestConstants.DESIGN_AGGREGATE_UPDATE_REQUESTED);
         assertThat(actualMessage.getTrace()).isNotNull();
@@ -73,10 +73,10 @@ public class TestAssertions {
 
     public static void assertExpectedDesignAggregateUpdateCompletedMessage(InputMessage actualMessage, UUID designId, String data, String checksum, String status) {
         assertThat(actualMessage.getTimestamp()).isNotNull();
-        assertThat(actualMessage.getOffset()).isNotNull();
         assertThat(actualMessage.getKey()).isEqualTo(designId.toString());
         assertThat(actualMessage.getValue()).isNotNull();
         assertThat(actualMessage.getValue().getSource()).isEqualTo(TestConstants.MESSAGE_SOURCE);
+        assertThat(actualMessage.getValue().getToken()).isNotNull();
         assertThat(actualMessage.getValue().getUuid()).isNotNull();
         assertThat(actualMessage.getValue().getType()).isEqualTo(TestConstants.DESIGN_AGGREGATE_UPDATE_COMPLETED);
         assertThat(actualMessage.getTrace()).isNotNull();
@@ -94,10 +94,10 @@ public class TestAssertions {
 
     public static void assertExpectedTileRenderRequestedMessage(InputMessage actualMessage, String partitionKey) {
         assertThat(actualMessage.getTimestamp()).isNotNull();
-        assertThat(actualMessage.getOffset()).isNotNull();
         assertThat(actualMessage.getKey()).isEqualTo(partitionKey);
         assertThat(actualMessage.getValue()).isNotNull();
         assertThat(actualMessage.getValue().getSource()).isEqualTo(TestConstants.MESSAGE_SOURCE);
+        assertThat(actualMessage.getValue().getToken()).isNotNull();
         assertThat(actualMessage.getValue().getUuid()).isNotNull();
         assertThat(actualMessage.getValue().getType()).isEqualTo(TestConstants.TILE_RENDER_REQUESTED);
         assertThat(actualMessage.getTrace()).isNotNull();
@@ -119,10 +119,10 @@ public class TestAssertions {
 
     public static void assertExpectedTileRenderCompletedMessage(InputMessage actualMessage, UUID designId) {
         assertThat(actualMessage.getTimestamp()).isNotNull();
-        assertThat(actualMessage.getOffset()).isNotNull();
         assertThat(actualMessage.getKey()).isEqualTo(designId.toString());
         assertThat(actualMessage.getValue()).isNotNull();
         assertThat(actualMessage.getValue().getSource()).isEqualTo(TestConstants.MESSAGE_SOURCE);
+        assertThat(actualMessage.getValue().getToken()).isNotNull();
         assertThat(actualMessage.getValue().getUuid()).isNotNull();
         assertThat(actualMessage.getValue().getType()).isEqualTo(TestConstants.TILE_RENDER_COMPLETED);
         assertThat(actualMessage.getTrace()).isNotNull();
@@ -147,6 +147,7 @@ public class TestAssertions {
         assertThat(actualMessage.getKey()).isEqualTo(designId.toString());
         assertThat(actualMessage.getValue()).isNotNull();
         assertThat(actualMessage.getValue().getSource()).isEqualTo(TestConstants.MESSAGE_SOURCE);
+        assertThat(actualMessage.getValue().getToken()).isNotNull();
         assertThat(actualMessage.getValue().getUuid()).isNotNull();
         assertThat(actualMessage.getValue().getType()).isEqualTo(TestConstants.TILE_AGGREGATE_UPDATE_REQUIRED);
         assertThat(actualMessage.getTrace()).isNotNull();
@@ -161,10 +162,10 @@ public class TestAssertions {
 
     public static void assertExpectedTileAggregateUpdateRequestedMessage(InputMessage actualMessage, UUID designId) {
         assertThat(actualMessage.getTimestamp()).isNotNull();
-        assertThat(actualMessage.getOffset()).isNotNull();
         assertThat(actualMessage.getKey()).isEqualTo(designId.toString());
         assertThat(actualMessage.getValue()).isNotNull();
         assertThat(actualMessage.getValue().getSource()).isEqualTo(TestConstants.MESSAGE_SOURCE);
+        assertThat(actualMessage.getValue().getToken()).isNotNull();
         assertThat(actualMessage.getValue().getUuid()).isNotNull();
         assertThat(actualMessage.getValue().getType()).isEqualTo(TestConstants.TILE_AGGREGATE_UPDATE_REQUESTED);
         assertThat(actualMessage.getTrace()).isNotNull();
@@ -179,10 +180,10 @@ public class TestAssertions {
 
     public static void assertExpectedTileAggregateUpdateCompletedMessage(InputMessage actualMessage, UUID designId) {
         assertThat(actualMessage.getTimestamp()).isNotNull();
-        assertThat(actualMessage.getOffset()).isNotNull();
         assertThat(actualMessage.getKey()).isEqualTo(designId.toString());
         assertThat(actualMessage.getTrace()).isNotNull();
         assertThat(actualMessage.getValue().getSource()).isEqualTo(TestConstants.MESSAGE_SOURCE);
+        assertThat(actualMessage.getValue().getToken()).isNotNull();
         assertThat(actualMessage.getValue().getUuid()).isNotNull();
         assertThat(actualMessage.getValue().getType()).isEqualTo(TestConstants.TILE_AGGREGATE_UPDATE_COMPLETED);
         assertThat(actualMessage.getTrace().getTraceId()).isNotNull();
@@ -196,10 +197,10 @@ public class TestAssertions {
 
     public static void assertExpectedDesignDocumentUpdateRequestedMessage(InputMessage actualMessage, UUID designId, String data, String checksum, String status) {
         assertThat(actualMessage.getTimestamp()).isNotNull();
-        assertThat(actualMessage.getOffset()).isNotNull();
         assertThat(actualMessage.getKey()).isEqualTo(designId.toString());
         assertThat(actualMessage.getTrace()).isNotNull();
         assertThat(actualMessage.getValue().getSource()).isEqualTo(TestConstants.MESSAGE_SOURCE);
+        assertThat(actualMessage.getValue().getToken()).isNotNull();
         assertThat(actualMessage.getValue().getUuid()).isNotNull();
         assertThat(actualMessage.getValue().getType()).isEqualTo(TestConstants.DESIGN_DOCUMENT_UPDATE_REQUESTED);
         assertThat(actualMessage.getTrace().getTraceId()).isNotNull();

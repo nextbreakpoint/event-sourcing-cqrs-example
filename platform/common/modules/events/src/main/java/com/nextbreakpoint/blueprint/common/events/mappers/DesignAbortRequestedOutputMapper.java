@@ -19,6 +19,7 @@ public class DesignAbortRequestedOutputMapper implements MessageMapper<DesignAbo
                 event.getDesignId().toString(),
                 new Payload(
                         UUID.randomUUID(),
+                        TimeUUID.next().toString(),
                         DesignAbortRequested.TYPE,
                         Json.encodeValue(event),
                         messageSource

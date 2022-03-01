@@ -16,7 +16,7 @@ public class TileRenderAborted {
 
     private final UUID eventId;
     private final UUID designId;
-    private final long revision;
+    private final String revision;
     private final String checksum;
     private final int level;
     private final int row;
@@ -26,7 +26,7 @@ public class TileRenderAborted {
     public TileRenderAborted(
         @JsonProperty("eventId") UUID eventId,
         @JsonProperty("designId") UUID designId,
-        @JsonProperty("revision") long revision,
+        @JsonProperty("revision") String revision,
         @JsonProperty("checksum") String checksum,
         @JsonProperty("level") int level,
         @JsonProperty("row") int row,
@@ -34,7 +34,7 @@ public class TileRenderAborted {
     ) {
         this.eventId = Objects.requireNonNull(eventId);
         this.designId = Objects.requireNonNull(designId);
-        this.revision = revision;
+        this.revision = Objects.requireNonNull(revision);
         this.checksum = Objects.requireNonNull(checksum);
         this.level = level;
         this.row = row;

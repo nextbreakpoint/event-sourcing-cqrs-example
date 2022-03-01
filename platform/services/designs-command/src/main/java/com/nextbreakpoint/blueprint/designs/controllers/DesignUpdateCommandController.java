@@ -1,6 +1,5 @@
 package com.nextbreakpoint.blueprint.designs.controllers;
 
-import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.nextbreakpoint.blueprint.common.commands.DesignUpdateCommand;
 import com.nextbreakpoint.blueprint.common.core.*;
 import com.nextbreakpoint.blueprint.common.events.DesignUpdateRequested;
@@ -44,7 +43,7 @@ public class DesignUpdateCommandController implements Controller<InputMessage, V
 
     private DesignUpdateRequested createEvent(DesignUpdateCommand command) {
         return DesignUpdateRequested.builder()
-                .withEventId(Uuids.timeBased())
+                .withEventId(TimeUUID.next())
                 .withDesignId(command.getDesignId())
                 .withChangeId(command.getChangeId())
                 .withUserId(command.getUserId())

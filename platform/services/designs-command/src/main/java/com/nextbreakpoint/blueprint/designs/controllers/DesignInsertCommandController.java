@@ -1,6 +1,5 @@
 package com.nextbreakpoint.blueprint.designs.controllers;
 
-import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.nextbreakpoint.blueprint.common.commands.DesignInsertCommand;
 import com.nextbreakpoint.blueprint.common.core.*;
 import com.nextbreakpoint.blueprint.common.events.DesignInsertRequested;
@@ -44,7 +43,7 @@ public class DesignInsertCommandController implements Controller<InputMessage, V
 
     private DesignInsertRequested createEvent(DesignInsertCommand command) {
         return DesignInsertRequested.builder()
-                .withEventId(Uuids.timeBased())
+                .withEventId(TimeUUID.next())
                 .withDesignId(command.getDesignId())
                 .withChangeId(command.getChangeId())
                 .withUserId(command.getUserId())

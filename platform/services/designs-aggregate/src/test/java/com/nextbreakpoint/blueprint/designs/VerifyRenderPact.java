@@ -10,11 +10,7 @@ import au.com.dius.pact.provider.junitsupport.Consumer;
 import au.com.dius.pact.provider.junitsupport.Provider;
 import au.com.dius.pact.provider.junitsupport.State;
 import au.com.dius.pact.provider.junitsupport.loader.PactBroker;
-import com.datastax.oss.driver.api.core.uuid.Uuids;
-import com.nextbreakpoint.blueprint.common.core.Json;
-import com.nextbreakpoint.blueprint.common.core.KafkaRecord;
-import com.nextbreakpoint.blueprint.common.core.OutputMessage;
-import com.nextbreakpoint.blueprint.common.core.Tracing;
+import com.nextbreakpoint.blueprint.common.core.*;
 import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
 import com.nextbreakpoint.blueprint.common.events.mappers.TileRenderRequestedOutputMapper;
 import com.nextbreakpoint.blueprint.common.test.PayloadUtils;
@@ -69,7 +65,7 @@ public class VerifyRenderPact {
     }
 
     private String produceTileRenderRequested(UUID uuid, int level, int row, int col, String data, String checksum) {
-        final TileRenderRequested tileRenderRequested = new TileRenderRequested(Uuids.timeBased(), uuid, 0, data, checksum, level,  row, col);
+        final TileRenderRequested tileRenderRequested = new TileRenderRequested(TimeUUID.next(), uuid, TestConstants.REVISION_0, data, checksum, level,  row, col);
 
         final OutputMessage tileRenderRequestedMessage = new TileRenderRequestedOutputMapper(TestConstants.MESSAGE_SOURCE, event -> TestUtils.createBucketKey(tileRenderRequested)).transform(Tracing.of(UUID.randomUUID()), tileRenderRequested);
 

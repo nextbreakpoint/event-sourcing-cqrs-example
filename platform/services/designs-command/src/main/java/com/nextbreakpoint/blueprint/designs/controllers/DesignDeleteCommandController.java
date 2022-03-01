@@ -1,6 +1,5 @@
 package com.nextbreakpoint.blueprint.designs.controllers;
 
-import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.nextbreakpoint.blueprint.common.commands.DesignDeleteCommand;
 import com.nextbreakpoint.blueprint.common.core.*;
 import com.nextbreakpoint.blueprint.common.events.DesignDeleteRequested;
@@ -44,7 +43,7 @@ public class DesignDeleteCommandController implements Controller<InputMessage, V
 
     private DesignDeleteRequested createEvent(DesignDeleteCommand command) {
         return DesignDeleteRequested.builder()
-                .withEventId(Uuids.timeBased())
+                .withEventId(TimeUUID.next())
                 .withDesignId(command.getDesignId())
                 .withChangeId(command.getChangeId())
                 .withUserId(command.getUserId())

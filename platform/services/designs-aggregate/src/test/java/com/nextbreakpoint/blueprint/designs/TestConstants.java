@@ -34,4 +34,10 @@ public interface TestConstants {
     String DATABASE_KEYSPACE = "test_designs_aggregate";
 
     UUID USER_ID = new UUID(0L, 1L);
+
+    String REVISION_0 = UUID.fromString("00000000-0000-1000-0000-000000000000").toString();
+    String REVISION_1 = UUID.fromString("00000000-0000-1000-0000-000000000001").toString();
+    String REVISION_2 = UUID.fromString("00000000-0000-1000-0000-000000000002").toString();
+    String REVISION_3 = UUID.fromString("00000000-0000-1000-0000-000000000003").toString();
+    String REVISION_4 = UUID.fromString("00000000-0000-1000-0000-000000000004").toString();
 }

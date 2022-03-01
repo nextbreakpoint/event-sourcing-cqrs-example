@@ -1,6 +1,5 @@
 package com.nextbreakpoint.blueprint.designs.controllers;
 
-import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.nextbreakpoint.blueprint.common.core.*;
 import com.nextbreakpoint.blueprint.common.events.DesignAbortRequested;
 import com.nextbreakpoint.blueprint.common.events.TileRenderAborted;
@@ -70,7 +69,7 @@ public class DesignAbortRequestedController implements Controller<InputMessage, 
 
     private TileRenderAborted createEvent(DesignAbortRequested event, Design design, Tile tile) {
         return TileRenderAborted.builder()
-                .withEventId(Uuids.timeBased())
+                .withEventId(TimeUUID.next())
                 .withDesignId(event.getDesignId())
                 .withRevision(design.getRevision())
                 .withChecksum(event.getChecksum())

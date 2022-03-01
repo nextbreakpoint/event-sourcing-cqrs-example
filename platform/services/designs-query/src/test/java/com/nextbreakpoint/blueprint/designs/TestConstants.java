@@ -41,4 +41,8 @@ public interface TestConstants {
     String DESIGNS_INDEX_NAME = "test_designs_query";
 
     UUID USER_ID = new UUID(0L, 1L);
+
+    String REVISION_0 = UUID.fromString("00000000-0000-1000-0000-000000000000").toString();
+    String REVISION_1 = UUID.fromString("00000000-0000-1000-0000-000000000001").toString();
+    String REVISION_2 = UUID.fromString("00000000-0000-1000-0000-000000000002").toString();
 }

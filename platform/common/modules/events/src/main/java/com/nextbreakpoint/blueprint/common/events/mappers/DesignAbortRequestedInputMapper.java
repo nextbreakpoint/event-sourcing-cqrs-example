@@ -8,8 +8,8 @@ import com.nextbreakpoint.blueprint.common.events.DesignAbortRequested;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
 
-public class DesignAbortRequestedInputMessageMapper implements Mapper<InputMessage, DesignAbortRequested> {
-    private final Logger logger = LoggerFactory.getLogger(DesignAbortRequestedInputMessageMapper.class.getName());
+public class DesignAbortRequestedInputMapper implements Mapper<InputMessage, DesignAbortRequested> {
+    private final Logger logger = LoggerFactory.getLogger(DesignAbortRequestedInputMapper.class.getName());
 
     @Override
     public DesignAbortRequested transform(InputMessage message) {

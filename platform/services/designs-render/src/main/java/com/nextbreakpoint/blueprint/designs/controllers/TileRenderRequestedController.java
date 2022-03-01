@@ -1,6 +1,5 @@
 package com.nextbreakpoint.blueprint.designs.controllers;
 
-import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.nextbreakpoint.blueprint.common.core.*;
 import com.nextbreakpoint.blueprint.common.events.TileRenderCompleted;
 import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
@@ -56,7 +55,7 @@ public class TileRenderRequestedController implements Controller<InputMessage, V
 
     private TileRenderCompleted createEvent(TileRenderRequested event, String status) {
         return TileRenderCompleted.builder()
-                .withEventId(Uuids.timeBased())
+                .withEventId(TimeUUID.next())
                 .withDesignId(event.getDesignId())
                 .withRevision(event.getRevision())
                 .withChecksum(event.getChecksum())

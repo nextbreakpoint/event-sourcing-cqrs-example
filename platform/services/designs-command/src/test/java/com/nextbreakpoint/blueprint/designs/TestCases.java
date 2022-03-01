@@ -20,6 +20,7 @@ import rx.schedulers.Schedulers;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -160,7 +161,7 @@ public class TestCases {
                     TestAssertions.assertExpectedDesignInsertCommand(rows.get(0), uuid);
                 });
 
-        await().atMost(TEN_SECONDS)
+        await().atMost(Duration.ofSeconds(20))
                 .pollInterval(ONE_SECOND)
                 .untilAsserted(() -> {
                     final List<InputMessage> messages = eventsPolling.findMessages(uuid, TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_INSERT_REQUESTED);
@@ -199,7 +200,7 @@ public class TestCases {
                     TestAssertions.assertExpectedDesignUpdateCommand(rows.get(0), uuid);
                 });
 
-        await().atMost(TEN_SECONDS)
+        await().atMost(Duration.ofSeconds(20))
                 .pollInterval(ONE_SECOND)
                 .untilAsserted(() -> {
                     final List<InputMessage> messages = eventsPolling.findMessages(uuid, TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_UPDATE_REQUESTED);
@@ -238,7 +239,7 @@ public class TestCases {
                     TestAssertions.assertExpectedDesignDeleteCommand(rows.get(0), uuid);
                 });
 
-        await().atMost(TEN_SECONDS)
+        await().atMost(Duration.ofSeconds(20))
                 .pollInterval(ONE_SECOND)
                 .untilAsserted(() -> {
                     final List<InputMessage> messages = eventsPolling.findMessages(uuid, TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_DELETE_REQUESTED);

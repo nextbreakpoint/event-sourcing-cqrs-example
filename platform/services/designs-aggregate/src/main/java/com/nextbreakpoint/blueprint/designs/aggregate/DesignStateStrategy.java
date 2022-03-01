@@ -89,29 +89,29 @@ public class DesignStateStrategy {
     }
 
     private void mergeEvent(Accumulator state, InputMessage message) {
-        final long offset = message.getOffset();
         final String type = message.getValue().getType();
         final String value = message.getValue().getData();
+        final String token = message.getValue().getToken();
         final long timestamp = message.getTimestamp();
         switch (type) {
             case DesignInsertRequested.TYPE: {
                 DesignInsertRequested event = Json.decodeValue(value, DesignInsertRequested.class);
-                state.design = new Design(event.getUserId(), event.getEventId(), event.getDesignId(), event.getChangeId(), offset, event.getData(), Checksum.of(event.getData()), "CREATED", event.getLevels(), createLevelsMap(event.getLevels()), toDateTime(timestamp));
+                state.design = new Design(event.getUserId(), event.getEventId(), event.getDesignId(), event.getChangeId(), token, event.getData(), Checksum.of(event.getData()), "CREATED", event.getLevels(), createLevelsMap(event.getLevels()), toDateTime(timestamp));
                 break;
             }
             case DesignUpdateRequested.TYPE: {
                 DesignUpdateRequested event = Json.decodeValue(value, DesignUpdateRequested.class);
-                state.design = new Design(event.getUserId(), event.getEventId(), event.getDesignId(), event.getChangeId(), offset, event.getData(), Checksum.of(event.getData()), "UPDATED", event.getLevels(), state.design.getTiles(), toDateTime(timestamp));
+                state.design = new Design(event.getUserId(), event.getEventId(), event.getDesignId(), event.getChangeId(), token, event.getData(), Checksum.of(event.getData()), "UPDATED", event.getLevels(), createLevelsMap(event.getLevels()), toDateTime(timestamp));
                 break;
             }
             case DesignDeleteRequested.TYPE: {
                 DesignDeleteRequested event = Json.decodeValue(value, DesignDeleteRequested.class);
-                state.design = new Design(event.getUserId(), event.getEventId(), event.getDesignId(), event.getChangeId(), offset, state.design.getData(), state.design.getChecksum(), "DELETED", state.design.getLevels(), state.design.getTiles(), toDateTime(timestamp));
+                state.design = new Design(event.getUserId(), event.getEventId(), event.getDesignId(), event.getChangeId(), token, state.design.getData(), state.design.getChecksum(), "DELETED", state.design.getLevels(), state.design.getTiles(), toDateTime(timestamp));
                 break;
             }
             case TileRenderCompleted.TYPE: {
                 TileRenderCompleted event = Json.decodeValue(value, TileRenderCompleted.class);
-                state.design = new Design(state.design.getUserId(), event.getEventId(), event.getDesignId(), state.design.getChangeId(), offset, state.design.getData(), state.design.getChecksum(), state.design.getStatus(), state.design.getLevels(), createLevelsMap(state.design, createLevelsMap(event)), toDateTime(timestamp));
+                state.design = new Design(state.design.getUserId(), event.getEventId(), event.getDesignId(), state.design.getChangeId(), token, state.design.getData(), state.design.getChecksum(), state.design.getStatus(), state.design.getLevels(), createLevelsMap(state.design, createLevelsMap(event)), toDateTime(timestamp));
                 break;
             }
             default: {

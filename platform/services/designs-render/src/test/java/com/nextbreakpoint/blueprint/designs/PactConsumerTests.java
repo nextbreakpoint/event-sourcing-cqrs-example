@@ -46,7 +46,7 @@ public class PactConsumerTests {
         PactDslJsonBody event1 = new PactDslJsonBody()
                 .uuid("designId", uuid)
                 .stringMatcher("eventId", TestConstants.UUID1_REGEXP)
-                .numberType("revision")
+                .stringMatcher("revision", TestConstants.UUID1_REGEXP)
                 .stringValue("data", TestConstants.JSON_1)
                 .stringValue("checksum", TestConstants.CHECKSUM_1)
                 .numberValue("level", 0)
@@ -54,7 +54,8 @@ public class PactConsumerTests {
                 .numberValue("col", 0);
 
         PactDslJsonBody payload1 = new PactDslJsonBody()
-                .stringMatcher("uuid", TestConstants.UUID1_REGEXP)
+                .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
+                .stringMatcher("token", TestConstants.UUID1_REGEXP)
                 .object("data", event1)
                 .stringValue("type", TestConstants.TILE_RENDER_REQUESTED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
@@ -72,7 +73,7 @@ public class PactConsumerTests {
         PactDslJsonBody event2 = new PactDslJsonBody()
                 .uuid("designId", uuid)
                 .stringMatcher("eventId", TestConstants.UUID1_REGEXP)
-                .numberType("revision")
+                .stringMatcher("revision", TestConstants.UUID1_REGEXP)
                 .stringValue("data", TestConstants.JSON_2)
                 .stringValue("checksum", TestConstants.CHECKSUM_2)
                 .numberValue("level", 1)
@@ -80,7 +81,8 @@ public class PactConsumerTests {
                 .numberValue("col", 2);
 
         PactDslJsonBody payload2 = new PactDslJsonBody()
-                .stringMatcher("uuid", TestConstants.UUID1_REGEXP)
+                .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
+                .stringMatcher("token", TestConstants.UUID1_REGEXP)
                 .object("data", event2)
                 .stringValue("type", TestConstants.TILE_RENDER_REQUESTED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);

@@ -371,8 +371,6 @@ public class TestCases {
 
         System.out.println("designId = " + designId);
 
-        final long[] offset = new long[1];
-
         eventsPolling.clearMessages();
         renderPolling.clearMessages();
 
@@ -383,7 +381,6 @@ public class TestCases {
                 .untilAsserted(() -> {
                     final List<InputMessage> messages = eventsPolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_INSERT_REQUESTED);
                     assertThat(messages).hasSize(1);
-                    offset[0] = messages.get(0).getOffset();
                 });
 
         await().atMost(TEN_SECONDS)
@@ -439,8 +436,6 @@ public class TestCases {
                     assertThat(events).hasSize(messages.size());
                     events.forEach(event -> TestAssertions.assertExpectedTileRenderRequestedEvent(event, designId, TestConstants.JSON_1, TestConstants.CHECKSUM_1));
                 });
-
-        System.out.println("offset = " + offset[0]);
 
         final OutputMessage tileRenderCompletedMessage1 = tileRenderCompletedMessages.get(0);
         final OutputMessage tileRenderCompletedMessage2 = tileRenderCompletedMessages.get(1);

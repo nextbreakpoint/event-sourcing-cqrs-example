@@ -9,7 +9,6 @@ module com.nextbreakpoint.blueprint.designs.query {
     requires io.vertx.web.openapi;
     requires io.vertx.metrics.micrometer;
     requires io.vertx.tracing.opentracing;
-    requires io.vertx.client.cassandra;
     requires io.vertx.client.kafka;
     requires vertx.rx.java;
     requires static lombok;
@@ -18,7 +17,6 @@ module com.nextbreakpoint.blueprint.designs.query {
     requires com.fasterxml.jackson.databind;
     requires com.fasterxml.jackson.datatype.jsr310;
     requires org.apache.logging.log4j;
-    requires com.datastax.oss.driver.core;
     requires jakarta.json;
     requires java.sql;
     requires java.desktop;

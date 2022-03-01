@@ -9,7 +9,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface Store {
-    Single<List<InputMessage>> findMessages(UUID uuid, long fromEsid, long toEsid);
+    Single<List<InputMessage>> findMessages(UUID uuid, String fromRevision, String toRevision);
 
     Single<Void> appendMessage(InputMessage message);
 

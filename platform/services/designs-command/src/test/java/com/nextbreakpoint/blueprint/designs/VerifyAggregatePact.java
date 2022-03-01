@@ -10,11 +10,7 @@ import au.com.dius.pact.provider.junitsupport.Consumer;
 import au.com.dius.pact.provider.junitsupport.Provider;
 import au.com.dius.pact.provider.junitsupport.State;
 import au.com.dius.pact.provider.junitsupport.loader.PactBroker;
-import com.datastax.oss.driver.api.core.uuid.Uuids;
-import com.nextbreakpoint.blueprint.common.core.Json;
-import com.nextbreakpoint.blueprint.common.core.KafkaRecord;
-import com.nextbreakpoint.blueprint.common.core.OutputMessage;
-import com.nextbreakpoint.blueprint.common.core.Tracing;
+import com.nextbreakpoint.blueprint.common.core.*;
 import com.nextbreakpoint.blueprint.common.events.DesignDeleteRequested;
 import com.nextbreakpoint.blueprint.common.events.DesignInsertRequested;
 import com.nextbreakpoint.blueprint.common.events.DesignUpdateRequested;
@@ -89,7 +85,7 @@ public class VerifyAggregatePact {
     }
 
     private String produceDesignInsertRequested(UUID uuid, String data, int levels) {
-        final DesignInsertRequested designInsertRequested = new DesignInsertRequested(TestConstants.USER_ID, Uuids.timeBased(), uuid, UUID.randomUUID(), data, levels);
+        final DesignInsertRequested designInsertRequested = new DesignInsertRequested(TestConstants.USER_ID, TimeUUID.next(), uuid, UUID.randomUUID(), data, levels);
 
         final OutputMessage designInsertRequestedMessage = new DesignInsertRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(Tracing.of(UUID.randomUUID()), designInsertRequested);
 
@@ -97,7 +93,7 @@ public class VerifyAggregatePact {
     }
 
     private String produceDesignUpdateRequested(UUID uuid, String data, int levels) {
-        final DesignUpdateRequested designUpdateRequested = new DesignUpdateRequested(TestConstants.USER_ID, Uuids.timeBased(), uuid, UUID.randomUUID(), data, levels);
+        final DesignUpdateRequested designUpdateRequested = new DesignUpdateRequested(TestConstants.USER_ID, TimeUUID.next(), uuid, UUID.randomUUID(), data, levels);
 
         final OutputMessage designUpdateRequestedMessage = new DesignUpdateRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(Tracing.of(UUID.randomUUID()), designUpdateRequested);
 
@@ -105,7 +101,7 @@ public class VerifyAggregatePact {
     }
 
     private String produceDesignDeleteRequested(UUID uuid) {
-        final DesignDeleteRequested designDeleteRequested = new DesignDeleteRequested(TestConstants.USER_ID, Uuids.timeBased(), uuid, UUID.randomUUID());
+        final DesignDeleteRequested designDeleteRequested = new DesignDeleteRequested(TestConstants.USER_ID, TimeUUID.next(), uuid, UUID.randomUUID());
 
         final OutputMessage designDeleteRequestedMessage = new DesignDeleteRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(Tracing.of(UUID.randomUUID()), designDeleteRequested);
 

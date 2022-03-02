@@ -18,7 +18,7 @@ import {
 import {
     getDesigns,
     getDesignsStatus,
-    getTimestamp,
+    getRevision,
     loadDesigns,
     loadDesignsSuccess,
     loadDesignsFailure,
@@ -30,9 +30,9 @@ import axios from 'axios'
 
 let Designs = class Designs extends React.Component {
     componentDidMount = () => {
-        let timestamp = 0
-
         let component = this
+
+        let revision = "0000000000000000-0000000000000000"
 
         let config = {
             timeout: 30000,
@@ -41,7 +41,7 @@ let Designs = class Designs extends React.Component {
 
         try {
             if (typeof(EventSource) !== "undefined") {
-                axios.get(component.props.config.api_url + "/v1/watch/designs?timestamp=" + timestamp, config)
+                axios.get(component.props.config.api_url + "/v1/watch/designs?revision=" + revision, config)
                     .then(function (response) {
                         if (response.status == 200) {
                             var source = new EventSource(response.headers.location, { withCredentials: true })
@@ -55,33 +55,30 @@ let Designs = class Designs extends React.Component {
                             }
 
                             source.addEventListener("update",  function(event) {
-                               let timestamp = Number(event.lastEventId)
-
-                               if (component.props.timestamp == undefined || timestamp > component.props.timestamp) {
-                                  console.log("Reloading designs...")
-                                  component.loadDesigns(timestamp)
-                               }
+                               console.log(event)
+                               console.log("Reloading designs...")
+                               component.loadDesigns(revision)
                             }, false)
                         } else {
                             console.log("Can't redirect to SSE server")
-                            component.loadDesigns(timestamp)
+                            component.loadDesigns(revision)
                         }
                     })
                     .catch(function (error) {
                         console.log("Can't retrieve url of SSE server")
-                        component.loadDesigns(timestamp)
+                        component.loadDesigns(revision)
                     })
             } else {
                 console.log("EventSource not available")
-                component.loadDesigns(timestamp)
+                component.loadDesigns(revision)
             }
         } catch (e) {
            console.log("Can't subscribe: " + e)
-           component.loadDesigns(timestamp)
+           component.loadDesigns(revision)
         }
     }
 
-    loadDesigns = (timestamp) => {
+    loadDesigns = (revision) => {
         let component = this
 
         let config = {
@@ -96,7 +93,7 @@ let Designs = class Designs extends React.Component {
                 if (response.status == 200) {
                     console.log("Designs loaded")
                     let designs = response.data.map((design) => { return { uuid: design.uuid, checksum: design.checksum }})
-                    component.props.handleLoadDesignsSuccess(designs, timestamp)
+                    component.props.handleLoadDesignsSuccess(designs, revision)
                     //component.props.handleHideErrorMessage()
                 } else {
                     console.log("Can't load designs: status = " + content.status)
@@ -122,7 +119,7 @@ Designs.propTypes = {
     config: PropTypes.object.isRequired,
     account: PropTypes.object.isRequired,
     status: PropTypes.object.isRequired,
-    timestamp: PropTypes.number.isRequired,
+    revision: PropTypes.string.isRequired,
     classes: PropTypes.object.isRequired,
     theme: PropTypes.object.isRequired
 }
@@ -134,7 +131,7 @@ const mapStateToProps = state => ({
     account: getAccount(state),
     designs: getDesigns(state),
     status: getDesignsStatus(state),
-    timestamp: getTimestamp(state)
+    revision: getRevision(state)
 })
 
 const mapDispatchToProps = dispatch => ({
@@ -147,8 +144,8 @@ const mapDispatchToProps = dispatch => ({
     handleLoadDesigns: () => {
         dispatch(loadDesigns())
     },
-    handleLoadDesignsSuccess: (designs, timestamp) => {
-        dispatch(loadDesignsSuccess(designs, timestamp))
+    handleLoadDesignsSuccess: (designs, revision) => {
+        dispatch(loadDesignsSuccess(designs, revision))
     },
     handleLoadDesignsFailure: (error) => {
         dispatch(loadDesignsFailure(error))

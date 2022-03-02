@@ -22,6 +22,8 @@ public interface TestConstants {
     String UUID1_REGEXP = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
     String UUID6_REGEXP = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
 
-    String REVISION_0 = UUID.fromString("00000000-0000-1000-0000-000000000000").toString();
-    String REVISION_1 = UUID.fromString("00000000-0000-1000-0000-000000000001").toString();
+    String REVISION_REGEXP = "[0-9]{16}-[0-9]{16}";
+
+    String REVISION_0 = "0000000000000000-0000000000000000";
+    String REVISION_1 = "0000000000000000-0000000000000001";
 }

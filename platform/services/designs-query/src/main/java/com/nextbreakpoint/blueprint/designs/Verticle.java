@@ -12,6 +12,7 @@ import com.nextbreakpoint.blueprint.common.core.BlockingHandler;
 import com.nextbreakpoint.blueprint.common.core.Environment;
 import com.nextbreakpoint.blueprint.common.core.IOUtils;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
+import com.nextbreakpoint.blueprint.common.events.DesignDocumentDeleteRequested;
 import com.nextbreakpoint.blueprint.common.events.DesignDocumentUpdateRequested;
 import com.nextbreakpoint.blueprint.common.vertx.*;
 import com.nextbreakpoint.blueprint.designs.persistence.ElasticsearchStore;
@@ -260,6 +261,7 @@ public class Verticle extends AbstractVerticle {
             final Map<String, BlockingHandler<InputMessage>> messageHandlers = new HashMap<>();
 
             messageHandlers.put(DesignDocumentUpdateRequested.TYPE, Factory.createDesignDocumentUpdateRequestedHandler(store, eventsTopic, kafkaProducer, messageSource));
+            messageHandlers.put(DesignDocumentDeleteRequested.TYPE, Factory.createDesignDocumentDeleteRequestedHandler(store, eventsTopic, kafkaProducer, messageSource));
 
             kafkaConsumer.subscribe(eventsTopic);
 

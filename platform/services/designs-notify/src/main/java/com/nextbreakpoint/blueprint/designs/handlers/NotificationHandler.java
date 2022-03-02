@@ -17,6 +17,8 @@ import java.util.*;
 public class NotificationHandler implements Handler<RoutingContext> {
     private final Logger logger = LoggerFactory.getLogger(NotificationHandler.class.getName());
 
+    private static final String REVISION_NULL = "0000000000000000-0000000000000000";
+
     private Map<String, Set<Watcher>> watcherMap = new HashMap<>();
 
     private final Vertx vertx;
@@ -48,13 +50,15 @@ public class NotificationHandler implements Handler<RoutingContext> {
     }
 
     protected void createWatcher(RoutingContext routingContext) {
-        final long timestamp = getLastMessageId(routingContext);
+        final long eventId = getLastMessageId(routingContext);
+
+        final String revision = getRevision(routingContext);
 
         final String watchKey = getWatchKey(routingContext);
 
         final String sessionId = UUID.randomUUID().toString();
 
-        final Watcher watcher = new Watcher(watchKey, sessionId, timestamp);
+        final Watcher watcher = new Watcher(watchKey, sessionId, eventId);
 
         final Set<Watcher> watchers = watcherMap.getOrDefault(watchKey, new HashSet<>());
 
@@ -62,7 +66,7 @@ public class NotificationHandler implements Handler<RoutingContext> {
 
         watcherMap.put(watchKey, watchers);
 
-        logger.info("Session created (session = " + sessionId + ", timestamp = " + timestamp + ")");
+        logger.info("Session created (session = " + sessionId + ", eventId = " + eventId + ")");
 
         routingContext.response().setChunked(true);
 
@@ -73,8 +77,9 @@ public class NotificationHandler implements Handler<RoutingContext> {
         final JsonObject openData = new JsonObject();
 
         openData.put("session", sessionId);
+        openData.put("revision", revision);
 
-        routingContext.response().write(makeEvent("open", watcher.getTimestamp(), openData.encode()));
+        routingContext.response().write(makeEvent("open", watcher.getEventId(), openData.encode()));
 
         final MessageConsumer<JsonObject> consumer = vertx.eventBus().consumer("notifications." + sessionId, msg -> {
             try {
@@ -82,10 +87,10 @@ public class NotificationHandler implements Handler<RoutingContext> {
 
                 final JsonObject updateData = new JsonObject();
 
-                final String revision = (String) message.getValue("revision");
+                final String newRevision = (String) message.getValue("revision");
 
-                watcher.setRevision(revision);
-                watcher.setTimestamp(watcher.getTimestamp() + 1);
+                watcher.setRevision(newRevision);
+                watcher.setEventId(watcher.getEventId() + 1);
 
                 updateData.put("uuid", watchKey);
                 updateData.put("session", sessionId);
@@ -93,7 +98,7 @@ public class NotificationHandler implements Handler<RoutingContext> {
 
                 logger.info("Send update notification (session = " + sessionId + ", revision = " + revision + ")");
 
-                routingContext.response().write(makeEvent("update", watcher.getTimestamp(), updateData.encode()));
+                routingContext.response().write(makeEvent("update", watcher.getEventId(), updateData.encode()));
             } catch (Exception e) {
                 logger.warn("Cannot write message (session = " + sessionId + ")", e);
             }
@@ -151,6 +156,10 @@ public class NotificationHandler implements Handler<RoutingContext> {
         }
     }
 
+    private String getRevision(RoutingContext routingContext) {
+        return routingContext.queryParam("revision").stream().findFirst().orElse(REVISION_NULL);
+    }
+
     private long getLastMessageId(RoutingContext routingContext) {
         final String lastEventId = routingContext.request().headers().get("Last-Message-ID");
 
@@ -158,7 +167,7 @@ public class NotificationHandler implements Handler<RoutingContext> {
             return Long.parseLong(lastEventId);
         }
 
-        return Long.parseLong(routingContext.queryParam("timestamp").stream().findFirst().orElse("0"));
+        return 0L;
     }
 
     private void dispatchNotification(DesignChangedNotification notification) {
@@ -188,12 +197,12 @@ public class NotificationHandler implements Handler<RoutingContext> {
         private final String sessionId;
         private final String watchKey;
         private String revision;
-        private long timestamp;
+        private long eventId;
 
-        public Watcher(String watchKey, String sessionId, long timestamp) {
+        public Watcher(String watchKey, String sessionId, long eventId) {
             this.sessionId = sessionId;
             this.watchKey = watchKey;
-            this.timestamp = timestamp;
+            this.eventId = eventId;
         }
 
         public String getSessionId() {
@@ -212,12 +221,12 @@ public class NotificationHandler implements Handler<RoutingContext> {
             this.revision = revision;
         }
 
-        public long getTimestamp() {
-            return timestamp;
+        public long getEventId() {
+            return eventId;
         }
 
-        public void setTimestamp(long timestamp) {
-            this.timestamp = timestamp;
+        public void setEventId(long eventId) {
+            this.eventId = eventId;
         }
     }
 }

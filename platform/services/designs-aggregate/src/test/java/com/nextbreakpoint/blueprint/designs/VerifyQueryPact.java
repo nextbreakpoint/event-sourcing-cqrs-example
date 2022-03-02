@@ -14,7 +14,9 @@ import com.nextbreakpoint.blueprint.common.core.Json;
 import com.nextbreakpoint.blueprint.common.core.KafkaRecord;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.core.Tracing;
+import com.nextbreakpoint.blueprint.common.events.DesignDocumentDeleteRequested;
 import com.nextbreakpoint.blueprint.common.events.DesignDocumentUpdateRequested;
+import com.nextbreakpoint.blueprint.common.events.mappers.DesignDocumentDeleteRequestedOutputMapper;
 import com.nextbreakpoint.blueprint.common.events.mappers.DesignDocumentUpdateRequestedOutputMapper;
 import com.nextbreakpoint.blueprint.common.test.PayloadUtils;
 import com.nextbreakpoint.blueprint.designs.model.Tiles;
@@ -88,8 +90,13 @@ public class VerifyQueryPact {
         return produceDesignDocumentUpdateRequested(new UUID(0L, 3L), TestConstants.JSON_2, TestConstants.CHECKSUM_2, "CREATED", 1.0f);
     }
 
+    @PactVerifyProvider("design document update requested for design 00000000-0000-0000-0000-000000000003 with deleted status")
+    public String produceDesignDocumentUpdateRequested6() {
+        return produceDesignDocumentUpdateRequested(new UUID(0L, 3L), TestConstants.JSON_2, TestConstants.CHECKSUM_2, "DELETED", 1.0f);
+    }
+
     @PactVerifyProvider("design document delete requested for design 00000000-0000-0000-0000-000000000003")
-    public String produceDesignDocumentDeleteRequested5() {
+    public String produceDesignDocumentDeleteRequested() {
         return produceDesignDocumentDeleteRequested(new UUID(0L, 3L));
     }
 
@@ -104,13 +111,11 @@ public class VerifyQueryPact {
     }
 
     private String produceDesignDocumentDeleteRequested(UUID uuid) {
-        final List<DesignDocumentUpdateRequested.Tiles> tiles = TestUtils.getTiles(TestConstants.LEVELS, 1.0f).stream().map(this::createTiles).collect(Collectors.toList());
+        final DesignDocumentDeleteRequested designDocumentDeleteRequested = new DesignDocumentDeleteRequested(uuid, TestConstants.REVISION_0);
 
-        final DesignDocumentUpdateRequested designDocumentUpdateRequested = new DesignDocumentUpdateRequested(uuid, TestConstants.USER_ID, UUID.randomUUID(), TestConstants.JSON_2, TestConstants.CHECKSUM_2, TestConstants.REVISION_0, "DELETED", TestConstants.LEVELS, tiles, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
+        final OutputMessage designDocumentDeleteRequestedMessage = new DesignDocumentDeleteRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(Tracing.of(UUID.randomUUID()), designDocumentDeleteRequested);
 
-        final OutputMessage designDocumentUpdateRequestedMessage = new DesignDocumentUpdateRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(Tracing.of(UUID.randomUUID()), designDocumentUpdateRequested);
-
-        return Json.encodeValue(new KafkaRecord(designDocumentUpdateRequestedMessage.getKey(), PayloadUtils.payloadToMap(designDocumentUpdateRequestedMessage.getValue()), designDocumentUpdateRequestedMessage.getTrace().toHeaders()));
+        return Json.encodeValue(new KafkaRecord(designDocumentDeleteRequestedMessage.getKey(), PayloadUtils.payloadToMap(designDocumentDeleteRequestedMessage.getValue()), designDocumentDeleteRequestedMessage.getTrace().toHeaders()));
     }
 
     private DesignDocumentUpdateRequested.Tiles createTiles(Tiles tiles) {

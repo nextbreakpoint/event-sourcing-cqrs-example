@@ -1,9 +1,6 @@
 package com.nextbreakpoint.blueprint.common.test;
 
-import com.nextbreakpoint.blueprint.common.core.InputMessage;
-import com.nextbreakpoint.blueprint.common.core.Json;
-import com.nextbreakpoint.blueprint.common.core.Payload;
-import com.nextbreakpoint.blueprint.common.core.Tracing;
+import com.nextbreakpoint.blueprint.common.core.*;
 import io.vertx.rxjava.core.buffer.Buffer;
 import io.vertx.rxjava.kafka.client.consumer.KafkaConsumer;
 import io.vertx.rxjava.kafka.client.consumer.KafkaConsumerRecord;
@@ -94,7 +91,7 @@ public class KafkaTestPolling {
 
         final Payload payload = Json.decodeValue(record.value(), Payload.class);
 
-        final String token = record.key() + "-" + record.timestamp() + "-" + record.offset();
+        final String token = Token.from(record.timestamp(), record.offset());
 
         return new InputMessage(record.key(), token, payload, Tracing.from(headers), record.timestamp());
     }

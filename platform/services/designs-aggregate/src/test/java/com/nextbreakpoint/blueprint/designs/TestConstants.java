@@ -16,6 +16,7 @@ public interface TestConstants {
     String TILE_AGGREGATE_UPDATE_REQUESTED = "tile-aggregate-update-requested-v1";
     String TILE_AGGREGATE_UPDATE_COMPLETED = "tile-aggregate-update-completed-v1";
     String DESIGN_DOCUMENT_UPDATE_REQUESTED = "design-document-update-requested-v1";
+    String DESIGN_DOCUMENT_DELETED_REQUESTED = "design-document-delete-requested-v1";
 
     String MESSAGE_SOURCE = "service-designs";
     String EVENTS_TOPIC_NAME = "test-designs-aggregate-events";
@@ -31,13 +32,15 @@ public interface TestConstants {
     String UUID1_REGEXP = "[0-9a-f]{8}-[0-9a-f]{4}-[1][0-9a-f]{3}-[0-9a-f]{4}-[0-9a-f]{12}";
     String UUID6_REGEXP = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
 
+    String REVISION_REGEXP = "[0-9]{16}-[0-9]{16}";
+
     String DATABASE_KEYSPACE = "test_designs_aggregate";
 
     UUID USER_ID = new UUID(0L, 1L);
 
-    String REVISION_0 = UUID.fromString("00000000-0000-1000-0000-000000000000").toString();
-    String REVISION_1 = UUID.fromString("00000000-0000-1000-0000-000000000001").toString();
-    String REVISION_2 = UUID.fromString("00000000-0000-1000-0000-000000000002").toString();
-    String REVISION_3 = UUID.fromString("00000000-0000-1000-0000-000000000003").toString();
-    String REVISION_4 = UUID.fromString("00000000-0000-1000-0000-000000000004").toString();
+    String REVISION_0 = "0000000000000000-0000000000000000";
+    String REVISION_1 = "0000000000000000-0000000000000001";
+    String REVISION_2 = "0000000000000000-0000000000000002";
+    String REVISION_3 = "0000000000000000-0000000000000003";
+    String REVISION_4 = "0000000000000000-0000000000000004";
 }

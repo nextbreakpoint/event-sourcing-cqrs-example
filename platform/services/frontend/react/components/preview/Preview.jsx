@@ -18,7 +18,7 @@ import {
 import {
     getDesign,
     getDesignStatus,
-    getTimestamp,
+    getRevision,
     loadDesign,
     loadDesignSuccess,
     loadDesignFailure,
@@ -32,7 +32,7 @@ let Preview = class Preview extends React.Component {
     componentDidMount = () => {
         let component = this
 
-        let timestamp = 0
+        let revision = "0000000000000000-0000000000000000"
 
         let config = {
             timeout: 30000,
@@ -41,7 +41,7 @@ let Preview = class Preview extends React.Component {
 
         try {
             if (typeof(EventSource) !== "undefined") {
-                axios.get(component.props.config.api_url + "/v1/watch/designs/" + this.props.uuid + "?timestamp=" + timestamp, config)
+                axios.get(component.props.config.api_url + "/v1/watch/designs/" + this.props.uuid + "?revision=" + revision, config)
                     .then(function (response) {
                         if (response.status == 200) {
                             var source = new EventSource(response.headers.location, { withCredentials: true })
@@ -51,37 +51,34 @@ let Preview = class Preview extends React.Component {
                             }
 
                             source.onopen = function() {
-                              component.loadDesign(timestamp)
+                              component.loadDesign(revision)
                             }
 
                             source.addEventListener("update",  function(event) {
-                               let timestamp = Number(event.lastEventId)
-
-                               if (component.props.timestamp == undefined || timestamp > component.props.timestamp) {
-                                  console.log("Reloading design...")
-                                  component.loadDesign(timestamp)
-                               }
+                               conosle.log(event)
+                               console.log("Reloading design...")
+                               component.loadDesign(revision)
                             }, false)
                         } else {
                             console.log("Can't redirect to SSE server")
-                            component.loadDesign(timestamp)
+                            component.loadDesign(revision)
                         }
                     })
                     .catch(function (error) {
                         console.log("Can't retrieve url of SSE server")
-                        component.loadDesign(timestamp)
+                        component.loadDesign(revision)
                     })
             } else {
                 console.log("EventSource not available")
-                component.loadDesign(timestamp)
+                component.loadDesign(revision)
             }
         } catch (e) {
            console.log("Can't subscribe: " + e)
-           component.loadDesign(timestamp)
+           component.loadDesign(revision)
         }
     }
 
-    loadDesign = (timestamp) => {
+    loadDesign = (revision) => {
         let component = this
 
         let config = {
@@ -101,7 +98,7 @@ let Preview = class Preview extends React.Component {
                     design.uuid = response.data.uuid
                     if (component.props.design == undefined || design.script != component.props.design.script || design.metadata != component.props.design.metadata || design.manifest != component.props.design.manifest) {
                         console.log("Design changed")
-                        component.props.handleLoadDesignSuccess(design, timestamp)
+                        component.props.handleLoadDesignSuccess(design, revision)
                     }
                     //component.props.handleHideErrorMessage()
                 } else {
@@ -128,7 +125,7 @@ Preview.propTypes = {
     config: PropTypes.object.isRequired,
     account: PropTypes.object.isRequired,
     status: PropTypes.object.isRequired,
-    timestamp: PropTypes.number.isRequired,
+    revision: PropTypes.string.isRequired,
     classes: PropTypes.object.isRequired,
     theme: PropTypes.object.isRequired,
     uuid: PropTypes.string.isRequired
@@ -141,7 +138,7 @@ const mapStateToProps = state => ({
     account: getAccount(state),
     design: getDesign(state),
     status: getDesignStatus(state),
-    timestamp: getTimestamp(state)
+    revision: getRevision(state)
 })
 
 const mapDispatchToProps = dispatch => ({
@@ -154,8 +151,8 @@ const mapDispatchToProps = dispatch => ({
     handleLoadDesign: () => {
         dispatch(loadDesign())
     },
-    handleLoadDesignSuccess: (design, timestamp) => {
-        dispatch(loadDesignSuccess(design, timestamp))
+    handleLoadDesignSuccess: (design, revision) => {
+        dispatch(loadDesignSuccess(design, revision))
     },
     handleLoadDesignFailure: (error) => {
         dispatch(loadDesignFailure(error))

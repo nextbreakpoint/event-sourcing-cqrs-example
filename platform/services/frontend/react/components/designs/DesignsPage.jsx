@@ -38,7 +38,7 @@ import {
 import {
     getSelected,
     getDesigns,
-    getTimestamp,
+    getRevision,
     getShowCreateDesign,
     getShowDeleteDesigns,
     showDeleteDesigns,
@@ -296,7 +296,7 @@ const mapStateToProps = state => ({
     account: getAccount(state),
     designs: getDesigns(state),
     selected: getSelected(state),
-    timestamp: getTimestamp(state),
+    timestamp: getRevision(state),
     show_create_design: getShowCreateDesign(state),
     show_delete_designs: getShowDeleteDesigns(state),
     show_error_message: getShowErrorMessage(state),

@@ -198,7 +198,7 @@ public class PactConsumerTests {
 
         PactDslJsonBody event1 = new PactDslJsonBody()
                 .uuid("designId", uuid)
-                .stringMatcher("revision", TestConstants.UUID1_REGEXP)
+                .stringMatcher("revision", TestConstants.REVISION_REGEXP)
                 .stringValue("checksum", TestConstants.CHECKSUM_1)
                 .numberValue("level", 0)
                 .numberValue("row", 0)
@@ -223,7 +223,7 @@ public class PactConsumerTests {
 
         PactDslJsonBody event2 = new PactDslJsonBody()
                 .uuid("designId", uuid)
-                .stringMatcher("revision", TestConstants.UUID1_REGEXP)
+                .stringMatcher("revision", TestConstants.REVISION_REGEXP)
                 .stringValue("checksum", TestConstants.CHECKSUM_1)
                 .numberValue("level", 1)
                 .numberValue("row", 0)
@@ -248,7 +248,7 @@ public class PactConsumerTests {
 
         PactDslJsonBody event3 = new PactDslJsonBody()
                 .uuid("designId", uuid)
-                .stringMatcher("revision", TestConstants.UUID1_REGEXP)
+                .stringMatcher("revision", TestConstants.REVISION_REGEXP)
                 .stringValue("checksum", TestConstants.CHECKSUM_1)
                 .numberValue("level", 1)
                 .numberValue("row", 1)
@@ -273,7 +273,7 @@ public class PactConsumerTests {
 
         PactDslJsonBody event4 = new PactDslJsonBody()
                 .uuid("designId", uuid)
-                .stringMatcher("revision", TestConstants.UUID1_REGEXP)
+                .stringMatcher("revision", TestConstants.REVISION_REGEXP)
                 .stringValue("checksum", TestConstants.CHECKSUM_1)
                 .numberValue("level", 2)
                 .numberValue("row", 2)
@@ -298,7 +298,7 @@ public class PactConsumerTests {
 
         PactDslJsonBody event5 = new PactDslJsonBody()
                 .uuid("designId", uuid)
-                .stringMatcher("revision", TestConstants.UUID1_REGEXP)
+                .stringMatcher("revision", TestConstants.REVISION_REGEXP)
                 .stringValue("checksum", TestConstants.CHECKSUM_2)
                 .numberValue("level", 2)
                 .numberValue("row", 3)

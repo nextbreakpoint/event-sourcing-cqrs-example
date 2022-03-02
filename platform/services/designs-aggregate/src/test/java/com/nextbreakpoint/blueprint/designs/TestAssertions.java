@@ -209,6 +209,23 @@ public class TestAssertions {
         assertThat(actualEvent.getChecksum()).isEqualTo(checksum);
     }
 
+    public static void assertExpectedDesignDocumentDeleteRequestedMessage(InputMessage actualMessage, UUID designId) {
+        assertThat(actualMessage.getTimestamp()).isNotNull();
+        assertThat(actualMessage.getKey()).isEqualTo(designId.toString());
+        assertThat(actualMessage.getToken()).isNotNull();
+        assertThat(actualMessage.getValue()).isNotNull();
+        assertThat(actualMessage.getValue().getSource()).isEqualTo(TestConstants.MESSAGE_SOURCE);
+        assertThat(actualMessage.getValue().getUuid()).isNotNull();
+        assertThat(actualMessage.getValue().getType()).isEqualTo(TestConstants.DESIGN_DOCUMENT_DELETED_REQUESTED);
+        assertThat(actualMessage.getTrace()).isNotNull();
+        assertThat(actualMessage.getTrace().getTraceId()).isNotNull();
+        assertThat(actualMessage.getTrace().getSpanId()).isNotNull();
+        assertThat(actualMessage.getTrace().getParent()).isNotNull();
+        DesignDocumentDeleteRequested actualEvent = Json.decodeValue(actualMessage.getValue().getData(), DesignDocumentDeleteRequested.class);
+        assertThat(actualEvent.getDesignId()).isEqualTo(designId);
+        assertThat(actualEvent.getRevision()).isNotNull();
+    }
+
     @NotNull
     private static Tiles convertToTiles(Integer level, UdtValue udtValue) {
         return new Tiles(level, udtValue.getInt("REQUESTED"), udtValue.getSet("COMPLETED", Integer.class), udtValue.getSet("FAILED", Integer.class));

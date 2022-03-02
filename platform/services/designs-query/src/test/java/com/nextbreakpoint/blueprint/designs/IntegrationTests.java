@@ -3,7 +3,9 @@ package com.nextbreakpoint.blueprint.designs;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.http.ContentType;
 import com.nextbreakpoint.blueprint.common.core.*;
+import com.nextbreakpoint.blueprint.common.events.DesignDocumentDeleteRequested;
 import com.nextbreakpoint.blueprint.common.events.DesignDocumentUpdateRequested;
+import com.nextbreakpoint.blueprint.common.events.mappers.DesignDocumentDeleteRequestedOutputMapper;
 import com.nextbreakpoint.blueprint.common.events.mappers.DesignDocumentUpdateRequestedOutputMapper;
 import com.nextbreakpoint.blueprint.designs.model.Design;
 import com.nextbreakpoint.blueprint.designs.model.DesignDocument;
@@ -100,7 +102,7 @@ public class IntegrationTests {
 
   @Test
   @DisplayName("Should delete the design after receiving a DesignDocumentUpdateRequested event")
-  public void shouldDeleteTheDesignWhenReceivingADesignDocumentDeleteRequested() {
+  public void shouldDeleteTheDesignWhenReceivingADesignDocumentUpdateRequested() {
     final UUID designId = UUID.randomUUID();
 
     final List<DesignDocumentUpdateRequested.Tiles> tiles = TestUtils.getTiles(TestConstants.LEVELS, 100.0f).stream().map(this::createTiles).collect(Collectors.toList());
@@ -113,7 +115,26 @@ public class IntegrationTests {
     final OutputMessage designDocumentUpdateRequestedMessage1 = outputMapper.transform(Tracing.of(UUID.randomUUID()), designDocumentUpdateRequested1);
     final OutputMessage designDocumentUpdateRequestedMessage2 = outputMapper.transform(Tracing.of(UUID.randomUUID()), designDocumentUpdateRequested2);
 
-    testCases.shouldDeleteTheDesignWhenReceivingADesignDocumentDeleteRequestedMessage(designDocumentUpdateRequestedMessage1, designDocumentUpdateRequestedMessage2);
+    testCases.shouldDeleteTheDesignWhenReceivingADesignDocumentUpdateRequestedMessage(designDocumentUpdateRequestedMessage1, designDocumentUpdateRequestedMessage2);
+  }
+
+  @Test
+  @DisplayName("Should delete the design after receiving a DesignDocumentDeleteRequested event")
+  public void shouldDeleteTheDesignWhenReceivingADesignDocumentDeleteRequested() {
+    final UUID designId = UUID.randomUUID();
+
+    final List<DesignDocumentUpdateRequested.Tiles> tiles = TestUtils.getTiles(TestConstants.LEVELS, 100.0f).stream().map(this::createTiles).collect(Collectors.toList());
+
+    final DesignDocumentUpdateRequested designDocumentUpdateRequested = new DesignDocumentUpdateRequested(designId, TestConstants.USER_ID, UUID.randomUUID(), TestConstants.JSON_2, TestConstants.CHECKSUM_2, TestConstants.REVISION_0, "CREATED", TestConstants.LEVELS, tiles, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
+    final DesignDocumentDeleteRequested designDocumentDeleteRequested = new DesignDocumentDeleteRequested(designId, TestConstants.REVISION_0);
+
+    final DesignDocumentUpdateRequestedOutputMapper outputMapper1 = new DesignDocumentUpdateRequestedOutputMapper(TestConstants.MESSAGE_SOURCE);
+    final DesignDocumentDeleteRequestedOutputMapper outputMapper2 = new DesignDocumentDeleteRequestedOutputMapper(TestConstants.MESSAGE_SOURCE);
+
+    final OutputMessage designDocumentUpdateRequestedMessage = outputMapper1.transform(Tracing.of(UUID.randomUUID()), designDocumentUpdateRequested);
+    final OutputMessage designDocumentDeleteRequestedMessage = outputMapper2.transform(Tracing.of(UUID.randomUUID()), designDocumentDeleteRequested);
+
+    testCases.shouldDeleteTheDesignWhenReceivingADesignDocumentDeleteRequestedMessage(designDocumentUpdateRequestedMessage, designDocumentDeleteRequestedMessage);
   }
 
   @Test

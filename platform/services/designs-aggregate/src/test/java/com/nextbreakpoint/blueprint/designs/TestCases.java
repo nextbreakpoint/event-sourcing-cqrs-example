@@ -357,10 +357,18 @@ public class TestCases {
                 .pollInterval(ONE_SECOND)
                 .untilAsserted(() -> {
                     final List<InputMessage> messages = renderPolling.findMessages(TestConstants.MESSAGE_SOURCE, TestConstants.TILE_RENDER_REQUESTED, key -> key.startsWith(TestConstants.CHECKSUM_1));
-                    assertThat(messages).hasSize(TestUtils.totalTilesByLevels(TestConstants.LEVELS) + 1);
+                    assertThat(messages).hasSize(TestUtils.totalTilesByLevels(TestConstants.LEVELS));
                     List<TileRenderRequested> events = TestUtils.extractTileRenderRequestedEvents(messages, TestConstants.CHECKSUM_1);
                     assertThat(events).hasSize(messages.size());
                     events.forEach(event -> TestAssertions.assertExpectedTileRenderRequestedEvent(event, designId, TestConstants.JSON_1, TestConstants.CHECKSUM_1));
+                });
+
+        await().atMost(TEN_SECONDS)
+                .pollInterval(ONE_SECOND)
+                .untilAsserted(() -> {
+                    final List<InputMessage> messages = eventsPolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_DOCUMENT_DELETED_REQUESTED);
+                    assertThat(messages).hasSize(1);
+                    messages.forEach(message -> TestAssertions.assertExpectedDesignDocumentDeleteRequestedMessage(message, designId));
                 });
     }
 

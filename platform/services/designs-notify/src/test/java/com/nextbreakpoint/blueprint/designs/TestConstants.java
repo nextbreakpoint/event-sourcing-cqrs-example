@@ -3,7 +3,8 @@ package com.nextbreakpoint.blueprint.designs;
 import java.util.UUID;
 
 public interface TestConstants {
-    String DESIGN_DOCUMET_UPDATE_COMPLETED = "design-document-update-completed-v1";
+    String DESIGN_DOCUMENT_UPDATE_COMPLETED = "design-document-update-completed-v1";
+    String DESIGN_DOCUMENT_DELETE_COMPLETED = "design-document-delete-completed-v1";
 
     String MESSAGE_SOURCE = "service-designs";
     String EVENTS_TOPIC_NAME = "test-designs-notify-events";
@@ -14,5 +15,7 @@ public interface TestConstants {
     String UUID1_REGEXP = "[0-9a-f]{8}-[0-9a-f]{4}-[1][0-9a-f]{3}-[0-9a-f]{4}-[0-9a-f]{12}";
     String UUID6_REGEXP = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
 
-    String REVISION_0 = UUID.fromString("00000000-0000-1000-0000-000000000000").toString();
+    String REVISION_REGEXP = "[0-9]{16}-[0-9]{16}";
+
+    String REVISION_0 = "0000000000000000-0000000000000000";
 }

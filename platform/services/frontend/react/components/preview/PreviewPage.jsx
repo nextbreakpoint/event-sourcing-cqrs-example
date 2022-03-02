@@ -38,7 +38,7 @@ import {
     showUpdateDesign,
     hideUpdateDesign,
     getDesign,
-    getTimestamp,
+    getRevision,
     getShowUpdateDesign,
     loadDesignSuccess,
     getShowErrorMessage,
@@ -248,7 +248,7 @@ const mapStateToProps = state => ({
     config: getConfig(state),
     account: getAccount(state),
     design: getDesign(state),
-    timestamp: getTimestamp(state),
+    timestamp: getRevision(state),
     show_update_design: getShowUpdateDesign(state),
     show_error_message: getShowErrorMessage(state),
     error_message: getErrorMessage(state)

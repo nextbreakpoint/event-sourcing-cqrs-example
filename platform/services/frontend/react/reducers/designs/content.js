@@ -2,7 +2,7 @@ import * as Types from '../../constants/ActionTypes'
 
 const initialState = {
     data: undefined,
-    timestamp: 0,
+    revision: "0000000000000000-0000000000000000",
     status: {
         message: "Loading designs...",
         error: false
@@ -27,7 +27,7 @@ function reducer (state = initialState, action) {
             error: false
         },
         data: action.designs,
-        timestamp: action.timestamp
+        revision: action.revision
       }
     case Types.DESIGNS_LOAD_FAILURE:
       return {
@@ -37,7 +37,7 @@ function reducer (state = initialState, action) {
             error: true
         },
         data: [],
-        timestamp: 0
+        revision: "0000000000000000-0000000000000000"
       }
     default:
       return state
@@ -52,8 +52,8 @@ export const getDesignsStatus = (state) => {
     return state.designs.content.status
 }
 
-export const getTimestamp = (state) => {
-    return state.designs.content.timestamp
+export const getRevision = (state) => {
+    return state.designs.content.revision
 }
 
 export default reducer

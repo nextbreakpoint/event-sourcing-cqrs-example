@@ -42,12 +42,12 @@ public class PactConsumerTests {
 
         PactDslJsonBody event1 = new PactDslJsonBody()
                 .uuid("designId", uuid1)
-                .stringMatcher("revision", TestConstants.UUID1_REGEXP);
+                .stringMatcher("revision", TestConstants.REVISION_REGEXP);
 
         PactDslJsonBody payload1 = new PactDslJsonBody()
                 .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
                 .object("data", event1)
-                .stringValue("type", TestConstants.DESIGN_DOCUMET_UPDATE_COMPLETED)
+                .stringValue("type", TestConstants.DESIGN_DOCUMENT_UPDATE_COMPLETED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
 
         PactDslJsonBody trace1 = new PactDslJsonBody()
@@ -62,12 +62,12 @@ public class PactConsumerTests {
 
         PactDslJsonBody event2 = new PactDslJsonBody()
                 .uuid("designId", uuid2)
-                .stringMatcher("revision", TestConstants.UUID1_REGEXP);
+                .stringMatcher("revision", TestConstants.REVISION_REGEXP);
 
         PactDslJsonBody payload2 = new PactDslJsonBody()
                 .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
                 .object("data", event2)
-                .stringValue("type", TestConstants.DESIGN_DOCUMET_UPDATE_COMPLETED)
+                .stringValue("type", TestConstants.DESIGN_DOCUMENT_UPDATE_COMPLETED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
 
         PactDslJsonBody trace2 = new PactDslJsonBody()
@@ -84,6 +84,59 @@ public class PactConsumerTests {
                 .expectsToReceive("design document update completed for design 00000000-0000-0000-0000-000000000001")
                 .withContent(message1)
                 .expectsToReceive("design document update completed for design 00000000-0000-0000-0000-000000000002")
+                .withContent(message2)
+                .toPact();
+    }
+
+    @Pact(consumer = "designs-notify")
+    public MessagePact designDocumentDeleteCompleted(MessagePactBuilder builder) {
+        UUID uuid1 = new UUID(0L, 1L);
+        UUID uuid2 = new UUID(0L, 2L);
+
+        PactDslJsonBody event1 = new PactDslJsonBody()
+                .uuid("designId", uuid1)
+                .stringMatcher("revision", TestConstants.REVISION_REGEXP);
+
+        PactDslJsonBody payload1 = new PactDslJsonBody()
+                .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
+                .object("data", event1)
+                .stringValue("type", TestConstants.DESIGN_DOCUMENT_DELETE_COMPLETED)
+                .stringValue("source", TestConstants.MESSAGE_SOURCE);
+
+        PactDslJsonBody trace1 = new PactDslJsonBody()
+                .stringMatcher("X-TRACE-TRACE-ID", TestConstants.UUID6_REGEXP)
+                .stringMatcher("X-TRACE-SPAN-ID", TestConstants.UUID6_REGEXP)
+                .stringMatcher("X-TRACE-PARENT", TestConstants.UUID6_REGEXP);
+
+        PactDslJsonBody message1 = new PactDslJsonBody()
+                .stringValue("key", uuid1.toString())
+                .object("value", payload1)
+                .object("headers", trace1);
+
+        PactDslJsonBody event2 = new PactDslJsonBody()
+                .uuid("designId", uuid2)
+                .stringMatcher("revision", TestConstants.REVISION_REGEXP);
+
+        PactDslJsonBody payload2 = new PactDslJsonBody()
+                .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
+                .object("data", event2)
+                .stringValue("type", TestConstants.DESIGN_DOCUMENT_DELETE_COMPLETED)
+                .stringValue("source", TestConstants.MESSAGE_SOURCE);
+
+        PactDslJsonBody trace2 = new PactDslJsonBody()
+                .stringMatcher("X-TRACE-TRACE-ID", TestConstants.UUID6_REGEXP)
+                .stringMatcher("X-TRACE-SPAN-ID", TestConstants.UUID6_REGEXP)
+                .stringMatcher("X-TRACE-PARENT", TestConstants.UUID6_REGEXP);
+
+        PactDslJsonBody message2 = new PactDslJsonBody()
+                .stringValue("key", uuid2.toString())
+                .object("value", payload2)
+                .object("headers", trace2);
+
+        return builder.given("kafka topic exists")
+                .expectsToReceive("design document delete completed for design 00000000-0000-0000-0000-000000000001")
+                .withContent(message1)
+                .expectsToReceive("design document delete completed for design 00000000-0000-0000-0000-000000000002")
                 .withContent(message2)
                 .toPact();
     }
@@ -110,5 +163,29 @@ public class PactConsumerTests {
         final OutputMessage designDocumentUpdateCompletedMessage2 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getMessages().get(1)));
 
         testCases.shouldNotifyWatchersOfSingleResourceWhenReceivingAnEvent(List.of(designDocumentUpdateCompletedMessage1, designDocumentUpdateCompletedMessage2));
+    }
+
+    @Test
+    @PactTestFor(providerName = "designs-query", port = "1113", pactMethod = "designDocumentDeleteCompleted", providerType = ProviderType.ASYNCH, pactVersion = PactSpecVersion.V3)
+    @DisplayName("Should notify watchers of all resources after receiving a DesignDocumentDeleteCompleted event")
+    public void shouldNotifyWatchersOfAllResourcesWhenReceivingADesignDocumentDeleteCompletedEvent(MessagePact pact) {
+        assertThat(pact.getMessages()).hasSize(2);
+
+        final OutputMessage designDocumentDeleteCompletedMessage1 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getMessages().get(0)));
+        final OutputMessage designDocumentDeleteCompletedMessage2 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getMessages().get(1)));
+
+        testCases.shouldNotifyWatchersOfAllResourcesWhenReceivingAnEvent(List.of(designDocumentDeleteCompletedMessage1, designDocumentDeleteCompletedMessage2));
+    }
+
+    @Test
+    @PactTestFor(providerName = "designs-query", port = "1114", pactMethod = "designDocumentDeleteCompleted", providerType = ProviderType.ASYNCH, pactVersion = PactSpecVersion.V3)
+    @DisplayName("Should notify watchers of single resource after receiving a DesignDocumentDeleteCompleted event")
+    public void shouldNotifyWatchersOfSingleResourceWhenReceivingAnDesignDocumentDeleteCompletedEvent(MessagePact pact) {
+        assertThat(pact.getMessages()).hasSize(2);
+
+        final OutputMessage designDocumentDeleteCompletedMessage1 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getMessages().get(0)));
+        final OutputMessage designDocumentDeleteCompletedMessage2 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getMessages().get(1)));
+
+        testCases.shouldNotifyWatchersOfSingleResourceWhenReceivingAnEvent(List.of(designDocumentDeleteCompletedMessage1, designDocumentDeleteCompletedMessage2));
     }
 }

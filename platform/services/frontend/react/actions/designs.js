@@ -10,8 +10,8 @@ export const loadDesigns = () => ({
   type: Types.DESIGNS_LOAD
 })
 
-export const loadDesignsSuccess = (designs, timestamp) => ({
-  type: Types.DESIGNS_LOAD_SUCCESS, designs, timestamp
+export const loadDesignsSuccess = (designs, revision) => ({
+  type: Types.DESIGNS_LOAD_SUCCESS, designs, revision
 })
 
 export const loadDesignsFailure = (error) => ({
@@ -62,8 +62,8 @@ export const getDesignsStatus = (state) => {
     return content.getDesignsStatus(state)
 }
 
-export const getTimestamp = (state) => {
-    return content.getTimestamp(state)
+export const getRevision = (state) => {
+    return content.getRevision(state)
 }
 
 export const getShowCreateDesign = (state) => {

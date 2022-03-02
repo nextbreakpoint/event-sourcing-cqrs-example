@@ -12,7 +12,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 public class DesignAggregate {
-    private static final String REVISION_NULL = UUID.fromString("00000000-0000-1000-0000-000000000000").toString();
+    private static final String REVISION_NULL = "0000000000000000-0000000000000000";
 
     private final DesignStateStrategy strategy;
 

@@ -4,8 +4,10 @@ import com.nextbreakpoint.blueprint.common.core.BlockingHandler;
 import com.nextbreakpoint.blueprint.common.core.Environment;
 import com.nextbreakpoint.blueprint.common.core.IOUtils;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
+import com.nextbreakpoint.blueprint.common.events.DesignDocumentDeleteCompleted;
 import com.nextbreakpoint.blueprint.common.events.DesignDocumentUpdateCompleted;
 import com.nextbreakpoint.blueprint.common.vertx.*;
+import com.nextbreakpoint.blueprint.designs.controllers.DesignDocumentDeleteCompletedController;
 import com.nextbreakpoint.blueprint.designs.controllers.DesignDocumentUpdateCompletedController;
 import com.nextbreakpoint.blueprint.designs.handlers.NotificationHandler;
 import com.nextbreakpoint.blueprint.designs.handlers.WatchHandler;
@@ -200,6 +202,7 @@ public class Verticle extends AbstractVerticle {
             final Map<String, BlockingHandler<InputMessage>> messageHandlers = new HashMap<>();
 
             messageHandlers.put(DesignDocumentUpdateCompleted.TYPE, Factory.createDesignDocumentUpdateCompletedHandler(new DesignDocumentUpdateCompletedController(vertx, "notifications")));
+            messageHandlers.put(DesignDocumentDeleteCompleted.TYPE, Factory.createDesignDocumentDeleteCompletedHandler(new DesignDocumentDeleteCompletedController(vertx, "notifications")));
 
             kafkaConsumer.subscribe(eventsTopic);
 

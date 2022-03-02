@@ -15,7 +15,7 @@ cat <<EOF >/tmp/data.json
       "userId": {
         "type": "keyword"
       },
-      "changeId": {
+      "commandId": {
         "type": "keyword"
       },
       "designId": {

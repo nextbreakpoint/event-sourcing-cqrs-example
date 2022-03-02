@@ -44,6 +44,7 @@ public class TestScenario {
 
   private GenericContainer<?> service = new GenericContainer<>(DockerImageName.parse("integration/" + serviceName + ":" + version))
           .withEnv("DEBUG_OPTS", "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:" + DEBUG_PORT)
+          .withEnv("DEBUG_LEVEL", "DEBUG")
           .withEnv("JAEGER_SERVICE_NAME", serviceName)
           .withEnv("KEYSTORE_SECRET", "secret")
           .withEnv("ELASTICSEARCH_HOST", "elasticsearch")

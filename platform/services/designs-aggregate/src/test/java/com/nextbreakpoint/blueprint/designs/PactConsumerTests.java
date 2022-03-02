@@ -50,7 +50,6 @@ public class PactConsumerTests {
                 .uuid("designId", uuid)
                 .uuid("userId", TestConstants.USER_ID)
                 .stringMatcher("commandId", TestConstants.UUID6_REGEXP)
-                .stringMatcher("eventId", TestConstants.UUID1_REGEXP)
                 .stringValue("data", TestConstants.JSON_1)
                 .numberValue("levels", TestConstants.LEVELS);
 
@@ -86,7 +85,6 @@ public class PactConsumerTests {
                 .uuid("designId", uuid)
                 .uuid("userId", TestConstants.USER_ID)
                 .stringMatcher("commandId", TestConstants.UUID6_REGEXP)
-                .stringMatcher("eventId", TestConstants.UUID1_REGEXP)
                 .stringValue("data", TestConstants.JSON_1)
                 .numberValue("levels", TestConstants.LEVELS);
 
@@ -111,7 +109,6 @@ public class PactConsumerTests {
                 .uuid("designId", uuid)
                 .uuid("userId", TestConstants.USER_ID)
                 .stringMatcher("commandId", TestConstants.UUID6_REGEXP)
-                .stringMatcher("eventId", TestConstants.UUID1_REGEXP)
                 .stringValue("data", TestConstants.JSON_2)
                 .numberValue("levels", TestConstants.LEVELS);
 
@@ -149,7 +146,6 @@ public class PactConsumerTests {
                 .uuid("designId", uuid)
                 .uuid("userId", TestConstants.USER_ID)
                 .stringMatcher("commandId", TestConstants.UUID6_REGEXP)
-                .stringMatcher("eventId", TestConstants.UUID1_REGEXP)
                 .stringValue("data", TestConstants.JSON_1)
                 .numberValue("levels", TestConstants.LEVELS);
 
@@ -173,8 +169,7 @@ public class PactConsumerTests {
         PactDslJsonBody event2 = new PactDslJsonBody()
                 .uuid("designId", uuid)
                 .uuid("userId", TestConstants.USER_ID)
-                .stringMatcher("commandId", TestConstants.UUID6_REGEXP)
-                .stringMatcher("eventId", TestConstants.UUID1_REGEXP);
+                .stringMatcher("commandId", TestConstants.UUID6_REGEXP);
 
         PactDslJsonBody payload2 = new PactDslJsonBody()
                 .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
@@ -208,7 +203,6 @@ public class PactConsumerTests {
 
         PactDslJsonBody event1 = new PactDslJsonBody()
                 .uuid("designId", uuid)
-                .stringMatcher("eventId", TestConstants.UUID1_REGEXP)
                 .stringMatcher("revision", TestConstants.UUID1_REGEXP)
                 .stringValue("checksum", TestConstants.CHECKSUM_1)
                 .numberValue("level", 0)
@@ -235,7 +229,6 @@ public class PactConsumerTests {
 
         PactDslJsonBody event2 = new PactDslJsonBody()
                 .uuid("designId", uuid)
-                .stringMatcher("eventId", TestConstants.UUID1_REGEXP)
                 .stringMatcher("revision", TestConstants.UUID1_REGEXP)
                 .stringValue("checksum", TestConstants.CHECKSUM_1)
                 .numberValue("level", 1)
@@ -262,7 +255,6 @@ public class PactConsumerTests {
 
         PactDslJsonBody event3 = new PactDslJsonBody()
                 .uuid("designId", uuid)
-                .stringMatcher("eventId", TestConstants.UUID1_REGEXP)
                 .stringMatcher("revision", TestConstants.UUID1_REGEXP)
                 .stringValue("checksum", TestConstants.CHECKSUM_1)
                 .numberValue("level", 1)
@@ -289,7 +281,6 @@ public class PactConsumerTests {
 
         PactDslJsonBody event4 = new PactDslJsonBody()
                 .uuid("designId", uuid)
-                .stringMatcher("eventId", TestConstants.UUID1_REGEXP)
                 .stringMatcher("revision", TestConstants.UUID1_REGEXP)
                 .stringValue("checksum", TestConstants.CHECKSUM_1)
                 .numberValue("level", 2)
@@ -316,7 +307,6 @@ public class PactConsumerTests {
 
         PactDslJsonBody event5 = new PactDslJsonBody()
                 .uuid("designId", uuid)
-                .stringMatcher("eventId", TestConstants.UUID1_REGEXP)
                 .stringMatcher("revision", TestConstants.UUID1_REGEXP)
                 .stringValue("checksum", TestConstants.CHECKSUM_2)
                 .numberValue("level", 2)

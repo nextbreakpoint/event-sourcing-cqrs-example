@@ -24,7 +24,9 @@ public class DesignDocumentUpdateCompletedController implements Controller<Desig
                 .withKey(event.getDesignId().toString())
                 .withRevision(event.getRevision())
                 .build();
+
         vertx.eventBus().publish(address, Json.encodeValue(notification));
+
         return Single.just(null);
     }
 }

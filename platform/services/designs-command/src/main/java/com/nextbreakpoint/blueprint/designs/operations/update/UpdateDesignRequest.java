@@ -4,8 +4,8 @@ import java.util.Objects;
 import java.util.UUID;
 
 public class UpdateDesignRequest {
-    private final UUID change;
     private final UUID owner;
+    private final UUID change;
     private final UUID uuid;
     private final String json;
     private final int levels;

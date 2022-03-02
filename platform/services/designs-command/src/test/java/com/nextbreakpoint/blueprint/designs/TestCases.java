@@ -144,33 +144,33 @@ public class TestCases {
         commandsPolling.clearMessages();
         eventsPolling.clearMessages();
 
-        final String uuid = submitInsertDesignRequest(authorization, TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT));
+        final String designId = submitInsertDesignRequest(authorization, TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT));
 
         await().atMost(TEN_SECONDS)
                 .pollInterval(ONE_SECOND)
                 .untilAsserted(() -> {
-                    final List<InputMessage> messages = commandsPolling.findMessages(uuid, TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_INSERT_COMMAND);
+                    final List<InputMessage> messages = commandsPolling.findMessages(designId, TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_INSERT_COMMAND);
                     assertThat(messages).hasSize(1);
                 });
 
         await().atMost(TEN_SECONDS)
                 .pollInterval(ONE_SECOND)
                 .untilAsserted(() -> {
-                    final List<Row> rows = testCassandra.fetchMessages(UUID.fromString(uuid));
+                    final List<Row> rows = testCassandra.fetchMessages(UUID.fromString(designId));
                     assertThat(rows).hasSize(1);
-                    TestAssertions.assertExpectedDesignInsertCommand(rows.get(0), uuid);
+                    TestAssertions.assertExpectedDesignInsertCommand(rows.get(0), designId);
                 });
 
         await().atMost(Duration.ofSeconds(20))
                 .pollInterval(ONE_SECOND)
                 .untilAsserted(() -> {
-                    final List<InputMessage> messages = eventsPolling.findMessages(uuid, TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_INSERT_REQUESTED);
+                    final List<InputMessage> messages = eventsPolling.findMessages(designId, TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_INSERT_REQUESTED);
                     assertThat(messages).hasSize(1);
                     InputMessage decodedMessage = messages.get(0);
-                    TestAssertions.assertExpectedDesignInsertRequestedMessage(decodedMessage, uuid);
+                    TestAssertions.assertExpectedDesignInsertRequestedMessage(decodedMessage, designId);
                 });
 
-        return uuid;
+        return designId;
     }
 
     public String shouldPublishDesignUpdateRequestedEventWhenReceivingAUpdateDesignRequest() throws MalformedURLException {
@@ -181,35 +181,35 @@ public class TestCases {
         commandsPolling.clearMessages();
         eventsPolling.clearMessages();
 
-        final String uuid = UUID.randomUUID().toString();
+        final String designId = UUID.randomUUID().toString();
 
-        submitUpdateDesignRequest(authorization, TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT), uuid);
+        submitUpdateDesignRequest(authorization, TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT), designId);
 
         await().atMost(TEN_SECONDS)
                 .pollInterval(ONE_SECOND)
                 .untilAsserted(() -> {
-                    final List<InputMessage> messages = commandsPolling.findMessages(uuid, TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_UPDATE_COMMAND);
+                    final List<InputMessage> messages = commandsPolling.findMessages(designId, TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_UPDATE_COMMAND);
                     assertThat(messages).hasSize(1);
                 });
 
         await().atMost(TEN_SECONDS)
                 .pollInterval(ONE_SECOND)
                 .untilAsserted(() -> {
-                    final List<Row> rows = testCassandra.fetchMessages(UUID.fromString(uuid));
+                    final List<Row> rows = testCassandra.fetchMessages(UUID.fromString(designId));
                     assertThat(rows).hasSize(1);
-                    TestAssertions.assertExpectedDesignUpdateCommand(rows.get(0), uuid);
+                    TestAssertions.assertExpectedDesignUpdateCommand(rows.get(0), designId);
                 });
 
         await().atMost(Duration.ofSeconds(20))
                 .pollInterval(ONE_SECOND)
                 .untilAsserted(() -> {
-                    final List<InputMessage> messages = eventsPolling.findMessages(uuid, TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_UPDATE_REQUESTED);
+                    final List<InputMessage> messages = eventsPolling.findMessages(designId, TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_UPDATE_REQUESTED);
                     assertThat(messages).hasSize(1);
                     InputMessage decodedMessage = messages.get(0);
-                    TestAssertions.assertExpectedDesignUpdateRequestedMessage(decodedMessage, uuid);
+                    TestAssertions.assertExpectedDesignUpdateRequestedMessage(decodedMessage, designId);
                 });
 
-        return uuid;
+        return designId;
     }
 
     public String shouldPublishDesignDeleteRequestedEventWhenReceivingADeleteDesignRequest() throws MalformedURLException {
@@ -220,35 +220,35 @@ public class TestCases {
         commandsPolling.clearMessages();
         eventsPolling.clearMessages();
 
-        final String uuid = UUID.randomUUID().toString();
+        final String designId = UUID.randomUUID().toString();
 
-        submitDeleteDesignRequest(authorization, uuid);
+        submitDeleteDesignRequest(authorization, designId);
 
         await().atMost(TEN_SECONDS)
                 .pollInterval(ONE_SECOND)
                 .untilAsserted(() -> {
-                    final List<InputMessage> messages = commandsPolling.findMessages(uuid, TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_DELETE_COMMAND);
+                    final List<InputMessage> messages = commandsPolling.findMessages(designId, TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_DELETE_COMMAND);
                     assertThat(messages).hasSize(1);
                 });
 
         await().atMost(TEN_SECONDS)
                 .pollInterval(ONE_SECOND)
                 .untilAsserted(() -> {
-                    final List<Row> rows = testCassandra.fetchMessages(UUID.fromString(uuid));
+                    final List<Row> rows = testCassandra.fetchMessages(UUID.fromString(designId));
                     assertThat(rows).hasSize(1);
-                    TestAssertions.assertExpectedDesignDeleteCommand(rows.get(0), uuid);
+                    TestAssertions.assertExpectedDesignDeleteCommand(rows.get(0), designId);
                 });
 
         await().atMost(Duration.ofSeconds(20))
                 .pollInterval(ONE_SECOND)
                 .untilAsserted(() -> {
-                    final List<InputMessage> messages = eventsPolling.findMessages(uuid, TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_DELETE_REQUESTED);
+                    final List<InputMessage> messages = eventsPolling.findMessages(designId, TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_DELETE_REQUESTED);
                     assertThat(messages).hasSize(1);
                     InputMessage decodedMessage = messages.get(0);
-                    TestAssertions.assertExpectedDesignDeleteRequestedMessage(decodedMessage, uuid);
+                    TestAssertions.assertExpectedDesignDeleteRequestedMessage(decodedMessage, designId);
                 });
 
-        return uuid;
+        return designId;
     }
 
     private String submitInsertDesignRequest(String authorization, Map<String, Object> design) throws MalformedURLException {

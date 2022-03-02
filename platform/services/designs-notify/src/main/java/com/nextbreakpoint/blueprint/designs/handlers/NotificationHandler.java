@@ -70,21 +70,28 @@ public class NotificationHandler implements Handler<RoutingContext> {
 
         routingContext.response().headers().add("Connection", "keep-alive");
 
-        routingContext.response().write(makeEvent("open", 0L, "{\"session\":\"" + sessionId + "\"}"));
+        final JsonObject openData = new JsonObject();
+
+        openData.put("session", sessionId);
+        openData.put("revision", revision);
+
+        routingContext.response().write(makeEvent("open", revision, openData.encode()));
 
         final MessageConsumer<JsonObject> consumer = vertx.eventBus().consumer("notifications." + sessionId, msg -> {
             try {
                 final JsonObject message = msg.body();
 
-                final JsonObject data = new JsonObject();
+                final JsonObject updateData = new JsonObject();
 
-                data.put("uuid", watchKey);
-                data.put("session", sessionId);
-                data.put("revision", revision);
+                final String newRevision = (String) message.getValue("revision");
+
+                updateData.put("uuid", watchKey);
+                updateData.put("session", sessionId);
+                updateData.put("revision", newRevision);
 
                 logger.info("Send update notification to session " + watcher.sessionId);
 
-                routingContext.response().write(makeEvent("update", message.getLong("timestamp"), data.encode()));
+                routingContext.response().write(makeEvent("update", newRevision, updateData.encode()));
             } catch (Exception e) {
                 logger.warn("Cannot write message (session = " + sessionId + ")", e);
             }
@@ -113,8 +120,8 @@ public class NotificationHandler implements Handler<RoutingContext> {
         }
     }
 
-    private String makeEvent(String name, Long id, String data) {
-        return "event: " + name + "\nid: " + id + "\ndata: " + data + "\n\n";
+    private String makeEvent(String name, String revision, String data) {
+        return "event: " + name + "\nid: " + revision + "\ndata: " + data + "\n\n";
     }
 
     private void notifyWatcher(Watcher watcher, String revision) {
@@ -122,15 +129,14 @@ public class NotificationHandler implements Handler<RoutingContext> {
 
         logger.info("Notify watcher for session " + watcher.sessionId);
 
-        final JsonObject message = makeMessageData(revision, System.currentTimeMillis());
+        final JsonObject message = makeMessageData(revision);
 
         vertx.eventBus().publish("notifications." + watcher.getSessionId(), message);
     }
 
-    private JsonObject makeMessageData(String revision, Long timestamp) {
+    private JsonObject makeMessageData(String revision) {
         final JsonObject message = new JsonObject();
 
-        message.put("timestamp", timestamp);
         message.put("revision", revision);
 
         return message;
@@ -152,7 +158,7 @@ public class NotificationHandler implements Handler<RoutingContext> {
             return lastEventId;
         }
 
-        return routingContext.pathParam("offset");
+        return routingContext.queryParam("revision").stream().findFirst().orElse("0");
     }
 
     private void dispatchNotification(DesignChangedNotification notification) {

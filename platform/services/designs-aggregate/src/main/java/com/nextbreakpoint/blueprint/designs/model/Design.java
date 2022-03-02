@@ -14,9 +14,9 @@ public class Design {
     private final UUID designId;
     private final UUID userId;
     private final UUID commandId;
-    private final String revision;
     private final String data;
     private final String checksum;
+    private final String revision;
     private final String status;
     private final int levels;
     private final Map<Integer, Tiles> tiles;

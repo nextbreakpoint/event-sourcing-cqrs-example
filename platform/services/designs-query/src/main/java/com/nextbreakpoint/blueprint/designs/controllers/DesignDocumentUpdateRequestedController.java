@@ -60,9 +60,11 @@ public class DesignDocumentUpdateRequestedController implements Controller<Input
     private Design createDesign(DesignDocumentUpdateRequested event) {
         return Design.builder()
                 .withDesignId(event.getDesignId())
+                .withUserId(event.getUserId())
+                .withCommandId(event.getCommandId())
+                .withChecksum(event.getChecksum())
                 .withRevision(event.getRevision())
                 .withData(event.getData())
-                .withChecksum(event.getChecksum())
                 .withStatus(event.getStatus())
                 .withLevels(event.getLevels())
                 .withTiles(event.getTiles().stream().map(this::createTiles).collect(Collectors.toList()))

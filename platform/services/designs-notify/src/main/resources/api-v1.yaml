@@ -12,19 +12,19 @@ tags:
   - name: designs
     description: Everything about receiving notifications about designs
 paths:
-  /watch/designs/{offset}/{designId}:
+  /watch/designs/{designId}:
     get:
       tags:
         - designs
       summary: Retrieve sse events url for a single design
       operationId: watchDesign
       parameters:
-        - name: offset
-          in: path
-          description: offset of initial event
+        - name: token
+          in: query
+          description: token of initial event
           required: true
           schema:
-            type: integer
+            type: string
         - name: designId
           in: path
           description: uuid of design to watch
@@ -37,37 +37,37 @@ paths:
           description: Started watching
           content:
             {}
-  /watch/designs/{offset}:
+  /watch/designs:
     get:
       tags:
         - designs
       summary: Retrieve sse events url for the designs collection
       operationId: watchDesigns
       parameters:
-        - name: offset
-          in: path
-          description: offset of initial event
+        - name: token
+          in: query
+          description: token of initial event
           required: true
           schema:
-            type: integer
+            type: string
       responses:
         200:
           description: Started watching
           content:
             {}
-  /sse/designs/{offset}/{designId}:
+  /sse/designs/{designId}:
     get:
       tags:
         - designs
       summary: Receive sse events related to a single design
       operationId: sseDesign
       parameters:
-        - name: offset
-          in: path
-          description: offset of initial event
+        - name: token
+          in: query
+          description: token of initial event
           required: true
           schema:
-            type: integer
+            type: string
         - name: designId
           in: path
           description: uuid of design to watch
@@ -80,19 +80,19 @@ paths:
           description: Started watching
           content:
             {}
-  /sse/designs/{offset}:
+  /sse/designs:
     get:
       tags:
         - designs
       summary: Receive sse events related the designs collection
       operationId: sseDesigns
       parameters:
-        - name: offset
-          in: path
-          description: offset of initial event
+        - name: token
+          in: query
+          description: token of initial event
           required: true
           schema:
-            type: integer
+            type: string
       responses:
         200:
           description: Started watching

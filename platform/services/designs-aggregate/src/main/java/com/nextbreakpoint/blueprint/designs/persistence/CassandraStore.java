@@ -160,7 +160,7 @@ public class CassandraStore implements Store {
 
     private Design convertRowToDesign(Row row) {
         final UUID userId = row.getUuid("COMMAND_USER");
-        final UUID changeId = row.getUuid("COMMAND_UUID");
+        final UUID commandId = row.getUuid("COMMAND_UUID");
         final UUID designId = row.getUuid("DESIGN_UUID");
         final String data = row.getString("DESIGN_DATA");
         final String checksum = row.getString("DESIGN_CHECKSUM");
@@ -172,7 +172,7 @@ public class CassandraStore implements Store {
         final Map<Integer, Tiles> tilesList = tilesMap != null ? tilesMap.entrySet().stream()
                 .map(entry -> convertUDTToTiles(entry.getKey(), entry.getValue()))
                 .collect(Collectors.toMap(Tiles::getLevel, Function.identity())) : Map.of();
-        return new Design(designId, userId, changeId, data, checksum, revision, status, levels, tilesList, toDate(updated));
+        return new Design(designId, userId, commandId, data, checksum, revision, status, levels, tilesList, toDate(updated));
     }
 
     private InputMessage convertRowToMessage(Row row) {

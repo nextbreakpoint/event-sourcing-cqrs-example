@@ -14,8 +14,8 @@ import java.util.UUID;
 public class DesignInsertCommand {
     public static final String TYPE = "design-insert-command-v1";
 
-    private final UUID userId;
     private final UUID designId;
+    private final UUID userId;
     private final UUID commandId;
     private final String data;
     private final int levels;

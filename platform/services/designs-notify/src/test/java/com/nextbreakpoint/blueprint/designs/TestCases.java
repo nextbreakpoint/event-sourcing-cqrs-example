@@ -111,7 +111,7 @@ public class TestCases {
                     System.out.println(notification);
                     notifications.add(notification);
                 })
-                .connect("/v1/sse/designs/0", null, result -> {
+                .connect("/v1/sse/designs?token=" + TestConstants.REVISION_0, null, result -> {
                     final SSENotification notification = new SSENotification("CONNECT", result.succeeded() ? "SUCCESS" : "FAILURE");
                     System.out.println(notification);
                     notifications.add(notification);
@@ -169,7 +169,7 @@ public class TestCases {
                     System.out.println(notification);
                     notifications.add(notification);
                 })
-                .connect("/v1/sse/designs/0/" + designId, null, result -> {
+                .connect("/v1/sse/designs/" + designId + "?token=" + TestConstants.REVISION_0, null, result -> {
                     final SSENotification notification = new SSENotification("CONNECT", result.succeeded() ? "SUCCESS" : "FAILURE");
                     System.out.println(notification);
                     notifications.add(notification);

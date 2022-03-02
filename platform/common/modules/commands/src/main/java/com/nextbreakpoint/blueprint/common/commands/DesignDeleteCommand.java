@@ -14,8 +14,8 @@ import java.util.UUID;
 public class DesignDeleteCommand {
     public static final String TYPE = "design-delete-command-v1";
 
-    private final UUID userId;
     private final UUID designId;
+    private final UUID userId;
     private final UUID commandId;
 
     @JsonCreator

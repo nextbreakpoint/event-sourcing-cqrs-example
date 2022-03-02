@@ -43,9 +43,8 @@ public class DesignUpdateCommandController implements Controller<InputMessage, V
 
     private DesignUpdateRequested createEvent(DesignUpdateCommand command) {
         return DesignUpdateRequested.builder()
-                .withEventId(TimeUUID.next())
                 .withDesignId(command.getDesignId())
-                .withChangeId(command.getChangeId())
+                .withCommandId(command.getCommandId())
                 .withUserId(command.getUserId())
                 .withData(command.getData())
                 .withLevels(command.getLevels())

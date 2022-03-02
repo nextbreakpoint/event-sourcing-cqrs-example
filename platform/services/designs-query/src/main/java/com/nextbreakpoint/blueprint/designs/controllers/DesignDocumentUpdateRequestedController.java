@@ -48,18 +48,17 @@ public class DesignDocumentUpdateRequestedController implements Controller<Input
     private Observable<DesignDocumentUpdateCompleted> onDesignDocumentUpdateRequested(DesignDocumentUpdateRequested event) {
         if (event.getStatus().equals("DELETED")) {
             return store.deleteDesign(new DeleteDesignRequest(event.getDesignId()))
-                    .map(result -> new DesignDocumentUpdateCompleted(event.getEventId(), event.getDesignId(), event.getRevision()))
+                    .map(result -> new DesignDocumentUpdateCompleted(event.getDesignId(), event.getRevision()))
                     .toObservable();
         } else {
             return store.insertDesign(new InsertDesignRequest(event.getDesignId(), createDesign(event)))
-                    .map(result -> new DesignDocumentUpdateCompleted(event.getEventId(), event.getDesignId(), event.getRevision()))
+                    .map(result -> new DesignDocumentUpdateCompleted(event.getDesignId(), event.getRevision()))
                     .toObservable();
         }
     }
 
     private Design createDesign(DesignDocumentUpdateRequested event) {
         return Design.builder()
-                .withEventId(event.getEventId())
                 .withDesignId(event.getDesignId())
                 .withRevision(event.getRevision())
                 .withData(event.getData())
@@ -67,7 +66,7 @@ public class DesignDocumentUpdateRequestedController implements Controller<Input
                 .withStatus(event.getStatus())
                 .withLevels(event.getLevels())
                 .withTiles(event.getTiles().stream().map(this::createTiles).collect(Collectors.toList()))
-                .withModified(FORMATTER.format(event.getModified()))
+                .withLastModified(FORMATTER.format(event.getModified()))
                 .build();
     }
 

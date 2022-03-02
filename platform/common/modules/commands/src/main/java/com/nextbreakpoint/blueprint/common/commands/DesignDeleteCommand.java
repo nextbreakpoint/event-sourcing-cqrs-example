@@ -15,20 +15,17 @@ public class DesignDeleteCommand {
     public static final String TYPE = "design-delete-command-v1";
 
     private final UUID userId;
-    private final UUID eventId;
     private final UUID designId;
-    private final UUID changeId;
+    private final UUID commandId;
 
     @JsonCreator
     public DesignDeleteCommand(
-        @JsonProperty("userId") UUID userId,
-        @JsonProperty("eventId") UUID eventId,
-        @JsonProperty("designId") UUID designId,
-        @JsonProperty("changeId") UUID changeId
+            @JsonProperty("designId") UUID designId,
+            @JsonProperty("userId") UUID userId,
+            @JsonProperty("commandId") UUID commandId
     ) {
-        this.userId = Objects.requireNonNull(userId);
-        this.eventId = Objects.requireNonNull(eventId);
         this.designId = Objects.requireNonNull(designId);
-        this.changeId = Objects.requireNonNull(changeId);
+        this.userId = Objects.requireNonNull(userId);
+        this.commandId = Objects.requireNonNull(commandId);
     }
 }

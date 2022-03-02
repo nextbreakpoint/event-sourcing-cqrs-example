@@ -68,7 +68,6 @@ public class TestAssertions {
         DesignAggregateUpdateRequested actualEvent = Json.decodeValue(actualMessage.getValue().getData(), DesignAggregateUpdateRequested.class);
         assertThat(actualEvent.getDesignId()).isEqualTo(designId);
         assertThat(actualEvent.getRevision()).isNotNull();
-        assertThat(actualEvent.getEventId()).isNotNull();
     }
 
     public static void assertExpectedDesignAggregateUpdateCompletedMessage(InputMessage actualMessage, UUID designId, String data, String checksum, String status) {
@@ -86,7 +85,6 @@ public class TestAssertions {
         DesignAggregateUpdateCompleted actualEvent = Json.decodeValue(actualMessage.getValue().getData(), DesignAggregateUpdateCompleted.class);
         assertThat(actualEvent.getDesignId()).isEqualTo(designId);
         assertThat(actualEvent.getRevision()).isNotNull();
-        assertThat(actualEvent.getEventId()).isNotNull();
         assertThat(actualEvent.getData()).isEqualTo(data);
         assertThat(actualEvent.getStatus()).isEqualTo(status);
         assertThat(actualEvent.getChecksum()).isEqualTo(checksum);
@@ -107,7 +105,6 @@ public class TestAssertions {
     }
 
     public static void assertExpectedTileRenderRequestedEvent(TileRenderRequested actualEvent, UUID designId, String data, String checksum) {
-        assertThat(actualEvent.getEventId()).isNotNull();
         assertThat(actualEvent.getRevision()).isNotNull();
         assertThat(actualEvent.getDesignId()).isEqualTo(designId);
         assertThat(actualEvent.getData()).isEqualTo(data);
@@ -132,7 +129,6 @@ public class TestAssertions {
     }
 
     public static void assertExpectedTileRenderCompletedEvent(TileRenderCompleted actualEvent, UUID designId, String checksum, String status) {
-        assertThat(actualEvent.getEventId()).isNotNull();
         assertThat(actualEvent.getRevision()).isNotNull();
         assertThat(actualEvent.getDesignId()).isEqualTo(designId);
         assertThat(actualEvent.getChecksum()).isEqualTo(checksum);
@@ -157,7 +153,6 @@ public class TestAssertions {
         TileAggregateUpdateRequired actualEvent = Json.decodeValue(actualMessage.getValue().getData(), TileAggregateUpdateRequired.class);
         assertThat(actualEvent.getDesignId()).isEqualTo(designId);
         assertThat(actualEvent.getRevision()).isNotNull();
-        assertThat(actualEvent.getEventId()).isNotNull();
     }
 
     public static void assertExpectedTileAggregateUpdateRequestedMessage(InputMessage actualMessage, UUID designId) {
@@ -175,7 +170,6 @@ public class TestAssertions {
         TileAggregateUpdateRequested actualEvent = Json.decodeValue(actualMessage.getValue().getData(), TileAggregateUpdateRequested.class);
         assertThat(actualEvent.getDesignId()).isEqualTo(designId);
         assertThat(actualEvent.getRevision()).isNotNull();
-        assertThat(actualEvent.getEventId()).isNotNull();
     }
 
     public static void assertExpectedTileAggregateUpdateCompletedMessage(InputMessage actualMessage, UUID designId) {
@@ -192,7 +186,6 @@ public class TestAssertions {
         TileAggregateUpdateCompleted actualEvent = Json.decodeValue(actualMessage.getValue().getData(), TileAggregateUpdateCompleted.class);
         assertThat(actualEvent.getDesignId()).isEqualTo(designId);
         assertThat(actualEvent.getRevision()).isNotNull();
-        assertThat(actualEvent.getEventId()).isNotNull();
     }
 
     public static void assertExpectedDesignDocumentUpdateRequestedMessage(InputMessage actualMessage, UUID designId, String data, String checksum, String status) {
@@ -209,9 +202,8 @@ public class TestAssertions {
         DesignDocumentUpdateRequested actualEvent = Json.decodeValue(actualMessage.getValue().getData(), DesignDocumentUpdateRequested.class);
         assertThat(actualEvent.getUserId()).isEqualTo(TestConstants.USER_ID);
         assertThat(actualEvent.getDesignId()).isEqualTo(designId);
-        assertThat(actualEvent.getChangeId()).isNotNull();
+        assertThat(actualEvent.getCommandId()).isNotNull();
         assertThat(actualEvent.getRevision()).isNotNull();
-        assertThat(actualEvent.getEventId()).isNotNull();
         assertThat(actualEvent.getData()).isEqualTo(data);
         assertThat(actualEvent.getStatus()).isEqualTo(status);
         assertThat(actualEvent.getChecksum()).isEqualTo(checksum);

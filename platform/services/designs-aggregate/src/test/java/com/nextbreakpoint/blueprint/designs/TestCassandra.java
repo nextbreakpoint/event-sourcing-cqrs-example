@@ -64,7 +64,7 @@ public class TestCassandra {
 //    }
 //
 //    private Single<ResultSet> insertDesign(Design design, UserDefinedType levelType) {
-//        return session.rxPrepare("INSERT INTO DESIGN (DESIGN_UUID, DESIGN_EVID, DESIGN_ESID, DESIGN_DATA, DESIGN_CHECKSUM, DESIGN_STATUS, DESIGN_LEVELS, DESIGN_TILES, DESIGN_UPDATED) VALUES (?,?,?,?,?,?,?,?,?)")
+//        return session.rxPrepare("INSERT INTO DESIGN (DESIGN_UUID, DESIGN_EVID, DESIGN_ESID, DESIGN_DATA, DESIGN_CHECKSUM, DESIGN_STATUS, DESIGN_LEVELS, DESIGN_TILES, DESIGN_TIMESTAMP) VALUES (?,?,?,?,?,?,?,?,?)")
 //                .map(stmt -> stmt.bind(createInsertParams(design, levelType)).setConsistencyLevel(ConsistencyLevel.QUORUM))
 //                .flatMap(session::rxExecute);
 //    }

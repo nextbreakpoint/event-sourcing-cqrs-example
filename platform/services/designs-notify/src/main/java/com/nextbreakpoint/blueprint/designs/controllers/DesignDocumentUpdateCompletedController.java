@@ -22,7 +22,7 @@ public class DesignDocumentUpdateCompletedController implements Controller<Desig
     public Single<Void> onNext(DesignDocumentUpdateCompleted event) {
         DesignChangedNotification notification = DesignChangedNotification.builder()
                 .withKey(event.getDesignId().toString())
-                .withTimestamp(event.getEventId().timestamp())
+                .withRevision(event.getRevision())
                 .build();
         vertx.eventBus().publish(address, Json.encodeValue(notification));
         return Single.just(null);

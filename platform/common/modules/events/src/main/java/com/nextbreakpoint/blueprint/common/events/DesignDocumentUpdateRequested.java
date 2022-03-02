@@ -18,13 +18,12 @@ import java.util.UUID;
 public class DesignDocumentUpdateRequested {
     public static final String TYPE = "design-document-update-requested-v1";
 
-    private final UUID userId;
-    private final UUID eventId;
     private final UUID designId;
-    private final UUID changeId;
-    private final String revision;
+    private final UUID userId;
+    private final UUID commandId;
     private final String data;
     private final String checksum;
+    private final String revision;
     private final String status;
     private final int levels;
     private final List<Tiles> tiles;
@@ -32,25 +31,23 @@ public class DesignDocumentUpdateRequested {
 
     @JsonCreator
     public DesignDocumentUpdateRequested(
-        @JsonProperty("userId") UUID userId,
-        @JsonProperty("eventId") UUID eventId,
-        @JsonProperty("designId") UUID designId,
-        @JsonProperty("changeId") UUID changeId,
-        @JsonProperty("revision") String revision,
-        @JsonProperty("data") String data,
-        @JsonProperty("checksum") String checksum,
-        @JsonProperty("status") String status,
-        @JsonProperty("levels") int levels,
-        @JsonProperty("tiles") List<Tiles> tiles,
-        @JsonProperty("modified") @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'") LocalDateTime modified
+            @JsonProperty("designId") UUID designId,
+            @JsonProperty("userId") UUID userId,
+            @JsonProperty("commandId") UUID commandId,
+            @JsonProperty("data") String data,
+            @JsonProperty("checksum") String checksum,
+            @JsonProperty("revision") String revision,
+            @JsonProperty("status") String status,
+            @JsonProperty("levels") int levels,
+            @JsonProperty("tiles") List<Tiles> tiles,
+            @JsonProperty("modified") @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'") LocalDateTime modified
     ) {
-        this.userId = Objects.requireNonNull(userId);
-        this.eventId = Objects.requireNonNull(eventId);
         this.designId = Objects.requireNonNull(designId);
-        this.changeId = Objects.requireNonNull(changeId);
-        this.revision = Objects.requireNonNull(revision);
+        this.userId = Objects.requireNonNull(userId);
+        this.commandId = Objects.requireNonNull(commandId);
         this.data = Objects.requireNonNull(data);
         this.checksum = Objects.requireNonNull(checksum);
+        this.revision = Objects.requireNonNull(revision);
         this.status = Objects.requireNonNull(status);
         this.levels = levels;
         this.tiles = Objects.requireNonNull(tiles);

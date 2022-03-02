@@ -63,7 +63,6 @@ public class DesignAggregateUpdateCompletedController implements Controller<Inpu
 
     private TileRenderRequested createEvent(DesignAggregateUpdateCompleted event, Tile tile) {
         return TileRenderRequested.builder()
-                .withEventId(TimeUUID.next())
                 .withDesignId(event.getDesignId())
                 .withRevision(event.getRevision())
                 .withData(event.getData())

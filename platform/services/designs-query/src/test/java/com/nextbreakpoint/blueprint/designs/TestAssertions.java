@@ -28,7 +28,6 @@ public class TestAssertions {
         DesignDocumentUpdateRequested actualEvent = Json.decodeValue(actualMessage.getValue().getData(), DesignDocumentUpdateRequested.class);
         assertThat(actualEvent.getDesignId()).isEqualTo(designId);
         assertThat(actualEvent.getRevision()).isNotNull();
-        assertThat(actualEvent.getEventId()).isNotNull();
         assertThat(actualEvent.getData()).isEqualTo(data);
         assertThat(actualEvent.getStatus()).isEqualTo(status);
         assertThat(actualEvent.getChecksum()).isEqualTo(checksum);
@@ -52,14 +51,11 @@ public class TestAssertions {
         DesignDocumentUpdateCompleted actualEvent = Json.decodeValue(actualMessage.getValue().getData(), DesignDocumentUpdateCompleted.class);
         assertThat(actualEvent.getDesignId()).isEqualTo(designId);
         assertThat(actualEvent.getRevision()).isNotNull();
-        assertThat(actualEvent.getEventId()).isNotNull();
     }
 
     public static void assertExpectedDesign(Design actualDesign, UUID designId, String data, String checksum, String status) {
         assertThat(actualDesign.getDesignId()).isEqualTo(designId);
-        assertThat(actualDesign.getEventId()).isNotNull();
         assertThat(actualDesign.getRevision()).isNotNull();
-        assertThat(actualDesign.getEventId()).isNotNull();
         assertThat(actualDesign.getData()).isEqualTo(data);
         assertThat(actualDesign.getStatus()).isEqualTo(status);
         assertThat(actualDesign.getChecksum()).isEqualTo(checksum);
@@ -77,6 +73,6 @@ public class TestAssertions {
         assertThat(actualDesign.getTiles().get(2).getRequested()).isEqualTo(16);
         assertThat(actualDesign.getTiles().get(2).getCompleted()).hasSize(16);
         assertThat(actualDesign.getTiles().get(2).getFailed()).isEmpty();
-        assertThat(actualDesign.getModified()).isNotNull();
+        assertThat(actualDesign.getLastModified()).isNotNull();
     }
 }

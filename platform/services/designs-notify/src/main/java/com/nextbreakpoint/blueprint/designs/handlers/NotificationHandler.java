@@ -48,21 +48,13 @@ public class NotificationHandler implements Handler<RoutingContext> {
     }
 
     protected void createWatcher(RoutingContext routingContext) {
-//        Long offset = getOffset(routingContext);
+        final String revision = getRevision(routingContext);
 
         final String watchKey = getWatchKey(routingContext);
 
         final String sessionId = UUID.randomUUID().toString();
 
-//        final String lastEventId = routingContext.request().headers().get("Last-Message-ID");
-
-//        if (lastEventId != null) {
-//            offset = Long.parseLong(lastEventId);
-//        }
-
-        final Watcher watcher = new Watcher(watchKey, sessionId);
-
-//        watcher.setOffset(offset);
+        final Watcher watcher = new Watcher(watchKey, sessionId, revision);
 
         final Set<Watcher> watchers = watcherMap.getOrDefault(watchKey, new HashSet<>());
 
@@ -86,9 +78,9 @@ public class NotificationHandler implements Handler<RoutingContext> {
 
                 final JsonObject data = new JsonObject();
 
-                data.put("session", sessionId);
-
                 data.put("uuid", watchKey);
+                data.put("session", sessionId);
+                data.put("revision", revision);
 
                 logger.info("Send update notification to session " + watcher.sessionId);
 
@@ -125,20 +117,21 @@ public class NotificationHandler implements Handler<RoutingContext> {
         return "event: " + name + "\nid: " + id + "\ndata: " + data + "\n\n";
     }
 
-    private void notifyWatcher(Watcher watcher, Long timestamp) {
-//        watcher.setOffset(timestamp);
+    private void notifyWatcher(Watcher watcher, String revision) {
+        watcher.setRevision(revision);
 
         logger.info("Notify watcher for session " + watcher.sessionId);
 
-        final JsonObject message = makeMessageData(timestamp);
+        final JsonObject message = makeMessageData(revision, System.currentTimeMillis());
 
         vertx.eventBus().publish("notifications." + watcher.getSessionId(), message);
     }
 
-    private JsonObject makeMessageData(Long timestamp) {
+    private JsonObject makeMessageData(String revision, Long timestamp) {
         final JsonObject message = new JsonObject();
 
         message.put("timestamp", timestamp);
+        message.put("revision", revision);
 
         return message;
     }
@@ -152,20 +145,26 @@ public class NotificationHandler implements Handler<RoutingContext> {
         }
     }
 
-    private Long getOffset(RoutingContext routingContext) {
-        return Long.parseLong(routingContext.pathParam("offset"));
+    private String getRevision(RoutingContext routingContext) {
+        final String lastEventId = routingContext.request().headers().get("Last-Message-ID");
+
+        if (lastEventId != null) {
+            return lastEventId;
+        }
+
+        return routingContext.pathParam("offset");
     }
 
     private void dispatchNotification(DesignChangedNotification notification) {
         final String watchKey = notification.getKey();
-        final Long timestamp = notification.getTimestamp();
+        final String revision = notification.getRevision();
 
-        logger.info("Processing event " + watchKey + " (timestamp = " + timestamp +  ")");
+        logger.info("Processing event " + watchKey + " (revision = " + revision +  ")");
 
         final Set<Watcher> watchers = watcherMap.get(watchKey);
 
         if (watchers != null && watchers.size() > 0) {
-            watchers.forEach(watcher -> notifyWatcher(watcher, System.currentTimeMillis()));
+            watchers.forEach(watcher -> notifyWatcher(watcher, revision));
         } else {
             logger.info("No watchers found for resource " + watchKey);
         }
@@ -173,7 +172,7 @@ public class NotificationHandler implements Handler<RoutingContext> {
         final Set<Watcher> otherWatchers = watcherMap.get("*");
 
         if (otherWatchers != null && otherWatchers.size() > 0) {
-            otherWatchers.forEach(watcher -> notifyWatcher(watcher, System.currentTimeMillis()));
+            otherWatchers.forEach(watcher -> notifyWatcher(watcher, revision));
         } else {
             logger.info("No watchers found for all resources");
         }
@@ -182,11 +181,12 @@ public class NotificationHandler implements Handler<RoutingContext> {
     private static class Watcher {
         private final String sessionId;
         private final String watchKey;
-//        private Long offset;
+        private String revision;
 
-        public Watcher(String watchKey, String sessionId) {
+        public Watcher(String watchKey, String sessionId, String revision) {
             this.sessionId = sessionId;
             this.watchKey = watchKey;
+            this.revision = revision;
         }
 
         public String getSessionId() {
@@ -196,13 +196,13 @@ public class NotificationHandler implements Handler<RoutingContext> {
         public String getWatchKey() {
             return watchKey;
         }
-//
-//        public Long getOffset() {
-//            return offset;
-//        }
-//
-//        public void setOffset(Long offset) {
-//            this.offset = offset;
-//        }
+
+        public String getRevision() {
+            return revision;
+        }
+
+        public void setRevision(String revision) {
+            this.revision = revision;
+        }
     }
 }

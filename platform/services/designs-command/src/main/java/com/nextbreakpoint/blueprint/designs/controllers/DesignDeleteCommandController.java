@@ -43,9 +43,8 @@ public class DesignDeleteCommandController implements Controller<InputMessage, V
 
     private DesignDeleteRequested createEvent(DesignDeleteCommand command) {
         return DesignDeleteRequested.builder()
-                .withEventId(TimeUUID.next())
                 .withDesignId(command.getDesignId())
-                .withChangeId(command.getChangeId())
+                .withCommandId(command.getCommandId())
                 .withUserId(command.getUserId())
                 .build();
     }

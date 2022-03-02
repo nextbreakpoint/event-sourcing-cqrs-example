@@ -14,21 +14,18 @@ import java.util.UUID;
 public class DesignAbortRequested {
     public static final String TYPE = "design-abort-requested-v1";
 
-    private final UUID userId;
-    private final UUID eventId;
     private final UUID designId;
+    private final UUID userId;
     private final String checksum;
 
     @JsonCreator
     public DesignAbortRequested(
-        @JsonProperty("userId") UUID userId,
-        @JsonProperty("eventId") UUID eventId,
-        @JsonProperty("designId") UUID designId,
-        @JsonProperty("checksum") String checksum
+            @JsonProperty("designId") UUID designId,
+            @JsonProperty("userId") UUID userId,
+            @JsonProperty("checksum") String checksum
     ) {
-        this.userId = Objects.requireNonNull(userId);
-        this.eventId = Objects.requireNonNull(eventId);
         this.designId = Objects.requireNonNull(designId);
+        this.userId = Objects.requireNonNull(userId);
         this.checksum = Objects.requireNonNull(checksum);
     }
 }

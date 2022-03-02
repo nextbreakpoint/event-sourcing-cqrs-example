@@ -2,16 +2,14 @@ package com.nextbreakpoint.blueprint.designs.operations.update;
 
 import com.nextbreakpoint.blueprint.common.commands.DesignUpdateCommand;
 import com.nextbreakpoint.blueprint.common.core.Mapper;
-import com.nextbreakpoint.blueprint.common.core.TimeUUID;
 
 public class UpdateDesignCommandMapper implements Mapper<UpdateDesignRequest, DesignUpdateCommand> {
     @Override
     public DesignUpdateCommand transform(UpdateDesignRequest request) {
         return DesignUpdateCommand.builder()
                 .withUserId(request.getOwner())
-                .withEventId(TimeUUID.next())
                 .withDesignId(request.getUuid())
-                .withChangeId(request.getChange())
+                .withCommandId(request.getChange())
                 .withData(request.getJson())
                 .withLevels(request.getLevels())
                 .build();

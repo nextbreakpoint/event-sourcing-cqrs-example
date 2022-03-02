@@ -41,7 +41,6 @@ public class DesignAggregateUpdateRequestedController implements Controller<Inpu
 
     private DesignAggregateUpdateCompleted createEvent(Design design) {
         return DesignAggregateUpdateCompleted.builder()
-                .withEventId(TimeUUID.next())
                 .withDesignId(design.getDesignId())
                 .withRevision(design.getRevision())
                 .withData(design.getData())

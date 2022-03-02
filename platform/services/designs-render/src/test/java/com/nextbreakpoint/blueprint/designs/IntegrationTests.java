@@ -32,11 +32,11 @@ public class IntegrationTests {
     public void shouldStartRenderingAnImageWhenReceivingATileRenderRequestedMessage() {
         final UUID designId = UUID.randomUUID();
 
-        final TileRenderRequested tileRenderRequested1 = new TileRenderRequested(TimeUUID.next(), designId, TestConstants.REVISION_0, TestConstants.JSON_1, Checksum.of(TestConstants.JSON_1), 0, 0, 0);
+        final TileRenderRequested tileRenderRequested1 = new TileRenderRequested(designId, TestConstants.REVISION_0, Checksum.of(TestConstants.JSON_1), TestConstants.JSON_1, 0, 0, 0);
 
         final OutputMessage tileRenderRequestedMessage1 = new TileRenderRequestedOutputMapper(TestConstants.MESSAGE_SOURCE, TestUtils::createBucketKey).transform(Tracing.of(UUID.randomUUID()), tileRenderRequested1);
 
-        final TileRenderRequested tileRenderRequested2 = new TileRenderRequested(TimeUUID.next(), designId, TestConstants.REVISION_1, TestConstants.JSON_2, Checksum.of(TestConstants.JSON_2), 1, 1, 2);
+        final TileRenderRequested tileRenderRequested2 = new TileRenderRequested(designId, TestConstants.REVISION_1, Checksum.of(TestConstants.JSON_2), TestConstants.JSON_2, 1, 1, 2);
 
         final OutputMessage tileRenderRequestedMessage2 = new TileRenderRequestedOutputMapper(TestConstants.MESSAGE_SOURCE, TestUtils::createBucketKey).transform(Tracing.of(UUID.randomUUID()), tileRenderRequested2);
 

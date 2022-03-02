@@ -9,7 +9,6 @@ import com.nextbreakpoint.blueprint.designs.aggregate.DesignAggregate;
 import rx.Single;
 
 import java.util.Objects;
-import java.util.UUID;
 
 public class TileRenderCompletedController implements Controller<InputMessage, Void> {
     private final Mapper<InputMessage, TileRenderCompleted> inputMapper;
@@ -39,7 +38,6 @@ public class TileRenderCompletedController implements Controller<InputMessage, V
 
     private TileAggregateUpdateRequired createEvent(TileRenderCompleted event, String revision) {
         return TileAggregateUpdateRequired.builder()
-                .withEventId(TimeUUID.next())
                 .withDesignId(event.getDesignId())
                 .withRevision(revision)
                 .build();

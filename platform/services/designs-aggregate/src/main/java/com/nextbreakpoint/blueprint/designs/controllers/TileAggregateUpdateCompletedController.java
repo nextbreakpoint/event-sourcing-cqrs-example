@@ -45,16 +45,15 @@ public class TileAggregateUpdateCompletedController implements Controller<InputM
     private DesignDocumentUpdateRequested createEvent(Design design) {
         return DesignDocumentUpdateRequested.builder()
                 .withUserId(design.getUserId())
-                .withEventId(design.getEventId())
                 .withDesignId(design.getDesignId())
-                .withChangeId(design.getChangeId())
+                .withCommandId(design.getCommandId())
                 .withRevision(design.getRevision())
                 .withData(design.getData())
                 .withChecksum(design.getChecksum())
                 .withStatus(design.getStatus())
                 .withLevels(design.getLevels())
                 .withTiles(design.getTiles().values().stream().sorted(Comparator.comparing(Tiles::getLevel)).map(this::createTiles).collect(Collectors.toList()))
-                .withModified(design.getModified())
+                .withModified(design.getLastModified())
                 .build();
     }
 

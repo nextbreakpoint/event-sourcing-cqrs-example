@@ -9,7 +9,6 @@ import com.nextbreakpoint.blueprint.designs.aggregate.DesignAggregate;
 import rx.Single;
 
 import java.util.Objects;
-import java.util.UUID;
 
 public class DesignDeleteRequestedController implements Controller<InputMessage, Void> {
     private final Mapper<InputMessage, DesignDeleteRequested> inputMapper;
@@ -44,7 +43,6 @@ public class DesignDeleteRequestedController implements Controller<InputMessage,
 
     private DesignAggregateUpdateRequested createEvent(DesignDeleteRequested event, String revision) {
         return DesignAggregateUpdateRequested.builder()
-                .withEventId(TimeUUID.next())
                 .withDesignId(event.getDesignId())
                 .withRevision(revision)
                 .build();

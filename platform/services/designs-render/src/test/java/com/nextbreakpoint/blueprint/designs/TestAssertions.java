@@ -23,7 +23,6 @@ public class TestAssertions {
         assertThat(actualMessage.getTrace().getSpanId()).isNotNull();
         assertThat(actualMessage.getTrace().getParent()).isNotNull();
         TileRenderCompleted actualEvent = Json.decodeValue(actualMessage.getValue().getData(), TileRenderCompleted.class);
-        assertThat(actualEvent.getEventId()).isNotNull();
         assertThat(actualEvent.getRevision()).isNotNull();
         assertThat(actualEvent.getDesignId()).isEqualTo(tileRenderRequested.getDesignId());
         assertThat(actualEvent.getLevel()).isEqualTo(tileRenderRequested.getLevel());

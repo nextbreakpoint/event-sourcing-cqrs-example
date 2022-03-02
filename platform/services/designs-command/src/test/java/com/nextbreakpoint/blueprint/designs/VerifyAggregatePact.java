@@ -84,24 +84,24 @@ public class VerifyAggregatePact {
         return produceDesignDeleteRequested(new UUID(0L, 3L));
     }
 
-    private String produceDesignInsertRequested(UUID uuid, String data, int levels) {
-        final DesignInsertRequested designInsertRequested = new DesignInsertRequested(TestConstants.USER_ID, TimeUUID.next(), uuid, UUID.randomUUID(), data, levels);
+    private String produceDesignInsertRequested(UUID designId, String data, int levels) {
+        final DesignInsertRequested designInsertRequested = new DesignInsertRequested(designId, TestConstants.USER_ID, TimeUUID.next(), data, levels);
 
         final OutputMessage designInsertRequestedMessage = new DesignInsertRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(Tracing.of(UUID.randomUUID()), designInsertRequested);
 
         return Json.encodeValue(new KafkaRecord(designInsertRequestedMessage.getKey(), PayloadUtils.payloadToMap(designInsertRequestedMessage.getValue()), designInsertRequestedMessage.getTrace().toHeaders()));
     }
 
-    private String produceDesignUpdateRequested(UUID uuid, String data, int levels) {
-        final DesignUpdateRequested designUpdateRequested = new DesignUpdateRequested(TestConstants.USER_ID, TimeUUID.next(), uuid, UUID.randomUUID(), data, levels);
+    private String produceDesignUpdateRequested(UUID designId, String data, int levels) {
+        final DesignUpdateRequested designUpdateRequested = new DesignUpdateRequested(designId, TestConstants.USER_ID, TimeUUID.next(), data, levels);
 
         final OutputMessage designUpdateRequestedMessage = new DesignUpdateRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(Tracing.of(UUID.randomUUID()), designUpdateRequested);
 
         return Json.encodeValue(new KafkaRecord(designUpdateRequestedMessage.getKey(), PayloadUtils.payloadToMap(designUpdateRequestedMessage.getValue()), designUpdateRequestedMessage.getTrace().toHeaders()));
     }
 
-    private String produceDesignDeleteRequested(UUID uuid) {
-        final DesignDeleteRequested designDeleteRequested = new DesignDeleteRequested(TestConstants.USER_ID, TimeUUID.next(), uuid, UUID.randomUUID());
+    private String produceDesignDeleteRequested(UUID designId) {
+        final DesignDeleteRequested designDeleteRequested = new DesignDeleteRequested(designId, TestConstants.USER_ID, TimeUUID.next());
 
         final OutputMessage designDeleteRequestedMessage = new DesignDeleteRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(Tracing.of(UUID.randomUUID()), designDeleteRequested);
 

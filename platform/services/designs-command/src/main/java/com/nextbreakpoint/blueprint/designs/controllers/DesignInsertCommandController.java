@@ -43,9 +43,8 @@ public class DesignInsertCommandController implements Controller<InputMessage, V
 
     private DesignInsertRequested createEvent(DesignInsertCommand command) {
         return DesignInsertRequested.builder()
-                .withEventId(TimeUUID.next())
                 .withDesignId(command.getDesignId())
-                .withChangeId(command.getChangeId())
+                .withCommandId(command.getCommandId())
                 .withUserId(command.getUserId())
                 .withData(command.getData())
                 .withLevels(command.getLevels())

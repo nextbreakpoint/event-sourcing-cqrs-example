@@ -37,11 +37,11 @@ public class CassandraStore implements Store {
     private static final String ERROR_INSERT_MESSAGE = "An error occurred while inserting a message";
     private static final String ERROR_SELECT_MESSAGES = "An error occurred while fetching messages";
 
-    private static final String SELECT_DESIGN = "SELECT DESIGN_USER_ID, DESIGN_EVENT_ID, DESIGN_CHANGE_ID, DESIGN_UUID, DESIGN_REVISION, DESIGN_DATA, DESIGN_CHECKSUM, DESIGN_STATUS, DESIGN_LEVELS, DESIGN_TILES, DESIGN_UPDATED FROM DESIGN WHERE DESIGN_UUID = ?";
-    private static final String INSERT_DESIGN = "INSERT INTO DESIGN (DESIGN_USER_ID, DESIGN_EVENT_ID, DESIGN_CHANGE_ID, DESIGN_UUID, DESIGN_REVISION, DESIGN_DATA, DESIGN_CHECKSUM, DESIGN_STATUS, DESIGN_LEVELS, DESIGN_TILES, DESIGN_UPDATED) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    private static final String SELECT_DESIGN = "SELECT COMMAND_USER, COMMAND_UUID, DESIGN_UUID, DESIGN_REVISION, DESIGN_DATA, DESIGN_CHECKSUM, DESIGN_STATUS, DESIGN_LEVELS, DESIGN_TILES, DESIGN_TIMESTAMP FROM DESIGN WHERE DESIGN_UUID = ?";
+    private static final String INSERT_DESIGN = "INSERT INTO DESIGN (COMMAND_USER, COMMAND_UUID, DESIGN_UUID, DESIGN_REVISION, DESIGN_DATA, DESIGN_CHECKSUM, DESIGN_STATUS, DESIGN_LEVELS, DESIGN_TILES, DESIGN_TIMESTAMP) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     private static final String DELETE_DESIGN = "DELETE FROM DESIGN WHERE DESIGN_UUID = ?";
-    private static final String INSERT_MESSAGE = "INSERT INTO MESSAGE (MESSAGE_UUID, MESSAGE_TOKEN, MESSAGE_TYPE, MESSAGE_VALUE, MESSAGE_SOURCE, MESSAGE_KEY, MESSAGE_TIMESTAMP, MESSAGE_TRACE_ID, MESSAGE_SPAN_ID, MESSAGE_PARENT) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-    private static final String SELECT_MESSAGES = "SELECT MESSAGE_UUID, MESSAGE_TOKEN, MESSAGE_TYPE, MESSAGE_VALUE, MESSAGE_SOURCE, MESSAGE_KEY, MESSAGE_TIMESTAMP, MESSAGE_TRACE_ID, MESSAGE_SPAN_ID, MESSAGE_PARENT FROM MESSAGE WHERE MESSAGE_KEY = ? AND MESSAGE_TOKEN <= ? AND MESSAGE_TOKEN > ?";
+    private static final String INSERT_MESSAGE = "INSERT INTO MESSAGE (MESSAGE_UUID, MESSAGE_TOKEN, MESSAGE_TYPE, MESSAGE_VALUE, MESSAGE_SOURCE, MESSAGE_KEY, MESSAGE_TIMESTAMP, TRACING_TRACE_ID, TRACING_SPAN_ID, TRACING_PARENT_ID) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    private static final String SELECT_MESSAGES = "SELECT MESSAGE_UUID, MESSAGE_TOKEN, MESSAGE_TYPE, MESSAGE_VALUE, MESSAGE_SOURCE, MESSAGE_KEY, MESSAGE_TIMESTAMP, TRACING_TRACE_ID, TRACING_SPAN_ID, TRACING_PARENT_ID FROM MESSAGE WHERE MESSAGE_KEY = ? AND MESSAGE_TOKEN <= ? AND MESSAGE_TOKEN > ?";
 
     private final String keyspace;
     private final Supplier<CassandraClient> supplier;
@@ -159,21 +159,20 @@ public class CassandraStore implements Store {
     }
 
     private Design convertRowToDesign(Row row) {
-        final UUID userId = row.getUuid("DESIGN_USER_ID");
-        final UUID eventId = row.getUuid("DESIGN_EVENT_ID");
-        final UUID changeId = row.getUuid("DESIGN_CHANGE_ID");
+        final UUID userId = row.getUuid("COMMAND_USER");
+        final UUID changeId = row.getUuid("COMMAND_UUID");
         final UUID designId = row.getUuid("DESIGN_UUID");
         final String data = row.getString("DESIGN_DATA");
         final String checksum = row.getString("DESIGN_CHECKSUM");
         final String status = row.getString("DESIGN_STATUS");
         final int levels = row.getInt("DESIGN_LEVELS");
-        final Instant updated = row.getInstant("DESIGN_UPDATED");
+        final Instant updated = row.getInstant("DESIGN_TIMESTAMP");
         final String revision = row.getString("DESIGN_REVISION");
         final Map<Integer, UdtValue> tilesMap = row.getMap("DESIGN_TILES", Integer.class, UdtValue.class);
         final Map<Integer, Tiles> tilesList = tilesMap != null ? tilesMap.entrySet().stream()
                 .map(entry -> convertUDTToTiles(entry.getKey(), entry.getValue()))
                 .collect(Collectors.toMap(Tiles::getLevel, Function.identity())) : Map.of();
-        return new Design(userId, eventId, designId, changeId, revision, data, checksum, status, levels, tilesList, toDate(updated));
+        return new Design(designId, userId, changeId, data, checksum, revision, status, levels, tilesList, toDate(updated));
     }
 
     private InputMessage convertRowToMessage(Row row) {
@@ -183,9 +182,9 @@ public class CassandraStore implements Store {
         final String value = row.getString("MESSAGE_VALUE");
         final String source = row.getString("MESSAGE_SOURCE");
         final UUID uuid = row.getUuid("MESSAGE_UUID");
-        final UUID traceId = row.getUuid("MESSAGE_TRACE_ID");
-        final UUID spanId = row.getUuid("MESSAGE_SPAN_ID");
-        final UUID parent = row.getUuid("MESSAGE_PARENT");
+        final UUID traceId = row.getUuid("TRACING_TRACE_ID");
+        final UUID spanId = row.getUuid("TRACING_SPAN_ID");
+        final UUID parent = row.getUuid("TRACING_PARENT_ID");
         final Instant timestamp = row.getInstant("MESSAGE_TIMESTAMP");
         final Payload payload = new Payload(uuid, token, type, value, source);
         final Tracing trace = new Tracing(traceId, spanId, parent);
@@ -226,8 +225,7 @@ public class CassandraStore implements Store {
 
         return new Object[] {
                 design.getUserId(),
-                design.getEventId(),
-                design.getChangeId(),
+                design.getCommandId(),
                 design.getDesignId(),
                 design.getRevision(),
                 design.getData(),
@@ -235,7 +233,7 @@ public class CassandraStore implements Store {
                 design.getStatus(),
                 design.getLevels(),
                 levelsMap,
-                design.getModified().toInstant(ZoneOffset.UTC)
+                design.getLastModified().toInstant(ZoneOffset.UTC)
         };
     }
 

@@ -14,17 +14,14 @@ import java.util.UUID;
 public class DesignAggregateUpdateRequested {
     public static final String TYPE = "design-aggregate-update-requested-v1";
 
-    private final UUID eventId;
     private final UUID designId;
     private final String revision;
 
     @JsonCreator
     public DesignAggregateUpdateRequested(
-        @JsonProperty("eventId") UUID eventId,
-        @JsonProperty("designId") UUID designId,
-        @JsonProperty("revision") String revision
+            @JsonProperty("designId") UUID designId,
+            @JsonProperty("revision") String revision
     ) {
-        this.eventId = Objects.requireNonNull(eventId);
         this.designId = Objects.requireNonNull(designId);
         this.revision = Objects.requireNonNull(revision);
     }

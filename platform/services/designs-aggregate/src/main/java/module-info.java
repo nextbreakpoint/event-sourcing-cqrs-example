@@ -16,6 +16,7 @@ module com.nextbreakpoint.blueprint.designs.aggregate {
     requires org.apache.logging.log4j;
     requires java.sql;
     requires com.datastax.oss.driver.core;
+    requires static lombok;
     exports com.nextbreakpoint.blueprint.designs.model to com.fasterxml.jackson.databind;
     opens com.nextbreakpoint.blueprint.designs.model to com.fasterxml.jackson.databind;
 }

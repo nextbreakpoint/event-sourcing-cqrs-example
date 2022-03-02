@@ -9,7 +9,6 @@ import au.com.dius.pact.core.model.PactSpecVersion;
 import au.com.dius.pact.core.model.annotations.Pact;
 import au.com.dius.pact.core.model.messaging.MessagePact;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
-import com.nextbreakpoint.blueprint.common.core.TimeUUID;
 import com.nextbreakpoint.blueprint.common.core.Tracing;
 import com.nextbreakpoint.blueprint.common.events.DesignInsertRequested;
 import com.nextbreakpoint.blueprint.common.events.mappers.DesignInsertRequestedOutputMapper;
@@ -50,7 +49,7 @@ public class PactConsumerTests {
         PactDslJsonBody event1 = new PactDslJsonBody()
                 .uuid("designId", uuid)
                 .uuid("userId", TestConstants.USER_ID)
-                .stringMatcher("changeId", TestConstants.UUID6_REGEXP)
+                .stringMatcher("commandId", TestConstants.UUID6_REGEXP)
                 .stringMatcher("eventId", TestConstants.UUID1_REGEXP)
                 .stringValue("data", TestConstants.JSON_1)
                 .numberValue("levels", TestConstants.LEVELS);
@@ -86,7 +85,7 @@ public class PactConsumerTests {
         PactDslJsonBody event1 = new PactDslJsonBody()
                 .uuid("designId", uuid)
                 .uuid("userId", TestConstants.USER_ID)
-                .stringMatcher("changeId", TestConstants.UUID6_REGEXP)
+                .stringMatcher("commandId", TestConstants.UUID6_REGEXP)
                 .stringMatcher("eventId", TestConstants.UUID1_REGEXP)
                 .stringValue("data", TestConstants.JSON_1)
                 .numberValue("levels", TestConstants.LEVELS);
@@ -111,7 +110,7 @@ public class PactConsumerTests {
         PactDslJsonBody event2 = new PactDslJsonBody()
                 .uuid("designId", uuid)
                 .uuid("userId", TestConstants.USER_ID)
-                .stringMatcher("changeId", TestConstants.UUID6_REGEXP)
+                .stringMatcher("commandId", TestConstants.UUID6_REGEXP)
                 .stringMatcher("eventId", TestConstants.UUID1_REGEXP)
                 .stringValue("data", TestConstants.JSON_2)
                 .numberValue("levels", TestConstants.LEVELS);
@@ -149,7 +148,7 @@ public class PactConsumerTests {
         PactDslJsonBody event1 = new PactDslJsonBody()
                 .uuid("designId", uuid)
                 .uuid("userId", TestConstants.USER_ID)
-                .stringMatcher("changeId", TestConstants.UUID6_REGEXP)
+                .stringMatcher("commandId", TestConstants.UUID6_REGEXP)
                 .stringMatcher("eventId", TestConstants.UUID1_REGEXP)
                 .stringValue("data", TestConstants.JSON_1)
                 .numberValue("levels", TestConstants.LEVELS);
@@ -174,7 +173,7 @@ public class PactConsumerTests {
         PactDslJsonBody event2 = new PactDslJsonBody()
                 .uuid("designId", uuid)
                 .uuid("userId", TestConstants.USER_ID)
-                .stringMatcher("changeId", TestConstants.UUID6_REGEXP)
+                .stringMatcher("commandId", TestConstants.UUID6_REGEXP)
                 .stringMatcher("eventId", TestConstants.UUID1_REGEXP);
 
         PactDslJsonBody payload2 = new PactDslJsonBody()
@@ -397,7 +396,7 @@ public class PactConsumerTests {
     public void shouldUpdateTheDesignWhenReceivingATileRenderCompletedMessage(MessagePact pact) {
         assertThat(pact.getMessages()).hasSize(5);
 
-        final DesignInsertRequested designInsertRequested = new DesignInsertRequested(TestConstants.USER_ID, TimeUUID.next(), new UUID(0L, 4L), UUID.randomUUID(), TestConstants.JSON_1, TestConstants.LEVELS);
+        final DesignInsertRequested designInsertRequested = new DesignInsertRequested(new UUID(0L, 4L), TestConstants.USER_ID, UUID.randomUUID(), TestConstants.JSON_1, TestConstants.LEVELS);
 
         final OutputMessage designInsertRequestedMessage = new DesignInsertRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(Tracing.of(UUID.randomUUID()), designInsertRequested);
 

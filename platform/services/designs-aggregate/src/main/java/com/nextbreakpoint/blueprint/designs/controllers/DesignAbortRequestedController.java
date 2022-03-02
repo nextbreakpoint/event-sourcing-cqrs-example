@@ -69,7 +69,6 @@ public class DesignAbortRequestedController implements Controller<InputMessage, 
 
     private TileRenderAborted createEvent(DesignAbortRequested event, Design design, Tile tile) {
         return TileRenderAborted.builder()
-                .withEventId(TimeUUID.next())
                 .withDesignId(event.getDesignId())
                 .withRevision(design.getRevision())
                 .withChecksum(event.getChecksum())

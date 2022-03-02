@@ -9,7 +9,6 @@ import com.nextbreakpoint.blueprint.designs.aggregate.DesignAggregate;
 import rx.Single;
 
 import java.util.Objects;
-import java.util.UUID;
 
 public class DesignUpdateRequestedController implements Controller<InputMessage, Void> {
     private final Mapper<InputMessage, DesignUpdateRequested> inputMapper;
@@ -44,7 +43,6 @@ public class DesignUpdateRequestedController implements Controller<InputMessage,
 
     private DesignAggregateUpdateRequested createEvent(DesignUpdateRequested event, String revision) {
         return DesignAggregateUpdateRequested.builder()
-                .withEventId(TimeUUID.next())
                 .withDesignId(event.getDesignId())
                 .withRevision(revision)
                 .build();

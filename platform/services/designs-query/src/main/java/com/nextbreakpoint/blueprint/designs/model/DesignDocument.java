@@ -35,7 +35,7 @@ public class DesignDocument {
                 .withUuid(design.getDesignId())
                 .withJson(design.getData())
                 .withChecksum(design.getChecksum())
-                .withModified(design.getModified())
+                .withModified(design.getLastModified())
                 .build();
     }
 }

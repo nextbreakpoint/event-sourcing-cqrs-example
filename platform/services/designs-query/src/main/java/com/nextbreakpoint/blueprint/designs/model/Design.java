@@ -13,100 +13,39 @@ import java.util.UUID;
 @Data
 @Builder(access = AccessLevel.PUBLIC, setterPrefix = "with")
 public class Design {
-    private final UUID eventId;
     private final UUID designId;
+    private final UUID userId;
+    private final UUID commandId;
     private final String revision;
     private final String data;
     private final String checksum;
     private final String status;
     private final int levels;
     private final List<Tiles> tiles;
-    private final String modified;
+    private final String lastModified;
 
     @JsonCreator
     public Design(
-        @JsonProperty("eventId") UUID eventId,
-        @JsonProperty("designId") UUID designId,
-        @JsonProperty("revision") String revision,
-        @JsonProperty("data") String data,
-        @JsonProperty("checksum") String checksum,
-        @JsonProperty("status") String status,
-        @JsonProperty("levels") int levels,
-        @JsonProperty("tiles") List<Tiles> tiles,
-        @JsonProperty("modified") String modified
+            @JsonProperty("designId") UUID designId,
+            @JsonProperty("userId") UUID userId,
+            @JsonProperty("commandId") UUID commandId,
+            @JsonProperty("data") String data,
+            @JsonProperty("checksum") String checksum,
+            @JsonProperty("revision") String revision,
+            @JsonProperty("status") String status,
+            @JsonProperty("levels") int levels,
+            @JsonProperty("tiles") List<Tiles> tiles,
+            @JsonProperty("lastModified") String lastModified
     ) {
-        this.eventId = Objects.requireNonNull(eventId);
         this.designId = Objects.requireNonNull(designId);
-        this.revision = Objects.requireNonNull(revision);
+        this.userId = Objects.requireNonNull(userId);
+        this.commandId = Objects.requireNonNull(commandId);
         this.data = Objects.requireNonNull(data);
         this.checksum = Objects.requireNonNull(checksum);
+        this.revision = Objects.requireNonNull(revision);
         this.status = Objects.requireNonNull(status);
         this.levels = levels;
         this.tiles = Objects.requireNonNull(tiles);
-        this.modified = Objects.requireNonNull(modified);
-    }
-
-    public UUID getEventId() {
-        return eventId;
-    }
-
-    public UUID getDesignId() {
-        return designId;
-    }
-
-    public String getRevision() {
-        return revision;
-    }
-
-    public String getData() {
-        return data;
-    }
-
-    public String getChecksum() {
-        return checksum;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public int getLevels() {
-        return levels;
-    }
-
-    public List<Tiles> getTiles() {
-        return tiles;
-    }
-
-    public String getModified() {
-        return modified;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Design that = (Design) o;
-        return getRevision() == that.getRevision() && getLevels() == that.getLevels() && Objects.equals(getEventId(), that.getEventId()) && Objects.equals(getDesignId(), that.getDesignId()) && Objects.equals(getData(), that.getData()) && Objects.equals(getChecksum(), that.getChecksum()) && Objects.equals(getStatus(), that.getStatus()) && Objects.equals(getModified(), that.getModified()) && Objects.equals(getTiles(), that.getTiles());
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(getEventId(), getDesignId(), getRevision(), getData(), getChecksum(), getStatus(), getLevels(), getModified(), getTiles());
-    }
-
-    @Override
-    public String toString() {
-        return "Design{" +
-                "eventId=" + eventId +
-                ", designId=" + designId +
-                ", revision=" + revision +
-                ", json='" + data + '\'' +
-                ", checksum='" + checksum + '\'' +
-                ", status='" + status + '\'' +
-                ", levels=" + levels +
-                ", tiles=" + tiles +
-                ", modified=" + modified +
-                '}';
+        this.lastModified = Objects.requireNonNull(lastModified);
     }
 }

@@ -11,7 +11,6 @@ module com.nextbreakpoint.blueprint.designs.query {
     requires io.vertx.tracing.opentracing;
     requires io.vertx.client.kafka;
     requires vertx.rx.java;
-    requires static lombok;
     requires rxjava;
     requires com.fasterxml.jackson.core;
     requires com.fasterxml.jackson.databind;
@@ -27,6 +26,7 @@ module com.nextbreakpoint.blueprint.designs.query {
     requires software.amazon.awssdk.services.s3;
     requires elasticsearch.rest.client;
     requires elasticsearch.java;
+    requires static lombok;
     requires org.apache.httpcomponents.httpcore;
     opens com.nextbreakpoint.blueprint.designs.model to com.fasterxml.jackson.databind;
 }

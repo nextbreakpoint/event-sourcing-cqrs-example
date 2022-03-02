@@ -12,22 +12,22 @@ import java.util.Objects;
 @Builder(access = AccessLevel.PUBLIC, setterPrefix = "with")
 public class DesignChangedNotification {
     private final String key;
-    private final long timestamp;
+    private final String revision;
 
     @JsonCreator
     public DesignChangedNotification(
         @JsonProperty("key") String key,
-        @JsonProperty("timestamp") long timestamp
+        @JsonProperty("revision") String revision
     ) {
         this.key = Objects.requireNonNull(key);
-        this.timestamp = timestamp;
+        this.revision = Objects.requireNonNull(revision);
     }
 
     public String getKey() {
         return key;
     }
 
-    public long getTimestamp() {
-        return timestamp;
+    public String getRevision() {
+        return revision;
     }
 }

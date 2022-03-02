@@ -28,7 +28,7 @@ public class DesignDeleteRequestedController implements Controller<InputMessage,
         return Single.just(message)
                 .flatMap(this::onMessageReceived)
                 .map(inputMapper::transform)
-                .flatMap(event -> onDesignDeleteRequested(event, message.getValue().getToken()))
+                .flatMap(event -> onDesignDeleteRequested(event, message.getToken()))
                 .map(event -> outputMapper.transform(Tracing.from(message.getTrace()), event))
                 .flatMap(emitter::onNext);
     }

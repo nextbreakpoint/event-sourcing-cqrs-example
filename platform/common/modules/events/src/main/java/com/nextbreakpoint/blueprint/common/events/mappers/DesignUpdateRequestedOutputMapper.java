@@ -19,7 +19,6 @@ public class DesignUpdateRequestedOutputMapper implements MessageMapper<DesignUp
                 event.getDesignId().toString(),
                 new Payload(
                         UUID.randomUUID(),
-                        TimeUUID.next().toString(),
                         DesignUpdateRequested.TYPE,
                         Json.encodeValue(event),
                         messageSource

@@ -40,8 +40,8 @@ public class CassandraStore implements Store {
     private static final String SELECT_DESIGN = "SELECT COMMAND_USER, COMMAND_UUID, DESIGN_UUID, DESIGN_REVISION, DESIGN_DATA, DESIGN_CHECKSUM, DESIGN_STATUS, DESIGN_LEVELS, DESIGN_TILES, DESIGN_TIMESTAMP FROM DESIGN WHERE DESIGN_UUID = ?";
     private static final String INSERT_DESIGN = "INSERT INTO DESIGN (COMMAND_USER, COMMAND_UUID, DESIGN_UUID, DESIGN_REVISION, DESIGN_DATA, DESIGN_CHECKSUM, DESIGN_STATUS, DESIGN_LEVELS, DESIGN_TILES, DESIGN_TIMESTAMP) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     private static final String DELETE_DESIGN = "DELETE FROM DESIGN WHERE DESIGN_UUID = ?";
-    private static final String INSERT_MESSAGE = "INSERT INTO MESSAGE (MESSAGE_UUID, MESSAGE_TOKEN, MESSAGE_TYPE, MESSAGE_VALUE, MESSAGE_SOURCE, MESSAGE_KEY, MESSAGE_TIMESTAMP, TRACING_TRACE_ID, TRACING_SPAN_ID, TRACING_PARENT_ID) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-    private static final String SELECT_MESSAGES = "SELECT MESSAGE_UUID, MESSAGE_TOKEN, MESSAGE_TYPE, MESSAGE_VALUE, MESSAGE_SOURCE, MESSAGE_KEY, MESSAGE_TIMESTAMP, TRACING_TRACE_ID, TRACING_SPAN_ID, TRACING_PARENT_ID FROM MESSAGE WHERE MESSAGE_KEY = ? AND MESSAGE_TOKEN <= ? AND MESSAGE_TOKEN > ?";
+    private static final String INSERT_MESSAGE = "INSERT INTO MESSAGE (MESSAGE_TOKEN, MESSAGE_KEY, MESSAGE_UUID, MESSAGE_TYPE, MESSAGE_VALUE, MESSAGE_SOURCE, MESSAGE_TIMESTAMP, TRACING_TRACE_ID, TRACING_SPAN_ID, TRACING_PARENT_ID) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    private static final String SELECT_MESSAGES = "SELECT MESSAGE_TOKEN, MESSAGE_KEY, MESSAGE_UUID, MESSAGE_TYPE, MESSAGE_VALUE, MESSAGE_SOURCE, MESSAGE_TIMESTAMP, TRACING_TRACE_ID, TRACING_SPAN_ID, TRACING_PARENT_ID FROM MESSAGE WHERE MESSAGE_KEY = ? AND MESSAGE_TOKEN <= ? AND MESSAGE_TOKEN > ?";
 
     private final String keyspace;
     private final Supplier<CassandraClient> supplier;
@@ -176,20 +176,20 @@ public class CassandraStore implements Store {
     }
 
     private InputMessage convertRowToMessage(Row row) {
-        final String key = row.getString("MESSAGE_KEY");
         final String token  = row.getString("MESSAGE_TOKEN");
+        final String key = row.getString("MESSAGE_KEY");
+        final UUID uuid = row.getUuid("MESSAGE_UUID");
         final String type = row.getString("MESSAGE_TYPE");
         final String value = row.getString("MESSAGE_VALUE");
         final String source = row.getString("MESSAGE_SOURCE");
-        final UUID uuid = row.getUuid("MESSAGE_UUID");
         final UUID traceId = row.getUuid("TRACING_TRACE_ID");
         final UUID spanId = row.getUuid("TRACING_SPAN_ID");
         final UUID parent = row.getUuid("TRACING_PARENT_ID");
         final Instant timestamp = row.getInstant("MESSAGE_TIMESTAMP");
-        final Payload payload = new Payload(uuid, token, type, value, source);
+        final Payload payload = new Payload(uuid, type, value, source);
         final Tracing trace = new Tracing(traceId, spanId, parent);
         final long messageTimestamp = timestamp != null ? timestamp.toEpochMilli() : 0L;
-        return new InputMessage(key, payload, trace, messageTimestamp);
+        return new InputMessage(key, token, payload, trace, messageTimestamp);
     }
 
     private LocalDateTime toDate(Instant instant) {
@@ -202,12 +202,12 @@ public class CassandraStore implements Store {
 
     private Object[] makeInsertMessageParams(InputMessage message) {
         return new Object[] {
+                message.getToken(),
+                message.getKey(),
                 message.getValue().getUuid(),
-                message.getValue().getToken(),
                 message.getValue().getType(),
                 message.getValue().getData(),
                 message.getValue().getSource(),
-                message.getKey(),
                 Instant.ofEpochMilli(message.getTimestamp()),
                 message.getTrace().getTraceId(),
                 message.getTrace().getSpanId(),

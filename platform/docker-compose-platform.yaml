@@ -2,7 +2,7 @@ version: '3.8'
 services:
   accounts:
     restart: unless-stopped
-    image: integration/accounts:1.0.0-wip2-2afee9a-1646046583 
+    image: integration/accounts:1.0.0-wip2-17d5050-1646244085 
     environment:
       JAEGER_SERVICE_NAME: accounts
       JAEGER_AGENT_HOST: host.docker.internal
@@ -16,6 +16,7 @@ services:
       DATABASE_USERNAME: verticle
       DATABASE_PASSWORD: password
       DEBUG_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:35110
+      DEBUG_LEVEL: ${DEBUG_LEVEL:-INFO}
     ports:
       - target: 30110
         published: 30110
@@ -33,7 +34,7 @@ services:
       - ./secrets/keystore_auth.jceks:/secrets/keystore_auth.jceks
   authentication:
     restart: unless-stopped
-    image: integration/authentication:1.0.0-wip2-2afee9a-1646046583 
+    image: integration/authentication:1.0.0-wip2-17d5050-1646244085 
     environment:
       JAEGER_SERVICE_NAME: authentication
       JAEGER_AGENT_HOST: host.docker.internal
@@ -49,6 +50,7 @@ services:
       GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET}
       ADMIN_EMAIL: ${ADMIN_EMAIL}
       DEBUG_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:35101
+      DEBUG_LEVEL: ${DEBUG_LEVEL:-INFO}
     ports:
       - target: 30101
         published: 30101
@@ -68,7 +70,7 @@ services:
       - ./secrets/truststore_client.jks:/secrets/truststore_client.jks
   designs-query:
     restart: unless-stopped
-    image: integration/designs-query:1.0.0-wip2-2afee9a-1646046583 
+    image: integration/designs-query:1.0.0-wip2-17d5050-1646244085 
     environment:
       JAEGER_SERVICE_NAME: designs-query
       JAEGER_AGENT_HOST: host.docker.internal
@@ -89,6 +91,7 @@ services:
       KAFKA_PORT: 9094
       EVENTS_TOPIC: events
       DEBUG_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:35120
+      DEBUG_LEVEL: ${DEBUG_LEVEL:-INFO}
     ports:
       - target: 30120
         published: 30120
@@ -106,7 +109,7 @@ services:
       - ./secrets/keystore_server.jks:/secrets/keystore_server.jks
   designs-command:
     restart: unless-stopped
-    image: integration/designs-command:1.0.0-wip2-2afee9a-1646046583 
+    image: integration/designs-command:1.0.0-wip2-17d5050-1646244085 
     environment:
       JAEGER_SERVICE_NAME: designs-command
       JAEGER_AGENT_HOST: host.docker.internal
@@ -124,6 +127,7 @@ services:
       COMMANDS_TOPIC: commands
       EVENTS_TOPIC: events
       DEBUG_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:35121
+      DEBUG_LEVEL: ${DEBUG_LEVEL:-INFO}
     ports:
       - target: 30121
         published: 30121
@@ -141,7 +145,7 @@ services:
       - ./secrets/keystore_server.jks:/secrets/keystore_server.jks
   designs-aggregate:
     restart: unless-stopped
-    image: integration/designs-aggregate:1.0.0-wip2-2afee9a-1646046583 
+    image: integration/designs-aggregate:1.0.0-wip2-17d5050-1646244085 
     environment:
       JAEGER_SERVICE_NAME: designs-aggregate
       JAEGER_AGENT_HOST: host.docker.internal
@@ -159,6 +163,7 @@ services:
       EVENTS_TOPIC: events
       RENDER_TOPIC: render
       DEBUG_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:35122
+      DEBUG_LEVEL: ${DEBUG_LEVEL:-INFO}
     ports:
       - target: 30122
         published: 30122
@@ -176,7 +181,7 @@ services:
       - ./secrets/keystore_server.jks:/secrets/keystore_server.jks
   designs-notify:
     restart: unless-stopped
-    image: integration/designs-notify:1.0.0-wip2-2afee9a-1646046583 
+    image: integration/designs-notify:1.0.0-wip2-17d5050-1646244085
     environment:
       JAEGER_SERVICE_NAME: designs-notify
       JAEGER_AGENT_HOST: host.docker.internal
@@ -190,6 +195,7 @@ services:
       KAFKA_PORT: 9094
       EVENTS_TOPIC: events
       DEBUG_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:35123
+      DEBUG_LEVEL: ${DEBUG_LEVEL:-INFO}
     ports:
       - target: 30123
         published: 30123
@@ -207,7 +213,7 @@ services:
       - ./secrets/keystore_server.jks:/secrets/keystore_server.jks
   designs-render1:
     restart: unless-stopped
-    image: integration/designs-render:1.0.0-wip2-2afee9a-1646046583 
+    image: integration/designs-render:1.0.0-wip2-17d5050-1646244085 
     environment:
       JAEGER_SERVICE_NAME: designs-render
       JAEGER_AGENT_HOST: host.docker.internal
@@ -226,6 +232,7 @@ services:
       RENDER_TOPIC: render
       EVENTS_TOPIC: events
       DEBUG_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:35124
+      DEBUG_LEVEL: ${DEBUG_LEVEL:-INFO}
     ports:
       - target: 30124
         published: 30124
@@ -243,7 +250,7 @@ services:
       - ./secrets/keystore_server.jks:/secrets/keystore_server.jks
   designs-render2:
     restart: unless-stopped
-    image: integration/designs-render:1.0.0-wip2-2afee9a-1646046583 
+    image: integration/designs-render:1.0.0-wip2-17d5050-1646244085 
     environment:
       JAEGER_SERVICE_NAME: designs-render
       JAEGER_AGENT_HOST: host.docker.internal
@@ -262,6 +269,7 @@ services:
       RENDER_TOPIC: render
       EVENTS_TOPIC: events
       DEBUG_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:35125
+      DEBUG_LEVEL: ${DEBUG_LEVEL:-INFO}
     ports:
       - target: 30125
         published: 30125
@@ -279,7 +287,7 @@ services:
       - ./secrets/keystore_server.jks:/secrets/keystore_server.jks
   designs-render3:
     restart: unless-stopped
-    image: integration/designs-render:1.0.0-wip2-2afee9a-1646046583 
+    image: integration/designs-render:1.0.0-wip2-17d5050-1646244085 
     environment:
       JAEGER_SERVICE_NAME: designs-render
       JAEGER_AGENT_HOST: host.docker.internal
@@ -298,6 +306,7 @@ services:
       RENDER_TOPIC: render
       EVENTS_TOPIC: events
       DEBUG_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:35126
+      DEBUG_LEVEL: ${DEBUG_LEVEL:-INFO}
     ports:
       - target: 30126
         published: 30126
@@ -315,7 +324,7 @@ services:
       - ./secrets/keystore_server.jks:/secrets/keystore_server.jks
   designs-render4:
     restart: unless-stopped
-    image: integration/designs-render:1.0.0-wip2-2afee9a-1646046583 
+    image: integration/designs-render:1.0.0-wip2-17d5050-1646244085 
     environment:
       JAEGER_SERVICE_NAME: designs-render
       JAEGER_AGENT_HOST: host.docker.internal
@@ -334,6 +343,7 @@ services:
       RENDER_TOPIC: render
       EVENTS_TOPIC: events
       DEBUG_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:35127
+      DEBUG_LEVEL: ${DEBUG_LEVEL:-INFO}
     ports:
       - target: 30127
         published: 30127
@@ -351,7 +361,7 @@ services:
       - ./secrets/keystore_server.jks:/secrets/keystore_server.jks
   gateway:
     restart: unless-stopped
-    image: integration/gateway:1.0.0-wip2-2afee9a-1646046583 
+    image: integration/gateway:1.0.0-wip2-17d5050-1646244085 
     environment:
       JAEGER_SERVICE_NAME: gateway
       JAEGER_AGENT_HOST: host.docker.internal
@@ -366,6 +376,7 @@ services:
       DESIGNS_COMMAND_URL: https://designs-command:30121
       DESIGNS_WATCH_URL: https://designs-notify:30123
       DEBUG_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:35100
+      DEBUG_LEVEL: ${DEBUG_LEVEL:-INFO}
     ports:
       - target: 30100
         published: 30100
@@ -385,7 +396,7 @@ services:
       - ./secrets/truststore_client.jks:/secrets/truststore_client.jks
   frontend:
     restart: unless-stopped
-    image: integration/frontend:1.0.0-wip2-2afee9a-1646046583 
+    image: integration/frontend:1.0.0-wip2-17d5050-1646244085 
     environment:
       CONFIG_PATH: /etc/config.json
       SECRETS_PATH: /secrets

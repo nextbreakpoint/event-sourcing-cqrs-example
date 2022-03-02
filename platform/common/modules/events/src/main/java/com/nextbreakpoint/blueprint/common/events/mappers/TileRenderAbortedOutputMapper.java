@@ -19,7 +19,6 @@ public class TileRenderAbortedOutputMapper implements MessageMapper<TileRenderAb
                 event.getDesignId().toString(),
                 new Payload(
                         UUID.randomUUID(),
-                        TimeUUID.next().toString(),
                         TileRenderAborted.TYPE,
                         Json.encodeValue(event),
                         messageSource

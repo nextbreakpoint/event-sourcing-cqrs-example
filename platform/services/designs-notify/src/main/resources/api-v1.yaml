@@ -19,12 +19,12 @@ paths:
       summary: Retrieve sse events url for a single design
       operationId: watchDesign
       parameters:
-        - name: token
+        - name: timestamp
           in: query
           description: token of initial event
           required: true
           schema:
-            type: string
+            type: integer
         - name: designId
           in: path
           description: uuid of design to watch
@@ -44,12 +44,12 @@ paths:
       summary: Retrieve sse events url for the designs collection
       operationId: watchDesigns
       parameters:
-        - name: token
+        - name: timestamp
           in: query
           description: token of initial event
           required: true
           schema:
-            type: string
+            type: integer
       responses:
         200:
           description: Started watching
@@ -62,12 +62,12 @@ paths:
       summary: Receive sse events related to a single design
       operationId: sseDesign
       parameters:
-        - name: token
+        - name: timestamp
           in: query
           description: token of initial event
           required: true
           schema:
-            type: string
+            type: integer
         - name: designId
           in: path
           description: uuid of design to watch
@@ -87,12 +87,12 @@ paths:
       summary: Receive sse events related the designs collection
       operationId: sseDesigns
       parameters:
-        - name: token
+        - name: timestamp
           in: query
           description: token of initial event
           required: true
           schema:
-            type: string
+            type: integer
       responses:
         200:
           description: Started watching

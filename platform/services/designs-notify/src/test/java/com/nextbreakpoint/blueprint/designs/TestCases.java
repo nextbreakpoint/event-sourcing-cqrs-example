@@ -111,7 +111,7 @@ public class TestCases {
                     System.out.println(notification);
                     notifications.add(notification);
                 })
-                .connect("/v1/sse/designs?token=" + TestConstants.REVISION_0, null, result -> {
+                .connect("/v1/sse/designs?timestamp=0", null, result -> {
                     final SSENotification notification = new SSENotification("CONNECT", result.succeeded() ? "SUCCESS" : "FAILURE");
                     System.out.println(notification);
                     notifications.add(notification);
@@ -135,7 +135,6 @@ public class TestCases {
                         String openData = events.get(1).body.split("\n")[1];
                         Map<String, Object> openObject = Json.decodeValue(openData, HashMap.class);
                         assertThat(openObject.get("session")).isNotNull();
-                        assertThat(openObject.get("revision")).isNotNull();
                         String updateData = events.get(2).body.split("\n")[1];
                         Map<String, Object> updateObject = Json.decodeValue(updateData, HashMap.class);
                         assertThat(updateObject.get("revision")).isNotNull();
@@ -169,7 +168,7 @@ public class TestCases {
                     System.out.println(notification);
                     notifications.add(notification);
                 })
-                .connect("/v1/sse/designs/" + designId + "?token=" + TestConstants.REVISION_0, null, result -> {
+                .connect("/v1/sse/designs/" + designId + "?timestamp=0", null, result -> {
                     final SSENotification notification = new SSENotification("CONNECT", result.succeeded() ? "SUCCESS" : "FAILURE");
                     System.out.println(notification);
                     notifications.add(notification);
@@ -192,7 +191,6 @@ public class TestCases {
                         String openData = events.get(1).body.split("\n")[1];
                         Map<String, Object> openObject = Json.decodeValue(openData, HashMap.class);
                         assertThat(openObject.get("session")).isNotNull();
-                        assertThat(openObject.get("revision")).isNotNull();
                         String updateData = events.get(2).body.split("\n")[1];
                         Map<String, Object> updateObject = Json.decodeValue(updateData, HashMap.class);
                         assertThat(updateObject.get("revision")).isNotNull();

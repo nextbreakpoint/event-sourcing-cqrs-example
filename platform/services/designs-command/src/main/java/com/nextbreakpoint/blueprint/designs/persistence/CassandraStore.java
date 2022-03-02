@@ -18,8 +18,8 @@ public class CassandraStore implements Store {
 
     private static final String ERROR_INSERT_MESSAGE = "An error occurred while inserting a message";
 
-    private static final String INSERT_MESSAGE = "INSERT INTO MESSAGE (MESSAGE_UUID, MESSAGE_TOKEN, MESSAGE_TYPE, MESSAGE_VALUE, MESSAGE_SOURCE, MESSAGE_KEY, MESSAGE_TIMESTAMP, TRACING_TRACE_ID, TRACING_SPAN_ID, TRACING_PARENT_ID) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-    private static final String SELECT_MESSAGES = "SELECT MESSAGE_UUID, MESSAGE_TOKEN, MESSAGE_TYPE, MESSAGE_VALUE, MESSAGE_SOURCE, MESSAGE_KEY, MESSAGE_TIMESTAMP, TRACING_TRACE_ID, TRACING_SPAN_ID, TRACING_PARENT_ID FROM MESSAGE WHERE MESSAGE_KEY = ? AND MESSAGE_TOKEN <= ? AND MESSAGE_TOKEN > ?";
+    private static final String INSERT_MESSAGE = "INSERT INTO MESSAGE (MESSAGE_TOKEN, MESSAGE_KEY, MESSAGE_UUID, MESSAGE_TYPE, MESSAGE_VALUE, MESSAGE_SOURCE, MESSAGE_TIMESTAMP, TRACING_TRACE_ID, TRACING_SPAN_ID, TRACING_PARENT_ID) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    private static final String SELECT_MESSAGES = "SELECT MESSAGE_TOKEN, MESSAGE_KEY, MESSAGE_UUID, MESSAGE_TYPE, MESSAGE_VALUE, MESSAGE_SOURCE, MESSAGE_TIMESTAMP, TRACING_TRACE_ID, TRACING_SPAN_ID, TRACING_PARENT_ID FROM MESSAGE WHERE MESSAGE_KEY = ? AND MESSAGE_TOKEN <= ? AND MESSAGE_TOKEN > ?";
 
     private final String keyspace;
     private final Supplier<CassandraClient> supplier;
@@ -62,12 +62,12 @@ public class CassandraStore implements Store {
 
     private Object[] makeInsertMessageParams(InputMessage message) {
         return new Object[] {
+                message.getToken(),
+                message.getKey(),
                 message.getValue().getUuid(),
-                message.getValue().getToken(),
                 message.getValue().getType(),
                 message.getValue().getData(),
                 message.getValue().getSource(),
-                message.getKey(),
                 Instant.ofEpochMilli(message.getTimestamp()),
                 message.getTrace().getTraceId(),
                 message.getTrace().getSpanId(),

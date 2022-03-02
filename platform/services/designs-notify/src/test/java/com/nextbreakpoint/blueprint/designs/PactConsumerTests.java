@@ -46,7 +46,6 @@ public class PactConsumerTests {
 
         PactDslJsonBody payload1 = new PactDslJsonBody()
                 .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
-                .stringMatcher("token", TestConstants.UUID1_REGEXP)
                 .object("data", event1)
                 .stringValue("type", TestConstants.DESIGN_DOCUMET_UPDATE_COMPLETED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
@@ -67,7 +66,6 @@ public class PactConsumerTests {
 
         PactDslJsonBody payload2 = new PactDslJsonBody()
                 .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
-                .stringMatcher("token", TestConstants.UUID1_REGEXP)
                 .object("data", event2)
                 .stringValue("type", TestConstants.DESIGN_DOCUMET_UPDATE_COMPLETED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);

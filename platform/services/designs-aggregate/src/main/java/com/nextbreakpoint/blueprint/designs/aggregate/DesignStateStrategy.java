@@ -91,7 +91,7 @@ public class DesignStateStrategy {
     private void mergeEvent(Accumulator state, InputMessage message) {
         final String type = message.getValue().getType();
         final String value = message.getValue().getData();
-        final String token = message.getValue().getToken();
+        final String token = message.getToken();
         final long timestamp = message.getTimestamp();
         switch (type) {
             case DesignInsertRequested.TYPE: {

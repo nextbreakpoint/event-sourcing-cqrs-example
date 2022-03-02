@@ -28,7 +28,7 @@ public class DesignUpdateRequestedController implements Controller<InputMessage,
         return Single.just(message)
                 .flatMap(this::onMessageReceived)
                 .map(inputMapper::transform)
-                .flatMap(event -> onDesignUpdateRequested(event, message.getValue().getToken()))
+                .flatMap(event -> onDesignUpdateRequested(event, message.getToken()))
                 .map(event -> outputMapper.transform(Tracing.from(message.getTrace()), event))
                 .flatMap(emitter::onNext);
     }

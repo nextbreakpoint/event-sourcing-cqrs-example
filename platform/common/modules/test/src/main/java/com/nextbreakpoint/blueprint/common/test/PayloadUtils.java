@@ -13,17 +13,15 @@ public class PayloadUtils {
 
     public static Payload mapToPayload(Map<String, Object> value) {
         UUID uuid = UUID.fromString((String) value.get("uuid"));
-        String token = TimeUUID.next().toString();
         String type = (String) value.get("type");
         String source = (String) value.get("source");
         Map data = (Map) value.get("data");
-        return new Payload(uuid, token, type, Json.encodeValue(data), source);
+        return new Payload(uuid, type, Json.encodeValue(data), source);
     }
 
     public static Map<String, Object> payloadToMap(Payload payload) {
         Map<String, Object> result = new HashMap<>();
         result.put("uuid", payload.getUuid().toString());
-        result.put("token", payload.getToken());
         result.put("data", Json.decodeValue(payload.getData(), Map.class));
         result.put("type", payload.getType());
         result.put("source", payload.getSource());

@@ -21,9 +21,9 @@ public class TestAssertions {
     public static void assertExpectedDesignInsertRequestedMessage(InputMessage actualMessage, String designId) {
         assertThat(actualMessage.getTimestamp()).isNotNull();
         assertThat(actualMessage.getKey()).isEqualTo(designId);
+        assertThat(actualMessage.getToken()).isNotNull();
         assertThat(actualMessage.getValue()).isNotNull();
         assertThat(actualMessage.getValue().getSource()).isEqualTo(TestConstants.MESSAGE_SOURCE);
-        assertThat(actualMessage.getValue().getToken()).isNotNull();
         assertThat(actualMessage.getValue().getUuid()).isNotNull();
         assertThat(actualMessage.getValue().getType()).isEqualTo(TestConstants.DESIGN_INSERT_REQUESTED);
         assertThat(actualMessage.getValue()).isNotNull();
@@ -45,9 +45,9 @@ public class TestAssertions {
     public static void assertExpectedDesignUpdateRequestedMessage(InputMessage actualMessage, String designId) {
         assertThat(actualMessage.getTimestamp()).isNotNull();
         assertThat(actualMessage.getKey()).isEqualTo(designId);
+        assertThat(actualMessage.getToken()).isNotNull();
         assertThat(actualMessage.getValue()).isNotNull();
         assertThat(actualMessage.getValue().getSource()).isEqualTo(TestConstants.MESSAGE_SOURCE);
-        assertThat(actualMessage.getValue().getToken()).isNotNull();
         assertThat(actualMessage.getValue().getUuid()).isNotNull();
         assertThat(actualMessage.getValue().getType()).isEqualTo(TestConstants.DESIGN_UPDATE_REQUESTED);
         assertThat(actualMessage.getValue()).isNotNull();
@@ -69,9 +69,9 @@ public class TestAssertions {
     public static void assertExpectedDesignDeleteRequestedMessage(InputMessage actualMessage, String designId) {
         assertThat(actualMessage.getTimestamp()).isNotNull();
         assertThat(actualMessage.getKey()).isEqualTo(designId);
+        assertThat(actualMessage.getToken()).isNotNull();
         assertThat(actualMessage.getValue()).isNotNull();
         assertThat(actualMessage.getValue().getSource()).isEqualTo(TestConstants.MESSAGE_SOURCE);
-        assertThat(actualMessage.getValue().getToken()).isNotNull();
         assertThat(actualMessage.getValue().getUuid()).isNotNull();
         assertThat(actualMessage.getValue().getType()).isEqualTo(TestConstants.DESIGN_DELETE_REQUESTED);
         assertThat(actualMessage.getValue()).isNotNull();

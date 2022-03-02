@@ -19,7 +19,6 @@ public class DesignInsertCommandOutputMapper implements MessageMapper<DesignInse
                 event.getDesignId().toString(),
                 new Payload(
                         UUID.randomUUID(),
-                        TimeUUID.next().toString(),
                         DesignInsertCommand.TYPE,
                         Json.encodeValue(event),
                         messageSource

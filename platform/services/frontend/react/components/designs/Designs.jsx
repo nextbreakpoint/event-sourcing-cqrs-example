@@ -30,7 +30,7 @@ import axios from 'axios'
 
 let Designs = class Designs extends React.Component {
     componentDidMount = () => {
-        let timestamp = Date.now();
+        let timestamp = 0
 
         let component = this
 
@@ -41,7 +41,7 @@ let Designs = class Designs extends React.Component {
 
         try {
             if (typeof(EventSource) !== "undefined") {
-                axios.get(component.props.config.api_url + "/v1/watch/designs/" + timestamp, config)
+                axios.get(component.props.config.api_url + "/v1/watch/designs?timestamp=" + timestamp, config)
                     .then(function (response) {
                         if (response.status == 200) {
                             var source = new EventSource(response.headers.location, { withCredentials: true })

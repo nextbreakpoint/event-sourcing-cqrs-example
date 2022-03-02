@@ -8,21 +8,18 @@ import java.util.UUID;
 
 public class Payload {
     private UUID uuid;
-    private String token;
     private String type;
     private String data;
     private String source;
 
     @JsonCreator
     public Payload(
-        @JsonProperty("uuid") UUID uuid,
-        @JsonProperty("token") String token,
-        @JsonProperty("type") String type,
-        @JsonProperty("data") String data,
-        @JsonProperty("source") String source
+            @JsonProperty("uuid") UUID uuid,
+            @JsonProperty("type") String type,
+            @JsonProperty("data") String data,
+            @JsonProperty("source") String source
     ) {
         this.uuid = Objects.requireNonNull(uuid);
-        this.token = Objects.requireNonNull(token);
         this.type = Objects.requireNonNull(type);
         this.data = Objects.requireNonNull(data);
         this.source = Objects.requireNonNull(source);
@@ -30,10 +27,6 @@ public class Payload {
 
     public UUID getUuid() {
         return uuid;
-    }
-
-    public String getToken() {
-        return token;
     }
 
     public String getType() {
@@ -52,7 +45,6 @@ public class Payload {
     public String toString() {
         return "[" +
                 "uuid=" + uuid +
-                ", token='" + token + '\'' +
                 ", type='" + type + '\'' +
                 ", data='" + data + '\'' +
                 ", source='" + source + '\'' +

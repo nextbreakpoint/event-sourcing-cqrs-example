@@ -39,7 +39,7 @@ public class DesignAggregateUpdateCompletedController implements Controller<Inpu
     }
 
     private Observable<TileRenderRequested> onAggregateUpdateCompleted(DesignAggregateUpdateCompleted event) {
-        return "DELETED".equalsIgnoreCase(event.getStatus()) ? Observable.empty() : generateEvents(event);
+        return "DELETED".equalsIgnoreCase(event.getStatus()) ? generateEvents(event, 0) : generateEvents(event);
     }
 
     private Observable<TileRenderRequested> generateEvents(DesignAggregateUpdateCompleted event) {

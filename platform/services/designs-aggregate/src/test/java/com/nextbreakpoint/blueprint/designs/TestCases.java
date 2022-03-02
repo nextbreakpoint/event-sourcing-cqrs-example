@@ -357,7 +357,7 @@ public class TestCases {
                 .pollInterval(ONE_SECOND)
                 .untilAsserted(() -> {
                     final List<InputMessage> messages = renderPolling.findMessages(TestConstants.MESSAGE_SOURCE, TestConstants.TILE_RENDER_REQUESTED, key -> key.startsWith(TestConstants.CHECKSUM_1));
-                    assertThat(messages).hasSize(TestUtils.totalTilesByLevels(TestConstants.LEVELS));
+                    assertThat(messages).hasSize(TestUtils.totalTilesByLevels(TestConstants.LEVELS) + 1);
                     List<TileRenderRequested> events = TestUtils.extractTileRenderRequestedEvents(messages, TestConstants.CHECKSUM_1);
                     assertThat(events).hasSize(messages.size());
                     events.forEach(event -> TestAssertions.assertExpectedTileRenderRequestedEvent(event, designId, TestConstants.JSON_1, TestConstants.CHECKSUM_1));

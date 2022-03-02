@@ -16,9 +16,9 @@ public class TestAssertions {
     public static void assertExpectedDesignDocumentUpdateRequestedMessage(InputMessage actualMessage, UUID designId, String data, String checksum, String status) {
         assertThat(actualMessage.getTimestamp()).isNotNull();
         assertThat(actualMessage.getKey()).isEqualTo(designId.toString());
+        assertThat(actualMessage.getToken()).isNotNull();
         assertThat(actualMessage.getValue()).isNotNull();
         assertThat(actualMessage.getValue().getSource()).isEqualTo(TestConstants.MESSAGE_SOURCE);
-        assertThat(actualMessage.getValue().getToken()).isNotNull();
         assertThat(actualMessage.getValue().getUuid()).isNotNull();
         assertThat(actualMessage.getValue().getType()).isEqualTo(TestConstants.DESIGN_DOCUMENT_UPDATE_REQUESTED);
         assertThat(actualMessage.getTrace()).isNotNull();
@@ -39,9 +39,9 @@ public class TestAssertions {
     public static void assertExpectedDesignDocumentUpdateCompletedMessage(InputMessage actualMessage, UUID designId) {
         assertThat(actualMessage.getTimestamp()).isNotNull();
         assertThat(actualMessage.getKey()).isEqualTo(designId.toString());
+        assertThat(actualMessage.getToken()).isNotNull();
         assertThat(actualMessage.getValue()).isNotNull();
         assertThat(actualMessage.getValue().getSource()).isEqualTo(TestConstants.MESSAGE_SOURCE);
-        assertThat(actualMessage.getValue().getToken()).isNotNull();
         assertThat(actualMessage.getValue().getUuid()).isNotNull();
         assertThat(actualMessage.getValue().getType()).isEqualTo(TestConstants.DESIGN_DOCUMENT_UPDATE_COMPLETED);
         assertThat(actualMessage.getTrace()).isNotNull();

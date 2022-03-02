@@ -94,7 +94,9 @@ public class KafkaTestPolling {
 
         final Payload payload = Json.decodeValue(record.value(), Payload.class);
 
-        return new InputMessage(record.key(), payload, Tracing.from(headers), record.timestamp());
+        final String token = record.key() + "-" + record.timestamp() + "-" + record.offset();
+
+        return new InputMessage(record.key(), token, payload, Tracing.from(headers), record.timestamp());
     }
 
     private void pollMessages() {

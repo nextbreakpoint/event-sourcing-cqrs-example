@@ -55,7 +55,6 @@ public class PactConsumerTests {
 
         PactDslJsonBody payload1 = new PactDslJsonBody()
                 .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
-                .stringMatcher("token", TestConstants.UUID1_REGEXP)
                 .object("data", event1)
                 .stringValue("type", TestConstants.DESIGN_INSERT_REQUESTED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
@@ -90,7 +89,6 @@ public class PactConsumerTests {
 
         PactDslJsonBody payload1 = new PactDslJsonBody()
                 .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
-                .stringMatcher("token", TestConstants.UUID1_REGEXP)
                 .object("data", event1)
                 .stringValue("type", TestConstants.DESIGN_INSERT_REQUESTED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
@@ -119,7 +117,6 @@ public class PactConsumerTests {
 
         PactDslJsonBody payload2 = new PactDslJsonBody()
                 .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
-                .stringMatcher("token", TestConstants.UUID1_REGEXP)
                 .object("data", event2)
                 .stringValue("type", TestConstants.DESIGN_UPDATE_REQUESTED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
@@ -151,7 +148,6 @@ public class PactConsumerTests {
 
         PactDslJsonBody payload1 = new PactDslJsonBody()
                 .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
-                .stringMatcher("token", TestConstants.UUID1_REGEXP)
                 .object("data", event1)
                 .stringValue("type", TestConstants.DESIGN_INSERT_REQUESTED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
@@ -173,7 +169,6 @@ public class PactConsumerTests {
 
         PactDslJsonBody payload2 = new PactDslJsonBody()
                 .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
-                .stringMatcher("token", TestConstants.UUID1_REGEXP)
                 .object("data", event2)
                 .stringValue("type", TestConstants.DESIGN_DELETE_REQUESTED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
@@ -212,7 +207,6 @@ public class PactConsumerTests {
 
         PactDslJsonBody payload1 = new PactDslJsonBody()
                 .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
-                .stringMatcher("token", TestConstants.UUID1_REGEXP)
                 .object("data", event1)
                 .stringValue("type", TestConstants.TILE_RENDER_COMPLETED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
@@ -238,7 +232,6 @@ public class PactConsumerTests {
 
         PactDslJsonBody payload2 = new PactDslJsonBody()
                 .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
-                .stringMatcher("token", TestConstants.UUID1_REGEXP)
                 .object("data", event2)
                 .stringValue("type", TestConstants.TILE_RENDER_COMPLETED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
@@ -264,7 +257,6 @@ public class PactConsumerTests {
 
         PactDslJsonBody payload3 = new PactDslJsonBody()
                 .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
-                .stringMatcher("token", TestConstants.UUID1_REGEXP)
                 .object("data", event3)
                 .stringValue("type", TestConstants.TILE_RENDER_COMPLETED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
@@ -290,7 +282,6 @@ public class PactConsumerTests {
 
         PactDslJsonBody payload4 = new PactDslJsonBody()
                 .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
-                .stringMatcher("token", TestConstants.UUID1_REGEXP)
                 .object("data", event4)
                 .stringValue("type", TestConstants.TILE_RENDER_COMPLETED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
@@ -316,7 +307,6 @@ public class PactConsumerTests {
 
         PactDslJsonBody payload5 = new PactDslJsonBody()
                 .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
-                .stringMatcher("token", TestConstants.UUID1_REGEXP)
                 .object("data", event5)
                 .stringValue("type", TestConstants.TILE_RENDER_COMPLETED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);

@@ -69,7 +69,7 @@ let Header = class Header extends React.Component {
         return (
             <AppBar position="static">
                 <Toolbar>
-                  <Typography variant="title" color="inherit" className={classes.grow}>{browseLink != null && <span><Link className={classes.browse} href={browseLink}>{browseText}</Link></span>} | {titleLink != null && <span><Link href={titleLink}>{titleText}</Link>{titleText2 != null && <span> | {titleText2}</span>}</span>}{titleLink == null && <span>{titleText}{titleText2 != null && <span> | {titleText2}</span>}</span>}</Typography>
+                  <Typography variant="title" color="inherit" className={classes.grow}>{browseLink != null && <span className={classes.browse}><Link href={browseLink}>{browseText}</Link></span>} | {titleLink != null && <span><Link href={titleLink}>{titleText}</Link>{titleText2 != null && <span> | {titleText2}</span>}</span>}{titleLink == null && <span>{titleText}{titleText2 != null && <span> | {titleText2}</span>}</span>}</Typography>
                   {this.props.account.role == 'anonymous' && <Button color="inherit" onClick={this.handleLogin}>Login</Button>}
                   {this.props.account.role != 'anonymous' && <Button color="inherit" onClick={this.handleLogout}>Logout</Button>}
                 </Toolbar>

@@ -19,7 +19,6 @@ public class DesignDeleteCommandOutputMapper implements MessageMapper<DesignDele
                 event.getDesignId().toString(),
                 new Payload(
                         UUID.randomUUID(),
-                        TimeUUID.next().toString(),
                         DesignDeleteCommand.TYPE,
                         Json.encodeValue(event),
                         messageSource

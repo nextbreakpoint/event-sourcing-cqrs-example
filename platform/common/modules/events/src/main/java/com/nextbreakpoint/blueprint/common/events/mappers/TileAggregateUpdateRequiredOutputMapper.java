@@ -19,7 +19,6 @@ public class TileAggregateUpdateRequiredOutputMapper implements MessageMapper<Ti
                 event.getDesignId().toString(),
                 new Payload(
                         UUID.randomUUID(),
-                        TimeUUID.next().toString(),
                         TileAggregateUpdateRequired.TYPE,
                         Json.encodeValue(event),
                         messageSource

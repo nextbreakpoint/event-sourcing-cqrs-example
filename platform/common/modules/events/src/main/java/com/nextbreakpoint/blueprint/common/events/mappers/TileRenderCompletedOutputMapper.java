@@ -19,7 +19,6 @@ public class TileRenderCompletedOutputMapper implements MessageMapper<TileRender
                 event.getDesignId().toString(),
                 new Payload(
                         UUID.randomUUID(),
-                        TimeUUID.next().toString(),
                         TileRenderCompleted.TYPE,
                         Json.encodeValue(event),
                         messageSource

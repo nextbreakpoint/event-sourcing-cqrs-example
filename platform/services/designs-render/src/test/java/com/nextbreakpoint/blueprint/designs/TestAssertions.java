@@ -13,9 +13,9 @@ public class TestAssertions {
     public static void assertExpectedTileRenderCompletedMessage(InputMessage actualMessage, TileRenderRequested tileRenderRequested) {
         assertThat(actualMessage.getTimestamp()).isNotNull();
         assertThat(actualMessage.getKey()).isEqualTo(tileRenderRequested.getDesignId().toString());
+        assertThat(actualMessage.getToken()).isNotNull();
         assertThat(actualMessage.getValue()).isNotNull();
         assertThat(actualMessage.getValue().getSource()).isEqualTo(TestConstants.MESSAGE_SOURCE);
-        assertThat(actualMessage.getValue().getToken()).isNotNull();
         assertThat(actualMessage.getValue().getUuid()).isNotNull();
         assertThat(actualMessage.getValue().getType()).isEqualTo(TestConstants.TILE_RENDER_COMPLETED);
         assertThat(actualMessage.getTrace()).isNotNull();

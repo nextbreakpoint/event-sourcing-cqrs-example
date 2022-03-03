@@ -92,11 +92,11 @@ public class NotificationHandler implements Handler<RoutingContext> {
                 watcher.setRevision(newRevision);
                 watcher.setEventId(watcher.getEventId() + 1);
 
-                updateData.put("uuid", watchKey);
-                updateData.put("session", sessionId);
-                updateData.put("revision", revision);
+                updateData.put("uuid", watcher.getWatchKey());
+                updateData.put("session", watcher.getSessionId());
+                updateData.put("revision", watcher.getRevision());
 
-                logger.info("Send update notification (session = " + sessionId + ", revision = " + revision + ")");
+                logger.info("Send update notification (session = " + watcher.getSessionId() + ", revision = " + watcher.getRevision() + ")");
 
                 routingContext.response().write(makeEvent("update", watcher.getEventId(), updateData.encode()));
             } catch (Exception e) {

@@ -97,7 +97,7 @@ let Preview = class Preview extends React.Component {
                     design.revision = response.data.revision
                     design.modified = response.data.modified
                     design.uuid = response.data.uuid
-                    if (component.props.design == undefined || design.revision > component.props.revision) {
+                    if (component.props.design == undefined || design.revision > component.props.revision || design.checksum != component.props.checksum) {
                         console.log("Design changed")
                         component.props.handleLoadDesignSuccess(design, design.revision)
                     }

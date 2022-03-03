@@ -78,10 +78,10 @@ public class IntegrationTests {
     final UUID designId1 = UUID.randomUUID();
     final UUID designId2 = UUID.randomUUID();
 
-    final List<Tiles> tiles1 = TestUtils.getTiles(TestConstants.LEVELS, 0.0f);
-    final List<Tiles> tiles2 = TestUtils.getTiles(TestConstants.LEVELS, 0.5f);
-    final List<Tiles> tiles3 = TestUtils.getTiles(TestConstants.LEVELS, 1.0f);
-    final List<Tiles> tiles4 = TestUtils.getTiles(TestConstants.LEVELS, 1.0f);
+    final List<Tiles> tiles1 = TestUtils.getTiles(TestConstants.LEVELS, 0f);
+    final List<Tiles> tiles2 = TestUtils.getTiles(TestConstants.LEVELS, 50f);
+    final List<Tiles> tiles3 = TestUtils.getTiles(TestConstants.LEVELS, 100f);
+    final List<Tiles> tiles4 = TestUtils.getTiles(TestConstants.LEVELS, 100f);
 
     final DesignDocumentUpdateRequested designDocumentUpdateRequested1 = new DesignDocumentUpdateRequested(designId1, TestConstants.USER_ID, UUID.randomUUID(), TestConstants.JSON_1, TestConstants.CHECKSUM_1, TestConstants.REVISION_0, "CREATED", TestConstants.LEVELS, tiles1, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
     final DesignDocumentUpdateRequested designDocumentUpdateRequested2 = new DesignDocumentUpdateRequested(designId1, TestConstants.USER_ID, UUID.randomUUID(), TestConstants.JSON_1, TestConstants.CHECKSUM_1, TestConstants.REVISION_1, "UPDATED", TestConstants.LEVELS, tiles2, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));

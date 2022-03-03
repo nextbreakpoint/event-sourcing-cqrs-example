@@ -19,6 +19,7 @@ import org.jetbrains.annotations.NotNull;
 import rx.plugins.RxJavaHooks;
 import rx.schedulers.Schedulers;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -220,15 +221,27 @@ public class TestCases {
 
         eventEmitter.send(designInsertRequestedMessage);
 
+        await().atMost(Duration.ofSeconds(20))
+                .pollInterval(ONE_SECOND)
+                .untilAsserted(() -> {
+                    final List<InputMessage> messages = renderPolling.findMessages(TestConstants.MESSAGE_SOURCE, TestConstants.TILE_RENDER_REQUESTED, key -> key.startsWith(TestConstants.CHECKSUM_1));
+                    assertThat(messages).hasSize(TestUtils.totalTilesByLevels(TestConstants.LEVELS));
+                    List<TileRenderRequested> events = TestUtils.extractTileRenderRequestedEvents(messages, TestConstants.CHECKSUM_1);
+                    assertThat(events).hasSize(messages.size());
+                    events.forEach(event -> TestAssertions.assertExpectedTileRenderRequestedEvent(event, designId, TestConstants.JSON_1, TestConstants.CHECKSUM_1));
+                });
+
+        eventsPolling.clearMessages();
+        renderPolling.clearMessages();
+        batchPolling.clearMessages();
+
         eventEmitter.send(designUpdateRequestedMessage);
 
         await().atMost(TEN_SECONDS)
                 .pollInterval(ONE_SECOND)
                 .untilAsserted(() -> {
-                    final List<InputMessage> messages1 = eventsPolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_INSERT_REQUESTED);
-                    assertThat(messages1).hasSize(1);
-                    final List<InputMessage> messages2 = eventsPolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_UPDATE_REQUESTED);
-                    assertThat(messages2).hasSize(1);
+                    final List<InputMessage> messages = eventsPolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_UPDATE_REQUESTED);
+                    assertThat(messages).hasSize(1);
                 });
 
         await().atMost(TEN_SECONDS)
@@ -253,32 +266,27 @@ public class TestCases {
                 .pollInterval(ONE_SECOND)
                 .untilAsserted(() -> {
                     final List<InputMessage> messages = eventsPolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_AGGREGATE_UPDATE_REQUESTED);
-                    assertThat(messages).hasSize(2);
+                    assertThat(messages).hasSize(1);
                     TestAssertions.assertExpectedDesignAggregateUpdateRequestedMessage(messages.get(0), designId);
-                    TestAssertions.assertExpectedDesignAggregateUpdateRequestedMessage(messages.get(1), designId);
                 });
 
         await().atMost(TEN_SECONDS)
                 .pollInterval(ONE_SECOND)
                 .untilAsserted(() -> {
                     final List<InputMessage> messages = eventsPolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_AGGREGATE_UPDATE_COMPLETED);
-                    assertThat(messages).hasSize(2);
-                    TestAssertions.assertExpectedDesignAggregateUpdateCompletedMessage(messages.get(0), designId, TestConstants.JSON_1, TestConstants.CHECKSUM_1, "CREATED");
-                    TestAssertions.assertExpectedDesignAggregateUpdateCompletedMessage(messages.get(1), designId, TestConstants.JSON_2, TestConstants.CHECKSUM_2, "UPDATED");
+                    assertThat(messages).hasSize(1);
+                    TestAssertions.assertExpectedDesignAggregateUpdateCompletedMessage(messages.get(0), designId, TestConstants.JSON_2, TestConstants.CHECKSUM_2, "UPDATED");
                 });
 
         await().atMost(TEN_SECONDS)
                 .pollInterval(ONE_SECOND)
                 .untilAsserted(() -> {
                     final List<InputMessage> messages = eventsPolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, TestConstants.TILE_RENDER_REQUESTED);
-                    assertThat(messages).hasSize(TestUtils.totalTilesByLevels(TestConstants.LEVELS) * 2);
+                    assertThat(messages).hasSize(TestUtils.totalTilesByLevels(TestConstants.LEVELS));
                     messages.forEach(message -> TestAssertions.assertExpectedTileRenderRequestedMessage(message, designId.toString()));
-                    List<TileRenderRequested> events1 = TestUtils.extractTileRenderRequestedEvents(messages, TestConstants.CHECKSUM_1);
-                    List<TileRenderRequested> events2 = TestUtils.extractTileRenderRequestedEvents(messages, TestConstants.CHECKSUM_2);
-                    assertThat(events1).hasSize(messages.size() / 2);
-                    assertThat(events2).hasSize(messages.size() / 2);
-                    events1.forEach(event -> TestAssertions.assertExpectedTileRenderRequestedEvent(event, designId, TestConstants.JSON_1, TestConstants.CHECKSUM_1));
-                    events2.forEach(event -> TestAssertions.assertExpectedTileRenderRequestedEvent(event, designId, TestConstants.JSON_2, TestConstants.CHECKSUM_2));
+                    List<TileRenderRequested> events = TestUtils.extractTileRenderRequestedEvents(messages, TestConstants.CHECKSUM_2);
+                    assertThat(events).hasSize(messages.size());
+                    events.forEach(event -> TestAssertions.assertExpectedTileRenderRequestedEvent(event, designId, TestConstants.JSON_2, TestConstants.CHECKSUM_2));
                 });
 
         await().atMost(TEN_SECONDS)
@@ -305,15 +313,27 @@ public class TestCases {
 
         eventEmitter.send(designInsertRequestedMessage);
 
+        await().atMost(Duration.ofSeconds(20))
+                .pollInterval(ONE_SECOND)
+                .untilAsserted(() -> {
+                    final List<InputMessage> messages = renderPolling.findMessages(TestConstants.MESSAGE_SOURCE, TestConstants.TILE_RENDER_REQUESTED, key -> key.startsWith(TestConstants.CHECKSUM_1));
+                    assertThat(messages).hasSize(TestUtils.totalTilesByLevels(TestConstants.LEVELS));
+                    List<TileRenderRequested> events = TestUtils.extractTileRenderRequestedEvents(messages, TestConstants.CHECKSUM_1);
+                    assertThat(events).hasSize(messages.size());
+                    events.forEach(event -> TestAssertions.assertExpectedTileRenderRequestedEvent(event, designId, TestConstants.JSON_1, TestConstants.CHECKSUM_1));
+                });
+
+        eventsPolling.clearMessages();
+        renderPolling.clearMessages();
+        batchPolling.clearMessages();
+
         eventEmitter.send(designDeleteRequestedMessage);
 
         await().atMost(TEN_SECONDS)
                 .pollInterval(ONE_SECOND)
                 .untilAsserted(() -> {
-                    final List<InputMessage> messages1 = eventsPolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_INSERT_REQUESTED);
-                    assertThat(messages1).hasSize(1);
-                    final List<InputMessage> messages2 = eventsPolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_DELETE_REQUESTED);
-                    assertThat(messages2).hasSize(1);
+                    final List<InputMessage> messages = eventsPolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_DELETE_REQUESTED);
+                    assertThat(messages).hasSize(1);
                 });
 
         await().atMost(TEN_SECONDS)
@@ -336,39 +356,30 @@ public class TestCases {
                 .pollInterval(ONE_SECOND)
                 .untilAsserted(() -> {
                     final List<InputMessage> messages = eventsPolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_AGGREGATE_UPDATE_REQUESTED);
-                    assertThat(messages).hasSize(2);
+                    assertThat(messages).hasSize(1);
                     TestAssertions.assertExpectedDesignAggregateUpdateRequestedMessage(messages.get(0), designId);
-                    TestAssertions.assertExpectedDesignAggregateUpdateRequestedMessage(messages.get(1), designId);
                 });
 
         await().atMost(TEN_SECONDS)
                 .pollInterval(ONE_SECOND)
                 .untilAsserted(() -> {
                     final List<InputMessage> messages = eventsPolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_AGGREGATE_UPDATE_COMPLETED);
-                    assertThat(messages).hasSize(2);
-                    TestAssertions.assertExpectedDesignAggregateUpdateCompletedMessage(messages.get(0), designId, TestConstants.JSON_1, TestConstants.CHECKSUM_1, "CREATED");
-                    TestAssertions.assertExpectedDesignAggregateUpdateCompletedMessage(messages.get(1), designId, TestConstants.JSON_1, TestConstants.CHECKSUM_1, "DELETED");
+                    assertThat(messages).hasSize(1);
+                    TestAssertions.assertExpectedDesignAggregateUpdateCompletedMessage(messages.get(0), designId, TestConstants.JSON_1, TestConstants.CHECKSUM_1, "DELETED");
                 });
 
         await().atMost(TEN_SECONDS)
                 .pollInterval(ONE_SECOND)
                 .untilAsserted(() -> {
                     final List<InputMessage> messages = eventsPolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, TestConstants.TILE_RENDER_REQUESTED);
-                    assertThat(messages).hasSize(TestUtils.totalTilesByLevels(TestConstants.LEVELS));
-                    messages.forEach(message -> TestAssertions.assertExpectedTileRenderRequestedMessage(message, designId.toString()));
-                    List<TileRenderRequested> events = TestUtils.extractTileRenderRequestedEvents(messages, TestConstants.CHECKSUM_1);
-                    assertThat(events).hasSize(messages.size());
-                    events.forEach(event -> TestAssertions.assertExpectedTileRenderRequestedEvent(event, designId, TestConstants.JSON_1, TestConstants.CHECKSUM_1));
+                    assertThat(messages).hasSize(0);
                 });
 
         await().atMost(TEN_SECONDS)
                 .pollInterval(ONE_SECOND)
                 .untilAsserted(() -> {
                     final List<InputMessage> messages = renderPolling.findMessages(TestConstants.MESSAGE_SOURCE, TestConstants.TILE_RENDER_REQUESTED, key -> key.startsWith(TestConstants.CHECKSUM_1));
-                    assertThat(messages).hasSize(TestUtils.totalTilesByLevels(TestConstants.LEVELS));
-                    List<TileRenderRequested> events = TestUtils.extractTileRenderRequestedEvents(messages, TestConstants.CHECKSUM_1);
-                    assertThat(events).hasSize(messages.size());
-                    events.forEach(event -> TestAssertions.assertExpectedTileRenderRequestedEvent(event, designId, TestConstants.JSON_1, TestConstants.CHECKSUM_1));
+                    assertThat(messages).hasSize(0);
                 });
 
         await().atMost(TEN_SECONDS)

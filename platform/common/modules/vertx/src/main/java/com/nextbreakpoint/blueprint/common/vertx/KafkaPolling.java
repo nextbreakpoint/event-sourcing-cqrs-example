@@ -117,6 +117,10 @@ public class KafkaPolling {
                     continue;
                 }
 
+                if (queue.size() == 0) {
+                    timestamp = record.timestamp();
+                }
+
                 queue.addRecord(record);
             } catch (Exception e) {
                 logger.error("Failed to process record: " + record.key());
@@ -129,9 +133,9 @@ public class KafkaPolling {
             }
         }
 
-        if (System.currentTimeMillis() - timestamp > maximumLatency) {
-            timestamp = System.currentTimeMillis();
+        final long currentTimeMillis = System.currentTimeMillis();
 
+        if (queue.size() > 0 && currentTimeMillis - timestamp > maximumLatency) {
             logger.debug("Received " + queue.size() + " " + (queue.size() > 0 ? "messages" : "message"));
 
             queue.getRecords().forEach(record -> processRecord(suspendedPartitions, record));

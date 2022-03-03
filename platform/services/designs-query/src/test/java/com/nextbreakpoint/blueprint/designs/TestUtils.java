@@ -99,16 +99,8 @@ public class TestUtils {
     @NotNull
     private static Tiles makeTiles(int level, float completePercentage) {
         final int requested = (int) Math.rint(Math.pow(2, level * 2));
-
-        final int completedCount = (int) Math.rint(completePercentage * requested);
-
-        final Set<Integer> completed = TestUtils.generateTiles(level)
-                .stream()
-                .limit(completedCount)
-                .map(tile -> tile.getCol() << 16 | tile.getRow())
-                .collect(Collectors.toSet());
-
-        return new Tiles(level, requested, completed, new HashSet<>());
+        final int completedCount = (int) Math.rint((completePercentage * requested) / 100f);
+        return new Tiles(level, requested, completedCount, 0);
     }
 
     @NotNull

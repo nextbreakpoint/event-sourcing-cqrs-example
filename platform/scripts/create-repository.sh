@@ -2,8 +2,8 @@
 
 set -e
 
-export NEXUS_HOST=localhost
-export NEXUS_PORT=8081
+NEXUS_HOST=localhost
+NEXUS_PORT=8081
 
 POSITIONAL_ARGS=()
 

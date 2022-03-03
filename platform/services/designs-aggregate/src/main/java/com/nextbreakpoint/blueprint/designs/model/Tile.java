@@ -1,5 +1,11 @@
 package com.nextbreakpoint.blueprint.designs.model;
 
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Data;
+
+@Data
+@Builder(access = AccessLevel.PUBLIC, setterPrefix = "with")
 public class Tile {
     private final int level;
     private final int col;
@@ -9,17 +15,5 @@ public class Tile {
         this.level = level;
         this.row = row;
         this.col = col;
-    }
-
-    public int getLevel() {
-        return level;
-    }
-
-    public int getRow() {
-        return row;
-    }
-
-    public int getCol() {
-        return col;
     }
 }

@@ -2,13 +2,15 @@
 
 set -e
 
-export PACTBROKER_HOST=localhost
-export PACTBROKER_PORT="9292"
+PACTBROKER_HOST=localhost
+PACTBROKER_PORT="9292"
 
-export NEXUS_HOST=localhost
-export NEXUS_PORT="8081"
-export NEXUS_USERNAME=admin
-export NEXUS_PASSWORD=password
+NEXUS_HOST=localhost
+NEXUS_PORT="8081"
+NEXUS_USERNAME=admin
+NEXUS_PASSWORD=password
+
+TARGET=shared
 
 POSITIONAL_ARGS=()
 
@@ -36,6 +38,10 @@ for i in "$@"; do
       ;;
     --nexus-password=*)
       NEXUS_PASSWORD="${i#*=}"
+      shift
+      ;;
+    --isolated)
+      TARGET="isolated"
       shift
       ;;
     -*|--*)
@@ -78,6 +84,6 @@ export MAVEN_ARGS="-q -e -Dnexus.host=${NEXUS_HOST} -Dnexus.port=${NEXUS_PORT} -
 
 for service in ${services[@]}; do
   pushd services/$service
-    mvn compile org.codehaus.mojo:exec-maven-plugin:exec@shared -s settings.xml ${MAVEN_ARGS} -Dcommon=true -Dservice=true -Dplatform=true -Dnexus=true &
+    mvn compile org.codehaus.mojo:exec-maven-plugin:exec@${TARGET} -s settings.xml ${MAVEN_ARGS} -Dcommon=true -Dservice=true -Dplatform=true -Dnexus=true &
   popd
 done

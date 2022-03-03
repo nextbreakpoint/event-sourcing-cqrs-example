@@ -10,7 +10,7 @@
     <parent>
         <groupId>com.nextbreakpoint</groupId>
         <artifactId>com.nextbreakpoint.blueprint.service</artifactId>
-        <version>1.0.0-wip2-c3e7410-1646301446</version>
+        <version>1.0.0-wip2-e414c88-1646309949</version>
     </parent>
     <repositories>
         <repository>
@@ -92,6 +92,7 @@
                         </goals>
                         <configuration>
                             <environmentVariables>
+                                <DEBUG_LEVEL>DEBUG</DEBUG_LEVEL>
                                 <EVENTS_TOPIC>test-designs-notify-events</EVENTS_TOPIC>
                             </environmentVariables>
                         </configuration>

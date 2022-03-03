@@ -91,6 +91,8 @@ public class TestAssertions {
 
     public static void assertExpectedDesign(Design actualDesign, UUID designId, String data, String checksum, String status) {
         assertThat(actualDesign.getDesignId()).isEqualTo(designId);
+        assertThat(actualDesign.getCommandId()).isNotNull();
+        assertThat(actualDesign.getUserId()).isNotNull();
         assertThat(actualDesign.getRevision()).isNotNull();
         assertThat(actualDesign.getData()).isEqualTo(data);
         assertThat(actualDesign.getStatus()).isEqualTo(status);
@@ -99,16 +101,16 @@ public class TestAssertions {
         assertThat(actualDesign.getTiles()).isNotNull();
         assertThat(actualDesign.getTiles().get(0).getLevel()).isEqualTo(0);
         assertThat(actualDesign.getTiles().get(0).getRequested()).isEqualTo(1);
-        assertThat(actualDesign.getTiles().get(0).getCompleted()).hasSize(1);
-        assertThat(actualDesign.getTiles().get(0).getFailed()).isEmpty();
+        assertThat(actualDesign.getTiles().get(0).getCompleted()).isEqualTo(1);
+        assertThat(actualDesign.getTiles().get(0).getFailed()).isEqualTo(0);
         assertThat(actualDesign.getTiles().get(1).getLevel()).isEqualTo(1);
         assertThat(actualDesign.getTiles().get(1).getRequested()).isEqualTo(4);
-        assertThat(actualDesign.getTiles().get(1).getCompleted()).hasSize(4);
-        assertThat(actualDesign.getTiles().get(1).getFailed()).isEmpty();
+        assertThat(actualDesign.getTiles().get(1).getCompleted()).isEqualTo(4);
+        assertThat(actualDesign.getTiles().get(1).getFailed()).isEqualTo(0);
         assertThat(actualDesign.getTiles().get(2).getLevel()).isEqualTo(2);
         assertThat(actualDesign.getTiles().get(2).getRequested()).isEqualTo(16);
-        assertThat(actualDesign.getTiles().get(2).getCompleted()).hasSize(16);
-        assertThat(actualDesign.getTiles().get(2).getFailed()).isEmpty();
+        assertThat(actualDesign.getTiles().get(2).getCompleted()).isEqualTo(16);
+        assertThat(actualDesign.getTiles().get(2).getFailed()).isEqualTo(0);
         assertThat(actualDesign.getLastModified()).isNotNull();
     }
 }

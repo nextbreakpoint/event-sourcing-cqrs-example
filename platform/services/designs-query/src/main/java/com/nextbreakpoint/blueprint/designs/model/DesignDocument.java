@@ -6,6 +6,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -17,6 +18,8 @@ public class DesignDocument {
     private final String checksum;
     private final String revision;
     private final String modified;
+    private final int levels;
+    private final List<Tiles> tiles;
 
     @JsonCreator
     public DesignDocument(
@@ -24,13 +27,17 @@ public class DesignDocument {
         @JsonProperty("json") String json,
         @JsonProperty("checksum") String checksum,
         @JsonProperty("revision") String revision,
-        @JsonProperty("modified") String modified
+        @JsonProperty("modified") String modified,
+        @JsonProperty("levels") int levels,
+        @JsonProperty("tiles") List<Tiles> tiles
     ) {
         this.uuid = Objects.requireNonNull(uuid);
         this.json = Objects.requireNonNull(json);
         this.checksum = Objects.requireNonNull(checksum);
         this.revision = Objects.requireNonNull(revision);
         this.modified = Objects.requireNonNull(modified);
+        this.levels = levels;
+        this.tiles = Objects.requireNonNull(tiles);
     }
 
     public static DesignDocument from(Design design) {
@@ -40,6 +47,8 @@ public class DesignDocument {
                 .withChecksum(design.getChecksum())
                 .withRevision(design.getRevision())
                 .withModified(design.getLastModified())
+                .withLevels(design.getLevels())
+                .withTiles(design.getTiles())
                 .build();
     }
 }

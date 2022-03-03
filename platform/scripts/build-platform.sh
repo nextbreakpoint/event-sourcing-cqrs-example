@@ -2,23 +2,23 @@
 
 set -e
 
-export REPOSITORY="integration"
-export VERSION="1.0.0-$(git rev-parse --abbrev-ref HEAD)-$(git rev-parse --short HEAD)-$(date +%s)"
-export DEPLOY="true"
-export BUILD="true"
-export PACT_TESTS="true"
-export PACT_VERIFY="true"
-export INTEGRATION_TESTS="true"
+REPOSITORY="integration"
+VERSION="1.0.0-$(git rev-parse --abbrev-ref HEAD)-$(git rev-parse --short HEAD)-$(date +%s)"
+DEPLOY="true"
+BUILD="true"
+PACT_TESTS="true"
+PACT_VERIFY="true"
+INTEGRATION_TESTS="true"
 
-export TEST_DOCKER_HOST=host.docker.internal
+TEST_DOCKER_HOST=host.docker.internal
 
-export PACTBROKER_HOST=localhost
-export PACTBROKER_PORT="9292"
+PACTBROKER_HOST=localhost
+PACTBROKER_PORT="9292"
 
-export NEXUS_HOST=localhost
-export NEXUS_PORT="8081"
-export NEXUS_USERNAME=admin
-export NEXUS_PASSWORD=password
+NEXUS_HOST=localhost
+NEXUS_PORT="8081"
+NEXUS_USERNAME=admin
+NEXUS_PASSWORD=password
 
 POSITIONAL_ARGS=()
 
@@ -147,8 +147,8 @@ services=(
   frontend
 )
 
-export MAVEN_ARGS="-q -e -Dnexus.host=${NEXUS_HOST} -Dnexus.port=${NEXUS_PORT} -Dpactbroker.host=${PACTBROKER_HOST} -Dpactbroker.port=${PACTBROKER_PORT}"
-export BUILD_ARGS="-q -e -Dnexus.host=${TEST_DOCKER_HOST} -Dnexus.port=${NEXUS_PORT} -Dpactbroker.host=${TEST_DOCKER_HOST} -Dpactbroker.port=${PACTBROKER_PORT}"
+MAVEN_ARGS="-q -e -Dnexus.host=${NEXUS_HOST} -Dnexus.port=${NEXUS_PORT} -Dpactbroker.host=${PACTBROKER_HOST} -Dpactbroker.port=${PACTBROKER_PORT}"
+BUILD_ARGS="-q -e -Dnexus.host=${TEST_DOCKER_HOST} -Dnexus.port=${NEXUS_PORT} -Dpactbroker.host=${TEST_DOCKER_HOST} -Dpactbroker.port=${PACTBROKER_PORT}"
 
 mvn versions:set versions:commit -q -e -DnewVersion=$VERSION -Dcommon=true -Dservices=true -Dplatform=true
 

@@ -88,6 +88,7 @@ public class TestAssertions {
         assertThat(actualEvent.getData()).isEqualTo(data);
         assertThat(actualEvent.getStatus()).isEqualTo(status);
         assertThat(actualEvent.getChecksum()).isEqualTo(checksum);
+        assertThat(actualEvent.getLevels()).isEqualTo(3);
     }
 
     public static void assertExpectedTileRenderRequestedMessage(InputMessage actualMessage, String partitionKey) {
@@ -207,6 +208,8 @@ public class TestAssertions {
         assertThat(actualEvent.getData()).isEqualTo(data);
         assertThat(actualEvent.getStatus()).isEqualTo(status);
         assertThat(actualEvent.getChecksum()).isEqualTo(checksum);
+        assertThat(actualEvent.getLevels()).isEqualTo(3);
+        assertThat(actualEvent.getTiles()).isNotNull();
     }
 
     public static void assertExpectedDesignDocumentDeleteRequestedMessage(InputMessage actualMessage, UUID designId) {

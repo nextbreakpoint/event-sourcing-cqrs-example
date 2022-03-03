@@ -206,6 +206,14 @@ public class IntegrationTests {
     assertThat(sortedResults.get(1).getModified()).isNotNull();
     assertThat(sortedResults.get(2).getModified()).isNotNull();
     assertThat(sortedResults.get(3).getModified()).isNotNull();
+    assertThat(sortedResults.get(0).getLevels()).isEqualTo(TestConstants.LEVELS);
+    assertThat(sortedResults.get(1).getLevels()).isEqualTo(TestConstants.LEVELS);
+    assertThat(sortedResults.get(2).getLevels()).isEqualTo(TestConstants.LEVELS);
+    assertThat(sortedResults.get(3).getLevels()).isEqualTo(TestConstants.LEVELS);
+    assertThat(sortedResults.get(0).getTiles()).isNotNull();
+    assertThat(sortedResults.get(1).getTiles()).isNotNull();
+    assertThat(sortedResults.get(2).getTiles()).isNotNull();
+    assertThat(sortedResults.get(3).getTiles()).isNotNull();
   }
 
   @Test
@@ -221,6 +229,8 @@ public class IntegrationTests {
     assertThat(result.getModified()).isNotNull();
     assertThat(result.getChecksum()).isNotNull();
     assertThat(result.getRevision()).isNotNull();
+    assertThat(result.getLevels()).isEqualTo(TestConstants.LEVELS);
+    assertThat(result.getTiles()).isNotNull();
   }
 
   @Test
@@ -264,6 +274,14 @@ public class IntegrationTests {
     assertThat(sortedResults.get(1).getModified()).isNotNull();
     assertThat(sortedResults.get(2).getModified()).isNotNull();
     assertThat(sortedResults.get(3).getModified()).isNotNull();
+    assertThat(sortedResults.get(0).getLevels()).isEqualTo(TestConstants.LEVELS);
+    assertThat(sortedResults.get(1).getLevels()).isEqualTo(TestConstants.LEVELS);
+    assertThat(sortedResults.get(2).getLevels()).isEqualTo(TestConstants.LEVELS);
+    assertThat(sortedResults.get(3).getLevels()).isEqualTo(TestConstants.LEVELS);
+    assertThat(sortedResults.get(0).getTiles()).isNotNull();
+    assertThat(sortedResults.get(1).getTiles()).isNotNull();
+    assertThat(sortedResults.get(2).getTiles()).isNotNull();
+    assertThat(sortedResults.get(3).getTiles()).isNotNull();
   }
 
   @Test
@@ -279,6 +297,8 @@ public class IntegrationTests {
     assertThat(result.getModified()).isNotNull();
     assertThat(result.getChecksum()).isNotNull();
     assertThat(result.getRevision()).isNotNull();
+    assertThat(result.getLevels()).isEqualTo(TestConstants.LEVELS);
+    assertThat(result.getTiles()).isNotNull();
   }
 
   @Test
@@ -322,6 +342,14 @@ public class IntegrationTests {
     assertThat(sortedResults.get(1).getModified()).isNotNull();
     assertThat(sortedResults.get(2).getModified()).isNotNull();
     assertThat(sortedResults.get(3).getModified()).isNotNull();
+    assertThat(sortedResults.get(0).getLevels()).isEqualTo(TestConstants.LEVELS);
+    assertThat(sortedResults.get(1).getLevels()).isEqualTo(TestConstants.LEVELS);
+    assertThat(sortedResults.get(2).getLevels()).isEqualTo(TestConstants.LEVELS);
+    assertThat(sortedResults.get(3).getLevels()).isEqualTo(TestConstants.LEVELS);
+    assertThat(sortedResults.get(0).getTiles()).isNotNull();
+    assertThat(sortedResults.get(1).getTiles()).isNotNull();
+    assertThat(sortedResults.get(2).getTiles()).isNotNull();
+    assertThat(sortedResults.get(3).getTiles()).isNotNull();
   }
 
   @Test
@@ -337,6 +365,8 @@ public class IntegrationTests {
     assertThat(result.getModified()).isNotNull();
     assertThat(result.getChecksum()).isNotNull();
     assertThat(result.getRevision()).isNotNull();
+    assertThat(result.getLevels()).isEqualTo(TestConstants.LEVELS);
+    assertThat(result.getTiles()).isNotNull();
   }
 
   @Test

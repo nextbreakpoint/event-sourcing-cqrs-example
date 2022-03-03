@@ -61,8 +61,8 @@ public class TileAggregateUpdateCompletedController implements Controller<InputM
         return DesignDocumentUpdateRequested.Tiles.builder()
                 .withLevel(tiles.getLevel())
                 .withRequested(tiles.getRequested())
-                .withCompleted(tiles.getCompleted())
-                .withFailed(tiles.getFailed())
+                .withCompleted(tiles.getCompleted().size())
+                .withFailed(tiles.getFailed().size())
                 .build();
     }
 }

@@ -59,15 +59,15 @@ public class DesignDocumentUpdateRequested {
     public static class Tiles {
         private final int level;
         private final int requested;
-        private final Set<Integer> completed;
-        private final Set<Integer> failed;
+        private final int completed;
+        private final int failed;
 
         @JsonCreator
         public Tiles(
             @JsonProperty("level") int level,
             @JsonProperty("requested") int requested,
-            @JsonProperty("completed") Set<Integer> completed,
-            @JsonProperty("failed") Set<Integer> failed
+            @JsonProperty("completed") int completed,
+            @JsonProperty("failed") int failed
         ) {
             this.level = level;
             this.requested = requested;

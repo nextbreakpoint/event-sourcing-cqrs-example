@@ -7,14 +7,12 @@ import com.nextbreakpoint.blueprint.common.vertx.Controller;
 import com.nextbreakpoint.blueprint.common.vertx.KafkaEmitter;
 import com.nextbreakpoint.blueprint.designs.Store;
 import com.nextbreakpoint.blueprint.designs.model.Design;
-import com.nextbreakpoint.blueprint.designs.model.Tiles;
 import com.nextbreakpoint.blueprint.designs.persistence.InsertDesignRequest;
 import rx.Observable;
 import rx.Single;
 
 import java.time.format.DateTimeFormatter;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 public class DesignDocumentUpdateRequestedController implements Controller<InputMessage, Void> {
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
@@ -60,17 +58,8 @@ public class DesignDocumentUpdateRequestedController implements Controller<Input
                 .withData(event.getData())
                 .withStatus(event.getStatus())
                 .withLevels(event.getLevels())
-                .withTiles(event.getTiles().stream().map(this::createTiles).collect(Collectors.toList()))
+                .withTiles(event.getTiles())
                 .withLastModified(FORMATTER.format(event.getModified()))
-                .build();
-    }
-
-    private Tiles createTiles(DesignDocumentUpdateRequested.Tiles tiles) {
-        return Tiles.builder()
-                .withLevel(tiles.getLevel())
-                .withRequested(tiles.getRequested())
-                .withCompleted(tiles.getCompleted())
-                .withFailed(tiles.getFailed())
                 .build();
     }
 }

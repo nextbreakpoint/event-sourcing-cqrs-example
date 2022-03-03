@@ -7,10 +7,11 @@ import com.nextbreakpoint.blueprint.common.vertx.Controller;
 import com.nextbreakpoint.blueprint.common.vertx.KafkaEmitter;
 import com.nextbreakpoint.blueprint.designs.aggregate.DesignAggregate;
 import com.nextbreakpoint.blueprint.designs.model.Design;
-import com.nextbreakpoint.blueprint.designs.model.Tiles;
+import com.nextbreakpoint.blueprint.designs.model.DesignTiles;
 import rx.Single;
 
 import java.util.Comparator;
+import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -43,6 +44,11 @@ public class TileAggregateUpdateCompletedController implements Controller<InputM
     }
 
     private DesignDocumentUpdateRequested createEvent(Design design) {
+        final List<Tiles> tiles = design.getTiles().values().stream()
+                .sorted(Comparator.comparing(DesignTiles::getLevel))
+                .map(DesignTiles::toTiles)
+                .collect(Collectors.toList());
+
         return DesignDocumentUpdateRequested.builder()
                 .withUserId(design.getUserId())
                 .withDesignId(design.getDesignId())
@@ -52,17 +58,8 @@ public class TileAggregateUpdateCompletedController implements Controller<InputM
                 .withChecksum(design.getChecksum())
                 .withStatus(design.getStatus())
                 .withLevels(design.getLevels())
-                .withTiles(design.getTiles().values().stream().sorted(Comparator.comparing(Tiles::getLevel)).map(this::createTiles).collect(Collectors.toList()))
+                .withTiles(tiles)
                 .withModified(design.getLastModified())
-                .build();
-    }
-
-    private DesignDocumentUpdateRequested.Tiles createTiles(Tiles tiles) {
-        return DesignDocumentUpdateRequested.Tiles.builder()
-                .withLevel(tiles.getLevel())
-                .withRequested(tiles.getRequested())
-                .withCompleted(tiles.getCompleted().size())
-                .withFailed(tiles.getFailed().size())
                 .build();
     }
 }

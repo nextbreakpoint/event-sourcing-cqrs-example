@@ -58,7 +58,7 @@ public class Factory {
                 .build();
     }
 
-    public static BlockingHandler<InputMessage> createDesignAggregateUpdateCancelledHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
+    public static BlockingHandler<InputMessage> createDesignAggregateUpdateCancelledHandler(Store store, String eventsTopic, String batchTopic, KafkaProducer<String, String> producer, String messageSource) {
         return TemplateHandler.<InputMessage, InputMessage, Void, Void>builder()
                 .withInputMapper(input -> input)
                 .withOutputMapper(output -> output)
@@ -66,14 +66,14 @@ public class Factory {
                     new DesignAggregate(store, new DesignStateStrategy()),
                     new DesignAggregateUpdateCancelledInputMapper(),
                     new TileRenderAbortedOutputMapper(messageSource),
-                    new KafkaEmitter(producer, topic, 3)
+                    new KafkaEmitter(producer, eventsTopic, 3)
                 ))
                 .onSuccess(new MessageConsumed())
                 .onFailure(new MessageFailed())
                 .build();
     }
 
-    public static BlockingHandler<InputMessage> createDesignAggregateUpdateRequestedHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
+    public static BlockingHandler<InputMessage> createDesignAggregateUpdateRequestedHandler(Store store, String eventsTopic, String batchTopic, KafkaProducer<String, String> producer, String messageSource) {
         return TemplateHandler.<InputMessage, InputMessage, Void, Void>builder()
                 .withInputMapper(input -> input)
                 .withOutputMapper(output -> output)
@@ -81,22 +81,23 @@ public class Factory {
                     new DesignAggregate(store, new DesignStateStrategy()),
                     new DesignAggregateUpdateRequestedInputMapper(),
                     new DesignAggregateUpdateCompletedOutputMapper(messageSource),
-                    new KafkaEmitter(producer, topic, 3)
+                    new KafkaEmitter(producer, eventsTopic, 3)
                 ))
                 .onSuccess(new MessageConsumed())
                 .onFailure(new MessageFailed())
                 .build();
     }
 
-    public static BlockingHandler<InputMessage> createDesignAggregateUpdateCompletedHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
+    public static BlockingHandler<InputMessage> createDesignAggregateUpdateCompletedHandler(Store store, String eventsTopic, String batchTopic, KafkaProducer<String, String> producer, String messageSource) {
         return TemplateHandler.<InputMessage, InputMessage, Void, Void>builder()
                 .withInputMapper(input -> input)
                 .withOutputMapper(output -> output)
                 .withController(new DesignAggregateUpdateCompletedController(
                     new DesignAggregateUpdateCompletedInputMapper(),
-                    new TileRenderRequestedOutputMapper(messageSource),
+                    new TilesRenderRequiredOutputMapper(messageSource),
                     new DesignDocumentDeleteRequestedOutputMapper(messageSource),
-                    new KafkaEmitter(producer, topic, 3)
+                    new KafkaEmitter(producer, batchTopic, 3),
+                    new KafkaEmitter(producer, eventsTopic, 3)
                 ))
                 .onSuccess(new MessageConsumed())
                 .onFailure(new MessageFailed())
@@ -183,6 +184,20 @@ public class Factory {
                 .withController(new TileRenderAbortedController(
                     new TileRenderAbortedInputMapper(),
                     new TombstoneEmitter(producer, topic, 3)
+                ))
+                .onSuccess(new MessageConsumed())
+                .onFailure(new MessageFailed())
+                .build();
+    }
+
+    public static BlockingHandler<InputMessage> createTilesRenderRequiredHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
+        return TemplateHandler.<InputMessage, InputMessage, Void, Void>builder()
+                .withInputMapper(input -> input)
+                .withOutputMapper(output -> output)
+                .withController(new TilesRenderRequiredController(
+                        new TilesRenderRequiredInputMapper(),
+                        new TileRenderRequestedOutputMapper(messageSource),
+                        new KafkaEmitter(producer, topic, 3)
                 ))
                 .onSuccess(new MessageConsumed())
                 .onFailure(new MessageFailed())

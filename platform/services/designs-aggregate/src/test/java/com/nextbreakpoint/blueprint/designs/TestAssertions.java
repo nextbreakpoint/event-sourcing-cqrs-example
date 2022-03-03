@@ -6,7 +6,7 @@ import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.core.Json;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.events.*;
-import com.nextbreakpoint.blueprint.designs.model.Tiles;
+import com.nextbreakpoint.blueprint.designs.model.DesignTiles;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.Instant;
@@ -37,13 +37,13 @@ public class TestAssertions {
         assertThat(actualToken).isNotNull();
     }
 
-    public static void assertExpectedDesign(Row row, String data, String status, List<Tiles> tiles) {
+    public static void assertExpectedDesign(Row row, String data, String status, List<DesignTiles> tiles) {
         final String actualJson = row.getString("DESIGN_DATA");
         final String actualStatus = row.getString("DESIGN_STATUS");
         final String actualChecksum = row.getString("DESIGN_CHECKSUM");
         final int actualLevels = row.getInt("DESIGN_LEVELS");
         final Map<Integer, UdtValue> tilesMap = row.getMap("DESIGN_TILES", Integer.class, UdtValue.class);
-        final List<Tiles> actualTiles = tilesMap.entrySet().stream()
+        final List<DesignTiles> actualTiles = tilesMap.entrySet().stream()
                 .map(entry -> convertToTiles(entry.getKey(), entry.getValue()))
                 .collect(Collectors.toList());
         assertThat(actualJson).isEqualTo(data);
@@ -230,7 +230,7 @@ public class TestAssertions {
     }
 
     @NotNull
-    private static Tiles convertToTiles(Integer level, UdtValue udtValue) {
-        return new Tiles(level, udtValue.getInt("REQUESTED"), udtValue.getSet("COMPLETED", Integer.class), udtValue.getSet("FAILED", Integer.class));
+    private static DesignTiles convertToTiles(Integer level, UdtValue udtValue) {
+        return new DesignTiles(level, udtValue.getInt("REQUESTED"), udtValue.getSet("COMPLETED", Integer.class), udtValue.getSet("FAILED", Integer.class));
     }
 }

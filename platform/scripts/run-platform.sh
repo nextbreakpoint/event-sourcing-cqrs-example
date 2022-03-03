@@ -2,17 +2,17 @@
 
 set -e
 
-PACTBROKER_HOST=localhost
-PACTBROKER_PORT="9292"
+export PACTBROKER_HOST=localhost
+export PACTBROKER_PORT="9292"
 
-NEXUS_HOST=localhost
-NEXUS_PORT="8081"
-NEXUS_USERNAME=admin
-NEXUS_PASSWORD=password
-
-TARGET=shared
+export NEXUS_HOST=localhost
+export NEXUS_PORT="8081"
+export NEXUS_USERNAME=admin
+export NEXUS_PASSWORD=password
 
 POSITIONAL_ARGS=()
+
+TARGET=shared
 
 for i in "$@"; do
   case $i in

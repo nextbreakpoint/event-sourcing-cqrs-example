@@ -37,7 +37,7 @@ public class KafkaPolling {
     private Thread pollingThread;
 
     public KafkaPolling(KafkaConsumer<String, String> kafkaConsumer, Map<String, BlockingHandler<InputMessage>> messageHandlers) {
-        this(kafkaConsumer, messageHandlers, KafkaRecordsQueue.Simple, -1);
+        this(kafkaConsumer, messageHandlers, KafkaRecordsQueue.Simple.create(), -1);
     }
 
     public KafkaPolling(KafkaConsumer<String, String> kafkaConsumer, Map<String, BlockingHandler<InputMessage>> messageHandlers, KafkaRecordsQueue queue, int maximumLatency) {
@@ -177,7 +177,7 @@ public class KafkaPolling {
 
             final InputMessage message = new InputMessage(record.key(), token, payload, Tracing.from(headers), record.timestamp());
 
-//            logger.debug("Received message: " + message);
+            logger.debug("Received message: " + message);
 
             handler.handleBlocking(message);
         } catch (Exception e) {

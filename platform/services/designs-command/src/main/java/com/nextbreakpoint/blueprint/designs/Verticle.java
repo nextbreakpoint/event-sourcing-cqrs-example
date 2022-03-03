@@ -58,7 +58,7 @@ import static java.util.Collections.singletonList;
 public class Verticle extends AbstractVerticle {
     private static final Logger logger = LoggerFactory.getLogger(Verticle.class.getName());
 
-    private KafkaPolling kafkaPolling;
+    private KafkaPolling commandsPolling;
 
     public static void main(String[] args) {
         try {
@@ -106,8 +106,8 @@ public class Verticle extends AbstractVerticle {
     @Override
     public Completable rxStop() {
         return Completable.fromCallable(() -> {
-            if (kafkaPolling != null) {
-                kafkaPolling.stopPolling();
+            if (commandsPolling != null) {
+                commandsPolling.stopPolling();
             }
             return null;
         });
@@ -239,9 +239,9 @@ public class Verticle extends AbstractVerticle {
             messageHandlers.put(DesignUpdateCommand.TYPE, createDesignUpdateCommandHandler(store, eventsTopic, kafkaProducer, messageSource));
             messageHandlers.put(DesignDeleteCommand.TYPE, createDesignDeleteCommandHandler(store, eventsTopic, kafkaProducer, messageSource));
 
-            kafkaPolling = new KafkaPolling(kafkaConsumer, messageHandlers);
+            commandsPolling = new KafkaPolling(kafkaConsumer, messageHandlers);
 
-            kafkaPolling.startPolling("kafka-records-poll");
+            commandsPolling.startPolling("kafka-polling-topic-" + commandsTopic);
 
             final CorsHandler corsHandler = CorsHandlerFactory.createWithAll(originPattern, asList(COOKIE, AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN), asList(COOKIE, CONTENT_TYPE, X_XSRF_TOKEN));
 

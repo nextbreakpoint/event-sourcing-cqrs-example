@@ -9,7 +9,7 @@ import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
 import com.nextbreakpoint.blueprint.common.test.KafkaTestEmitter;
 import com.nextbreakpoint.blueprint.common.test.KafkaTestPolling;
 import com.nextbreakpoint.blueprint.common.vertx.*;
-import com.nextbreakpoint.blueprint.designs.model.Tiles;
+import com.nextbreakpoint.blueprint.designs.model.DesignTiles;
 import io.vertx.rxjava.cassandra.CassandraClient;
 import io.vertx.rxjava.core.RxHelper;
 import io.vertx.rxjava.core.Vertx;
@@ -35,6 +35,7 @@ public class TestCases {
 
     private KafkaTestPolling eventsPolling;
     private KafkaTestPolling renderPolling;
+    private KafkaTestPolling batchPolling;
     private KafkaTestEmitter eventEmitter;
 
     private TestCassandra testCassandra;
@@ -62,11 +63,15 @@ public class TestCases {
 
         KafkaConsumer<String, String> renderConsumer = KafkaClientFactory.createConsumer(vertx, createConsumerConfig(consumerGroupId));
 
+        KafkaConsumer<String, String> batchConsumer = KafkaClientFactory.createConsumer(vertx, createConsumerConfig(consumerGroupId));
+
         eventsPolling = new KafkaTestPolling(eventsConsumer, TestConstants.EVENTS_TOPIC_NAME);
         renderPolling = new KafkaTestPolling(renderConsumer, TestConstants.RENDER_TOPIC_NAME);
+        batchPolling = new KafkaTestPolling(batchConsumer, TestConstants.BATCH_TOPIC_NAME);
 
         eventsPolling.startPolling();
         renderPolling.startPolling();
+        batchPolling.startPolling();
 
         eventEmitter = new KafkaTestEmitter(producer, TestConstants.EVENTS_TOPIC_NAME);
 
@@ -136,6 +141,7 @@ public class TestCases {
 
         eventsPolling.clearMessages();
         renderPolling.clearMessages();
+        batchPolling.clearMessages();
 
         eventEmitter.send(designInsertRequestedMessage);
 
@@ -159,7 +165,7 @@ public class TestCases {
                 .untilAsserted(() -> {
                     final List<Row> rows = testCassandra.fetchDesigns(designId);
                     assertThat(rows).hasSize(1);
-                    final List<Tiles> tiles = TestUtils.convertToTilesList(TestUtils.createTilesMap(TestConstants.LEVELS));
+                    final List<DesignTiles> tiles = TestUtils.convertToTilesList(TestUtils.createTilesMap(TestConstants.LEVELS));
                     TestAssertions.assertExpectedDesign(rows.get(0), TestConstants.JSON_1, "CREATED", tiles);
                 });
 
@@ -210,6 +216,7 @@ public class TestCases {
 
         eventsPolling.clearMessages();
         renderPolling.clearMessages();
+        batchPolling.clearMessages();
 
         eventEmitter.send(designInsertRequestedMessage);
 
@@ -238,7 +245,7 @@ public class TestCases {
                 .untilAsserted(() -> {
                     final List<Row> rows = testCassandra.fetchDesigns(designId);
                     assertThat(rows).hasSize(1);
-                    final List<Tiles> tiles = TestUtils.convertToTilesList(TestUtils.createTilesMap(TestConstants.LEVELS));
+                    final List<DesignTiles> tiles = TestUtils.convertToTilesList(TestUtils.createTilesMap(TestConstants.LEVELS));
                     TestAssertions.assertExpectedDesign(rows.get(0), TestConstants.JSON_2, "UPDATED", tiles);
                 });
 
@@ -294,6 +301,7 @@ public class TestCases {
 
         eventsPolling.clearMessages();
         renderPolling.clearMessages();
+        batchPolling.clearMessages();
 
         eventEmitter.send(designInsertRequestedMessage);
 
@@ -381,6 +389,7 @@ public class TestCases {
 
         eventsPolling.clearMessages();
         renderPolling.clearMessages();
+        batchPolling.clearMessages();
 
         eventEmitter.send(designInsertRequestedMessage);
 
@@ -404,7 +413,7 @@ public class TestCases {
                 .untilAsserted(() -> {
                     final List<Row> rows = testCassandra.fetchDesigns(designId);
                     assertThat(rows).hasSize(1);
-                    final List<Tiles> tiles = TestUtils.convertToTilesList(TestUtils.createTilesMap(TestConstants.LEVELS));
+                    final List<DesignTiles> tiles = TestUtils.convertToTilesList(TestUtils.createTilesMap(TestConstants.LEVELS));
                     TestAssertions.assertExpectedDesign(rows.get(0), TestConstants.JSON_1, "CREATED", tiles);
                 });
 
@@ -484,11 +493,11 @@ public class TestCases {
                 .untilAsserted(() -> {
                     final List<Row> rows = testCassandra.fetchDesigns(designId);
                     assertThat(rows).hasSize(1);
-                    final Map<Integer, Tiles> tilesMap = TestUtils.createTilesMap(TestConstants.LEVELS);
-                    tilesMap.put(0, new Tiles(0, 1, Set.of(), Set.of(0)));
-                    tilesMap.put(1, new Tiles(1, 4, Set.of(0, 65536), Set.of()));
-                    tilesMap.put(2, new Tiles(2, 16, Set.of(131073), Set.of(196609)));
-                    final List<Tiles> tiles = TestUtils.convertToTilesList(tilesMap);
+                    final Map<Integer, DesignTiles> tilesMap = TestUtils.createTilesMap(TestConstants.LEVELS);
+                    tilesMap.put(0, new DesignTiles(0, 1, Set.of(), Set.of(0)));
+                    tilesMap.put(1, new DesignTiles(1, 4, Set.of(0, 65536), Set.of()));
+                    tilesMap.put(2, new DesignTiles(2, 16, Set.of(131073), Set.of(196609)));
+                    final List<DesignTiles> tiles = TestUtils.convertToTilesList(tilesMap);
                     TestAssertions.assertExpectedDesign(rows.get(0), TestConstants.JSON_1, "CREATED", tiles);
                 });
     }

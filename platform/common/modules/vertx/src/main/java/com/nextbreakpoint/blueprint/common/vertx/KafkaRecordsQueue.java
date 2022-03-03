@@ -5,9 +5,6 @@ import io.vertx.rxjava.kafka.client.consumer.KafkaConsumerRecord;
 import java.util.*;
 
 public interface KafkaRecordsQueue {
-    Simple Simple = new KafkaRecordsQueue.Simple();
-    Compacted Compacted = new KafkaRecordsQueue.Compacted();
-
     void addRecord(KafkaConsumerRecord<String, String> record);
 
     Collection<KafkaConsumerRecord<String, String>> getRecords();
@@ -38,6 +35,10 @@ public interface KafkaRecordsQueue {
         public void clear() {
             records.clear();
         }
+
+        public static Simple create() {
+            return new Simple();
+        }
     }
 
     class Compacted implements KafkaRecordsQueue {
@@ -61,6 +62,10 @@ public interface KafkaRecordsQueue {
         @Override
         public void clear() {
             records.clear();
+        }
+
+        public static Compacted create() {
+            return new Compacted();
         }
     }
 }

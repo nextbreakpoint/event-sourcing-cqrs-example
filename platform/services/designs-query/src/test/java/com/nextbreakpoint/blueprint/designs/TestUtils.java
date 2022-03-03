@@ -11,7 +11,7 @@ import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.core.Tracing;
 import com.nextbreakpoint.blueprint.common.test.PayloadUtils;
 import com.nextbreakpoint.blueprint.designs.model.Design;
-import com.nextbreakpoint.blueprint.designs.model.Tiles;
+import com.nextbreakpoint.blueprint.common.core.Tiles;
 import org.jetbrains.annotations.NotNull;
 import rx.Observable;
 

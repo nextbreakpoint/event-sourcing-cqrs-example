@@ -19,7 +19,7 @@ public class Design {
     private final String revision;
     private final String status;
     private final int levels;
-    private final Map<Integer, Tiles> tiles;
+    private final Map<Integer, DesignTiles> tiles;
     private final LocalDateTime lastModified;
 
     public Design(
@@ -31,7 +31,7 @@ public class Design {
             String revision,
             String status,
             int levels,
-            Map<Integer, Tiles> tiles,
+            Map<Integer, DesignTiles> tiles,
             LocalDateTime lastModified
     ) {
         this.designId = designId;

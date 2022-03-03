@@ -36,5 +36,6 @@ data:
       "kafka_group_id": "designs-aggregate",
       "message_source": "service-designs",
       "events_topic": "events",
-      "render_topic": "render"
+      "render_topic": "render",
+      "batch_topic": "batch"
     }

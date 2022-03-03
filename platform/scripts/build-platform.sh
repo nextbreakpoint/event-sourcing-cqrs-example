@@ -2,25 +2,27 @@
 
 set -e
 
-REPOSITORY="integration"
-VERSION="1.0.0-$(git rev-parse --abbrev-ref HEAD)-$(git rev-parse --short HEAD)-$(date +%s)"
+export REPOSITORY="integration"
+export VERSION="1.0.0-$(git rev-parse --abbrev-ref HEAD)-$(git rev-parse --short HEAD)-$(date +%s)"
+
+export TEST_DOCKER_HOST=host.docker.internal
+
+export PACTBROKER_HOST=localhost
+export PACTBROKER_PORT="9292"
+
+export NEXUS_HOST=localhost
+export NEXUS_PORT="8081"
+export NEXUS_USERNAME=admin
+export NEXUS_PASSWORD=password
+
+POSITIONAL_ARGS=()
+
+PACKAGE="true"
 DEPLOY="true"
-BUILD="true"
+IMAGES="true"
 PACT_TESTS="true"
 PACT_VERIFY="true"
 INTEGRATION_TESTS="true"
-
-TEST_DOCKER_HOST=host.docker.internal
-
-PACTBROKER_HOST=localhost
-PACTBROKER_PORT="9292"
-
-NEXUS_HOST=localhost
-NEXUS_PORT="8081"
-NEXUS_USERNAME=admin
-NEXUS_PASSWORD=password
-
-POSITIONAL_ARGS=()
 
 for i in "$@"; do
   case $i in
@@ -60,12 +62,16 @@ for i in "$@"; do
       NEXUS_PASSWORD="${i#*=}"
       shift
       ;;
+    --skip-package)
+      PACKAGE="false"
+      shift
+      ;;
     --skip-deploy)
       DEPLOY="false"
       shift
       ;;
-    --skip-build)
-      BUILD="false"
+    --skip-images)
+      IMAGES="false"
       shift
       ;;
     --skip-tests)
@@ -115,12 +121,16 @@ echo "Docker host is ${TEST_DOCKER_HOST}"
 
 echo "Images version is ${REPOSITORY}:${VERSION}"
 
+if [[ $PACKAGE == "false" ]]; then
+  echo "Skipping package"
+fi
+
 if [[ $DEPLOY == "false" ]]; then
   echo "Skipping deploy"
 fi
 
-if [[ $BUILD == "false" ]]; then
-  echo "Skipping build"
+if [[ $IMAGES == "false" ]]; then
+  echo "Skipping images"
 fi
 
 if [[ $INTEGRATION_TESTS == "false" ]]; then
@@ -152,13 +162,15 @@ BUILD_ARGS="-q -e -Dnexus.host=${TEST_DOCKER_HOST} -Dnexus.port=${NEXUS_PORT} -D
 
 mvn versions:set versions:commit -q -e -DnewVersion=$VERSION -Dcommon=true -Dservices=true -Dplatform=true
 
-if [ "$DEPLOY" == "true" ]; then
-  mvn clean deploy -q -e -s settings.xml ${MAVEN_ARGS} -Dcommon=true -Dservices=true -Dnexus=true
+if [ "$PACKAGE" == "true" ]; then
+  mvn clean package -q -e -s settings.xml ${MAVEN_ARGS} -Dcommon=true -Dservices=true -Dplatform=true -Dnexus=true -DskipTests=true
 fi
 
-if [ "$BUILD" == "true" ]; then
+if [ "$DEPLOY" == "true" ]; then
+  mvn deploy -q -e -s settings.xml ${MAVEN_ARGS} -Dcommon=true -Dservices=true -Dnexus=true
+fi
 
-#mvn package -q -e -s settings.xml ${MAVEN_ARGS} -Dcommon=true -Dservices=true -Dnexus=true -DskipTests=true
+if [ "$IMAGES" == "true" ]; then
 
 for service in ${services[@]}; do
   pushd services/$service

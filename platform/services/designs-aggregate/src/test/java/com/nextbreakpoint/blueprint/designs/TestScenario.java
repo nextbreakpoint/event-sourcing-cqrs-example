@@ -50,6 +50,7 @@ public class TestScenario {
           .withEnv("KAFKA_PORT", "9092")
           .withEnv("EVENTS_TOPIC", TestConstants.EVENTS_TOPIC_NAME)
           .withEnv("RENDER_TOPIC", TestConstants.RENDER_TOPIC_NAME)
+          .withEnv("BATCH_TOPIC", TestConstants.BATCH_TOPIC_NAME)
           .withFileSystemBind("../../secrets/keystore_server.jks", "/secrets/keystore_server.jks", BindMode.READ_ONLY)
           .withFileSystemBind("../../secrets/keystore_auth.jceks", "/secrets/keystore_auth.jceks", BindMode.READ_ONLY)
           .withFileSystemBind("config/integration.json", "/etc/config.json", BindMode.READ_ONLY)

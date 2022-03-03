@@ -57,8 +57,9 @@ import static java.util.Arrays.asList;
 public class Verticle extends AbstractVerticle {
     private static final Logger logger = LoggerFactory.getLogger(Verticle.class.getName());
 
-    private KafkaPolling kafkaPolling1;
-    private KafkaPolling kafkaPolling2;
+    private KafkaPolling eventsPolling;
+    private KafkaPolling renderPolling;
+    private KafkaPolling batchPolling;
 
     public static void main(String[] args) {
         try {
@@ -113,11 +114,14 @@ public class Verticle extends AbstractVerticle {
     @Override
     public Completable rxStop() {
         return Completable.fromCallable(() -> {
-            if (kafkaPolling1 != null) {
-                kafkaPolling1.stopPolling();
+            if (eventsPolling != null) {
+                eventsPolling.stopPolling();
             }
-            if (kafkaPolling2 != null) {
-                kafkaPolling2.stopPolling();
+            if (renderPolling != null) {
+                renderPolling.stopPolling();
+            }
+            if (batchPolling != null) {
+                batchPolling.stopPolling();
             }
             return null;
         });
@@ -140,6 +144,8 @@ public class Verticle extends AbstractVerticle {
             final String renderTopic = config.getString("render_topic");
 
             final String eventsTopic = config.getString("events_topic");
+
+            final String batchTopic = config.getString("batch_topic");
 
             final String messageSource = config.getString("message_source");
 
@@ -223,9 +229,24 @@ public class Verticle extends AbstractVerticle {
                     .withEnableAutoCommit(enableAutoCommit)
                     .build();
 
+            final KafkaConsumerConfig consumerConfig3 = KafkaConsumerConfig.builder()
+                    .withBootstrapServers(bootstrapServers)
+                    .withKeyDeserializer(keyDeserializer)
+                    .withValueDeserializer(valDeserializer)
+                    .withKeystoreLocation(keystoreLocation)
+                    .withKeystorePassword(keystorePassword)
+                    .withTruststoreLocation(truststoreLocation)
+                    .withTruststorePassword(truststorePassword)
+                    .withGroupId(groupId + "-3")
+                    .withAutoOffsetReset(autoOffsetReset)
+                    .withEnableAutoCommit(enableAutoCommit)
+                    .build();
+
             final KafkaConsumer<String, String> kafkaConsumer1 = KafkaClientFactory.createConsumer(vertx, consumerConfig1);
 
             final KafkaConsumer<String, String> kafkaConsumer2 = KafkaClientFactory.createConsumer(vertx, consumerConfig2);
+
+            final KafkaConsumer<String, String> kafkaConsumer3 = KafkaClientFactory.createConsumer(vertx, consumerConfig3);
 
             final CassandraClientConfig cassandraConfig = CassandraClientConfig.builder()
                     .withClusterName(clusterName)
@@ -248,17 +269,21 @@ public class Verticle extends AbstractVerticle {
 
             final Map<String, BlockingHandler<InputMessage>> messageHandlers2 = new HashMap<>();
 
+            final Map<String, BlockingHandler<InputMessage>> messageHandlers3 = new HashMap<>();
+
             kafkaConsumer1.subscribe(eventsTopic);
 
             kafkaConsumer2.subscribe(eventsTopic);
+
+            kafkaConsumer3.subscribe(batchTopic);
 
             messageHandlers1.put(DesignInsertRequested.TYPE, createDesignInsertRequestedHandler(store, eventsTopic, kafkaProducer, messageSource));
             messageHandlers1.put(DesignUpdateRequested.TYPE, createDesignUpdateRequestedHandler(store, eventsTopic, kafkaProducer, messageSource));
             messageHandlers1.put(DesignDeleteRequested.TYPE, createDesignDeleteRequestedHandler(store, eventsTopic, kafkaProducer, messageSource));
 
-            messageHandlers1.put(DesignAggregateUpdateRequested.TYPE, createDesignAggregateUpdateRequestedHandler(store, eventsTopic, kafkaProducer, messageSource));
-            messageHandlers1.put(DesignAggregateUpdateCompleted.TYPE, createDesignAggregateUpdateCompletedHandler(store, eventsTopic, kafkaProducer, messageSource));
-            messageHandlers1.put(DesignAggregateUpdateCancelled.TYPE, createDesignAggregateUpdateCancelledHandler(store, eventsTopic, kafkaProducer, messageSource));
+            messageHandlers1.put(DesignAggregateUpdateRequested.TYPE, createDesignAggregateUpdateRequestedHandler(store, eventsTopic, batchTopic, kafkaProducer, messageSource));
+            messageHandlers1.put(DesignAggregateUpdateCompleted.TYPE, createDesignAggregateUpdateCompletedHandler(store, eventsTopic, batchTopic, kafkaProducer, messageSource));
+            messageHandlers1.put(DesignAggregateUpdateCancelled.TYPE, createDesignAggregateUpdateCancelledHandler(store, eventsTopic, batchTopic, kafkaProducer, messageSource));
 
             messageHandlers1.put(TileAggregateUpdateRequested.TYPE, createTileAggregateUpdateRequestedHandler(store, eventsTopic, kafkaProducer, messageSource));
             messageHandlers1.put(TileAggregateUpdateCompleted.TYPE, createTileAggregateUpdateCompletedHandler(store, eventsTopic, kafkaProducer, messageSource));
@@ -269,13 +294,19 @@ public class Verticle extends AbstractVerticle {
 
             messageHandlers2.put(TileAggregateUpdateRequired.TYPE, createTileAggregateUpdateRequiredHandler(store, eventsTopic, kafkaProducer, messageSource));
 
-            kafkaPolling1 = new KafkaPolling(kafkaConsumer1, messageHandlers1);
+            messageHandlers3.put(TilesRenderRequired.TYPE, createTilesRenderRequiredHandler(store, eventsTopic, kafkaProducer, messageSource));
 
-            kafkaPolling2 = new KafkaPolling(kafkaConsumer2, messageHandlers2, KafkaRecordsQueue.Compacted, 30000);
+            eventsPolling = new KafkaPolling(kafkaConsumer1, messageHandlers1);
 
-            kafkaPolling1.startPolling("kafka-records-poll-1");
+            renderPolling = new KafkaPolling(kafkaConsumer2, messageHandlers2, KafkaRecordsQueue.Compacted.create(), 5000);
 
-            kafkaPolling2.startPolling("kafka-records-poll-2");
+            batchPolling = new KafkaPolling(kafkaConsumer3, messageHandlers3, KafkaRecordsQueue.Compacted.create(), 2000);
+
+            eventsPolling.startPolling("kafka-polling-topic-" + eventsTopic);
+
+            renderPolling.startPolling("kafka-polling-topic-" + renderTopic);
+
+            batchPolling.startPolling("kafka-polling-topic-" + batchTopic);
 
             final Handler<RoutingContext> apiV1DocsHandler = new OpenApiHandler(vertx.getDelegate(), executor, "api-v1.yaml");
 

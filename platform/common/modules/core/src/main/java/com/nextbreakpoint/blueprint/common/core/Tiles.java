@@ -1,4 +1,4 @@
-package com.nextbreakpoint.blueprint.designs.model;
+package com.nextbreakpoint.blueprint.common.core;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;

@@ -21,5 +21,6 @@
   "kafka_group_id": "designs-aggregate",
   "message_source": "service-designs",
   "events_topic": "${EVENTS_TOPIC}",
-  "render_topic": "${RENDER_TOPIC}"
+  "render_topic": "${RENDER_TOPIC}",
+  "batch_topic": "${BATCH_TOPIC}"
 }

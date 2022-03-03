@@ -9,7 +9,7 @@ import com.nextbreakpoint.blueprint.common.events.mappers.DesignDocumentDeleteRe
 import com.nextbreakpoint.blueprint.common.events.mappers.DesignDocumentUpdateRequestedOutputMapper;
 import com.nextbreakpoint.blueprint.designs.model.Design;
 import com.nextbreakpoint.blueprint.designs.model.DesignDocument;
-import com.nextbreakpoint.blueprint.designs.model.Tiles;
+import com.nextbreakpoint.blueprint.common.core.Tiles;
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.*;
 
@@ -78,10 +78,10 @@ public class IntegrationTests {
     final UUID designId1 = UUID.randomUUID();
     final UUID designId2 = UUID.randomUUID();
 
-    final List<DesignDocumentUpdateRequested.Tiles> tiles1 = TestUtils.getTiles(TestConstants.LEVELS, 0.0f).stream().map(this::createTiles).collect(Collectors.toList());
-    final List<DesignDocumentUpdateRequested.Tiles> tiles2 = TestUtils.getTiles(TestConstants.LEVELS, 0.5f).stream().map(this::createTiles).collect(Collectors.toList());
-    final List<DesignDocumentUpdateRequested.Tiles> tiles3 = TestUtils.getTiles(TestConstants.LEVELS, 1.0f).stream().map(this::createTiles).collect(Collectors.toList());
-    final List<DesignDocumentUpdateRequested.Tiles> tiles4 = TestUtils.getTiles(TestConstants.LEVELS, 1.0f).stream().map(this::createTiles).collect(Collectors.toList());
+    final List<Tiles> tiles1 = TestUtils.getTiles(TestConstants.LEVELS, 0.0f);
+    final List<Tiles> tiles2 = TestUtils.getTiles(TestConstants.LEVELS, 0.5f);
+    final List<Tiles> tiles3 = TestUtils.getTiles(TestConstants.LEVELS, 1.0f);
+    final List<Tiles> tiles4 = TestUtils.getTiles(TestConstants.LEVELS, 1.0f);
 
     final DesignDocumentUpdateRequested designDocumentUpdateRequested1 = new DesignDocumentUpdateRequested(designId1, TestConstants.USER_ID, UUID.randomUUID(), TestConstants.JSON_1, TestConstants.CHECKSUM_1, TestConstants.REVISION_0, "CREATED", TestConstants.LEVELS, tiles1, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
     final DesignDocumentUpdateRequested designDocumentUpdateRequested2 = new DesignDocumentUpdateRequested(designId1, TestConstants.USER_ID, UUID.randomUUID(), TestConstants.JSON_1, TestConstants.CHECKSUM_1, TestConstants.REVISION_1, "UPDATED", TestConstants.LEVELS, tiles2, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
@@ -105,7 +105,7 @@ public class IntegrationTests {
   public void shouldDeleteTheDesignWhenReceivingADesignDocumentDeleteRequested() {
     final UUID designId = UUID.randomUUID();
 
-    final List<DesignDocumentUpdateRequested.Tiles> tiles = TestUtils.getTiles(TestConstants.LEVELS, 100.0f).stream().map(this::createTiles).collect(Collectors.toList());
+    final List<Tiles> tiles = TestUtils.getTiles(TestConstants.LEVELS, 100.0f);
 
     final DesignDocumentUpdateRequested designDocumentUpdateRequested = new DesignDocumentUpdateRequested(designId, TestConstants.USER_ID, UUID.randomUUID(), TestConstants.JSON_2, TestConstants.CHECKSUM_2, TestConstants.REVISION_0, "CREATED", TestConstants.LEVELS, tiles, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
     final DesignDocumentDeleteRequested designDocumentDeleteRequested = new DesignDocumentDeleteRequested(designId, TestConstants.REVISION_0);
@@ -455,14 +455,5 @@ public class IntegrationTests {
             .then().assertThat().statusCode(200)
             .and().assertThat().contentType("image/png")
             .extract().response().asByteArray();
-  }
-
-  private DesignDocumentUpdateRequested.Tiles createTiles(Tiles tiles) {
-    return DesignDocumentUpdateRequested.Tiles.builder()
-            .withLevel(tiles.getLevel())
-            .withRequested(tiles.getRequested())
-            .withCompleted(tiles.getCompleted())
-            .withFailed(tiles.getFailed())
-            .build();
   }
 }

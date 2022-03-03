@@ -11,21 +11,21 @@ import java.util.UUID;
 
 @Data
 @Builder(access = AccessLevel.PUBLIC, setterPrefix = "with")
-public class DesignAbortRequested {
-    public static final String TYPE = "design-abort-requested-v1";
+public class DesignAggregateUpdateCancelled {
+    public static final String TYPE = "design-aggregate-update-cancelled-v1";
 
     private final UUID designId;
-    private final UUID userId;
+    private final String revision;
     private final String checksum;
 
     @JsonCreator
-    public DesignAbortRequested(
+    public DesignAggregateUpdateCancelled(
             @JsonProperty("designId") UUID designId,
-            @JsonProperty("userId") UUID userId,
+            @JsonProperty("revision") String revision,
             @JsonProperty("checksum") String checksum
     ) {
         this.designId = Objects.requireNonNull(designId);
-        this.userId = Objects.requireNonNull(userId);
+        this.revision = Objects.requireNonNull(revision);
         this.checksum = Objects.requireNonNull(checksum);
     }
 }

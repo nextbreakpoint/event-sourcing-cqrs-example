@@ -255,10 +255,10 @@ public class Verticle extends AbstractVerticle {
             messageHandlers1.put(DesignInsertRequested.TYPE, createDesignInsertRequestedHandler(store, eventsTopic, kafkaProducer, messageSource));
             messageHandlers1.put(DesignUpdateRequested.TYPE, createDesignUpdateRequestedHandler(store, eventsTopic, kafkaProducer, messageSource));
             messageHandlers1.put(DesignDeleteRequested.TYPE, createDesignDeleteRequestedHandler(store, eventsTopic, kafkaProducer, messageSource));
-            messageHandlers1.put(DesignAbortRequested.TYPE, createDesignAbortRequestedHandler(store, eventsTopic, kafkaProducer, messageSource));
 
             messageHandlers1.put(DesignAggregateUpdateRequested.TYPE, createDesignAggregateUpdateRequestedHandler(store, eventsTopic, kafkaProducer, messageSource));
             messageHandlers1.put(DesignAggregateUpdateCompleted.TYPE, createDesignAggregateUpdateCompletedHandler(store, eventsTopic, kafkaProducer, messageSource));
+            messageHandlers1.put(DesignAggregateUpdateCancelled.TYPE, createDesignAggregateUpdateCancelledHandler(store, eventsTopic, kafkaProducer, messageSource));
 
             messageHandlers1.put(TileAggregateUpdateRequested.TYPE, createTileAggregateUpdateRequestedHandler(store, eventsTopic, kafkaProducer, messageSource));
             messageHandlers1.put(TileAggregateUpdateCompleted.TYPE, createTileAggregateUpdateCompletedHandler(store, eventsTopic, kafkaProducer, messageSource));

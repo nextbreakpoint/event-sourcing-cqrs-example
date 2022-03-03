@@ -1,7 +1,7 @@
 package com.nextbreakpoint.blueprint.designs.controllers;
 
 import com.nextbreakpoint.blueprint.common.core.*;
-import com.nextbreakpoint.blueprint.common.events.DesignAbortRequested;
+import com.nextbreakpoint.blueprint.common.events.DesignAggregateUpdateCancelled;
 import com.nextbreakpoint.blueprint.common.events.TileRenderAborted;
 import com.nextbreakpoint.blueprint.common.vertx.Controller;
 import com.nextbreakpoint.blueprint.common.vertx.KafkaEmitter;
@@ -16,13 +16,13 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public class DesignAbortRequestedController implements Controller<InputMessage, Void> {
-    private final Mapper<InputMessage, DesignAbortRequested> inputMapper;
+public class DesignAggregateUpdateCancelledController implements Controller<InputMessage, Void> {
+    private final Mapper<InputMessage, DesignAggregateUpdateCancelled> inputMapper;
     private final MessageMapper<TileRenderAborted, OutputMessage> outputMapper;
     private final KafkaEmitter emitter;
     private final DesignAggregate aggregate;
 
-    public DesignAbortRequestedController(DesignAggregate aggregate, Mapper<InputMessage, DesignAbortRequested> inputMapper, MessageMapper<TileRenderAborted, OutputMessage> outputMapper, KafkaEmitter emitter) {
+    public DesignAggregateUpdateCancelledController(DesignAggregate aggregate, Mapper<InputMessage, DesignAggregateUpdateCancelled> inputMapper, MessageMapper<TileRenderAborted, OutputMessage> outputMapper, KafkaEmitter emitter) {
         this.aggregate = Objects.requireNonNull(aggregate);
         this.inputMapper = Objects.requireNonNull(inputMapper);
         this.outputMapper = Objects.requireNonNull(outputMapper);
@@ -42,13 +42,13 @@ public class DesignAbortRequestedController implements Controller<InputMessage, 
                 .map(result -> null);
     }
 
-    private Observable<TileRenderAborted> onTileRenderAborted(DesignAbortRequested event) {
+    private Observable<TileRenderAborted> onTileRenderAborted(DesignAggregateUpdateCancelled event) {
         return aggregate.findDesign(event.getDesignId())
                 .map(result -> result.orElseThrow(() -> new RuntimeException("Design not found " + event.getDesignId())))
                 .flatMapObservable(design -> generateEvents(event, design));
     }
 
-    private Observable<TileRenderAborted> generateEvents(DesignAbortRequested event, Design design) {
+    private Observable<TileRenderAborted> generateEvents(DesignAggregateUpdateCancelled event, Design design) {
         return generateEvents(event, design, 0)
                 .concatWith(generateEvents(event, design, 1))
                 .concatWith(generateEvents(event, design, 2))
@@ -59,7 +59,7 @@ public class DesignAbortRequestedController implements Controller<InputMessage, 
                 .concatWith(generateEvents(event, design, 7));
     }
 
-    private Observable<TileRenderAborted> generateEvents(DesignAbortRequested event, Design design, int level) {
+    private Observable<TileRenderAborted> generateEvents(DesignAggregateUpdateCancelled event, Design design, int level) {
         if (design.getLevels() > level) {
             return Observable.from(generateTiles(level)).map(tile -> createEvent(event, design, tile));
         } else {
@@ -67,7 +67,7 @@ public class DesignAbortRequestedController implements Controller<InputMessage, 
         }
     }
 
-    private TileRenderAborted createEvent(DesignAbortRequested event, Design design, Tile tile) {
+    private TileRenderAborted createEvent(DesignAggregateUpdateCancelled event, Design design, Tile tile) {
         return TileRenderAborted.builder()
                 .withDesignId(event.getDesignId())
                 .withRevision(design.getRevision())

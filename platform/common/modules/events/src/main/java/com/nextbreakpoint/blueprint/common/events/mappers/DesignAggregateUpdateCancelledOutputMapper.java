@@ -1,25 +1,25 @@
 package com.nextbreakpoint.blueprint.common.events.mappers;
 
 import com.nextbreakpoint.blueprint.common.core.*;
-import com.nextbreakpoint.blueprint.common.events.DesignAbortRequested;
+import com.nextbreakpoint.blueprint.common.events.DesignAggregateUpdateCancelled;
 
 import java.util.Objects;
 import java.util.UUID;
 
-public class DesignAbortRequestedOutputMapper implements MessageMapper<DesignAbortRequested, OutputMessage> {
+public class DesignAggregateUpdateCancelledOutputMapper implements MessageMapper<DesignAggregateUpdateCancelled, OutputMessage> {
     private final String messageSource;
 
-    public DesignAbortRequestedOutputMapper(String messageSource) {
+    public DesignAggregateUpdateCancelledOutputMapper(String messageSource) {
         this.messageSource = Objects.requireNonNull(messageSource);
     }
 
     @Override
-    public OutputMessage transform(Tracing trace, DesignAbortRequested event) {
+    public OutputMessage transform(Tracing trace, DesignAggregateUpdateCancelled event) {
         return new OutputMessage(
                 event.getDesignId().toString(),
                 new Payload(
                         UUID.randomUUID(),
-                        DesignAbortRequested.TYPE,
+                        DesignAggregateUpdateCancelled.TYPE,
                         Json.encodeValue(event),
                         messageSource
                 ),

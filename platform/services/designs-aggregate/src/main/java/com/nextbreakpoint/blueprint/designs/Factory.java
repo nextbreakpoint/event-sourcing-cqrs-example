@@ -58,13 +58,13 @@ public class Factory {
                 .build();
     }
 
-    public static BlockingHandler<InputMessage> createDesignAbortRequestedHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
+    public static BlockingHandler<InputMessage> createDesignAggregateUpdateCancelledHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
         return TemplateHandler.<InputMessage, InputMessage, Void, Void>builder()
                 .withInputMapper(input -> input)
                 .withOutputMapper(output -> output)
-                .withController(new DesignAbortRequestedController(
+                .withController(new DesignAggregateUpdateCancelledController(
                     new DesignAggregate(store, new DesignStateStrategy()),
-                    new DesignAbortRequestedInputMapper(),
+                    new DesignAggregateUpdateCancelledInputMapper(),
                     new TileRenderAbortedOutputMapper(messageSource),
                     new KafkaEmitter(producer, topic, 3)
                 ))

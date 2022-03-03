@@ -56,13 +56,13 @@ a, a:active, a:hover, a:visited {
 }
 
 header a, header a:active, header a:hover, header a:visited {
-    color: #fdfdfd;
-    text-decoration: underline;
+    color: #fdfdfd !important;
+    text-decoration: none !important;
 }
 
 footer a, footer a:active, footer a:hover, footer a:visited {
-    color: #222222;
-    text-decoration: underline;
+    color: #222222 !important;
+    text-decoration: none !important;
 }
 
 .leaflet-container {

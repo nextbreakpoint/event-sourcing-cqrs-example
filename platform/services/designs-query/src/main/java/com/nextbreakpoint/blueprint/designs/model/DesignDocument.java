@@ -15,6 +15,7 @@ public class DesignDocument {
     private final UUID uuid;
     private final String json;
     private final String checksum;
+    private final String revision;
     private final String modified;
 
     @JsonCreator
@@ -22,11 +23,13 @@ public class DesignDocument {
         @JsonProperty("uuid") UUID uuid,
         @JsonProperty("json") String json,
         @JsonProperty("checksum") String checksum,
+        @JsonProperty("revision") String revision,
         @JsonProperty("modified") String modified
     ) {
         this.uuid = Objects.requireNonNull(uuid);
         this.json = Objects.requireNonNull(json);
         this.checksum = Objects.requireNonNull(checksum);
+        this.revision = Objects.requireNonNull(revision);
         this.modified = Objects.requireNonNull(modified);
     }
 
@@ -35,6 +38,7 @@ public class DesignDocument {
                 .withUuid(design.getDesignId())
                 .withJson(design.getData())
                 .withChecksum(design.getChecksum())
+                .withRevision(design.getRevision())
                 .withModified(design.getLastModified())
                 .build();
     }

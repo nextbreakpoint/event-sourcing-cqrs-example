@@ -8,7 +8,6 @@ import com.nextbreakpoint.blueprint.common.vertx.KafkaEmitter;
 import com.nextbreakpoint.blueprint.designs.Store;
 import com.nextbreakpoint.blueprint.designs.model.Design;
 import com.nextbreakpoint.blueprint.designs.model.Tiles;
-import com.nextbreakpoint.blueprint.designs.persistence.DeleteDesignRequest;
 import com.nextbreakpoint.blueprint.designs.persistence.InsertDesignRequest;
 import rx.Observable;
 import rx.Single;
@@ -46,15 +45,9 @@ public class DesignDocumentUpdateRequestedController implements Controller<Input
     }
 
     private Observable<DesignDocumentUpdateCompleted> onDesignDocumentUpdateRequested(DesignDocumentUpdateRequested event) {
-        if (event.getStatus().equals("DELETED")) {
-            return store.deleteDesign(new DeleteDesignRequest(event.getDesignId()))
-                    .map(result -> new DesignDocumentUpdateCompleted(event.getDesignId(), event.getRevision()))
-                    .toObservable();
-        } else {
-            return store.insertDesign(new InsertDesignRequest(event.getDesignId(), createDesign(event)))
-                    .map(result -> new DesignDocumentUpdateCompleted(event.getDesignId(), event.getRevision()))
-                    .toObservable();
-        }
+        return store.insertDesign(new InsertDesignRequest(event.getDesignId(), createDesign(event)))
+                .map(result -> new DesignDocumentUpdateCompleted(event.getDesignId(), event.getRevision()))
+                .toObservable();
     }
 
     private Design createDesign(DesignDocumentUpdateRequested event) {

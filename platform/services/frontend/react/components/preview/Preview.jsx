@@ -55,7 +55,7 @@ let Preview = class Preview extends React.Component {
                             }
 
                             source.addEventListener("update",  function(event) {
-                               conosle.log(event)
+                               console.log(event.data)
                                console.log("Reloading design...")
                                component.loadDesign(revision)
                             }, false)
@@ -94,11 +94,12 @@ let Preview = class Preview extends React.Component {
                     console.log("Design loaded")
                     let design = JSON.parse(response.data.json)
                     design.checksum = response.data.checksum
+                    design.revision = response.data.revision
                     design.modified = response.data.modified
                     design.uuid = response.data.uuid
-                    if (component.props.design == undefined || design.script != component.props.design.script || design.metadata != component.props.design.metadata || design.manifest != component.props.design.manifest) {
+                    if (component.props.design == undefined || design.revision > component.props.revision) {
                         console.log("Design changed")
-                        component.props.handleLoadDesignSuccess(design, revision)
+                        component.props.handleLoadDesignSuccess(design, design.revision)
                     }
                     //component.props.handleHideErrorMessage()
                 } else {

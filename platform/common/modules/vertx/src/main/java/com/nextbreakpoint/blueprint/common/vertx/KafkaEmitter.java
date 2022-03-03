@@ -29,7 +29,7 @@ public class KafkaEmitter implements Controller<OutputMessage, Void> {
     @Override
     public Single<Void> onNext(OutputMessage message) {
         return Single.just(message)
-                .doOnEach(outputMessage -> logger.debug("Sending message: " + outputMessage))
+                .doOnEach(notification -> logger.debug("Sending message: " + notification.getValue()))
                 .map(this::createKafkaRecord)
                 .map(record -> addHeaders(message, record))
                 .flatMap(this::writeRecord);

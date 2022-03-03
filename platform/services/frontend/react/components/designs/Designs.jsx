@@ -51,11 +51,11 @@ let Designs = class Designs extends React.Component {
                             }
 
                             source.onopen = function() {
-                              component.loadDesigns(timestamp)
+                              component.loadDesigns(revision)
                             }
 
                             source.addEventListener("update",  function(event) {
-                               console.log(event)
+                               console.log(event.data)
                                console.log("Reloading designs...")
                                component.loadDesigns(revision)
                             }, false)
@@ -92,7 +92,7 @@ let Designs = class Designs extends React.Component {
             .then(function (response) {
                 if (response.status == 200) {
                     console.log("Designs loaded")
-                    let designs = response.data.map((design) => { return { uuid: design.uuid, checksum: design.checksum }})
+                    let designs = response.data.map((design) => { return { uuid: design.uuid, checksum: design.checksum, revision: design.revision }})
                     component.props.handleLoadDesignsSuccess(designs, revision)
                     //component.props.handleHideErrorMessage()
                 } else {

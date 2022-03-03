@@ -90,11 +90,6 @@ public class VerifyQueryPact {
         return produceDesignDocumentUpdateRequested(new UUID(0L, 3L), TestConstants.JSON_2, TestConstants.CHECKSUM_2, "CREATED", 1.0f);
     }
 
-    @PactVerifyProvider("design document update requested for design 00000000-0000-0000-0000-000000000003 with deleted status")
-    public String produceDesignDocumentUpdateRequested6() {
-        return produceDesignDocumentUpdateRequested(new UUID(0L, 3L), TestConstants.JSON_2, TestConstants.CHECKSUM_2, "DELETED", 1.0f);
-    }
-
     @PactVerifyProvider("design document delete requested for design 00000000-0000-0000-0000-000000000003")
     public String produceDesignDocumentDeleteRequested() {
         return produceDesignDocumentDeleteRequested(new UUID(0L, 3L));

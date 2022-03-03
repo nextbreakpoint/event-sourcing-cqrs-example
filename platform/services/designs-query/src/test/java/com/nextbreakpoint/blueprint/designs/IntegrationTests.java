@@ -101,24 +101,6 @@ public class IntegrationTests {
   }
 
   @Test
-  @DisplayName("Should delete the design after receiving a DesignDocumentUpdateRequested event")
-  public void shouldDeleteTheDesignWhenReceivingADesignDocumentUpdateRequested() {
-    final UUID designId = UUID.randomUUID();
-
-    final List<DesignDocumentUpdateRequested.Tiles> tiles = TestUtils.getTiles(TestConstants.LEVELS, 100.0f).stream().map(this::createTiles).collect(Collectors.toList());
-
-    final DesignDocumentUpdateRequested designDocumentUpdateRequested1 = new DesignDocumentUpdateRequested(designId, TestConstants.USER_ID, UUID.randomUUID(), TestConstants.JSON_2, TestConstants.CHECKSUM_2, TestConstants.REVISION_0, "CREATED", TestConstants.LEVELS, tiles, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
-    final DesignDocumentUpdateRequested designDocumentUpdateRequested2 = new DesignDocumentUpdateRequested(designId, TestConstants.USER_ID, UUID.randomUUID(), TestConstants.JSON_2, TestConstants.CHECKSUM_2, TestConstants.REVISION_1, "DELETED", TestConstants.LEVELS, tiles, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
-
-    final DesignDocumentUpdateRequestedOutputMapper outputMapper = new DesignDocumentUpdateRequestedOutputMapper(TestConstants.MESSAGE_SOURCE);
-
-    final OutputMessage designDocumentUpdateRequestedMessage1 = outputMapper.transform(Tracing.of(UUID.randomUUID()), designDocumentUpdateRequested1);
-    final OutputMessage designDocumentUpdateRequestedMessage2 = outputMapper.transform(Tracing.of(UUID.randomUUID()), designDocumentUpdateRequested2);
-
-    testCases.shouldDeleteTheDesignWhenReceivingADesignDocumentUpdateRequestedMessage(designDocumentUpdateRequestedMessage1, designDocumentUpdateRequestedMessage2);
-  }
-
-  @Test
   @DisplayName("Should delete the design after receiving a DesignDocumentDeleteRequested event")
   public void shouldDeleteTheDesignWhenReceivingADesignDocumentDeleteRequested() {
     final UUID designId = UUID.randomUUID();
@@ -216,6 +198,10 @@ public class IntegrationTests {
     assertThat(sortedResults.get(1).getChecksum()).isEqualTo(Checksum.of(JSON_2));
     assertThat(sortedResults.get(2).getChecksum()).isEqualTo(Checksum.of(JSON_3));
     assertThat(sortedResults.get(3).getChecksum()).isEqualTo(Checksum.of(JSON_4));
+    assertThat(sortedResults.get(0).getRevision()).isNotNull();
+    assertThat(sortedResults.get(1).getRevision()).isNotNull();
+    assertThat(sortedResults.get(2).getRevision()).isNotNull();
+    assertThat(sortedResults.get(3).getRevision()).isNotNull();
     assertThat(sortedResults.get(0).getModified()).isNotNull();
     assertThat(sortedResults.get(1).getModified()).isNotNull();
     assertThat(sortedResults.get(2).getModified()).isNotNull();
@@ -234,6 +220,7 @@ public class IntegrationTests {
     assertThat(result.getJson()).isEqualTo(json1);
     assertThat(result.getModified()).isNotNull();
     assertThat(result.getChecksum()).isNotNull();
+    assertThat(result.getRevision()).isNotNull();
   }
 
   @Test
@@ -269,6 +256,10 @@ public class IntegrationTests {
     assertThat(sortedResults.get(1).getChecksum()).isEqualTo(Checksum.of(JSON_2));
     assertThat(sortedResults.get(2).getChecksum()).isEqualTo(Checksum.of(JSON_3));
     assertThat(sortedResults.get(3).getChecksum()).isEqualTo(Checksum.of(JSON_4));
+    assertThat(sortedResults.get(0).getRevision()).isNotNull();
+    assertThat(sortedResults.get(1).getRevision()).isNotNull();
+    assertThat(sortedResults.get(2).getRevision()).isNotNull();
+    assertThat(sortedResults.get(3).getRevision()).isNotNull();
     assertThat(sortedResults.get(0).getModified()).isNotNull();
     assertThat(sortedResults.get(1).getModified()).isNotNull();
     assertThat(sortedResults.get(2).getModified()).isNotNull();
@@ -287,6 +278,7 @@ public class IntegrationTests {
     assertThat(result.getJson()).isEqualTo(json1);
     assertThat(result.getModified()).isNotNull();
     assertThat(result.getChecksum()).isNotNull();
+    assertThat(result.getRevision()).isNotNull();
   }
 
   @Test
@@ -322,6 +314,10 @@ public class IntegrationTests {
     assertThat(sortedResults.get(1).getChecksum()).isEqualTo(Checksum.of(JSON_2));
     assertThat(sortedResults.get(2).getChecksum()).isEqualTo(Checksum.of(JSON_3));
     assertThat(sortedResults.get(3).getChecksum()).isEqualTo(Checksum.of(JSON_4));
+    assertThat(sortedResults.get(0).getRevision()).isNotNull();
+    assertThat(sortedResults.get(1).getRevision()).isNotNull();
+    assertThat(sortedResults.get(2).getRevision()).isNotNull();
+    assertThat(sortedResults.get(3).getRevision()).isNotNull();
     assertThat(sortedResults.get(0).getModified()).isNotNull();
     assertThat(sortedResults.get(1).getModified()).isNotNull();
     assertThat(sortedResults.get(2).getModified()).isNotNull();
@@ -340,6 +336,7 @@ public class IntegrationTests {
     assertThat(result.getJson()).isEqualTo(json1);
     assertThat(result.getModified()).isNotNull();
     assertThat(result.getChecksum()).isNotNull();
+    assertThat(result.getRevision()).isNotNull();
   }
 
   @Test

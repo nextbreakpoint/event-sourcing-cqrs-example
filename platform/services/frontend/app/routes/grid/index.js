@@ -67,7 +67,7 @@ Instance.prototype.make = function (designs) {
         let cells = pattern.map((row) => {
             return row.map((col) => {
                 let design = designs[(offset + col[0]) % designs.length]
-                let url = design.baseUrl + "/" + design.uuid + "/" + col[1] + "/" + col[3] + "/" + col[2] + "/256.png"
+                let url = design.baseUrl + "/" + design.uuid + "/" + col[1] + "/" + col[3] + "/" + col[2] + "/256.png?t=" + design.checksum
                 let cell = {
                     design: design,
                     imageUrl: url

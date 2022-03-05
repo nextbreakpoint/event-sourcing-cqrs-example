@@ -9,6 +9,8 @@ public interface KafkaRecordsQueue {
 
     Collection<KafkaConsumerRecord<String, String>> getRecords();
 
+    void deleteRecord(KafkaConsumerRecord<String, String> record);
+
     int size();
 
     void clear();
@@ -20,6 +22,9 @@ public interface KafkaRecordsQueue {
         public void addRecord(KafkaConsumerRecord<String, String> record) {
             records.add(record);
         }
+
+        @Override
+        public void deleteRecord(KafkaConsumerRecord<String, String> record) {}
 
         @Override
         public Collection<KafkaConsumerRecord<String, String>> getRecords() {
@@ -47,6 +52,11 @@ public interface KafkaRecordsQueue {
         @Override
         public void addRecord(KafkaConsumerRecord<String, String> record) {
             records.put(record.key(), record);
+        }
+
+        @Override
+        public void deleteRecord(KafkaConsumerRecord<String, String> record) {
+            records.remove(record.key());
         }
 
         @Override

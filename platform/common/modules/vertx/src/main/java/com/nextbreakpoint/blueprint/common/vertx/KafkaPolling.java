@@ -28,7 +28,9 @@ public class KafkaPolling {
 
     private final KafkaRecordsQueue queue;
 
-    private final int maximumLatency;
+    private final int latency;
+
+    private final int maxRecords;
 
     private final Set<TopicPartition> suspendedPartitions = new HashSet<>();
 
@@ -37,14 +39,15 @@ public class KafkaPolling {
     private Thread pollingThread;
 
     public KafkaPolling(KafkaConsumer<String, String> kafkaConsumer, Map<String, BlockingHandler<InputMessage>> messageHandlers) {
-        this(kafkaConsumer, messageHandlers, KafkaRecordsQueue.Simple.create(), -1);
+        this(kafkaConsumer, messageHandlers, KafkaRecordsQueue.Simple.create(), -1, 10);
     }
 
-    public KafkaPolling(KafkaConsumer<String, String> kafkaConsumer, Map<String, BlockingHandler<InputMessage>> messageHandlers, KafkaRecordsQueue queue, int maximumLatency) {
+    public KafkaPolling(KafkaConsumer<String, String> kafkaConsumer, Map<String, BlockingHandler<InputMessage>> messageHandlers, KafkaRecordsQueue queue, int latency, int maxRecords) {
         this.kafkaConsumer = Objects.requireNonNull(kafkaConsumer);
         this.messageHandlers = Objects.requireNonNull(messageHandlers);
         this.queue = Objects.requireNonNull(queue);
-        this.maximumLatency = maximumLatency;
+        this.latency = latency;
+        this.maxRecords = maxRecords;
     }
 
     public void startPolling(String name) {
@@ -53,13 +56,23 @@ public class KafkaPolling {
         }
 
         pollingThread = new Thread(() -> {
-            timestamp = System.currentTimeMillis();
-
             while (!Thread.currentThread().isInterrupted()) {
                 try {
-                    processRecords(pollRecords());
+                    if (queue.size() < maxRecords) {
+                        enqueueRecords(pollRecords());
 
-                    Thread.yield();
+                        processRecords();
+
+                        Thread.yield();
+                    } else {
+                        processRecords();
+
+                        try {
+                            Thread.sleep(1000);
+                        } catch (InterruptedException ex) {
+                            Thread.currentThread().interrupt();
+                        }
+                    }
                 } catch (Exception e) {
                     logger.error("Error occurred while consuming messages", e);
 
@@ -88,7 +101,7 @@ public class KafkaPolling {
         }
     }
 
-    private void processRecords(KafkaConsumerRecords<String, String> records) {
+    private void enqueueRecords(KafkaConsumerRecords<String, String> records) {
         for (int i = 0; i < records.size(); i++) {
             final KafkaConsumerRecord<String, String> record = records.recordAt(i);
 
@@ -104,6 +117,8 @@ public class KafkaPolling {
                 if (record.value() == null) {
                     logger.debug("Skipping tombstone record " + record.key() + " from partition (" + topicPartition + ")");
 
+                    queue.deleteRecord(record);
+
                     continue;
                 }
 
@@ -112,13 +127,11 @@ public class KafkaPolling {
                 final BlockingHandler<InputMessage> handler = messageHandlers.get(payload.getType());
 
                 if (handler == null) {
-//                        logger.warn("Ignoring message of type: " + message.getType());
-
                     continue;
                 }
 
                 if (queue.size() == 0) {
-                    timestamp = record.timestamp();
+                    timestamp = System.currentTimeMillis();
                 }
 
                 queue.addRecord(record);
@@ -127,39 +140,33 @@ public class KafkaPolling {
 
                 suspendedPartitions.add(topicPartition);
 
-                //TODO the record should go into a DLQ
-
                 retryPartition(record, topicPartition);
             }
         }
 
+        suspendedPartitions.clear();
+    }
+
+    private void processRecords() {
         final long currentTimeMillis = System.currentTimeMillis();
 
-        if (queue.size() > 0 && currentTimeMillis - timestamp > maximumLatency) {
+        if (queue.size() > 0 && currentTimeMillis - timestamp > latency) {
             logger.debug("Received " + queue.size() + " " + (queue.size() > 0 ? "messages" : "message"));
 
-            queue.getRecords().forEach(record -> processRecord(suspendedPartitions, record));
+            queue.getRecords().forEach(this::processRecord);
 
             queue.clear();
-
-            suspendedPartitions.clear();
 
             commitOffsets();
         }
     }
 
-    private void processRecord(Set<TopicPartition> suspendedPartitions, KafkaConsumerRecord<String, String> record) {
+    private void processRecord(KafkaConsumerRecord<String, String> record) {
         final TopicPartition topicPartition = new TopicPartition(record.topic(), record.partition());
 
         try {
             if (suspendedPartitions.contains(topicPartition)) {
                 logger.debug("Skipping record " + record.key() + " from suspended partition (" + topicPartition + ")");
-
-                return;
-            }
-
-            if (record.value() == null) {
-                logger.debug("Skipping tombstone record " + record.key() + " from partition (" + topicPartition + ")");
 
                 return;
             }
@@ -172,8 +179,6 @@ public class KafkaPolling {
             final BlockingHandler<InputMessage> handler = messageHandlers.get(payload.getType());
 
             if (handler == null) {
-//                logger.warn("Ignoring message of type: " + message.getType());
-
                 return;
             }
 
@@ -189,10 +194,10 @@ public class KafkaPolling {
 
             suspendedPartitions.add(topicPartition);
 
-            //TODO the record should go into a DLQ
-
             retryPartition(record, topicPartition);
         }
+
+        suspendedPartitions.clear();
     }
 
     private String getString(Buffer value) {
@@ -200,7 +205,8 @@ public class KafkaPolling {
     }
 
     private KafkaConsumerRecords<String, String> pollRecords() {
-        return kafkaConsumer.rxPoll(Duration.ofSeconds(10))
+        return kafkaConsumer.fetch(Math.min(10, maxRecords))
+                .rxPoll(Duration.ofSeconds(10))
                 .subscribeOn(Schedulers.computation())
                 .doOnError(err -> logger.error("Failed to consume records", err))
                 .toBlocking()

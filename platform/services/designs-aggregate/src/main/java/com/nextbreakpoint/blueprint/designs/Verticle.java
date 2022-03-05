@@ -57,9 +57,9 @@ import static java.util.Arrays.asList;
 public class Verticle extends AbstractVerticle {
     private static final Logger logger = LoggerFactory.getLogger(Verticle.class.getName());
 
-    private KafkaPolling eventsPolling;
-    private KafkaPolling renderPolling;
-    private KafkaPolling batchPolling;
+    private KafkaPolling kafkaPolling1;
+    private KafkaPolling kafkaPolling2;
+    private KafkaPolling kafkaPolling3;
 
     public static void main(String[] args) {
         try {
@@ -114,14 +114,14 @@ public class Verticle extends AbstractVerticle {
     @Override
     public Completable rxStop() {
         return Completable.fromCallable(() -> {
-            if (eventsPolling != null) {
-                eventsPolling.stopPolling();
+            if (kafkaPolling1 != null) {
+                kafkaPolling1.stopPolling();
             }
-            if (renderPolling != null) {
-                renderPolling.stopPolling();
+            if (kafkaPolling2 != null) {
+                kafkaPolling2.stopPolling();
             }
-            if (batchPolling != null) {
-                batchPolling.stopPolling();
+            if (kafkaPolling3 != null) {
+                kafkaPolling3.stopPolling();
             }
             return null;
         });
@@ -281,32 +281,30 @@ public class Verticle extends AbstractVerticle {
             messageHandlers1.put(DesignUpdateRequested.TYPE, createDesignUpdateRequestedHandler(store, eventsTopic, kafkaProducer, messageSource));
             messageHandlers1.put(DesignDeleteRequested.TYPE, createDesignDeleteRequestedHandler(store, eventsTopic, kafkaProducer, messageSource));
 
-            messageHandlers1.put(DesignAggregateUpdateRequested.TYPE, createDesignAggregateUpdateRequestedHandler(store, eventsTopic, batchTopic, kafkaProducer, messageSource));
+            messageHandlers1.put(DesignAggregateUpdateRequested.TYPE, createDesignAggregateUpdateRequestedHandler(store, eventsTopic, kafkaProducer, messageSource));
             messageHandlers1.put(DesignAggregateUpdateCompleted.TYPE, createDesignAggregateUpdateCompletedHandler(store, eventsTopic, batchTopic, kafkaProducer, messageSource));
-            messageHandlers1.put(DesignAggregateUpdateCancelled.TYPE, createDesignAggregateUpdateCancelledHandler(store, eventsTopic, batchTopic, kafkaProducer, messageSource));
+            messageHandlers1.put(DesignAggregateUpdateCancelled.TYPE, createDesignAggregateUpdateCancelledHandler(store, eventsTopic, kafkaProducer, messageSource));
 
             messageHandlers1.put(TileAggregateUpdateRequested.TYPE, createTileAggregateUpdateRequestedHandler(store, eventsTopic, kafkaProducer, messageSource));
             messageHandlers1.put(TileAggregateUpdateCompleted.TYPE, createTileAggregateUpdateCompletedHandler(store, eventsTopic, kafkaProducer, messageSource));
 
-            messageHandlers1.put(TileRenderRequested.TYPE, createTileRenderRequestedHandler(store, renderTopic, kafkaProducer, messageSource));
             messageHandlers1.put(TileRenderCompleted.TYPE, createTileRenderCompletedHandler(store, eventsTopic, kafkaProducer, messageSource));
-            messageHandlers1.put(TileRenderAborted.TYPE, createTileRenderAbortedHandler(store, renderTopic, kafkaProducer, messageSource));
 
             messageHandlers2.put(TileAggregateUpdateRequired.TYPE, createTileAggregateUpdateRequiredHandler(store, eventsTopic, kafkaProducer, messageSource));
 
-            messageHandlers3.put(TilesRenderRequired.TYPE, createTilesRenderRequiredHandler(store, eventsTopic, kafkaProducer, messageSource));
+            messageHandlers3.put(TilesRenderRequired.TYPE, createTilesRenderRequiredHandler(store, renderTopic, kafkaProducer, messageSource));
 
-            eventsPolling = new KafkaPolling(kafkaConsumer1, messageHandlers1);
+            kafkaPolling1 = new KafkaPolling(kafkaConsumer1, messageHandlers1, KafkaRecordsQueue.Simple.create(), -1, 50);
 
-            renderPolling = new KafkaPolling(kafkaConsumer2, messageHandlers2, KafkaRecordsQueue.Compacted.create(), 5000);
+            kafkaPolling2 = new KafkaPolling(kafkaConsumer2, messageHandlers2, KafkaRecordsQueue.Compacted.create(), 5000, 50);
 
-            batchPolling = new KafkaPolling(kafkaConsumer3, messageHandlers3, KafkaRecordsQueue.Compacted.create(), 2000);
+            kafkaPolling3 = new KafkaPolling(kafkaConsumer3, messageHandlers3, KafkaRecordsQueue.Simple.create(), 2000, 1);
 
-            eventsPolling.startPolling("kafka-polling-topic-" + eventsTopic);
+            kafkaPolling1.startPolling("kafka-polling-topic-" + eventsTopic + "-1");
 
-            renderPolling.startPolling("kafka-polling-topic-" + renderTopic);
+            kafkaPolling2.startPolling("kafka-polling-topic-" + eventsTopic + "-2");
 
-            batchPolling.startPolling("kafka-polling-topic-" + batchTopic);
+            kafkaPolling3.startPolling("kafka-polling-topic-" + batchTopic);
 
             final Handler<RoutingContext> apiV1DocsHandler = new OpenApiHandler(vertx.getDelegate(), executor, "api-v1.yaml");
 

@@ -73,7 +73,7 @@ router.get('/designs.html', function(req, res, next) {
                         uuid: design.uuid,
                         checksum: design.checksum,
                         location: appConfig.client_web_url + '/browse/designs/' + design.uuid + ".html",
-                        imageUrl: appConfig.client_web_url + '/browse/designs/' + design.uuid + "/0/0/0/256.png",
+                        imageUrl: appConfig.client_web_url + '/browse/designs/' + design.uuid + "/0/0/0/256.png?t=" + design.checksum,
                         baseUrl: appConfig.client_web_url + '/browse/designs',
                         modified: design.modified
                     }))
@@ -142,7 +142,7 @@ router.get('/designs/(:uuid).html', function(req, res, next) {
                         uuid: design.uuid,
                         checksum: design.checksum,
                         location: appConfig.client_web_url + '/browse/designs/' + design.uuid + ".html",
-                        imageUrl: appConfig.client_web_url + '/browse/designs/' + design.uuid + "/0/0/0/512.png",
+                        imageUrl: appConfig.client_web_url + '/browse/designs/' + design.uuid + "/0/0/0/512.png?t=" + design.checksum,
                         baseUrl: appConfig.client_web_url + '/browse/designs',
                         modified: design.modified
                     }

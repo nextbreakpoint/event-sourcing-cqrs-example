@@ -6,7 +6,7 @@ import com.nextbreakpoint.blueprint.common.core.Tombstone;
 import com.nextbreakpoint.blueprint.common.events.TileRenderAborted;
 import com.nextbreakpoint.blueprint.common.vertx.Controller;
 import com.nextbreakpoint.blueprint.common.vertx.TombstoneEmitter;
-import com.nextbreakpoint.blueprint.designs.common.Bucket;
+import com.nextbreakpoint.blueprint.designs.common.Render;
 import rx.Single;
 
 import java.util.Objects;
@@ -29,6 +29,6 @@ public class TileRenderAbortedController implements Controller<InputMessage, Voi
     }
 
     private Tombstone onTileRenderAborted(TileRenderAborted event) {
-        return new Tombstone(Bucket.createBucketKey(event));
+        return new Tombstone(Render.createRenderKey(event));
     }
 }

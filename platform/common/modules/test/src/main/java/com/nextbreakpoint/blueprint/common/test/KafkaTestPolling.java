@@ -79,7 +79,9 @@ public class KafkaTestPolling {
 
     private void consumeMessages(KafkaConsumerRecords<String, String> consumerRecords) {
         IntStream.range(0, consumerRecords.size())
-                .mapToObj(index -> convertToMessage(consumerRecords.recordAt(index)))
+                .mapToObj(consumerRecords::recordAt)
+                .filter(record -> record.value() != null)
+                .map(this::convertToMessage)
                 .peek(message -> System.out.println("Received message: " + message + " from topic " + topicName))
                 .forEach(this::appendMessage);
     }

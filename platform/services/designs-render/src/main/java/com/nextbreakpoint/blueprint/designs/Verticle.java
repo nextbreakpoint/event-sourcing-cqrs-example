@@ -56,7 +56,7 @@ import static java.util.Arrays.asList;
 public class Verticle extends AbstractVerticle {
     private static final Logger logger = LoggerFactory.getLogger(Verticle.class.getName());
 
-    private KafkaPolling renderPolling;
+    private KafkaPolling kafkaPolling;
 
     public static void main(String[] args) {
         try {
@@ -108,8 +108,8 @@ public class Verticle extends AbstractVerticle {
     @Override
     public Completable rxStop() {
         return Completable.fromCallable(() -> {
-            if (renderPolling != null) {
-                renderPolling.stopPolling();
+            if (kafkaPolling != null) {
+                kafkaPolling.stopPolling();
             }
             return null;
         });
@@ -222,9 +222,9 @@ public class Verticle extends AbstractVerticle {
 
             kafkaConsumer.subscribe(renderTopic);
 
-            renderPolling = new KafkaPolling(kafkaConsumer, messageHandlers);
+            kafkaPolling = new KafkaPolling(kafkaConsumer, messageHandlers, KafkaRecordsQueue.Compacted.create(), -1, 20);
 
-            renderPolling.startPolling("kafka-polling-topic-" + renderTopic);
+            kafkaPolling.startPolling("kafka-polling-topic-" + renderTopic);
 
             final Handler<RoutingContext> apiV1DocsHandler = new OpenApiHandler(vertx.getDelegate(), executor, "api-v1.yaml");
 

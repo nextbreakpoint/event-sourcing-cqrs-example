@@ -5,18 +5,25 @@ import com.nextbreakpoint.blueprint.common.events.TileRenderAborted;
 
 import java.util.Objects;
 import java.util.UUID;
+import java.util.function.Function;
 
 public class TileRenderAbortedOutputMapper implements MessageMapper<TileRenderAborted, OutputMessage> {
     private final String messageSource;
+    private final Function<TileRenderAborted, String> keyMapper;
+
+    public TileRenderAbortedOutputMapper(String messageSource, Function<TileRenderAborted, String> keyMapper) {
+        this.messageSource = Objects.requireNonNull(messageSource);
+        this.keyMapper = Objects.requireNonNull(keyMapper);
+    }
 
     public TileRenderAbortedOutputMapper(String messageSource) {
-        this.messageSource = Objects.requireNonNull(messageSource);
+        this(messageSource, event -> event.getDesignId().toString());
     }
 
     @Override
     public OutputMessage transform(Tracing trace, TileRenderAborted event) {
         return new OutputMessage(
-                event.getDesignId().toString(),
+                keyMapper.apply(event),
                 new Payload(
                         UUID.randomUUID(),
                         TileRenderAborted.TYPE,

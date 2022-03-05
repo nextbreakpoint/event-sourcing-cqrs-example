@@ -17,6 +17,7 @@ export NEXUS_PASSWORD=password
 
 POSITIONAL_ARGS=()
 
+CLEAN="true"
 PACKAGE="true"
 DEPLOY="true"
 IMAGES="true"
@@ -60,6 +61,10 @@ for i in "$@"; do
       ;;
     --nexus-password=*)
       NEXUS_PASSWORD="${i#*=}"
+      shift
+      ;;
+    --skip-clean)
+      CLEAN="false"
       shift
       ;;
     --skip-package)
@@ -121,6 +126,10 @@ echo "Docker host is ${TEST_DOCKER_HOST}"
 
 echo "Images version is ${REPOSITORY}:${VERSION}"
 
+if [[ $CLEAN == "false" ]]; then
+  echo "Skipping clean"
+fi
+
 if [[ $PACKAGE == "false" ]]; then
   echo "Skipping package"
 fi
@@ -160,10 +169,14 @@ services=(
 MAVEN_ARGS="-q -e -Dnexus.host=${NEXUS_HOST} -Dnexus.port=${NEXUS_PORT} -Dpactbroker.host=${PACTBROKER_HOST} -Dpactbroker.port=${PACTBROKER_PORT}"
 BUILD_ARGS="-q -e -Dnexus.host=${TEST_DOCKER_HOST} -Dnexus.port=${NEXUS_PORT} -Dpactbroker.host=${TEST_DOCKER_HOST} -Dpactbroker.port=${PACTBROKER_PORT}"
 
+if [ "$CLEAN" == "true" ]; then
+  mvn clean -q -e -Dcommon=true -Dservices=true -Dplatform=true -Dnexus=true
+fi
+
 mvn versions:set versions:commit -q -e -DnewVersion=$VERSION -Dcommon=true -Dservices=true -Dplatform=true
 
 if [ "$PACKAGE" == "true" ]; then
-  mvn clean package -q -e -s settings.xml ${MAVEN_ARGS} -Dcommon=true -Dservices=true -Dplatform=true -Dnexus=true -DskipTests=true
+  mvn package -q -e -s settings.xml ${MAVEN_ARGS} -Dcommon=true -Dservices=true -Dplatform=true -Dnexus=true -DskipTests=true
 fi
 
 if [ "$DEPLOY" == "true" ]; then

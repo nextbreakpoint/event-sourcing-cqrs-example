@@ -3,16 +3,21 @@ package com.nextbreakpoint.blueprint.designs.operations.get;
 import com.nextbreakpoint.blueprint.common.core.Image;
 import com.nextbreakpoint.blueprint.common.vertx.Controller;
 import com.nextbreakpoint.blueprint.designs.Store;
+import com.nextbreakpoint.blueprint.designs.Verticle;
 import com.nextbreakpoint.blueprint.designs.common.S3Driver;
 import com.nextbreakpoint.blueprint.designs.model.Design;
 import com.nextbreakpoint.blueprint.designs.persistence.LoadDesignRequest;
 import com.nextbreakpoint.blueprint.designs.persistence.LoadDesignResponse;
+import io.vertx.core.impl.logging.Logger;
+import io.vertx.core.impl.logging.LoggerFactory;
 import rx.Single;
 
 import java.util.Objects;
 import java.util.Optional;
 
 public class GetTileController implements Controller<GetTileRequest, GetTileResponse> {
+    private static final Logger logger = LoggerFactory.getLogger(GetTileController.class.getName());
+
     private Store store;
     private final S3Driver s3Driver;
 
@@ -30,15 +35,10 @@ public class GetTileController implements Controller<GetTileRequest, GetTileResp
 
     private Single<GetTileResponse> getImage(GetTileRequest request, Design document) {
         return s3Driver.getObject(getBucketKey(request, document.getChecksum()))
-                .onErrorReturn(null)
-                .map(data -> getImage(document, data));
-    }
-
-    private GetTileResponse getImage(Design document, byte[] data) {
-        return Optional.ofNullable(data)
                 .map(bytes -> new Image(bytes, document.getChecksum()))
-                .map(GetTileResponse::new)
-                .orElseGet(() -> new GetTileResponse(null));
+                .doOnError(error -> logger.warn("Failed to load image: " + error.getMessage()))
+                .onErrorReturn(error -> null)
+                .map(GetTileResponse::new);
     }
 
     private String getBucketKey(GetTileRequest request, String checksum) {

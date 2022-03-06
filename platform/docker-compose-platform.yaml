@@ -2,7 +2,7 @@ version: '3.8'
 services:
   accounts:
     restart: unless-stopped
-    image: integration/accounts:1.0.0-wip2-101b9b1e-1646406952 
+    image: integration/accounts:1.0.0-wip2-b73de36e-1646598353 
     environment:
       JAEGER_SERVICE_NAME: accounts
       JAEGER_AGENT_HOST: host.docker.internal
@@ -34,7 +34,7 @@ services:
       - ./secrets/keystore_auth.jceks:/secrets/keystore_auth.jceks
   authentication:
     restart: unless-stopped
-    image: integration/authentication:1.0.0-wip2-101b9b1e-1646406952 
+    image: integration/authentication:1.0.0-wip2-b73de36e-1646598353 
     environment:
       JAEGER_SERVICE_NAME: authentication
       JAEGER_AGENT_HOST: host.docker.internal
@@ -70,7 +70,7 @@ services:
       - ./secrets/truststore_client.jks:/secrets/truststore_client.jks
   designs-query:
     restart: unless-stopped
-    image: integration/designs-query:1.0.0-wip2-101b9b1e-1646406952 
+    image: integration/designs-query:1.0.0-wip2-b73de36e-1646598353 
     environment:
       JAEGER_SERVICE_NAME: designs-query
       JAEGER_AGENT_HOST: host.docker.internal
@@ -109,7 +109,7 @@ services:
       - ./secrets/keystore_server.jks:/secrets/keystore_server.jks
   designs-command:
     restart: unless-stopped
-    image: integration/designs-command:1.0.0-wip2-101b9b1e-1646406952 
+    image: integration/designs-command:1.0.0-wip2-b73de36e-1646598353 
     environment:
       JAEGER_SERVICE_NAME: designs-command
       JAEGER_AGENT_HOST: host.docker.internal
@@ -145,7 +145,7 @@ services:
       - ./secrets/keystore_server.jks:/secrets/keystore_server.jks
   designs-aggregate:
     restart: unless-stopped
-    image: integration/designs-aggregate:1.0.0-wip2-101b9b1e-1646406952 
+    image: integration/designs-aggregate:1.0.0-wip2-b73de36e-1646598353 
     environment:
       JAEGER_SERVICE_NAME: designs-aggregate
       JAEGER_AGENT_HOST: host.docker.internal
@@ -182,7 +182,7 @@ services:
       - ./secrets/keystore_server.jks:/secrets/keystore_server.jks
   designs-notify:
     restart: unless-stopped
-    image: integration/designs-notify:1.0.0-wip2-101b9b1e-1646406952
+    image: integration/designs-notify:1.0.0-wip2-b73de36e-1646598353
     environment:
       JAEGER_SERVICE_NAME: designs-notify
       JAEGER_AGENT_HOST: host.docker.internal
@@ -214,7 +214,7 @@ services:
       - ./secrets/keystore_server.jks:/secrets/keystore_server.jks
   designs-render1:
     restart: unless-stopped
-    image: integration/designs-render:1.0.0-wip2-101b9b1e-1646406952
+    image: integration/designs-render:1.0.0-wip2-b73de36e-1646598353
     environment:
       JAEGER_SERVICE_NAME: designs-render
       JAEGER_AGENT_HOST: host.docker.internal
@@ -251,7 +251,7 @@ services:
       - ./secrets/keystore_server.jks:/secrets/keystore_server.jks
   designs-render2:
     restart: unless-stopped
-    image: integration/designs-render:1.0.0-wip2-101b9b1e-1646406952
+    image: integration/designs-render:1.0.0-wip2-b73de36e-1646598353
     environment:
       JAEGER_SERVICE_NAME: designs-render
       JAEGER_AGENT_HOST: host.docker.internal
@@ -288,7 +288,7 @@ services:
       - ./secrets/keystore_server.jks:/secrets/keystore_server.jks
   designs-render3:
     restart: unless-stopped
-    image: integration/designs-render:1.0.0-wip2-101b9b1e-1646406952
+    image: integration/designs-render:1.0.0-wip2-b73de36e-1646598353
     environment:
       JAEGER_SERVICE_NAME: designs-render
       JAEGER_AGENT_HOST: host.docker.internal
@@ -325,7 +325,7 @@ services:
       - ./secrets/keystore_server.jks:/secrets/keystore_server.jks
   designs-render4:
     restart: unless-stopped
-    image: integration/designs-render:1.0.0-wip2-101b9b1e-1646406952
+    image: integration/designs-render:1.0.0-wip2-b73de36e-1646598353
     environment:
       JAEGER_SERVICE_NAME: designs-render
       JAEGER_AGENT_HOST: host.docker.internal
@@ -362,7 +362,7 @@ services:
       - ./secrets/keystore_server.jks:/secrets/keystore_server.jks
   gateway:
     restart: unless-stopped
-    image: integration/gateway:1.0.0-wip2-101b9b1e-1646406952 
+    image: integration/gateway:1.0.0-wip2-b73de36e-1646598353 
     environment:
       JAEGER_SERVICE_NAME: gateway
       JAEGER_AGENT_HOST: host.docker.internal
@@ -397,7 +397,7 @@ services:
       - ./secrets/truststore_client.jks:/secrets/truststore_client.jks
   frontend:
     restart: unless-stopped
-    image: integration/frontend:1.0.0-wip2-101b9b1e-1646406952 
+    image: integration/frontend:1.0.0-wip2-b73de36e-1646598353 
     environment:
       CONFIG_PATH: /etc/config.json
       SECRETS_PATH: /secrets

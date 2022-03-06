@@ -7,11 +7,12 @@ import com.nextbreakpoint.blueprint.common.vertx.Controller;
 import com.nextbreakpoint.blueprint.common.vertx.KafkaEmitter;
 import com.nextbreakpoint.blueprint.designs.Store;
 import com.nextbreakpoint.blueprint.designs.model.Design;
-import com.nextbreakpoint.blueprint.designs.persistence.InsertDesignRequest;
+import com.nextbreakpoint.blueprint.designs.persistence.dto.InsertDesignRequest;
 import rx.Observable;
 import rx.Single;
 
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Objects;
 
 public class DesignDocumentUpdateRequestedController implements Controller<InputMessage, Void> {
@@ -43,9 +44,18 @@ public class DesignDocumentUpdateRequestedController implements Controller<Input
     }
 
     private Observable<DesignDocumentUpdateCompleted> onDesignDocumentUpdateRequested(DesignDocumentUpdateRequested event) {
-        return store.insertDesign(new InsertDesignRequest(event.getDesignId(), createDesign(event)))
+        return store.insertDesign(new InsertDesignRequest(event.getDesignId(), createDesign(event), true))
+                .flatMap(result -> isCompleted(event) ? store.insertDesign(new InsertDesignRequest(event.getDesignId(), createDesign(event), false)) : Single.just(null))
                 .map(result -> new DesignDocumentUpdateCompleted(event.getDesignId(), event.getRevision()))
                 .toObservable();
+    }
+
+    private boolean isCompleted(DesignDocumentUpdateRequested event) {
+        return event.getLevels() == 8 && completedTiles(event.getTiles()) == 21845;
+    }
+
+    private int completedTiles(List<Tiles> tiles) {
+        return tiles.stream().mapToInt(Tiles::getCompleted).sum();
     }
 
     private Design createDesign(DesignDocumentUpdateRequested event) {

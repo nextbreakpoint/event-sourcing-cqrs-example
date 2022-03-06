@@ -121,7 +121,7 @@ let DesignsPage = class DesignsPage extends React.Component {
 
         let promises = this.props.selected
             .map((uuid) => {
-                return axios.delete(component.props.config.api_url + '/v1/designs/' + uuid, config)
+                return axios.delete(component.props.config.api_url + '/v1/designs/' + uuid + '?draft=true', config)
             })
 
         component.props.handleHideConfirmDelete()

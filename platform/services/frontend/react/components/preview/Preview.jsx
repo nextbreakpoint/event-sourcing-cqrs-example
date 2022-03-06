@@ -88,7 +88,7 @@ let Preview = class Preview extends React.Component {
 
         component.props.handleLoadDesign()
 
-        axios.get(component.props.config.api_url + '/v1/designs/' + this.props.uuid, config)
+        axios.get(component.props.config.api_url + '/v1/designs/' + this.props.uuid + '?draft=true', config)
             .then(function (response) {
                 if (response.status == 200) {
                     console.log("Design loaded")

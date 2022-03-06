@@ -9,13 +9,15 @@ public class GetTileRequest {
     private final int row;
     private final int col;
     private final int size;
+    private final boolean draft;
 
-    public GetTileRequest(UUID uuid, int level, int row, int col, int size) {
+    public GetTileRequest(UUID uuid, int level, int row, int col, int size, boolean draft) {
         this.uuid = Objects.requireNonNull(uuid);
         this.level = level;
         this.row = row;
         this.col = col;
         this.size = size;
+        this.draft = draft;
     }
 
     public UUID getUuid() {
@@ -36,5 +38,9 @@ public class GetTileRequest {
 
     public int getSize() {
         return size;
+    }
+
+    public boolean isDraft() {
+        return draft;
     }
 }

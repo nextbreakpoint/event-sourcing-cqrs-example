@@ -155,7 +155,7 @@ let PreviewPage = class PreviewPage extends React.Component {
     }
 
     render() {
-        const url = this.props.config.api_url + '/v1/designs/' + this.props.uuid + '/{z}/{x}/{y}/256.png?t=' + this.props.design.checksum
+        const url = this.props.config.api_url + '/v1/designs/' + this.props.uuid + '/{z}/{x}/{y}/256.png?draft=true&t=' + this.props.design.checksum
 
         return (
             <React.Fragment>

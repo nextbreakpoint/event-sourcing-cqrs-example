@@ -2,8 +2,8 @@ package com.nextbreakpoint.blueprint.designs.operations.load;
 
 import com.nextbreakpoint.blueprint.common.vertx.Controller;
 import com.nextbreakpoint.blueprint.designs.Store;
-import com.nextbreakpoint.blueprint.designs.persistence.LoadDesignRequest;
-import com.nextbreakpoint.blueprint.designs.persistence.LoadDesignResponse;
+import com.nextbreakpoint.blueprint.designs.persistence.dto.LoadDesignRequest;
+import com.nextbreakpoint.blueprint.designs.persistence.dto.LoadDesignResponse;
 import rx.Single;
 
 import java.util.Objects;

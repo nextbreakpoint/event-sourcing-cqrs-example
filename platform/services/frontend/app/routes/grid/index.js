@@ -2,8 +2,10 @@ function Instance() {
     var self = this
 }
 
-let random = (function() {
-	var seed = 0x2F6E2B1
+let makeRandom = function() {
+    var date = new Date()
+    date.setHours(0, 0, 0, 0)
+	var seed = date.getTime() //original seed 0x2F6E2B1
 	return function() {
 		// Robert Jenkins’ 32 bit integer hash function
 		seed = ((seed + 0x7ED55D16) + (seed << 12))  & 0xFFFFFFFF
@@ -14,7 +16,7 @@ let random = (function() {
 		seed = ((seed ^ 0xB55A4F09) ^ (seed >>> 16)) & 0xFFFFFFFF
 		return (seed & 0xFFFFFFF) / 0x10000000
 	}
-}())
+}
 
 let pattern1 = [
     [ [0,3,2,0], [0,3,2,1], [0,3,2,2], [0,3,2,3], [0,3,2,4], [0,3,2,5], [0,3,2,6], [0,3,2,7] ],
@@ -52,12 +54,13 @@ let patterns = [
 ]
 
 Instance.prototype.make = function (designs) {
-    var offset = 0;
+    var random = makeRandom()
+    var offset = 0
     if (designs.length == 0) {
         return []
     }
     let rows = [0, 1, 2, 3].map((idx) => {
-        let patternIdx = Math.round(random() * (patterns.length - 1));
+        let patternIdx = Math.round(random() * (patterns.length - 1))
         let pattern = patterns[patternIdx]
         let advance = pattern.reduce((previousValue, row) => {
             return row.reduce((previousValue, col) => {
@@ -83,5 +86,5 @@ Instance.prototype.make = function (designs) {
 
 module.exports = new Instance()
 module.exports.create = function() {
-  return new Instance();
+  return new Instance()
 }

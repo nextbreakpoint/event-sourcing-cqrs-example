@@ -18,10 +18,10 @@ import com.nextbreakpoint.blueprint.designs.operations.list.ListDesignsResponseM
 import com.nextbreakpoint.blueprint.designs.operations.load.LoadDesignController;
 import com.nextbreakpoint.blueprint.designs.operations.load.LoadDesignRequestMapper;
 import com.nextbreakpoint.blueprint.designs.operations.load.LoadDesignResponseMapper;
-import com.nextbreakpoint.blueprint.designs.persistence.ListDesignsRequest;
-import com.nextbreakpoint.blueprint.designs.persistence.ListDesignsResponse;
-import com.nextbreakpoint.blueprint.designs.persistence.LoadDesignRequest;
-import com.nextbreakpoint.blueprint.designs.persistence.LoadDesignResponse;
+import com.nextbreakpoint.blueprint.designs.persistence.dto.ListDesignsRequest;
+import com.nextbreakpoint.blueprint.designs.persistence.dto.ListDesignsResponse;
+import com.nextbreakpoint.blueprint.designs.persistence.dto.LoadDesignRequest;
+import com.nextbreakpoint.blueprint.designs.persistence.dto.LoadDesignResponse;
 import io.vertx.core.Handler;
 import io.vertx.rxjava.ext.web.RoutingContext;
 import io.vertx.rxjava.kafka.client.producer.KafkaProducer;

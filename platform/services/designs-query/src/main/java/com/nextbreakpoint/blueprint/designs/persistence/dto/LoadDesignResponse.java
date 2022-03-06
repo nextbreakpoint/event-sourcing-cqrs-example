@@ -1,4 +1,4 @@
-package com.nextbreakpoint.blueprint.designs.persistence;
+package com.nextbreakpoint.blueprint.designs.persistence.dto;
 
 import com.nextbreakpoint.blueprint.designs.model.Design;
 

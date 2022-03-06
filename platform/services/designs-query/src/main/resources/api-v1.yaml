@@ -26,6 +26,12 @@ paths:
           schema:
             type: string
             format: uuid
+        - name: draft
+          in: query
+          description: select draft designs
+          required: false
+          schema:
+            type: boolean
       responses:
         200:
           description: Successful operation
@@ -50,13 +56,20 @@ paths:
         - designs
       summary: List designs
       operationId: listDesigns
+      parameters:
+        - name: draft
+          in: query
+          description: select draft designs
+          required: false
+          schema:
+            type: boolean
       responses:
         200:
           description: Return design
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ListDesignsResponse'
+                $ref: '#/components/schemas/DesignList'
 #      security:
 #        - design_auth:
 #            - admin
@@ -100,6 +113,12 @@ paths:
           required: true
           schema:
             type: integer
+        - name: draft
+          in: query
+          description: select draft designs
+          required: false
+          schema:
+            type: boolean
       responses:
         200:
           description: Return tile
@@ -119,20 +138,10 @@ paths:
 #            - anonymous
 components:
   schemas:
-    ListDesignsResponse:
+    DesignList:
       type: array
       items:
-        type: object
-        properties:
-          uuid:
-            type: string
-            format: uuid
-          json:
-            type: string
-          modified:
-            type: string
-          checksum:
-            type: string
+        $ref: "#/components/schemas/Design"
     Design:
       type: object
       properties:
@@ -145,6 +154,21 @@ components:
           type: string
         checksum:
           type: string
+        revision:
+          type: string
+        tiles:
+          type: array
+          items:
+            type: object
+            properties:
+              level:
+                type: integer
+              requested:
+                type: integer
+              completed:
+                type: integer
+              failed:
+                type: integer
 #  securitySchemes:
 #    design_auth:
 #      type: oauth2

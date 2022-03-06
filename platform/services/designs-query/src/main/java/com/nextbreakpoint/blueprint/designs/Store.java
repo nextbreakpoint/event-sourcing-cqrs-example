@@ -1,6 +1,6 @@
 package com.nextbreakpoint.blueprint.designs;
 
-import com.nextbreakpoint.blueprint.designs.persistence.*;
+import com.nextbreakpoint.blueprint.designs.persistence.dto.*;
 import rx.Single;
 
 public interface Store {

@@ -6,7 +6,7 @@ import com.nextbreakpoint.blueprint.common.events.DesignDocumentDeleteRequested;
 import com.nextbreakpoint.blueprint.common.vertx.Controller;
 import com.nextbreakpoint.blueprint.common.vertx.KafkaEmitter;
 import com.nextbreakpoint.blueprint.designs.Store;
-import com.nextbreakpoint.blueprint.designs.persistence.DeleteDesignRequest;
+import com.nextbreakpoint.blueprint.designs.persistence.dto.DeleteDesignRequest;
 import rx.Observable;
 import rx.Single;
 
@@ -39,7 +39,8 @@ public class DesignDocumentDeleteRequestedController implements Controller<Input
     }
 
     private Observable<DesignDocumentDeleteCompleted> onDesignDocumentDeleteRequested(DesignDocumentDeleteRequested event) {
-        return store.deleteDesign(new DeleteDesignRequest(event.getDesignId()))
+        return store.deleteDesign(new DeleteDesignRequest(event.getDesignId(), false))
+                .flatMap(result -> store.deleteDesign(new DeleteDesignRequest(event.getDesignId(), true)))
                 .map(result -> new DesignDocumentDeleteCompleted(event.getDesignId(), event.getRevision()))
                 .toObservable();
     }

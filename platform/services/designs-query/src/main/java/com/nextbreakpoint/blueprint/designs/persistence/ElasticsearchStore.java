@@ -11,6 +11,7 @@ import co.elastic.clients.elasticsearch.core.UpdateRequest;
 import co.elastic.clients.elasticsearch.core.search.Hit;
 import com.nextbreakpoint.blueprint.designs.Store;
 import com.nextbreakpoint.blueprint.designs.model.Design;
+import com.nextbreakpoint.blueprint.designs.persistence.dto.*;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
 import rx.Observable;
@@ -119,20 +120,20 @@ public class ElasticsearchStore implements Store {
 
     private SearchRequest.Builder createLoadDesignRequest(SearchRequest.Builder builder, LoadDesignRequest request) {
         return builder
-                .index(indexName)
+                .index(getIndexName(request.isDraft()))
                 .query(q -> q.term(t -> t.field("designId").value(v -> v.stringValue(request.getUuid().toString()))));
     }
 
     private SearchRequest.Builder createListDesignsRequest(SearchRequest.Builder builder, ListDesignsRequest request) {
         return builder
-                .index(indexName)
+                .index(getIndexName(request.isDraft()))
                 .query(q -> q.matchAll(MatchAllQuery.of(a -> a)))
                 .sort(x -> x.field(f -> f.field("modified").order(SortOrder.Asc).format("strict_date_optional_time_nanos")) );
     }
 
     private UpdateRequest.Builder<Design, Design> createInsertDesignRequest(UpdateRequest.Builder<Design, Design> builder, InsertDesignRequest request) {
         return builder
-                .index(indexName)
+                .index(getIndexName(request.isDraft()))
                 .refresh(Refresh.True)
                 .id(request.getDesign().getDesignId().toString())
                 .doc(request.getDesign())
@@ -141,9 +142,13 @@ public class ElasticsearchStore implements Store {
 
     private DeleteRequest.Builder createDeleteDesignRequest(DeleteRequest.Builder builder, DeleteDesignRequest request) {
         return builder
-                .index(indexName)
+                .index(getIndexName(request.isDraft()))
                 .refresh(Refresh.True)
                 .id(request.getUuid().toString());
+    }
+
+    private String getIndexName(boolean draft) {
+        return draft ? indexName + "_draft" : indexName;
     }
 
     private void handleError(String message, Throwable err) {

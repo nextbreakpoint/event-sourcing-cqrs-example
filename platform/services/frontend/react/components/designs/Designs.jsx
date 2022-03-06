@@ -88,7 +88,7 @@ let Designs = class Designs extends React.Component {
 
         component.props.handleLoadDesigns()
 
-        axios.get(component.props.config.api_url + '/v1/designs', config)
+        axios.get(component.props.config.api_url + '/v1/designs?draft=true', config)
             .then(function (response) {
                 if (response.status == 200) {
                     console.log("Designs loaded")

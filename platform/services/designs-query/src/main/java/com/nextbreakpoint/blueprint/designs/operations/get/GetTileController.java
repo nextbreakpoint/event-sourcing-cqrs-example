@@ -3,17 +3,15 @@ package com.nextbreakpoint.blueprint.designs.operations.get;
 import com.nextbreakpoint.blueprint.common.core.Image;
 import com.nextbreakpoint.blueprint.common.vertx.Controller;
 import com.nextbreakpoint.blueprint.designs.Store;
-import com.nextbreakpoint.blueprint.designs.Verticle;
 import com.nextbreakpoint.blueprint.designs.common.S3Driver;
 import com.nextbreakpoint.blueprint.designs.model.Design;
-import com.nextbreakpoint.blueprint.designs.persistence.LoadDesignRequest;
-import com.nextbreakpoint.blueprint.designs.persistence.LoadDesignResponse;
+import com.nextbreakpoint.blueprint.designs.persistence.dto.LoadDesignRequest;
+import com.nextbreakpoint.blueprint.designs.persistence.dto.LoadDesignResponse;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
 import rx.Single;
 
 import java.util.Objects;
-import java.util.Optional;
 
 public class GetTileController implements Controller<GetTileRequest, GetTileResponse> {
     private static final Logger logger = LoggerFactory.getLogger(GetTileController.class.getName());
@@ -28,7 +26,7 @@ public class GetTileController implements Controller<GetTileRequest, GetTileResp
 
     @Override
     public Single<GetTileResponse> onNext(GetTileRequest request) {
-        return store.loadDesign(new LoadDesignRequest(request.getUuid()))
+        return store.loadDesign(new LoadDesignRequest(request.getUuid(), request.isDraft()))
             .map(LoadDesignResponse::getDesign)
             .flatMap(result -> result.map(design -> getImage(request, design)).orElse(Single.just(new GetTileResponse(null))));
     }

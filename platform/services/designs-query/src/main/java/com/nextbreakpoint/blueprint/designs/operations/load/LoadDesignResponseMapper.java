@@ -3,7 +3,7 @@ package com.nextbreakpoint.blueprint.designs.operations.load;
 import com.nextbreakpoint.blueprint.common.core.Json;
 import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.designs.model.DesignDocument;
-import com.nextbreakpoint.blueprint.designs.persistence.LoadDesignResponse;
+import com.nextbreakpoint.blueprint.designs.persistence.dto.LoadDesignResponse;
 
 import java.util.Optional;
 

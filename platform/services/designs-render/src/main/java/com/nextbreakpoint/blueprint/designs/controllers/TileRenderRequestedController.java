@@ -67,22 +67,24 @@ public class TileRenderRequestedController implements Controller<InputMessage, V
 
     private Single<Result> uploadImage(TileRenderRequested event, Result result) {
         return s3Driver.putObject(createBucketKey(event), result.getImage())
-                .doOnSuccess(response -> logger.info("Image uploaded " + createBucketKey(event)))
+                .doOnSuccess(response -> logger.info("Image uploaded: " + createBucketKey(event)))
+                .doOnError(response -> logger.info("Can't upload image: " + createBucketKey(event)))
                 .map(response -> result);
     }
 
     private Single<Result> renderImage(TileRenderRequested event) {
         return s3Driver.getObject(createBucketKey(event))
-                .doOnError(err -> logger.warn("Image not found " + createBucketKey(event)))
+                .doOnError(err -> logger.debug("Image not found: " + createBucketKey(event)))
                 .map(image -> Result.of(image, null))
-                .doOnSuccess(result -> logger.info("Image cached " + createBucketKey(event)))
+                .doOnSuccess(result -> logger.info("Image found: " + createBucketKey(event)))
                 .onErrorResumeNext(err -> renderImageBlocking(event).flatMap(result -> uploadImage(event, result)));
     }
 
     private Single<Result> renderImageBlocking(TileRenderRequested event) {
         return executor.rxExecuteBlocking(promise -> {
+            logger.debug("Render image: " + createBucketKey(event));
             renderer.renderImage(event, promise);
-            logger.info("Image rendered " + createBucketKey(event));
+            logger.debug("Image rendered: " + createBucketKey(event));
         }, false);
     }
 }

@@ -82,7 +82,7 @@ public class VerifyRenderPact {
     private String produceTileRenderRequested(UUID uuid, int level, int row, int col, String data, String checksum) {
         final TileRenderRequested tileRenderRequested = new TileRenderRequested(uuid, TestConstants.REVISION_0, checksum, data, level,  row, col);
 
-        final OutputMessage tileRenderRequestedMessage = new TileRenderRequestedOutputMapper(TestConstants.MESSAGE_SOURCE, event -> TestUtils.createBucketKey(tileRenderRequested)).transform(Tracing.of(UUID.randomUUID()), tileRenderRequested);
+        final OutputMessage tileRenderRequestedMessage = new TileRenderRequestedOutputMapper(TestConstants.MESSAGE_SOURCE, event -> TestUtils.createRenderKey(tileRenderRequested)).transform(Tracing.of(UUID.randomUUID()), tileRenderRequested);
 
         return Json.encodeValue(new KafkaRecord(tileRenderRequestedMessage.getKey(), PayloadUtils.payloadToMap(tileRenderRequestedMessage.getValue()), tileRenderRequestedMessage.getTrace().toHeaders()));
     }

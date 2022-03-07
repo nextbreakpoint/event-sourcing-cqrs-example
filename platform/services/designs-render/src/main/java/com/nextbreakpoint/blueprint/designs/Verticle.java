@@ -57,7 +57,11 @@ import static java.util.Arrays.asList;
 public class Verticle extends AbstractVerticle {
     private static final Logger logger = LoggerFactory.getLogger(Verticle.class.getName());
 
-    private KafkaPolling kafkaPolling;
+    private KafkaPolling kafkaPolling1;
+    private KafkaPolling kafkaPolling2;
+    private KafkaPolling kafkaPolling3;
+    private KafkaPolling kafkaPolling4;
+    private KafkaPolling kafkaPolling5;
 
     public static void main(String[] args) {
         try {
@@ -109,8 +113,20 @@ public class Verticle extends AbstractVerticle {
     @Override
     public Completable rxStop() {
         return Completable.fromCallable(() -> {
-            if (kafkaPolling != null) {
-                kafkaPolling.stopPolling();
+            if (kafkaPolling1 != null) {
+                kafkaPolling1.stopPolling();
+            }
+            if (kafkaPolling2 != null) {
+                kafkaPolling2.stopPolling();
+            }
+            if (kafkaPolling3 != null) {
+                kafkaPolling3.stopPolling();
+            }
+            if (kafkaPolling4 != null) {
+                kafkaPolling4.stopPolling();
+            }
+            if (kafkaPolling5 != null) {
+                kafkaPolling5.stopPolling();
             }
             return null;
         });
@@ -203,7 +219,11 @@ public class Verticle extends AbstractVerticle {
                     .withEnableAutoCommit(enableAutoCommit)
                     .build();
 
-            final KafkaConsumer<String, String> kafkaConsumer = KafkaClientFactory.createConsumer(vertx, consumerConfig);
+            final KafkaConsumer<String, String> kafkaConsumer1 = KafkaClientFactory.createConsumer(vertx, consumerConfig);
+            final KafkaConsumer<String, String> kafkaConsumer2 = KafkaClientFactory.createConsumer(vertx, consumerConfig);
+            final KafkaConsumer<String, String> kafkaConsumer3 = KafkaClientFactory.createConsumer(vertx, consumerConfig);
+            final KafkaConsumer<String, String> kafkaConsumer4 = KafkaClientFactory.createConsumer(vertx, consumerConfig);
+            final KafkaConsumer<String, String> kafkaConsumer5 = KafkaClientFactory.createConsumer(vertx, consumerConfig);
 
             final AwsCredentialsProvider credentialsProvider = AwsCredentialsProviderChain.of(DefaultCredentialsProvider.create());
 
@@ -221,11 +241,23 @@ public class Verticle extends AbstractVerticle {
 
             messageHandlers.put(TileRenderRequested.TYPE, createTileRenderRequestedHandler(eventsTopic, kafkaProducer, messageSource, workerExecutor, s3AsyncClient, s3Bucket));
 
-            kafkaConsumer.subscribe(Set.of(renderTopic + "-0", renderTopic + "-1", renderTopic + "-2", renderTopic + "-3", renderTopic + "-4"));
+            kafkaConsumer1.subscribe(Set.of(renderTopic + "-0"));
+            kafkaConsumer2.subscribe(Set.of(renderTopic + "-1"));
+            kafkaConsumer3.subscribe(Set.of(renderTopic + "-2"));
+            kafkaConsumer4.subscribe(Set.of(renderTopic + "-3"));
+            kafkaConsumer5.subscribe(Set.of(renderTopic + "-4"));
 
-            kafkaPolling = new KafkaPolling(kafkaConsumer, messageHandlers, KafkaRecordsQueue.Compacted.create(), -1, 20);
+            kafkaPolling1 = new KafkaPolling(kafkaConsumer1, messageHandlers, KafkaRecordsQueue.Compacted.create(), -1, 20);
+            kafkaPolling2 = new KafkaPolling(kafkaConsumer2, messageHandlers, KafkaRecordsQueue.Compacted.create(), -1, 20);
+            kafkaPolling3 = new KafkaPolling(kafkaConsumer3, messageHandlers, KafkaRecordsQueue.Compacted.create(), -1, 20);
+            kafkaPolling4 = new KafkaPolling(kafkaConsumer4, messageHandlers, KafkaRecordsQueue.Compacted.create(), -1, 20);
+            kafkaPolling5 = new KafkaPolling(kafkaConsumer5, messageHandlers, KafkaRecordsQueue.Compacted.create(), -1, 20);
 
-            kafkaPolling.startPolling("kafka-polling-topic-" + renderTopic);
+            kafkaPolling1.startPolling("kafka-polling-topic-" + renderTopic + "-1");
+            kafkaPolling2.startPolling("kafka-polling-topic-" + renderTopic + "-2");
+            kafkaPolling3.startPolling("kafka-polling-topic-" + renderTopic + "-3");
+            kafkaPolling4.startPolling("kafka-polling-topic-" + renderTopic + "-4");
+            kafkaPolling5.startPolling("kafka-polling-topic-" + renderTopic + "-5");
 
             final Handler<RoutingContext> apiV1DocsHandler = new OpenApiHandler(vertx.getDelegate(), executor, "api-v1.yaml");
 

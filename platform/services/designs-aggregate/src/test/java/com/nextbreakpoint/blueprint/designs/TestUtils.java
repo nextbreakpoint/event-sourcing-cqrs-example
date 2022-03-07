@@ -17,8 +17,8 @@ public class TestUtils {
     private TestUtils() {}
 
     @NotNull
-    public static String createBucketKey(TileRenderRequested event) {
-        return String.format("%s/%d/%04d%04d.png", event.getChecksum(), event.getLevel(), event.getRow(), event.getCol());
+    public static String createRenderKey(TileRenderRequested event) {
+        return String.format("%s/%d/%04d%04d.png", event.getDesignId().toString(), event.getLevel(), event.getRow(), event.getCol());
     }
 
     public static int totalTilesByLevels(int levels) {

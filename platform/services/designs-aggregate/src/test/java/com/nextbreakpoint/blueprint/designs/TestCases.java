@@ -66,13 +66,21 @@ public class TestCases {
 
         KafkaConsumer<String, String> batchConsumer = KafkaClientFactory.createConsumer(vertx, createConsumerConfig(consumerGroupId));
 
+        final Set<String> renderTopics = Set.of(
+                TestConstants.RENDER_TOPIC_NAME + "-0",
+                TestConstants.RENDER_TOPIC_NAME + "-1",
+                TestConstants.RENDER_TOPIC_NAME + "-2",
+                TestConstants.RENDER_TOPIC_NAME + "-3",
+                TestConstants.RENDER_TOPIC_NAME + "-4"
+        );
+
         eventsPolling = new KafkaTestPolling(eventsConsumer, TestConstants.EVENTS_TOPIC_NAME);
-        renderPolling = new KafkaTestPolling(renderConsumer, TestConstants.RENDER_TOPIC_NAME);
         batchPolling = new KafkaTestPolling(batchConsumer, TestConstants.BATCH_TOPIC_NAME);
+        renderPolling = new KafkaTestPolling(renderConsumer, renderTopics);
 
         eventsPolling.startPolling();
-        renderPolling.startPolling();
         batchPolling.startPolling();
+        renderPolling.startPolling();
 
         eventEmitter = new KafkaTestEmitter(producer, TestConstants.EVENTS_TOPIC_NAME);
 

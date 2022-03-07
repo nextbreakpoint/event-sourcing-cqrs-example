@@ -18,6 +18,11 @@ public class TestUtils {
     }
 
     @NotNull
+    public static String createRenderKey(TileRenderRequested event) {
+        return String.format("%s/%d/%04d%04d.png", event.getDesignId().toString(), event.getLevel(), event.getRow(), event.getCol());
+    }
+
+    @NotNull
     public static OutputMessage toOutputMessage(Message message) {
         final KafkaRecord kafkaRecord = Json.decodeValue(message.contentsAsString(), KafkaRecord.class);
         return OutputMessage.from(kafkaRecord.getKey(), PayloadUtils.mapToPayload(kafkaRecord.getValue()), Tracing.from(kafkaRecord.getHeaders()));

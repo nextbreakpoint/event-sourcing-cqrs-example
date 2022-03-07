@@ -53,6 +53,7 @@ public class TestCases {
     private KafkaTestEmitter eventEmitter;
 
     private TestElasticsearch testElasticsearch;
+    private TestElasticsearch testDraftElasticsearch;
 
     private S3Client s3Client;
 
@@ -95,6 +96,7 @@ public class TestCases {
         final ElasticsearchTransport transport = new RestClientTransport(restClient, new JacksonJsonpMapper(objectMapper));
 
         testElasticsearch = new TestElasticsearch(new ElasticsearchAsyncClient(transport), TestConstants.DESIGNS_INDEX_NAME);
+        testDraftElasticsearch = new TestElasticsearch(new ElasticsearchAsyncClient(transport), TestConstants.DESIGNS_INDEX_NAME + "_draft");
     }
 
     public void after() {
@@ -166,6 +168,22 @@ public class TestCases {
                 .build();
     }
 
+    public void deleteDraftDesigns() {
+        testDraftElasticsearch.deleteDesigns();
+    }
+
+    public void insertDraftDesign(Design design) {
+        testDraftElasticsearch.insertDesign(design);
+
+        final byte[] data = TestUtils.makeImage(256);
+
+        TestUtils.generateKeys(design)
+                .doOnNext(key -> TestS3.putObject(s3Client, TestConstants.BUCKET, key, data))
+                .ignoreElements()
+                .toCompletable()
+                .await();
+    }
+
     public void deleteDesigns() {
         testElasticsearch.deleteDesigns();
     }
@@ -234,10 +252,10 @@ public class TestCases {
         await().atMost(Duration.of(20, SECONDS))
                 .pollInterval(ONE_SECOND)
                 .untilAsserted(() -> {
-                    final List<Design> designs1 = testElasticsearch.findDesigns(designId1);
+                    final List<Design> designs1 = testDraftElasticsearch.findDesigns(designId1);
                     assertThat(designs1).hasSize(1);
                     TestAssertions.assertExpectedDesign(designs1.get(0), designId1, designDocumentUpdateRequested3.getData(), designDocumentUpdateRequested3.getChecksum(), designDocumentUpdateRequested3.getStatus());
-                    final List<Design> designs2 = testElasticsearch.findDesigns(designId2);
+                    final List<Design> designs2 = testDraftElasticsearch.findDesigns(designId2);
                     assertThat(designs2).hasSize(1);
                     TestAssertions.assertExpectedDesign(designs2.get(0), designId2, designDocumentUpdateRequested4.getData(), designDocumentUpdateRequested4.getChecksum(), designDocumentUpdateRequested4.getStatus());
                 });
@@ -276,7 +294,7 @@ public class TestCases {
         await().atMost(Duration.of(20, SECONDS))
                 .pollInterval(ONE_SECOND)
                 .untilAsserted(() -> {
-                    final List<Design> designs = testElasticsearch.findDesigns(designId);
+                    final List<Design> designs = testDraftElasticsearch.findDesigns(designId);
                     assertThat(designs).hasSize(1);
                     TestAssertions.assertExpectedDesign(designs.get(0), designId, designDocumentUpdateRequested.getData(), designDocumentUpdateRequested.getChecksum(), designDocumentUpdateRequested.getStatus());
                 });
@@ -304,7 +322,7 @@ public class TestCases {
         await().atMost(Duration.of(20, SECONDS))
                 .pollInterval(ONE_SECOND)
                 .untilAsserted(() -> {
-                    final List<Design> designs = testElasticsearch.findDesigns(designId);
+                    final List<Design> designs = testDraftElasticsearch.findDesigns(designId);
                     assertThat(designs).isEmpty();
                 });
     }

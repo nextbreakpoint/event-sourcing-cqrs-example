@@ -34,7 +34,7 @@ public class TileAggregateUpdateCompletedController implements Controller<InputM
                 .map(inputMapper::transform)
                 .flatMap(this::onAggregateUpdateCompleted)
                 .map(event -> outputMapper.transform(Tracing.from(message.getTrace()), event))
-                .flatMap(emitter::onNext);
+                .flatMap(emitter::send);
     }
 
     private Single<DesignDocumentUpdateRequested> onAggregateUpdateCompleted(TileAggregateUpdateCompleted event) {

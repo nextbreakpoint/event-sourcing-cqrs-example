@@ -33,7 +33,7 @@ public class TileRenderCompletedController implements Controller<InputMessage, V
                 .map(result -> inputMapper.transform(message))
                 .map(event -> createEvent(event, message.getToken()))
                 .map(event -> outputMapper.transform(Tracing.from(message.getTrace()), event))
-                .flatMap(emitter::onNext);
+                .flatMap(emitter::send);
     }
 
     private TileAggregateUpdateRequired createEvent(TileRenderCompleted event, String revision) {

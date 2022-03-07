@@ -47,7 +47,7 @@ public class VerifyFrontendPact {
 
   @BeforeEach
   public void setup() {
-    testCases.deleteDesigns();
+    testCases.deleteDraftDesigns();
   }
 
   @BeforeEach
@@ -72,6 +72,7 @@ public class VerifyFrontendPact {
     final Design design1 = new Design(TestConstants.DESIGN_UUID_1, TestConstants.USER_ID, UUID.randomUUID(), json1, Checksum.of(json1), TestConstants.REVISION_0, "CREATED", TestConstants.LEVELS, TestUtils.getTiles(TestConstants.LEVELS, 0.0f), FORMATTER.format(Instant.now()));
     final Design design2 = new Design(TestConstants.DESIGN_UUID_2, TestConstants.USER_ID, UUID.randomUUID(), json2, Checksum.of(json1), TestConstants.REVISION_1, "UPDATED", TestConstants.LEVELS, TestUtils.getTiles(TestConstants.LEVELS, 0.5f), FORMATTER.format(Instant.now()));
 
+    List.of(design1, design2).forEach(testCases::insertDraftDesign);
     List.of(design1, design2).forEach(testCases::insertDesign);
   }
 
@@ -81,6 +82,7 @@ public class VerifyFrontendPact {
 
     final Design design = new Design(TestConstants.DESIGN_UUID_1, TestConstants.USER_ID, UUID.randomUUID(), json, Checksum.of(json), TestConstants.REVISION_0, "CREATED", TestConstants.LEVELS, TestUtils.getTiles(TestConstants.LEVELS, 0.0f), FORMATTER.format(Instant.now()));
 
+    List.of(design).forEach(testCases::insertDraftDesign);
     List.of(design).forEach(testCases::insertDesign);
   }
 }

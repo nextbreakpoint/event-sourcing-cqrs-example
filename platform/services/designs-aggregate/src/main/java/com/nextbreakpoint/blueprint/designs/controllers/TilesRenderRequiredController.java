@@ -16,13 +16,13 @@ import java.util.Objects;
 public class TilesRenderRequiredController implements Controller<InputMessage, Void> {
     private final Mapper<InputMessage, TilesRenderRequired> inputMapper;
     private final MessageMapper<TileRenderRequested, OutputMessage> renderOutputMapper;
-    private final KafkaEmitter emitter;
+    private final KafkaEmitter renderEmitter;
     private final TombstoneEmitter tombstoneEmitter;
 
-    public TilesRenderRequiredController(Mapper<InputMessage, TilesRenderRequired> inputMapper, MessageMapper<TileRenderRequested, OutputMessage> renderOutputMapper, KafkaEmitter emitter, TombstoneEmitter tombstoneEmitter) {
+    public TilesRenderRequiredController(Mapper<InputMessage, TilesRenderRequired> inputMapper, MessageMapper<TileRenderRequested, OutputMessage> renderOutputMapper, KafkaEmitter renderEmitter, TombstoneEmitter tombstoneEmitter) {
         this.inputMapper = Objects.requireNonNull(inputMapper);
         this.renderOutputMapper = Objects.requireNonNull(renderOutputMapper);
-        this.emitter = Objects.requireNonNull(emitter);
+        this.renderEmitter = Objects.requireNonNull(renderEmitter);
         this.tombstoneEmitter = Objects.requireNonNull(tombstoneEmitter);
     }
 
@@ -44,8 +44,11 @@ public class TilesRenderRequiredController implements Controller<InputMessage, V
     private Observable<Void> createRenderEvents(TilesRenderRequired event, Tracing tracing) {
         return Observable.from(event.getTiles())
                 .map(tile -> createRenderEvent(event, tile))
-                .map(renderEvent -> renderOutputMapper.transform(Tracing.from(tracing), renderEvent))
-                .flatMapSingle(emitter::onNext);
+                .flatMapSingle(renderEvent -> renderEmitter.send(renderOutputMapper.transform(Tracing.from(tracing), renderEvent), makeRenderTopicName(renderEvent)));
+    }
+
+    private String makeRenderTopicName(TileRenderRequested renderEvent) {
+        return renderEvent.getLevel() < 4 ? renderEmitter.getTopicName() + "-0" : renderEmitter.getTopicName() + "-" + (renderEvent.getLevel() - 3);
     }
 
     private Observable<Void> createAbortEvents(TilesRenderRequired event, Tracing tracing) {

@@ -30,7 +30,7 @@ public class DesignInsertRequestedController implements Controller<InputMessage,
                 .map(inputMapper::transform)
                 .flatMap(event -> onDesignInsertRequested(event, message.getToken()))
                 .map(event -> outputMapper.transform(Tracing.from(message.getTrace()), event))
-                .flatMap(emitter::onNext);
+                .flatMap(emitter::send);
     }
 
     private Single<InputMessage> onMessageReceived(InputMessage message) {

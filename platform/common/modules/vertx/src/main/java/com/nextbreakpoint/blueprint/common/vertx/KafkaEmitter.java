@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-public class KafkaEmitter implements Controller<OutputMessage, Void> {
+public class KafkaEmitter {
     private final Logger logger = LoggerFactory.getLogger(KafkaEmitter.class.getName());
 
     private final KafkaProducer<String, String> producer;
@@ -26,11 +26,18 @@ public class KafkaEmitter implements Controller<OutputMessage, Void> {
         this.retries = retries;
     }
 
-    @Override
-    public Single<Void> onNext(OutputMessage message) {
+    public Single<Void> send(OutputMessage message) {
         return Single.just(message)
                 .doOnEach(notification -> logger.debug("Sending message on topic " + topicName + ": " + notification.getValue()))
-                .map(this::createKafkaRecord)
+                .map(outputMessage -> createKafkaRecord(outputMessage, topicName))
+                .map(record -> addHeaders(message, record))
+                .flatMap(this::writeRecord);
+    }
+
+    public Single<Void> send(OutputMessage message, String topicName) {
+        return Single.just(message)
+                .doOnEach(notification -> logger.debug("Sending message on topic " + topicName + ": " + notification.getValue()))
+                .map(outputMessage -> createKafkaRecord(outputMessage, topicName))
                 .map(record -> addHeaders(message, record))
                 .flatMap(this::writeRecord);
     }
@@ -52,7 +59,11 @@ public class KafkaEmitter implements Controller<OutputMessage, Void> {
                 .retry(retries);
     }
 
-    private KafkaProducerRecord<String, String> createKafkaRecord(OutputMessage message) {
+    private KafkaProducerRecord<String, String> createKafkaRecord(OutputMessage message, String topicName) {
         return KafkaProducerRecord.create(topicName, message.getKey(), Json.encodeValue(message.getValue()));
+    }
+
+    public String getTopicName() {
+        return topicName;
     }
 }

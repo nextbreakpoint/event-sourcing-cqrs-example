@@ -29,7 +29,7 @@ public class DeleteDesignController implements Controller<DeleteDesignRequest, D
                 .map(this.inputMapper::transform)
                 .doOnSuccess(command -> logger.info("Processing delete command " + command.getDesignId()))
                 .map(command -> outputMapper.transform(Tracing.of(null), command))
-                .flatMap(emitter::onNext)
+                .flatMap(emitter::send)
                 .map(ignore -> new DeleteDesignResponse(request.getUuid(), ResultStatus.SUCCESS))
                 .onErrorReturn(err -> new DeleteDesignResponse(request.getUuid(), ResultStatus.FAILURE, err.getMessage()));
     }

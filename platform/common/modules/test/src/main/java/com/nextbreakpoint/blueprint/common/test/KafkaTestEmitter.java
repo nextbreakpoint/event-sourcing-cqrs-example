@@ -20,7 +20,15 @@ public class KafkaTestEmitter {
     }
 
     public void send(OutputMessage message) {
-        kafkaProducer.rxSend(createKafkaRecord(message))
+        send(message, topicName);
+    }
+
+    public void sendAsync(OutputMessage message) {
+        sendAsync(message, topicName);
+    }
+
+    public void send(OutputMessage message, String topicName) {
+        kafkaProducer.rxSend(createKafkaRecord(message, topicName))
                 .doOnEach(action -> System.out.println("Sending message " + message + " to topic " + topicName))
                 .doOnError(Throwable::printStackTrace)
                 .subscribeOn(Schedulers.io())
@@ -28,14 +36,14 @@ public class KafkaTestEmitter {
                 .value();
     }
 
-    public void sendAsync(OutputMessage message) {
-        kafkaProducer.rxSend(createKafkaRecord(message))
+    public void sendAsync(OutputMessage message, String topicName) {
+        kafkaProducer.rxSend(createKafkaRecord(message, topicName))
                 .doOnEach(action -> System.out.println("Sending message " + message + " to topic " + topicName))
                 .doOnError(Throwable::printStackTrace)
                 .subscribe();
     }
 
-    private KafkaProducerRecord<String, String> createKafkaRecord(OutputMessage message) {
+    private KafkaProducerRecord<String, String> createKafkaRecord(OutputMessage message, String topicName) {
         final KafkaProducerRecord<String, String> record = KafkaProducerRecord.create(topicName, message.getKey(), Json.encodeValue(message.getValue()));
         record.addHeaders(makeHeaders(message));
         return record;
@@ -46,5 +54,9 @@ public class KafkaTestEmitter {
                 .map(e -> KafkaHeader.header(e.getKey(), e.getValue()))
 //                .peek(header -> System.out.println("header: " + header.key() + "=" + header.value()))
                 .collect(Collectors.toList());
+    }
+
+    public String getTopicName() {
+        return topicName;
     }
 }

@@ -30,7 +30,7 @@ public class DesignAggregateUpdateRequestedController implements Controller<Inpu
                 .map(inputMapper::transform)
                 .flatMap(this::onAggregateUpdateRequested)
                 .map(event -> outputMapper.transform(Tracing.from(message.getTrace()), event))
-                .flatMap(emitter::onNext);
+                .flatMap(emitter::send);
     }
 
     private Single<DesignAggregateUpdateCompleted> onAggregateUpdateRequested(DesignAggregateUpdateRequested event) {

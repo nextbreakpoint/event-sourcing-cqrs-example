@@ -45,6 +45,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -220,7 +221,7 @@ public class Verticle extends AbstractVerticle {
 
             messageHandlers.put(TileRenderRequested.TYPE, createTileRenderRequestedHandler(eventsTopic, kafkaProducer, messageSource, workerExecutor, s3AsyncClient, s3Bucket));
 
-            kafkaConsumer.subscribe(renderTopic);
+            kafkaConsumer.subscribe(Set.of(renderTopic + "-0", renderTopic + "-1", renderTopic + "-2", renderTopic + "-3", renderTopic + "-4"));
 
             kafkaPolling = new KafkaPolling(kafkaConsumer, messageHandlers, KafkaRecordsQueue.Compacted.create(), -1, 20);
 

@@ -46,7 +46,7 @@ public class DesignAggregateUpdateCompletedController implements Controller<Inpu
     private Observable<Void> onDelete(DesignAggregateUpdateCompleted event, Tracing tracing) {
         return generateEvents(event)
                 .map(deleteEvent -> deleteOutputMapper.transform(Tracing.from(tracing), deleteEvent))
-                .flatMapSingle(deleteEmitter::onNext);
+                .flatMapSingle(deleteEmitter::send);
     }
 
     private Observable<Void> onUpdate(DesignAggregateUpdateCompleted event, Tracing tracing) {
@@ -54,7 +54,7 @@ public class DesignAggregateUpdateCompletedController implements Controller<Inpu
                 .buffer(50)
                 .map(tiles -> createEvent(event, tiles))
                 .map(renderEvent -> updateOutputMapper.transform(Tracing.from(tracing), renderEvent))
-                .flatMapSingle(updateEmitter::onNext);
+                .flatMapSingle(updateEmitter::send);
     }
 
     private Observable<DesignDocumentDeleteRequested> generateEvents(DesignAggregateUpdateCompleted event) {

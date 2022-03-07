@@ -29,7 +29,7 @@ public class InsertDesignController implements Controller<InsertDesignRequest, I
                 .map(this.inputMapper::transform)
                 .doOnSuccess(command -> logger.info("Processing insert command " + command.getDesignId()))
                 .map(command -> outputMapper.transform(Tracing.of(null), command))
-                .flatMap(emitter::onNext)
+                .flatMap(emitter::send)
                 .map(ignore -> new InsertDesignResponse(request.getUuid(), ResultStatus.SUCCESS))
                 .onErrorReturn(err -> new InsertDesignResponse(request.getUuid(), ResultStatus.FAILURE, err.getMessage()));
     }

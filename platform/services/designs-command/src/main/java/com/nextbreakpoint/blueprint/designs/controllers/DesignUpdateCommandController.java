@@ -30,7 +30,7 @@ public class DesignUpdateCommandController implements Controller<InputMessage, V
                 .map(inputMapper::transform)
                 .flatMap(this::onDesignUpdateRequested)
                 .map(event -> outputMapper.transform(Tracing.from(message.getTrace()), event))
-                .flatMap(emitter::onNext);
+                .flatMap(emitter::send);
     }
 
     private Single<InputMessage> onMessageReceived(InputMessage message) {

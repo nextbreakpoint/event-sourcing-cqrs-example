@@ -24,6 +24,6 @@ public class TileRenderRequestedController implements Controller<InputMessage, V
         return Single.just(message)
                 .map(inputMapper::transform)
                 .map(event -> outputMapper.transform(Tracing.from(message.getTrace()), event))
-                .flatMap(emitter::onNext);
+                .flatMap(emitter::send);
     }
 }

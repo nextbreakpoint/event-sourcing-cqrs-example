@@ -9,10 +9,7 @@ import io.vertx.rxjava.kafka.client.producer.KafkaHeader;
 import rx.schedulers.Schedulers;
 
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -22,11 +19,15 @@ public class KafkaTestPolling {
 
     private final KafkaConsumer<String, String> kafkaConsumer;
 
-    private String topicName;
+    private Set<String> topicNames;
 
     public KafkaTestPolling(KafkaConsumer<String, String> kafkaConsumer, String topicName) {
+        this(kafkaConsumer, Set.of(topicName));
+    }
+
+    public KafkaTestPolling(KafkaConsumer<String, String> kafkaConsumer, Set<String> topicNames) {
         this.kafkaConsumer = kafkaConsumer;
-        this.topicName = topicName;
+        this.topicNames = topicNames;
     }
 
     public List<InputMessage> findMessages(String partitionKey, String messageSource, String messageType) {
@@ -51,7 +52,7 @@ public class KafkaTestPolling {
     }
 
     public void startPolling() {
-        kafkaConsumer.rxSubscribe(Collections.singleton(topicName))
+        kafkaConsumer.rxSubscribe(topicNames)
                 .flatMap(ignore -> kafkaConsumer.rxPoll(Duration.ofSeconds(5)))
                 .flatMap(records -> kafkaConsumer.rxAssignment())
                 .flatMap(kafkaConsumer::rxSeekToEnd)
@@ -61,7 +62,7 @@ public class KafkaTestPolling {
                 .value();
 
         kafkaConsumer.rxPoll(Duration.ofSeconds(10))
-                .doOnSuccess(records -> System.out.println("Received " + records.size() + " messages from topic " + topicName))
+                .doOnSuccess(records -> System.out.println("Received " + records.size() + " messages"))
                 .doOnSuccess(this::consumeMessages)
                 .flatMap(result -> kafkaConsumer.rxCommit())
                 .doOnError(Throwable::printStackTrace)
@@ -82,7 +83,7 @@ public class KafkaTestPolling {
                 .mapToObj(consumerRecords::recordAt)
                 .filter(record -> record.value() != null)
                 .map(this::convertToMessage)
-                .peek(message -> System.out.println("Received message: " + message + " from topic " + topicName))
+                .peek(message -> System.out.println("Received message: " + message))
                 .forEach(this::appendMessage);
     }
 
@@ -100,7 +101,7 @@ public class KafkaTestPolling {
 
     private void pollMessages() {
         kafkaConsumer.rxPoll(Duration.ofSeconds(10))
-                .doOnSuccess(records -> System.out.println("Received " + records.size() + " messages from topic " + topicName))
+                .doOnSuccess(records -> System.out.println("Received " + records.size() + " messages"))
                 .doOnSuccess(this::consumeMessages)
                 .flatMap(result -> kafkaConsumer.rxCommit())
                 .doOnError(Throwable::printStackTrace)

@@ -10,6 +10,121 @@ servers:
   - url: https://localhost/v1
 tags:
   - name: designs
-    description: Everything about rendering tiles
+    description: Everything about validating designs and parsing files
 paths:
-  {}
+  /designs/validate:
+    post:
+      tags:
+        - designs
+        - validate
+      summary: Validate a design
+      operationId: validateDesign
+      requestBody:
+        description: Design data
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ValidateDesignRequest'
+      responses:
+        200:
+          description: Validation status and errors
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidateDesignResponse'
+        400:
+          description: Invalid request
+          content: {}
+        401:
+          description: Missing authentication
+          content: {}
+        403:
+          description: User not authorized
+          content: {}
+#      security:
+#        - design_auth:
+#            - admin
+  /designs/parse:
+    post:
+      tags:
+        - designs
+        - upload
+      summary: Return content of file
+      operationId: parseDesign
+      requestBody:
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+      responses:
+        200:
+          description: Content of file
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadedDesignResponse'
+        400:
+          description: Invalid request
+          content: {}
+        401:
+          description: Missing authentication
+          content: {}
+        403:
+          description: User not authorized
+          content: {}
+#      security:
+#        - design_auth:
+#            - admin
+components:
+  schemas:
+    ValidateDesignRequest:
+      type: object
+      properties:
+        manifest:
+          type: string
+        metadata:
+          type: string
+        script:
+          type: string
+      required:
+        - manifest
+        - metadata
+        - script
+    ValidateDesignResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [ACCEPTED, REJECTED]
+        errors:
+          type: array
+          items:
+            type: string
+      required:
+        - status
+        - errors
+    UploadedDesignResponse:
+      type: object
+      properties:
+        manifest:
+          type: string
+        metadata:
+          type: string
+        script:
+          type: string
+      required:
+        - manifest
+        - metadata
+        - script
+#  securitySchemes:
+#    design_auth:
+#      type: oauth2
+#      flows:
+#        implicit:
+#          authorizationUrl: https://localhost:8081/auth/signin
+#          scopes:
+#            anonymous: user not logged
+#            admin: user logged as admin
+#            guest: user logged as guest
+#            platform: platform token

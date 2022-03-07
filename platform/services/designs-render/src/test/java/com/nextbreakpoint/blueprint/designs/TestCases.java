@@ -1,5 +1,6 @@
 package com.nextbreakpoint.blueprint.designs;
 
+import au.com.dius.pact.provider.junit5.HttpsTestTarget;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.core.Json;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
@@ -20,14 +21,16 @@ import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 
+import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URL;
 import java.time.Duration;
 import java.util.List;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
-import static org.awaitility.Durations.*;
+import static org.awaitility.Durations.ONE_SECOND;
 
 public class TestCases {
     private final TestScenario scenario = new TestScenario();
@@ -96,6 +99,27 @@ public class TestCases {
     @NotNull
     public String getVersion() {
         return scenario.getVersion();
+    }
+
+    @NotNull
+    public URL makeBaseURL(String path) throws MalformedURLException {
+        final String normPath = path.startsWith("/") ? path.substring(1) : path;
+        return new URL("https://" + scenario.getServiceHost() + ":" + scenario.getServicePort() + "/" + normPath);
+    }
+
+    @NotNull
+    public String makeAuthorization(String user, String role) {
+        return scenario.makeAuthorization(user, role);
+    }
+
+    @NotNull
+    public String getOriginUrl() {
+        return "https://" + scenario.getServiceHost() + ":" + scenario.getServicePort();
+    }
+
+    @NotNull
+    public HttpsTestTarget getHttpsTestTarget() {
+        return new HttpsTestTarget(scenario.getServiceHost(), scenario.getServicePort(), "/", true);
     }
 
     @NotNull

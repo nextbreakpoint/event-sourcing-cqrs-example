@@ -4,19 +4,40 @@ import com.nextbreakpoint.blueprint.common.core.BlockingHandler;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.events.mappers.TileRenderCompletedOutputMapper;
 import com.nextbreakpoint.blueprint.common.events.mappers.TileRenderRequestedInputMapper;
-import com.nextbreakpoint.blueprint.common.vertx.KafkaEmitter;
-import com.nextbreakpoint.blueprint.common.vertx.MessageConsumed;
-import com.nextbreakpoint.blueprint.common.vertx.MessageFailed;
-import com.nextbreakpoint.blueprint.common.vertx.TemplateHandler;
+import com.nextbreakpoint.blueprint.common.vertx.*;
 import com.nextbreakpoint.blueprint.designs.common.S3Driver;
 import com.nextbreakpoint.blueprint.designs.common.TileRenderer;
 import com.nextbreakpoint.blueprint.designs.controllers.TileRenderRequestedController;
+import com.nextbreakpoint.blueprint.designs.operations.parse.*;
+import com.nextbreakpoint.blueprint.designs.operations.validate.*;
+import io.vertx.core.Handler;
 import io.vertx.rxjava.core.WorkerExecutor;
+import io.vertx.rxjava.ext.web.RoutingContext;
 import io.vertx.rxjava.kafka.client.producer.KafkaProducer;
 import software.amazon.awssdk.services.s3.S3AsyncClient;
 
 public class Factory {
     private Factory() {}
+
+    public static Handler<RoutingContext> createValidateDesignHandler() {
+        return TemplateHandler.<RoutingContext, ValidateDesignRequest, ValidateDesignResponse, String>builder()
+                .withInputMapper(new ValidateDesignRequestMapper())
+                .withController(new ValidateDesignController())
+                .withOutputMapper(new ValidateDesignResponseMapper())
+                .onSuccess(new JsonConsumer(200))
+                .onFailure(new ErrorConsumer())
+                .build();
+    }
+
+    public static Handler<RoutingContext> createParseDesignHandler() {
+        return TemplateHandler.<RoutingContext, ParseDesignRequest, ParseDesignResponse, String>builder()
+                .withInputMapper(new ParseDesignRequestMapper())
+                .withController(new ParseDesignController())
+                .withOutputMapper(new ParseDesignResponseMapper())
+                .onSuccess(new JsonConsumer(200))
+                .onFailure(new ErrorConsumer())
+                .build();
+    }
 
     public static BlockingHandler<InputMessage> createTileRenderRequestedHandler(String topic, KafkaProducer<String, String> producer, String messageSource, WorkerExecutor executor, S3AsyncClient s3AsyncClient, String bucket) {
         return TemplateHandler.<InputMessage, InputMessage, Void, Void>builder()

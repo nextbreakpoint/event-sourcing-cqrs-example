@@ -22,4 +22,6 @@ module com.nextbreakpoint.blueprint.designs.render {
     requires software.amazon.awssdk.regions;
     requires software.amazon.awssdk.services.s3;
     exports com.nextbreakpoint.blueprint.designs to com.fasterxml.jackson.databind;
+    exports com.nextbreakpoint.blueprint.designs.operations.parse to com.fasterxml.jackson.databind;
+    exports com.nextbreakpoint.blueprint.designs.operations.validate to com.fasterxml.jackson.databind;
 }

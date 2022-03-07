@@ -23,3 +23,4 @@ dependency-reduced-pom.xml
 .gradle
 designs.js
 preview.js
+**/file-uploads

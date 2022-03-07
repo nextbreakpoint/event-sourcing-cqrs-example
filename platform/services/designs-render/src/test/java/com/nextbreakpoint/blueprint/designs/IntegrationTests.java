@@ -1,15 +1,27 @@
 package com.nextbreakpoint.blueprint.designs;
 
-import com.nextbreakpoint.blueprint.common.core.Checksum;
-import com.nextbreakpoint.blueprint.common.core.OutputMessage;
-import com.nextbreakpoint.blueprint.common.core.TimeUUID;
-import com.nextbreakpoint.blueprint.common.core.Tracing;
+import com.jayway.restassured.RestAssured;
+import com.jayway.restassured.http.ContentType;
+import com.nextbreakpoint.blueprint.common.core.*;
 import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
 import com.nextbreakpoint.blueprint.common.events.mappers.TileRenderRequestedOutputMapper;
+import com.nextbreakpoint.blueprint.designs.operations.validate.ValidateDesignResponse;
+import org.hamcrest.Matcher;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.*;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.UUID;
+
+import static com.jayway.restassured.RestAssured.given;
+import static com.nextbreakpoint.blueprint.common.core.Headers.AUTHORIZATION;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.in;
 
 @Tag("docker")
 @Tag("integration")
@@ -25,6 +37,11 @@ public class IntegrationTests {
     @AfterAll
     public static void after() {
         testCases.after();
+    }
+
+    @AfterEach
+    public void reset() {
+        RestAssured.reset();
     }
 
     @Test
@@ -59,5 +76,64 @@ public class IntegrationTests {
         final List<OutputMessage> messages = List.of(tileRenderRequestedMessage1, tileRenderRequestedMessage2, tileRenderRequestedMessage3, tileRenderRequestedMessage4, tileRenderRequestedMessage5);
 
         testCases.shouldStartRenderingAnImageWhenReceivingATileRenderRequestedMessage(messages);
+    }
+
+    @Test
+    @DisplayName("Should not return errors when design is valid")
+    public void shouldReturnNoErrorsWhenDesignIsValid() throws MalformedURLException {
+        final String authorization = testCases.makeAuthorization("test", Authority.ADMIN);
+
+        given().config(TestUtils.getRestAssuredConfig())
+                .with().header(AUTHORIZATION, authorization)
+                .and().contentType(ContentType.JSON)
+                .and().accept(ContentType.JSON)
+                .and().body(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT))
+                .when().post(testCases.makeBaseURL("/v1/designs/validate"))
+                .then().assertThat().statusCode(200)
+                .and().assertThat().body("status", Matchers.equalTo(ValidationStatus.ACCEPTED.toString()))
+                .and().assertThat().body("errors", Matchers.empty());
+    }
+
+    @Test
+    @DisplayName("Should return errors when design is invalid")
+    public void shouldReturnErrorsWhenDesignIsInvalid() throws MalformedURLException {
+        final String authorization = testCases.makeAuthorization("test", Authority.ADMIN);
+
+        given().config(TestUtils.getRestAssuredConfig())
+                .with().header(AUTHORIZATION, authorization)
+                .and().contentType(ContentType.JSON)
+                .and().accept(ContentType.JSON)
+                .and().body(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT_WITH_ERRORS))
+                .when().post(testCases.makeBaseURL("/v1/designs/validate"))
+                .then().assertThat().statusCode(200)
+                .and().assertThat().body("status", Matchers.equalTo(ValidationStatus.REJECTED.toString()))
+                .and().assertThat().body("errors", Matchers.equalTo("[1:0] Parse failed. Expected tokens: FRACTAL, 'fractal'"));
+    }
+
+    @Test
+    @DisplayName("Should return the design when uploading a file")
+    public void shouldReturnTheDesignWhenUploadingAFile() throws IOException {
+        final String authorization = testCases.makeAuthorization("test", Authority.ADMIN);
+
+        final String manifest = getContent("/test.nf/manifest");
+        final String metadata = getContent("/test.nf/metadata");
+        final String script = getContent("/test.nf/script");
+
+        try (InputStream inputStream = getClass().getResourceAsStream("/test.nf.zip")) {
+            given().config(TestUtils.getRestAssuredConfig())
+                    .with().header(AUTHORIZATION, authorization)
+                    .and().multiPart("fileName", "test.nf.zip", inputStream)
+                    .when().post(testCases.makeBaseURL("/v1/designs/parse"))
+                    .then().assertThat().statusCode(200)
+                    .and().assertThat().body("manifest", Matchers.equalTo(manifest))
+                    .and().assertThat().body("metadata", Matchers.equalTo(metadata))
+                    .and().assertThat().body("script", Matchers.equalTo(script));
+        }
+    }
+
+    private String getContent(String resource) throws IOException {
+        try (InputStream inputStream = getClass().getResourceAsStream(resource)) {
+            return IOUtils.toString(inputStream);
+        }
     }
 }

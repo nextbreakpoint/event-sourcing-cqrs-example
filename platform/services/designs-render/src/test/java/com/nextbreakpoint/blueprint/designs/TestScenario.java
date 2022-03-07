@@ -3,6 +3,7 @@ package com.nextbreakpoint.blueprint.designs;
 import com.nextbreakpoint.blueprint.common.test.BuildUtils;
 import com.nextbreakpoint.blueprint.common.test.ContainerUtils;
 import com.nextbreakpoint.blueprint.common.test.TestUtils;
+import com.nextbreakpoint.blueprint.common.test.VertxUtils;
 import org.testcontainers.containers.BindMode;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
@@ -11,6 +12,7 @@ import org.testcontainers.utility.DockerImageName;
 
 import java.io.ByteArrayOutputStream;
 import java.time.Duration;
+import java.util.Collections;
 import java.util.Optional;
 
 public class TestScenario {
@@ -124,5 +126,9 @@ public class TestScenario {
 
   public Integer getMinioPort() {
     return getPort(minio, 9000);
+  }
+
+  public String makeAuthorization(String user, String role) {
+    return VertxUtils.makeAuthorization(user, Collections.singletonList(role), "../../secrets/keystore_auth.jceks");
   }
 }

@@ -19,6 +19,7 @@ import io.vertx.ext.web.openapi.RouterBuilder;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.VertxPrometheusOptions;
 import io.vertx.rxjava.core.*;
+import io.vertx.rxjava.ext.auth.jwt.JWTAuth;
 import io.vertx.rxjava.ext.web.Router;
 import io.vertx.rxjava.ext.web.RoutingContext;
 import io.vertx.rxjava.ext.web.handler.BodyHandler;
@@ -50,9 +51,11 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import static com.nextbreakpoint.blueprint.common.core.Authority.ADMIN;
 import static com.nextbreakpoint.blueprint.common.core.Headers.*;
 import static com.nextbreakpoint.blueprint.designs.Factory.createTileRenderRequestedHandler;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 
 public class Verticle extends AbstractVerticle {
     private static final Logger logger = LoggerFactory.getLogger(Verticle.class.getName());
@@ -158,6 +161,12 @@ public class Verticle extends AbstractVerticle {
 
             final String s3Region = config.getString("s3_region", "eu-west-1");
 
+            final String jwtKeystoreType = config.getString("jwt_keystore_type");
+
+            final String jwtKeystorePath = config.getString("jwt_keystore_path");
+
+            final String jwtKeystoreSecret = config.getString("jwt_keystore_secret");
+
             final String messageSource = config.getString("message_source");
 
             final String renderTopic = config.getString("render_topic");
@@ -233,9 +242,15 @@ public class Verticle extends AbstractVerticle {
                     .endpointOverride(URI.create(s3Endpoint))
                     .build();
 
-            final Router mainRouter = Router.router(vertx);
+            final JWTProviderConfig jwtProviderConfig = JWTProviderConfig.builder()
+                    .withKeyStoreType(jwtKeystoreType)
+                    .withKeyStorePath(jwtKeystorePath)
+                    .withKeyStoreSecret(jwtKeystoreSecret)
+                    .build();
 
-            final CorsHandler corsHandler = CorsHandlerFactory.createWithAll(originPattern, asList(AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN), asList(CONTENT_TYPE, X_XSRF_TOKEN));
+            final JWTAuth jwtProvider = JWTProviderFactory.create(vertx, jwtProviderConfig);
+
+            final Router mainRouter = Router.router(vertx);
 
             final Map<String, BlockingHandler<InputMessage>> messageHandlers = new HashMap<>();
 
@@ -259,6 +274,14 @@ public class Verticle extends AbstractVerticle {
             kafkaPolling4.startPolling("kafka-polling-topic-" + renderTopic + "-4");
             kafkaPolling5.startPolling("kafka-polling-topic-" + renderTopic + "-5");
 
+            final CorsHandler corsHandler = CorsHandlerFactory.createWithAll(originPattern, asList(COOKIE, AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN), asList(COOKIE, CONTENT_TYPE, X_XSRF_TOKEN));
+
+            final Handler<RoutingContext> onAccessDenied = routingContext -> routingContext.fail(Failure.accessDenied("Authorisation failed"));
+
+            final Handler<RoutingContext> validateDesignHandler = new AccessHandler(jwtProvider, Factory.createValidateDesignHandler(), onAccessDenied, singletonList(ADMIN));
+
+            final Handler<RoutingContext> parseDesignHandler = new AccessHandler(jwtProvider, Factory.createParseDesignHandler(), onAccessDenied, singletonList(ADMIN));
+
             final Handler<RoutingContext> apiV1DocsHandler = new OpenApiHandler(vertx.getDelegate(), executor, "api-v1.yaml");
 
             final URL resource = RouterBuilder.class.getClassLoader().getResource("api-v1.yaml");
@@ -273,6 +296,12 @@ public class Verticle extends AbstractVerticle {
 
             RouterBuilder.create(vertx.getDelegate(), "file://" + tempFile.getAbsolutePath())
                     .onSuccess(routerBuilder -> {
+                        routerBuilder.operation("validateDesign")
+                                .handler(context -> validateDesignHandler.handle(RoutingContext.newInstance(context)));
+
+                        routerBuilder.operation("parseDesign")
+                                .handler(context -> parseDesignHandler.handle(RoutingContext.newInstance(context)));
+
                         final Router apiRouter = Router.newInstance(routerBuilder.createRouter());
 
                         mainRouter.route().handler(MDCHandler.create());

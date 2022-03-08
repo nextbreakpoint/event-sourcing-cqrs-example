@@ -10,7 +10,7 @@
     <parent>
         <groupId>com.nextbreakpoint</groupId>
         <artifactId>com.nextbreakpoint.blueprint.service</artifactId>
-        <version>1.0.0-wip2-f893499f-1646672177</version>
+        <version>1.0.0-wip2-55c1984e-1646762219</version>
     </parent>
     <repositories>
         <repository>
@@ -73,6 +73,7 @@
                                 <AUTHENTICATION_URL>http://localhost:39001</AUTHENTICATION_URL>
                                 <DESIGNS_QUERY_URL>http://localhost:39001</DESIGNS_QUERY_URL>
                                 <DESIGNS_COMMAND_URL>http://localhost:39001</DESIGNS_COMMAND_URL>
+                                <DESIGNS_RENDER_URL>http://localhost:39001</DESIGNS_RENDER_URL>
                                 <DESIGNS_WATCH_URL>http://localhost:39001</DESIGNS_WATCH_URL>
                             </environmentVariables>
                         </configuration>
@@ -88,6 +89,7 @@
                                 <AUTHENTICATION_URL>https://localhost:30101</AUTHENTICATION_URL>
                                 <DESIGNS_QUERY_URL>https://localhost:30120</DESIGNS_QUERY_URL>
                                 <DESIGNS_COMMAND_URL>https://localhost:30121</DESIGNS_COMMAND_URL>
+                                <DESIGNS_RENDER_URL>http://localhost:30124</DESIGNS_RENDER_URL>
                                 <DESIGNS_WATCH_URL>https://localhost:30123</DESIGNS_WATCH_URL>
                             </environmentVariables>
                         </configuration>

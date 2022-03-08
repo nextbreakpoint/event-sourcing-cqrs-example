@@ -1,6 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import classNames from 'classnames'
+import FormData from 'form-data'
 
 import { withStyles } from '@material-ui/core/styles'
 import { lighten } from '@material-ui/core/styles/colorManipulator'
@@ -19,10 +20,12 @@ import Checkbox from '@material-ui/core/Checkbox'
 import IconButton from '@material-ui/core/IconButton'
 import ButtonBase from '@material-ui/core/ButtonBase'
 import Tooltip from '@material-ui/core/Tooltip'
+import Input from '@material-ui/core/Input'
 
 import AddIcon from '@material-ui/icons/Add'
 import EditIcon from '@material-ui/icons/Edit'
 import DeleteIcon from '@material-ui/icons/Delete'
+import UploadIcon from '@material-ui/icons/ArrowUpward'
 
 import { connect } from 'react-redux'
 
@@ -46,7 +49,12 @@ import {
     getOrder,
     getOrderBy,
     getPage,
-    getRowsPerPage
+    getRowsPerPage,
+    getShowErrorMessage,
+    getErrorMessage,
+    showErrorMessage,
+    hideErrorMessage,
+    setUploadedDesign
 } from '../../actions/designs'
 
 import axios from 'axios'
@@ -176,11 +184,14 @@ const toolbarStyles = theme => ({
   },
   title: {
     flex: '0 0 auto'
+  },
+  uploadFile: {
+    display: 'none'
   }
 })
 
 let EnhancedTableToolbar = props => {
-  const { role, numSelected, classes, onCreate, onDelete, onModify } = props
+  const { role, numSelected, classes, onUpload, onCreate, onDelete, onModify } = props
 
   return (
     <Toolbar
@@ -198,6 +209,14 @@ let EnhancedTableToolbar = props => {
       <div className={classes.spacer} />
       {role == 'admin' && (
           <div className={classes.actions}>
+            <Tooltip title="Upload">
+              <label htmlFor="uploadFile">
+                  <Input className={classes.uploadFile} id="uploadFile" accept="application/zip" type="file" onChange={onUpload} />
+                  <IconButton aria-label="Upload" component="span">
+                    <UploadIcon />
+                  </IconButton>
+              </label>
+            </Tooltip>
             <Tooltip title="Create">
               <IconButton aria-label="Create" onClick={onCreate}>
                 <AddIcon />
@@ -226,6 +245,8 @@ let EnhancedTableToolbar = props => {
 EnhancedTableToolbar.propTypes = {
   classes: PropTypes.object.isRequired,
   numSelected: PropTypes.number.isRequired,
+  onUpload: PropTypes.func,
+  onCreate: PropTypes.func,
   onDelete: PropTypes.func,
   onModify: PropTypes.func,
   role: PropTypes.string
@@ -294,6 +315,44 @@ let EnhancedTable = class EnhancedTable extends React.Component {
       }
   }
 
+  handleUpload = (e) => {
+        console.log("upload")
+
+        let component = this
+
+        let formData = new FormData();
+        formData.append('file', e.target.files[0]);
+
+        let config = {
+            timeout: 30000,
+            metadata: {'content-type': 'multipart/form-data'},
+            withCredentials: true
+        }
+
+        component.props.handleHideErrorMessage()
+
+        axios.post(component.props.config.api_url + '/v1/designs/parse', formData, config)
+            .then(function (response) {
+                if (response.status == 200) {
+                    if (response.data.errors.length == 0) {
+                        let design = { manifest: response.data.manifest, metadata: response.data.metadata, script: response.data.script }
+                        component.props.handleUploadedDesign(design)
+                        component.props.handleShowCreateDialog()
+                        component.props.handleShowErrorMessage("The file has been loaded")
+                    } else {
+                        component.props.handleShowErrorMessage("The file can't be loaded")
+                    }
+                } else {
+                    console.log("Can't create a new design: status = " + response.status)
+                    component.props.handleShowErrorMessage("Can't parse the file")
+                }
+            })
+            .catch(function (error) {
+                console.log("Can't parse the file: " + error)
+                component.props.handleShowErrorMessage("Can't parse the file")
+            })
+  }
+
   isSelected = id => this.props.selected.indexOf(id) !== -1
 
   render() {
@@ -302,7 +361,7 @@ let EnhancedTable = class EnhancedTable extends React.Component {
 
     return (
       <Paper className={classes.root} square={true}>
-        <EnhancedTableToolbar role={account.role} numSelected={selected.length} onCreate={this.props.handleShowCreateDialog} onDelete={this.props.handleShowDeleteDialog} onModify={this.handleModify}/>
+        <EnhancedTableToolbar role={account.role} numSelected={selected.length} onUpload={this.handleUpload} onCreate={this.props.handleShowCreateDialog} onDelete={this.props.handleShowDeleteDialog} onModify={this.handleModify}/>
           <Table className={classes.table} aria-labelledby="tableTitle">
             <EnhancedTableHead
               numSelected={selected.length}
@@ -413,6 +472,12 @@ const mapDispatchToProps = dispatch => ({
     handleShowCreateDialog: () => {
         dispatch(showCreateDesign())
     },
+    handleShowErrorMessage: (error) => {
+        dispatch(showErrorMessage(error))
+    },
+    handleHideErrorMessage: () => {
+        dispatch(hideErrorMessage())
+    },
     handleChangePagination: (page, rowsPerPage) => {
         dispatch(setDesignsPagination(page, rowsPerPage))
     },
@@ -421,6 +486,9 @@ const mapDispatchToProps = dispatch => ({
     },
     handleChangeSelection: (selected) => {
         dispatch(setDesignsSelection(selected))
+    },
+    handleUploadedDesign: (design) => {
+        dispatch(setUploadedDesign(design))
     }
 })
 

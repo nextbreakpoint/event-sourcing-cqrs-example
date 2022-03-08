@@ -1,10 +1,13 @@
 import * as Types from '../../constants/ActionTypes'
 
 const initialState = {
+    show_upload_design: false,
     show_create_design: false,
     show_delete_designs: false,
     show_error_message: false,
-    error_message: ""
+    error_message: "",
+    uploaded_design_present: false,
+    uploaded_design: {}
 }
 
 function reducer (state = initialState, action) {
@@ -40,9 +43,19 @@ function reducer (state = initialState, action) {
         ...state,
         show_error_message: false
       }
+    case Types.UPLOADED_DESIGN_CHANGED:
+      return {
+        ...state,
+        uploaded_design_present: action.present,
+        uploaded_design: action.design
+      }
     default:
       return state
   }
+}
+
+export const getShowUploadDesign = (state) => {
+    return state.designs.dialog.show_upload_design
 }
 
 export const getShowCreateDesign = (state) => {
@@ -59,6 +72,14 @@ export const getShowErrorMessage = (state) => {
 
 export const getErrorMessage = (state) => {
     return state.designs.dialog.error_message
+}
+
+export const isUploadedDesignPresent = (state) => {
+    return state.designs.dialog.uploaded_design_present
+}
+
+export const getUploadedDesign = (state) => {
+    return state.designs.dialog.uploaded_design
 }
 
 export default reducer

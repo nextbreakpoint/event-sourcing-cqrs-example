@@ -109,6 +109,8 @@ public class Verticle extends AbstractVerticle {
 
             final String designsCommandUrl = config.getString("server_designs_command_url");
 
+            final String designsRenderUrl = config.getString("server_designs_render_url");
+
             final String designsQueryUrl = config.getString("server_designs_query_url");
 
             final String designsWatchUrl = config.getString("server_designs_watch_url");
@@ -134,7 +136,7 @@ public class Verticle extends AbstractVerticle {
 
             configureAccountRoute(mainRouter, clientConfig, accountsUrl);
 
-            configureDesignsRoute(mainRouter, clientConfig, designsCommandUrl, designsQueryUrl);
+            configureDesignsRoute(mainRouter, clientConfig, designsCommandUrl, designsRenderUrl, designsQueryUrl);
 
             final ServerConfig serverConfig = ServerConfig.builder()
                     .withJksStorePath(jksStorePath)
@@ -191,12 +193,22 @@ public class Verticle extends AbstractVerticle {
         mainRouter.mountSubRouter("/v1/accounts", accountsRouter);
     }
 
-    private void configureDesignsRoute(Router mainRouter, HttpClientConfig clientConfig, String designsCommandUrl, String designsQueryUrl) throws MalformedURLException {
+    private void configureDesignsRoute(Router mainRouter, HttpClientConfig clientConfig, String designsCommandUrl, String designsRenderUrl, String designsQueryUrl) throws MalformedURLException {
         final Router designsRouter = Router.router(vertx);
 
         final HttpClient designsCommandClient = HttpClientFactory.create(vertx, designsCommandUrl, clientConfig);
 
-        final HttpClient designsQueryClient = HttpClientFactory.create(vertx, designsQueryUrl,clientConfig);
+        final HttpClient designsRenderClient = HttpClientFactory.create(vertx, designsRenderUrl, clientConfig);
+
+        final HttpClient designsQueryClient = HttpClientFactory.create(vertx, designsQueryUrl, clientConfig);
+
+        designsRouter.route("/validate")
+                .method(HttpMethod.POST)
+                .handler(new ProxyHandler(designsRenderClient));
+
+        designsRouter.route("/parse")
+                .method(HttpMethod.POST)
+                .handler(new ProxyHandler(designsRenderClient));
 
         designsRouter.route("/*")
                 .method(HttpMethod.HEAD)

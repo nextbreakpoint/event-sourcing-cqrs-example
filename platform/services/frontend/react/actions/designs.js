@@ -54,6 +54,14 @@ export const setDesignsPagination = (page, rowsPerPage) => ({
   type: Types.DESIGNS_PAGINATION_UPDATE, page, rowsPerPage
 })
 
+export const setUploadedDesign = (design) => ({
+  type: Types.UPLOADED_DESIGN_CHANGED, present: true, design: design
+})
+
+export const resetUploadedDesign = () => ({
+  type: Types.UPLOADED_DESIGN_CHANGED, present: false, design: {}
+})
+
 export const getDesigns = (state) => {
     return content.getDesigns(state)
 }
@@ -64,6 +72,10 @@ export const getDesignsStatus = (state) => {
 
 export const getRevision = (state) => {
     return content.getRevision(state)
+}
+
+export const getShowUploadDesign = (state) => {
+    return dialog.getShowUploadDesign(state)
 }
 
 export const getShowCreateDesign = (state) => {
@@ -80,6 +92,14 @@ export const getShowErrorMessage = (state) => {
 
 export const getErrorMessage = (state) => {
     return dialog.getErrorMessage(state)
+}
+
+export const isUploadedDesignPresent = (state) => {
+    return dialog.isUploadedDesignPresent(state)
+}
+
+export const getUploadedDesign = (state) => {
+    return dialog.getUploadedDesign(state)
 }
 
 export const getSelected = (state) => {

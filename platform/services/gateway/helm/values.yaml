@@ -29,4 +29,5 @@ authApiUrl:
 accountsApiUrl:
 designsQueryApiUrl:
 designsCommandApiUrl:
+designsRenderpiUrl:
 designsNotifyApiUrl:

@@ -50,7 +50,10 @@ import {
     getShowErrorMessage,
     getErrorMessage,
     showErrorMessage,
-    hideErrorMessage
+    hideErrorMessage,
+    isUploadedDesignPresent,
+    getUploadedDesign,
+    resetUploadedDesign
 } from '../../actions/designs'
 
 import axios from 'axios'
@@ -74,6 +77,44 @@ let DesignsPage = class DesignsPage extends React.Component {
         metadata: metadata
     }
 
+    handleUpload = () => {
+        console.log("upload")
+
+        let component = this
+
+        let config = {
+            timeout: 30000,
+            metadata: {'content-type': 'application/json'},
+            withCredentials: true
+        }
+
+        component.props.handleHideUploadDialog()
+        component.props.handleHideErrorMessage()
+
+//         let manifest = "{\"pluginId\":\"Mandelbrot\"}"
+//         let design = { manifest: manifest, script: this.state.script, metadata: this.state.metadata, levels: 3 }
+//
+//         component.props.handleHideCreateDialog()
+//         component.props.handleHideErrorMessage()
+//
+//         axios.post(component.props.config.api_url + '/v1/designs', design, config)
+//             .then(function (response) {
+//                 if (response.status == 202 || response.status == 201) {
+//                     //var designs = component.props.designs.slice()
+//                     //designs.push({uuid:content.data.uuid, selected: false})
+//                     //component.props.handleLoadDesignsSuccess(designs, component.props.timestamp)
+//                     component.props.handleShowErrorMessage("Your request has been processed")
+//                 } else {
+//                     console.log("Can't create a new design: status = " + response.status)
+//                     component.props.handleShowErrorMessage("Can't create a new design")
+//                 }
+//             })
+//             .catch(function (error) {
+//                 console.log("Can't create a new design: " + error)
+//                 component.props.handleShowErrorMessage("Can't create a new design")
+//             })
+    }
+
     handleCreate = () => {
         console.log("create")
 
@@ -90,6 +131,7 @@ let DesignsPage = class DesignsPage extends React.Component {
 
         component.props.handleHideCreateDialog()
         component.props.handleHideErrorMessage()
+        component.props.resetUploadedDesign()
 
         axios.post(component.props.config.api_url + '/v1/designs', design, config)
             .then(function (response) {
@@ -205,7 +247,23 @@ let DesignsPage = class DesignsPage extends React.Component {
                         <Footer/>
                     </Grid>
                 </Grid>
-                {this.props.account.role == 'admin' && (
+                {(this.props.account.role == 'admin' & this.props.uploaded_design_present == true) && (
+                    <Dialog className={this.props.classes.dialog} open={this.props.show_create_design} onClose={this.props.handleHideCreateDialog} scroll={"paper"} TransitionComponent={SlideTransition}>
+                        <DialogTitle>Create New Design</DialogTitle>
+                        <DialogContent>
+                            <DesignForm script={this.props.uploaded_design.script} metadata={this.props.uploaded_design.metadata} onScriptChanged={this.handleScriptChanged} onMetadataChanged={this.handleMetadataChanged}/>
+                        </DialogContent>
+                        <DialogActions>
+                            <Button variant="outlined" color="primary" onClick={this.props.handleHideCreateDialog} color="primary">
+                              Cancel
+                            </Button>
+                            <Button variant="outlined" color="primary" onClick={this.handleCreate} color="primary" autoFocus>
+                              Create
+                            </Button>
+                        </DialogActions>
+                    </Dialog>
+                )}
+                {(this.props.account.role == 'admin' & this.props.uploaded_design_present == false) && (
                     <Dialog className={this.props.classes.dialog} open={this.props.show_create_design} onClose={this.props.handleHideCreateDialog} scroll={"paper"} TransitionComponent={SlideTransition}>
                         <DialogTitle>Create New Design</DialogTitle>
                         <DialogContent>
@@ -287,6 +345,8 @@ DesignsPage.propTypes = {
     show_delete_designs: PropTypes.bool.isRequired,
     show_error_message: PropTypes.bool.isRequired,
     error_message: PropTypes.string.isRequired,
+    uploaded_design_present: PropTypes.bool.isRequired,
+    uploaded_design: PropTypes.object.isRequired,
     classes: PropTypes.object.isRequired,
     theme: PropTypes.object.isRequired
 }
@@ -300,7 +360,9 @@ const mapStateToProps = state => ({
     show_create_design: getShowCreateDesign(state),
     show_delete_designs: getShowDeleteDesigns(state),
     show_error_message: getShowErrorMessage(state),
-    error_message: getErrorMessage(state)
+    error_message: getErrorMessage(state),
+    uploaded_design_present: isUploadedDesignPresent(state),
+    uploaded_design: getUploadedDesign(state)
 })
 
 const mapDispatchToProps = dispatch => ({
@@ -330,6 +392,9 @@ const mapDispatchToProps = dispatch => ({
     },
     handleLoadDesignsFailure: (error) => {
         dispatch(loadDesignsFailure(error))
+    },
+    resetUploadedDesign: (error) => {
+        dispatch(resetUploadedDesign(error))
     }
 })
 

@@ -23,5 +23,6 @@
   "server_accounts_url": "${ACCOUNTS_URL}/accounts",
   "server_designs_query_url": "${DESIGNS_QUERY_URL}/designs",
   "server_designs_command_url": "${DESIGNS_COMMAND_URL}/designs",
+  "server_designs_render_url": "${DESIGNS_RENDER_URL}/designs",
   "server_designs_watch_url": "${DESIGNS_WATCH_URL}/watch/designs"
 }

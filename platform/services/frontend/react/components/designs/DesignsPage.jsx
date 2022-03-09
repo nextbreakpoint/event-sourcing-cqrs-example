@@ -72,47 +72,11 @@ let manifest = "{\"pluginId\":\"Mandelbrot\"}"
 
 let DesignsPage = class DesignsPage extends React.Component {
     state = {
-        manifest: manifest,
-        script: script,
-        metadata: metadata
-    }
-
-    handleUpload = () => {
-        console.log("upload")
-
-        let component = this
-
-        let config = {
-            timeout: 30000,
-            metadata: {'content-type': 'application/json'},
-            withCredentials: true
+        design: {
+            manifest: manifest,
+            metadata: metadata,
+            script: script
         }
-
-        component.props.handleHideUploadDialog()
-        component.props.handleHideErrorMessage()
-
-//         let manifest = "{\"pluginId\":\"Mandelbrot\"}"
-//         let design = { manifest: manifest, script: this.state.script, metadata: this.state.metadata, levels: 3 }
-//
-//         component.props.handleHideCreateDialog()
-//         component.props.handleHideErrorMessage()
-//
-//         axios.post(component.props.config.api_url + '/v1/designs', design, config)
-//             .then(function (response) {
-//                 if (response.status == 202 || response.status == 201) {
-//                     //var designs = component.props.designs.slice()
-//                     //designs.push({uuid:content.data.uuid, selected: false})
-//                     //component.props.handleLoadDesignsSuccess(designs, component.props.timestamp)
-//                     component.props.handleShowErrorMessage("Your request has been processed")
-//                 } else {
-//                     console.log("Can't create a new design: status = " + response.status)
-//                     component.props.handleShowErrorMessage("Can't create a new design")
-//                 }
-//             })
-//             .catch(function (error) {
-//                 console.log("Can't create a new design: " + error)
-//                 component.props.handleShowErrorMessage("Can't create a new design")
-//             })
     }
 
     handleCreate = () => {
@@ -126,8 +90,7 @@ let DesignsPage = class DesignsPage extends React.Component {
             withCredentials: true
         }
 
-        let manifest = "{\"pluginId\":\"Mandelbrot\"}"
-        let design = { manifest: manifest, script: this.state.script, metadata: this.state.metadata, levels: 3 }
+        let design = this.createDesign()
 
         component.props.handleHideCreateDialog()
         component.props.handleHideErrorMessage()
@@ -217,11 +180,21 @@ let DesignsPage = class DesignsPage extends React.Component {
     }
 
     handleScriptChanged = (value) => {
-        this.setState({script: value})
+        if (this.props.uploaded_design_present == true) {
+            this.props.resetUploadedDesign()
+            this.setState({design: {...this.state.design, script: value}})
+        } else {
+            this.setState({design: {...this.state.design, script: value}})
+        }
     }
 
     handleMetadataChanged = (value) => {
-        this.setState({metadata: value})
+        if (this.props.uploaded_design_present == true) {
+            this.props.resetUploadedDesign()
+            this.setState({design: {...this.state.design, metadata: value}})
+        } else {
+            this.setState({design: {...this.state.design, metadata: value}})
+        }
     }
 
     handleClose = (event, reason) => {
@@ -229,7 +202,16 @@ let DesignsPage = class DesignsPage extends React.Component {
           return
         }
 
+        this.props.resetUploadedDesign()
         this.props.handleHideErrorMessage()
+    }
+
+    createDesign = () => {
+        if (this.props.uploaded_design_present == true) {
+            return { manifest: this.props.uploaded_design.manifest, script: this.props.uploaded_design.script, metadata: this.props.uploaded_design.metadata, levels: 3 }
+        } else {
+            return { manifest: this.state.design.manifest, script: this.state.design.script, metadata: this.state.design.metadata, levels: 3 }
+        }
     }
 
     render() {
@@ -247,27 +229,11 @@ let DesignsPage = class DesignsPage extends React.Component {
                         <Footer/>
                     </Grid>
                 </Grid>
-                {(this.props.account.role == 'admin' & this.props.uploaded_design_present == true) && (
+                {this.props.account.role == 'admin' && (
                     <Dialog className={this.props.classes.dialog} open={this.props.show_create_design} onClose={this.props.handleHideCreateDialog} scroll={"paper"} TransitionComponent={SlideTransition}>
                         <DialogTitle>Create New Design</DialogTitle>
                         <DialogContent>
-                            <DesignForm script={this.props.uploaded_design.script} metadata={this.props.uploaded_design.metadata} onScriptChanged={this.handleScriptChanged} onMetadataChanged={this.handleMetadataChanged}/>
-                        </DialogContent>
-                        <DialogActions>
-                            <Button variant="outlined" color="primary" onClick={this.props.handleHideCreateDialog} color="primary">
-                              Cancel
-                            </Button>
-                            <Button variant="outlined" color="primary" onClick={this.handleCreate} color="primary" autoFocus>
-                              Create
-                            </Button>
-                        </DialogActions>
-                    </Dialog>
-                )}
-                {(this.props.account.role == 'admin' & this.props.uploaded_design_present == false) && (
-                    <Dialog className={this.props.classes.dialog} open={this.props.show_create_design} onClose={this.props.handleHideCreateDialog} scroll={"paper"} TransitionComponent={SlideTransition}>
-                        <DialogTitle>Create New Design</DialogTitle>
-                        <DialogContent>
-                            <DesignForm script={this.state.script} metadata={this.state.metadata} onScriptChanged={this.handleScriptChanged} onMetadataChanged={this.handleMetadataChanged}/>
+                            <DesignForm script={this.props.uploaded_design_present == true ? this.props.uploaded_design.script : this.state.design.script} metadata={this.props.uploaded_design_present == true ? this.props.uploaded_design.metadata : this.state.design.metadata} onScriptChanged={this.handleScriptChanged} onMetadataChanged={this.handleMetadataChanged}/>
                         </DialogContent>
                         <DialogActions>
                             <Button variant="outlined" color="primary" onClick={this.props.handleHideCreateDialog} color="primary">

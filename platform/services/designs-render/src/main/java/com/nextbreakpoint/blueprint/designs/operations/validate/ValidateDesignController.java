@@ -2,9 +2,8 @@ package com.nextbreakpoint.blueprint.designs.operations.validate;
 
 import com.nextbreakpoint.blueprint.common.core.ValidationStatus;
 import com.nextbreakpoint.blueprint.common.vertx.Controller;
+import com.nextbreakpoint.blueprint.designs.common.BundleUtils;
 import com.nextbreakpoint.nextfractal.core.common.Bundle;
-import com.nextbreakpoint.nextfractal.core.common.SourceError;
-import com.nextbreakpoint.nextfractal.core.common.TileUtils;
 import com.nextbreakpoint.nextfractal.mandelbrot.dsl.DSLCompiler;
 import com.nextbreakpoint.nextfractal.mandelbrot.dsl.DSLParser;
 import com.nextbreakpoint.nextfractal.mandelbrot.dsl.ParserResult;
@@ -23,7 +22,7 @@ public class ValidateDesignController implements Controller<ValidateDesignReques
 
     private Single<ValidateDesignResponse> onRequest(ValidateDesignRequest request) {
         try {
-            Bundle bundle = TileUtils.parseData(request.getManifest(), request.getMetadata(), request.getScript());
+            Bundle bundle = BundleUtils.createBundle(request.getManifest(), request.getMetadata(), request.getScript());
 
             DSLParser parser = new DSLParser(DSLParser.class.getPackage().getName() + ".generated", "Compile" + System.nanoTime());
             ParserResult result = parser.parse(bundle.getSession().getScript());

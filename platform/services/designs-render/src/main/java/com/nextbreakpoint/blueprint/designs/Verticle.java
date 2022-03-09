@@ -280,7 +280,9 @@ public class Verticle extends AbstractVerticle {
 
             final Handler<RoutingContext> validateDesignHandler = new AccessHandler(jwtProvider, Factory.createValidateDesignHandler(), onAccessDenied, singletonList(ADMIN));
 
-            final Handler<RoutingContext> parseDesignHandler = new AccessHandler(jwtProvider, Factory.createParseDesignHandler(), onAccessDenied, singletonList(ADMIN));
+            final Handler<RoutingContext> downloadDesignHandler = new AccessHandler(jwtProvider, Factory.createDownloadDesignHandler(), onAccessDenied, singletonList(ADMIN));
+
+            final Handler<RoutingContext> uploadDesignHandler = new AccessHandler(jwtProvider, Factory.createUploadDesignHandler(), onAccessDenied, singletonList(ADMIN));
 
             final Handler<RoutingContext> apiV1DocsHandler = new OpenApiHandler(vertx.getDelegate(), executor, "api-v1.yaml");
 
@@ -299,8 +301,11 @@ public class Verticle extends AbstractVerticle {
                         routerBuilder.operation("validateDesign")
                                 .handler(context -> validateDesignHandler.handle(RoutingContext.newInstance(context)));
 
-                        routerBuilder.operation("parseDesign")
-                                .handler(context -> parseDesignHandler.handle(RoutingContext.newInstance(context)));
+                        routerBuilder.operation("downloadDesign")
+                                .handler(context -> downloadDesignHandler.handle(RoutingContext.newInstance(context)));
+
+                        routerBuilder.operation("uploadDesign")
+                                .handler(context -> uploadDesignHandler.handle(RoutingContext.newInstance(context)));
 
                         final Router apiRouter = Router.newInstance(routerBuilder.createRouter());
 

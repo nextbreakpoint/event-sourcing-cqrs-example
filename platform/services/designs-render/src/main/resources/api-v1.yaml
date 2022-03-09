@@ -24,7 +24,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ValidateDesignRequest'
+              $ref: '#/components/schemas/Design'
       responses:
         200:
           description: Validation status and errors
@@ -44,13 +44,46 @@ paths:
 #      security:
 #        - design_auth:
 #            - admin
-  /designs/parse:
+  /designs/download:
+    post:
+      tags:
+        - designs
+        - download
+      summary: Return design as file
+      operationId: downloadDesign
+      requestBody:
+        description: Design data
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Design'
+      responses:
+        200:
+          description: Content of the file
+          content:
+            application/zip:
+              schema:
+                type: string
+                format: binary
+        400:
+          description: Invalid request
+          content: {}
+        401:
+          description: Missing authentication
+          content: {}
+        403:
+          description: User not authorized
+          content: {}
+  #      security:
+  #        - design_auth:
+  #            - admin
+  /designs/upload:
     post:
       tags:
         - designs
         - upload
-      summary: Return content of file
-      operationId: parseDesign
+      summary: Return design from file
+      operationId: uploadDesign
       requestBody:
         content:
           application/octet-stream:
@@ -59,11 +92,11 @@ paths:
               format: binary
       responses:
         200:
-          description: Content of file
+          description: Design and validation errors
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UploadedDesignResponse'
+                $ref: '#/components/schemas/UploadDesignResponse'
         400:
           description: Invalid request
           content: {}
@@ -78,7 +111,7 @@ paths:
 #            - admin
 components:
   schemas:
-    ValidateDesignRequest:
+    Design:
       type: object
       properties:
         manifest:
@@ -104,7 +137,7 @@ components:
       required:
         - status
         - errors
-    UploadedDesignResponse:
+    UploadDesignResponse:
       type: object
       properties:
         manifest:

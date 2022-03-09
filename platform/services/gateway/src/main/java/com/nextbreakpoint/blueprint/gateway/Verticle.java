@@ -206,7 +206,11 @@ public class Verticle extends AbstractVerticle {
                 .method(HttpMethod.POST)
                 .handler(new ProxyHandler(designsRenderClient));
 
-        designsRouter.route("/parse")
+        designsRouter.route("/download")
+                .method(HttpMethod.POST)
+                .handler(new ProxyHandler(designsRenderClient));
+
+        designsRouter.route("/upload")
                 .method(HttpMethod.POST)
                 .handler(new ProxyHandler(designsRenderClient));
 

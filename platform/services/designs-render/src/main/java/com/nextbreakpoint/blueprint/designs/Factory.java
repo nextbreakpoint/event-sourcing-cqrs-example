@@ -8,7 +8,8 @@ import com.nextbreakpoint.blueprint.common.vertx.*;
 import com.nextbreakpoint.blueprint.designs.common.S3Driver;
 import com.nextbreakpoint.blueprint.designs.common.TileRenderer;
 import com.nextbreakpoint.blueprint.designs.controllers.TileRenderRequestedController;
-import com.nextbreakpoint.blueprint.designs.operations.parse.*;
+import com.nextbreakpoint.blueprint.designs.operations.download.*;
+import com.nextbreakpoint.blueprint.designs.operations.upload.*;
 import com.nextbreakpoint.blueprint.designs.operations.validate.*;
 import io.vertx.core.Handler;
 import io.vertx.rxjava.core.WorkerExecutor;
@@ -29,12 +30,22 @@ public class Factory {
                 .build();
     }
 
-    public static Handler<RoutingContext> createParseDesignHandler() {
-        return TemplateHandler.<RoutingContext, ParseDesignRequest, ParseDesignResponse, String>builder()
-                .withInputMapper(new ParseDesignRequestMapper())
-                .withController(new ParseDesignController())
-                .withOutputMapper(new ParseDesignResponseMapper())
+    public static Handler<RoutingContext> createUploadDesignHandler() {
+        return TemplateHandler.<RoutingContext, UploadDesignRequest, UploadDesignResponse, String>builder()
+                .withInputMapper(new UploadDesignRequestMapper())
+                .withController(new UploadDesignController())
+                .withOutputMapper(new UploadDesignResponseMapper())
                 .onSuccess(new JsonConsumer(200))
+                .onFailure(new ErrorConsumer())
+                .build();
+    }
+
+    public static Handler<RoutingContext> createDownloadDesignHandler() {
+        return TemplateHandler.<RoutingContext, DownloadDesignRequest, DownloadDesignResponse, byte[]>builder()
+                .withInputMapper(new DownloadDesignRequestMapper())
+                .withController(new DownloadDesignController())
+                .withOutputMapper(new DownloadDesignResponseMapper())
+                .onSuccess(new ZipConsumer(200))
                 .onFailure(new ErrorConsumer())
                 .build();
     }

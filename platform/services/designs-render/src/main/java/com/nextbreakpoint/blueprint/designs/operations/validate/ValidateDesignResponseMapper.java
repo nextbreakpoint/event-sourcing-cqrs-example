@@ -5,7 +5,7 @@ import com.nextbreakpoint.blueprint.common.core.Mapper;
 
 public class ValidateDesignResponseMapper implements Mapper<ValidateDesignResponse, String> {
     @Override
-    public String transform(ValidateDesignResponse result) {
-        return Json.encodeValue(result);
+    public String transform(ValidateDesignResponse response) {
+        return Json.encodeValue(response);
     }
 }

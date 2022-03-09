@@ -3,7 +3,6 @@ package com.nextbreakpoint.blueprint.designs.common;
 import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
 import com.nextbreakpoint.nextfractal.core.common.Bundle;
 import com.nextbreakpoint.nextfractal.core.common.TileGenerator;
-import com.nextbreakpoint.nextfractal.core.common.TileUtils;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.JsonObject;
@@ -45,7 +44,7 @@ public class TileRenderer {
         final String manifest = jsonObject.getString("manifest");
         final String metadata = jsonObject.getString("metadata");
         final String script = jsonObject.getString("script");
-        return TileUtils.parseData(manifest, metadata, script);
+        return BundleUtils.createBundle(manifest, metadata, script);
     }
 
     private static class Params {

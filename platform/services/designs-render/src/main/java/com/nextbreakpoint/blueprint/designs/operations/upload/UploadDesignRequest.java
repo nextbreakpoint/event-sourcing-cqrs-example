@@ -1,11 +1,11 @@
-package com.nextbreakpoint.blueprint.designs.operations.parse;
+package com.nextbreakpoint.blueprint.designs.operations.upload;
 
 import java.util.Objects;
 
-public class ParseDesignRequest {
+public class UploadDesignRequest {
     private String file;
 
-    public ParseDesignRequest(String file) {
+    public UploadDesignRequest(String file) {
         this.file = Objects.requireNonNull(file);
     }
 

@@ -331,7 +331,7 @@ let EnhancedTable = class EnhancedTable extends React.Component {
 
         component.props.handleHideErrorMessage()
 
-        axios.post(component.props.config.api_url + '/v1/designs/parse', formData, config)
+        axios.post(component.props.config.api_url + '/v1/designs/upload', formData, config)
             .then(function (response) {
                 if (response.status == 200) {
                     if (response.data.errors.length == 0) {

@@ -107,7 +107,7 @@ public class IntegrationTests {
                 .when().post(testCases.makeBaseURL("/v1/designs/validate"))
                 .then().assertThat().statusCode(200)
                 .and().assertThat().body("status", Matchers.equalTo(ValidationStatus.REJECTED.toString()))
-                .and().assertThat().body("errors", Matchers.equalTo("[1:0] Parse failed. Expected tokens: FRACTAL, 'fractal'"));
+                .and().assertThat().body("errors", Matchers.equalTo(List.of("[1:0] Parse failed. Expected tokens: FRACTAL, 'fractal'")));
     }
 
     @Test
@@ -123,12 +123,28 @@ public class IntegrationTests {
             given().config(TestUtils.getRestAssuredConfig())
                     .with().header(AUTHORIZATION, authorization)
                     .and().multiPart("fileName", "test.nf.zip", inputStream)
-                    .when().post(testCases.makeBaseURL("/v1/designs/parse"))
+                    .when().post(testCases.makeBaseURL("/v1/designs/upload"))
                     .then().assertThat().statusCode(200)
                     .and().assertThat().body("manifest", Matchers.equalTo(manifest))
                     .and().assertThat().body("metadata", Matchers.equalTo(metadata))
                     .and().assertThat().body("script", Matchers.equalTo(script));
         }
+    }
+
+    @Test
+    @DisplayName("Should return file when design is valid")
+    public void shouldReturnFileWhenDesignIsValid() throws MalformedURLException {
+        final String authorization = testCases.makeAuthorization("test", Authority.ADMIN);
+
+        given().config(TestUtils.getRestAssuredConfig())
+                .with().header(AUTHORIZATION, authorization)
+                .and().contentType("application/json")
+                .and().accept("application/zip")
+                .and().body(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT))
+                .when().post(testCases.makeBaseURL("/v1/designs/download"))
+                .then().assertThat().statusCode(200)
+                .and().assertThat().contentType("application/zip")
+                .and().assertThat().content(Matchers.notNullValue());
     }
 
     private String getContent(String resource) throws IOException {

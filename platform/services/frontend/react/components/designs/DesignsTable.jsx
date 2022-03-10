@@ -219,7 +219,7 @@ let EnhancedTableToolbar = props => {
               </label>
             </Tooltip>
             <Tooltip title="Download">
-              <IconButton aria-label="Download" onClick={onDownload}>
+              <IconButton aria-label="Download" onClick={onDownload} disabled={numSelected != 1}>
                 <DownloadIcon />
               </IconButton>
             </Tooltip>

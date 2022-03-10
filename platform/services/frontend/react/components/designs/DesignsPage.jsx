@@ -96,10 +96,28 @@ let DesignsPage = class DesignsPage extends React.Component {
         component.props.handleHideErrorMessage()
         component.props.resetUploadedDesign()
 
-        axios.post(component.props.config.api_url + '/v1/designs', design, config)
+        axios.post(component.props.config.api_url + '/v1/designs/validate', design, config)
             .then(function (response) {
-                if (response.status == 202 || response.status == 201) {
-                    component.props.handleShowErrorMessage("Your request has been received. The designs will be updated shortly")
+                if (response.status == 200) {
+                     let result = response.data
+                     console.log(result)
+                     if (result.errors.length == 0) {
+                        axios.post(component.props.config.api_url + '/v1/designs', design, config)
+                            .then(function (response) {
+                                if (response.status == 202 || response.status == 201) {
+                                    component.props.handleShowErrorMessage("Your request has been received. The designs will be updated shortly")
+                                } else {
+                                    console.log("Can't create the design: status = " + response.status)
+                                    component.props.handleShowErrorMessage("Can't create the design")
+                                }
+                            })
+                            .catch(function (error) {
+                                console.log("Can't create the design: " + error)
+                                component.props.handleShowErrorMessage("Can't create the design")
+                            })
+                     } else {
+                        component.props.handleShowErrorMessage("Can't create the design")
+                     }
                 } else {
                     console.log("Can't create the design: status = " + response.status)
                     component.props.handleShowErrorMessage("Can't create the design")
@@ -211,6 +229,9 @@ let DesignsPage = class DesignsPage extends React.Component {
     }
 
     render() {
+        let script = this.props.uploaded_design_present == true ? this.props.uploaded_design.script : this.state.design.script
+        let metadata = this.props.uploaded_design_present == true ? this.props.uploaded_design.metadata : this.state.design.metadata
+
         return (
             <React.Fragment>
                 <CssBaseline />
@@ -229,7 +250,17 @@ let DesignsPage = class DesignsPage extends React.Component {
                     <Dialog className={this.props.classes.dialog} open={this.props.show_create_design} onClose={this.props.handleHideCreateDialog} scroll={"paper"} TransitionComponent={SlideTransition}>
                         <DialogTitle>Create New Design</DialogTitle>
                         <DialogContent>
-                            <DesignForm script={this.props.uploaded_design_present == true ? this.props.uploaded_design.script : this.state.design.script} metadata={this.props.uploaded_design_present == true ? this.props.uploaded_design.metadata : this.state.design.metadata} onScriptChanged={this.handleScriptChanged} onMetadataChanged={this.handleMetadataChanged}/>
+{/*                             <Grid container xs={12} justify="space-between" alignItems="center" className="container"> */}
+{/*                                 <Grid item xs={6}> */}
+{/*                                     <Map center={[0, 0]} zoom={2} attributionControl={false} dragging={false} zoomControl={false} scrollWheelZoom={false} touchZoom={false}> */}
+{/*                                         {this.renderMapLayer(url)} */}
+{/*                                     </Map> */}
+{/*                                 </Grid> */}
+{/*                                 <Grid item xs={6}> */}
+{/*                                     <DesignForm script={script} metadata={metadata} onScriptChanged={this.handleScriptChanged} onMetadataChanged={this.handleMetadataChanged}/> */}
+{/*                                 </Grid> */}
+{/*                             </Grid> */}
+                            <DesignForm script={script} metadata={metadata} onScriptChanged={this.handleScriptChanged} onMetadataChanged={this.handleMetadataChanged}/>
                         </DialogContent>
                         <DialogActions>
                             <Button variant="outlined" color="primary" onClick={this.props.handleHideCreateDialog} color="primary">

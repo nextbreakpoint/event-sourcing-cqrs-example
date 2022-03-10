@@ -63,40 +63,40 @@ let PreviewPage = class PreviewPage extends React.Component {
         design: {}
     }
 
-    handleUpload = (e) => {
-        let component = this
-
-        let formData = new FormData();
-        formData.append('file', e.target.files[0]);
-
-        let config = {
-            timeout: 30000,
-            metadata: {'content-type': 'multipart/form-data'},
-            withCredentials: true
-        }
-
-        component.props.handleHideErrorMessage()
-
-        axios.post(component.props.config.api_url + '/v1/designs/upload', formData, config)
-            .then(function (response) {
-                if (response.status == 200) {
-                    if (response.data.errors.length == 0) {
-                        let design = { manifest: response.data.manifest, metadata: response.data.metadata, script: response.data.script }
-                        component.setState({design: design})
-                        component.props.handleShowErrorMessage("The file has been uploaded")
-                    } else {
-                        component.props.handleShowErrorMessage("Can't upload the file")
-                    }
-                } else {
-                    console.log("Can't upload the file: status = " + response.status)
-                    component.props.handleShowErrorMessage("Can't upload the file")
-                }
-            })
-            .catch(function (error) {
-                console.log("Can't upload the file: " + error)
-                component.props.handleShowErrorMessage("Can't upload the file")
-            })
-    }
+//     handleUpload = (e) => {
+//         let component = this
+//
+//         let formData = new FormData();
+//         formData.append('file', e.target.files[0]);
+//
+//         let config = {
+//             timeout: 30000,
+//             metadata: {'content-type': 'multipart/form-data'},
+//             withCredentials: true
+//         }
+//
+//         component.props.handleHideErrorMessage()
+//
+//         axios.post(component.props.config.api_url + '/v1/designs/upload', formData, config)
+//             .then(function (response) {
+//                 if (response.status == 200) {
+//                     if (response.data.errors.length == 0) {
+//                         let design = { manifest: response.data.manifest, metadata: response.data.metadata, script: response.data.script }
+//                         component.setState({design: design})
+//                         component.props.handleShowErrorMessage("The file has been uploaded")
+//                     } else {
+//                         component.props.handleShowErrorMessage("Can't upload the file")
+//                     }
+//                 } else {
+//                     console.log("Can't upload the file: status = " + response.status)
+//                     component.props.handleShowErrorMessage("Can't upload the file")
+//                 }
+//             })
+//             .catch(function (error) {
+//                 console.log("Can't upload the file: " + error)
+//                 component.props.handleShowErrorMessage("Can't upload the file")
+//             })
+//     }
 
     handleDownload = (e) => {
         console.log("download")
@@ -106,8 +106,7 @@ let PreviewPage = class PreviewPage extends React.Component {
         let config = {
             timeout: 30000,
             metadata: {'content-type': 'application/json'},
-            withCredentials: true,
-            responseType: "blob"
+            withCredentials: true
         }
 
         let timestamp = Date.now()
@@ -121,15 +120,40 @@ let PreviewPage = class PreviewPage extends React.Component {
         component.props.handleHideUpdateDialog()
         component.props.handleHideErrorMessage()
 
-        axios.post(component.props.config.api_url + '/v1/designs/download', design, config)
+        axios.post(component.props.config.api_url + '/v1/designs/validate', design, config)
             .then(function (response) {
                 if (response.status == 200) {
-                    let url = window.URL.createObjectURL(response.data);
-                    let a = document.createElement('a');
-                    a.href = url;
-                    a.download = component.props.uuid + '.zip';
-                    a.click();
-                    component.props.handleShowErrorMessage("The design has been downloaded")
+                     let result = response.data
+                     console.log(result)
+                     if (result.errors.length == 0) {
+                        let config = {
+                            timeout: 30000,
+                            metadata: {'content-type': 'application/json'},
+                            withCredentials: true,
+                            responseType: "blob"
+                        }
+
+                        axios.post(component.props.config.api_url + '/v1/designs/download', design, config)
+                            .then(function (response) {
+                                if (response.status == 200) {
+                                    let url = window.URL.createObjectURL(response.data);
+                                    let a = document.createElement('a');
+                                    a.href = url;
+                                    a.download = component.props.uuid + '.zip';
+                                    a.click();
+                                    component.props.handleShowErrorMessage("The design has been downloaded")
+                                } else {
+                                    console.log("Can't download the design: status = " + response.status)
+                                    component.props.handleShowErrorMessage("Can't download the design")
+                                }
+                            })
+                            .catch(function (error) {
+                                console.log("Can't download the design: " + error)
+                                component.props.handleShowErrorMessage("Can't download the design")
+                            })
+                     } else {
+                        component.props.handleShowErrorMessage("Can't download the design")
+                     }
                 } else {
                     console.log("Can't download the design: status = " + response.status)
                     component.props.handleShowErrorMessage("Can't download the design")
@@ -143,7 +167,6 @@ let PreviewPage = class PreviewPage extends React.Component {
 
     handleUpdate = (e) => {
         console.log("update")
-//         e.preventDefault()
 
         let component = this
 
@@ -164,10 +187,28 @@ let PreviewPage = class PreviewPage extends React.Component {
         component.props.handleHideUpdateDialog()
         component.props.handleHideErrorMessage()
 
-        axios.put(component.props.config.api_url + '/v1/designs/' + this.props.uuid, design, config)
+        axios.post(component.props.config.api_url + '/v1/designs/validate', design, config)
             .then(function (response) {
-                if (response.status == 202 || response.status == 200) {
-                    component.props.handleShowErrorMessage("Your request has been received. The design will be updated shortly")
+                if (response.status == 200) {
+                     let result = response.data
+                     console.log(result)
+                     if (result.errors.length == 0) {
+                        axios.put(component.props.config.api_url + '/v1/designs/' + this.props.uuid, design, config)
+                            .then(function (response) {
+                                if (response.status == 202 || response.status == 200) {
+                                    component.props.handleShowErrorMessage("Your request has been received. The design will be updated shortly")
+                                } else {
+                                    console.log("Can't update the design: status = " + response.status)
+                                    component.props.handleShowErrorMessage("Can't update the design")
+                                }
+                            })
+                            .catch(function (error) {
+                                console.log("Can't update the design: " + error)
+                                component.props.handleShowErrorMessage("Can't update the design")
+                            })
+                     } else {
+                        component.props.handleShowErrorMessage("Can't update the design")
+                     }
                 } else {
                     console.log("Can't update the design: status = " + response.status)
                     component.props.handleShowErrorMessage("Can't update the design")
@@ -181,7 +222,6 @@ let PreviewPage = class PreviewPage extends React.Component {
 
     handleRender = (e) => {
         console.log("render")
-//         e.preventDefault()
 
         let component = this
 
@@ -202,10 +242,28 @@ let PreviewPage = class PreviewPage extends React.Component {
         component.props.handleHideUpdateDialog()
         component.props.handleHideErrorMessage()
 
-        axios.put(component.props.config.api_url + '/v1/designs/' + this.props.uuid, design, config)
+        axios.post(component.props.config.api_url + '/v1/designs/validate', design, config)
             .then(function (response) {
-                if (response.status == 202 || response.status == 200) {
-                    component.props.handleShowErrorMessage("Your request has been received. The design will be updated shortly")
+                if (response.status == 200) {
+                     let result = response.data
+                     console.log(result)
+                     if (result.errors.length == 0) {
+                        axios.put(component.props.config.api_url + '/v1/designs/' + this.props.uuid, design, config)
+                            .then(function (response) {
+                                if (response.status == 202 || response.status == 200) {
+                                    component.props.handleShowErrorMessage("Your request has been received. The design will be updated shortly")
+                                } else {
+                                    console.log("Can't update the design: status = " + response.status)
+                                    component.props.handleShowErrorMessage("Can't update the design")
+                                }
+                            })
+                            .catch(function (error) {
+                                console.log("Can't update the design: " + error)
+                                component.props.handleShowErrorMessage("Can't update the design")
+                            })
+                     } else {
+                        component.props.handleShowErrorMessage("Can't update the design")
+                     }
                 } else {
                     console.log("Can't update the design: status = " + response.status)
                     component.props.handleShowErrorMessage("Can't update the design")
@@ -242,9 +300,8 @@ let PreviewPage = class PreviewPage extends React.Component {
     render() {
         const { classes, uuid, checksum } = this.props
 
-        const design = (this.state.design.script && this.state.design.metadata) ? this.state.design : this.props.design
-
-        console.log(design.script)
+        let script = this.state.design.script ? this.state.design.script : this.props.design.script
+        let metadata = this.state.design.metadata ? this.state.design.metadata : this.props.design.metadata
 
         const url = this.props.config.api_url + '/v1/designs/' + uuid + '/{z}/{x}/{y}/256.png?draft=true&t=' + checksum
 
@@ -262,14 +319,8 @@ let PreviewPage = class PreviewPage extends React.Component {
                             </Map>
                         </Grid>
                         <Grid item xs={6}>
-                            <DesignForm script={design.script} metadata={design.metadata} onScriptChanged={this.handleScriptChanged} onMetadataChanged={this.handleMetadataChanged}/>
+                            <DesignForm script={script} metadata={metadata} onScriptChanged={this.handleScriptChanged} onMetadataChanged={this.handleMetadataChanged}/>
                             <div className="controls">
-                                <label htmlFor="uploadFile">
-                                    <Input className={classes.uploadFile} id="uploadFile" accept="application/zip" type="file" onChange={this.handleUpload} />
-                                    <Button className="button" variant="outlined" color="primary" component="span">
-                                      Upload
-                                    </Button>
-                                </label>
                                 <Button className="button" variant="outlined" color="primary" onClick={this.handleDownload}>
                                   Download
                                 </Button>
@@ -341,10 +392,10 @@ const themeStyles = theme => ({
   },
   fab: {
     margin: theme.spacing.unit
-  },
-  uploadFile: {
-    display: 'none'
   }
+//   uploadFile: {
+//     display: 'none'
+//   }
 })
 
 const mapStateToProps = state => ({

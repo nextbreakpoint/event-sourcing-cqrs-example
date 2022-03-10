@@ -421,7 +421,7 @@ let EnhancedTable = class EnhancedTable extends React.Component {
   isSelected = id => this.props.selected.indexOf(id) !== -1
 
   render() {
-    const { classes, config, designs, timestamp, account, order, orderBy, selected, rowsPerPage, page } = this.props
+    const { classes, config, designs, revision, account, order, orderBy, selected, rowsPerPage, page } = this.props
     const emptyRows = 0 //rowsPerPage - Math.min(rowsPerPage, designs.length - page * rowsPerPage)
 
     return (
@@ -508,7 +508,7 @@ EnhancedTable.propTypes = {
     config: PropTypes.object,
     account: PropTypes.object,
     designs: PropTypes.array,
-    timestamp: PropTypes.number,
+    revision: PropTypes.number,
     selected: PropTypes.array,
     order: PropTypes.string,
     orderBy: PropTypes.string,
@@ -522,7 +522,7 @@ const mapStateToProps = state => ({
     config: getConfig(state),
     account: getAccount(state),
     designs: getDesigns(state),
-    timestamp: getRevision(state),
+    revision: getRevision(state),
     selected: getSelected(state),
     order: getOrder(state),
     orderBy: getOrderBy(state),

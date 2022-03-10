@@ -109,15 +109,13 @@ let PreviewPage = class PreviewPage extends React.Component {
             withCredentials: true
         }
 
-        let timestamp = Date.now()
-
         let script = this.state.design.script ? this.state.design.script : this.props.design.script
         let metadata = this.state.design.metadata ? this.state.design.metadata : this.props.design.metadata
         let manifest = this.state.design.manifest ? this.state.design.manifest : this.props.design.manifest
 
         const design = { manifest: manifest, script: script, metadata: metadata, levels: 8 }
 
-        component.props.handleHideUpdateDialog()
+//         component.props.handleHideUpdateDialog()
         component.props.handleHideErrorMessage()
 
         axios.post(component.props.config.api_url + '/v1/designs/validate', design, config)
@@ -125,7 +123,7 @@ let PreviewPage = class PreviewPage extends React.Component {
                 if (response.status == 200) {
                      let result = response.data
                      console.log(result)
-                     if (result.errors.length == 0) {
+                     if (result.status == "ACCEPTED") {
                         let config = {
                             timeout: 30000,
                             metadata: {'content-type': 'application/json'},
@@ -176,15 +174,13 @@ let PreviewPage = class PreviewPage extends React.Component {
             withCredentials: true
         }
 
-        let timestamp = Date.now()
-
         let script = this.state.design.script ? this.state.design.script : this.props.design.script
         let metadata = this.state.design.metadata ? this.state.design.metadata : this.props.design.metadata
         let manifest = this.state.design.manifest ? this.state.design.manifest : this.props.design.manifest
 
         const design = { manifest: manifest, script: script, metadata: metadata, levels: 8 }
 
-        component.props.handleHideUpdateDialog()
+//         component.props.handleHideUpdateDialog()
         component.props.handleHideErrorMessage()
 
         axios.post(component.props.config.api_url + '/v1/designs/validate', design, config)
@@ -192,8 +188,8 @@ let PreviewPage = class PreviewPage extends React.Component {
                 if (response.status == 200) {
                      let result = response.data
                      console.log(result)
-                     if (result.errors.length == 0) {
-                        axios.put(component.props.config.api_url + '/v1/designs/' + this.props.uuid, design, config)
+                     if (result.status == "ACCEPTED") {
+                        axios.put(component.props.config.api_url + '/v1/designs/' + component.props.uuid, design, config)
                             .then(function (response) {
                                 if (response.status == 202 || response.status == 200) {
                                     component.props.handleShowErrorMessage("Your request has been received. The design will be updated shortly")
@@ -220,8 +216,8 @@ let PreviewPage = class PreviewPage extends React.Component {
             })
     }
 
-    handleRender = (e) => {
-        console.log("render")
+    handlePublish = (e) => {
+        console.log("publish")
 
         let component = this
 
@@ -231,15 +227,13 @@ let PreviewPage = class PreviewPage extends React.Component {
             withCredentials: true
         }
 
-        let timestamp = Date.now()
-
         let script = this.state.design.script ? this.state.design.script : this.props.design.script
         let metadata = this.state.design.metadata ? this.state.design.metadata : this.props.design.metadata
         let manifest = this.state.design.manifest ? this.state.design.manifest : this.props.design.manifest
 
         const design = { manifest: manifest, script: script, metadata: metadata, levels: 8 }
 
-        component.props.handleHideUpdateDialog()
+//         component.props.handleHideUpdateDialog()
         component.props.handleHideErrorMessage()
 
         axios.post(component.props.config.api_url + '/v1/designs/validate', design, config)
@@ -247,41 +241,92 @@ let PreviewPage = class PreviewPage extends React.Component {
                 if (response.status == 200) {
                      let result = response.data
                      console.log(result)
-                     if (result.errors.length == 0) {
-                        axios.put(component.props.config.api_url + '/v1/designs/' + this.props.uuid, design, config)
+                     if (result.status == "ACCEPTED") {
+                        axios.put(component.props.config.api_url + '/v1/designs/' + component.props.uuid, design, config)
                             .then(function (response) {
                                 if (response.status == 202 || response.status == 200) {
                                     component.props.handleShowErrorMessage("Your request has been received. The design will be updated shortly")
                                 } else {
-                                    console.log("Can't update the design: status = " + response.status)
-                                    component.props.handleShowErrorMessage("Can't update the design")
+                                    console.log("Can't publish the design: status = " + response.status)
+                                    component.props.handleShowErrorMessage("Can't publish the design")
                                 }
                             })
                             .catch(function (error) {
-                                console.log("Can't update the design: " + error)
-                                component.props.handleShowErrorMessage("Can't update the design")
+                                console.log("Can't publish the design: " + error)
+                                component.props.handleShowErrorMessage("Can't publish the design")
                             })
                      } else {
-                        component.props.handleShowErrorMessage("Can't update the design")
+                        component.props.handleShowErrorMessage("Can't publish the design")
                      }
                 } else {
-                    console.log("Can't update the design: status = " + response.status)
-                    component.props.handleShowErrorMessage("Can't update the design")
+                    console.log("Can't publish the design: status = " + response.status)
+                    component.props.handleShowErrorMessage("Can't publish the design")
                 }
             })
             .catch(function (error) {
-                console.log("Can't update the design: " + error)
-                component.props.handleShowErrorMessage("Can't update the design")
+                console.log("Can't publish the design: " + error)
+                component.props.handleShowErrorMessage("Can't publish the design")
+            })
+    }
+
+    handleUnpublish = (e) => {
+        console.log("unpublish")
+
+        let component = this
+
+        let config = {
+            timeout: 30000,
+            metadata: {'content-type': 'application/json'},
+            withCredentials: true
+        }
+
+        let script = this.state.design.script ? this.state.design.script : this.props.design.script
+        let metadata = this.state.design.metadata ? this.state.design.metadata : this.props.design.metadata
+        let manifest = this.state.design.manifest ? this.state.design.manifest : this.props.design.manifest
+
+        const design = { manifest: manifest, script: script, metadata: metadata, levels: 3 }
+
+//         component.props.handleHideUpdateDialog()
+        component.props.handleHideErrorMessage()
+
+        axios.post(component.props.config.api_url + '/v1/designs/validate', design, config)
+            .then(function (response) {
+                if (response.status == 200) {
+                     let result = response.data
+                     console.log(result)
+                     if (result.status == "ACCEPTED") {
+                        axios.put(component.props.config.api_url + '/v1/designs/' + component.props.uuid, design, config)
+                            .then(function (response) {
+                                if (response.status == 202 || response.status == 200) {
+                                    component.props.handleShowErrorMessage("Your request has been received. The design will be updated shortly")
+                                } else {
+                                    console.log("Can't unpublish the design: status = " + response.status)
+                                    component.props.handleShowErrorMessage("Can't unpublish the design")
+                                }
+                            })
+                            .catch(function (error) {
+                                console.log("Can't unpublish the design: " + error)
+                                component.props.handleShowErrorMessage("Can't unpublish the design")
+                            })
+                     } else {
+                        component.props.handleShowErrorMessage("Can't unpublish the design")
+                     }
+                } else {
+                    console.log("Can't unpublish the design: status = " + response.status)
+                    component.props.handleShowErrorMessage("Can't unpublish the design")
+                }
+            })
+            .catch(function (error) {
+                console.log("Can't unpublish the design: " + error)
+                component.props.handleShowErrorMessage("Can't unpublish the design")
             })
     }
 
     handleScriptChanged = (value) => {
-        console.log("changed")
         this.setState({design: {...this.state.design, script: value}})
     }
 
     handleMetadataChanged = (value) => {
-        console.log("changed")
         this.setState({design: {...this.state.design, metadata: value}})
     }
 
@@ -327,8 +372,11 @@ let PreviewPage = class PreviewPage extends React.Component {
                                 <Button className="button" variant="outlined" color="primary" onClick={this.handleUpdate}>
                                   Update
                                 </Button>
-                                <Button className="button" variant="outlined" color="primary" onClick={this.handleRender}>
-                                  Render
+                                <Button className="button" variant="outlined" color="primary" onClick={this.handlePublish}>
+                                  Publish
+                                </Button>
+                                <Button className="button" variant="outlined" color="primary" onClick={this.handleUnpublish}>
+                                  Unpublish
                                 </Button>
                             </div>
                         </Grid>
@@ -369,7 +417,7 @@ PreviewPage.propTypes = {
     config: PropTypes.object.isRequired,
     account: PropTypes.object.isRequired,
     design: PropTypes.object.isRequired,
-    timestamp: PropTypes.number.isRequired,
+    revision: PropTypes.number.isRequired,
     show_update_design: PropTypes.bool.isRequired,
     show_error_message: PropTypes.bool.isRequired,
     error_message: PropTypes.string.isRequired,
@@ -402,7 +450,7 @@ const mapStateToProps = state => ({
     config: getConfig(state),
     account: getAccount(state),
     design: getDesign(state),
-    timestamp: getRevision(state),
+    revision: getRevision(state),
     show_update_design: getShowUpdateDesign(state),
     show_error_message: getShowErrorMessage(state),
     error_message: getErrorMessage(state)
@@ -421,8 +469,8 @@ const mapDispatchToProps = dispatch => ({
     handleHideErrorMessage: () => {
         dispatch(hideErrorMessage())
     },
-    handleDesignLoadedSuccess: (design, timestamp) => {
-        dispatch(loadDesignSuccess(design, timestamp))
+    handleDesignLoadedSuccess: (design, revision) => {
+        dispatch(loadDesignSuccess(design, revision))
     },
     handleDesignLoadedFailure: (error) => {
         dispatch(loadDesignFailure(error))

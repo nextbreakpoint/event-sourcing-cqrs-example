@@ -92,20 +92,20 @@ let DesignsPage = class DesignsPage extends React.Component {
 
         let design = this.createDesign()
 
-        component.props.handleHideCreateDialog()
         component.props.handleHideErrorMessage()
-        component.props.resetUploadedDesign()
 
         axios.post(component.props.config.api_url + '/v1/designs/validate', design, config)
             .then(function (response) {
                 if (response.status == 200) {
                      let result = response.data
                      console.log(result)
-                     if (result.errors.length == 0) {
+                     if (result.status == "ACCEPTED") {
                         axios.post(component.props.config.api_url + '/v1/designs', design, config)
                             .then(function (response) {
                                 if (response.status == 202 || response.status == 201) {
                                     component.props.handleShowErrorMessage("Your request has been received. The designs will be updated shortly")
+                                    component.props.handleHideCreateDialog()
+                                    component.props.resetUploadedDesign()
                                 } else {
                                     console.log("Can't create the design: status = " + response.status)
                                     component.props.handleShowErrorMessage("Can't create the design")
@@ -333,7 +333,7 @@ DesignsPage.propTypes = {
     account: PropTypes.object.isRequired,
     selected: PropTypes.array.isRequired,
     designs: PropTypes.array.isRequired,
-    timestamp: PropTypes.number.isRequired,
+    revision: PropTypes.number.isRequired,
     show_create_design: PropTypes.bool.isRequired,
     show_delete_designs: PropTypes.bool.isRequired,
     show_error_message: PropTypes.bool.isRequired,
@@ -349,7 +349,7 @@ const mapStateToProps = state => ({
     account: getAccount(state),
     designs: getDesigns(state),
     selected: getSelected(state),
-    timestamp: getRevision(state),
+    revision: getRevision(state),
     show_create_design: getShowCreateDesign(state),
     show_delete_designs: getShowDeleteDesigns(state),
     show_error_message: getShowErrorMessage(state),
@@ -380,8 +380,8 @@ const mapDispatchToProps = dispatch => ({
     handleHideErrorMessage: () => {
         dispatch(hideErrorMessage())
     },
-    handleLoadDesignsSuccess: (designs, timestamp) => {
-        dispatch(loadDesignsSuccess(designs, timestamp))
+    handleLoadDesignsSuccess: (designs, revision) => {
+        dispatch(loadDesignsSuccess(designs, revision))
     },
     handleLoadDesignsFailure: (error) => {
         dispatch(loadDesignsFailure(error))

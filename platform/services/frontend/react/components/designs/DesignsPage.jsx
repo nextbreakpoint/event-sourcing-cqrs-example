@@ -99,18 +99,15 @@ let DesignsPage = class DesignsPage extends React.Component {
         axios.post(component.props.config.api_url + '/v1/designs', design, config)
             .then(function (response) {
                 if (response.status == 202 || response.status == 201) {
-                    //var designs = component.props.designs.slice()
-                    //designs.push({uuid:content.data.uuid, selected: false})
-                    //component.props.handleLoadDesignsSuccess(designs, component.props.timestamp)
-                    component.props.handleShowErrorMessage("Your request has been processed")
+                    component.props.handleShowErrorMessage("Your request has been received. The designs will be updated shortly")
                 } else {
-                    console.log("Can't create a new design: status = " + response.status)
-                    component.props.handleShowErrorMessage("Can't create a new design")
+                    console.log("Can't create the design: status = " + response.status)
+                    component.props.handleShowErrorMessage("Can't create the design")
                 }
             })
             .catch(function (error) {
-                console.log("Can't create a new design: " + error)
-                component.props.handleShowErrorMessage("Can't create a new design")
+                console.log("Can't create the design: " + error)
+                component.props.handleShowErrorMessage("Can't create the design")
             })
     }
 
@@ -161,15 +158,14 @@ let DesignsPage = class DesignsPage extends React.Component {
                 component.props.handleChangeSelected([])
 
                 if (failedUuids.length == 0) {
-                    //component.props.handleLoadDesignsSuccess(designs, component.props.timestamp)
-                    component.props.handleShowErrorMessage("Your request has been processed")
+                    component.props.handleShowErrorMessage("Your request has been received. The designs will be updated shortly")
                 } else {
-                    component.props.handleShowErrorMessage("Can't delete designs")
+                    component.props.handleShowErrorMessage("Can't delete the designs")
                 }
             })
             .catch(function (error) {
-                console.log("Can't delete designs: " + error)
-                component.props.handleShowErrorMessage("Can't delete designs")
+                console.log("Can't delete the designs: " + error)
+                component.props.handleShowErrorMessage("Can't delete the designs")
             })
     }
 

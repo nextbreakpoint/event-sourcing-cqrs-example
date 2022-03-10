@@ -101,7 +101,6 @@ let Preview = class Preview extends React.Component {
                         console.log("Design changed")
                         component.props.handleLoadDesignSuccess(design, design.revision)
                     }
-                    //component.props.handleHideErrorMessage()
                 } else {
                     console.log("Can't load design: status = " + content.status)
                     component.props.handleLoadDesignFailure("Design not found")

@@ -20,6 +20,7 @@ import Slide from '@material-ui/core/Slide'
 import Fade from '@material-ui/core/Fade'
 import Snackbar from '@material-ui/core/Snackbar'
 import IconButton from '@material-ui/core/IconButton'
+import Input from '@material-ui/core/Input'
 
 import EditIcon from '@material-ui/icons/Edit'
 import CloseIcon from '@material-ui/icons/Close'
@@ -58,10 +59,91 @@ function FadeTransition(props) {
 }
 
 let PreviewPage = class PreviewPage extends React.Component {
-    state = {}
+    state = {
+        design: {}
+    }
+
+    handleUpload = (e) => {
+        let component = this
+
+        let formData = new FormData();
+        formData.append('file', e.target.files[0]);
+
+        let config = {
+            timeout: 30000,
+            metadata: {'content-type': 'multipart/form-data'},
+            withCredentials: true
+        }
+
+        component.props.handleHideErrorMessage()
+
+        axios.post(component.props.config.api_url + '/v1/designs/upload', formData, config)
+            .then(function (response) {
+                if (response.status == 200) {
+                    if (response.data.errors.length == 0) {
+                        let design = { manifest: response.data.manifest, metadata: response.data.metadata, script: response.data.script }
+                        component.setState({design: design})
+                        component.props.handleShowErrorMessage("The file has been uploaded")
+                    } else {
+                        component.props.handleShowErrorMessage("Can't upload the file")
+                    }
+                } else {
+                    console.log("Can't upload the file: status = " + response.status)
+                    component.props.handleShowErrorMessage("Can't upload the file")
+                }
+            })
+            .catch(function (error) {
+                console.log("Can't upload the file: " + error)
+                component.props.handleShowErrorMessage("Can't upload the file")
+            })
+    }
+
+    handleDownload = (e) => {
+        console.log("download")
+
+        let component = this
+
+        let config = {
+            timeout: 30000,
+            metadata: {'content-type': 'application/json'},
+            withCredentials: true,
+            responseType: "blob"
+        }
+
+        let timestamp = Date.now()
+
+        let script = this.state.design.script ? this.state.design.script : this.props.design.script
+        let metadata = this.state.design.metadata ? this.state.design.metadata : this.props.design.metadata
+        let manifest = this.state.design.manifest ? this.state.design.manifest : this.props.design.manifest
+
+        const design = { manifest: manifest, script: script, metadata: metadata, levels: 8 }
+
+        component.props.handleHideUpdateDialog()
+        component.props.handleHideErrorMessage()
+
+        axios.post(component.props.config.api_url + '/v1/designs/download', design, config)
+            .then(function (response) {
+                if (response.status == 200) {
+                    let url = window.URL.createObjectURL(response.data);
+                    let a = document.createElement('a');
+                    a.href = url;
+                    a.download = component.props.uuid + '.zip';
+                    a.click();
+                    component.props.handleShowErrorMessage("The design has been downloaded")
+                } else {
+                    console.log("Can't download the design: status = " + response.status)
+                    component.props.handleShowErrorMessage("Can't download the design")
+                }
+            })
+            .catch(function (error) {
+                console.log("Can't download the design: " + error)
+                component.props.handleShowErrorMessage("Can't download the design")
+            })
+    }
 
     handleUpdate = (e) => {
-        e.preventDefault()
+        console.log("update")
+//         e.preventDefault()
 
         let component = this
 
@@ -73,21 +155,21 @@ let PreviewPage = class PreviewPage extends React.Component {
 
         let timestamp = Date.now()
 
-        let script = this.state.script ? this.state.script : this.props.design.script
-        let metadata = this.state.metadata ? this.state.metadata : this.props.design.metadata
+        let script = this.state.design.script ? this.state.design.script : this.props.design.script
+        let metadata = this.state.design.metadata ? this.state.design.metadata : this.props.design.metadata
+        let manifest = this.state.design.manifest ? this.state.design.manifest : this.props.design.manifest
 
-        const design = { manifest: this.props.design.manifest, script: script, metadata: metadata, levels: 3 }
+        const design = { manifest: manifest, script: script, metadata: metadata, levels: 8 }
 
         component.props.handleHideUpdateDialog()
         component.props.handleHideErrorMessage()
 
         axios.put(component.props.config.api_url + '/v1/designs/' + this.props.uuid, design, config)
-            .then(function (content) {
-                if (content.status == 202 || content.status == 200) {
-                    //component.props.handleDesignLoadedSuccess(design, timestamp)
-                    component.props.handleShowErrorMessage("Your request has been processed")
+            .then(function (response) {
+                if (response.status == 202 || response.status == 200) {
+                    component.props.handleShowErrorMessage("Your request has been received. The design will be updated shortly")
                 } else {
-                    console.log("Can't create a new design: status = " + response.status)
+                    console.log("Can't update the design: status = " + response.status)
                     component.props.handleShowErrorMessage("Can't update the design")
                 }
             })
@@ -98,7 +180,8 @@ let PreviewPage = class PreviewPage extends React.Component {
     }
 
     handleRender = (e) => {
-        e.preventDefault()
+        console.log("render")
+//         e.preventDefault()
 
         let component = this
 
@@ -110,21 +193,21 @@ let PreviewPage = class PreviewPage extends React.Component {
 
         let timestamp = Date.now()
 
-        let script = this.state.script ? this.state.script : this.props.design.script
-        let metadata = this.state.metadata ? this.state.metadata : this.props.design.metadata
+        let script = this.state.design.script ? this.state.design.script : this.props.design.script
+        let metadata = this.state.design.metadata ? this.state.design.metadata : this.props.design.metadata
+        let manifest = this.state.design.manifest ? this.state.design.manifest : this.props.design.manifest
 
-        const design = { manifest: this.props.design.manifest, script: script, metadata: metadata, levels: 8 }
+        const design = { manifest: manifest, script: script, metadata: metadata, levels: 8 }
 
         component.props.handleHideUpdateDialog()
         component.props.handleHideErrorMessage()
 
         axios.put(component.props.config.api_url + '/v1/designs/' + this.props.uuid, design, config)
-            .then(function (content) {
-                if (content.status == 202 || content.status == 200) {
-                    //component.props.handleDesignLoadedSuccess(design, timestamp)
-                    component.props.handleShowErrorMessage("Your request has been processed")
+            .then(function (response) {
+                if (response.status == 202 || response.status == 200) {
+                    component.props.handleShowErrorMessage("Your request has been received. The design will be updated shortly")
                 } else {
-                    console.log("Can't create a new design: status = " + response.status)
+                    console.log("Can't update the design: status = " + response.status)
                     component.props.handleShowErrorMessage("Can't update the design")
                 }
             })
@@ -135,11 +218,13 @@ let PreviewPage = class PreviewPage extends React.Component {
     }
 
     handleScriptChanged = (value) => {
-        this.setState({script: value})
+        console.log("changed")
+        this.setState({design: {...this.state.design, script: value}})
     }
 
     handleMetadataChanged = (value) => {
-        this.setState({metadata: value})
+        console.log("changed")
+        this.setState({design: {...this.state.design, metadata: value}})
     }
 
     handleClose = (event, reason) => {
@@ -155,24 +240,39 @@ let PreviewPage = class PreviewPage extends React.Component {
     }
 
     render() {
-        const url = this.props.config.api_url + '/v1/designs/' + this.props.uuid + '/{z}/{x}/{y}/256.png?draft=true&t=' + this.props.design.checksum
+        const { classes, uuid, checksum } = this.props
+
+        const design = (this.state.design.script && this.state.design.metadata) ? this.state.design : this.props.design
+
+        console.log(design.script)
+
+        const url = this.props.config.api_url + '/v1/designs/' + uuid + '/{z}/{x}/{y}/256.png?draft=true&t=' + checksum
 
         return (
             <React.Fragment>
                 <CssBaseline />
                 <Grid container justify="space-between" alignItems="center">
                     <Grid item xs={12}>
-                        <Header landing={'/admin/designs/' + this.props.uuid + '.html'} titleLink={"/admin/designs.html"} titleText={"Fractals"} titleText2={this.props.uuid} browseLink={"/browse/designs/" + this.props.uuid + ".html"} browseText={"The Beauty of Chaos"}/>
+                        <Header landing={'/admin/designs/' + uuid + '.html'} titleLink={"/admin/designs.html"} titleText={"Fractals"} titleText2={uuid} browseLink={"/browse/designs/" + uuid + ".html"} browseText={"The Beauty of Chaos"}/>
                     </Grid>
                     <Grid container xs={12} justify="space-between" alignItems="center" className="container">
                         <Grid item xs={6}>
-                            <Map center={[0, 0]} zoom={2} className="preview" attributionControl={false} dragging={false} zoomControl={false} scrollWheelZoom={false} touchZoom={false}>
+                            <Map center={[0, 0]} zoom={2} attributionControl={false} dragging={false} zoomControl={false} scrollWheelZoom={false} touchZoom={false}>
                                 {this.renderMapLayer(url)}
                             </Map>
                         </Grid>
                         <Grid item xs={6}>
-                            <DesignForm script={this.props.design.script} metadata={this.props.design.metadata} onScriptChanged={this.handleScriptChanged} onMetadataChanged={this.handleMetadataChanged}/>
+                            <DesignForm script={design.script} metadata={design.metadata} onScriptChanged={this.handleScriptChanged} onMetadataChanged={this.handleMetadataChanged}/>
                             <div className="controls">
+                                <label htmlFor="uploadFile">
+                                    <Input className={classes.uploadFile} id="uploadFile" accept="application/zip" type="file" onChange={this.handleUpload} />
+                                    <Button className="button" variant="outlined" color="primary" component="span">
+                                      Upload
+                                    </Button>
+                                </label>
+                                <Button className="button" variant="outlined" color="primary" onClick={this.handleDownload}>
+                                  Download
+                                </Button>
                                 <Button className="button" variant="outlined" color="primary" onClick={this.handleUpdate}>
                                   Update
                                 </Button>
@@ -241,6 +341,9 @@ const themeStyles = theme => ({
   },
   fab: {
     margin: theme.spacing.unit
+  },
+  uploadFile: {
+    display: 'none'
   }
 })
 

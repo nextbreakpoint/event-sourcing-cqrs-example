@@ -94,7 +94,6 @@ let Designs = class Designs extends React.Component {
                     console.log("Designs loaded")
                     let designs = response.data.map((design) => { return { uuid: design.uuid, checksum: design.checksum, revision: design.revision }})
                     component.props.handleLoadDesignsSuccess(designs, revision)
-                    //component.props.handleHideErrorMessage()
                 } else {
                     console.log("Can't load designs: status = " + content.status)
                     component.props.handleLoadDesignsSuccess([], 0)

@@ -26,6 +26,7 @@ import AddIcon from '@material-ui/icons/Add'
 import EditIcon from '@material-ui/icons/Edit'
 import DeleteIcon from '@material-ui/icons/Delete'
 import UploadIcon from '@material-ui/icons/ArrowUpward'
+import DownloadIcon from '@material-ui/icons/ArrowDownward'
 
 import { connect } from 'react-redux'
 
@@ -191,7 +192,7 @@ const toolbarStyles = theme => ({
 })
 
 let EnhancedTableToolbar = props => {
-  const { role, numSelected, classes, onUpload, onCreate, onDelete, onModify } = props
+  const { role, numSelected, classes, onDownload, onUpload, onCreate, onDelete, onModify } = props
 
   return (
     <Toolbar
@@ -216,6 +217,11 @@ let EnhancedTableToolbar = props => {
                     <UploadIcon />
                   </IconButton>
               </label>
+            </Tooltip>
+            <Tooltip title="Download">
+              <IconButton aria-label="Download" onClick={onDownload}>
+                <DownloadIcon />
+              </IconButton>
             </Tooltip>
             <Tooltip title="Create">
               <IconButton aria-label="Create" onClick={onCreate}>
@@ -338,20 +344,79 @@ let EnhancedTable = class EnhancedTable extends React.Component {
                         let design = { manifest: response.data.manifest, metadata: response.data.metadata, script: response.data.script }
                         component.props.handleUploadedDesign(design)
                         component.props.handleShowCreateDialog()
-                        component.props.handleShowErrorMessage("The file has been loaded")
                     } else {
-                        component.props.handleShowErrorMessage("The file can't be loaded")
+                        component.props.handleShowErrorMessage("Can't upload the file")
                     }
                 } else {
-                    console.log("Can't create a new design: status = " + response.status)
-                    component.props.handleShowErrorMessage("Can't parse the file")
+                    console.log("Can't upload the file: status = " + response.status)
+                    component.props.handleShowErrorMessage("Can't upload the file")
                 }
             })
             .catch(function (error) {
-                console.log("Can't parse the file: " + error)
-                component.props.handleShowErrorMessage("Can't parse the file")
+                console.log("Can't upload the file: " + error)
+                component.props.handleShowErrorMessage("Can't upload the file")
             })
   }
+
+    handleDownload = (e) => {
+      if (this.props.selected[0]) {
+        console.log("download")
+
+        let component = this
+
+        let uuid = this.props.selected[0]
+
+        let config = {
+            timeout: 30000,
+            metadata: {'content-type': 'application/json'},
+            withCredentials: true
+        }
+
+        component.props.handleHideErrorMessage()
+
+        axios.get(component.props.config.api_url + '/v1/designs/' + uuid + '?draft=true', config)
+            .then(function (response) {
+                if (response.status == 200) {
+                    console.log("Design loaded")
+
+                    let design = JSON.parse(response.data.json)
+
+                    let config = {
+                        timeout: 30000,
+                        metadata: {'content-type': 'application/json'},
+                        withCredentials: true,
+                        responseType: "blob"
+                    }
+
+                    axios.post(component.props.config.api_url + '/v1/designs/download', design, config)
+                        .then(function (response) {
+                            if (response.status == 200) {
+                                let url = window.URL.createObjectURL(response.data);
+                                let a = document.createElement('a');
+                                a.href = url;
+                                a.download = uuid + '.zip';
+                                a.click();
+                                component.props.handleShowErrorMessage("The design has been downloaded")
+                            } else {
+                                console.log("Can't download the design: status = " + response.status)
+                                component.props.handleShowErrorMessage("Can't download the design")
+                            }
+                        })
+                        .catch(function (error) {
+                            console.log("Can't download the design: " + error)
+                            component.props.handleShowErrorMessage("Can't download the design")
+                        })
+                } else {
+                    console.log("Can't load design: status = " + content.status)
+                    component.props.handleShowErrorMessage("Can't load design")
+                }
+            })
+            .catch(function (error) {
+                console.log("Can't load design: " + error)
+                component.props.handleShowErrorMessage("Can't load design")
+            })
+      }
+    }
 
   isSelected = id => this.props.selected.indexOf(id) !== -1
 
@@ -361,7 +426,7 @@ let EnhancedTable = class EnhancedTable extends React.Component {
 
     return (
       <Paper className={classes.root} square={true}>
-        <EnhancedTableToolbar role={account.role} numSelected={selected.length} onUpload={this.handleUpload} onCreate={this.props.handleShowCreateDialog} onDelete={this.props.handleShowDeleteDialog} onModify={this.handleModify}/>
+        <EnhancedTableToolbar role={account.role} numSelected={selected.length} onDownload={this.handleDownload} onUpload={this.handleUpload} onCreate={this.props.handleShowCreateDialog} onDelete={this.props.handleShowDeleteDialog} onModify={this.handleModify}/>
           <Table className={classes.table} aria-labelledby="tableTitle">
             <EnhancedTableHead
               numSelected={selected.length}

@@ -1,6 +1,8 @@
 body {
     font-family: "Roboto";
     color: #080808;
+    min-width: 800px;
+    max-width: 2600px;
 }
 
 header {
@@ -20,14 +22,8 @@ footer {
 
 .container {
     background-color: #ededed;
-}
-
-.preview {
-    width: 738px;
-    height: 738px;
-    position: relative;
-    margin: 0;
-    overflow: hidden;
+    text-align: center;
+    padding: 5% 0;
 }
 
 .controls {
@@ -66,10 +62,30 @@ footer a, footer a:active, footer a:hover, footer a:visited {
 }
 
 .leaflet-container {
-    width: 100%;
+    width: 1024pt;
+    height: 1024pt;
     position: relative;
     display: inline-block;
-    margin: 0px;
-    text-align: center;
     background: transparent;
+}
+
+@media (max-width: 2000pt) {
+    .leaflet-container {
+        width: 768pt;
+        height: 768pt;
+    }
+}
+
+@media (max-width: 1500pt) {
+    .leaflet-container {
+        width: 512pt;
+        height: 512pt;
+    }
+}
+
+@media (max-width: 1100pt) {
+    .leaflet-container {
+        width: 256pt;
+        height: 256pt;
+    }
 }

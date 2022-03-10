@@ -8,7 +8,7 @@
     <parent>
         <groupId>com.nextbreakpoint</groupId>
         <artifactId>com.nextbreakpoint.blueprint.bom</artifactId>
-        <version>1.0.0-wip2-899c15f9-1646849455</version>
+        <version>1.0.0-wip2-b3b9682f-1646918868</version>
     </parent>
     <modules>
         <module>modules/core</module>

@@ -74,10 +74,10 @@ function desc(a, b, orderBy) {
   return 0
 }
 
-function stableSort(array, cmp) {
+function stableSort(array, comparator) {
   const stabilizedThis = array.map((el, index) => [el, index])
   stabilizedThis.sort((a, b) => {
-    const order = cmp(a[0], b[0])
+    const order = comparator(a[0], b[0])
     if (order !== 0) return order
     return a[1] - b[1]
   })
@@ -90,6 +90,11 @@ function getSorting(order, orderBy) {
 
 const cells = [
   { id: 'uuid', numeric: false, disablePadding: true, label: 'UUID', enableSort: true, className: '' },
+  { id: 'modified', numeric: false, disablePadding: true, label: 'Last Modified', enableSort: true, className: '' },
+  { id: 'levels', numeric: true, disablePadding: true, label: 'Levels', enableSort: false, className: '' },
+  { id: 'checksum', numeric: false, disablePadding: true, label: 'Checksum', enableSort: false, className: '' },
+  { id: 'percentage', numeric: true, disablePadding: true, label: 'Percentage', enableSort: false, className: '' },
+  { id: 'published', numeric: false, disablePadding: true, label: 'Published', enableSort: false, className: '' },
   { id: 'image', numeric: false, disablePadding: true, label: '', enableSort: false, className: 'list-image' }
 ]
 
@@ -458,20 +463,35 @@ let EnhancedTable = class EnhancedTable extends React.Component {
                       <TableCell scope="row" padding="none">
                         <a href={"/admin/designs/" + n.uuid + '.html'}><pre>{n.uuid}</pre></a>
                       </TableCell>
+                      <TableCell scope="row" padding="none">
+                        <pre>{n.modified}</pre>
+                      </TableCell>
+                      <TableCell scope="row" padding="none">
+                        <pre>{n.levels}</pre>
+                      </TableCell>
+                      <TableCell scope="row" padding="none">
+                        <pre>{n.checksum}</pre>
+                      </TableCell>
+                      <TableCell scope="row" padding="none">
+                        <pre>{n.percentage}%</pre>
+                      </TableCell>
+                      <TableCell scope="row" padding="none">
+                        <pre>{n.published ? 'yes' : 'no'}</pre>
+                      </TableCell>
                       <TableCell scope="row" padding="none" className="list-image">
                         <ButtonBase
                                 focusRipple
                                 key={n.uuid}
                                 focusVisibleClassName={classes.focusVisible}
                                 style={{
-                                  width: 128,
-                                  height: 128,
+                                  width: 256,
+                                  height: 256,
                                   margin: '8px 0 8px 0',
                                   borderRadius: '1em'
                                 }}
                               >
                             <a href={"/admin/designs/" + n.uuid + ".html"}>
-                                <img className={classes.image} width="128" height="128" src={config.api_url + "/v1/designs/" + n.uuid + "/0/0/0/256.png?draft=true&t=" + n.checksum}/>
+                                <img className={classes.image} width="256" height="256" src={config.api_url + "/v1/designs/" + n.uuid + "/0/0/0/256.png?draft=true&t=" + n.checksum}/>
                             </a>
                         </ButtonBase>
                       </TableCell>
@@ -479,7 +499,7 @@ let EnhancedTable = class EnhancedTable extends React.Component {
                   )
                 })}
               {emptyRows > 0 && (
-                <TableRow style={{ height: 145 * emptyRows }}>
+                <TableRow style={{ height: 300 * emptyRows }}>
                   <TableCell colSpan={3} />
                 </TableRow>
               )}

@@ -1,8 +1,8 @@
 import * as Types from '../../constants/ActionTypes'
 
 const initialState = {
-    order: 'asc',
-    orderBy: 'uuid'
+    order: 'desc',
+    orderBy: 'modified'
 }
 
 function reducer (state = initialState, action) {

@@ -2,9 +2,13 @@ package com.nextbreakpoint.blueprint.common.core;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Builder;
+import lombok.Data;
 
 import java.util.Objects;
 
+@Data
+@Builder(toBuilder = true)
 public class OutputMessage {
     private String key;
     private Payload value;
@@ -19,22 +23,6 @@ public class OutputMessage {
         this.key = Objects.requireNonNull(key);
         this.value = Objects.requireNonNull(value);
         this.trace = Objects.requireNonNull(trace);
-    }
-
-    public String getKey() {
-        return key;
-    }
-
-    public Payload getValue() {
-        return value;
-    }
-
-    public Tracing getTrace() {
-        return trace;
-    }
-
-    public static OutputMessage from(InputMessage inputMessage) {
-        return new OutputMessage(inputMessage.getKey(), inputMessage.getValue(), Tracing.from(inputMessage.getTrace()));
     }
 
     public static OutputMessage from(String key, Payload value, Tracing trace) {

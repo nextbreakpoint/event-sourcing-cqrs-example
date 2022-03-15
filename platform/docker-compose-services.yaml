@@ -204,6 +204,10 @@ services:
         published: 14268
         protocol: tcp
         mode: host
+      - target: 14269
+        published: 14269
+        protocol: tcp
+        mode: host
     networks:
       - services
   minio:

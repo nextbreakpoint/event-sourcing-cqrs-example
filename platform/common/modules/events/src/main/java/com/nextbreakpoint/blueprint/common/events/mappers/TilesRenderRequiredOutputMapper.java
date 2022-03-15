@@ -21,7 +21,7 @@ public class TilesRenderRequiredOutputMapper implements MessageMapper<TilesRende
     }
 
     @Override
-    public OutputMessage transform(Tracing trace, TilesRenderRequired event) {
+    public OutputMessage transform(TilesRenderRequired event, Tracing trace) {
         return new OutputMessage(
                 keyMapper.apply(event),
                 new Payload(

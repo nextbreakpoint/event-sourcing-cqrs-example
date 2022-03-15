@@ -29,7 +29,6 @@ public class TestAssertions {
         assertThat(actualMessage.getValue()).isNotNull();
         assertThat(actualMessage.getTrace().getTraceId()).isNotNull();
         assertThat(actualMessage.getTrace().getSpanId()).isNotNull();
-        assertThat(actualMessage.getTrace().getParent()).isNotNull();
         DesignInsertRequested actualEvent = Json.decodeValue(actualMessage.getValue().getData(), DesignInsertRequested.class);
         assertThat(actualEvent.getUserId()).isEqualTo(TestConstants.USER_ID);
         assertThat(actualEvent.getCommandId()).isNotNull();
@@ -53,7 +52,6 @@ public class TestAssertions {
         assertThat(actualMessage.getValue()).isNotNull();
         assertThat(actualMessage.getTrace().getTraceId()).isNotNull();
         assertThat(actualMessage.getTrace().getSpanId()).isNotNull();
-        assertThat(actualMessage.getTrace().getParent()).isNotNull();
         DesignUpdateRequested actualEvent = Json.decodeValue(actualMessage.getValue().getData(), DesignUpdateRequested.class);
         assertThat(actualEvent.getUserId()).isEqualTo(TestConstants.USER_ID);
         assertThat(actualEvent.getCommandId()).isNotNull();
@@ -77,7 +75,6 @@ public class TestAssertions {
         assertThat(actualMessage.getValue()).isNotNull();
         assertThat(actualMessage.getTrace().getTraceId()).isNotNull();
         assertThat(actualMessage.getTrace().getSpanId()).isNotNull();
-        assertThat(actualMessage.getTrace().getParent()).isNotNull();
         DesignDeleteRequested actualEvent = Json.decodeValue(actualMessage.getValue().getData(), DesignDeleteRequested.class);
         assertThat(actualEvent.getUserId()).isEqualTo(TestConstants.USER_ID);
         assertThat(actualEvent.getCommandId()).isNotNull();

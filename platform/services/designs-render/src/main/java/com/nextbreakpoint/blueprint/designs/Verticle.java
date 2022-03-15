@@ -1,6 +1,5 @@
 package com.nextbreakpoint.blueprint.designs;
 
-import com.nextbreakpoint.blueprint.common.core.BlockingHandler;
 import com.nextbreakpoint.blueprint.common.core.Environment;
 import com.nextbreakpoint.blueprint.common.core.IOUtils;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
@@ -8,16 +7,12 @@ import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
 import com.nextbreakpoint.blueprint.common.vertx.*;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Handler;
-import io.vertx.core.VertxOptions;
-import io.vertx.core.dns.AddressResolverOptions;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.handler.LoggerFormat;
 import io.vertx.ext.web.openapi.RouterBuilder;
-import io.vertx.micrometer.MicrometerMetricsOptions;
-import io.vertx.micrometer.VertxPrometheusOptions;
 import io.vertx.rxjava.core.*;
 import io.vertx.rxjava.ext.auth.jwt.JWTAuth;
 import io.vertx.rxjava.ext.web.Router;
@@ -28,7 +23,6 @@ import io.vertx.rxjava.ext.web.handler.LoggerHandler;
 import io.vertx.rxjava.ext.web.handler.TimeoutHandler;
 import io.vertx.rxjava.kafka.client.consumer.KafkaConsumer;
 import io.vertx.rxjava.kafka.client.producer.KafkaProducer;
-import io.vertx.tracing.opentracing.OpenTracingOptions;
 import rx.Completable;
 import rx.plugins.RxJavaHooks;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
@@ -70,23 +64,7 @@ public class Verticle extends AbstractVerticle {
         try {
             final JsonObject config = loadConfig(args.length > 0 ? args[0] : "config/localhost.json");
 
-            final VertxPrometheusOptions prometheusOptions = new VertxPrometheusOptions().setEnabled(true);
-
-            final MicrometerMetricsOptions metricsOptions = new MicrometerMetricsOptions()
-                    .setPrometheusOptions(prometheusOptions).setEnabled(true);
-
-            final OpenTracingOptions tracingOptions = new OpenTracingOptions();
-
-            final AddressResolverOptions addressResolverOptions = new AddressResolverOptions()
-                    .setCacheNegativeTimeToLive(0)
-                    .setCacheMaxTimeToLive(30);
-
-            final VertxOptions vertxOptions = new VertxOptions()
-                    .setAddressResolverOptions(addressResolverOptions)
-                    .setMetricsOptions(metricsOptions)
-                    .setTracingOptions(tracingOptions);
-
-            final Vertx vertx = Vertx.vertx(vertxOptions);
+            final Vertx vertx = Initializer.initialize();
 
             RxJavaHooks.setOnComputationScheduler(s -> RxHelper.scheduler(vertx));
             RxJavaHooks.setOnIOScheduler(s -> RxHelper.blockingScheduler(vertx));
@@ -252,7 +230,7 @@ public class Verticle extends AbstractVerticle {
 
             final Router mainRouter = Router.router(vertx);
 
-            final Map<String, BlockingHandler<InputMessage>> messageHandlers = new HashMap<>();
+            final Map<String, RxSingleHandler<InputMessage, ?>> messageHandlers = new HashMap<>();
 
             messageHandlers.put(TileRenderRequested.TYPE, createTileRenderRequestedHandler(eventsTopic, kafkaProducer, messageSource, workerExecutor, s3AsyncClient, s3Bucket));
 

@@ -13,7 +13,6 @@ import com.nextbreakpoint.blueprint.common.core.Payload;
 import com.nextbreakpoint.blueprint.common.core.Tracing;
 import com.nextbreakpoint.blueprint.designs.Store;
 import com.nextbreakpoint.blueprint.designs.model.Design;
-import com.nextbreakpoint.blueprint.designs.model.DesignTiles;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.rxjava.cassandra.CassandraClient;
@@ -40,8 +39,8 @@ public class CassandraStore implements Store {
     private static final String SELECT_DESIGN = "SELECT COMMAND_USER, COMMAND_UUID, DESIGN_UUID, DESIGN_REVISION, DESIGN_DATA, DESIGN_CHECKSUM, DESIGN_STATUS, DESIGN_LEVELS, DESIGN_TILES, DESIGN_TIMESTAMP FROM DESIGN WHERE DESIGN_UUID = ?";
     private static final String INSERT_DESIGN = "INSERT INTO DESIGN (COMMAND_USER, COMMAND_UUID, DESIGN_UUID, DESIGN_REVISION, DESIGN_DATA, DESIGN_CHECKSUM, DESIGN_STATUS, DESIGN_LEVELS, DESIGN_TILES, DESIGN_TIMESTAMP) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     private static final String DELETE_DESIGN = "DELETE FROM DESIGN WHERE DESIGN_UUID = ?";
-    private static final String INSERT_MESSAGE = "INSERT INTO MESSAGE (MESSAGE_TOKEN, MESSAGE_KEY, MESSAGE_UUID, MESSAGE_TYPE, MESSAGE_VALUE, MESSAGE_SOURCE, MESSAGE_TIMESTAMP, TRACING_TRACE_ID, TRACING_SPAN_ID, TRACING_PARENT_ID) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-    private static final String SELECT_MESSAGES = "SELECT MESSAGE_TOKEN, MESSAGE_KEY, MESSAGE_UUID, MESSAGE_TYPE, MESSAGE_VALUE, MESSAGE_SOURCE, MESSAGE_TIMESTAMP, TRACING_TRACE_ID, TRACING_SPAN_ID, TRACING_PARENT_ID FROM MESSAGE WHERE MESSAGE_KEY = ? AND MESSAGE_TOKEN <= ? AND MESSAGE_TOKEN > ?";
+    private static final String INSERT_MESSAGE = "INSERT INTO MESSAGE (MESSAGE_TOKEN, MESSAGE_KEY, MESSAGE_UUID, MESSAGE_TYPE, MESSAGE_VALUE, MESSAGE_SOURCE, MESSAGE_TIMESTAMP, TRACING_TRACE_ID, TRACING_SPAN_ID) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    private static final String SELECT_MESSAGES = "SELECT MESSAGE_TOKEN, MESSAGE_KEY, MESSAGE_UUID, MESSAGE_TYPE, MESSAGE_VALUE, MESSAGE_SOURCE, MESSAGE_TIMESTAMP, TRACING_TRACE_ID, TRACING_SPAN_ID FROM MESSAGE WHERE MESSAGE_KEY = ? AND MESSAGE_TOKEN <= ? AND MESSAGE_TOKEN > ?";
 
     private final String keyspace;
     private final Supplier<CassandraClient> supplier;
@@ -182,12 +181,11 @@ public class CassandraStore implements Store {
         final String type = row.getString("MESSAGE_TYPE");
         final String value = row.getString("MESSAGE_VALUE");
         final String source = row.getString("MESSAGE_SOURCE");
-        final UUID traceId = row.getUuid("TRACING_TRACE_ID");
-        final UUID spanId = row.getUuid("TRACING_SPAN_ID");
-        final UUID parent = row.getUuid("TRACING_PARENT_ID");
+        final String traceId = row.getString("TRACING_TRACE_ID");
+        final String spanId = row.getString("TRACING_SPAN_ID");
         final Instant timestamp = row.getInstant("MESSAGE_TIMESTAMP");
         final Payload payload = new Payload(uuid, type, value, source);
-        final Tracing trace = new Tracing(traceId, spanId, parent);
+        final Tracing trace = new Tracing(traceId, spanId);
         final long messageTimestamp = timestamp != null ? timestamp.toEpochMilli() : 0L;
         return new InputMessage(key, token, payload, trace, messageTimestamp);
     }
@@ -210,8 +208,7 @@ public class CassandraStore implements Store {
                 message.getValue().getSource(),
                 Instant.ofEpochMilli(message.getTimestamp()),
                 message.getTrace().getTraceId(),
-                message.getTrace().getSpanId(),
-                message.getTrace().getParent()
+                message.getTrace().getSpanId()
         };
     }
 

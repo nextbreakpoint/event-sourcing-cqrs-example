@@ -14,7 +14,7 @@ public class DesignAggregateUpdateCompletedOutputMapper implements MessageMapper
     }
 
     @Override
-    public OutputMessage transform(Tracing trace, DesignAggregateUpdateCompleted event) {
+    public OutputMessage transform(DesignAggregateUpdateCompleted event, Tracing trace) {
         return new OutputMessage(
                 event.getDesignId().toString(),
                 new Payload(

@@ -2,14 +2,10 @@ version: '3.8'
 services:
   accounts:
     restart: unless-stopped
-    image: integration/accounts:1.0.0-wip2-ae185d5c-1646940832 
+    image: integration/accounts:1.0.0-wip2-424a9a61-1647341334 
     environment:
-      JAEGER_SERVICE_NAME: accounts
-      JAEGER_AGENT_HOST: host.docker.internal
-      JAEGER_TAGS: env=dev
-      JAEGER_SAMPLER_TYPE: const
-      JAEGER_SAMPLER_PARAM: 1
-      JAEGER_REPORTER_LOG_SPANS: true
+      JAEGER_ATTRIBUTES: service.name=accounts,service.version=1.0.0-wip2-424a9a61-1647341334,service.namespace=designs,environment=dev
+      JAEGER_ENDPOINT: http://host.docker.internal:14250
       KEYSTORE_SECRET: secret
       DATABASE_HOST: host.docker.internal
       DATABASE_NAME: accounts
@@ -34,14 +30,10 @@ services:
       - ./secrets/keystore_auth.jceks:/secrets/keystore_auth.jceks
   authentication:
     restart: unless-stopped
-    image: integration/authentication:1.0.0-wip2-ae185d5c-1646940832 
+    image: integration/authentication:1.0.0-wip2-424a9a61-1647341334 
     environment:
-      JAEGER_SERVICE_NAME: authentication
-      JAEGER_AGENT_HOST: host.docker.internal
-      JAEGER_TAGS: env=dev
-      JAEGER_SAMPLER_TYPE: const
-      JAEGER_SAMPLER_PARAM: 1
-      JAEGER_REPORTER_LOG_SPANS: true
+      JAEGER_ATTRIBUTES: service.name=authentication,service.version=1.0.0-wip2-424a9a61-1647341334,service.namespace=designs,environment=dev
+      JAEGER_ENDPOINT: http://host.docker.internal:14250
       KEYSTORE_SECRET: secret
       ACCOUNTS_URL: https://accounts:30110
       GITHUB_API_URL: https://api.github.com
@@ -70,14 +62,10 @@ services:
       - ./secrets/truststore_client.jks:/secrets/truststore_client.jks
   designs-query:
     restart: unless-stopped
-    image: integration/designs-query:1.0.0-wip2-ae185d5c-1646940832 
+    image: integration/designs-query:1.0.0-wip2-424a9a61-1647341334 
     environment:
-      JAEGER_SERVICE_NAME: designs-query
-      JAEGER_AGENT_HOST: host.docker.internal
-      JAEGER_TAGS: env=dev
-      JAEGER_SAMPLER_TYPE: const
-      JAEGER_SAMPLER_PARAM: 1
-      JAEGER_REPORTER_LOG_SPANS: true
+      JAEGER_ATTRIBUTES: service.name=designs-query,service.version=1.0.0-wip2-424a9a61-1647341334,service.namespace=designs,environment=dev
+      JAEGER_ENDPOINT: http://host.docker.internal:14250
       KEYSTORE_SECRET: secret
       ELASTICSEARCH_HOST: host.docker.internal
       ELASTICSEARCH_PORT: 9200
@@ -109,14 +97,10 @@ services:
       - ./secrets/keystore_server.jks:/secrets/keystore_server.jks
   designs-command:
     restart: unless-stopped
-    image: integration/designs-command:1.0.0-wip2-ae185d5c-1646940832 
+    image: integration/designs-command:1.0.0-wip2-424a9a61-1647341334
     environment:
-      JAEGER_SERVICE_NAME: designs-command
-      JAEGER_AGENT_HOST: host.docker.internal
-      JAEGER_TAGS: env=dev
-      JAEGER_SAMPLER_TYPE: const
-      JAEGER_SAMPLER_PARAM: 1
-      JAEGER_REPORTER_LOG_SPANS: true
+      JAEGER_ATTRIBUTES: service.name=designs-command,service.version=1.0.0-wip2-424a9a61-1647341334,service.namespace=designs,environment=dev
+      JAEGER_ENDPOINT: http://host.docker.internal:14250
       KEYSTORE_SECRET: secret
       DATABASE_HOST: host.docker.internal
       DATABASE_USERNAME: verticle
@@ -145,14 +129,10 @@ services:
       - ./secrets/keystore_server.jks:/secrets/keystore_server.jks
   designs-aggregate:
     restart: unless-stopped
-    image: integration/designs-aggregate:1.0.0-wip2-ae185d5c-1646940832 
+    image: integration/designs-aggregate:1.0.0-wip2-424a9a61-1647341334 
     environment:
-      JAEGER_SERVICE_NAME: designs-aggregate
-      JAEGER_AGENT_HOST: host.docker.internal
-      JAEGER_TAGS: env=dev
-      JAEGER_SAMPLER_TYPE: const
-      JAEGER_SAMPLER_PARAM: 1
-      JAEGER_REPORTER_LOG_SPANS: true
+      JAEGER_ATTRIBUTES: service.name=designs-aggregate,service.version=1.0.0-wip2-424a9a61-1647341334,service.namespace=designs,environment=dev
+      JAEGER_ENDPOINT: http://host.docker.internal:14250
       KEYSTORE_SECRET: secret
       DATABASE_HOST: host.docker.internal
       DATABASE_USERNAME: verticle
@@ -182,14 +162,10 @@ services:
       - ./secrets/keystore_server.jks:/secrets/keystore_server.jks
   designs-notify:
     restart: unless-stopped
-    image: integration/designs-notify:1.0.0-wip2-ae185d5c-1646940832
+    image: integration/designs-notify:1.0.0-wip2-424a9a61-1647341334
     environment:
-      JAEGER_SERVICE_NAME: designs-notify
-      JAEGER_AGENT_HOST: host.docker.internal
-      JAEGER_TAGS: env=dev
-      JAEGER_SAMPLER_TYPE: const
-      JAEGER_SAMPLER_PARAM: 1
-      JAEGER_REPORTER_LOG_SPANS: true
+      JAEGER_ATTRIBUTES: service.name=designs-notify,service.version=1.0.0-wip2-424a9a61-1647341334,service.namespace=designs,environment=dev
+      JAEGER_ENDPOINT: http://host.docker.internal:14250
       KEYSTORE_SECRET: secret
       CONSUL_HOST: host.docker.internal
       KAFKA_HOST: host.docker.internal
@@ -214,14 +190,10 @@ services:
       - ./secrets/keystore_server.jks:/secrets/keystore_server.jks
   designs-render1:
     restart: unless-stopped
-    image: integration/designs-render:1.0.0-wip2-ae185d5c-1646940832
+    image: integration/designs-render:1.0.0-wip2-424a9a61-1647341334
     environment:
-      JAEGER_SERVICE_NAME: designs-render
-      JAEGER_AGENT_HOST: host.docker.internal
-      JAEGER_TAGS: env=dev
-      JAEGER_SAMPLER_TYPE: const
-      JAEGER_SAMPLER_PARAM: 1
-      JAEGER_REPORTER_LOG_SPANS: true
+      JAEGER_ATTRIBUTES: service.name=designs-render,service.version=1.0.0-wip2-424a9a61-1647341334,service.namespace=designs,environment=dev
+      JAEGER_ENDPOINT: http://host.docker.internal:14250
       KEYSTORE_SECRET: secret
       AWS_ACCESS_KEY_ID: admin
       AWS_SECRET_ACCESS_KEY: password
@@ -251,14 +223,10 @@ services:
       - ./secrets/keystore_server.jks:/secrets/keystore_server.jks
   designs-render2:
     restart: unless-stopped
-    image: integration/designs-render:1.0.0-wip2-ae185d5c-1646940832
+    image: integration/designs-render:1.0.0-wip2-424a9a61-1647341334
     environment:
-      JAEGER_SERVICE_NAME: designs-render
-      JAEGER_AGENT_HOST: host.docker.internal
-      JAEGER_TAGS: env=dev
-      JAEGER_SAMPLER_TYPE: const
-      JAEGER_SAMPLER_PARAM: 1
-      JAEGER_REPORTER_LOG_SPANS: true
+      JAEGER_ATTRIBUTES: service.name=designs-render,service.version=1.0.0-wip2-424a9a61-1647341334,service.namespace=designs,environment=dev
+      JAEGER_ENDPOINT: http://host.docker.internal:14250
       KEYSTORE_SECRET: secret
       AWS_ACCESS_KEY_ID: admin
       AWS_SECRET_ACCESS_KEY: password
@@ -288,14 +256,10 @@ services:
       - ./secrets/keystore_server.jks:/secrets/keystore_server.jks
   designs-render3:
     restart: unless-stopped
-    image: integration/designs-render:1.0.0-wip2-ae185d5c-1646940832
+    image: integration/designs-render:1.0.0-wip2-424a9a61-1647341334
     environment:
-      JAEGER_SERVICE_NAME: designs-render
-      JAEGER_AGENT_HOST: host.docker.internal
-      JAEGER_TAGS: env=dev
-      JAEGER_SAMPLER_TYPE: const
-      JAEGER_SAMPLER_PARAM: 1
-      JAEGER_REPORTER_LOG_SPANS: true
+      JAEGER_ATTRIBUTES: service.name=designs-render,service.version=1.0.0-wip2-424a9a61-1647341334,service.namespace=designs,environment=dev
+      JAEGER_ENDPOINT: http://host.docker.internal:14250
       KEYSTORE_SECRET: secret
       AWS_ACCESS_KEY_ID: admin
       AWS_SECRET_ACCESS_KEY: password
@@ -325,14 +289,10 @@ services:
       - ./secrets/keystore_server.jks:/secrets/keystore_server.jks
   designs-render4:
     restart: unless-stopped
-    image: integration/designs-render:1.0.0-wip2-ae185d5c-1646940832
+    image: integration/designs-render:1.0.0-wip2-424a9a61-1647341334
     environment:
-      JAEGER_SERVICE_NAME: designs-render
-      JAEGER_AGENT_HOST: host.docker.internal
-      JAEGER_TAGS: env=dev
-      JAEGER_SAMPLER_TYPE: const
-      JAEGER_SAMPLER_PARAM: 1
-      JAEGER_REPORTER_LOG_SPANS: true
+      JAEGER_ATTRIBUTES: service.name=designs-render,service.version=1.0.0-wip2-424a9a61-1647341334,service.namespace=designs,environment=dev
+      JAEGER_ENDPOINT: http://host.docker.internal:14250
       KEYSTORE_SECRET: secret
       AWS_ACCESS_KEY_ID: admin
       AWS_SECRET_ACCESS_KEY: password
@@ -362,14 +322,10 @@ services:
       - ./secrets/keystore_server.jks:/secrets/keystore_server.jks
   gateway:
     restart: unless-stopped
-    image: integration/gateway:1.0.0-wip2-ae185d5c-1646940832 
+    image: integration/gateway:1.0.0-wip2-424a9a61-1647341334
     environment:
-      JAEGER_SERVICE_NAME: gateway
-      JAEGER_AGENT_HOST: host.docker.internal
-      JAEGER_TAGS: env=dev
-      JAEGER_SAMPLER_TYPE: const
-      JAEGER_SAMPLER_PARAM: 1
-      JAEGER_REPORTER_LOG_SPANS: true
+      JAEGER_ATTRIBUTES: service.name=gateway,service.version=1.0.0-wip2-424a9a61-1647341334,service.namespace=designs,environment=dev
+      JAEGER_ENDPOINT: http://host.docker.internal:14250
       KEYSTORE_SECRET: secret
       ACCOUNTS_URL: https://accounts:30110
       AUTHENTICATION_URL: https://authentication:30101
@@ -398,7 +354,7 @@ services:
       - ./secrets/truststore_client.jks:/secrets/truststore_client.jks
   frontend:
     restart: unless-stopped
-    image: integration/frontend:1.0.0-wip2-ae185d5c-1646940832 
+    image: integration/frontend:1.0.0-wip2-424a9a61-1647341334 
     environment:
       CONFIG_PATH: /etc/config.json
       SECRETS_PATH: /secrets

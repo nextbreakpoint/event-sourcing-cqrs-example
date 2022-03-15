@@ -4,7 +4,7 @@ import com.nextbreakpoint.blueprint.common.core.*;
 import com.nextbreakpoint.blueprint.common.events.DesignAggregateUpdateCancelled;
 import com.nextbreakpoint.blueprint.common.events.TileRenderAborted;
 import com.nextbreakpoint.blueprint.common.vertx.Controller;
-import com.nextbreakpoint.blueprint.common.vertx.KafkaEmitter;
+import com.nextbreakpoint.blueprint.common.vertx.MessageEmitter;
 import com.nextbreakpoint.blueprint.designs.aggregate.DesignAggregate;
 import com.nextbreakpoint.blueprint.designs.model.Design;
 import com.nextbreakpoint.blueprint.common.core.Tile;
@@ -19,10 +19,10 @@ import java.util.stream.IntStream;
 public class DesignAggregateUpdateCancelledController implements Controller<InputMessage, Void> {
     private final Mapper<InputMessage, DesignAggregateUpdateCancelled> inputMapper;
     private final MessageMapper<TileRenderAborted, OutputMessage> outputMapper;
-    private final KafkaEmitter emitter;
+    private final MessageEmitter emitter;
     private final DesignAggregate aggregate;
 
-    public DesignAggregateUpdateCancelledController(DesignAggregate aggregate, Mapper<InputMessage, DesignAggregateUpdateCancelled> inputMapper, MessageMapper<TileRenderAborted, OutputMessage> outputMapper, KafkaEmitter emitter) {
+    public DesignAggregateUpdateCancelledController(DesignAggregate aggregate, Mapper<InputMessage, DesignAggregateUpdateCancelled> inputMapper, MessageMapper<TileRenderAborted, OutputMessage> outputMapper, MessageEmitter emitter) {
         this.aggregate = Objects.requireNonNull(aggregate);
         this.inputMapper = Objects.requireNonNull(inputMapper);
         this.outputMapper = Objects.requireNonNull(outputMapper);
@@ -34,7 +34,7 @@ public class DesignAggregateUpdateCancelledController implements Controller<Inpu
         return Single.just(message)
                 .map(inputMapper::transform)
                 .flatMapObservable(this::onTileRenderAborted)
-                .map(event -> outputMapper.transform(Tracing.from(message.getTrace()), event))
+                .map(event -> outputMapper.transform(event, message.getTrace()))
                 .flatMapSingle(emitter::send)
                 .ignoreElements()
                 .toCompletable()

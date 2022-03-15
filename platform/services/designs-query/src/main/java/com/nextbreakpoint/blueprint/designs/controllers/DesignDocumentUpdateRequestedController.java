@@ -4,7 +4,7 @@ import com.nextbreakpoint.blueprint.common.core.*;
 import com.nextbreakpoint.blueprint.common.events.DesignDocumentUpdateCompleted;
 import com.nextbreakpoint.blueprint.common.events.DesignDocumentUpdateRequested;
 import com.nextbreakpoint.blueprint.common.vertx.Controller;
-import com.nextbreakpoint.blueprint.common.vertx.KafkaEmitter;
+import com.nextbreakpoint.blueprint.common.vertx.MessageEmitter;
 import com.nextbreakpoint.blueprint.designs.Store;
 import com.nextbreakpoint.blueprint.designs.model.Design;
 import com.nextbreakpoint.blueprint.designs.persistence.dto.InsertDesignRequest;
@@ -21,9 +21,9 @@ public class DesignDocumentUpdateRequestedController implements Controller<Input
     private final Store store;
     private final Mapper<InputMessage, DesignDocumentUpdateRequested> inputMapper;
     private final MessageMapper<DesignDocumentUpdateCompleted, OutputMessage> outputMapper;
-    private final KafkaEmitter emitter;
+    private final MessageEmitter emitter;
 
-    public DesignDocumentUpdateRequestedController(Store store, Mapper<InputMessage, DesignDocumentUpdateRequested> inputMapper, MessageMapper<DesignDocumentUpdateCompleted, OutputMessage> outputMapper, KafkaEmitter emitter) {
+    public DesignDocumentUpdateRequestedController(Store store, Mapper<InputMessage, DesignDocumentUpdateRequested> inputMapper, MessageMapper<DesignDocumentUpdateCompleted, OutputMessage> outputMapper, MessageEmitter emitter) {
         this.store = Objects.requireNonNull(store);
         this.inputMapper = Objects.requireNonNull(inputMapper);
         this.outputMapper = Objects.requireNonNull(outputMapper);
@@ -35,7 +35,7 @@ public class DesignDocumentUpdateRequestedController implements Controller<Input
         return Single.just(message)
                 .map(inputMapper::transform)
                 .flatMapObservable(this::onDesignDocumentUpdateRequested)
-                .map(event -> outputMapper.transform(Tracing.from(message.getTrace()), event))
+                .map(event -> outputMapper.transform(event, message.getTrace()))
                 .flatMapSingle(emitter::send)
                 .ignoreElements()
                 .toCompletable()

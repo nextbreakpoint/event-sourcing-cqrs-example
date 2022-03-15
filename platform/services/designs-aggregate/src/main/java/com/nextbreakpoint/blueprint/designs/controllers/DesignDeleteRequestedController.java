@@ -4,7 +4,7 @@ import com.nextbreakpoint.blueprint.common.core.*;
 import com.nextbreakpoint.blueprint.common.events.DesignAggregateUpdateRequested;
 import com.nextbreakpoint.blueprint.common.events.DesignDeleteRequested;
 import com.nextbreakpoint.blueprint.common.vertx.Controller;
-import com.nextbreakpoint.blueprint.common.vertx.KafkaEmitter;
+import com.nextbreakpoint.blueprint.common.vertx.MessageEmitter;
 import com.nextbreakpoint.blueprint.designs.aggregate.DesignAggregate;
 import rx.Single;
 
@@ -13,10 +13,10 @@ import java.util.Objects;
 public class DesignDeleteRequestedController implements Controller<InputMessage, Void> {
     private final Mapper<InputMessage, DesignDeleteRequested> inputMapper;
     private final MessageMapper<DesignAggregateUpdateRequested, OutputMessage> outputMapper;
-    private final KafkaEmitter emitter;
+    private final MessageEmitter emitter;
     private final DesignAggregate aggregate;
 
-    public DesignDeleteRequestedController(DesignAggregate aggregate, Mapper<InputMessage, DesignDeleteRequested> inputMapper, MessageMapper<DesignAggregateUpdateRequested, OutputMessage> outputMapper, KafkaEmitter emitter) {
+    public DesignDeleteRequestedController(DesignAggregate aggregate, Mapper<InputMessage, DesignDeleteRequested> inputMapper, MessageMapper<DesignAggregateUpdateRequested, OutputMessage> outputMapper, MessageEmitter emitter) {
         this.aggregate = Objects.requireNonNull(aggregate);
         this.inputMapper = Objects.requireNonNull(inputMapper);
         this.outputMapper = Objects.requireNonNull(outputMapper);
@@ -29,7 +29,7 @@ public class DesignDeleteRequestedController implements Controller<InputMessage,
                 .flatMap(this::onMessageReceived)
                 .map(inputMapper::transform)
                 .flatMap(event -> onDesignDeleteRequested(event, message.getToken()))
-                .map(event -> outputMapper.transform(Tracing.from(message.getTrace()), event))
+                .map(event -> outputMapper.transform(event, message.getTrace()))
                 .flatMap(emitter::send);
     }
 

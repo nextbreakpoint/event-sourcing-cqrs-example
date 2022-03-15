@@ -7,7 +7,15 @@ module com.nextbreakpoint.blueprint.authentication {
     requires io.vertx.auth.jwt;
     requires io.vertx.auth.oauth2;
     requires io.vertx.metrics.micrometer;
-    requires io.vertx.tracing.opentracing;
+    requires io.vertx.tracing.opentelemetry;
+    requires io.opentelemetry.semconv;
+    requires io.opentelemetry.context;
+    requires io.opentelemetry.api;
+    requires io.opentelemetry.sdk;
+    requires io.opentelemetry.sdk.trace;
+    requires io.opentelemetry.sdk.common;
+    requires io.opentelemetry.exporter.jaeger;
+    requires io.opentelemetry.exporter.otlp.trace;
     requires vertx.rx.java;
     requires rxjava;
     requires com.fasterxml.jackson.core;

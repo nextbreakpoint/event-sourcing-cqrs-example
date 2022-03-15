@@ -1,6 +1,6 @@
 package com.nextbreakpoint.blueprint.designs;
 
-import com.nextbreakpoint.blueprint.common.core.BlockingHandler;
+import com.nextbreakpoint.blueprint.common.vertx.RxSingleHandler;
 import com.nextbreakpoint.blueprint.common.core.Image;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.events.mappers.DesignDocumentDeleteCompletedOutputMapper;
@@ -62,7 +62,7 @@ public class Factory {
                 .build();
     }
 
-    public static BlockingHandler<InputMessage> createDesignDocumentUpdateRequestedHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
+    public static RxSingleHandler<InputMessage, ?> createDesignDocumentUpdateRequestedHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
         return TemplateHandler.<InputMessage, InputMessage, Void, Void>builder()
                 .withInputMapper(input -> input)
                 .withOutputMapper(output -> output)
@@ -77,7 +77,7 @@ public class Factory {
                 .build();
     }
 
-    public static BlockingHandler<InputMessage> createDesignDocumentDeleteRequestedHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
+    public static RxSingleHandler<InputMessage, ?> createDesignDocumentDeleteRequestedHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
         return TemplateHandler.<InputMessage, InputMessage, Void, Void>builder()
                 .withInputMapper(input -> input)
                 .withOutputMapper(output -> output)

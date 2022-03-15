@@ -1,6 +1,5 @@
 package com.nextbreakpoint.blueprint.common.vertx;
 
-import com.nextbreakpoint.blueprint.common.core.BlockingHandler;
 import com.nextbreakpoint.blueprint.common.core.Mapper;
 import io.vertx.core.Handler;
 import rx.Single;
@@ -9,7 +8,7 @@ import rx.schedulers.Schedulers;
 import java.util.Objects;
 import java.util.function.BiConsumer;
 
-public class TemplateHandler<T, I, O, R> implements Handler<T>, BlockingHandler<T> {
+public class TemplateHandler<T, I, O, R> implements Handler<T>, RxSingleHandler<T, R> {
     private final Mapper<T, I> inputMapper;
     private final Mapper<O, R> outputMapper;
     private final Controller<I, O> controller;
@@ -36,17 +35,15 @@ public class TemplateHandler<T, I, O, R> implements Handler<T>, BlockingHandler<
     }
 
     @Override
-    public void handleBlocking(T message) {
-        Single.just(message)
+    public Single<R> handleSingle(T message) {
+        return Single.just(message)
                 .subscribeOn(Schedulers.computation())
                 .map(inputMapper::transform)
                 .flatMap(controller::onNext)
                 .map(outputMapper::transform)
                 .observeOn(Schedulers.io())
-                .toCompletable()
-                .doOnCompleted(() -> successHandler.accept(message, null))
-                .doOnError(err -> failureHandler.accept(message, err))
-                .await();
+                .doOnSuccess(result -> successHandler.accept(message, null))
+                .doOnError(err -> failureHandler.accept(message, err));
     }
 
     public static <T, I, O, R> Builder<T, I, O, R> builder() {

@@ -3,7 +3,7 @@ package com.nextbreakpoint.blueprint.designs.controllers;
 import com.nextbreakpoint.blueprint.common.core.*;
 import com.nextbreakpoint.blueprint.common.events.*;
 import com.nextbreakpoint.blueprint.common.vertx.Controller;
-import com.nextbreakpoint.blueprint.common.vertx.KafkaEmitter;
+import com.nextbreakpoint.blueprint.common.vertx.MessageEmitter;
 import com.nextbreakpoint.blueprint.common.core.Tile;
 import rx.Observable;
 import rx.Single;
@@ -17,10 +17,10 @@ public class DesignAggregateUpdateCompletedController implements Controller<Inpu
     private final Mapper<InputMessage, DesignAggregateUpdateCompleted> inputMapper;
     private final MessageMapper<TilesRenderRequired, OutputMessage> updateOutputMapper;
     private final MessageMapper<DesignDocumentDeleteRequested, OutputMessage> deleteOutputMapper;
-    private final KafkaEmitter updateEmitter;
-    private final KafkaEmitter deleteEmitter;
+    private final MessageEmitter updateEmitter;
+    private final MessageEmitter deleteEmitter;
 
-    public DesignAggregateUpdateCompletedController(Mapper<InputMessage, DesignAggregateUpdateCompleted> inputMapper, MessageMapper<TilesRenderRequired, OutputMessage> updateOutputMapper, MessageMapper<DesignDocumentDeleteRequested, OutputMessage> deleteOutputMapper, KafkaEmitter updateEmitter, KafkaEmitter deleteEmitter) {
+    public DesignAggregateUpdateCompletedController(Mapper<InputMessage, DesignAggregateUpdateCompleted> inputMapper, MessageMapper<TilesRenderRequired, OutputMessage> updateOutputMapper, MessageMapper<DesignDocumentDeleteRequested, OutputMessage> deleteOutputMapper, MessageEmitter updateEmitter, MessageEmitter deleteEmitter) {
         this.inputMapper = Objects.requireNonNull(inputMapper);
         this.updateOutputMapper = Objects.requireNonNull(updateOutputMapper);
         this.deleteOutputMapper = Objects.requireNonNull(deleteOutputMapper);
@@ -39,21 +39,21 @@ public class DesignAggregateUpdateCompletedController implements Controller<Inpu
                 .map(result -> null);
     }
 
-    private Observable<Void> onAggregateUpdateCompleted(DesignAggregateUpdateCompleted event, Tracing tracing) {
-        return "DELETED".equalsIgnoreCase(event.getStatus()) ? onDelete(event, tracing) : onUpdate(event, tracing);
+    private Observable<Void> onAggregateUpdateCompleted(DesignAggregateUpdateCompleted event, Tracing trace) {
+        return "DELETED".equalsIgnoreCase(event.getStatus()) ? onDelete(event, trace) : onUpdate(event, trace);
     }
 
-    private Observable<Void> onDelete(DesignAggregateUpdateCompleted event, Tracing tracing) {
+    private Observable<Void> onDelete(DesignAggregateUpdateCompleted event, Tracing trace) {
         return generateEvents(event)
-                .map(deleteEvent -> deleteOutputMapper.transform(Tracing.from(tracing), deleteEvent))
+                .map(newEvent -> deleteOutputMapper.transform(newEvent, trace))
                 .flatMapSingle(deleteEmitter::send);
     }
 
-    private Observable<Void> onUpdate(DesignAggregateUpdateCompleted event, Tracing tracing) {
+    private Observable<Void> onUpdate(DesignAggregateUpdateCompleted event, Tracing trace) {
         return generateTiles(event.getLevels())
-                .buffer(50)
+                .buffer(16)
                 .map(tiles -> createEvent(event, tiles))
-                .map(renderEvent -> updateOutputMapper.transform(Tracing.from(tracing), renderEvent))
+                .map(newEvent -> updateOutputMapper.transform(newEvent, trace))
                 .flatMapSingle(updateEmitter::send);
     }
 

@@ -8,8 +8,16 @@ module com.nextbreakpoint.blueprint.designs.render {
     requires io.vertx.web;
     requires io.vertx.web.openapi;
     requires io.vertx.metrics.micrometer;
-    requires io.vertx.tracing.opentracing;
     requires io.vertx.client.kafka;
+    requires io.vertx.tracing.opentelemetry;
+    requires io.opentelemetry.semconv;
+    requires io.opentelemetry.context;
+    requires io.opentelemetry.api;
+    requires io.opentelemetry.sdk;
+    requires io.opentelemetry.sdk.trace;
+    requires io.opentelemetry.sdk.common;
+    requires io.opentelemetry.exporter.jaeger;
+    requires io.opentelemetry.exporter.otlp.trace;
     requires vertx.rx.java;
     requires rxjava;
     requires com.fasterxml.jackson.core;

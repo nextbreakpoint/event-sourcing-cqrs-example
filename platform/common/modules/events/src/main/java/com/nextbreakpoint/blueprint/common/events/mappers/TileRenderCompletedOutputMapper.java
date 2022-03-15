@@ -14,7 +14,7 @@ public class TileRenderCompletedOutputMapper implements MessageMapper<TileRender
     }
 
     @Override
-    public OutputMessage transform(Tracing trace, TileRenderCompleted event) {
+    public OutputMessage transform(TileRenderCompleted event, Tracing trace) {
         return new OutputMessage(
                 event.getDesignId().toString(),
                 new Payload(

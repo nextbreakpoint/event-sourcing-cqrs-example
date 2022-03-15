@@ -1,6 +1,13 @@
 package com.nextbreakpoint.blueprint.common.vertx;
 
 import com.nextbreakpoint.blueprint.common.core.*;
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.context.propagation.TextMapGetter;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.kafka.client.common.TopicPartition;
@@ -9,13 +16,11 @@ import io.vertx.rxjava.kafka.client.consumer.KafkaConsumer;
 import io.vertx.rxjava.kafka.client.consumer.KafkaConsumerRecord;
 import io.vertx.rxjava.kafka.client.consumer.KafkaConsumerRecords;
 import io.vertx.rxjava.kafka.client.producer.KafkaHeader;
+import rx.Single;
 import rx.schedulers.Schedulers;
 
 import java.time.Duration;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -24,7 +29,7 @@ public class KafkaPolling {
 
     private final KafkaConsumer<String, String> kafkaConsumer;
 
-    private final Map<String, BlockingHandler<InputMessage>> messageHandlers;
+    private final Map<String, RxSingleHandler<InputMessage, ?>> messageHandlers;
 
     private final KafkaRecordsQueue queue;
 
@@ -38,16 +43,32 @@ public class KafkaPolling {
 
     private Thread pollingThread;
 
-    public KafkaPolling(KafkaConsumer<String, String> kafkaConsumer, Map<String, BlockingHandler<InputMessage>> messageHandlers) {
+    private final Tracer tracer;
+
+    private final TextMapGetter<Map<String, String>> getter = new TextMapGetter<>() {
+        @Override
+        public String get(Map<String, String> headers, String key) {
+            return headers.get(key);
+        }
+
+        @Override
+        public Iterable<String> keys(Map<String, String> headers) {
+            return headers.keySet();
+        }
+    };
+
+    public KafkaPolling(KafkaConsumer<String, String> kafkaConsumer, Map<String, RxSingleHandler<InputMessage, ?>> messageHandlers) {
         this(kafkaConsumer, messageHandlers, KafkaRecordsQueue.Simple.create(), -1, 10);
     }
 
-    public KafkaPolling(KafkaConsumer<String, String> kafkaConsumer, Map<String, BlockingHandler<InputMessage>> messageHandlers, KafkaRecordsQueue queue, int latency, int maxRecords) {
+    public KafkaPolling(KafkaConsumer<String, String> kafkaConsumer, Map<String, RxSingleHandler<InputMessage, ?>> messageHandlers, KafkaRecordsQueue queue, int latency, int maxRecords) {
         this.kafkaConsumer = Objects.requireNonNull(kafkaConsumer);
         this.messageHandlers = Objects.requireNonNull(messageHandlers);
         this.queue = Objects.requireNonNull(queue);
         this.latency = latency;
         this.maxRecords = maxRecords;
+
+        tracer = GlobalOpenTelemetry.getTracer("com.nextbreakpoint.blueprint");
     }
 
     public void startPolling(String name) {
@@ -124,7 +145,7 @@ public class KafkaPolling {
 
                 final Payload payload = Json.decodeValue(record.value(), Payload.class);
 
-                final BlockingHandler<InputMessage> handler = messageHandlers.get(payload.getType());
+                final RxSingleHandler<InputMessage, ?> handler = messageHandlers.get(payload.getType());
 
                 if (handler == null) {
                     continue;
@@ -171,24 +192,55 @@ public class KafkaPolling {
                 return;
             }
 
-            Map<String, String> headers = record.headers().stream()
+            final Map<String, String> headers = record.headers().stream()
                     .collect(Collectors.toMap(KafkaHeader::key, kafkaHeader -> getString(kafkaHeader.value())));
+
+            System.out.println(headers);
 
             final Payload payload = Json.decodeValue(record.value(), Payload.class);
 
-            final BlockingHandler<InputMessage> handler = messageHandlers.get(payload.getType());
+            final RxSingleHandler<InputMessage, ?> handler = messageHandlers.get(payload.getType());
 
             if (handler == null) {
                 return;
             }
 
-            final String token = Token.from(record.timestamp(), record.offset());
+            final Context extractedContext = W3CTraceContextPropagator.getInstance().extract(Context.current(), headers, getter);
 
-            final InputMessage message = new InputMessage(record.key(), token, payload, Tracing.from(headers), record.timestamp());
+            final Span messageSpan = tracer.spanBuilder("Received message " + payload.getType()).setParent(extractedContext).startSpan();
 
-            logger.debug("Received message: " + message);
+            try (Scope scope = messageSpan.makeCurrent()) {
+                final Span span = Span.current();
 
-            handler.handleBlocking(message);
+                final String token = Token.from(record.timestamp(), record.offset());
+
+                Tracing tracing = Tracing.of(span.getSpanContext().getTraceId(), span.getSpanContext().getSpanId());
+
+                span.setAttribute("message.source", payload.getSource());
+                span.setAttribute("message.type", payload.getType());
+                span.setAttribute("message.uuid", payload.getUuid().toString());
+                span.setAttribute("message.key", record.key());
+                span.setAttribute("message.token", token);
+                span.setAttribute("message.topic", record.topic());
+                span.setAttribute("message.offset", record.offset());
+                span.setAttribute("message.timestamp", record.timestamp());
+
+                final InputMessage message = new InputMessage(record.key(), token, payload, tracing, record.timestamp());
+
+                logger.debug("Received message: " + message);
+
+                Single.just(Context.current())
+                        .subscribeOn(Schedulers.computation())
+                        .map(Context::makeCurrent)
+                        .toCompletable()
+                        .await();
+
+                handler.handleSingle(message)
+                        .toCompletable()
+                        .await();
+            } finally {
+                messageSpan.end();
+            }
         } catch (Exception e) {
             logger.error("Failed to process record: " + record.key());
 

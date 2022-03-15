@@ -4,7 +4,7 @@ import com.nextbreakpoint.blueprint.common.core.*;
 import com.nextbreakpoint.blueprint.common.events.DesignAggregateUpdateCompleted;
 import com.nextbreakpoint.blueprint.common.events.DesignAggregateUpdateRequested;
 import com.nextbreakpoint.blueprint.common.vertx.Controller;
-import com.nextbreakpoint.blueprint.common.vertx.KafkaEmitter;
+import com.nextbreakpoint.blueprint.common.vertx.MessageEmitter;
 import com.nextbreakpoint.blueprint.designs.aggregate.DesignAggregate;
 import com.nextbreakpoint.blueprint.designs.model.Design;
 import rx.Single;
@@ -14,10 +14,10 @@ import java.util.Objects;
 public class DesignAggregateUpdateRequestedController implements Controller<InputMessage, Void> {
     private final Mapper<InputMessage, DesignAggregateUpdateRequested> inputMapper;
     private final MessageMapper<DesignAggregateUpdateCompleted, OutputMessage> outputMapper;
-    private final KafkaEmitter emitter;
+    private final MessageEmitter emitter;
     private final DesignAggregate aggregate;
 
-    public DesignAggregateUpdateRequestedController(DesignAggregate aggregate, Mapper<InputMessage, DesignAggregateUpdateRequested> inputMapper, MessageMapper<DesignAggregateUpdateCompleted, OutputMessage> outputMapper, KafkaEmitter emitter) {
+    public DesignAggregateUpdateRequestedController(DesignAggregate aggregate, Mapper<InputMessage, DesignAggregateUpdateRequested> inputMapper, MessageMapper<DesignAggregateUpdateCompleted, OutputMessage> outputMapper, MessageEmitter emitter) {
         this.aggregate = Objects.requireNonNull(aggregate);
         this.inputMapper =  Objects.requireNonNull(inputMapper);
         this.outputMapper = Objects.requireNonNull(outputMapper);
@@ -29,7 +29,7 @@ public class DesignAggregateUpdateRequestedController implements Controller<Inpu
         return Single.just(message)
                 .map(inputMapper::transform)
                 .flatMap(this::onAggregateUpdateRequested)
-                .map(event -> outputMapper.transform(Tracing.from(message.getTrace()), event))
+                .map(event -> outputMapper.transform(event, message.getTrace()))
                 .flatMap(emitter::send);
     }
 

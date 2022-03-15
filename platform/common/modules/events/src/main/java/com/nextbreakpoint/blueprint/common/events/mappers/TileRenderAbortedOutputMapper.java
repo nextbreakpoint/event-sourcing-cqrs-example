@@ -21,7 +21,7 @@ public class TileRenderAbortedOutputMapper implements MessageMapper<TileRenderAb
     }
 
     @Override
-    public OutputMessage transform(Tracing trace, TileRenderAborted event) {
+    public OutputMessage transform(TileRenderAborted event, Tracing trace) {
         return new OutputMessage(
                 keyMapper.apply(event),
                 new Payload(

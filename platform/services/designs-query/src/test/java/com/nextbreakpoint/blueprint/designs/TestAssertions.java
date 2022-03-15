@@ -26,7 +26,6 @@ public class TestAssertions {
         assertThat(actualMessage.getTrace()).isNotNull();
         assertThat(actualMessage.getTrace().getTraceId()).isNotNull();
         assertThat(actualMessage.getTrace().getSpanId()).isNotNull();
-        assertThat(actualMessage.getTrace().getParent()).isNotNull();
         DesignDocumentUpdateRequested actualEvent = Json.decodeValue(actualMessage.getValue().getData(), DesignDocumentUpdateRequested.class);
         assertThat(actualEvent.getDesignId()).isEqualTo(designId);
         assertThat(actualEvent.getRevision()).isNotNull();
@@ -49,7 +48,6 @@ public class TestAssertions {
         assertThat(actualMessage.getTrace()).isNotNull();
         assertThat(actualMessage.getTrace().getTraceId()).isNotNull();
         assertThat(actualMessage.getTrace().getSpanId()).isNotNull();
-        assertThat(actualMessage.getTrace().getParent()).isNotNull();
         DesignDocumentUpdateCompleted actualEvent = Json.decodeValue(actualMessage.getValue().getData(), DesignDocumentUpdateCompleted.class);
         assertThat(actualEvent.getDesignId()).isEqualTo(designId);
         assertThat(actualEvent.getRevision()).isNotNull();
@@ -66,7 +64,6 @@ public class TestAssertions {
         assertThat(actualMessage.getTrace()).isNotNull();
         assertThat(actualMessage.getTrace().getTraceId()).isNotNull();
         assertThat(actualMessage.getTrace().getSpanId()).isNotNull();
-        assertThat(actualMessage.getTrace().getParent()).isNotNull();
         DesignDocumentDeleteRequested actualEvent = Json.decodeValue(actualMessage.getValue().getData(), DesignDocumentDeleteRequested.class);
         assertThat(actualEvent.getDesignId()).isEqualTo(designId);
         assertThat(actualEvent.getRevision()).isNotNull();
@@ -83,7 +80,6 @@ public class TestAssertions {
         assertThat(actualMessage.getTrace()).isNotNull();
         assertThat(actualMessage.getTrace().getTraceId()).isNotNull();
         assertThat(actualMessage.getTrace().getSpanId()).isNotNull();
-        assertThat(actualMessage.getTrace().getParent()).isNotNull();
         DesignDocumentDeleteCompleted actualEvent = Json.decodeValue(actualMessage.getValue().getData(), DesignDocumentDeleteCompleted.class);
         assertThat(actualEvent.getDesignId()).isEqualTo(designId);
         assertThat(actualEvent.getRevision()).isNotNull();

@@ -4,7 +4,7 @@ import com.nextbreakpoint.blueprint.common.commands.DesignDeleteCommand;
 import com.nextbreakpoint.blueprint.common.core.*;
 import com.nextbreakpoint.blueprint.common.events.DesignDeleteRequested;
 import com.nextbreakpoint.blueprint.common.vertx.Controller;
-import com.nextbreakpoint.blueprint.common.vertx.KafkaEmitter;
+import com.nextbreakpoint.blueprint.common.vertx.MessageEmitter;
 import com.nextbreakpoint.blueprint.designs.Store;
 import rx.Single;
 
@@ -13,10 +13,10 @@ import java.util.Objects;
 public class DesignDeleteCommandController implements Controller<InputMessage, Void> {
     private final Mapper<InputMessage, DesignDeleteCommand> inputMapper;
     private final MessageMapper<DesignDeleteRequested, OutputMessage> outputMapper;
-    private final KafkaEmitter emitter;
+    private final MessageEmitter emitter;
     private final Store store;
 
-    public DesignDeleteCommandController(Store store, Mapper<InputMessage, DesignDeleteCommand> inputMapper, MessageMapper<DesignDeleteRequested, OutputMessage> outputMapper, KafkaEmitter emitter) {
+    public DesignDeleteCommandController(Store store, Mapper<InputMessage, DesignDeleteCommand> inputMapper, MessageMapper<DesignDeleteRequested, OutputMessage> outputMapper, MessageEmitter emitter) {
         this.store = Objects.requireNonNull(store);
         this.inputMapper = Objects.requireNonNull(inputMapper);
         this.outputMapper = Objects.requireNonNull(outputMapper);
@@ -29,7 +29,7 @@ public class DesignDeleteCommandController implements Controller<InputMessage, V
                 .flatMap(this::onMessageReceived)
                 .map(inputMapper::transform)
                 .flatMap(this::onDesignDeleteRequested)
-                .map(event -> outputMapper.transform(Tracing.from(message.getTrace()), event))
+                .map(event -> outputMapper.transform(event, message.getTrace()))
                 .flatMap(emitter::send);
     }
 

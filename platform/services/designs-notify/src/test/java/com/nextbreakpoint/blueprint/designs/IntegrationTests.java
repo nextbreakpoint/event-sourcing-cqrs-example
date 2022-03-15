@@ -1,8 +1,6 @@
 package com.nextbreakpoint.blueprint.designs;
 
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
-import com.nextbreakpoint.blueprint.common.core.TimeUUID;
-import com.nextbreakpoint.blueprint.common.core.Tracing;
 import com.nextbreakpoint.blueprint.common.events.DesignDocumentUpdateCompleted;
 import com.nextbreakpoint.blueprint.common.events.mappers.DesignDocumentUpdateCompletedOutputMapper;
 import org.junit.jupiter.api.*;
@@ -37,9 +35,9 @@ public class IntegrationTests {
 
         final DesignDocumentUpdateCompleted designDocumentUpdateCompleted2 = new DesignDocumentUpdateCompleted(designId2, TestConstants.REVISION_0);
 
-        final OutputMessage designDocumentUpdateCompletedMessage1 = new DesignDocumentUpdateCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(Tracing.of(UUID.randomUUID()), designDocumentUpdateCompleted1);
+        final OutputMessage designDocumentUpdateCompletedMessage1 = new DesignDocumentUpdateCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designDocumentUpdateCompleted1, TestConstants.TRACING);
 
-        final OutputMessage designDocumentUpdateCompletedMessage2 = new DesignDocumentUpdateCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(Tracing.of(UUID.randomUUID()), designDocumentUpdateCompleted2);
+        final OutputMessage designDocumentUpdateCompletedMessage2 = new DesignDocumentUpdateCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designDocumentUpdateCompleted2, TestConstants.TRACING);
 
         testCases.shouldNotifyWatchersOfAllResourcesWhenReceivingAnEvent(List.of(designDocumentUpdateCompletedMessage1, designDocumentUpdateCompletedMessage2));
     }
@@ -55,9 +53,9 @@ public class IntegrationTests {
 
         final DesignDocumentUpdateCompleted designDocumentUpdateCompleted2 = new DesignDocumentUpdateCompleted(designId2, TestConstants.REVISION_0);
 
-        final OutputMessage designDocumentUpdateCompletedMessage1 = new DesignDocumentUpdateCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(Tracing.of(UUID.randomUUID()), designDocumentUpdateCompleted1);
+        final OutputMessage designDocumentUpdateCompletedMessage1 = new DesignDocumentUpdateCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designDocumentUpdateCompleted1, TestConstants.TRACING);
 
-        final OutputMessage designDocumentUpdateCompletedMessage2 = new DesignDocumentUpdateCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(Tracing.of(UUID.randomUUID()), designDocumentUpdateCompleted2);
+        final OutputMessage designDocumentUpdateCompletedMessage2 = new DesignDocumentUpdateCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designDocumentUpdateCompleted2, TestConstants.TRACING);
 
         testCases.shouldNotifyWatchersOfSingleResourceWhenReceivingAnEvent(List.of(designDocumentUpdateCompletedMessage1, designDocumentUpdateCompletedMessage2));
     }

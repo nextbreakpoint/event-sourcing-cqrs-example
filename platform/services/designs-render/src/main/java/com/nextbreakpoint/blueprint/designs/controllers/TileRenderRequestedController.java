@@ -4,7 +4,7 @@ import com.nextbreakpoint.blueprint.common.core.*;
 import com.nextbreakpoint.blueprint.common.events.TileRenderCompleted;
 import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
 import com.nextbreakpoint.blueprint.common.vertx.Controller;
-import com.nextbreakpoint.blueprint.common.vertx.KafkaEmitter;
+import com.nextbreakpoint.blueprint.common.vertx.MessageEmitter;
 import com.nextbreakpoint.blueprint.designs.common.Result;
 import com.nextbreakpoint.blueprint.designs.common.S3Driver;
 import com.nextbreakpoint.blueprint.designs.common.TileRenderer;
@@ -22,12 +22,12 @@ public class TileRenderRequestedController implements Controller<InputMessage, V
 
     private Mapper<InputMessage, TileRenderRequested> inputMapper;
     private final MessageMapper<TileRenderCompleted, OutputMessage> outputMapper;
-    private final KafkaEmitter emitter;
+    private final MessageEmitter emitter;
     private final WorkerExecutor executor;
     private final S3Driver s3Driver;
     private final TileRenderer renderer;
 
-    public TileRenderRequestedController(Mapper<InputMessage, TileRenderRequested> inputMapper, MessageMapper<TileRenderCompleted, OutputMessage> outputMapper, KafkaEmitter emitter, WorkerExecutor executor, S3Driver s3Driver, TileRenderer renderer) {
+    public TileRenderRequestedController(Mapper<InputMessage, TileRenderRequested> inputMapper, MessageMapper<TileRenderCompleted, OutputMessage> outputMapper, MessageEmitter emitter, WorkerExecutor executor, S3Driver s3Driver, TileRenderer renderer) {
         this.inputMapper = Objects.requireNonNull(inputMapper);;
         this.outputMapper = Objects.requireNonNull(outputMapper);
         this.emitter = Objects.requireNonNull(emitter);
@@ -41,7 +41,7 @@ public class TileRenderRequestedController implements Controller<InputMessage, V
         return Single.just(message)
                 .map(inputMapper::transform)
                 .flatMap(this::onTileRenderRequested)
-                .map(event -> outputMapper.transform(Tracing.from(message.getTrace()), event))
+                .map(event -> outputMapper.transform(event, message.getTrace()))
                 .flatMap(emitter::send);
     }
 

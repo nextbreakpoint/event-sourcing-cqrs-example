@@ -90,10 +90,10 @@ public class IntegrationTests {
 
     final DesignDocumentUpdateRequestedOutputMapper outputMapper = new DesignDocumentUpdateRequestedOutputMapper(TestConstants.MESSAGE_SOURCE);
 
-    final OutputMessage designDocumentUpdateRequestedMessage1 = outputMapper.transform(Tracing.of(UUID.randomUUID()), designDocumentUpdateRequested1);
-    final OutputMessage designDocumentUpdateRequestedMessage2 = outputMapper.transform(Tracing.of(UUID.randomUUID()), designDocumentUpdateRequested2);
-    final OutputMessage designDocumentUpdateRequestedMessage3 = outputMapper.transform(Tracing.of(UUID.randomUUID()), designDocumentUpdateRequested3);
-    final OutputMessage designDocumentUpdateRequestedMessage4 = outputMapper.transform(Tracing.of(UUID.randomUUID()), designDocumentUpdateRequested4);
+    final OutputMessage designDocumentUpdateRequestedMessage1 = outputMapper.transform(designDocumentUpdateRequested1, TestConstants.TRACING);
+    final OutputMessage designDocumentUpdateRequestedMessage2 = outputMapper.transform(designDocumentUpdateRequested2, TestConstants.TRACING);
+    final OutputMessage designDocumentUpdateRequestedMessage3 = outputMapper.transform(designDocumentUpdateRequested3, TestConstants.TRACING);
+    final OutputMessage designDocumentUpdateRequestedMessage4 = outputMapper.transform(designDocumentUpdateRequested4, TestConstants.TRACING);
 
     final List<OutputMessage> outputMessages = List.of(designDocumentUpdateRequestedMessage1, designDocumentUpdateRequestedMessage2, designDocumentUpdateRequestedMessage3, designDocumentUpdateRequestedMessage4);
 
@@ -113,8 +113,8 @@ public class IntegrationTests {
     final DesignDocumentUpdateRequestedOutputMapper outputMapper1 = new DesignDocumentUpdateRequestedOutputMapper(TestConstants.MESSAGE_SOURCE);
     final DesignDocumentDeleteRequestedOutputMapper outputMapper2 = new DesignDocumentDeleteRequestedOutputMapper(TestConstants.MESSAGE_SOURCE);
 
-    final OutputMessage designDocumentUpdateRequestedMessage = outputMapper1.transform(Tracing.of(UUID.randomUUID()), designDocumentUpdateRequested);
-    final OutputMessage designDocumentDeleteRequestedMessage = outputMapper2.transform(Tracing.of(UUID.randomUUID()), designDocumentDeleteRequested);
+    final OutputMessage designDocumentUpdateRequestedMessage = outputMapper1.transform(designDocumentUpdateRequested, TestConstants.TRACING);
+    final OutputMessage designDocumentDeleteRequestedMessage = outputMapper2.transform(designDocumentDeleteRequested, TestConstants.TRACING);
 
     testCases.shouldDeleteTheDesignWhenReceivingADesignDocumentDeleteRequestedMessage(designDocumentUpdateRequestedMessage, designDocumentDeleteRequestedMessage);
   }

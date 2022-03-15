@@ -13,13 +13,13 @@ import au.com.dius.pact.provider.junitsupport.loader.PactBroker;
 import com.nextbreakpoint.blueprint.common.core.Json;
 import com.nextbreakpoint.blueprint.common.core.KafkaRecord;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
-import com.nextbreakpoint.blueprint.common.core.Tracing;
 import com.nextbreakpoint.blueprint.common.events.TileRenderCompleted;
 import com.nextbreakpoint.blueprint.common.events.mappers.TileRenderCompletedOutputMapper;
 import com.nextbreakpoint.blueprint.common.test.PayloadUtils;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import java.util.HashMap;
 import java.util.UUID;
 
 @Tag("docker")
@@ -82,8 +82,8 @@ public class VerifyAggregatePact {
     private String produceTileRenderCompleted(UUID uuid, int level, int row, int col, String checksum, String status) {
         final TileRenderCompleted tileRenderCompleted = new TileRenderCompleted(uuid, TestConstants.REVISION_0, checksum, level, row, col, status);
 
-        final OutputMessage tileRenderCompletedMessage = new TileRenderCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(Tracing.of(UUID.randomUUID()), tileRenderCompleted);
+        final OutputMessage tileRenderCompletedMessage = new TileRenderCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(tileRenderCompleted, TestConstants.TRACING);
 
-        return Json.encodeValue(new KafkaRecord(tileRenderCompletedMessage.getKey(), PayloadUtils.payloadToMap(tileRenderCompletedMessage.getValue()), tileRenderCompletedMessage.getTrace().toHeaders()));
+        return Json.encodeValue(new KafkaRecord(tileRenderCompletedMessage.getKey(), PayloadUtils.payloadToMap(tileRenderCompletedMessage.getValue()), new HashMap<>()));
     }
 }

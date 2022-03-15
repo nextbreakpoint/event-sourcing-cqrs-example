@@ -1,6 +1,7 @@
 package com.nextbreakpoint.blueprint.designs;
 
 import com.nextbreakpoint.blueprint.common.core.Checksum;
+import com.nextbreakpoint.blueprint.common.core.Tracing;
 
 import java.util.UUID;
 
@@ -40,6 +41,9 @@ public interface TestConstants {
     String UUID1_REGEXP = "[0-9a-f]{8}-[0-9a-f]{4}-[1][0-9a-f]{3}-[0-9a-f]{4}-[0-9a-f]{12}";
     String UUID6_REGEXP = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
 
+    String TRACE_ID_REGEXP = ".+";
+    String SPAN_ID_REGEXP = ".+";
+
     String REVISION_REGEXP = "[0-9]{16}-[0-9]{16}";
 
     String DESIGNS_INDEX_NAME = "test_designs_query";
@@ -49,4 +53,6 @@ public interface TestConstants {
     String REVISION_0 = "0000000000000000-0000000000000000";
     String REVISION_1 = "0000000000000000-0000000000000001";
     String REVISION_2 = "0000000000000000-0000000000000002";
+
+    Tracing TRACING = Tracing.of("a", "b");
 }

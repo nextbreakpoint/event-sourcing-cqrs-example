@@ -13,13 +13,13 @@ import au.com.dius.pact.provider.junitsupport.loader.PactBroker;
 import com.nextbreakpoint.blueprint.common.core.Json;
 import com.nextbreakpoint.blueprint.common.core.KafkaRecord;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
-import com.nextbreakpoint.blueprint.common.core.Tracing;
 import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
 import com.nextbreakpoint.blueprint.common.events.mappers.TileRenderRequestedOutputMapper;
 import com.nextbreakpoint.blueprint.common.test.PayloadUtils;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import java.util.HashMap;
 import java.util.UUID;
 
 @Tag("docker")
@@ -82,8 +82,8 @@ public class VerifyRenderPact {
     private String produceTileRenderRequested(UUID uuid, int level, int row, int col, String data, String checksum) {
         final TileRenderRequested tileRenderRequested = new TileRenderRequested(uuid, TestConstants.REVISION_0, checksum, data, level,  row, col);
 
-        final OutputMessage tileRenderRequestedMessage = new TileRenderRequestedOutputMapper(TestConstants.MESSAGE_SOURCE, event -> TestUtils.createRenderKey(tileRenderRequested)).transform(Tracing.of(UUID.randomUUID()), tileRenderRequested);
+        final OutputMessage tileRenderRequestedMessage = new TileRenderRequestedOutputMapper(TestConstants.MESSAGE_SOURCE, event -> TestUtils.createRenderKey(tileRenderRequested)).transform(tileRenderRequested, TestConstants.TRACING);
 
-        return Json.encodeValue(new KafkaRecord(tileRenderRequestedMessage.getKey(), PayloadUtils.payloadToMap(tileRenderRequestedMessage.getValue()), tileRenderRequestedMessage.getTrace().toHeaders()));
+        return Json.encodeValue(new KafkaRecord(tileRenderRequestedMessage.getKey(), PayloadUtils.payloadToMap(tileRenderRequestedMessage.getValue()), new HashMap<>()));
     }
 }

@@ -1,5 +1,7 @@
 package com.nextbreakpoint.blueprint.designs;
 
+import com.nextbreakpoint.blueprint.common.core.Tracing;
+
 import java.util.UUID;
 
 public interface TestConstants {
@@ -25,6 +27,8 @@ public interface TestConstants {
     String DATABASE_KEYSPACE = "test_designs_command";
 
     UUID USER_ID = new UUID(0L, 1L);
+
+    Tracing TRACING = Tracing.of("a", "b");
 
     int LEVELS = 3;
 }

@@ -4,7 +4,7 @@ import com.nextbreakpoint.blueprint.common.core.*;
 import com.nextbreakpoint.blueprint.common.events.DesignDocumentDeleteCompleted;
 import com.nextbreakpoint.blueprint.common.events.DesignDocumentDeleteRequested;
 import com.nextbreakpoint.blueprint.common.vertx.Controller;
-import com.nextbreakpoint.blueprint.common.vertx.KafkaEmitter;
+import com.nextbreakpoint.blueprint.common.vertx.MessageEmitter;
 import com.nextbreakpoint.blueprint.designs.Store;
 import com.nextbreakpoint.blueprint.designs.persistence.dto.DeleteDesignRequest;
 import rx.Observable;
@@ -16,9 +16,9 @@ public class DesignDocumentDeleteRequestedController implements Controller<Input
     private final Store store;
     private final Mapper<InputMessage, DesignDocumentDeleteRequested> inputMapper;
     private final MessageMapper<DesignDocumentDeleteCompleted, OutputMessage> outputMapper;
-    private final KafkaEmitter emitter;
+    private final MessageEmitter emitter;
 
-    public DesignDocumentDeleteRequestedController(Store store, Mapper<InputMessage, DesignDocumentDeleteRequested> inputMapper, MessageMapper<DesignDocumentDeleteCompleted, OutputMessage> outputMapper, KafkaEmitter emitter) {
+    public DesignDocumentDeleteRequestedController(Store store, Mapper<InputMessage, DesignDocumentDeleteRequested> inputMapper, MessageMapper<DesignDocumentDeleteCompleted, OutputMessage> outputMapper, MessageEmitter emitter) {
         this.store = Objects.requireNonNull(store);
         this.inputMapper = Objects.requireNonNull(inputMapper);
         this.outputMapper = Objects.requireNonNull(outputMapper);
@@ -30,7 +30,7 @@ public class DesignDocumentDeleteRequestedController implements Controller<Input
         return Single.just(message)
                 .map(inputMapper::transform)
                 .flatMapObservable(this::onDesignDocumentDeleteRequested)
-                .map(event -> outputMapper.transform(Tracing.from(message.getTrace()), event))
+                .map(event -> outputMapper.transform(event, message.getTrace()))
                 .flatMapSingle(emitter::send)
                 .ignoreElements()
                 .toCompletable()

@@ -1,11 +1,9 @@
 package com.nextbreakpoint.blueprint.common.test;
 
 import com.nextbreakpoint.blueprint.common.core.*;
-import io.vertx.rxjava.core.buffer.Buffer;
 import io.vertx.rxjava.kafka.client.consumer.KafkaConsumer;
 import io.vertx.rxjava.kafka.client.consumer.KafkaConsumerRecord;
 import io.vertx.rxjava.kafka.client.consumer.KafkaConsumerRecords;
-import io.vertx.rxjava.kafka.client.producer.KafkaHeader;
 import rx.schedulers.Schedulers;
 
 import java.time.Duration;
@@ -88,15 +86,13 @@ public class KafkaTestPolling {
     }
 
     private InputMessage convertToMessage(KafkaConsumerRecord<String, String> record) {
-        Map<String, String> headers = record.headers().stream()
-//                .peek(header -> System.out.println("header: " + header.key() + "=" + header.value()))
-                .collect(Collectors.toMap(KafkaHeader::key, kafkaHeader -> getString(kafkaHeader.value())));
-
         final Payload payload = Json.decodeValue(record.value(), Payload.class);
 
         final String token = Token.from(record.timestamp(), record.offset());
 
-        return new InputMessage(record.key(), token, payload, Tracing.from(headers), record.timestamp());
+        final Tracing tracing = Tracing.of(UUID.randomUUID().toString(), UUID.randomUUID().toString());
+
+        return new InputMessage(record.key(), token, payload, tracing, record.timestamp());
     }
 
     private void pollMessages() {
@@ -107,9 +103,5 @@ public class KafkaTestPolling {
                 .doOnError(Throwable::printStackTrace)
                 .doAfterTerminate(this::pollMessages)
                 .subscribe();
-    }
-
-    private String getString(Buffer value) {
-        return value != null ? value.toString() : null;
     }
 }

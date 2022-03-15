@@ -14,7 +14,7 @@ public class DesignUpdateRequestedOutputMapper implements MessageMapper<DesignUp
     }
 
     @Override
-    public OutputMessage transform(Tracing trace, DesignUpdateRequested event) {
+    public OutputMessage transform(DesignUpdateRequested event, Tracing trace) {
         return new OutputMessage(
                 event.getDesignId().toString(),
                 new Payload(

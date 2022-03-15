@@ -8,14 +8,23 @@ module com.nextbreakpoint.blueprint.designs.query {
     requires io.vertx.web;
     requires io.vertx.web.openapi;
     requires io.vertx.metrics.micrometer;
-    requires io.vertx.tracing.opentracing;
     requires io.vertx.client.kafka;
+    requires io.vertx.tracing.opentelemetry;
+    requires io.opentelemetry.semconv;
+    requires io.opentelemetry.context;
+    requires io.opentelemetry.api;
+    requires io.opentelemetry.sdk;
+    requires io.opentelemetry.sdk.trace;
+    requires io.opentelemetry.sdk.common;
+    requires io.opentelemetry.exporter.jaeger;
+    requires io.opentelemetry.exporter.otlp.trace;
     requires vertx.rx.java;
     requires rxjava;
     requires com.fasterxml.jackson.core;
     requires com.fasterxml.jackson.databind;
     requires com.fasterxml.jackson.datatype.jsr310;
     requires org.apache.logging.log4j;
+    requires org.apache.httpcomponents.httpcore;
     requires jakarta.json;
     requires java.sql;
     requires java.desktop;
@@ -27,6 +36,5 @@ module com.nextbreakpoint.blueprint.designs.query {
     requires elasticsearch.rest.client;
     requires elasticsearch.java;
     requires static lombok;
-    requires org.apache.httpcomponents.httpcore;
     opens com.nextbreakpoint.blueprint.designs.model to com.fasterxml.jackson.databind;
 }

@@ -5,23 +5,18 @@ import com.jayway.restassured.http.ContentType;
 import com.nextbreakpoint.blueprint.common.core.*;
 import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
 import com.nextbreakpoint.blueprint.common.events.mappers.TileRenderRequestedOutputMapper;
-import com.nextbreakpoint.blueprint.designs.operations.validate.ValidateDesignResponse;
-import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.*;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.UUID;
 
 import static com.jayway.restassured.RestAssured.given;
 import static com.nextbreakpoint.blueprint.common.core.Headers.AUTHORIZATION;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.in;
 
 @Tag("docker")
 @Tag("integration")
@@ -55,23 +50,23 @@ public class IntegrationTests {
 
         final TileRenderRequested tileRenderRequested1 = new TileRenderRequested(designId1, TestConstants.REVISION_0, Checksum.of(TestConstants.JSON_1), TestConstants.JSON_1, 0, 0, 0);
 
-        final OutputMessage tileRenderRequestedMessage1 = new TileRenderRequestedOutputMapper(TestConstants.MESSAGE_SOURCE, TestUtils::createRenderKey).transform(Tracing.of(UUID.randomUUID()), tileRenderRequested1);
+        final OutputMessage tileRenderRequestedMessage1 = new TileRenderRequestedOutputMapper(TestConstants.MESSAGE_SOURCE, TestUtils::createRenderKey).transform(tileRenderRequested1, TestConstants.TRACING);
 
         final TileRenderRequested tileRenderRequested2 = new TileRenderRequested(designId2, TestConstants.REVISION_1, Checksum.of(TestConstants.JSON_2), TestConstants.JSON_2, 4, 1, 2);
 
-        final OutputMessage tileRenderRequestedMessage2 = new TileRenderRequestedOutputMapper(TestConstants.MESSAGE_SOURCE, TestUtils::createRenderKey).transform(Tracing.of(UUID.randomUUID()), tileRenderRequested2);
+        final OutputMessage tileRenderRequestedMessage2 = new TileRenderRequestedOutputMapper(TestConstants.MESSAGE_SOURCE, TestUtils::createRenderKey).transform(tileRenderRequested2, TestConstants.TRACING);
 
         final TileRenderRequested tileRenderRequested3 = new TileRenderRequested(designId3, TestConstants.REVISION_1, Checksum.of(TestConstants.JSON_2), TestConstants.JSON_2, 5, 1, 2);
 
-        final OutputMessage tileRenderRequestedMessage3 = new TileRenderRequestedOutputMapper(TestConstants.MESSAGE_SOURCE, TestUtils::createRenderKey).transform(Tracing.of(UUID.randomUUID()), tileRenderRequested3);
+        final OutputMessage tileRenderRequestedMessage3 = new TileRenderRequestedOutputMapper(TestConstants.MESSAGE_SOURCE, TestUtils::createRenderKey).transform(tileRenderRequested3, TestConstants.TRACING);
 
         final TileRenderRequested tileRenderRequested4 = new TileRenderRequested(designId4, TestConstants.REVISION_1, Checksum.of(TestConstants.JSON_2), TestConstants.JSON_2, 6, 1, 2);
 
-        final OutputMessage tileRenderRequestedMessage4 = new TileRenderRequestedOutputMapper(TestConstants.MESSAGE_SOURCE, TestUtils::createRenderKey).transform(Tracing.of(UUID.randomUUID()), tileRenderRequested4);
+        final OutputMessage tileRenderRequestedMessage4 = new TileRenderRequestedOutputMapper(TestConstants.MESSAGE_SOURCE, TestUtils::createRenderKey).transform(tileRenderRequested4, TestConstants.TRACING);
 
         final TileRenderRequested tileRenderRequested5 = new TileRenderRequested(designId5, TestConstants.REVISION_1, Checksum.of(TestConstants.JSON_2), TestConstants.JSON_2, 7, 1, 2);
 
-        final OutputMessage tileRenderRequestedMessage5 = new TileRenderRequestedOutputMapper(TestConstants.MESSAGE_SOURCE, TestUtils::createRenderKey).transform(Tracing.of(UUID.randomUUID()), tileRenderRequested5);
+        final OutputMessage tileRenderRequestedMessage5 = new TileRenderRequestedOutputMapper(TestConstants.MESSAGE_SOURCE, TestUtils::createRenderKey).transform(tileRenderRequested5, TestConstants.TRACING);
 
         final List<OutputMessage> messages = List.of(tileRenderRequestedMessage1, tileRenderRequestedMessage2, tileRenderRequestedMessage3, tileRenderRequestedMessage4, tileRenderRequestedMessage5);
 

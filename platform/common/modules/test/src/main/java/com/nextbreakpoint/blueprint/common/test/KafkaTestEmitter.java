@@ -7,8 +7,8 @@ import io.vertx.rxjava.kafka.client.producer.KafkaProducer;
 import io.vertx.rxjava.kafka.client.producer.KafkaProducerRecord;
 import rx.schedulers.Schedulers;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class KafkaTestEmitter {
     private KafkaProducer<String, String> kafkaProducer;
@@ -50,10 +50,7 @@ public class KafkaTestEmitter {
     }
 
     private List<KafkaHeader> makeHeaders(OutputMessage message) {
-        return message.getTrace().toHeaders().entrySet().stream()
-                .map(e -> KafkaHeader.header(e.getKey(), e.getValue()))
-//                .peek(header -> System.out.println("header: " + header.key() + "=" + header.value()))
-                .collect(Collectors.toList());
+        return new ArrayList<>();
     }
 
     public String getTopicName() {

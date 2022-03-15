@@ -13,7 +13,6 @@ import au.com.dius.pact.provider.junitsupport.loader.PactBroker;
 import com.nextbreakpoint.blueprint.common.core.Json;
 import com.nextbreakpoint.blueprint.common.core.KafkaRecord;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
-import com.nextbreakpoint.blueprint.common.core.Tracing;
 import com.nextbreakpoint.blueprint.common.events.DesignDocumentDeleteCompleted;
 import com.nextbreakpoint.blueprint.common.events.DesignDocumentUpdateCompleted;
 import com.nextbreakpoint.blueprint.common.events.mappers.DesignDocumentDeleteCompletedOutputMapper;
@@ -25,7 +24,6 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import java.util.HashMap;
 import java.util.UUID;
 
 @Tag("docker")
@@ -83,16 +81,16 @@ public class VerifyNotifyPact {
     private String produceDesignDocumentUpdateCompleted(UUID uuid) {
         final DesignDocumentUpdateCompleted designDocumentUpdateCompleted = new DesignDocumentUpdateCompleted(uuid, TestConstants.REVISION_0);
 
-        final OutputMessage designDocumentUpdateCompletedMessage = new DesignDocumentUpdateCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designDocumentUpdateCompleted, TestConstants.TRACING);
+        final OutputMessage designDocumentUpdateCompletedMessage = new DesignDocumentUpdateCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designDocumentUpdateCompleted);
 
-        return Json.encodeValue(new KafkaRecord(designDocumentUpdateCompletedMessage.getKey(), PayloadUtils.payloadToMap(designDocumentUpdateCompletedMessage.getValue()), new HashMap<>()));
+        return Json.encodeValue(new KafkaRecord(designDocumentUpdateCompletedMessage.getKey(), PayloadUtils.payloadToMap(designDocumentUpdateCompletedMessage.getValue())));
     }
 
     private String produceDesignDocumentDeleteCompleted(UUID uuid) {
         final DesignDocumentDeleteCompleted designDocumentDeleteCompleted = new DesignDocumentDeleteCompleted(uuid, TestConstants.REVISION_0);
 
-        final OutputMessage designDocumentDeleteCompletedMessage = new DesignDocumentDeleteCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designDocumentDeleteCompleted, TestConstants.TRACING);
+        final OutputMessage designDocumentDeleteCompletedMessage = new DesignDocumentDeleteCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designDocumentDeleteCompleted);
 
-        return Json.encodeValue(new KafkaRecord(designDocumentDeleteCompletedMessage.getKey(), PayloadUtils.payloadToMap(designDocumentDeleteCompletedMessage.getValue()), new HashMap<>()));
+        return Json.encodeValue(new KafkaRecord(designDocumentDeleteCompletedMessage.getKey(), PayloadUtils.payloadToMap(designDocumentDeleteCompletedMessage.getValue())));
     }
 }

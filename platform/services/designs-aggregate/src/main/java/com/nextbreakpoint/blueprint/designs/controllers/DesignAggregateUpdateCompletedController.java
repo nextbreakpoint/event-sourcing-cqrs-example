@@ -32,28 +32,28 @@ public class DesignAggregateUpdateCompletedController implements Controller<Inpu
     public Single<Void> onNext(InputMessage message) {
         return Single.just(message)
                 .map(inputMapper::transform)
-                .flatMapObservable(event -> onAggregateUpdateCompleted(event, message.getTrace()))
+                .flatMapObservable(this::onAggregateUpdateCompleted)
                 .ignoreElements()
                 .toCompletable()
                 .toSingleDefault("")
                 .map(result -> null);
     }
 
-    private Observable<Void> onAggregateUpdateCompleted(DesignAggregateUpdateCompleted event, Tracing trace) {
-        return "DELETED".equalsIgnoreCase(event.getStatus()) ? onDelete(event, trace) : onUpdate(event, trace);
+    private Observable<Void> onAggregateUpdateCompleted(DesignAggregateUpdateCompleted event) {
+        return "DELETED".equalsIgnoreCase(event.getStatus()) ? onDelete(event) : onUpdate(event);
     }
 
-    private Observable<Void> onDelete(DesignAggregateUpdateCompleted event, Tracing trace) {
+    private Observable<Void> onDelete(DesignAggregateUpdateCompleted event) {
         return generateEvents(event)
-                .map(newEvent -> deleteOutputMapper.transform(newEvent, trace))
+                .map(deleteOutputMapper::transform)
                 .flatMapSingle(deleteEmitter::send);
     }
 
-    private Observable<Void> onUpdate(DesignAggregateUpdateCompleted event, Tracing trace) {
+    private Observable<Void> onUpdate(DesignAggregateUpdateCompleted event) {
         return generateTiles(event.getLevels())
                 .buffer(16)
                 .map(tiles -> createEvent(event, tiles))
-                .map(newEvent -> updateOutputMapper.transform(newEvent, trace))
+                .map(updateOutputMapper::transform)
                 .flatMapSingle(updateEmitter::send);
     }
 

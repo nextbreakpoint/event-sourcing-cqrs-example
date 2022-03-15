@@ -35,7 +35,7 @@ public class DesignDocumentUpdateRequestedController implements Controller<Input
         return Single.just(message)
                 .map(inputMapper::transform)
                 .flatMapObservable(this::onDesignDocumentUpdateRequested)
-                .map(event -> outputMapper.transform(event, message.getTrace()))
+                .map(outputMapper::transform)
                 .flatMapSingle(emitter::send)
                 .ignoreElements()
                 .toCompletable()

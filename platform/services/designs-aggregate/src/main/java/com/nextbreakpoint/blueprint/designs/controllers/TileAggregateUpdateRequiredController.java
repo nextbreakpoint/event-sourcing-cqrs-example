@@ -25,7 +25,7 @@ public class TileAggregateUpdateRequiredController implements Controller<InputMe
         return Single.just(message)
                 .map(inputMapper::transform)
                 .flatMap(this::onAggregateUpdateRequired)
-                .map(event -> outputMapper.transform(event, message.getTrace()))
+                .map(outputMapper::transform)
                 .flatMap(emitter::send);
     }
 

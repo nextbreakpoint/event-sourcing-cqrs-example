@@ -35,7 +35,7 @@ public class DeleteDesignController implements Controller<DeleteDesignRequest, D
                 .flatMap(tracing -> Single.just(request)
                         .map(this.inputMapper::transform)
                         .doOnSuccess(command -> logger.info("Processing delete command " + command.getDesignId()))
-                        .map(event -> outputMapper.transform(event, tracing))
+                        .map(outputMapper::transform)
                         .flatMap(emitter::send)
                         .map(ignore -> new DeleteDesignResponse(request.getUuid(), ResultStatus.SUCCESS))
                         .doOnError(err -> logger.info("Can't process delete command", err))

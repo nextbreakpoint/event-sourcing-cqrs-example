@@ -19,7 +19,6 @@ import com.nextbreakpoint.blueprint.common.test.PayloadUtils;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import java.util.HashMap;
 import java.util.UUID;
 
 @Tag("docker")
@@ -82,8 +81,8 @@ public class VerifyAggregatePact {
     private String produceTileRenderCompleted(UUID uuid, int level, int row, int col, String checksum, String status) {
         final TileRenderCompleted tileRenderCompleted = new TileRenderCompleted(uuid, TestConstants.REVISION_0, checksum, level, row, col, status);
 
-        final OutputMessage tileRenderCompletedMessage = new TileRenderCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(tileRenderCompleted, TestConstants.TRACING);
+        final OutputMessage tileRenderCompletedMessage = new TileRenderCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(tileRenderCompleted);
 
-        return Json.encodeValue(new KafkaRecord(tileRenderCompletedMessage.getKey(), PayloadUtils.payloadToMap(tileRenderCompletedMessage.getValue()), new HashMap<>()));
+        return Json.encodeValue(new KafkaRecord(tileRenderCompletedMessage.getKey(), PayloadUtils.payloadToMap(tileRenderCompletedMessage.getValue())));
     }
 }

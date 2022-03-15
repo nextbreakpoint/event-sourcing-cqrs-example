@@ -54,7 +54,7 @@ public class TestUtils {
     @NotNull
     public static OutputMessage toOutputMessage(Message message) {
         final KafkaRecord kafkaRecord = Json.decodeValue(message.contentsAsString(), KafkaRecord.class);
-        return OutputMessage.from(kafkaRecord.getKey(), PayloadUtils.mapToPayload(kafkaRecord.getValue()), Tracing.from(kafkaRecord.getHeaders()));
+        return OutputMessage.from(kafkaRecord.getKey(), PayloadUtils.mapToPayload(kafkaRecord.getValue()));
     }
 
     @NotNull

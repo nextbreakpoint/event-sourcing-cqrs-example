@@ -25,7 +25,6 @@ import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.net.MalformedURLException;
-import java.util.HashMap;
 import java.util.UUID;
 
 @Tag("docker")
@@ -88,24 +87,24 @@ public class VerifyAggregatePact {
     private String produceDesignInsertRequested(UUID designId, String data, int levels) {
         final DesignInsertRequested designInsertRequested = new DesignInsertRequested(designId, TestConstants.USER_ID, TimeUUID.next(), data, levels);
 
-        final OutputMessage designInsertRequestedMessage = new DesignInsertRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designInsertRequested, TestConstants.TRACING);
+        final OutputMessage designInsertRequestedMessage = new DesignInsertRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designInsertRequested);
 
-        return Json.encodeValue(new KafkaRecord(designInsertRequestedMessage.getKey(), PayloadUtils.payloadToMap(designInsertRequestedMessage.getValue()), new HashMap<>()));
+        return Json.encodeValue(new KafkaRecord(designInsertRequestedMessage.getKey(), PayloadUtils.payloadToMap(designInsertRequestedMessage.getValue())));
     }
 
     private String produceDesignUpdateRequested(UUID designId, String data, int levels) {
         final DesignUpdateRequested designUpdateRequested = new DesignUpdateRequested(designId, TestConstants.USER_ID, TimeUUID.next(), data, levels);
 
-        final OutputMessage designUpdateRequestedMessage = new DesignUpdateRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designUpdateRequested, TestConstants.TRACING);
+        final OutputMessage designUpdateRequestedMessage = new DesignUpdateRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designUpdateRequested);
 
-        return Json.encodeValue(new KafkaRecord(designUpdateRequestedMessage.getKey(), PayloadUtils.payloadToMap(designUpdateRequestedMessage.getValue()), new HashMap<>()));
+        return Json.encodeValue(new KafkaRecord(designUpdateRequestedMessage.getKey(), PayloadUtils.payloadToMap(designUpdateRequestedMessage.getValue())));
     }
 
     private String produceDesignDeleteRequested(UUID designId) {
         final DesignDeleteRequested designDeleteRequested = new DesignDeleteRequested(designId, TestConstants.USER_ID, TimeUUID.next());
 
-        final OutputMessage designDeleteRequestedMessage = new DesignDeleteRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designDeleteRequested, TestConstants.TRACING);
+        final OutputMessage designDeleteRequestedMessage = new DesignDeleteRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designDeleteRequested);
 
-        return Json.encodeValue(new KafkaRecord(designDeleteRequestedMessage.getKey(), PayloadUtils.payloadToMap(designDeleteRequestedMessage.getValue()), new HashMap<>()));
+        return Json.encodeValue(new KafkaRecord(designDeleteRequestedMessage.getKey(), PayloadUtils.payloadToMap(designDeleteRequestedMessage.getValue())));
     }
 }

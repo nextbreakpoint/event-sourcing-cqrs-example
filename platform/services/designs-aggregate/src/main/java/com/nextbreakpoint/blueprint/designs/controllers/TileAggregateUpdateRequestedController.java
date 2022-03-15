@@ -29,7 +29,7 @@ public class TileAggregateUpdateRequestedController implements Controller<InputM
         return Single.just(message)
                 .map(inputMapper::transform)
                 .flatMap(this::onAggregateUpdateRequested)
-                .map(event -> outputMapper.transform(event, message.getTrace()))
+                .map(outputMapper::transform)
                 .flatMap(emitter::send);
 //                .toCompletable()
 //                .toSingleDefault("")

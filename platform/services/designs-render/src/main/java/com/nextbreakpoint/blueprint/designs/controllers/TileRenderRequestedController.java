@@ -41,7 +41,7 @@ public class TileRenderRequestedController implements Controller<InputMessage, V
         return Single.just(message)
                 .map(inputMapper::transform)
                 .flatMap(this::onTileRenderRequested)
-                .map(event -> outputMapper.transform(event, message.getTrace()))
+                .map(outputMapper::transform)
                 .flatMap(emitter::send);
     }
 

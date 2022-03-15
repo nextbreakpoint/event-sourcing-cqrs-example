@@ -14,7 +14,7 @@ public class DesignInsertRequestedOutputMapper implements MessageMapper<DesignIn
     }
 
     @Override
-    public OutputMessage transform(DesignInsertRequested event, Tracing trace) {
+    public OutputMessage transform(DesignInsertRequested event) {
         return new OutputMessage(
                 event.getDesignId().toString(),
                 new Payload(
@@ -22,8 +22,7 @@ public class DesignInsertRequestedOutputMapper implements MessageMapper<DesignIn
                         DesignInsertRequested.TYPE,
                         Json.encodeValue(event),
                         messageSource
-                ),
-                trace
+                )
         );
     }
 }

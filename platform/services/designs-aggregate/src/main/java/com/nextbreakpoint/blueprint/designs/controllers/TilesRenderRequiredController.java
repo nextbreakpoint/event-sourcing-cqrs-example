@@ -30,28 +30,28 @@ public class TilesRenderRequiredController implements Controller<InputMessage, V
     public Single<Void> onNext(InputMessage message) {
         return Single.just(message)
                 .map(inputMapper::transform)
-                .flatMapObservable(event -> onTilesRenderRequiredCompleted(event, message.getTrace()))
+                .flatMapObservable(this::onTilesRenderRequiredCompleted)
                 .ignoreElements()
                 .toCompletable()
                 .toSingleDefault("")
                 .map(result -> null);
     }
 
-    private Observable<Void> onTilesRenderRequiredCompleted(TilesRenderRequired event, Tracing trace) {
-        return createAbortEvents(event, trace).concatWith(createRenderEvents(event, trace));
+    private Observable<Void> onTilesRenderRequiredCompleted(TilesRenderRequired event) {
+        return createAbortEvents(event).concatWith(createRenderEvents(event));
     }
 
-    private Observable<Void> createRenderEvents(TilesRenderRequired event, Tracing trace) {
+    private Observable<Void> createRenderEvents(TilesRenderRequired event) {
         return Observable.from(event.getTiles())
                 .map(tile -> createRenderEvent(event, tile))
-                .flatMapSingle(renderEvent -> renderEmitter.send(renderOutputMapper.transform(renderEvent, trace), makeRenderTopicName(renderEvent)));
+                .flatMapSingle(renderEvent -> renderEmitter.send(renderOutputMapper.transform(renderEvent), makeRenderTopicName(renderEvent)));
     }
 
     private String makeRenderTopicName(TileRenderRequested renderEvent) {
         return renderEvent.getLevel() < 4 ? renderEmitter.getTopicName() + "-0" : renderEmitter.getTopicName() + "-" + (renderEvent.getLevel() - 3);
     }
 
-    private Observable<Void> createAbortEvents(TilesRenderRequired event, Tracing trace) {
+    private Observable<Void> createAbortEvents(TilesRenderRequired event) {
         return Observable.from(event.getTiles())
                 .map(tile -> createAbortEvent(event, tile))
                 .map(this::createTombstone)

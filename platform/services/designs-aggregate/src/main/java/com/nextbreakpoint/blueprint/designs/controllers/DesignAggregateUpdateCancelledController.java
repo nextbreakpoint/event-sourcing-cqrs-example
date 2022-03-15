@@ -34,7 +34,7 @@ public class DesignAggregateUpdateCancelledController implements Controller<Inpu
         return Single.just(message)
                 .map(inputMapper::transform)
                 .flatMapObservable(this::onTileRenderAborted)
-                .map(event -> outputMapper.transform(event, message.getTrace()))
+                .map(outputMapper::transform)
                 .flatMapSingle(emitter::send)
                 .ignoreElements()
                 .toCompletable()

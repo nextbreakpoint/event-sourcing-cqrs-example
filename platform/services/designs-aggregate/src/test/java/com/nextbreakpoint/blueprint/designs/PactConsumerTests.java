@@ -58,14 +58,9 @@ public class PactConsumerTests {
                 .stringValue("type", TestConstants.DESIGN_INSERT_REQUESTED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
 
-        PactDslJsonBody trace1 = new PactDslJsonBody()
-                .stringMatcher("X-TRACE-ID", TestConstants.TRACE_ID_REGEXP)
-                .stringMatcher("X-SPAN-ID", TestConstants.SPAN_ID_REGEXP);
-
         PactDslJsonBody message1 = new PactDslJsonBody()
                 .stringValue("key", uuid.toString())
-                .object("value", payload1)
-                .object("headers", trace1);
+                .object("value", payload1);
 
         return builder
                 .given("kafka topic exists")
@@ -91,14 +86,9 @@ public class PactConsumerTests {
                 .stringValue("type", TestConstants.DESIGN_INSERT_REQUESTED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
 
-        PactDslJsonBody trace1 = new PactDslJsonBody()
-                .stringMatcher("X-TRACE-ID", TestConstants.TRACE_ID_REGEXP)
-                .stringMatcher("X-SPAN-ID", TestConstants.SPAN_ID_REGEXP);
-
         PactDslJsonBody message1 = new PactDslJsonBody()
                 .stringValue("key", uuid.toString())
-                .object("value", payload1)
-                .object("headers", trace1);
+                .object("value", payload1);
 
         PactDslJsonBody event2 = new PactDslJsonBody()
                 .uuid("designId", uuid)
@@ -106,10 +96,6 @@ public class PactConsumerTests {
                 .stringMatcher("commandId", TestConstants.UUID6_REGEXP)
                 .stringValue("data", TestConstants.JSON_2)
                 .numberValue("levels", TestConstants.LEVELS);
-
-        PactDslJsonBody trace2 = new PactDslJsonBody()
-                .stringMatcher("X-TRACE-ID", TestConstants.TRACE_ID_REGEXP)
-                .stringMatcher("X-SPAN-ID", TestConstants.SPAN_ID_REGEXP);
 
         PactDslJsonBody payload2 = new PactDslJsonBody()
                 .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
@@ -119,8 +105,7 @@ public class PactConsumerTests {
 
         PactDslJsonBody message2 = new PactDslJsonBody()
                 .stringValue("key", uuid.toString())
-                .object("value", payload2)
-                .object("headers", trace2);
+                .object("value", payload2);
 
         return builder
                 .given("kafka topic exists")
@@ -148,14 +133,9 @@ public class PactConsumerTests {
                 .stringValue("type", TestConstants.DESIGN_INSERT_REQUESTED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
 
-        PactDslJsonBody trace1 = new PactDslJsonBody()
-                .stringMatcher("X-TRACE-ID", TestConstants.TRACE_ID_REGEXP)
-                .stringMatcher("X-SPAN-ID", TestConstants.SPAN_ID_REGEXP);
-
         PactDslJsonBody message1 = new PactDslJsonBody()
                 .stringValue("key", uuid.toString())
-                .object("value", payload1)
-                .object("headers", trace1);
+                .object("value", payload1);
 
         PactDslJsonBody event2 = new PactDslJsonBody()
                 .uuid("designId", uuid)
@@ -168,14 +148,9 @@ public class PactConsumerTests {
                 .stringValue("type", TestConstants.DESIGN_DELETE_REQUESTED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
 
-        PactDslJsonBody trace2 = new PactDslJsonBody()
-                .stringMatcher("X-TRACE-ID", TestConstants.TRACE_ID_REGEXP)
-                .stringMatcher("X-SPAN-ID", TestConstants.SPAN_ID_REGEXP);
-
         PactDslJsonBody message2 = new PactDslJsonBody()
                 .stringValue("key", uuid.toString())
-                .object("value", payload2)
-                .object("headers", trace2);
+                .object("value", payload2);
 
         return builder
                 .given("kafka topic exists")
@@ -205,14 +180,9 @@ public class PactConsumerTests {
                 .stringValue("type", TestConstants.TILE_RENDER_COMPLETED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
 
-        PactDslJsonBody trace1 = new PactDslJsonBody()
-                .stringMatcher("X-TRACE-ID", TestConstants.TRACE_ID_REGEXP)
-                .stringMatcher("X-SPAN-ID", TestConstants.SPAN_ID_REGEXP);
-
         PactDslJsonBody message1 = new PactDslJsonBody()
                 .stringValue("key", uuid.toString())
-                .object("value", payload1)
-                .object("headers", trace1);
+                .object("value", payload1);
 
         PactDslJsonBody event2 = new PactDslJsonBody()
                 .uuid("designId", uuid)
@@ -229,14 +199,9 @@ public class PactConsumerTests {
                 .stringValue("type", TestConstants.TILE_RENDER_COMPLETED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
 
-        PactDslJsonBody trace2 = new PactDslJsonBody()
-                .stringMatcher("X-TRACE-ID", TestConstants.TRACE_ID_REGEXP)
-                .stringMatcher("X-SPAN-ID", TestConstants.SPAN_ID_REGEXP);
-
         PactDslJsonBody message2 = new PactDslJsonBody()
                 .stringValue("key", uuid.toString())
-                .object("value", payload2)
-                .object("headers", trace2);
+                .object("value", payload2);
 
         PactDslJsonBody event3 = new PactDslJsonBody()
                 .uuid("designId", uuid)
@@ -253,14 +218,9 @@ public class PactConsumerTests {
                 .stringValue("type", TestConstants.TILE_RENDER_COMPLETED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
 
-        PactDslJsonBody trace3 = new PactDslJsonBody()
-                .stringMatcher("X-TRACE-ID", TestConstants.TRACE_ID_REGEXP)
-                .stringMatcher("X-SPAN-ID", TestConstants.SPAN_ID_REGEXP);
-
         PactDslJsonBody message3 = new PactDslJsonBody()
                 .stringValue("key", uuid.toString())
-                .object("value", payload3)
-                .object("headers", trace3);
+                .object("value", payload3);
 
         PactDslJsonBody event4 = new PactDslJsonBody()
                 .uuid("designId", uuid)
@@ -277,14 +237,9 @@ public class PactConsumerTests {
                 .stringValue("type", TestConstants.TILE_RENDER_COMPLETED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
 
-        PactDslJsonBody trace4 = new PactDslJsonBody()
-                .stringMatcher("X-TRACE-ID", TestConstants.TRACE_ID_REGEXP)
-                .stringMatcher("X-SPAN-ID", TestConstants.SPAN_ID_REGEXP);
-
         PactDslJsonBody message4 = new PactDslJsonBody()
                 .stringValue("key", uuid.toString())
-                .object("value", payload4)
-                .object("headers", trace4);
+                .object("value", payload4);
 
         PactDslJsonBody event5 = new PactDslJsonBody()
                 .uuid("designId", uuid)
@@ -301,14 +256,9 @@ public class PactConsumerTests {
                 .stringValue("type", TestConstants.TILE_RENDER_COMPLETED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
 
-        PactDslJsonBody trace5 = new PactDslJsonBody()
-                .stringMatcher("X-TRACE-ID", TestConstants.TRACE_ID_REGEXP)
-                .stringMatcher("X-SPAN-ID", TestConstants.SPAN_ID_REGEXP);
-
         PactDslJsonBody message5 = new PactDslJsonBody()
                 .stringValue("key", uuid.toString())
-                .object("value", payload5)
-                .object("headers", trace5);
+                .object("value", payload5);
 
         return builder.given("kafka topic exists")
                 .expectsToReceive("tile render completed with status FAILED for tile 0/00000000.png of design 00000000-0000-0000-0000-000000000004 with checksum 1")
@@ -367,7 +317,7 @@ public class PactConsumerTests {
 
         final DesignInsertRequested designInsertRequested = new DesignInsertRequested(new UUID(0L, 4L), TestConstants.USER_ID, UUID.randomUUID(), TestConstants.JSON_1, TestConstants.LEVELS);
 
-        final OutputMessage designInsertRequestedMessage = new DesignInsertRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designInsertRequested, TestConstants.TRACING);
+        final OutputMessage designInsertRequestedMessage = new DesignInsertRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designInsertRequested);
 
         final OutputMessage tileRenderCompletedMessage1 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getMessages().get(0)));
         final OutputMessage tileRenderCompletedMessage2 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getMessages().get(1)));

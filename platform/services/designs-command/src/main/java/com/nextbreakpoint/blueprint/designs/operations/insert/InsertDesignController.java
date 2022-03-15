@@ -35,7 +35,7 @@ public class InsertDesignController implements Controller<InsertDesignRequest, I
                 .flatMap(tracing -> Single.just(request)
                         .map(this.inputMapper::transform)
                         .doOnSuccess(command -> logger.info("Processing insert command " + command.getDesignId()))
-                        .map(event -> outputMapper.transform(event, tracing))
+                        .map(outputMapper::transform)
                         .flatMap(emitter::send)
                         .map(ignore -> new InsertDesignResponse(request.getUuid(), ResultStatus.SUCCESS))
                         .doOnError(err -> logger.info("Can't process insert command", err))

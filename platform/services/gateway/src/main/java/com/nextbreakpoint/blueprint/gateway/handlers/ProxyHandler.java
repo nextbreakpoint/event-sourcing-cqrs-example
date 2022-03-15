@@ -34,12 +34,10 @@ public class ProxyHandler implements Handler<RoutingContext> {
     private void handle(RoutingContext context, Buffer buffer) {
         final HttpServerRequest request = context.request();
         final HttpServerResponse response = context.response();
-        final String traceId = context.get("request-trace-id");
 
         client.rxRequest(request.method(), request.uri())
                 .flatMap(proxyRequest -> {
                     proxyRequest.headers().addAll(request.headers());
-                    proxyRequest.putHeader("X-TRACE-ID", traceId);
                     return proxyRequest.rxSend(buffer)
                             .flatMap(proxyResponse -> {
                                 response.headers().addAll(proxyResponse.headers());

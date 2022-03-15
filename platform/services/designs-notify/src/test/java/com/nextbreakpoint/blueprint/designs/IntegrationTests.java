@@ -35,9 +35,9 @@ public class IntegrationTests {
 
         final DesignDocumentUpdateCompleted designDocumentUpdateCompleted2 = new DesignDocumentUpdateCompleted(designId2, TestConstants.REVISION_0);
 
-        final OutputMessage designDocumentUpdateCompletedMessage1 = new DesignDocumentUpdateCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designDocumentUpdateCompleted1, TestConstants.TRACING);
+        final OutputMessage designDocumentUpdateCompletedMessage1 = new DesignDocumentUpdateCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designDocumentUpdateCompleted1);
 
-        final OutputMessage designDocumentUpdateCompletedMessage2 = new DesignDocumentUpdateCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designDocumentUpdateCompleted2, TestConstants.TRACING);
+        final OutputMessage designDocumentUpdateCompletedMessage2 = new DesignDocumentUpdateCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designDocumentUpdateCompleted2);
 
         testCases.shouldNotifyWatchersOfAllResourcesWhenReceivingAnEvent(List.of(designDocumentUpdateCompletedMessage1, designDocumentUpdateCompletedMessage2));
     }
@@ -53,9 +53,9 @@ public class IntegrationTests {
 
         final DesignDocumentUpdateCompleted designDocumentUpdateCompleted2 = new DesignDocumentUpdateCompleted(designId2, TestConstants.REVISION_0);
 
-        final OutputMessage designDocumentUpdateCompletedMessage1 = new DesignDocumentUpdateCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designDocumentUpdateCompleted1, TestConstants.TRACING);
+        final OutputMessage designDocumentUpdateCompletedMessage1 = new DesignDocumentUpdateCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designDocumentUpdateCompleted1);
 
-        final OutputMessage designDocumentUpdateCompletedMessage2 = new DesignDocumentUpdateCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designDocumentUpdateCompleted2, TestConstants.TRACING);
+        final OutputMessage designDocumentUpdateCompletedMessage2 = new DesignDocumentUpdateCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designDocumentUpdateCompleted2);
 
         testCases.shouldNotifyWatchersOfSingleResourceWhenReceivingAnEvent(List.of(designDocumentUpdateCompletedMessage1, designDocumentUpdateCompletedMessage2));
     }

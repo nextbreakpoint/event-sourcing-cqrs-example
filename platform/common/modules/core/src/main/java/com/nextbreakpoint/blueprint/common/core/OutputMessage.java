@@ -12,21 +12,18 @@ import java.util.Objects;
 public class OutputMessage {
     private String key;
     private Payload value;
-    private Tracing trace;
 
     @JsonCreator
     public OutputMessage(
-        @JsonProperty("key") String key,
-        @JsonProperty("value") Payload value,
-        @JsonProperty("trace") Tracing trace
+            @JsonProperty("key") String key,
+            @JsonProperty("value") Payload value
     ) {
         this.key = Objects.requireNonNull(key);
         this.value = Objects.requireNonNull(value);
-        this.trace = Objects.requireNonNull(trace);
     }
 
-    public static OutputMessage from(String key, Payload value, Tracing trace) {
-        return new OutputMessage(key, value, trace);
+    public static OutputMessage from(String key, Payload value) {
+        return new OutputMessage(key, value);
     }
 
     @Override
@@ -34,7 +31,6 @@ public class OutputMessage {
         return "[" +
                 "key='" + key + '\'' +
                 ", value=" + value +
-                ", trace=" + trace +
                 "]";
     }
 }

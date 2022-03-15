@@ -23,7 +23,7 @@ public class TileRenderRequestedController implements Controller<InputMessage, V
     public Single<Void> onNext(InputMessage message) {
         return Single.just(message)
                 .map(inputMapper::transform)
-                .map(event -> outputMapper.transform(event, message.getTrace()))
+                .map(outputMapper::transform)
                 .flatMap(emitter::send);
     }
 }

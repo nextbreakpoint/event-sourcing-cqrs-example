@@ -14,7 +14,7 @@ public class TileAggregateUpdateRequiredOutputMapper implements MessageMapper<Ti
     }
 
     @Override
-    public OutputMessage transform(TileAggregateUpdateRequired event, Tracing trace) {
+    public OutputMessage transform(TileAggregateUpdateRequired event) {
         return new OutputMessage(
                 event.getDesignId().toString(),
                 new Payload(
@@ -22,8 +22,7 @@ public class TileAggregateUpdateRequiredOutputMapper implements MessageMapper<Ti
                         TileAggregateUpdateRequired.TYPE,
                         Json.encodeValue(event),
                         messageSource
-                ),
-                trace
+                )
         );
     }
 }

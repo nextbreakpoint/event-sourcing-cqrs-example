@@ -21,7 +21,7 @@ public class TileRenderRequestedOutputMapper implements MessageMapper<TileRender
     }
 
     @Override
-    public OutputMessage transform(TileRenderRequested event, Tracing trace) {
+    public OutputMessage transform(TileRenderRequested event) {
         return new OutputMessage(
                 keyMapper.apply(event),
                 new Payload(
@@ -29,8 +29,7 @@ public class TileRenderRequestedOutputMapper implements MessageMapper<TileRender
                         TileRenderRequested.TYPE,
                         Json.encodeValue(event),
                         messageSource
-                ),
-                trace
+                )
         );
     }
 }

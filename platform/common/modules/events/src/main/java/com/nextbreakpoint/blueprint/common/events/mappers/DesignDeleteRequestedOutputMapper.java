@@ -14,7 +14,7 @@ public class DesignDeleteRequestedOutputMapper implements MessageMapper<DesignDe
     }
 
     @Override
-    public OutputMessage transform(DesignDeleteRequested event, Tracing trace) {
+    public OutputMessage transform(DesignDeleteRequested event) {
         return new OutputMessage(
                 event.getDesignId().toString(),
                 new Payload(
@@ -22,8 +22,7 @@ public class DesignDeleteRequestedOutputMapper implements MessageMapper<DesignDe
                         DesignDeleteRequested.TYPE,
                         Json.encodeValue(event),
                         messageSource
-                ),
-                trace
+                )
         );
     }
 }

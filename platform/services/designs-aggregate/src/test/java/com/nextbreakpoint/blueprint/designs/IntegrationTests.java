@@ -38,7 +38,7 @@ public class IntegrationTests {
 
         final DesignInsertRequested designInsertRequested = new DesignInsertRequested(designId, TestConstants.USER_ID, TimeUUID.next(), TestConstants.JSON_1, TestConstants.LEVELS);
 
-        final OutputMessage designInsertRequestedMessage = new DesignInsertRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designInsertRequested, TestConstants.TRACING);
+        final OutputMessage designInsertRequestedMessage = new DesignInsertRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designInsertRequested);
 
         testCases.shouldUpdateTheDesignWhenReceivingADesignInsertRequestedMessage(designInsertRequestedMessage);
     }
@@ -50,11 +50,11 @@ public class IntegrationTests {
 
         final DesignInsertRequested designInsertRequested = new DesignInsertRequested(designId, TestConstants.USER_ID, TimeUUID.next(), TestConstants.JSON_1, TestConstants.LEVELS);
 
-        final OutputMessage designInsertRequestedMessage = new DesignInsertRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designInsertRequested, TestConstants.TRACING);
+        final OutputMessage designInsertRequestedMessage = new DesignInsertRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designInsertRequested);
 
         final DesignUpdateRequested designUpdateRequested = new DesignUpdateRequested(designId, TestConstants.USER_ID, TimeUUID.next(), TestConstants.JSON_2, TestConstants.LEVELS);
 
-        final OutputMessage designUpdateRequestedMessage = new DesignUpdateRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designUpdateRequested, TestConstants.TRACING);
+        final OutputMessage designUpdateRequestedMessage = new DesignUpdateRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designUpdateRequested);
 
         testCases.shouldUpdateTheDesignWhenReceivingADesignUpdateRequestedMessage(designInsertRequestedMessage, designUpdateRequestedMessage);
     }
@@ -66,11 +66,11 @@ public class IntegrationTests {
 
         final DesignInsertRequested designInsertRequested = new DesignInsertRequested(designId, TestConstants.USER_ID, TimeUUID.next(), TestConstants.JSON_1, TestConstants.LEVELS);
 
-        final OutputMessage designInsertRequestedMessage = new DesignInsertRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designInsertRequested, TestConstants.TRACING);
+        final OutputMessage designInsertRequestedMessage = new DesignInsertRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designInsertRequested);
 
         final DesignDeleteRequested designDeleteRequested = new DesignDeleteRequested(designId, TestConstants.USER_ID, TimeUUID.next());
 
-        final OutputMessage designDeleteRequestedMessage = new DesignDeleteRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designDeleteRequested, TestConstants.TRACING);
+        final OutputMessage designDeleteRequestedMessage = new DesignDeleteRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designDeleteRequested);
 
         testCases.shouldUpdateTheDesignWhenReceivingADesignDeleteRequestedMessage(designInsertRequestedMessage, designDeleteRequestedMessage);
     }
@@ -82,7 +82,7 @@ public class IntegrationTests {
 
         final DesignInsertRequested designInsertRequested = new DesignInsertRequested(designId, TestConstants.USER_ID, TimeUUID.next(), TestConstants.JSON_1, TestConstants.LEVELS);
 
-        final OutputMessage designInsertRequestedMessage = new DesignInsertRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designInsertRequested, TestConstants.TRACING);
+        final OutputMessage designInsertRequestedMessage = new DesignInsertRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designInsertRequested);
 
         final TileRenderCompleted tileRenderCompleted1 = new TileRenderCompleted(designId, TestConstants.REVISION_0, TestConstants.CHECKSUM_1, 0, 0, 0, "FAILED");
         final TileRenderCompleted tileRenderCompleted2 = new TileRenderCompleted(designId, TestConstants.REVISION_1, TestConstants.CHECKSUM_1, 1, 0, 0, "COMPLETED");
@@ -90,11 +90,11 @@ public class IntegrationTests {
         final TileRenderCompleted tileRenderCompleted4 = new TileRenderCompleted(designId, TestConstants.REVISION_3, TestConstants.CHECKSUM_1, 2, 2, 1, "COMPLETED");
         final TileRenderCompleted tileRenderCompleted5 = new TileRenderCompleted(designId, TestConstants.REVISION_4, TestConstants.CHECKSUM_1, 2, 3, 1, "FAILED");
 
-        final OutputMessage tileRenderCompletedMessage1 = new TileRenderCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(tileRenderCompleted1, TestConstants.TRACING);
-        final OutputMessage tileRenderCompletedMessage2 = new TileRenderCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(tileRenderCompleted2, TestConstants.TRACING);
-        final OutputMessage tileRenderCompletedMessage3 = new TileRenderCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(tileRenderCompleted3, TestConstants.TRACING);
-        final OutputMessage tileRenderCompletedMessage4 = new TileRenderCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(tileRenderCompleted4, TestConstants.TRACING);
-        final OutputMessage tileRenderCompletedMessage5 = new TileRenderCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(tileRenderCompleted5, TestConstants.TRACING);
+        final OutputMessage tileRenderCompletedMessage1 = new TileRenderCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(tileRenderCompleted1);
+        final OutputMessage tileRenderCompletedMessage2 = new TileRenderCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(tileRenderCompleted2);
+        final OutputMessage tileRenderCompletedMessage3 = new TileRenderCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(tileRenderCompleted3);
+        final OutputMessage tileRenderCompletedMessage4 = new TileRenderCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(tileRenderCompleted4);
+        final OutputMessage tileRenderCompletedMessage5 = new TileRenderCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(tileRenderCompleted5);
 
         final List<OutputMessage> tileRenderCompletedMessages = List.of(tileRenderCompletedMessage1, tileRenderCompletedMessage2, tileRenderCompletedMessage3, tileRenderCompletedMessage4, tileRenderCompletedMessage5);
 

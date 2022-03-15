@@ -14,7 +14,7 @@ public class DesignDocumentUpdateCompletedOutputMapper implements MessageMapper<
     }
 
     @Override
-    public OutputMessage transform(DesignDocumentUpdateCompleted event, Tracing trace) {
+    public OutputMessage transform(DesignDocumentUpdateCompleted event) {
         return new OutputMessage(
                 event.getDesignId().toString(),
                 new Payload(
@@ -22,8 +22,7 @@ public class DesignDocumentUpdateCompletedOutputMapper implements MessageMapper<
                         DesignDocumentUpdateCompleted.TYPE,
                         Json.encodeValue(event),
                         messageSource
-                ),
-                trace
+                )
         );
     }
 }

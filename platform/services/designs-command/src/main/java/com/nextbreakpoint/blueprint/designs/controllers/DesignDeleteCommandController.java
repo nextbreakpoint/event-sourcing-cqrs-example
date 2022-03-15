@@ -29,7 +29,7 @@ public class DesignDeleteCommandController implements Controller<InputMessage, V
                 .flatMap(this::onMessageReceived)
                 .map(inputMapper::transform)
                 .flatMap(this::onDesignDeleteRequested)
-                .map(event -> outputMapper.transform(event, message.getTrace()))
+                .map(outputMapper::transform)
                 .flatMap(emitter::send);
     }
 

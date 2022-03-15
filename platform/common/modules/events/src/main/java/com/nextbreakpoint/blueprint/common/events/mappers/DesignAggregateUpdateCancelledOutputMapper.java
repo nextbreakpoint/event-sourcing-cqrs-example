@@ -14,7 +14,7 @@ public class DesignAggregateUpdateCancelledOutputMapper implements MessageMapper
     }
 
     @Override
-    public OutputMessage transform(DesignAggregateUpdateCancelled event, Tracing trace) {
+    public OutputMessage transform(DesignAggregateUpdateCancelled event) {
         return new OutputMessage(
                 event.getDesignId().toString(),
                 new Payload(
@@ -22,8 +22,7 @@ public class DesignAggregateUpdateCancelledOutputMapper implements MessageMapper
                         DesignAggregateUpdateCancelled.TYPE,
                         Json.encodeValue(event),
                         messageSource
-                ),
-                trace
+                )
         );
     }
 }

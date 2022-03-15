@@ -29,7 +29,7 @@ public class DesignInsertCommandController implements Controller<InputMessage, V
                 .flatMap(this::onMessageReceived)
                 .map(inputMapper::transform)
                 .flatMap(this::onDesignInsertRequested)
-                .map(event -> outputMapper.transform(event, message.getTrace()))
+                .map(outputMapper::transform)
                 .flatMap(emitter::send);
     }
 

@@ -32,7 +32,7 @@ public class TileRenderCompletedController implements Controller<InputMessage, V
         return aggregate.appendMessage(message)
                 .map(result -> inputMapper.transform(message))
                 .map(event -> createEvent(event, message.getToken()))
-                .map(event -> outputMapper.transform(event, message.getTrace()))
+                .map(outputMapper::transform)
                 .flatMap(emitter::send);
     }
 

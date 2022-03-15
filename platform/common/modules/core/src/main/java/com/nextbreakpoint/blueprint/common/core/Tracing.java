@@ -6,7 +6,6 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 
-import java.util.Map;
 import java.util.Objects;
 
 @Data
@@ -29,13 +28,5 @@ public class Tracing {
                 .withTraceId(traceId)
                 .withSpanId(spanId)
                 .build();
-    }
-
-    public static Tracing from(Map<String, String> headers) {
-        return new Tracing(headers.get("X-TRACE-ID"), headers.get("X-SPAN-ID"));
-    }
-
-    public Map<String, String> toHeaders() {
-        return Map.of("X-TRACE-ID", traceId, "X-SPAN-ID", spanId);
     }
 }

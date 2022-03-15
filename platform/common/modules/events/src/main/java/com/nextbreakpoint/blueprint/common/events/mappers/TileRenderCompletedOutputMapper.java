@@ -14,7 +14,7 @@ public class TileRenderCompletedOutputMapper implements MessageMapper<TileRender
     }
 
     @Override
-    public OutputMessage transform(TileRenderCompleted event, Tracing trace) {
+    public OutputMessage transform(TileRenderCompleted event) {
         return new OutputMessage(
                 event.getDesignId().toString(),
                 new Payload(
@@ -22,8 +22,7 @@ public class TileRenderCompletedOutputMapper implements MessageMapper<TileRender
                         TileRenderCompleted.TYPE,
                         Json.encodeValue(event),
                         messageSource
-                ),
-                trace
+                )
         );
     }
 }

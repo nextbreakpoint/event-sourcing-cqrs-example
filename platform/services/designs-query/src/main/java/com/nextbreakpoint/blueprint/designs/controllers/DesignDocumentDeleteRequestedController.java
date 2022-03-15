@@ -30,7 +30,7 @@ public class DesignDocumentDeleteRequestedController implements Controller<Input
         return Single.just(message)
                 .map(inputMapper::transform)
                 .flatMapObservable(this::onDesignDocumentDeleteRequested)
-                .map(event -> outputMapper.transform(event, message.getTrace()))
+                .map(outputMapper::transform)
                 .flatMapSingle(emitter::send)
                 .ignoreElements()
                 .toCompletable()

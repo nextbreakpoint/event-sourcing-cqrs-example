@@ -1,10 +1,11 @@
 package com.nextbreakpoint.blueprint.designs.controllers;
 
 import com.nextbreakpoint.blueprint.common.core.*;
-import com.nextbreakpoint.blueprint.common.events.*;
+import com.nextbreakpoint.blueprint.common.events.DesignAggregateUpdateCompleted;
+import com.nextbreakpoint.blueprint.common.events.DesignDocumentDeleteRequested;
+import com.nextbreakpoint.blueprint.common.events.TilesRenderRequired;
 import com.nextbreakpoint.blueprint.common.vertx.Controller;
 import com.nextbreakpoint.blueprint.common.vertx.MessageEmitter;
-import com.nextbreakpoint.blueprint.common.core.Tile;
 import rx.Observable;
 import rx.Single;
 

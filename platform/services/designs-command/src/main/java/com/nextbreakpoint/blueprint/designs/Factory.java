@@ -1,7 +1,6 @@
 package com.nextbreakpoint.blueprint.designs;
 
 import com.nextbreakpoint.blueprint.common.commands.mappers.*;
-import com.nextbreakpoint.blueprint.common.vertx.RxSingleHandler;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.events.mappers.DesignDeleteRequestedOutputMapper;
 import com.nextbreakpoint.blueprint.common.events.mappers.DesignInsertRequestedOutputMapper;

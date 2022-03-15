@@ -2,14 +2,16 @@ package com.nextbreakpoint.blueprint.designs;
 
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.http.ContentType;
-import com.nextbreakpoint.blueprint.common.core.*;
+import com.nextbreakpoint.blueprint.common.core.Authority;
+import com.nextbreakpoint.blueprint.common.core.Checksum;
+import com.nextbreakpoint.blueprint.common.core.OutputMessage;
+import com.nextbreakpoint.blueprint.common.core.Tiles;
 import com.nextbreakpoint.blueprint.common.events.DesignDocumentDeleteRequested;
 import com.nextbreakpoint.blueprint.common.events.DesignDocumentUpdateRequested;
 import com.nextbreakpoint.blueprint.common.events.mappers.DesignDocumentDeleteRequestedOutputMapper;
 import com.nextbreakpoint.blueprint.common.events.mappers.DesignDocumentUpdateRequestedOutputMapper;
 import com.nextbreakpoint.blueprint.designs.model.Design;
 import com.nextbreakpoint.blueprint.designs.model.DesignDocument;
-import com.nextbreakpoint.blueprint.common.core.Tiles;
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.*;
 

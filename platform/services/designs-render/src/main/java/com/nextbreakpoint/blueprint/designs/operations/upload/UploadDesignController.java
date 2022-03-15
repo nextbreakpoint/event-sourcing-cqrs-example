@@ -2,7 +2,9 @@ package com.nextbreakpoint.blueprint.designs.operations.upload;
 
 import com.nextbreakpoint.blueprint.common.core.Json;
 import com.nextbreakpoint.blueprint.common.vertx.Controller;
-import com.nextbreakpoint.nextfractal.core.common.*;
+import com.nextbreakpoint.nextfractal.core.common.Bundle;
+import com.nextbreakpoint.nextfractal.core.common.FileManager;
+import com.nextbreakpoint.nextfractal.core.common.FileManifest;
 import rx.Single;
 
 import java.io.File;

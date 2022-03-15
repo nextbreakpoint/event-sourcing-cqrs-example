@@ -7,7 +7,6 @@ import com.nextbreakpoint.blueprint.common.vertx.Controller;
 import com.nextbreakpoint.blueprint.common.vertx.MessageEmitter;
 import com.nextbreakpoint.blueprint.designs.aggregate.DesignAggregate;
 import com.nextbreakpoint.blueprint.designs.model.Design;
-import com.nextbreakpoint.blueprint.common.core.Tile;
 import rx.Observable;
 import rx.Single;
 

@@ -8,7 +8,6 @@ import com.jayway.restassured.config.SSLConfig;
 import com.nextbreakpoint.blueprint.common.core.Json;
 import com.nextbreakpoint.blueprint.common.core.KafkaRecord;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
-import com.nextbreakpoint.blueprint.common.core.Tracing;
 import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
 import com.nextbreakpoint.blueprint.common.test.PayloadUtils;
 import org.jetbrains.annotations.NotNull;

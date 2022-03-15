@@ -4,7 +4,6 @@ import au.com.dius.pact.core.model.messaging.Message;
 import com.nextbreakpoint.blueprint.common.core.*;
 import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
 import com.nextbreakpoint.blueprint.common.test.PayloadUtils;
-import com.nextbreakpoint.blueprint.common.core.Tile;
 import com.nextbreakpoint.blueprint.designs.model.DesignTiles;
 import org.jetbrains.annotations.NotNull;
 

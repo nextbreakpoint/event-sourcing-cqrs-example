@@ -8,15 +8,17 @@ import com.jayway.restassured.config.SSLConfig;
 import com.nextbreakpoint.blueprint.common.core.Json;
 import com.nextbreakpoint.blueprint.common.core.KafkaRecord;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
-import com.nextbreakpoint.blueprint.common.core.Tracing;
+import com.nextbreakpoint.blueprint.common.core.Tiles;
 import com.nextbreakpoint.blueprint.common.test.PayloadUtils;
 import com.nextbreakpoint.blueprint.designs.model.Design;
-import com.nextbreakpoint.blueprint.common.core.Tiles;
 import org.jetbrains.annotations.NotNull;
 import rx.Observable;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 

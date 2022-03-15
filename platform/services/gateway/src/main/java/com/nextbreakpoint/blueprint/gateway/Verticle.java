@@ -13,7 +13,6 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.handler.LoggerFormat;
 import io.vertx.rxjava.core.AbstractVerticle;
 import io.vertx.rxjava.core.Promise;
-import io.vertx.rxjava.core.RxHelper;
 import io.vertx.rxjava.core.Vertx;
 import io.vertx.rxjava.core.http.HttpClient;
 import io.vertx.rxjava.ext.web.Router;
@@ -21,7 +20,6 @@ import io.vertx.rxjava.ext.web.handler.CorsHandler;
 import io.vertx.rxjava.ext.web.handler.LoggerHandler;
 import io.vertx.rxjava.ext.web.handler.TimeoutHandler;
 import rx.Completable;
-import rx.plugins.RxJavaHooks;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -38,10 +36,6 @@ public class Verticle extends AbstractVerticle {
             final JsonObject config = loadConfig(args.length > 0 ? args[0] : "config/localhost.json");
 
             final Vertx vertx = Initializer.initialize();
-
-            RxJavaHooks.setOnComputationScheduler(s -> RxHelper.scheduler(vertx));
-            RxJavaHooks.setOnIOScheduler(s -> RxHelper.blockingScheduler(vertx));
-            RxJavaHooks.setOnNewThreadScheduler(s -> RxHelper.blockingScheduler(vertx));
 
             vertx.deployVerticle(new Verticle(), new DeploymentOptions().setConfig(config));
         } catch (Exception e) {

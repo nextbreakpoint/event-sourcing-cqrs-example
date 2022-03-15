@@ -25,7 +25,6 @@ import io.vertx.ext.web.handler.LoggerFormat;
 import io.vertx.ext.web.openapi.RouterBuilder;
 import io.vertx.rxjava.core.AbstractVerticle;
 import io.vertx.rxjava.core.Promise;
-import io.vertx.rxjava.core.RxHelper;
 import io.vertx.rxjava.core.Vertx;
 import io.vertx.rxjava.ext.auth.jwt.JWTAuth;
 import io.vertx.rxjava.ext.web.Router;
@@ -39,7 +38,6 @@ import io.vertx.rxjava.kafka.client.producer.KafkaProducer;
 import org.apache.http.HttpHost;
 import org.elasticsearch.client.RestClient;
 import rx.Completable;
-import rx.plugins.RxJavaHooks;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProviderChain;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
@@ -72,10 +70,6 @@ public class Verticle extends AbstractVerticle {
             final JsonObject config = loadConfig(args.length > 0 ? args[0] : "config/localhost.json");
 
             final Vertx vertx = Initializer.initialize();
-
-            RxJavaHooks.setOnComputationScheduler(s -> RxHelper.scheduler(vertx));
-            RxJavaHooks.setOnIOScheduler(s -> RxHelper.blockingScheduler(vertx));
-            RxJavaHooks.setOnNewThreadScheduler(s -> RxHelper.blockingScheduler(vertx));
 
             vertx.deployVerticle(new Verticle(), new DeploymentOptions().setConfig(config));
         } catch (Exception e) {

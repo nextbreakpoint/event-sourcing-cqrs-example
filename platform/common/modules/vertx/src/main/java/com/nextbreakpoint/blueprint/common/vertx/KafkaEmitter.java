@@ -51,31 +51,33 @@ public class KafkaEmitter implements MessageEmitter {
     public Single<Void> send(OutputMessage message, String topicName) {
         return Single.just(message)
                 .doOnEach(notification -> logger.debug("Sending message to topic " + topicName + ": " + notification.getValue()))
-                .map(outputMessage -> writeRecord(outputMessage, topicName));
+                .flatMap(outputMessage -> writeRecord(outputMessage, topicName));
     }
 
-    private Void writeRecord(OutputMessage message, String topicName) {
+    private Single<Void> writeRecord(OutputMessage message, String topicName) {
         final Payload payload = message.getValue();
 
         final Span messageSpan = tracer.spanBuilder("Sending message " + payload.getType()).startSpan();
 
-        try (Scope scope = messageSpan.makeCurrent()) {
-            final Span span = Span.current();
+        final Scope scope = messageSpan.makeCurrent();
 
-            final KafkaProducerRecord<String, String> record = createRecord(message, topicName);
+        final Span span = Span.current();
 
-            span.setAttribute("message.source", payload.getSource());
-            span.setAttribute("message.type", payload.getType());
-            span.setAttribute("message.uuid", payload.getUuid().toString());
-            span.setAttribute("message.key", record.key());
-            span.setAttribute("message.topic", topicName);
+        final KafkaProducerRecord<String, String> record = createRecord(message, topicName);
 
-            producer.write(record);
-        } finally {
-            messageSpan.end();
-        }
+        span.setAttribute("message.source", payload.getSource());
+        span.setAttribute("message.type", payload.getType());
+        span.setAttribute("message.uuid", payload.getUuid().toString());
+        span.setAttribute("message.key", record.key());
+        span.setAttribute("message.topic", topicName);
 
-        return null;
+        return producer.rxWrite(record)
+                .doOnError(err -> logger.error("Error occurred while writing record. Retrying...", err))
+                .retry(3)
+                .doAfterTerminate(() -> {
+                    messageSpan.end();
+                    scope.close();
+                });
     }
 
     private KafkaProducerRecord<String, String> createRecord(OutputMessage message, String topicName) {

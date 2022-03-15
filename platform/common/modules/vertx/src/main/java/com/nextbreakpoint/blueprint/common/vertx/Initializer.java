@@ -16,8 +16,10 @@ import io.vertx.core.VertxOptions;
 import io.vertx.core.dns.AddressResolverOptions;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.VertxPrometheusOptions;
+import io.vertx.rxjava.core.RxHelper;
 import io.vertx.rxjava.core.Vertx;
 import io.vertx.tracing.opentelemetry.OpenTelemetryOptions;
+import rx.plugins.RxJavaHooks;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -65,7 +67,13 @@ public class Initializer {
 
         ContextStorage.addWrapper(CustomContextStorage::new);
 
-        return Vertx.vertx(vertxOptions);
+        final Vertx vertx = Vertx.vertx(vertxOptions);
+
+        RxJavaHooks.setOnComputationScheduler(s -> RxHelper.scheduler(vertx));
+        RxJavaHooks.setOnIOScheduler(s -> RxHelper.blockingScheduler(vertx));
+        RxJavaHooks.setOnNewThreadScheduler(s -> RxHelper.blockingScheduler(vertx));
+
+        return vertx;
     }
 
     private static Resource getResource(String attributes) {

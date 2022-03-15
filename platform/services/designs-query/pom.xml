@@ -73,12 +73,8 @@
                     <toolchain>jdk</toolchain>
                     <executable>java</executable>
                     <environmentVariables>
-                        <JAEGER_SERVICE_NAME>designs-query</JAEGER_SERVICE_NAME>
-                        <JAEGER_AGENT_HOST>localhost</JAEGER_AGENT_HOST>
-                        <JAEGER_TAGS>env=dev</JAEGER_TAGS>
-                        <JAEGER_SAMPLER_TYPE>const</JAEGER_SAMPLER_TYPE>
-                        <JAEGER_SAMPLER_PARAM>1</JAEGER_SAMPLER_PARAM>
-                        <JAEGER_REPORTER_LOG_SPANS>true</JAEGER_REPORTER_LOG_SPANS>
+                        <JAEGER_ATTRIBUTES>service.name=designs-query,service.version=${project.version},service.namespace=designs,environment=dev</JAEGER_ATTRIBUTES>
+                        <JAEGER_ENDPOINT>http://host.docker.internal:14250</JAEGER_ENDPOINT>
                         <KEYSTORE_SECRET>secret</KEYSTORE_SECRET>
                         <ELASTICSEARCH_HOST>localhost</ELASTICSEARCH_HOST>
                         <ELASTICSEARCH_PORT>9200</ELASTICSEARCH_PORT>

@@ -13,7 +13,7 @@ metadata:
     heritage: {{ $root.Release.Service }}
 data:
   nginx.conf: |
-      worker_processes 4;
+      worker_processes 16;
       worker_rlimit_nofile 8192;
 
       events {
@@ -48,22 +48,7 @@ data:
           #resolver 127.0.0.11 valid=30s;
           resolver kube-dns.kube-system.svc.cluster.local valid=30s;
 
-          location /watch {
-            set $upstream_gateway gateway.blueprint.svc.cluster.local;
-            proxy_pass https://$upstream_gateway:8080$request_uri;
-          }
-
-          location /auth {
-            set $upstream_gateway gateway.blueprint.svc.cluster.local;
-            proxy_pass https://$upstream_gateway:8080$request_uri;
-          }
-
-          location /designs {
-            set $upstream_gateway gateway.blueprint.svc.cluster.local;
-            proxy_pass https://$upstream_gateway:8080$request_uri;
-          }
-
-          location /accounts {
+          location /v1 {
             set $upstream_gateway gateway.blueprint.svc.cluster.local;
             proxy_pass https://$upstream_gateway:8080$request_uri;
           }

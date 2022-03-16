@@ -25,10 +25,10 @@ data:
 
       "origin_pattern": "https://{{ $root.Values.clientDomain | default "localhost" }}(:[0-9]+)?",
 
-      "jdbc_url": "jdbc:mysql://mysql:3306/{{ $root.Values.databaseName | default "accounts" }}?useSSL=false&allowPublicKeyRetrieval=true&nullNamePatternMatchesAll=true&generateSimpleParameterMetadata=true",
+      "jdbc_url": "jdbc:mysql://{{ $root.Values.databaseHost | default "mysql" }}:{{ $root.Values.databasePort | default "3306" }}/{{ $root.Values.databaseName | default "accounts" }}?useSSL=false&allowPublicKeyRetrieval=true&nullNamePatternMatchesAll=true&generateSimpleParameterMetadata=true",
       "jdbc_driver": "com.mysql.cj.jdbc.Driver",
       "jdbc_username": "${DATABASE_USERNAME}",
       "jdbc_password": "${DATABASE_PASSWORD}",
-      "jdbc_max_pool_size": "200",
-      "jdbc_min_pool_size": "20"
+      "jdbc_max_pool_size": {{ $root.Values.databaseMaxPoolSize | default "200" | quote }},
+      "jdbc_min_pool_size": {{ $root.Values.databaseMinPoolSize | default "20" | quote }}
     }

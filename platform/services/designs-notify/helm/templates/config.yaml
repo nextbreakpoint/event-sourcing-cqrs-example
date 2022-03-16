@@ -25,10 +25,10 @@ data:
 
       "origin_pattern": "https://{{ $root.Values.clientDomain | default "localhost" }}(:[0-9]+)?",
 
-      "kafka_bootstrap_servers": "kafka:9092",
-      "kafka_group_id": "designs-notify",
-      "events_topic": "events",
+      "kafka_bootstrap_servers": {{ $root.Values.kafkaServers | default "kafka:9092" | quote }},
+      "kafka_group_id": {{ $root.Values.kafkaGroupId | default "designs-notify" | quote }},
+      "events_topic": {{ $root.Values.eventsTopic | default "events" | quote }},
 
-      "consul_host": "consul",
-      "consul_port": "8400"
+      "consul_host": {{ $root.Values.consulHost | default "consul" | quote }},
+      "consul_port": {{ $root.Values.consulPort | default "8500" | quote }}
     }

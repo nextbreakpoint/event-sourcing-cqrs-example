@@ -4,7 +4,7 @@
 
 image:
   repository: postgres
-  tag: 9.6.21-alpine
+  tag: 14-alpine
   pullPolicy: IfNotPresent
   pullSecrets:
 

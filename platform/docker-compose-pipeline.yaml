@@ -5,7 +5,7 @@ services:
     image: sonatype/nexus3:3.37.3
     environment:
       NEXUS_CONTEXT: "/"
-      INSTALL4J_ADD_VM_PARAMS: "-Xms2g -Xmx2g -XX:MaxDirectMemorySize=3g -Djava.util.prefs.userRoot=/nexus-data/javaPrefs"
+      INSTALL4J_ADD_VM_PARAMS: "-Xms2g -Xmx2g -XX:MaxDirectMemorySize=2g -Djava.util.prefs.userRoot=/nexus-data/javaPrefs"
     ports:
       - target: 8081
         published: 38081
@@ -32,7 +32,7 @@ services:
       - pipeline
   postgres:
     restart: unless-stopped
-    image: postgres:9.6.21-alpine
+    image: postgres:14-alpine
     environment:
       POSTGRES_USER: 'admin'
       POSTGRES_PASSWORD: 'password'

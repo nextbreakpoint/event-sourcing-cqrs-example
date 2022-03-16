@@ -56,7 +56,7 @@ spec:
               containerPort: 8302
               protocol: TCP
             - name: control4
-              containerPort: 8400
+              containerPort: 8500
               protocol: TCP
             - name: control5
               containerPort: 8600

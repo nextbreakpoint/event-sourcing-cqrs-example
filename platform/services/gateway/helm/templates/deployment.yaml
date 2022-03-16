@@ -30,7 +30,7 @@ spec:
       labels:
         app: {{ $root.Values.name | default "gateway" | quote }}
     spec:
-      serviceAccountName: {{ $root.Values.serviceAccount | default "gateway" }}
+      serviceAccountName: {{ $root.Values.serviceAccount | default "gateway-service" }}
       {{- if $root.Values.image }}
       {{- if $root.Values.image.pullSecrets }}
       imagePullSecrets:
@@ -66,8 +66,10 @@ spec:
                 secretKeyRef:
                   name: {{ $root.Values.secretName | default "gateway" | quote }}
                   key: KEYSTORE_SECRET
-            - name: JAEGER_SERVICE_NAME
-              value: {{ $root.Values.name | default "authentication" | quote }}
+            - name: JAEGER_ATTRIBUTES
+              value: 'service.name={{ $root.Values.name | default "gateway" }},service.version={{ $root.Values.image.tag }},service.namespace={{ $root.Release.Namespace }},environment={{ $root.Values.environment | default "dev" }},release={{ $root.Release.Name }}'
+            - name: JAEGER_ENDPOINT
+              value: {{ $root.Values.jaegerEndpoint | default "http://jaeger:14250" | quote }}
           volumeMounts:
             - name: config-vol
               readOnly: true

@@ -30,7 +30,7 @@ spec:
       labels:
         app: {{ $root.Values.name | default "designs-render" | quote }}
     spec:
-      serviceAccountName: {{ $root.Values.serviceAccount | default "designs-render" }}
+      serviceAccountName: {{ $root.Values.serviceAccount | default "designs-render-service" }}
       {{- if $root.Values.image }}
       {{- if $root.Values.image.pullSecrets }}
       imagePullSecrets:
@@ -66,16 +66,6 @@ spec:
                 secretKeyRef:
                   name: {{ $root.Values.secretName | default "designs-render" | quote }}
                   key: KEYSTORE_SECRET
-            - name: DATABASE_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: {{ $root.Values.secretName | default "designs-render" | quote }}
-                  key: DATABASE_USERNAME
-            - name: DATABASE_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: {{ $root.Values.secretName | default "designs-render" | quote }}
-                  key: DATABASE_PASSWORD
             - name: AWS_ACCESS_KEY_ID
               valueFrom:
                 secretKeyRef:
@@ -86,8 +76,10 @@ spec:
                 secretKeyRef:
                   name: {{ $root.Values.secretName | default "designs-render" | quote }}
                   key: AWS_SECRET_ACCESS_KEY
-            - name: JAEGER_SERVICE_NAME
-              value: {{ $root.Values.name | default "authentication" | quote }}
+            - name: JAEGER_ATTRIBUTES
+              value: 'service.name={{ $root.Values.name | default "gateway" }},service.version={{ $root.Values.image.tag }},service.namespace={{ $root.Release.Namespace }},environment={{ $root.Values.environment | default "dev" }},release={{ $root.Release.Name }}'
+            - name: JAEGER_ENDPOINT
+              value: {{ $root.Values.jaegerEndpoint | default "http://jaeger:14250" | quote }}
           volumeMounts:
             - name: config-vol
               readOnly: true

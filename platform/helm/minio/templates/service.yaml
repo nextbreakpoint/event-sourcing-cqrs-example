@@ -16,8 +16,12 @@ spec:
   type: ClusterIP
   ports:
     - port: 9000
-      targetPort: http
+      targetPort: minio
       protocol: TCP
       name: minio
+    - port: 9001
+      targetPort: minio-console
+      protocol: TCP
+      name: minio-console
   selector:
     app: {{ $root.Values.name | default "minio" | quote }}

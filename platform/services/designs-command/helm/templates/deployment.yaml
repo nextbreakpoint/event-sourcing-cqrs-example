@@ -30,7 +30,7 @@ spec:
       labels:
         app: {{ $root.Values.name | default "designs-command" | quote }}
     spec:
-      serviceAccountName: {{ $root.Values.serviceAccount | default "designs-command" }}
+      serviceAccountName: {{ $root.Values.serviceAccount | default "designs-command-service" }}
       {{- if $root.Values.image }}
       {{- if $root.Values.image.pullSecrets }}
       imagePullSecrets:
@@ -66,8 +66,20 @@ spec:
                 secretKeyRef:
                   name: {{ $root.Values.secretName | default "designs-command" | quote }}
                   key: KEYSTORE_SECRET
-            - name: JAEGER_SERVICE_NAME
-              value: {{ $root.Values.name | default "authentication" | quote }}
+            - name: DATABASE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $root.Values.secretName | default "designs-aggregate" | quote }}
+                  key: DATABASE_USERNAME
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $root.Values.secretName | default "designs-aggregate" | quote }}
+                  key: DATABASE_PASSWORD
+            - name: JAEGER_ATTRIBUTES
+              value: 'service.name={{ $root.Values.name | default "gateway" }},service.version={{ $root.Values.image.tag }},service.namespace={{ $root.Release.Namespace }},environment={{ $root.Values.environment | default "dev" }},release={{ $root.Release.Name }}'
+            - name: JAEGER_ENDPOINT
+              value: {{ $root.Values.jaegerEndpoint | default "http://jaeger:14250" | quote }}
           volumeMounts:
             - name: config-vol
               readOnly: true

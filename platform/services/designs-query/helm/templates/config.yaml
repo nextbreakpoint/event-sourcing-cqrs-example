@@ -25,14 +25,14 @@ data:
 
       "origin_pattern": "https://{{ $root.Values.clientDomain | default "localhost" }}(:[0-9]+)?",
 
-      "elasticsearch_host": "elasticsearch",
-      "elasticsearch_port": "9200",
-      "elasticsearch_index": "designs",
+      "elasticsearch_host": {{ $root.Values.elasticsearchHost | default "elasticsearch" | quote }},
+      "elasticsearch_port": {{ $root.Values.elasticsearchPort | default "9200" | quote }},
+      "elasticsearch_index": {{ $root.Values.elasticsearchIndex | default "designs" | quote }},
 
-      "kafka_bootstrap_servers": "kafka:9092",
-      "kafka_group_id": "designs-query",
-      "message_source": "service-designs",
-      "events_topic": "events",
+      "kafka_bootstrap_servers": {{ $root.Values.kafkaServers | default "kafka:9092" | quote }},
+      "kafka_group_id": {{ $root.Values.kafkaGroupId | default "designs-query" | quote }},
+      "message_source": {{ $root.Values.messageSource | default "service-designs" | quote }},
+      "events_topic": {{ $root.Values.eventsTopic | default "events" | quote }},
 
       "s3_endpoint": {{ $root.Values.s3Endpoint | default "http://minio:9000" | quote }},
       "s3_bucket": {{ $root.Values.s3Bucket | default "tiles" | quote }}

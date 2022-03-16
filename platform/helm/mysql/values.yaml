@@ -4,7 +4,7 @@
 
 image:
   repository: mysql
-  tag: 8.0.13
+  tag: 8.0.28-debian
   pullPolicy: IfNotPresent
   pullSecrets:
 

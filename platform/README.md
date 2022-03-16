@@ -79,13 +79,15 @@ Stop services (when finished):
 
 Setup Minikube:
 
-    minikube start --vm-driver=hyperkit --cpus 8 --memory 32768m —disk-size 100g --kubernetes-version v1.22.2
+    minikube start --vm-driver=hyperkit --cpus 8 --memory 48000m —disk-size 200g --kubernetes-version v1.22.2
 
-    minikube start --mount-string "$(pwd)/scripts:/var/docker/scripts" --mount
+Create namespace:
+
+    kubectl create ns blueprint
 
 Deploy Nexus:
 
-    helm install integration-nexus platform/helm/nexus -n blueprint --set replicas=1
+    helm install integration-nexus helm/nexus -n blueprint --set replicas=1
 
 Check Nexus:
 
@@ -93,7 +95,7 @@ Check Nexus:
 
 Deploy Postgres:
 
-    helm install integration-postgres platform/helm/postgres -n blueprint --set replicas=1
+    helm install integration-postgres helm/postgres -n blueprint --set replicas=1
 
 Check Postgres:
 
@@ -101,11 +103,16 @@ Check Postgres:
 
 Deploy Pact Broker:
 
-    helm install integration-pactbroker platform/helm/pactbroker -n blueprint --set replicas=1
+    helm install integration-pactbroker helm/pactbroker -n blueprint --set replicas=1
 
 Check Pact Broker:
 
     kubectl -n blueprint logs -f --tail=-1 -l app=pactbroker
+
+Expose services:
+
+    kubectl -n blueprint expose service/nexus --name nexus-external --port 8081 --target-port 8081 --type LoadBalancer --external-ip $(minikube ip)
+    kubectl -n blueprint expose service/pactbroker --name pactbroker-external --port 9292 --target-port 9292 --type LoadBalancer --external-ip $(minikube ip)
 
 Export variables:
 
@@ -126,6 +133,18 @@ Build platform:
 
     ./scripts/build-platform.sh --nexus-host=${NEXUS_HOST} --nexus-port=${NEXUS_PORT} --nexus-username=${NEXUS_USERNAME} --nexus-password=${NEXUS_PASSWORD} --docker-host=172.17.0.1
 
+Upgrade Nexus (if needed):
+
+    helm upgrade --install integration-nexus helm/nexus -n blueprint --set replicas=1
+
+Upgrade Postgres (if needed):
+
+    helm upgrade --install integration-postgres helm/postgres -n blueprint --set replicas=1
+
+Upgrade Pact Broker (if needed):
+
+    helm upgrade --install integration-pactbroker helm/pactbroker -n blueprint --set replicas=1
+
 ## Run on Minikube
 
 Setup Minikube:
@@ -133,10 +152,6 @@ Setup Minikube:
     minikube addons enable metrics-server
     minikube addons enable dashboard
     minikube addons enable registry
-
-Create namespace:
-
-    kubectl create ns blueprint
 
 Deploy secrets:
 
@@ -147,9 +162,25 @@ Deploy secrets:
     kubectl -n blueprint create secret generic keystore-auth.jceks --from-file=secrets/keystore_auth.jceks
     kubectl -n blueprint create secret generic nginx --from-file server_cert.pem=secrets/nginx_server_cert.pem --from-file server_key.pem=secrets/nginx_server_key.pem
 
+Deploy Jaeger:
+
+    helm install integration-jaeger helm/jaeger -n blueprint --set replicas=1
+
+Check Jaeger:
+
+    kubectl -n blueprint logs -f --tail=-1 -l app=jaeger
+
+Deploy Kibana:
+
+    helm install integration-kibana helm/kibana -n blueprint --set replicas=1
+
+Check Kibana:
+
+    kubectl -n blueprint logs -f --tail=-1 -l app=kibana
+
 Deploy Elasticsearch:
 
-    helm install integration-elasticsearch platform/helm/elasticsearch -n blueprint --set replicas=1
+    helm install integration-elasticsearch helm/elasticsearch -n blueprint --set replicas=1
 
 Check Elasticsearch:
 
@@ -157,7 +188,7 @@ Check Elasticsearch:
 
 Deploy Cassandra:
 
-    helm install integration-cassandra platform/helm/cassandra -n blueprint --set replicas=1
+    helm install integration-cassandra helm/cassandra -n blueprint --set replicas=1
 
 Check Cassandra:
 
@@ -165,7 +196,7 @@ Check Cassandra:
 
 Deploy Zookeeper:
 
-    helm install integration-zookeeper platform/helm/zookeeper -n blueprint --set replicas=1
+    helm install integration-zookeeper helm/zookeeper -n blueprint --set replicas=1
 
 Check Zookeeper:
 
@@ -173,7 +204,7 @@ Check Zookeeper:
 
 Deploy Kafka:
 
-    helm install integration-kafka platform/helm/kafka -n blueprint --set replicas=1
+    helm install integration-kafka helm/kafka -n blueprint --set replicas=1,externalName=$(minikube ip):9093
 
 Check Kafka:
 
@@ -181,7 +212,7 @@ Check Kafka:
 
 Deploy MySQL:
 
-    helm install integration-mysql platform/helm/mysql -n blueprint --set replicas=1
+    helm install integration-mysql helm/mysql -n blueprint --set replicas=1
 
 Check MySQL:
 
@@ -189,7 +220,7 @@ Check MySQL:
 
 Deploy NGINX:
 
-    helm install integration-nginx platform/helm/nginx -n blueprint --set replicas=1
+    helm install integration-nginx helm/nginx -n blueprint --set replicas=1
 
 Check NGINX:
 
@@ -197,7 +228,7 @@ Check NGINX:
 
 Deploy Consul:
 
-    helm install integration-consul platform/helm/consul -n blueprint --set replicas=1,servicePort=30080,serviceName=$(minikube ip)
+    helm install integration-consul helm/consul -n blueprint --set replicas=1,servicePort=8000,serviceName=$(minikube ip)
 
 Check Consul:
 
@@ -205,11 +236,19 @@ Check Consul:
 
 Deploy Minio:
 
-    helm install integration-minio platform/helm/minio -n blueprint --set replicas=1
+    helm install integration-minio helm/minio -n blueprint --set replicas=1
 
 Check Minio:
 
     kubectl -n blueprint logs -f --tail=-1 -l app=minio
+
+Expose servers:
+
+    kubectl -n blueprint expose service/kibana --name=kibana-external --port=5601 --target-port=5601 --type=LoadBalancer --external-ip=$(minikube ip) 
+    kubectl -n blueprint expose service/jaeger --name=jaeger-external --port=16686 --target-port=16686 --type=LoadBalancer --external-ip=$(minikube ip)
+    kubectl -n blueprint expose service/consul --name=consul-external --port=8500 --target-port=8500 --type=LoadBalancer --external-ip=$(minikube ip)
+    kubectl -n blueprint expose service/minio --name minio-external --port 9001 --target-port 9001 --type LoadBalancer --external-ip $(minikube ip)
+    kubectl -n blueprint expose service/nginx --name nginx-external --port 443 --target-port 443 --type LoadBalancer --external-ip $(minikube ip)
 
 Export GitHub secrets:
 
@@ -219,35 +258,39 @@ Export GitHub secrets:
 
 Deploy secrets for services:
 
-    kubectl -n blueprint create secret generic authentication --from-file keystore_client.jks=secrets/keystore_client.jks --from-file truststore_client.jks=secrets/truststore_client.jks --from-file keystore_server.jks=secrets/keystore_server.jks --from-file keystore_auth.jceks=secrets/keystore_auth.jceks --from-literal KEYSTORE_SECRET=secret --from-literal GITHUB_ACCOUNT_ID=$GITHUB_ACCOUNT_ID --from-literal GITHUB_CLIENT_ID=$GITHUB_CLIENT_ID --from-literal GITHUB_CLIENT_SECRET=$GITHUB_CLIENT_SECRET
+    kubectl -n blueprint create secret generic authentication --from-file keystore_client.jks=secrets/keystore_client.jks --from-file truststore_client.jks=secrets/truststore_client.jks --from-file keystore_server.jks=secrets/keystore_server.jks --from-file keystore_auth.jceks=secrets/keystore_auth.jceks --from-literal KEYSTORE_SECRET=secret --from-literal ADMIN_EMAIL=$ADMIN_EMAIL --from-literal GITHUB_CLIENT_ID=$GITHUB_CLIENT_ID --from-literal GITHUB_CLIENT_SECRET=$GITHUB_CLIENT_SECRET
 
     kubectl -n blueprint create secret generic accounts --from-file keystore_server.jks=secrets/keystore_server.jks --from-file keystore_auth.jceks=secrets/keystore_auth.jceks --from-literal KEYSTORE_SECRET=secret --from-literal DATABASE_USERNAME=verticle --from-literal DATABASE_PASSWORD=password
 
-    kubectl -n blueprint create secret generic designs-query --from-file keystore_server.jks=secrets/keystore_server.jks --from-file keystore_auth.jceks=secrets/keystore_auth.jceks --from-literal KEYSTORE_SECRET=secret --from-literal DATABASE_USERNAME=verticle --from-literal DATABASE_PASSWORD=password
+    kubectl -n blueprint create secret generic designs-query --from-file keystore_server.jks=secrets/keystore_server.jks --from-file keystore_auth.jceks=secrets/keystore_auth.jceks --from-literal KEYSTORE_SECRET=secret --from-literal DATABASE_USERNAME=verticle --from-literal DATABASE_PASSWORD=password --from-literal AWS_ACCESS_KEY_ID=admin --from-literal AWS_SECRET_ACCESS_KEY=password
     kubectl -n blueprint create secret generic designs-command --from-file keystore_server.jks=secrets/keystore_server.jks --from-file keystore_auth.jceks=secrets/keystore_auth.jceks --from-literal KEYSTORE_SECRET=secret --from-literal DATABASE_USERNAME=verticle --from-literal DATABASE_PASSWORD=password
     kubectl -n blueprint create secret generic designs-aggregate --from-file keystore_server.jks=secrets/keystore_server.jks --from-file keystore_auth.jceks=secrets/keystore_auth.jceks --from-literal KEYSTORE_SECRET=secret --from-literal DATABASE_USERNAME=verticle --from-literal DATABASE_PASSWORD=password
-    kubectl -n blueprint create secret generic designs-notify --from-file keystore_server.jks=secrets/keystore_server.jks --from-file keystore_auth.jceks=secrets/keystore_auth.jceks --from-literal KEYSTORE_SECRET=secret --from-literal AWS_ACCESS_KEY_ID=admin --from-literal AWS_SECRET_ACCESS_KEY=password
+    kubectl -n blueprint create secret generic designs-notify --from-file keystore_server.jks=secrets/keystore_server.jks --from-file keystore_auth.jceks=secrets/keystore_auth.jceks --from-literal KEYSTORE_SECRET=secret 
     kubectl -n blueprint create secret generic designs-render --from-file keystore_server.jks=secrets/keystore_server.jks --from-file keystore_auth.jceks=secrets/keystore_auth.jceks --from-literal KEYSTORE_SECRET=secret --from-literal AWS_ACCESS_KEY_ID=admin --from-literal AWS_SECRET_ACCESS_KEY=password
 
     kubectl -n blueprint create secret generic gateway --from-file keystore_client.jks=secrets/keystore_client.jks --from-file truststore_client.jks=secrets/truststore_client.jks --from-file keystore_server.jks=secrets/keystore_server.jks --from-file keystore_auth.jceks=secrets/keystore_auth.jceks --from-literal KEYSTORE_SECRET=secret
 
     kubectl -n blueprint create secret generic frontend --from-file ca_cert.pem=secrets/ca_cert.pem --from-file server_cert.pem=secrets/server_cert.pem --from-file server_key.pem=secrets/server_key.pem
 
+Export version:
+
+     export VERSION=$(mvn -q help:evaluate -Dexpression=project.version -DforceStdout)
+
 Deploy services:
 
-    helm install service-authentication platform/services/authentication/helm -n blueprint --set replicas=1,clientDomain=$(minikube ip),clientWebUrl=https://$(minikube ip):8081,clientAuthUrl=https://$(minikube ip):8081
+    helm install service-authentication services/authentication/helm -n blueprint --set image.repository=integration/authentication,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip),clientWebUrl=https://$(minikube ip):8080,clientAuthUrl=https://$(minikube ip):8080
 
-    helm install service-accounts platform/services/accounts/helm -n blueprint --set replicas=1,clientDomain=$(minikube ip)
+    helm install service-accounts services/accounts/helm -n blueprint --set image.repository=integration/accounts,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip)
 
-    helm install service-designs-query platform/services/designs-query/helm -n blueprint --set replicas=1,clientDomain=$(minikube ip)
-    helm install service-designs-command platform/services/designs-command/helm -n blueprint --set replicas=1,clientDomain=$(minikube ip)
-    helm install service-designs-aggregate platform/services/designs-aggregate/helm -n blueprint --set replicas=1,clientDomain=$(minikube ip)
-    helm install service-designs-notify platform/services/designs-notify/helm -n blueprint --set replicas=1,clientDomain=$(minikube ip)
-    helm install service-designs-render platform/services/designs-render/helm -n blueprint --set replicas=1,clientDomain=$(minikube ip)
+    helm install service-designs-query services/designs-query/helm -n blueprint --set image.repository=integration/designs-query,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip)
+    helm install service-designs-command services/designs-command/helm -n blueprint --set image.repository=integration/designs-command,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip)
+    helm install service-designs-aggregate services/designs-aggregate/helm -n blueprint --set image.repository=integration/designs-aggregate,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip)
+    helm install service-designs-notify services/designs-notify/helm -n blueprint --set image.repository=integration/designs-notify,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip)
+    helm install service-designs-render services/designs-render/helm -n blueprint --set image.repository=integration/designs-render,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip)
 
-    helm install service-gateway platform/services/gateway/helm -n blueprint --set replicas=1,clientDomain=$(minikube ip)
+    helm install service-gateway services/gateway/helm -n blueprint --set image.repository=integration/gateway,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip)
 
-    helm install service-frontend platform/services/frontend/helm -n blueprint --set replicas=1,clientWebUrl=https://$(minikube ip):8081,clientApiUrl=https://$(minikube ip):8081
+    helm install service-frontend services/frontend/helm -n blueprint --set image.repository=integration/frontend,image.tag=${VERSION},replicas=1,clientWebUrl=https://$(minikube ip):8080,clientApiUrl=https://$(minikube ip):8080
 
 Check services:
 
@@ -261,29 +304,85 @@ Check services:
     kubectl -n blueprint logs -f --tail=-1 -l app=gateway
     kubectl -n blueprint logs -f --tail=-1 -l app=frontend
 
-Forward ports (if needed):
+Expose services:
 
-    kubectl -n blueprint expose service/designs-notify --name designs-notify-external --port 30080 --target-port 8080 --type LoadBalancer --external-ip $(minikube ip)
-    kubectl -n blueprint expose service/nginx --name nginx-external --port 443 --target-port 443 --type LoadBalancer --external-ip $(minikube ip)
-    kubectl -n blueprint expose service/minio --name minio-external --port 9000 --target-port 9000 --type LoadBalancer --external-ip $(minikube ip)
-    kubectl -n blueprint expose service/nexus --name nexus-external --port 8081 --target-port 8081 --type LoadBalancer --external-ip $(minikube ip)
-    kubectl -n blueprint expose service/pactbroker --name pactbroker-external --port 9292 --target-port 9292 --type LoadBalancer --external-ip $(minikube ip)
+    kubectl -n blueprint expose service/designs-notify --name designs-notify-external --port 8000 --target-port 8080 --type LoadBalancer --external-ip $(minikube ip)
 
 Scale services (if needed):
 
     kubectl -n blueprint scale deployment authentication --replicas=2
     kubectl -n blueprint scale deployment accounts --replicas=2
     kubectl -n blueprint scale deployment designs-command --replicas=2
-    kubectl -n blueprint scale deployment designs-aggregate --replicas=2
-    kubectl -n blueprint scale deployment designs-query --replicas=4
+    kubectl -n blueprint scale deployment designs-aggregate --replicas=4
+    kubectl -n blueprint scale deployment designs-query --replicas=2
     kubectl -n blueprint scale deployment designs-render --replicas=8
     kubectl -n blueprint scale deployment frontend --replicas=2
     kubectl -n blueprint scale deployment gateway --replicas=2
-    kubectl -n blueprint scale deployment nginx --replicas=4
+    kubectl -n blueprint scale deployment nginx --replicas=2
+
+Upgrade services (if needed):
+
+    helm upgrade --install service-authentication services/authentication/helm -n blueprint --set image.repository=integration/authentication,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip),clientWebUrl=https://$(minikube ip):8080,clientAuthUrl=https://$(minikube ip):8080
+
+    helm upgrade --install service-accounts services/accounts/helm -n blueprint --set image.repository=integration/accounts,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip)
+
+    helm upgrade --install service-designs-query services/designs-query/helm -n blueprint --set image.repository=integration/designs-query,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip)
+    helm upgrade --install service-designs-command services/designs-command/helm -n blueprint --set image.repository=integration/designs-command,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip)
+    helm upgrade --install service-designs-aggregate services/designs-aggregate/helm -n blueprint --set image.repository=integration/designs-aggregate,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip)
+    helm upgrade --install service-designs-notify services/designs-notify/helm -n blueprint --set image.repository=integration/designs-notify,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip)
+    helm upgrade --install service-designs-render services/designs-render/helm -n blueprint --set image.repository=integration/designs-render,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip)
+
+    helm upgrade --install service-gateway services/gateway/helm -n blueprint --set image.repository=integration/gateway,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip)
+
+    helm upgrade --install service-frontend services/frontend/helm -n blueprint --set image.repository=integration/frontend,image.tag=${VERSION},replicas=1,clientWebUrl=https://$(minikube ip):8080,clientApiUrl=https://$(minikube ip):8080
+
+Upgrade Jaeger (if needed):
+
+    helm upgrade --install integration-jaeger helm/jaeger -n blueprint --set replicas=1
+
+Upgrade Kibana (if needed):
+
+    helm upgrade --install integration-kibana helm/kibana -n blueprint --set replicas=1
+
+Upgrade Elasticsearch (if needed):
+
+    helm upgrade --install integration-elasticsearch helm/elasticsearch -n blueprint --set replicas=1
+
+Upgrade Cassandra (if needed):
+
+    helm upgrade --install integration-cassandra helm/cassandra -n blueprint --set replicas=1
+
+Upgrade Zookeeper (if needed):
+
+    helm upgrade --install integration-zookeeper helm/zookeeper -n blueprint --set replicas=1
+
+Upgrade Kafka (if needed):
+
+    helm upgrade --install integration-kafka helm/kafka -n blueprint --set replicas=1,externalName=$(minikube ip):9093
+
+Upgrade MySQL (if needed):
+
+    helm upgrade --install integration-mysql helm/mysql -n blueprint --set replicas=1
+
+Upgrade NGINX (if needed):
+
+    helm upgrade --install integration-nginx helm/nginx -n blueprint --set replicas=1
+
+Upgrade Consul (if needed):
+
+    helm upgrade --install integration-consul helm/consul -n blueprint --set replicas=1,servicePort=8080,serviceName=$(minikube ip)
+
+Upgrade Minio (if needed):
+
+    helm upgrade --install integration-minio helm/minio -n blueprint --set replicas=1
 
 Stop Minikube (when finished):
 
     minikube stop
+
+
+
+
 
 
 /////////////////
@@ -296,3 +395,6 @@ docker run -it --network services_services -e MINIO_ACCESS_KEY=admin -e MINIO_SE
 
 
 mvn -s settings.xml -Dcommon=true -Dservices=true -Dplatform=true -Dnexus=true -DskipTests=true -Dnexus.host=localhost -Dnexus.port=38081 -Dpactbroker.host=localhost -Dpactbroker.port=9292 clean package
+
+minikube start --mount-string "$(pwd)/scripts:/var/docker/scripts" --mount
+

@@ -31,7 +31,7 @@ spec:
       targetPort: control4
       protocol: TCP
       name: control4
-    - port: 8600
+    - port: 8500
       targetPort: control5
       protocol: TCP
       name: control5

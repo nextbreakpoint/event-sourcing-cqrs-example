@@ -62,7 +62,7 @@ spec:
                 fieldRef:
                   fieldPath: metadata.namespace
             - name: CONFIG_PATH
-              value: /etc
+              value: /etc/config.json
             - name: SECRETS_PATH
               value: /etc
           volumeMounts:

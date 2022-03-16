@@ -24,7 +24,7 @@ data:
       "disable_update_check": true,
       "enable_script_checks": true,
       "skip_leave_on_interrupt": true,
-      "ports": { "https": -1, "http": 8400 },
+      "ports": { "https": -1, "http": 8500 },
       "dns_config": {
         "allow_stale": true,
         "max_stale": "1s",
@@ -39,5 +39,8 @@ data:
         ],
         "port": {{ $root.Values.servicePort | default "443" }},
         "address": {{ $root.Values.serviceName | default "localhost" | quote }}
-      }]
+      }],
+      "ui_config": {
+        "enabled": true
+      }
     }

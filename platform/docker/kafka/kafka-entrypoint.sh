@@ -43,5 +43,6 @@
 #   fi
 # fi
 
+unset KAFKA_HOST
 unset KAFKA_PORT
 exec "$@"

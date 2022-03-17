@@ -95,9 +95,9 @@ spec:
             - name: KAFKA_NUM_PARTITIONS
               value: "16"
             - name: KAFKA_DELETE_TOPICS
-              value: "true"
+              value: "false"
             - name: KAFKA_AUTO_CREATE_TOPICS
-              value: "true"
+              value: "false"
             - name: KAFKA_LOG_RETENTION_HOURS
               value: "24"
             - name: KAFKA_TRANSACTION_MAX_TIMEOUT_MS

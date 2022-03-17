@@ -38,9 +38,6 @@ spec:
       {{- end}}
       {{- end}}
       volumes:
-        - name: config-vol
-          configMap:
-            name: {{ $root.Values.configName | default "elasticsearch" | quote }}
         {{- if $root.Values.secretName}}
         - name: secret-vol
           secret:
@@ -85,11 +82,6 @@ spec:
               value: "false"
             - name: "bootstrap.memory_lock"
               value: "true"
-          volumeMounts:
-            - name: config-vol
-              readOnly: true
-              mountPath: /docker-entrypoint-initdb.d/init.sh
-              subPath: init.sh
           {{- if $root.Values.resources }}
           resources:
             {{ $root.Values.resources | toYaml | indent 12 | trim }}

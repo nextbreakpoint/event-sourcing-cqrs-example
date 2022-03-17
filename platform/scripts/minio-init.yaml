@@ -1,0 +1,13 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: minio-init
+spec:
+  template:
+    spec:
+      containers:
+        - name: minio-init
+          image: minio/mc:latest
+          command: ["sh", "-c", "mc alias set minio http://minio:9000 admin password && (mc rm --force minio/tiles || true) && mc mb minio/tiles"]
+      restartPolicy: Never
+  backoffLimit: 4

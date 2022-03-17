@@ -1,376 +1,263 @@
 version: '3.8'
 services:
-  accounts:
+  mysql:
     restart: unless-stopped
-    image: integration/accounts:1.0.0-wip2-424a9a61-1647341334 
+    image: mysql:8.0.13
     environment:
-      JAEGER_ATTRIBUTES: service.name=accounts,service.version=1.0.0-wip2-424a9a61-1647341334,service.namespace=designs,environment=dev
-      JAEGER_ENDPOINT: http://host.docker.internal:14250
-      KEYSTORE_SECRET: secret
-      DATABASE_HOST: host.docker.internal
-      DATABASE_NAME: accounts
-      DATABASE_USERNAME: verticle
-      DATABASE_PASSWORD: password
-      DEBUG_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:35110
-      DEBUG_LEVEL: ${DEBUG_LEVEL:-INFO}
+      MYSQL_ROOT_PASSWORD: 'password'
     ports:
-      - target: 30110
-        published: 30110
-        protocol: tcp
-        mode: host
-      - target: 35110
-        published: 35110
+      - target: 3306
+        published: 3306
         protocol: tcp
         mode: host
     networks:
-      - platform
+      - services
     volumes:
-      - ./services/accounts/config/integration.json:/etc/config.json
-      - ./secrets/keystore_server.jks:/secrets/keystore_server.jks
-      - ./secrets/keystore_auth.jceks:/secrets/keystore_auth.jceks
-  authentication:
+      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+  cassandra:
     restart: unless-stopped
-    image: integration/authentication:1.0.0-wip2-424a9a61-1647341334 
+    image: nextbreakpoint/cassandra:3.11.10-1
     environment:
-      JAEGER_ATTRIBUTES: service.name=authentication,service.version=1.0.0-wip2-424a9a61-1647341334,service.namespace=designs,environment=dev
-      JAEGER_ENDPOINT: http://host.docker.internal:14250
-      KEYSTORE_SECRET: secret
-      ACCOUNTS_URL: https://accounts:30110
-      GITHUB_API_URL: https://api.github.com
-      GITHUB_OAUTH_URL: https://github.com
-      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
-      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET}
-      GITHUB_ACCOUNT_EMAIL: ${GITHUB_ACCOUNT_EMAIL}
-      DEBUG_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:35101
-      DEBUG_LEVEL: ${DEBUG_LEVEL:-INFO}
+      CASSANDRA_DC: 'DC1'
+      CASSANDRA_RACK: 'RACK1'
+      JVM_OPTS: '-Xms2G -Xmx2G'
     ports:
-      - target: 30101
-        published: 30101
-        protocol: tcp
-        mode: host
-      - target: 35101
-        published: 35101
+      - target: 9042
+        published: 9042
         protocol: tcp
         mode: host
     networks:
-      - platform
+      - services
     volumes:
-      - ./services/authentication/config/integration.json:/etc/config.json
-      - ./secrets/keystore_auth.jceks:/secrets/keystore_auth.jceks
-      - ./secrets/keystore_server.jks:/secrets/keystore_server.jks
-      - ./secrets/keystore_client.jks:/secrets/keystore_client.jks
-      - ./secrets/truststore_client.jks:/secrets/truststore_client.jks
-  designs-query:
+      - ./scripts/init.cql:/docker-entrypoint-initdb.d/init.cql:ro
+      - cassandra-data:/var/lib/cassandra
+  zookeeper:
     restart: unless-stopped
-    image: integration/designs-query:1.0.0-wip2-424a9a61-1647341334 
+    image: nextbreakpoint/zookeeper:3.6.2-1
     environment:
-      JAEGER_ATTRIBUTES: service.name=designs-query,service.version=1.0.0-wip2-424a9a61-1647341334,service.namespace=designs,environment=dev
-      JAEGER_ENDPOINT: http://host.docker.internal:14250
-      KEYSTORE_SECRET: secret
-      ELASTICSEARCH_HOST: host.docker.internal
-      ELASTICSEARCH_PORT: 9200
-      ELASTICSEARCH_INDEX: designs
-      AWS_ACCESS_KEY_ID: admin
-      AWS_SECRET_ACCESS_KEY: password
-      MINIO_HOST: host.docker.internal
-      MINIO_PORT: 9000
-      BUCKET_NAME: tiles
-      KAFKA_HOST: host.docker.internal
-      KAFKA_PORT: 9094
-      EVENTS_TOPIC: events
-      DEBUG_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:35120
-      DEBUG_LEVEL: ${DEBUG_LEVEL:-INFO}
+      ZOO_MY_ID: '1'
     ports:
-      - target: 30120
-        published: 30120
-        protocol: tcp
-        mode: host
-      - target: 35120
-        published: 35120
+      - target: 2181
+        published: 2181
         protocol: tcp
         mode: host
     networks:
-      - platform
-    volumes:
-      - ./services/designs-query/config/integration.json:/etc/config.json
-      - ./secrets/keystore_auth.jceks:/secrets/keystore_auth.jceks
-      - ./secrets/keystore_server.jks:/secrets/keystore_server.jks
-  designs-command:
+      - services
+  kafka:
     restart: unless-stopped
-    image: integration/designs-command:1.0.0-wip2-424a9a61-1647341334
+    image: nextbreakpoint/kafka:6.1.0-1
     environment:
-      JAEGER_ATTRIBUTES: service.name=designs-command,service.version=1.0.0-wip2-424a9a61-1647341334,service.namespace=designs,environment=dev
-      JAEGER_ENDPOINT: http://host.docker.internal:14250
-      KEYSTORE_SECRET: secret
-      DATABASE_HOST: host.docker.internal
-      DATABASE_USERNAME: verticle
-      DATABASE_PASSWORD: password
-      DATABASE_KEYSPACE: designs_command
-      KAFKA_HOST: host.docker.internal
-      KAFKA_PORT: 9094
-      COMMANDS_TOPIC: commands
-      EVENTS_TOPIC: events
-      DEBUG_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:35121
-      DEBUG_LEVEL: ${DEBUG_LEVEL:-INFO}
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT_DOCKER://host.docker.internal:9094,PLAINTEXT_EXTERNAL://localhost:9093,PLAINTEXT_INTERNAL://kafka:9092'
+      KAFKA_LISTENERS: 'PLAINTEXT_DOCKER://0.0.0.0:9094,PLAINTEXT_EXTERNAL://0.0.0.0:9093,PLAINTEXT_INTERNAL://0.0.0.0:9092'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'PLAINTEXT_DOCKER:PLAINTEXT,PLAINTEXT_EXTERNAL:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT_INTERNAL'
+      KAFKA_BROKER_ID: '1'
+      KAFKA_BROKER_RACK: 'rack1'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: '1'
+      KAFKA_NUM_PARTITIONS: '16'
+      KAFKA_DELETE_TOPICS: 'true'
+      KAFKA_AUTO_CREATE_TOPICS: 'true'
+      KAFKA_LOG_RETENTION_HOURS: '24'
+      KAFKA_TRANSACTION_MAX_TIMEOUT_MS: '60000'
+      KAFKA_HEAP_OPTS: '-Xms1500M -Xmx1500M'
+      CONFLUENT_SUPPORT_METRICS_ENABLE: 'false'
     ports:
-      - target: 30121
-        published: 30121
+      - target: 9092
+        published: 9092
         protocol: tcp
         mode: host
-      - target: 35121
-        published: 35121
+      - target: 9093
+        published: 9093
+        protocol: tcp
+        mode: host
+      - target: 9094
+        published: 9094
         protocol: tcp
         mode: host
     networks:
-      - platform
-    volumes:
-      - ./services/designs-command/config/integration.json:/etc/config.json
-      - ./secrets/keystore_auth.jceks:/secrets/keystore_auth.jceks
-      - ./secrets/keystore_server.jks:/secrets/keystore_server.jks
-  designs-aggregate:
+      - services
+  consul:
     restart: unless-stopped
-    image: integration/designs-aggregate:1.0.0-wip2-424a9a61-1647341334 
-    environment:
-      JAEGER_ATTRIBUTES: service.name=designs-aggregate,service.version=1.0.0-wip2-424a9a61-1647341334,service.namespace=designs,environment=dev
-      JAEGER_ENDPOINT: http://host.docker.internal:14250
-      KEYSTORE_SECRET: secret
-      DATABASE_HOST: host.docker.internal
-      DATABASE_USERNAME: verticle
-      DATABASE_PASSWORD: password
-      DATABASE_KEYSPACE: designs_aggregate
-      KAFKA_HOST: host.docker.internal
-      KAFKA_PORT: 9094
-      EVENTS_TOPIC: events
-      RENDER_TOPIC: render
-      BATCH_TOPIC: batch
-      DEBUG_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:35122
-      DEBUG_LEVEL: ${DEBUG_LEVEL:-INFO}
+    image: consul:1.11.4
+    command:
+      - consul
+      - agent
+      - -data-dir=/consul/data
+      - -config-dir=/consul/config
     ports:
-      - target: 30122
-        published: 30122
+      - target: 8300
+        published: 8300
         protocol: tcp
         mode: host
-      - target: 35122
-        published: 35122
+      - target: 8301
+        published: 8301
+        protocol: tcp
+        mode: host
+      - target: 8302
+        published: 8302
+        protocol: tcp
+        mode: host
+      - target: 8500
+        published: 8500
+        protocol: tcp
+        mode: host
+      - target: 8600
+        published: 8600
         protocol: tcp
         mode: host
     networks:
-      - platform
+      - services
     volumes:
-      - ./services/designs-aggregate/config/integration.json:/etc/config.json
-      - ./secrets/keystore_auth.jceks:/secrets/keystore_auth.jceks
-      - ./secrets/keystore_server.jks:/secrets/keystore_server.jks
-  designs-notify:
+      - ./scripts/consul.json:/consul/config/config.json:ro
+  nginx:
     restart: unless-stopped
-    image: integration/designs-notify:1.0.0-wip2-424a9a61-1647341334
-    environment:
-      JAEGER_ATTRIBUTES: service.name=designs-notify,service.version=1.0.0-wip2-424a9a61-1647341334,service.namespace=designs,environment=dev
-      JAEGER_ENDPOINT: http://host.docker.internal:14250
-      KEYSTORE_SECRET: secret
-      CONSUL_HOST: host.docker.internal
-      KAFKA_HOST: host.docker.internal
-      KAFKA_PORT: 9094
-      EVENTS_TOPIC: events
-      DEBUG_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:35123
-      DEBUG_LEVEL: ${DEBUG_LEVEL:-INFO}
+    image: nginx:1.20.2-alpine
     ports:
-      - target: 30123
-        published: 30123
-        protocol: tcp
-        mode: host
-      - target: 35123
-        published: 35123
+      - target: 443
+        published: 8080
         protocol: tcp
         mode: host
     networks:
-      - platform
+      - services
     volumes:
-      - ./services/designs-notify/config/integration.json:/etc/config.json
-      - ./secrets/keystore_auth.jceks:/secrets/keystore_auth.jceks
-      - ./secrets/keystore_server.jks:/secrets/keystore_server.jks
-  designs-render1:
+      - ./scripts/nginx-localhost.conf:/etc/nginx/nginx.conf:ro
+      - ./secrets/nginx_server_key.pem:/etc/nginx/server_key.pem:ro
+      - ./secrets/nginx_server_cert.pem:/etc/nginx/server_cert.pem:ro
+  elasticsearch:
     restart: unless-stopped
-    image: integration/designs-render:1.0.0-wip2-424a9a61-1647341334
+    image: nextbreakpoint/elasticsearch:7.17.1-1
     environment:
-      JAEGER_ATTRIBUTES: service.name=designs-render,service.version=1.0.0-wip2-424a9a61-1647341334,service.namespace=designs,environment=dev
-      JAEGER_ENDPOINT: http://host.docker.internal:14250
-      KEYSTORE_SECRET: secret
-      AWS_ACCESS_KEY_ID: admin
-      AWS_SECRET_ACCESS_KEY: password
-      MINIO_HOST: host.docker.internal
-      MINIO_PORT: 9000
-      BUCKET_NAME: tiles
-      KAFKA_HOST: host.docker.internal
-      KAFKA_PORT: 9094
-      RENDER_TOPIC: render
-      EVENTS_TOPIC: events
-      DEBUG_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:35124
-      DEBUG_LEVEL: ${DEBUG_LEVEL:-INFO}
+      node.name: "elasticsearch"
+      cluster.name: "elasticsearch"
+      discovery.type: single-node
+      xpack.security.enabled: 'false'
+      bootstrap.memory_lock: 'true'
+      ES_JAVA_OPTS: '-Xms2G -Xmx2G'
     ports:
-      - target: 30124
-        published: 30124
+      - target: 9200
+        published: 9200
         protocol: tcp
         mode: host
-      - target: 35124
-        published: 35124
+      - target: 9300
+        published: 9300
         protocol: tcp
         mode: host
     networks:
-      - platform
+      - services
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
     volumes:
-      - ./services/designs-render/config/integration.json:/etc/config.json
-      - ./secrets/keystore_auth.jceks:/secrets/keystore_auth.jceks
-      - ./secrets/keystore_server.jks:/secrets/keystore_server.jks
-  designs-render2:
+      - ./scripts/init.sh:/docker-entrypoint-initdb.d/init.sh:ro
+      - elasticsearch-data:/usr/share/elasticsearch/data
+  kibana:
     restart: unless-stopped
-    image: integration/designs-render:1.0.0-wip2-424a9a61-1647341334
+    image: kibana:8.1.0
     environment:
-      JAEGER_ATTRIBUTES: service.name=designs-render,service.version=1.0.0-wip2-424a9a61-1647341334,service.namespace=designs,environment=dev
-      JAEGER_ENDPOINT: http://host.docker.internal:14250
-      KEYSTORE_SECRET: secret
-      AWS_ACCESS_KEY_ID: admin
-      AWS_SECRET_ACCESS_KEY: password
-      MINIO_HOST: host.docker.internal
-      MINIO_PORT: 9000
-      BUCKET_NAME: tiles
-      KAFKA_HOST: host.docker.internal
-      KAFKA_PORT: 9094
-      RENDER_TOPIC: render
-      EVENTS_TOPIC: events
-      DEBUG_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:35125
-      DEBUG_LEVEL: ${DEBUG_LEVEL:-INFO}
+      xpack.security.enabled: 'false'
+      elasticsearch.hosts: 'http://elasticsearch:9200'
     ports:
-      - target: 30125
-        published: 30125
-        protocol: tcp
-        mode: host
-      - target: 35125
-        published: 35125
+      - target: 5601
+        published: 5601
         protocol: tcp
         mode: host
     networks:
-      - platform
-    volumes:
-      - ./services/designs-render/config/integration.json:/etc/config.json
-      - ./secrets/keystore_auth.jceks:/secrets/keystore_auth.jceks
-      - ./secrets/keystore_server.jks:/secrets/keystore_server.jks
-  designs-render3:
+      - services
+  jaeger:
     restart: unless-stopped
-    image: integration/designs-render:1.0.0-wip2-424a9a61-1647341334
+    image: jaegertracing/all-in-one:1.22
     environment:
-      JAEGER_ATTRIBUTES: service.name=designs-render,service.version=1.0.0-wip2-424a9a61-1647341334,service.namespace=designs,environment=dev
-      JAEGER_ENDPOINT: http://host.docker.internal:14250
-      KEYSTORE_SECRET: secret
-      AWS_ACCESS_KEY_ID: admin
-      AWS_SECRET_ACCESS_KEY: password
-      MINIO_HOST: host.docker.internal
-      MINIO_PORT: 9000
-      BUCKET_NAME: tiles
-      KAFKA_HOST: host.docker.internal
-      KAFKA_PORT: 9094
-      RENDER_TOPIC: render
-      EVENTS_TOPIC: events
-      DEBUG_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:35126
-      DEBUG_LEVEL: ${DEBUG_LEVEL:-INFO}
+      SPAN_STORAGE_TYPE: elasticsearch
+      ES_SERVER_URLS: http://elasticsearch:9200
+      ES_TAGS_AS_FIELDS_ALL: 'true'
     ports:
-      - target: 30126
-        published: 30126
+      - target: 16686
+        published: 16686
         protocol: tcp
         mode: host
-      - target: 35126
-        published: 35126
+      - target: 5775
+        published: 5775
+        protocol: udp
+        mode: host
+      - target: 5778
+        published: 5778
+        protocol: tcp
+        mode: host
+      - target: 6831
+        published: 6831
+        protocol: udp
+        mode: host
+      - target: 6832
+        published: 6832
+        protocol: udp
+        mode: host
+      - target: 14250
+        published: 14250
+        protocol: tcp
+        mode: host
+      - target: 14268
+        published: 14268
+        protocol: tcp
+        mode: host
+      - target: 14269
+        published: 14269
         protocol: tcp
         mode: host
     networks:
-      - platform
-    volumes:
-      - ./services/designs-render/config/integration.json:/etc/config.json
-      - ./secrets/keystore_auth.jceks:/secrets/keystore_auth.jceks
-      - ./secrets/keystore_server.jks:/secrets/keystore_server.jks
-  designs-render4:
+      - services
+  minio:
     restart: unless-stopped
-    image: integration/designs-render:1.0.0-wip2-424a9a61-1647341334
+    image: minio/minio:RELEASE.2022-03-11T11-08-23Z.hotfix.29c773d72
     environment:
-      JAEGER_ATTRIBUTES: service.name=designs-render,service.version=1.0.0-wip2-424a9a61-1647341334,service.namespace=designs,environment=dev
-      JAEGER_ENDPOINT: http://host.docker.internal:14250
-      KEYSTORE_SECRET: secret
-      AWS_ACCESS_KEY_ID: admin
-      AWS_SECRET_ACCESS_KEY: password
-      MINIO_HOST: host.docker.internal
-      MINIO_PORT: 9000
-      BUCKET_NAME: tiles
-      KAFKA_HOST: host.docker.internal
-      KAFKA_PORT: 9094
-      RENDER_TOPIC: render
-      EVENTS_TOPIC: events
-      DEBUG_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:35127
-      DEBUG_LEVEL: ${DEBUG_LEVEL:-INFO}
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: password
+    command:
+      - server
+      - /var/data
+      - --console-address
+      - :39090
     ports:
-      - target: 30127
-        published: 30127
+      - target: 9000
+        published: 9000
         protocol: tcp
         mode: host
-      - target: 35127
-        published: 35127
+      - target: 39090
+        published: 39090
         protocol: tcp
         mode: host
-    networks:
-      - platform
     volumes:
-      - ./services/designs-render/config/integration.json:/etc/config.json
-      - ./secrets/keystore_auth.jceks:/secrets/keystore_auth.jceks
-      - ./secrets/keystore_server.jks:/secrets/keystore_server.jks
-  gateway:
-    restart: unless-stopped
-    image: integration/gateway:1.0.0-wip2-424a9a61-1647341334
-    environment:
-      JAEGER_ATTRIBUTES: service.name=gateway,service.version=1.0.0-wip2-424a9a61-1647341334,service.namespace=designs,environment=dev
-      JAEGER_ENDPOINT: http://host.docker.internal:14250
-      KEYSTORE_SECRET: secret
-      ACCOUNTS_URL: https://accounts:30110
-      AUTHENTICATION_URL: https://authentication:30101
-      DESIGNS_QUERY_URL: https://designs-query:30120
-      DESIGNS_COMMAND_URL: https://designs-command:30121
-      DESIGNS_RENDER_URL: https://designs-render1:30124
-      DESIGNS_WATCH_URL: https://designs-notify:30123
-      DEBUG_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:35100
-      DEBUG_LEVEL: ${DEBUG_LEVEL:-INFO}
-    ports:
-      - target: 30100
-        published: 30100
-        protocol: tcp
-        mode: host
-      - target: 35100
-        published: 35100
-        protocol: tcp
-        mode: host
+      - minio-data:/var/data
     networks:
-      - platform
-    volumes:
-      - ./services/gateway/config/integration.json:/etc/config.json
-      - ./secrets/keystore_auth.jceks:/secrets/keystore_auth.jceks
-      - ./secrets/keystore_server.jks:/secrets/keystore_server.jks
-      - ./secrets/keystore_client.jks:/secrets/keystore_client.jks
-      - ./secrets/truststore_client.jks:/secrets/truststore_client.jks
-  frontend:
-    restart: unless-stopped
-    image: integration/frontend:1.0.0-wip2-424a9a61-1647341334 
-    environment:
-      CONFIG_PATH: /etc/config.json
-      SECRETS_PATH: /secrets
-      PORT: 30400
-    ports:
-      - target: 30400
-        published: 30400
-        protocol: tcp
-        mode: host
-    networks:
-      - platform
-    volumes:
-      - ./services/frontend/config/integration.json:/etc/config.json
-      - ./secrets/server_key.pem:/secrets/server_key.pem
-      - ./secrets/server_cert.pem:/secrets/server_cert.pem
-      - ./secrets/ca_cert.pem:/secrets/ca_cert.pem
+      - services
+#  minio-init:
+#    restart: on-failure
+#    image: minio/mc:RELEASE.2022-02-24T22-12-01Z
+#    depends_on:
+#      - minio
+#    environment:
+#      MINIO_ROOT_USER: admin
+#      MINIO_ROOT_PASSWORD: password
+#    entrypoint: >
+#      /bin/sh -c "
+#      sleep 10;
+#      set -e
+#      mc config host add integration http://minio:9000 admin password;
+#      mc rm -r --force integration/tiles;
+#      mc mb integration/tiles;
+#      #mc policy download integration/tiles;
+#      exit 0;
+#      "
+#    networks:
+#      - services
+volumes:
+  minio-data:
+  cassandra-data:
+  elasticsearch-data:
 networks:
-  platform:
+  services:
     driver: bridge

@@ -1,10 +1,13 @@
 CREATE ROLE IF NOT EXISTS admin WITH PASSWORD = 'password' AND LOGIN = true;
+
+GRANT ALL PERMISSIONS ON ALL KEYSPACES TO admin;
+
+
 CREATE ROLE IF NOT EXISTS verticle WITH PASSWORD = 'password' AND LOGIN = true;
 
 CREATE KEYSPACE IF NOT EXISTS designs_aggregate WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };
 
-GRANT ALL PERMISSIONS on KEYSPACE designs_aggregate TO admin;
-GRANT ALL PERMISSIONS on KEYSPACE designs_aggregate TO verticle;
+GRANT ALL PERMISSIONS ON KEYSPACE designs_aggregate TO verticle;
 
 USE designs_aggregate;
 
@@ -45,8 +48,7 @@ CREATE TABLE IF NOT EXISTS DESIGN (
 
 CREATE KEYSPACE IF NOT EXISTS designs_command WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };
 
-GRANT ALL PERMISSIONS on KEYSPACE designs_command TO admin;
-GRANT ALL PERMISSIONS on KEYSPACE designs_command TO verticle;
+GRANT ALL PERMISSIONS ON KEYSPACE designs_command TO verticle;
 
 USE designs_command;
 
@@ -88,8 +90,7 @@ CREATE TABLE IF NOT EXISTS DESIGN (
 
 CREATE KEYSPACE IF NOT EXISTS test_designs_aggregate WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };
 
-GRANT ALL PERMISSIONS on KEYSPACE test_designs_aggregate TO admin;
-GRANT ALL PERMISSIONS on KEYSPACE test_designs_aggregate TO verticle;
+GRANT ALL PERMISSIONS ON KEYSPACE test_designs_aggregate TO verticle;
 
 USE test_designs_aggregate;
 
@@ -130,8 +131,7 @@ CREATE TABLE IF NOT EXISTS DESIGN (
 
 CREATE KEYSPACE IF NOT EXISTS test_designs_command WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };
 
-GRANT ALL PERMISSIONS on KEYSPACE test_designs_command TO admin;
-GRANT ALL PERMISSIONS on KEYSPACE test_designs_command TO verticle;
+GRANT ALL PERMISSIONS ON KEYSPACE test_designs_command TO verticle;
 
 USE test_designs_command;
 

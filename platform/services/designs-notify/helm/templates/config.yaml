@@ -5,7 +5,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ $root.Values.name | default "designs-notify" | quote }}
+  name: '{{ $root.Values.configName | default "designs-notify" }}.{{ $root.Release.Revision | default "1" }}'
   namespace: {{ $root.Release.Namespace | quote }}
   labels:
     chart: {{ $chart }}
@@ -25,10 +25,10 @@ data:
 
       "origin_pattern": "https://{{ $root.Values.clientDomain | default "localhost" }}(:[0-9]+)?",
 
-      "kafka_bootstrap_servers": {{ $root.Values.kafkaServers | default "kafka:9092" | quote }},
+      "kafka_bootstrap_servers": {{ $root.Values.kafkaServers | default "kafka.platform:9094" | quote }},
       "kafka_group_id": {{ $root.Values.kafkaGroupId | default "designs-notify" | quote }},
       "events_topic": {{ $root.Values.eventsTopic | default "events" | quote }},
 
-      "consul_host": {{ $root.Values.consulHost | default "consul" | quote }},
+      "consul_host": {{ $root.Values.consulHost | default "consul.platform" | quote }},
       "consul_port": {{ $root.Values.consulPort | default "8500" | quote }}
     }

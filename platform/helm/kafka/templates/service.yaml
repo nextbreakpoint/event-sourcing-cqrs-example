@@ -19,5 +19,9 @@ spec:
       targetPort: broker
       protocol: TCP
       name: broker
+    - port: 9094
+      targetPort: broker-platform
+      protocol: TCP
+      name: broker-platform
   selector:
     app: {{ $root.Values.name | default "kafka" | quote }}

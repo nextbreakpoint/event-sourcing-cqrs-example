@@ -40,7 +40,7 @@ spec:
       volumes:
         - name: config-vol
           configMap:
-            name: {{ $root.Values.configName | default "frontend" | quote }}
+            name: '{{ $root.Values.configName | default "frontend" }}.{{ $root.Release.Revision | default "1" }}'
         - name: secret-vol
           secret:
             secretName: {{ $root.Values.secretName | default "frontend" | quote }}

@@ -12,7 +12,7 @@ services:
       DATABASE_USERNAME: verticle
       DATABASE_PASSWORD: password
       DEBUG_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:35110
-      DEBUG_LEVEL: ${DEBUG_LEVEL:-INFO}
+      LOGGING_LEVEL: ${LOGGING_LEVEL:-INFO}
     ports:
       - target: 30110
         published: 30110
@@ -42,7 +42,7 @@ services:
       GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET}
       GITHUB_ACCOUNT_EMAIL: ${GITHUB_ACCOUNT_EMAIL}
       DEBUG_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:35101
-      DEBUG_LEVEL: ${DEBUG_LEVEL:-INFO}
+      LOGGING_LEVEL: ${LOGGING_LEVEL:-INFO}
     ports:
       - target: 30101
         published: 30101
@@ -79,7 +79,7 @@ services:
       KAFKA_PORT: 9094
       EVENTS_TOPIC: events
       DEBUG_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:35120
-      DEBUG_LEVEL: ${DEBUG_LEVEL:-INFO}
+      LOGGING_LEVEL: ${LOGGING_LEVEL:-INFO}
     ports:
       - target: 30120
         published: 30120
@@ -111,7 +111,7 @@ services:
       COMMANDS_TOPIC: commands
       EVENTS_TOPIC: events
       DEBUG_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:35121
-      DEBUG_LEVEL: ${DEBUG_LEVEL:-INFO}
+      LOGGING_LEVEL: ${LOGGING_LEVEL:-INFO}
     ports:
       - target: 30121
         published: 30121
@@ -144,7 +144,7 @@ services:
       RENDER_TOPIC: render
       BATCH_TOPIC: batch
       DEBUG_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:35122
-      DEBUG_LEVEL: ${DEBUG_LEVEL:-INFO}
+      LOGGING_LEVEL: ${LOGGING_LEVEL:-INFO}
     ports:
       - target: 30122
         published: 30122
@@ -172,7 +172,7 @@ services:
       KAFKA_PORT: 9094
       EVENTS_TOPIC: events
       DEBUG_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:35123
-      DEBUG_LEVEL: ${DEBUG_LEVEL:-INFO}
+      LOGGING_LEVEL: ${LOGGING_LEVEL:-INFO}
     ports:
       - target: 30123
         published: 30123
@@ -205,7 +205,7 @@ services:
       RENDER_TOPIC: render
       EVENTS_TOPIC: events
       DEBUG_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:35124
-      DEBUG_LEVEL: ${DEBUG_LEVEL:-INFO}
+      LOGGING_LEVEL: ${LOGGING_LEVEL:-INFO}
     ports:
       - target: 30124
         published: 30124
@@ -238,7 +238,7 @@ services:
       RENDER_TOPIC: render
       EVENTS_TOPIC: events
       DEBUG_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:35125
-      DEBUG_LEVEL: ${DEBUG_LEVEL:-INFO}
+      LOGGING_LEVEL: ${LOGGING_LEVEL:-INFO}
     ports:
       - target: 30125
         published: 30125
@@ -271,7 +271,7 @@ services:
       RENDER_TOPIC: render
       EVENTS_TOPIC: events
       DEBUG_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:35126
-      DEBUG_LEVEL: ${DEBUG_LEVEL:-INFO}
+      LOGGING_LEVEL: ${LOGGING_LEVEL:-INFO}
     ports:
       - target: 30126
         published: 30126
@@ -304,7 +304,7 @@ services:
       RENDER_TOPIC: render
       EVENTS_TOPIC: events
       DEBUG_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:35127
-      DEBUG_LEVEL: ${DEBUG_LEVEL:-INFO}
+      LOGGING_LEVEL: ${LOGGING_LEVEL:-INFO}
     ports:
       - target: 30127
         published: 30127
@@ -334,7 +334,7 @@ services:
       DESIGNS_RENDER_URL: https://designs-render1:30124
       DESIGNS_WATCH_URL: https://designs-notify:30123
       DEBUG_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:35100
-      DEBUG_LEVEL: ${DEBUG_LEVEL:-INFO}
+      LOGGING_LEVEL: ${LOGGING_LEVEL:-INFO}
     ports:
       - target: 30100
         published: 30100

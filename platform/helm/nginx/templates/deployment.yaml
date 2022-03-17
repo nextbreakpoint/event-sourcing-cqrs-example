@@ -40,7 +40,7 @@ spec:
       volumes:
         - name: config-vol
           configMap:
-            name: {{ $root.Values.configName | default "nginx" | quote }}
+            name: '{{ $root.Values.configName | default "nginx" }}.{{ $root.Release.Revision | default "1" }}'
         - name: secret-vol
           secret:
             secretName: {{ $root.Values.secretName | default "nginx" | quote }}

@@ -195,8 +195,6 @@ public class KafkaPolling {
             final Map<String, String> headers = record.headers().stream()
                     .collect(Collectors.toMap(KafkaHeader::key, kafkaHeader -> getString(kafkaHeader.value())));
 
-            System.out.println(headers);
-
             final Payload payload = Json.decodeValue(record.value(), Payload.class);
 
             final RxSingleHandler<InputMessage, ?> handler = messageHandlers.get(payload.getType());

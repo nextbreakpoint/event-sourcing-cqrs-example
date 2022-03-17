@@ -27,11 +27,11 @@ spec:
       targetPort: control3
       protocol: TCP
       name: control3
-    - port: 8400
+    - port: 8500
       targetPort: control4
       protocol: TCP
       name: control4
-    - port: 8500
+    - port: 8600
       targetPort: control5
       protocol: TCP
       name: control5

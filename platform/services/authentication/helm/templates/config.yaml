@@ -5,7 +5,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ $root.Values.name | default "authentication" | quote }}
+  name: '{{ $root.Values.configName | default "authentication" }}.{{ $root.Release.Revision | default "1" }}'
   namespace: {{ $root.Release.Namespace | quote }}
   labels:
     chart: {{ $chart }}

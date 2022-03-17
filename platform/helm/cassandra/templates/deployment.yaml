@@ -40,7 +40,7 @@ spec:
       volumes:
         - name: config-vol
           configMap:
-            name: {{ $root.Values.configName | default "cassandra" | quote }}
+            name: '{{ $root.Values.configName | default "cassandra" }}.{{ $root.Release.Revision | default "1" }}'
         {{- if $root.Values.secretName}}
         - name: secret-vol
           secret:

@@ -44,7 +44,7 @@ spec:
       volumes:
         - name: config-vol
           configMap:
-            name: {{ $root.Values.configName | default "postgres" | quote }}
+            name: '{{ $root.Values.configName | default "postgres" }}.{{ $root.Release.Revision | default "1" }}'
         - name: data-vol
           hostPath:
             path: /postgress-data

@@ -40,7 +40,7 @@ spec:
       volumes:
         - name: config-vol
           configMap:
-            name: {{ $root.Values.configName | default "mysql" | quote }}
+            name: '{{ $root.Values.configName | default "mysql" }}.{{ $root.Release.Revision | default "1" }}'
       containers:
         - name: {{ $root.Values.name | default "mysql" | quote }}
           image: "{{ $root.Values.image.registry }}{{ $root.Values.image.repository }}:{{ $root.Values.image.tag }}"

@@ -5,7 +5,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ $root.Values.name | default "nginx" | quote }}
+  name: '{{ $root.Values.configName | default "nginx" }}.{{ $root.Release.Revision | default "1" }}'
   namespace: {{ $root.Release.Namespace | quote }}
   labels:
     chart: {{ $chart }}
@@ -49,12 +49,12 @@ data:
           resolver kube-dns.kube-system.svc.cluster.local valid=30s;
 
           location /v1 {
-            set $upstream_gateway gateway.blueprint.svc.cluster.local;
+            set $upstream_gateway gateway.services.svc.cluster.local;
             proxy_pass https://$upstream_gateway:8080$request_uri;
           }
 
           location / {
-            set $upstream_frontend frontend.blueprint.svc.cluster.local;
+            set $upstream_frontend frontend.services.svc.cluster.local;
             proxy_pass https://$upstream_frontend:8080$request_uri;
           }
         }

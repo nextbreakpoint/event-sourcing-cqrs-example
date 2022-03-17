@@ -59,7 +59,7 @@ public class ContainerUtils {
     }
 
     public static GenericContainer createElasticsearchContainer(Network network) {
-        return new GenericContainer(DockerImageName.parse("nextbreakpoint/elasticsearch:7.16.3-1"))
+        return new GenericContainer(DockerImageName.parse("nextbreakpoint/elasticsearch:7.17.1-1"))
                 .withEnv("ES_JAVA_OPTS", "-Xms2G -Xmx2G")
                 .withEnv("discovery.type", "single-node")
                 .withEnv("xpack.security.enabled", "false")
@@ -80,7 +80,7 @@ public class ContainerUtils {
     }
 
     public static GenericContainer createConsulContainer(Network network, String configFile) {
-        return new GenericContainer(DockerImageName.parse("consul:1.9.4"))
+        return new GenericContainer(DockerImageName.parse("consul:1.11.4"))
                 .withFileSystemBind(configFile, "/consul/config/config.json", BindMode.READ_ONLY)
                 .withCommand("consul", "agent", "-data-dir=/consul/data", "-config-dir=/consul/config")
                 .withNetwork(network)

@@ -55,6 +55,9 @@ spec:
             - name: broker-external
               containerPort: {{ $root.Values.externalPort | default 9093 }}
               protocol: TCP
+            - name: broker-platform
+              containerPort: 9094
+              protocol: TCP
           env:
             - name: POD_NAME
               valueFrom:
@@ -79,11 +82,11 @@ spec:
             - name: KAFKA_ZOOKEEPER_CONNECT
               value: {{ $root.Values.zookeeperName | default "zookeeper" }}:{{ $root.Values.zookeeperPort | default 2181 }}
             - name: KAFKA_ADVERTISED_LISTENERS
-              value: PLAINTEXT_EXTERNAL://{{ $root.Values.externalName | default "localhost" }}:{{ $root.Values.externalPort | default 9093 }},PLAINTEXT_INTERNAL://kafka:9092
+              value: PLAINTEXT_PLATFORM://kafka.platform:9094,PLAINTEXT_EXTERNAL://{{ $root.Values.externalName | default "localhost" }}:{{ $root.Values.externalPort | default 9093 }},PLAINTEXT_INTERNAL://kafka:9092
             - name: KAFKA_LISTENERS
-              value: PLAINTEXT_EXTERNAL://0.0.0.0:{{ $root.Values.externalPort | default 9093 }},PLAINTEXT_INTERNAL://0.0.0.0:9092
+              value: PLAINTEXT_PLATFORM://0.0.0.0:9094,PLAINTEXT_EXTERNAL://0.0.0.0:{{ $root.Values.externalPort | default 9093 }},PLAINTEXT_INTERNAL://0.0.0.0:9092
             - name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
-              value: PLAINTEXT_EXTERNAL:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+              value: PLAINTEXT_PLATFORM:PLAINTEXT,PLAINTEXT_EXTERNAL:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
             - name: KAFKA_INTER_BROKER_LISTENER_NAME
               value: PLAINTEXT_INTERNAL
             - name: KAFKA_BROKER_ID

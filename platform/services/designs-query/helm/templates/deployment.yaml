@@ -40,7 +40,7 @@ spec:
       volumes:
         - name: config-vol
           configMap:
-            name: {{ $root.Values.configName | default "designs-query" | quote }}
+            name: '{{ $root.Values.configName | default "designs-query" }}.{{ $root.Release.Revision | default "1" }}'
         - name: secret-vol
           secret:
             secretName: {{ $root.Values.secretName | default "designs-query" | quote }}
@@ -89,7 +89,13 @@ spec:
             - name: JAEGER_ATTRIBUTES
               value: 'service.name={{ $root.Values.name | default "gateway" }},service.version={{ $root.Values.image.tag }},service.namespace={{ $root.Release.Namespace }},environment={{ $root.Values.environment | default "dev" }},release={{ $root.Release.Name }}'
             - name: JAEGER_ENDPOINT
-              value: {{ $root.Values.jaegerEndpoint | default "http://jaeger:14250" | quote }}
+              value: {{ $root.Values.jaegerEndpoint | default "http://jaeger.monitoring:14250" | quote }}
+            {{- if $root.Values.enableDebug }}
+            - name: DEBUG_OPTS
+              value: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
+            {{- end}}
+            - name: LOGGING_LEVEL
+              value: {{ $root.Values.loggingLevel | default "INFO" | quote }}
           volumeMounts:
             - name: config-vol
               readOnly: true

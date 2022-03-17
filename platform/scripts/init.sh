@@ -45,5 +45,3 @@ until curl -X PUT http://localhost:9200/designs_draft -H 'content-type: applicat
 
 until curl -X PUT http://localhost:9200/test_designs_query -H 'content-type: application/json' -d @/tmp/data.json; do >&2 echo "Elasticsearch is unavailable - sleeping"; sleep 5; done &
 until curl -X PUT http://localhost:9200/test_designs_query_draft -H 'content-type: application/json' -d @/tmp/data.json; do >&2 echo "Elasticsearch is unavailable - sleeping"; sleep 5; done &
-
-echo "done"

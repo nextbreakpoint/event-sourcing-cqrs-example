@@ -123,6 +123,8 @@ Wait until Nexus is ready:
 
 Export variables:
 
+    export PACTBROKER_HOST=$(minikube ip)
+    export PACTBROKER_PORT=9092
     export NEXUS_HOST=$(minikube ip)
     export NEXUS_PORT=8081
     export NEXUS_USERNAME=admin
@@ -138,7 +140,7 @@ Configure Docker:
 
 Build services:
 
-    ./scripts/build-services.sh --nexus-host=${NEXUS_HOST} --nexus-port=${NEXUS_PORT} --nexus-username=${NEXUS_USERNAME} --nexus-password=${NEXUS_PASSWORD} --docker-host=$(minikube ip)
+    ./scripts/build-services.sh --pactbroker-host=${PACTBROKER_HOST} --pactbroker-port=${PACTBROKER_PORT} --nexus-host=${NEXUS_HOST} --nexus-port=${NEXUS_PORT} --nexus-username=${NEXUS_USERNAME} --nexus-password=${NEXUS_PASSWORD} --docker-host=$(minikube ip) --skip-tests
 
 Upgrade Nexus (if needed):
 
@@ -186,14 +188,6 @@ Check Elasticsearch:
 
     kubectl -n monitoring logs -f --tail=-1 -l app=elasticsearch
 
-Deploy Jaeger:
-
-    helm install integration-jaeger helm/jaeger -n monitoring --set replicas=1
-
-Check Jaeger:
-
-    kubectl -n monitoring logs -f --tail=-1 -l app=jaeger
-
 Deploy Kibana:
 
     helm install integration-kibana helm/kibana -n monitoring --set replicas=1
@@ -201,6 +195,14 @@ Deploy Kibana:
 Check Kibana:
 
     kubectl -n monitoring logs -f --tail=-1 -l app=kibana
+
+Deploy Jaeger:
+
+    helm install integration-jaeger helm/jaeger -n monitoring --set replicas=1
+
+Check Jaeger:
+
+    kubectl -n monitoring logs -f --tail=-1 -l app=jaeger
 
 Deploy Elasticsearch:
 
@@ -326,19 +328,19 @@ Export version:
 
 Deploy services:
 
-    helm install service-authentication services/authentication/helm -n services --set image.repository=integration/authentication,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip),clientWebUrl=https://$(minikube ip):443,clientAuthUrl=https://$(minikube ip):443
+    helm install service-authentication services/authentication/helm -n services --set image.repository=integration/authentication,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip),clientWebUrl=https://$(minikube ip):443,clientAuthUrl=https://$(minikube ip):443,enableDebug=false,loggingLevel=INFO
 
-    helm install service-accounts services/accounts/helm -n services --set image.repository=integration/accounts,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip)
+    helm install service-accounts services/accounts/helm -n services --set image.repository=integration/accounts,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip),enableDebug=false,loggingLevel=INFO
 
-    helm install service-designs-query services/designs-query/helm -n services --set image.repository=integration/designs-query,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip)
-    helm install service-designs-command services/designs-command/helm -n services --set image.repository=integration/designs-command,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip)
-    helm install service-designs-aggregate services/designs-aggregate/helm -n services --set image.repository=integration/designs-aggregate,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip)
-    helm install service-designs-notify services/designs-notify/helm -n services --set image.repository=integration/designs-notify,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip)
-    helm install service-designs-render services/designs-render/helm -n services --set image.repository=integration/designs-render,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip)
+    helm install service-designs-query services/designs-query/helm -n services --set image.repository=integration/designs-query,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip),enableDebug=false,loggingLevel=INFO
+    helm install service-designs-command services/designs-command/helm -n services --set image.repository=integration/designs-command,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip),enableDebug=false,loggingLevel=INFO
+    helm install service-designs-aggregate services/designs-aggregate/helm -n services --set image.repository=integration/designs-aggregate,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip),enableDebug=false,loggingLevel=INFO
+    helm install service-designs-notify services/designs-notify/helm -n services --set image.repository=integration/designs-notify,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip),enableDebug=false,loggingLevel=INFO
+    helm install service-designs-render services/designs-render/helm -n services --set image.repository=integration/designs-render,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip),enableDebug=false,loggingLevel=INFO
 
-    helm install service-gateway services/gateway/helm -n services --set image.repository=integration/gateway,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip)
+    helm install service-gateway services/gateway/helm -n services --set image.repository=integration/gateway,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip),enableDebug=false,loggingLevel=INFO
 
-    helm install service-frontend services/frontend/helm -n services --set image.repository=integration/frontend,image.tag=${VERSION},replicas=1,clientWebUrl=https://$(minikube ip):443,clientApiUrl=https://$(minikube ip):443
+    helm install service-frontend services/frontend/helm -n services --set image.repository=integration/frontend,image.tag=${VERSION},replicas=1,clientWebUrl=https://$(minikube ip):443,clientApiUrl=https://$(minikube ip):443,enableDebug=false,loggingLevel=INFO
 
 Check services:
 
@@ -356,16 +358,20 @@ Expose services:
 
     kubectl -n services expose service/designs-notify --name designs-notify-external --port 8000 --target-port 8080 --type LoadBalancer --external-ip $(minikube ip)
 
-Scale services (if needed):
+Scale services:
 
     kubectl -n services scale deployment authentication --replicas=2
     kubectl -n services scale deployment accounts --replicas=2
-    kubectl -n services scale deployment designs-command --replicas=2
-    kubectl -n services scale deployment designs-aggregate --replicas=4
     kubectl -n services scale deployment designs-query --replicas=2
+    kubectl -n services scale deployment designs-command --replicas=2
+    kubectl -n services scale deployment designs-aggregate --replicas=2
+    kubectl -n services scale deployment designs-notify --replicas=1
     kubectl -n services scale deployment designs-render --replicas=8
-    kubectl -n services scale deployment frontend --replicas=2
     kubectl -n services scale deployment gateway --replicas=2
+    kubectl -n services scale deployment frontend --replicas=2
+
+Scale platform:
+
     kubectl -n services scale deployment nginx --replicas=2
 
 Open browser:
@@ -376,31 +382,31 @@ Login with your GitHub account associated with the admin email for getting admin
 
 Upgrade services (if needed):
 
-    helm upgrade --install service-authentication services/authentication/helm -n services --set image.repository=integration/authentication,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip),clientWebUrl=https://$(minikube ip):443,clientAuthUrl=https://$(minikube ip):443
+    helm upgrade --install service-authentication services/authentication/helm -n services --set image.repository=integration/authentication,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip),clientWebUrl=https://$(minikube ip):443,clientAuthUrl=https://$(minikube ip):443,enableDebug=false,loggingLevel=INFO
 
-    helm upgrade --install service-accounts services/accounts/helm -n services --set image.repository=integration/accounts,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip)
+    helm upgrade --install service-accounts services/accounts/helm -n services --set image.repository=integration/accounts,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip),enableDebug=false,loggingLevel=INFO
 
-    helm upgrade --install service-designs-query services/designs-query/helm -n services --set image.repository=integration/designs-query,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip)
-    helm upgrade --install service-designs-command services/designs-command/helm -n services --set image.repository=integration/designs-command,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip)
-    helm upgrade --install service-designs-aggregate services/designs-aggregate/helm -n services --set image.repository=integration/designs-aggregate,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip)
-    helm upgrade --install service-designs-notify services/designs-notify/helm -n services --set image.repository=integration/designs-notify,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip)
-    helm upgrade --install service-designs-render services/designs-render/helm -n services --set image.repository=integration/designs-render,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip)
+    helm upgrade --install service-designs-query services/designs-query/helm -n services --set image.repository=integration/designs-query,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip),enableDebug=false,loggingLevel=INFO
+    helm upgrade --install service-designs-command services/designs-command/helm -n services --set image.repository=integration/designs-command,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip),enableDebug=false,loggingLevel=INFO
+    helm upgrade --install service-designs-aggregate services/designs-aggregate/helm -n services --set image.repository=integration/designs-aggregate,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip),enableDebug=false,loggingLevel=INFO
+    helm upgrade --install service-designs-notify services/designs-notify/helm -n services --set image.repository=integration/designs-notify,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip),enableDebug=false,loggingLevel=INFO
+    helm upgrade --install service-designs-render services/designs-render/helm -n services --set image.repository=integration/designs-render,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip),enableDebug=false,loggingLevel=INFO
 
-    helm upgrade --install service-gateway services/gateway/helm -n services --set image.repository=integration/gateway,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip)
+    helm upgrade --install service-gateway services/gateway/helm -n services --set image.repository=integration/gateway,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip),enableDebug=false,loggingLevel=INFO
 
-    helm upgrade --install service-frontend services/frontend/helm -n services --set image.repository=integration/frontend,image.tag=${VERSION},replicas=1,clientWebUrl=https://$(minikube ip):443,clientApiUrl=https://$(minikube ip):443
+    helm upgrade --install service-frontend services/frontend/helm -n services --set image.repository=integration/frontend,image.tag=${VERSION},replicas=1,clientWebUrl=https://$(minikube ip):443,clientApiUrl=https://$(minikube ip):443,enableDebug=false,loggingLevel=INFO
 
-Upgrade Jaeger (if needed):
+Upgrade Elasticsearch (if needed):
 
-    helm upgrade --install integration-jaeger helm/jaeger -n monitoring --set replicas=1
+    helm upgrade --install integration-elasticsearch helm/elasticsearch -n monitoring --set replicas=1
 
 Upgrade Kibana (if needed):
 
     helm upgrade --install integration-kibana helm/kibana -n monitoring --set replicas=1
 
-Upgrade Elasticsearch (if needed):
+Upgrade Jaeger (if needed):
 
-    helm upgrade --install integration-elasticsearch helm/elasticsearch -n monitoring --set replicas=1
+    helm upgrade --install integration-jaeger helm/jaeger -n monitoring --set replicas=1
 
 Upgrade Elasticsearch (if needed):
 
@@ -438,6 +444,9 @@ Stop Minikube (when finished):
 
     minikube stop
 
+Delete Minikube (when finished):
+
+    minikube delete
 
 
 

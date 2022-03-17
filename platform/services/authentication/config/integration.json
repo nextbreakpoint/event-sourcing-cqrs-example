@@ -34,5 +34,5 @@
 
   "cookie_domain": "localhost",
 
-  "admin_users": ["${ADMIN_EMAIL}"]
+  "admin_users": ["${GITHUB_ACCOUNT_EMAIL}"]
 }

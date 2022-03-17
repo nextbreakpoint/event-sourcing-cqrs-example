@@ -90,7 +90,7 @@
                                 <GITHUB_OAUTH_URL>http://localhost:39002</GITHUB_OAUTH_URL>
                                 <GITHUB_CLIENT_ID>111</GITHUB_CLIENT_ID>
                                 <GITHUB_CLIENT_SECRET>222</GITHUB_CLIENT_SECRET>
-                                <ADMIN_EMAIL>admin@localhost</ADMIN_EMAIL>
+                                <GITHUB_ACCOUNT_EMAIL>admin@localhost</GITHUB_ACCOUNT_EMAIL>
                             </environmentVariables>
                         </configuration>
                     </execution>
@@ -106,7 +106,7 @@
                                 <GITHUB_OAUTH_URL>https://github.com</GITHUB_OAUTH_URL>
                                 <GITHUB_CLIENT_ID>${env.GITHUB_CLIENT_ID}</GITHUB_CLIENT_ID>
                                 <GITHUB_CLIENT_SECRET>${env.GITHUB_CLIENT_SECRET}</GITHUB_CLIENT_SECRET>
-                                <ADMIN_EMAIL>${env.ADMIN_EMAIL}</ADMIN_EMAIL>
+                                <GITHUB_ACCOUNT_EMAIL>${env.GITHUB_ACCOUNT_EMAIL}</GITHUB_ACCOUNT_EMAIL>
                             </environmentVariables>
                         </configuration>
                     </execution>

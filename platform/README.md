@@ -39,7 +39,7 @@ Update dependencies (if needed):
 
 Export GitHub secrets (very important):
 
-    export GITHUB_ACCOUNT_ID=your-account-id
+    export GITHUB_ACCOUNT_EMAIL=your-account-id
     export GITHUB_CLIENT_ID=your-client-id
     export GITHUB_CLIENT_SECRET=your-client-secret
 
@@ -252,13 +252,13 @@ Expose servers:
 
 Export GitHub secrets:
 
-    export GITHUB_ACCOUNT_ID=your-account-id
+    export GITHUB_ACCOUNT_EMAIL=your-account-id
     export GITHUB_CLIENT_ID=your-client-id
     export GITHUB_CLIENT_SECRET=your-client-secret
 
 Deploy secrets for services:
 
-    kubectl -n blueprint create secret generic authentication --from-file keystore_client.jks=secrets/keystore_client.jks --from-file truststore_client.jks=secrets/truststore_client.jks --from-file keystore_server.jks=secrets/keystore_server.jks --from-file keystore_auth.jceks=secrets/keystore_auth.jceks --from-literal KEYSTORE_SECRET=secret --from-literal ADMIN_EMAIL=$ADMIN_EMAIL --from-literal GITHUB_CLIENT_ID=$GITHUB_CLIENT_ID --from-literal GITHUB_CLIENT_SECRET=$GITHUB_CLIENT_SECRET
+    kubectl -n blueprint create secret generic authentication --from-file keystore_client.jks=secrets/keystore_client.jks --from-file truststore_client.jks=secrets/truststore_client.jks --from-file keystore_server.jks=secrets/keystore_server.jks --from-file keystore_auth.jceks=secrets/keystore_auth.jceks --from-literal KEYSTORE_SECRET=secret --from-literal GITHUB_ACCOUNT_EMAIL=$GITHUB_ACCOUNT_EMAIL --from-literal GITHUB_CLIENT_ID=$GITHUB_CLIENT_ID --from-literal GITHUB_CLIENT_SECRET=$GITHUB_CLIENT_SECRET
 
     kubectl -n blueprint create secret generic accounts --from-file keystore_server.jks=secrets/keystore_server.jks --from-file keystore_auth.jceks=secrets/keystore_auth.jceks --from-literal KEYSTORE_SECRET=secret --from-literal DATABASE_USERNAME=verticle --from-literal DATABASE_PASSWORD=password
 
@@ -278,7 +278,7 @@ Export version:
 
 Deploy services:
 
-    helm install service-authentication services/authentication/helm -n blueprint --set image.repository=integration/authentication,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip),clientWebUrl=https://$(minikube ip):8080,clientAuthUrl=https://$(minikube ip):8080
+    helm install service-authentication services/authentication/helm -n blueprint --set image.repository=integration/authentication,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip),clientWebUrl=https://$(minikube ip):443,clientAuthUrl=https://$(minikube ip):443
 
     helm install service-accounts services/accounts/helm -n blueprint --set image.repository=integration/accounts,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip)
 
@@ -290,7 +290,7 @@ Deploy services:
 
     helm install service-gateway services/gateway/helm -n blueprint --set image.repository=integration/gateway,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip)
 
-    helm install service-frontend services/frontend/helm -n blueprint --set image.repository=integration/frontend,image.tag=${VERSION},replicas=1,clientWebUrl=https://$(minikube ip):8080,clientApiUrl=https://$(minikube ip):8080
+    helm install service-frontend services/frontend/helm -n blueprint --set image.repository=integration/frontend,image.tag=${VERSION},replicas=1,clientWebUrl=https://$(minikube ip):443,clientApiUrl=https://$(minikube ip):443
 
 Check services:
 
@@ -320,9 +320,15 @@ Scale services (if needed):
     kubectl -n blueprint scale deployment gateway --replicas=2
     kubectl -n blueprint scale deployment nginx --replicas=2
 
+Open browser:
+
+    open https://$(minikube ip)/browse/designs.html
+
+Login with your GitHub account associated with the admin email for getting admin access
+
 Upgrade services (if needed):
 
-    helm upgrade --install service-authentication services/authentication/helm -n blueprint --set image.repository=integration/authentication,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip),clientWebUrl=https://$(minikube ip):8080,clientAuthUrl=https://$(minikube ip):8080
+    helm upgrade --install service-authentication services/authentication/helm -n blueprint --set image.repository=integration/authentication,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip),clientWebUrl=https://$(minikube ip):443,clientAuthUrl=https://$(minikube ip):443
 
     helm upgrade --install service-accounts services/accounts/helm -n blueprint --set image.repository=integration/accounts,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip)
 
@@ -334,7 +340,7 @@ Upgrade services (if needed):
 
     helm upgrade --install service-gateway services/gateway/helm -n blueprint --set image.repository=integration/gateway,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip)
 
-    helm upgrade --install service-frontend services/frontend/helm -n blueprint --set image.repository=integration/frontend,image.tag=${VERSION},replicas=1,clientWebUrl=https://$(minikube ip):8080,clientApiUrl=https://$(minikube ip):8080
+    helm upgrade --install service-frontend services/frontend/helm -n blueprint --set image.repository=integration/frontend,image.tag=${VERSION},replicas=1,clientWebUrl=https://$(minikube ip):443,clientApiUrl=https://$(minikube ip):443
 
 Upgrade Jaeger (if needed):
 
@@ -370,7 +376,7 @@ Upgrade NGINX (if needed):
 
 Upgrade Consul (if needed):
 
-    helm upgrade --install integration-consul helm/consul -n blueprint --set replicas=1,servicePort=8080,serviceName=$(minikube ip)
+    helm upgrade --install integration-consul helm/consul -n blueprint --set replicas=1,servicePort=8000,serviceName=$(minikube ip)
 
 Upgrade Minio (if needed):
 
@@ -387,14 +393,16 @@ Stop Minikube (when finished):
 
 /////////////////
 
-Only one replica per partition is allowed for designs-command-consumer. Only one replica per node is allowed for designs-notify.
+docker run -it --network services_services -e MINIO_ROOT_USER=admin -e MINIO_ROOT_PASSWORD=password --entrypoint sh minio/mc:latest -c "mc config host add integration http://minio:9000 admin password && mc rm -r --force integration/tiles && mc mb integration/tiles"
 
-docker run -it --network services_services -e MINIO_ACCESS_KEY=admin -e MINIO_SECRET_KEY=password --entrypoint sh minio/mc:latest -c "mc config host add integration http://minio:9000 admin password && mc rm -r --force integration/tiles && mc mb integration/tiles"
-
-docker run -it --network services_services -e MINIO_ACCESS_KEY=admin -e MINIO_SECRET_KEY=password --entrypoint sh minio/mc:latest -c "mc config host add integration http://minio:9000 admin password && mc mb integration/tiles"
-
+docker run -it --network services_services -e MINIO_ROOT_USER=admin -e MINIO_ROOT_PASSWORD=password --entrypoint sh minio/mc:latest -c "mc config host add integration http://minio:9000 admin password && mc mb integration/tiles"
 
 mvn -s settings.xml -Dcommon=true -Dservices=true -Dplatform=true -Dnexus=true -DskipTests=true -Dnexus.host=localhost -Dnexus.port=38081 -Dpactbroker.host=localhost -Dpactbroker.port=9292 clean package
 
 minikube start --mount-string "$(pwd)/scripts:/var/docker/scripts" --mount
+
+/////////////////
+
+Only one replica per partition is allowed for designs-command-consumer. Only one replica per node is allowed for designs-notify.
+
 

@@ -40,7 +40,7 @@ services:
       GITHUB_OAUTH_URL: https://github.com
       GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
       GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET}
-      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      GITHUB_ACCOUNT_EMAIL: ${GITHUB_ACCOUNT_EMAIL}
       DEBUG_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:35101
       DEBUG_LEVEL: ${DEBUG_LEVEL:-INFO}
     ports:

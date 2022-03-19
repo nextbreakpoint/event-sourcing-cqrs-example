@@ -1,5 +1,7 @@
 package com.nextbreakpoint.blueprint.common.vertx;
 
+import com.nextbreakpoint.blueprint.common.core.Environment;
+import com.nextbreakpoint.blueprint.common.core.IOUtils;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.Context;
@@ -14,6 +16,7 @@ import io.opentelemetry.sdk.trace.SdkTracerProvider;
 import io.opentelemetry.sdk.trace.export.BatchSpanProcessor;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.dns.AddressResolverOptions;
+import io.vertx.core.json.JsonObject;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.VertxPrometheusOptions;
 import io.vertx.rxjava.core.RxHelper;
@@ -21,6 +24,8 @@ import io.vertx.rxjava.core.Vertx;
 import io.vertx.tracing.opentelemetry.OpenTelemetryOptions;
 import rx.plugins.RxJavaHooks;
 
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
@@ -31,7 +36,7 @@ import java.util.stream.Collectors;
 public class Initializer {
     private Initializer() {}
 
-    public static Vertx initialize() {
+    public static Vertx createVertx() {
         final VertxPrometheusOptions prometheusOptions = new VertxPrometheusOptions().setEnabled(true);
 
         final MicrometerMetricsOptions metricsOptions = new MicrometerMetricsOptions()
@@ -124,6 +129,14 @@ public class Initializer {
             } else {
                 return ContextStorage.defaultStorage().root();
             }
+        }
+    }
+
+    public static JsonObject loadConfig(String configPath) throws IOException {
+        final Environment environment = Environment.getDefaultEnvironment();
+
+        try (FileInputStream stream = new FileInputStream(configPath)) {
+            return new JsonObject(environment.resolve(IOUtils.toString(stream)));
         }
     }
 }

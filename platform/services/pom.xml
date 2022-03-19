@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.nextbreakpoint</groupId>
         <artifactId>com.nextbreakpoint.blueprint.bom</artifactId>
-        <version>1.0.0-wip2-d5aa92f0-1647538617</version>
+        <version>1.0.0-wip2-4f2e1062-1647631475</version>
     </parent>
     <packaging>pom</packaging>
     <licenses>
@@ -82,6 +82,10 @@
         <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-rx-java</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-health-check</artifactId>
         </dependency>
         <dependency>
             <groupId>io.vertx</groupId>

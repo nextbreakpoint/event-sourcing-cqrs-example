@@ -3,6 +3,7 @@ module com.nextbreakpoint.blueprint.gateway {
     requires com.nextbreakpoint.blueprint.common.vertx;
     requires io.vertx.core;
     requires io.vertx.web;
+    requires io.vertx.healthcheck;
     requires io.vertx.metrics.micrometer;
     requires io.vertx.tracing.opentelemetry;
     requires io.opentelemetry.semconv;

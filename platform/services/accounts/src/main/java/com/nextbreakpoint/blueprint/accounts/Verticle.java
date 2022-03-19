@@ -1,7 +1,6 @@
 package com.nextbreakpoint.blueprint.accounts;
 
 import com.nextbreakpoint.blueprint.accounts.persistence.MySQLStore;
-import com.nextbreakpoint.blueprint.common.core.Environment;
 import com.nextbreakpoint.blueprint.common.core.IOUtils;
 import com.nextbreakpoint.blueprint.common.vertx.*;
 import io.vertx.core.DeploymentOptions;
@@ -10,13 +9,15 @@ import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.healthchecks.Status;
 import io.vertx.ext.web.handler.LoggerFormat;
 import io.vertx.ext.web.openapi.RouterBuilder;
 import io.vertx.rxjava.core.AbstractVerticle;
 import io.vertx.rxjava.core.Promise;
-import io.vertx.rxjava.core.RxHelper;
 import io.vertx.rxjava.core.Vertx;
 import io.vertx.rxjava.ext.auth.jwt.JWTAuth;
+import io.vertx.rxjava.ext.healthchecks.HealthCheckHandler;
+import io.vertx.rxjava.ext.healthchecks.HealthChecks;
 import io.vertx.rxjava.ext.jdbc.JDBCClient;
 import io.vertx.rxjava.ext.web.Router;
 import io.vertx.rxjava.ext.web.RoutingContext;
@@ -26,16 +27,14 @@ import io.vertx.rxjava.ext.web.handler.LoggerHandler;
 import io.vertx.rxjava.ext.web.handler.TimeoutHandler;
 import io.vertx.rxjava.micrometer.PrometheusScrapingHandler;
 import rx.Completable;
-import rx.plugins.RxJavaHooks;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import static com.nextbreakpoint.blueprint.common.core.Authority.*;
 import static com.nextbreakpoint.blueprint.common.core.Headers.*;
@@ -47,33 +46,22 @@ public class Verticle extends AbstractVerticle {
 
     public static void main(String[] args) {
         try {
-            final JsonObject config = loadConfig(args.length > 0 ? args[0] : "config/localhost.json");
+            final JsonObject config = Initializer.loadConfig(args.length > 0 ? args[0] : "config/localhost.json");
 
-            final Vertx vertx = Initializer.initialize();
+            final Vertx vertx = Initializer.createVertx();
 
-            RxJavaHooks.setOnComputationScheduler(s -> RxHelper.scheduler(vertx));
-            RxJavaHooks.setOnIOScheduler(s -> RxHelper.blockingScheduler(vertx));
-            RxJavaHooks.setOnNewThreadScheduler(s -> RxHelper.blockingScheduler(vertx));
-
-            vertx.deployVerticle(new Verticle(), new DeploymentOptions().setConfig(config));
+            vertx.rxDeployVerticle(new Verticle(), new DeploymentOptions().setConfig(config))
+                    .delay(5, TimeUnit.SECONDS)
+                    .retry(3)
+                    .subscribe(o -> logger.info("Verticle deployed"), err -> logger.error("Can't deploy verticle"));
         } catch (Exception e) {
             logger.error("Can't start service", e);
         }
     }
 
-    private static JsonObject loadConfig(String configPath) throws IOException {
-        final Environment environment = Environment.getDefaultEnvironment();
-
-        try (FileInputStream stream = new FileInputStream(configPath)) {
-            return new JsonObject(environment.resolve(IOUtils.toString(stream)));
-        }
-    }
-
     @Override
     public Completable rxStart() {
-        return vertx.rxExecuteBlocking(this::initServer)
-                .doOnError(err -> logger.error("Failed to start server", err))
-                .toCompletable();
+        return vertx.rxExecuteBlocking(this::initServer).toCompletable();
     }
 
     private void initServer(Promise<Void> promise) {
@@ -147,6 +135,10 @@ public class Verticle extends AbstractVerticle {
 
             final Handler<RoutingContext> apiV1DocsHandler = new OpenApiHandler(vertx.getDelegate(), executor, "api-v1.yaml");
 
+            final HealthCheckHandler healthCheckHandler = HealthCheckHandler.createWithHealthChecks(HealthChecks.create(vertx));
+
+            healthCheckHandler.register("database-accounts-table", future -> checkTable(store, future, "ACCOUNT"));
+
             final URL resource = RouterBuilder.class.getClassLoader().getResource("api-v1.yaml");
 
             if (resource == null) {
@@ -188,6 +180,8 @@ public class Verticle extends AbstractVerticle {
 
                         mainRouter.get("/v1/apidocs").handler(apiV1DocsHandler);
 
+                        mainRouter.get("/health*").handler(healthCheckHandler);
+
                         mainRouter.options("/*").handler(ResponseHelper::sendNoContent);
 
                         mainRouter.route("/metrics").handler(PrometheusScrapingHandler.create());
@@ -216,5 +210,11 @@ public class Verticle extends AbstractVerticle {
             logger.error("Failed to start server", e);
             promise.fail(e);
         }
+    }
+
+    private void checkTable(Store store, Promise<Status> promise, String tableName) {
+        store.existsTable(tableName)
+                .timeout(5, TimeUnit.SECONDS)
+                .subscribe(exists -> promise.complete(exists ? Status.OK() : Status.KO()), err -> promise.complete(Status.KO()));
     }
 }

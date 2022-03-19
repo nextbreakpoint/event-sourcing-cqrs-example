@@ -6,6 +6,7 @@ module com.nextbreakpoint.blueprint.authentication {
     requires io.vertx.web.openapi;
     requires io.vertx.auth.jwt;
     requires io.vertx.auth.oauth2;
+    requires io.vertx.healthcheck;
     requires io.vertx.metrics.micrometer;
     requires io.vertx.tracing.opentelemetry;
     requires io.opentelemetry.semconv;

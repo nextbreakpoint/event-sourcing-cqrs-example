@@ -1,6 +1,7 @@
 package com.nextbreakpoint.blueprint.designs;
 
 import com.nextbreakpoint.blueprint.designs.persistence.dto.*;
+import rx.Completable;
 import rx.Single;
 
 public interface Store {
@@ -11,4 +12,6 @@ public interface Store {
     Single<InsertDesignResponse> insertDesign(InsertDesignRequest request);
 
     Single<DeleteDesignResponse> deleteDesign(DeleteDesignRequest request);
+
+    Single<Boolean> existsIndex(String indexName);
 }

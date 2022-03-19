@@ -5,9 +5,10 @@ module com.nextbreakpoint.blueprint.designs.aggregate {
     requires io.vertx.core;
     requires io.vertx.web;
     requires io.vertx.web.openapi;
-    requires io.vertx.metrics.micrometer;
+    requires io.vertx.healthcheck;
     requires io.vertx.client.cassandra;
     requires io.vertx.client.kafka;
+    requires io.vertx.metrics.micrometer;
     requires io.vertx.tracing.opentelemetry;
     requires io.opentelemetry.semconv;
     requires io.opentelemetry.context;

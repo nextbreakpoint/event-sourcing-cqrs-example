@@ -1,7 +1,5 @@
 package com.nextbreakpoint.blueprint.gateway;
 
-import com.nextbreakpoint.blueprint.common.core.Environment;
-import com.nextbreakpoint.blueprint.common.core.IOUtils;
 import com.nextbreakpoint.blueprint.common.vertx.*;
 import com.nextbreakpoint.blueprint.gateway.handlers.ProxyHandler;
 import io.vertx.core.DeploymentOptions;
@@ -15,15 +13,16 @@ import io.vertx.rxjava.core.AbstractVerticle;
 import io.vertx.rxjava.core.Promise;
 import io.vertx.rxjava.core.Vertx;
 import io.vertx.rxjava.core.http.HttpClient;
+import io.vertx.rxjava.ext.healthchecks.HealthCheckHandler;
+import io.vertx.rxjava.ext.healthchecks.HealthChecks;
 import io.vertx.rxjava.ext.web.Router;
 import io.vertx.rxjava.ext.web.handler.CorsHandler;
 import io.vertx.rxjava.ext.web.handler.LoggerHandler;
 import io.vertx.rxjava.ext.web.handler.TimeoutHandler;
 import rx.Completable;
 
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.net.MalformedURLException;
+import java.util.concurrent.TimeUnit;
 
 import static com.nextbreakpoint.blueprint.common.core.Headers.*;
 import static java.util.Arrays.asList;
@@ -33,29 +32,22 @@ public class Verticle extends AbstractVerticle {
 
     public static void main(String[] args) {
         try {
-            final JsonObject config = loadConfig(args.length > 0 ? args[0] : "config/localhost.json");
+            final JsonObject config = Initializer.loadConfig(args.length > 0 ? args[0] : "config/localhost.json");
 
-            final Vertx vertx = Initializer.initialize();
+            final Vertx vertx = Initializer.createVertx();
 
-            vertx.deployVerticle(new Verticle(), new DeploymentOptions().setConfig(config));
+            vertx.rxDeployVerticle(new Verticle(), new DeploymentOptions().setConfig(config))
+                    .delay(30, TimeUnit.SECONDS)
+                    .retry(3)
+                    .subscribe(o -> logger.info("Verticle deployed"), err -> logger.error("Can't deploy verticle"));
         } catch (Exception e) {
             logger.error("Can't start service", e);
         }
     }
 
-    private static JsonObject loadConfig(String configPath) throws IOException {
-        final Environment environment = Environment.getDefaultEnvironment();
-
-        try (FileInputStream stream = new FileInputStream(configPath)) {
-            return new JsonObject(environment.resolve(IOUtils.toString(stream)));
-        }
-    }
-
     @Override
     public Completable rxStart() {
-        return vertx.rxExecuteBlocking(this::initServer)
-                .doOnError(err -> logger.error("Failed to start server", err))
-                .toCompletable();
+        return vertx.rxExecuteBlocking(this::initServer).toCompletable();
     }
 
     private void initServer(Promise<Void> promise) {
@@ -94,7 +86,11 @@ public class Verticle extends AbstractVerticle {
 
             final String designsWatchUrl = config.getString("server_designs_watch_url");
 
+            final HealthCheckHandler healthCheckHandler = HealthCheckHandler.createWithHealthChecks(HealthChecks.create(vertx));
+
             final Router mainRouter = Router.router(vertx);
+
+            mainRouter.get("/health*").handler(healthCheckHandler);
 
             mainRouter.route().handler(MDCHandler.create());
             mainRouter.route().handler(LoggerHandler.create(true, LoggerFormat.DEFAULT));

@@ -1,6 +1,5 @@
 package com.nextbreakpoint.blueprint.designs;
 
-import com.nextbreakpoint.blueprint.common.core.Environment;
 import com.nextbreakpoint.blueprint.common.core.IOUtils;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
@@ -11,6 +10,7 @@ import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.healthchecks.Status;
 import io.vertx.ext.web.handler.LoggerFormat;
 import io.vertx.ext.web.openapi.RouterBuilder;
 import io.vertx.rxjava.core.AbstractVerticle;
@@ -18,6 +18,8 @@ import io.vertx.rxjava.core.Promise;
 import io.vertx.rxjava.core.Vertx;
 import io.vertx.rxjava.core.WorkerExecutor;
 import io.vertx.rxjava.ext.auth.jwt.JWTAuth;
+import io.vertx.rxjava.ext.healthchecks.HealthCheckHandler;
+import io.vertx.rxjava.ext.healthchecks.HealthChecks;
 import io.vertx.rxjava.ext.web.Router;
 import io.vertx.rxjava.ext.web.RoutingContext;
 import io.vertx.rxjava.ext.web.handler.BodyHandler;
@@ -32,11 +34,12 @@ import software.amazon.awssdk.auth.credentials.AwsCredentialsProviderChain;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3AsyncClient;
+import software.amazon.awssdk.services.s3.model.ListObjectsRequest;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.LineNumberInputStream;
 import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -64,29 +67,22 @@ public class Verticle extends AbstractVerticle {
 
     public static void main(String[] args) {
         try {
-            final JsonObject config = loadConfig(args.length > 0 ? args[0] : "config/localhost.json");
+            final JsonObject config = Initializer.loadConfig(args.length > 0 ? args[0] : "config/localhost.json");
 
-            final Vertx vertx = Initializer.initialize();
+            final Vertx vertx = Initializer.createVertx();
 
-            vertx.deployVerticle(new Verticle(), new DeploymentOptions().setConfig(config));
+            vertx.rxDeployVerticle(new Verticle(), new DeploymentOptions().setConfig(config))
+                    .delay(30, TimeUnit.SECONDS)
+                    .retry(3)
+                    .subscribe(o -> logger.info("Verticle deployed"), err -> logger.error("Can't deploy verticle"));
         } catch (Exception e) {
             logger.error("Can't start service", e);
         }
     }
 
-    private static JsonObject loadConfig(String configPath) throws IOException {
-        final Environment environment = Environment.getDefaultEnvironment();
-
-        try (FileInputStream stream = new FileInputStream(configPath)) {
-            return new JsonObject(environment.resolve(IOUtils.toString(stream)));
-        }
-    }
-
     @Override
     public Completable rxStart() {
-        return vertx.rxExecuteBlocking(this::initServer)
-                .doOnError(err -> logger.error("Failed to start server", err))
-                .toCompletable();
+        return vertx.rxExecuteBlocking(this::initServer).toCompletable();
     }
 
     @Override
@@ -199,16 +195,16 @@ public class Verticle extends AbstractVerticle {
                     .withKeystorePassword(keystorePassword)
                     .withTruststoreLocation(truststoreLocation)
                     .withTruststorePassword(truststorePassword)
-                    .withGroupId(groupId)
                     .withAutoOffsetReset(autoOffsetReset)
                     .withEnableAutoCommit(enableAutoCommit)
                     .build();
 
-            final KafkaConsumer<String, String> kafkaConsumer1 = KafkaClientFactory.createConsumer(vertx, consumerConfig);
-            final KafkaConsumer<String, String> kafkaConsumer2 = KafkaClientFactory.createConsumer(vertx, consumerConfig);
-            final KafkaConsumer<String, String> kafkaConsumer3 = KafkaClientFactory.createConsumer(vertx, consumerConfig);
-            final KafkaConsumer<String, String> kafkaConsumer4 = KafkaClientFactory.createConsumer(vertx, consumerConfig);
-            final KafkaConsumer<String, String> kafkaConsumer5 = KafkaClientFactory.createConsumer(vertx, consumerConfig);
+            final KafkaConsumer<String, String> kafkaConsumer1 = KafkaClientFactory.createConsumer(vertx, consumerConfig.toBuilder().withGroupId(groupId + "-1").build());
+            final KafkaConsumer<String, String> kafkaConsumer2 = KafkaClientFactory.createConsumer(vertx, consumerConfig.toBuilder().withGroupId(groupId + "-2").build());
+            final KafkaConsumer<String, String> kafkaConsumer3 = KafkaClientFactory.createConsumer(vertx, consumerConfig.toBuilder().withGroupId(groupId + "-3").build());
+            final KafkaConsumer<String, String> kafkaConsumer4 = KafkaClientFactory.createConsumer(vertx, consumerConfig.toBuilder().withGroupId(groupId + "-4").build());
+            final KafkaConsumer<String, String> kafkaConsumer5 = KafkaClientFactory.createConsumer(vertx, consumerConfig.toBuilder().withGroupId(groupId + "-5").build());
+            final KafkaConsumer<String, String> kafkaConsumer6 = KafkaClientFactory.createConsumer(vertx, consumerConfig.toBuilder().withGroupId(groupId + "-6").build());
 
             final AwsCredentialsProvider credentialsProvider = AwsCredentialsProviderChain.of(DefaultCredentialsProvider.create());
 
@@ -262,6 +258,11 @@ public class Verticle extends AbstractVerticle {
 
             final Handler<RoutingContext> apiV1DocsHandler = new OpenApiHandler(vertx.getDelegate(), executor, "api-v1.yaml");
 
+            final HealthCheckHandler healthCheckHandler = HealthCheckHandler.createWithHealthChecks(HealthChecks.create(vertx));
+
+            healthCheckHandler.register("kafka-events-topic", future -> checkTopic(kafkaConsumer6, eventsTopic, future));
+            healthCheckHandler.register("bucket-tiles", future -> checkBucket(s3AsyncClient, s3Bucket, future));
+
             final URL resource = RouterBuilder.class.getClassLoader().getResource("api-v1.yaml");
 
             if (resource == null) {
@@ -297,6 +298,8 @@ public class Verticle extends AbstractVerticle {
 
                         mainRouter.get("/v1/apidocs").handler(apiV1DocsHandler);
 
+                        mainRouter.get("/health*").handler(healthCheckHandler);
+
                         mainRouter.options("/*").handler(ResponseHelper::sendNoContent);
 
                         mainRouter.route().failureHandler(ResponseHelper::sendFailure);
@@ -323,5 +326,22 @@ public class Verticle extends AbstractVerticle {
             logger.error("Failed to start server", e);
             promise.fail(e);
         }
+    }
+
+    private void checkBucket(S3AsyncClient s3AsyncClient, String bucket, Promise<Status> promise) {
+        s3AsyncClient.listObjectsV2(ListObjectsV2Request.builder().bucket(bucket).maxKeys(1).build())
+                .whenComplete((buckets, err) -> {
+                    if (err != null) {
+                        promise.complete(Status.KO());
+                    } else {
+                        promise.complete(Status.OK());
+                    }
+                });
+    }
+
+    private void checkTopic(KafkaConsumer<String, String> kafkaConsumer, String eventsTopic, Promise<Status> promise) {
+        kafkaConsumer.rxPartitionsFor(eventsTopic)
+                .timeout(5, TimeUnit.SECONDS)
+                .subscribe(partitions -> promise.complete(Status.OK()), err -> promise.complete(Status.KO()));
     }
 }

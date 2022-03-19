@@ -94,6 +94,16 @@ public class CassandraStore implements Store {
                 .doOnError(err -> handleError(ERROR_SELECT_DESIGN, err));
     }
 
+    @Override
+    public Single<Boolean> existsTable(String tableName) {
+        return withSession()
+                .flatMap(session -> existsTable(session, tableName));
+    }
+
+    private Optional<Design> findFirstDesign(List<Row> rows) {
+        return rows.stream().findFirst().map(this::convertRowToDesign);
+    }
+
     private Single<UserDefinedType> getLevelType() {
         return metadata.map(metadata -> metadata.getKeyspace(keyspace).orElseThrow()).map(this::getLevelType);
     }
@@ -153,8 +163,8 @@ public class CassandraStore implements Store {
                 .map(this::findFirstDesign);
     }
 
-    public Optional<Design> findFirstDesign(List<Row> rows) {
-        return rows.stream().findFirst().map(this::convertRowToDesign);
+    private Single<Boolean> existsTable(CassandraClient session, String tableName) {
+        return session.rxExecute("SELECT now() FROM " + tableName).map(result -> true);
     }
 
     private Design convertRowToDesign(Row row) {

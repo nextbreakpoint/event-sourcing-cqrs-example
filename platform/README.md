@@ -81,6 +81,10 @@ Setup Minikube:
 
     minikube start --vm-driver=hyperkit --cpus 8 --memory 32768m --disk-size 64g --kubernetes-version v1.22.2
 
+Create alias (unless you already have kubectl installed):
+
+    alias kubectl="minikube kubectl --"
+
 Create namespaces:
 
     kubectl create ns pipeline
@@ -324,7 +328,7 @@ Deploy secrets for services:
 
 Export version:
 
-     export VERSION=$(mvn -q help:evaluate -Dexpression=project.version -DforceStdout)
+    export VERSION=$(mvn -q help:evaluate -Dexpression=project.version -DforceStdout)
 
 Deploy services:
 
@@ -390,7 +394,7 @@ Upgrade services (if needed):
     helm upgrade --install service-designs-command services/designs-command/helm -n services --set image.repository=integration/designs-command,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip),enableDebug=false,loggingLevel=INFO
     helm upgrade --install service-designs-aggregate services/designs-aggregate/helm -n services --set image.repository=integration/designs-aggregate,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip),enableDebug=false,loggingLevel=INFO
     helm upgrade --install service-designs-notify services/designs-notify/helm -n services --set image.repository=integration/designs-notify,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip),enableDebug=false,loggingLevel=INFO
-    helm upgrade --install service-designs-render services/designs-render/helm -n services --set image.repository=integration/designs-render,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip),enableDebug=false,loggingLevel=INFO
+    helm upgrade --install service-designs-render services/designs-render/helm -n services --set image.repository=integration/designs-render,image.tag=${VERSION},replicas=4,clientDomain=$(minikube ip),enableDebug=false,loggingLevel=INFO
 
     helm upgrade --install service-gateway services/gateway/helm -n services --set image.repository=integration/gateway,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip),enableDebug=false,loggingLevel=INFO
 

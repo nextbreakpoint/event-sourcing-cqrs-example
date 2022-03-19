@@ -5,7 +5,9 @@ module com.nextbreakpoint.blueprint.designs.notify {
     requires io.vertx.core;
     requires io.vertx.web;
     requires io.vertx.web.openapi;
+    requires io.vertx.healthcheck;
     requires io.vertx.metrics.micrometer;
+    requires io.vertx.client.kafka;
     requires io.vertx.servicediscovery;
     requires io.vertx.servicediscovery.bridge.consul;
     requires io.vertx.tracing.opentelemetry;

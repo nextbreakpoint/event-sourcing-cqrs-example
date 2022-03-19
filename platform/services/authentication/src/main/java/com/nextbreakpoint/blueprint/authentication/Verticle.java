@@ -2,7 +2,6 @@ package com.nextbreakpoint.blueprint.authentication;
 
 import com.nextbreakpoint.blueprint.authentication.handlers.GitHubSignInHandler;
 import com.nextbreakpoint.blueprint.authentication.handlers.GitHubSignOutHandler;
-import com.nextbreakpoint.blueprint.common.core.Environment;
 import com.nextbreakpoint.blueprint.common.core.IOUtils;
 import com.nextbreakpoint.blueprint.common.vertx.*;
 import io.vertx.core.DeploymentOptions;
@@ -19,6 +18,8 @@ import io.vertx.rxjava.core.Promise;
 import io.vertx.rxjava.core.Vertx;
 import io.vertx.rxjava.ext.auth.jwt.JWTAuth;
 import io.vertx.rxjava.ext.auth.oauth2.OAuth2Auth;
+import io.vertx.rxjava.ext.healthchecks.HealthCheckHandler;
+import io.vertx.rxjava.ext.healthchecks.HealthChecks;
 import io.vertx.rxjava.ext.web.Router;
 import io.vertx.rxjava.ext.web.RoutingContext;
 import io.vertx.rxjava.ext.web.client.WebClient;
@@ -30,14 +31,13 @@ import io.vertx.rxjava.micrometer.PrometheusScrapingHandler;
 import rx.Completable;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.nextbreakpoint.blueprint.common.core.Headers.*;
@@ -50,29 +50,22 @@ public class Verticle extends AbstractVerticle {
 
     public static void main(String[] args) {
         try {
-            final JsonObject config = loadConfig(args.length > 0 ? args[0] : "config/localhost.json");
+            final JsonObject config = Initializer.loadConfig(args.length > 0 ? args[0] : "config/localhost.json");
 
-            final Vertx vertx = Initializer.initialize();
+            final Vertx vertx = Initializer.createVertx();
 
-            vertx.deployVerticle(new Verticle(), new DeploymentOptions().setConfig(config));
+            vertx.rxDeployVerticle(new Verticle(), new DeploymentOptions().setConfig(config))
+                    .delay(30, TimeUnit.SECONDS)
+                    .retry(3)
+                    .subscribe(o -> logger.info("Verticle deployed"), err -> logger.error("Can't deploy verticle"));
         } catch (Exception e) {
             logger.error("Can't start service", e);
         }
     }
 
-    private static JsonObject loadConfig(String configPath) throws IOException {
-        final Environment environment = Environment.getDefaultEnvironment();
-
-        try (FileInputStream stream = new FileInputStream(configPath)) {
-            return new JsonObject(environment.resolve(IOUtils.toString(stream)));
-        }
-    }
-
     @Override
     public Completable rxStart() {
-        return vertx.rxExecuteBlocking(this::initServer)
-                .doOnError(err -> logger.error("Failed to start server", err))
-                .toCompletable();
+        return vertx.rxExecuteBlocking(this::initServer).toCompletable();
     }
 
     private void initServer(Promise<Void> promise) {
@@ -187,6 +180,8 @@ public class Verticle extends AbstractVerticle {
 
             final Handler<RoutingContext> apiV1DocsHandler = new OpenApiHandler(vertx.getDelegate(), executor, "api-v1.yaml");
 
+            final HealthCheckHandler healthCheckHandler = HealthCheckHandler.createWithHealthChecks(HealthChecks.create(vertx));
+
             final URL resource = RouterBuilder.class.getClassLoader().getResource("api-v1.yaml");
 
             if (resource == null) {
@@ -210,6 +205,8 @@ public class Verticle extends AbstractVerticle {
                         mainRouter.mountSubRouter("/v1", apiRouter);
 
                         mainRouter.get("/v1/apidocs").handler(apiV1DocsHandler);
+
+                        mainRouter.get("/health*").handler(healthCheckHandler);
 
                         mainRouter.route().failureHandler(routingContext -> redirectOnFailure(routingContext, webUrl));
 

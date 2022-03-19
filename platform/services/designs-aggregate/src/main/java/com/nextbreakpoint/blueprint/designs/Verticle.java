@@ -1,7 +1,6 @@
 package com.nextbreakpoint.blueprint.designs;
 
 import com.fasterxml.jackson.core.JsonParser;
-import com.nextbreakpoint.blueprint.common.core.Environment;
 import com.nextbreakpoint.blueprint.common.core.IOUtils;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.events.*;
@@ -14,12 +13,15 @@ import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.json.jackson.DatabindCodec;
+import io.vertx.ext.healthchecks.Status;
 import io.vertx.ext.web.handler.LoggerFormat;
 import io.vertx.ext.web.openapi.RouterBuilder;
 import io.vertx.rxjava.cassandra.CassandraClient;
 import io.vertx.rxjava.core.AbstractVerticle;
 import io.vertx.rxjava.core.Promise;
 import io.vertx.rxjava.core.Vertx;
+import io.vertx.rxjava.ext.healthchecks.HealthCheckHandler;
+import io.vertx.rxjava.ext.healthchecks.HealthChecks;
 import io.vertx.rxjava.ext.web.Router;
 import io.vertx.rxjava.ext.web.RoutingContext;
 import io.vertx.rxjava.ext.web.handler.BodyHandler;
@@ -31,15 +33,14 @@ import io.vertx.rxjava.kafka.client.producer.KafkaProducer;
 import rx.Completable;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 import static com.nextbreakpoint.blueprint.common.core.Headers.*;
@@ -55,31 +56,24 @@ public class Verticle extends AbstractVerticle {
 
     public static void main(String[] args) {
         try {
-            final JsonObject config = loadConfig(args.length > 0 ? args[0] : "config/localhost.json");
+            final JsonObject config = Initializer.loadConfig(args.length > 0 ? args[0] : "config/localhost.json");
 
-            final Vertx vertx = Initializer.initialize();
+            final Vertx vertx = Initializer.createVertx();
 
             DatabindCodec.mapper().configure(JsonParser.Feature.IGNORE_UNDEFINED, true);
 
-            vertx.deployVerticle(new Verticle(), new DeploymentOptions().setConfig(config));
+            vertx.rxDeployVerticle(new Verticle(), new DeploymentOptions().setConfig(config))
+                    .delay(30, TimeUnit.SECONDS)
+                    .retry(3)
+                    .subscribe(o -> logger.info("Verticle deployed"), err -> logger.error("Can't deploy verticle"));
         } catch (Exception e) {
             logger.error("Can't start service", e);
         }
     }
 
-    private static JsonObject loadConfig(String configPath) throws IOException {
-        final Environment environment = Environment.getDefaultEnvironment();
-
-        try (FileInputStream stream = new FileInputStream(configPath)) {
-            return new JsonObject(environment.resolve(IOUtils.toString(stream)));
-        }
-    }
-
     @Override
     public Completable rxStart() {
-        return vertx.rxExecuteBlocking(this::initServer)
-                .doOnError(err -> logger.error("Failed to start server", err))
-                .toCompletable();
+        return vertx.rxExecuteBlocking(this::initServer).toCompletable();
     }
 
     @Override
@@ -174,7 +168,7 @@ public class Verticle extends AbstractVerticle {
 
             final KafkaProducer<String, String> kafkaProducer = KafkaClientFactory.createProducer(vertx, producerConfig);
 
-            final KafkaConsumerConfig consumerConfig1 = KafkaConsumerConfig.builder()
+            final KafkaConsumerConfig consumerConfig = KafkaConsumerConfig.builder()
                     .withBootstrapServers(bootstrapServers)
                     .withKeyDeserializer(keyDeserializer)
                     .withValueDeserializer(valDeserializer)
@@ -182,42 +176,14 @@ public class Verticle extends AbstractVerticle {
                     .withKeystorePassword(keystorePassword)
                     .withTruststoreLocation(truststoreLocation)
                     .withTruststorePassword(truststorePassword)
-                    .withGroupId(groupId + "-1")
                     .withAutoOffsetReset(autoOffsetReset)
                     .withEnableAutoCommit(enableAutoCommit)
                     .build();
 
-            final KafkaConsumerConfig consumerConfig2 = KafkaConsumerConfig.builder()
-                    .withBootstrapServers(bootstrapServers)
-                    .withKeyDeserializer(keyDeserializer)
-                    .withValueDeserializer(valDeserializer)
-                    .withKeystoreLocation(keystoreLocation)
-                    .withKeystorePassword(keystorePassword)
-                    .withTruststoreLocation(truststoreLocation)
-                    .withTruststorePassword(truststorePassword)
-                    .withGroupId(groupId + "-2")
-                    .withAutoOffsetReset(autoOffsetReset)
-                    .withEnableAutoCommit(enableAutoCommit)
-                    .build();
-
-            final KafkaConsumerConfig consumerConfig3 = KafkaConsumerConfig.builder()
-                    .withBootstrapServers(bootstrapServers)
-                    .withKeyDeserializer(keyDeserializer)
-                    .withValueDeserializer(valDeserializer)
-                    .withKeystoreLocation(keystoreLocation)
-                    .withKeystorePassword(keystorePassword)
-                    .withTruststoreLocation(truststoreLocation)
-                    .withTruststorePassword(truststorePassword)
-                    .withGroupId(groupId + "-3")
-                    .withAutoOffsetReset(autoOffsetReset)
-                    .withEnableAutoCommit(enableAutoCommit)
-                    .build();
-
-            final KafkaConsumer<String, String> kafkaConsumer1 = KafkaClientFactory.createConsumer(vertx, consumerConfig1);
-
-            final KafkaConsumer<String, String> kafkaConsumer2 = KafkaClientFactory.createConsumer(vertx, consumerConfig2);
-
-            final KafkaConsumer<String, String> kafkaConsumer3 = KafkaClientFactory.createConsumer(vertx, consumerConfig3);
+            final KafkaConsumer<String, String> kafkaConsumer1 = KafkaClientFactory.createConsumer(vertx, consumerConfig.toBuilder().withGroupId(groupId + "-1").build());
+            final KafkaConsumer<String, String> kafkaConsumer2 = KafkaClientFactory.createConsumer(vertx, consumerConfig.toBuilder().withGroupId(groupId + "-2").build());
+            final KafkaConsumer<String, String> kafkaConsumer3 = KafkaClientFactory.createConsumer(vertx, consumerConfig.toBuilder().withGroupId(groupId + "-3").build());
+            final KafkaConsumer<String, String> kafkaConsumer4 = KafkaClientFactory.createConsumer(vertx, consumerConfig.toBuilder().withGroupId(groupId + "-4").build());
 
             final CassandraClientConfig cassandraConfig = CassandraClientConfig.builder()
                     .withClusterName(clusterName)
@@ -279,6 +245,14 @@ public class Verticle extends AbstractVerticle {
 
             final Handler<RoutingContext> apiV1DocsHandler = new OpenApiHandler(vertx.getDelegate(), executor, "api-v1.yaml");
 
+            final HealthCheckHandler healthCheckHandler = HealthCheckHandler.createWithHealthChecks(HealthChecks.create(vertx));
+
+            healthCheckHandler.register("kafka-events-topic", future -> checkTopic(kafkaConsumer4, eventsTopic, future));
+            healthCheckHandler.register("kafka-render-topic", future -> checkTopic(kafkaConsumer4, renderTopic, future));
+            healthCheckHandler.register("kafka-batch-topic", future -> checkTopic(kafkaConsumer4, batchTopic, future));
+            healthCheckHandler.register("cassandra-design-table", future -> checkTable(store, future, "DESIGN"));
+            healthCheckHandler.register("cassandra-message-table", future -> checkTable(store, future, "MESSAGE"));
+
             final URL resource = RouterBuilder.class.getClassLoader().getResource("api-v1.yaml");
 
             if (resource == null) {
@@ -304,6 +278,8 @@ public class Verticle extends AbstractVerticle {
                         mainRouter.mountSubRouter("/v1", apiRouter);
 
                         mainRouter.get("/v1/apidocs").handler(apiV1DocsHandler);
+
+                        mainRouter.get("/health*").handler(healthCheckHandler);
 
                         mainRouter.options("/*").handler(ResponseHelper::sendNoContent);
 
@@ -331,5 +307,17 @@ public class Verticle extends AbstractVerticle {
             logger.error("Failed to start server", e);
             promise.fail(e);
         }
+    }
+
+    private void checkTable(Store store, Promise<Status> promise, String tableName) {
+        store.existsTable(tableName)
+                .timeout(5, TimeUnit.SECONDS)
+                .subscribe(exists -> promise.complete(exists ? Status.OK() : Status.KO()), err -> promise.complete(Status.KO()));
+    }
+
+    private void checkTopic(KafkaConsumer<String, String> kafkaConsumer, String eventsTopic, Promise<Status> promise) {
+        kafkaConsumer.rxPartitionsFor(eventsTopic)
+                .timeout(5, TimeUnit.SECONDS)
+                .subscribe(partitions -> promise.complete(Status.OK()), err -> promise.complete(Status.KO()));
     }
 }

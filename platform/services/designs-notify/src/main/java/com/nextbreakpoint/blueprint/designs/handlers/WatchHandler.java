@@ -22,14 +22,10 @@ public class WatchHandler implements Handler<RoutingContext> {
         this.serviceDiscovery = Objects.requireNonNull(serviceDiscovery);
     }
 
-    private boolean isDesignsSSE(Record record) {
-        return record.getName().equals("designs-sse");
-    }
-
     @Override
     public void handle(RoutingContext context) {
         final List<Record> records = serviceDiscovery
-                .rxGetRecords(this::isDesignsSSE)
+                .rxGetRecords(record -> record.getName().equals("designs-sse"))
                 .timeout(5, TimeUnit.SECONDS)
                 .toBlocking()
                 .value();

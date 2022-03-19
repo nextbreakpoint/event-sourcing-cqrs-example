@@ -6,7 +6,7 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
 @Data
-@Builder(access = AccessLevel.PUBLIC, setterPrefix = "with")
+@Builder(toBuilder = true, access = AccessLevel.PUBLIC, setterPrefix = "with")
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public class KafkaConsumerConfig {
     private final String bootstrapServers;

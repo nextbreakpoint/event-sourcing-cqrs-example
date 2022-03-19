@@ -76,6 +76,11 @@ public class MySQLStore implements Store {
                 .doOnError(err -> handleError(ERROR_FIND_ACCOUNTS, err));
     }
 
+    public Single<Boolean> existsTable(String tableName) {
+        return withConnection()
+                .flatMap(conn -> doExistsTable(conn, tableName));
+    }
+
     private Single<SQLConnection> withConnection() {
         return client.rxGetConnection()
                 .doOnSuccess(conn -> conn.setOptions(OPTIONS))
@@ -122,6 +127,14 @@ public class MySQLStore implements Store {
                 .map(ResultSet::getRows)
                 .map(result -> result.stream().map(x -> x.getString("ACCOUNT_UUID")).collect(toList()))
                 .map(ListAccountsResponse::new)
+                .doAfterTerminate(() -> conn.rxClose().subscribe());
+    }
+
+    private Single<Boolean> doExistsTable(SQLConnection conn, String tableName) {
+        return conn.rxSetTransactionIsolation(TransactionIsolation.READ_COMMITTED)
+                .flatMap(ignore -> conn.rxSetAutoCommit(false))
+                .flatMap(x -> conn.rxQuery("SELECT 1 FROM " + tableName))
+                .map(result -> true)
                 .doAfterTerminate(() -> conn.rxClose().subscribe());
     }
 

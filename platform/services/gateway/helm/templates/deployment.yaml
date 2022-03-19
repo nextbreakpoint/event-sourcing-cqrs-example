@@ -101,3 +101,29 @@ spec:
           resources:
             {{ $root.Values.resources | toYaml | indent 12 | trim }}
           {{- end}}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+              scheme: HTTPS
+            failureThreshold: 2
+            initialDelaySeconds: 5
+            timeoutSeconds: 2
+            periodSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+              scheme: HTTPS
+            failureThreshold: 2
+            initialDelaySeconds: 5
+            timeoutSeconds: 2
+            periodSeconds: 5
+          startupProbe:
+            httpGet:
+              path: /health
+              port: http
+              scheme: HTTPS
+            failureThreshold: 12
+            timeoutSeconds: 2
+            periodSeconds: 5

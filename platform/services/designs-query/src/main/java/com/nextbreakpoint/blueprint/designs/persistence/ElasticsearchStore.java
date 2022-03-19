@@ -17,6 +17,7 @@ import io.vertx.core.impl.logging.LoggerFactory;
 import rx.Observable;
 import rx.Single;
 
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -63,6 +64,12 @@ public class ElasticsearchStore implements Store {
         return withHttpClient()
                 .flatMap(client -> doDeleteDesign(client, request))
                 .doOnError(err -> handleError(ERROR_DELETE_DESIGN, err));
+    }
+
+    @Override
+    public Single<Boolean> existsIndex(String indexName) {
+        return withHttpClient()
+                .flatMap(client -> doExistsIndex(client, indexName));
     }
 
     private Single<ElasticsearchAsyncClient> withHttpClient() {
@@ -118,6 +125,16 @@ public class ElasticsearchStore implements Store {
         }
     }
 
+    private Single<Boolean> doExistsIndex(ElasticsearchAsyncClient client, String indexName) {
+        try {
+            return Observable.from(client.search(builder -> createExistsIndexRequest(builder, indexName), String.class))
+                    .map(result -> true)
+                    .toSingle();
+        } catch (Exception e) {
+            return Single.error(e);
+        }
+    }
+
     private SearchRequest.Builder createLoadDesignRequest(SearchRequest.Builder builder, LoadDesignRequest request) {
         return builder
                 .index(getIndexName(request.isDraft()))
@@ -129,6 +146,13 @@ public class ElasticsearchStore implements Store {
                 .index(getIndexName(request.isDraft()))
                 .query(q -> q.matchAll(MatchAllQuery.of(a -> a)))
                 .sort(x -> x.field(f -> f.field("modified").order(SortOrder.Asc).format("strict_date_optional_time_nanos")) );
+    }
+
+    private SearchRequest.Builder createExistsIndexRequest(SearchRequest.Builder builder, String indexName) {
+        return builder
+                .index(indexName)
+                .query(q -> q.matchAll(MatchAllQuery.of(a -> a)))
+                .size(1);
     }
 
     private UpdateRequest.Builder<Design, Design> createInsertDesignRequest(UpdateRequest.Builder<Design, Design> builder, InsertDesignRequest request) {

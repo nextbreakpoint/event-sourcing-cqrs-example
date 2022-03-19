@@ -7,6 +7,7 @@ module com.nextbreakpoint.blueprint.accounts {
     requires io.vertx.web;
     requires io.vertx.web.openapi;
     requires io.vertx.client.jdbc;
+    requires io.vertx.healthcheck;
     requires io.vertx.metrics.micrometer;
     requires io.vertx.tracing.opentelemetry;
     requires io.opentelemetry.semconv;

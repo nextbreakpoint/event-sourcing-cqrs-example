@@ -41,6 +41,12 @@ public class CassandraStore implements Store {
                 .doOnError(err -> handleError(ERROR_INSERT_MESSAGE, err));
     }
 
+    @Override
+    public Single<Boolean> existsTable(String tableName) {
+        return withSession()
+                .flatMap(session -> existsTable(session, tableName));
+    }
+
     private Single<CassandraClient> withSession() {
         if (session == null) {
             session = supplier.get();
@@ -58,6 +64,10 @@ public class CassandraStore implements Store {
                 .map(pst -> pst.bind(values).setConsistencyLevel(ConsistencyLevel.QUORUM))
                 .flatMap(session::rxExecute)
                 .map(rs -> null);
+    }
+
+    private Single<Boolean> existsTable(CassandraClient session, String tableName) {
+        return session.rxExecute("SELECT now() FROM " + tableName).map(result -> true);
     }
 
     private Object[] makeInsertMessageParams(InputMessage message) {

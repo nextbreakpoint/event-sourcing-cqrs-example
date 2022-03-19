@@ -18,4 +18,6 @@ public interface Store {
     Single<Void> deleteDesign(Design design);
 
     Single<Optional<Design>> findDesign(UUID uuid);
+
+    Single<Boolean> existsTable(String designs);
 }

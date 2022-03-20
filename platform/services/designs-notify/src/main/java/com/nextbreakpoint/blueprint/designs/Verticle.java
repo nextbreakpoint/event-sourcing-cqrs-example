@@ -183,9 +183,9 @@ public class Verticle extends AbstractVerticle {
 
             final HealthCheckHandler healthCheckHandler = HealthCheckHandler.createWithHealthChecks(HealthChecks.create(vertx));
 
-            healthCheckHandler.register("kafka-events-topic", future -> checkTopic(kafkaConsumer2, eventsTopic, future));
-            healthCheckHandler.register("service-discovery-importer", future -> checkDiscoveryImporter(serviceDiscovery, future));
-            healthCheckHandler.register("service-discovery-records", future -> checkDiscoveryRecords(serviceDiscovery, future));
+            healthCheckHandler.register("kafka-topic-events", 2000, future -> checkTopic(kafkaConsumer2, eventsTopic, future));
+            healthCheckHandler.register("service-discovery-importer", 2000, future -> checkDiscoveryImporter(serviceDiscovery, future));
+            healthCheckHandler.register("service-discovery-records", 2000, future -> checkDiscoveryRecords(serviceDiscovery, future));
 
             final URL resource = RouterBuilder.class.getClassLoader().getResource("api-v1.yaml");
 
@@ -283,13 +283,13 @@ public class Verticle extends AbstractVerticle {
     private void checkDiscoveryRecords(ServiceDiscovery serviceDiscovery, Promise<Status> promise) {
         serviceDiscovery
                 .rxGetRecords(record -> record.getName().equals("designs-sse"))
-                .timeout(5, TimeUnit.SECONDS)
+                .timeout(1, TimeUnit.SECONDS)
                 .subscribe(records -> promise.complete(records.isEmpty() ? Status.KO() : Status.OK()), err -> promise.complete(Status.KO()));
     }
 
     private void checkTopic(KafkaConsumer<String, String> kafkaConsumer, String eventsTopic, Promise<Status> promise) {
         kafkaConsumer.rxPartitionsFor(eventsTopic)
-                .timeout(5, TimeUnit.SECONDS)
+                .timeout(1, TimeUnit.SECONDS)
                 .subscribe(partitions -> promise.complete(Status.OK()), err -> promise.complete(Status.KO()));
     }
 }

@@ -23,8 +23,3 @@ resources:
 
 serviceAccount: default
 
-databaseName: accounts
-adminPassword: password
-verticlePassword: password
-
-

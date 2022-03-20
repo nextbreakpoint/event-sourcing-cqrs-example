@@ -14,17 +14,39 @@ Start pipeline:
 
     docker compose -f docker-compose-pipeline.yaml -p pipeline up -d
 
-Export Nexus password:
+Export Nexus password (wait until Nexus has started):
 
     export NEXUS_PASSWORD=$(docker exec $(docker container ls -f name=pipeline-nexus-1 -q) cat /opt/sonatype/sonatype-work/nexus3/admin.password)
 
 Create Maven repository (required only once):
 
-    ./scripts/create-repository.sh --nexus-host=localhost --nexus-port=38081 --nexus-username=admin --nexus-password=${NEXUS_PASSWORD} 
+    ./scripts/create-repository.sh --nexus-host=localhost --nexus-port=8082 --nexus-username=admin --nexus-password=${NEXUS_PASSWORD} 
 
 Build platform:
 
-    ./scripts/build-services.sh --nexus-host=localhost --nexus-port=38081 --nexus-username=admin --nexus-password=${NEXUS_PASSWORD} 
+    ./scripts/build-services.sh --nexus-host=localhost --nexus-port=8082 --nexus-username=admin --nexus-password=${NEXUS_PASSWORD} 
+
+See results of Pact tests:
+
+    open http://localhost:9292
+
+Build platform without tests:
+
+    ./scripts/build-services.sh --nexus-host=localhost --nexus-port=8082 --nexus-username=admin --nexus-password=${NEXUS_PASSWORD} --skip-tests 
+
+Build platform and run tests but skip Pact tests:
+
+    ./scripts/build-services.sh --nexus-host=localhost --nexus-port=8082 --nexus-username=admin --nexus-password=${NEXUS_PASSWORD} --skip-pact-tests --skip-pact-verify 
+
+Run tests without building:
+
+    export VERSION=$(mvn -q help:evaluate -Dexpression=project.version -DforceStdout)
+    ./scripts/build-services.sh --nexus-host=localhost --nexus-port=8082 --nexus-username=admin --nexus-password=${NEXUS_PASSWORD} --skip-images --skip-deploy --version=${VERSION} 
+
+Run only Pact tests without building:
+
+    export VERSION=$(mvn -q help:evaluate -Dexpression=project.version -DforceStdout)
+    ./scripts/build-services.sh --nexus-host=localhost --nexus-port=8082 --nexus-username=admin --nexus-password=${NEXUS_PASSWORD} --skip-images --skip-deploy --version=${VERSION} --skip-integration-tests 
 
 Stop pipeline (when finished):
 
@@ -37,11 +59,9 @@ Update dependencies (if needed):
 
 ## Run on Docker
 
-Export GitHub secrets (very important):
+Build Docker images:
 
-    export GITHUB_ACCOUNT_EMAIL=your-account-id
-    export GITHUB_CLIENT_ID=your-client-id
-    export GITHUB_CLIENT_SECRET=your-client-secret
+    ./scripts/build-images.sh 
 
 Start platform:
 
@@ -49,18 +69,47 @@ Start platform:
 
 Create Kafka topics:
 
-    docker exec -it $(docker ps | grep kafka | awk '{print $1}') kafka-topics --bootstrap-server=localhost:9092 --create --topic events --config "retention.ms=604800000" --replication-factor=1 --partitions=16
+    docker exec -i $(docker ps | grep kafka | awk '{print $1}') kafka-topics --bootstrap-server=localhost:9092 --create --topic events --config "retention.ms=604800000" --replication-factor=1 --partitions=16
 
-    docker exec -it $(docker ps | grep kafka | awk '{print $1}') kafka-topics --bootstrap-server=localhost:9092 --create --topic render-0 --config "cleanup.policy=compact" --config "delete.retention.ms=5000" --config "max.compaction.lag.ms=10000" --config "min.compaction.lag.ms=5000" --config "min.cleanable.dirty.ratio=0.1" --config "segment.ms=5000" --config "retention.ms=604800000" --replication-factor=1 --partitions=64
-    docker exec -it $(docker ps | grep kafka | awk '{print $1}') kafka-topics --bootstrap-server=localhost:9092 --create --topic render-1 --config "cleanup.policy=compact" --config "delete.retention.ms=5000" --config "max.compaction.lag.ms=10000" --config "min.compaction.lag.ms=5000" --config "min.cleanable.dirty.ratio=0.1" --config "segment.ms=5000" --config "retention.ms=604800000" --replication-factor=1 --partitions=64
-    docker exec -it $(docker ps | grep kafka | awk '{print $1}') kafka-topics --bootstrap-server=localhost:9092 --create --topic render-2 --config "cleanup.policy=compact" --config "delete.retention.ms=5000" --config "max.compaction.lag.ms=10000" --config "min.compaction.lag.ms=5000" --config "min.cleanable.dirty.ratio=0.1" --config "segment.ms=5000" --config "retention.ms=604800000" --replication-factor=1 --partitions=64
-    docker exec -it $(docker ps | grep kafka | awk '{print $1}') kafka-topics --bootstrap-server=localhost:9092 --create --topic render-3 --config "cleanup.policy=compact" --config "delete.retention.ms=5000" --config "max.compaction.lag.ms=10000" --config "min.compaction.lag.ms=5000" --config "min.cleanable.dirty.ratio=0.1" --config "segment.ms=5000" --config "retention.ms=604800000" --replication-factor=1 --partitions=64
-    docker exec -it $(docker ps | grep kafka | awk '{print $1}') kafka-topics --bootstrap-server=localhost:9092 --create --topic render-4 --config "cleanup.policy=compact" --config "delete.retention.ms=5000" --config "max.compaction.lag.ms=10000" --config "min.compaction.lag.ms=5000" --config "min.cleanable.dirty.ratio=0.1" --config "segment.ms=5000" --config "retention.ms=604800000" --replication-factor=1 --partitions=64
+    docker exec -i $(docker ps | grep kafka | awk '{print $1}') kafka-topics --bootstrap-server=localhost:9092 --create --topic render-0 --config "cleanup.policy=compact" --config "delete.retention.ms=5000" --config "max.compaction.lag.ms=10000" --config "min.compaction.lag.ms=5000" --config "min.cleanable.dirty.ratio=0.1" --config "segment.ms=5000" --config "retention.ms=604800000" --replication-factor=1 --partitions=64
+    docker exec -i $(docker ps | grep kafka | awk '{print $1}') kafka-topics --bootstrap-server=localhost:9092 --create --topic render-1 --config "cleanup.policy=compact" --config "delete.retention.ms=5000" --config "max.compaction.lag.ms=10000" --config "min.compaction.lag.ms=5000" --config "min.cleanable.dirty.ratio=0.1" --config "segment.ms=5000" --config "retention.ms=604800000" --replication-factor=1 --partitions=64
+    docker exec -i $(docker ps | grep kafka | awk '{print $1}') kafka-topics --bootstrap-server=localhost:9092 --create --topic render-2 --config "cleanup.policy=compact" --config "delete.retention.ms=5000" --config "max.compaction.lag.ms=10000" --config "min.compaction.lag.ms=5000" --config "min.cleanable.dirty.ratio=0.1" --config "segment.ms=5000" --config "retention.ms=604800000" --replication-factor=1 --partitions=64
+    docker exec -i $(docker ps | grep kafka | awk '{print $1}') kafka-topics --bootstrap-server=localhost:9092 --create --topic render-3 --config "cleanup.policy=compact" --config "delete.retention.ms=5000" --config "max.compaction.lag.ms=10000" --config "min.compaction.lag.ms=5000" --config "min.cleanable.dirty.ratio=0.1" --config "segment.ms=5000" --config "retention.ms=604800000" --replication-factor=1 --partitions=64
+    docker exec -i $(docker ps | grep kafka | awk '{print $1}') kafka-topics --bootstrap-server=localhost:9092 --create --topic render-4 --config "cleanup.policy=compact" --config "delete.retention.ms=5000" --config "max.compaction.lag.ms=10000" --config "min.compaction.lag.ms=5000" --config "min.cleanable.dirty.ratio=0.1" --config "segment.ms=5000" --config "retention.ms=604800000" --replication-factor=1 --partitions=64
 
     docker exec -it $(docker ps | grep kafka | awk '{print $1}') kafka-topics --bootstrap-server=localhost:9092 --create --topic batch --config "retention.ms=604800000" --replication-factor=1 --partitions=16
 
+Create Minio bucket:
+
+    docker run -i --network platform_services -e MINIO_ROOT_USER=admin -e MINIO_ROOT_PASSWORD=password --entrypoint sh minio/mc:latest < scripts/minio-init.sh
+
+See Jaeger console:
+
+    open http://localhost:16686
+
+See Kibana console:
+
+    open http://localhost:5601
+
+See Consul console:
+
+    open http://localhost:8500
+
+See Minio console:
+
+    open http://localhost:9091
+
+Login with user 'admin' and password 'password'.
+
+Export GitHub secrets (very important):
+
+    export GITHUB_ACCOUNT_EMAIL=your-account-id
+    export GITHUB_CLIENT_ID=your-client-id
+    export GITHUB_CLIENT_SECRET=your-client-secret
+
 Start services:
 
+    export VERSION=$(mvn -q help:evaluate -Dexpression=project.version -DforceStdout)
     docker compose -f docker-compose-services.yaml -p services up -d
 
 Open browser:
@@ -194,7 +243,7 @@ Check Elasticsearch:
 
 Deploy Kibana:
 
-    helm install integration-kibana helm/kibana -n monitoring --set replicas=1
+    helm install integration-kibana helm/kibana -n monitoring --set replicas=1,server.publicBaseUrl=http://$(minikube ip)::5601
 
 Check Kibana:
 
@@ -310,7 +359,7 @@ Export GitHub secrets:
     export GITHUB_CLIENT_ID=your-client-id
     export GITHUB_CLIENT_SECRET=your-client-secret
 
-Deploy secrets for services:
+Create secrets for services:
 
     kubectl -n services create secret generic authentication --from-file keystore_client.jks=secrets/keystore_client.jks --from-file truststore_client.jks=secrets/truststore_client.jks --from-file keystore_server.jks=secrets/keystore_server.jks --from-file keystore_auth.jceks=secrets/keystore_auth.jceks --from-literal KEYSTORE_SECRET=secret --from-literal GITHUB_ACCOUNT_EMAIL=$GITHUB_ACCOUNT_EMAIL --from-literal GITHUB_CLIENT_ID=$GITHUB_CLIENT_ID --from-literal GITHUB_CLIENT_SECRET=$GITHUB_CLIENT_SECRET
 
@@ -406,7 +455,7 @@ Upgrade Elasticsearch (if needed):
 
 Upgrade Kibana (if needed):
 
-    helm upgrade --install integration-kibana helm/kibana -n monitoring --set replicas=1
+    helm upgrade --install integration-kibana helm/kibana -n monitoring --set replicas=1,server.publicBaseUrl=http://$(minikube ip)::5601
 
 Upgrade Jaeger (if needed):
 
@@ -462,7 +511,7 @@ docker run -it --network services_services -e MINIO_ROOT_USER=admin -e MINIO_ROO
 
 docker run -it --network services_services -e MINIO_ROOT_USER=admin -e MINIO_ROOT_PASSWORD=password --entrypoint sh minio/mc:latest -c "mc config host add integration http://minio:9000 admin password && mc mb integration/tiles"
 
-mvn -s settings.xml -Dcommon=true -Dservices=true -Dplatform=true -Dnexus=true -DskipTests=true -Dnexus.host=localhost -Dnexus.port=38081 -Dpactbroker.host=localhost -Dpactbroker.port=9292 clean package
+mvn -s settings.xml -Dcommon=true -Dservices=true -Dplatform=true -Dnexus=true -DskipTests=true -Dnexus.host=localhost -Dnexus.port=8082 -Dpactbroker.host=localhost -Dpactbroker.port=9292 clean package
 
 minikube start --mount-string "$(pwd)/scripts:/var/docker/scripts" --mount
 

@@ -59,9 +59,9 @@ spec:
             - name: "xpack.security.enabled"
               value: "false"
             - name: "elasticsearch.hosts"
-              value: "http://elasticsearch:9200"
+              value: "http://elasticsearch.{{ $root.Release.Namespace }}:9200"
             - name: "server.publicBaseUrl"
-              value: "http://localhost:5601"
+              value: "http://{{ $root.Values.publicBaseUrl | default "localhost:5601" }}"
           {{- if $root.Values.resources }}
           resources:
             {{ $root.Values.resources | toYaml | indent 12 | trim }}

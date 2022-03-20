@@ -37,6 +37,11 @@ spec:
         - name: {{ toYaml $root.Values.image.pullSecrets | indent 8 | trim }}
       {{- end}}
       {{- end}}
+      volumes:
+        - name: data-vol
+          hostPath:
+            path: /volumes/zookeeper-data
+            type: DirectoryOrCreate
       containers:
         - name: {{ $root.Values.name | default "zookeeper" | quote }}
           image: "{{ $root.Values.image.registry }}{{ $root.Values.image.repository }}:{{ $root.Values.image.tag }}"
@@ -57,6 +62,9 @@ spec:
             - name: ZOO_MY_ID
               value: {{ $root.Values.nodeId | default 1 | quote }}
           {{- if $root.Values.resources }}
+          volumeMounts:
+            - name: data-vol
+              mountPath: /tmp/zookeeper
           resources:
             {{ $root.Values.resources | toYaml | indent 12 | trim }}
           {{- end}}

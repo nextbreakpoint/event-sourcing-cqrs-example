@@ -14,6 +14,7 @@ services:
       - services
     volumes:
       - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - mysql-data:/var/lib/mysql
   cassandra:
     restart: unless-stopped
     image: nextbreakpoint/cassandra:3.11.10-1
@@ -43,6 +44,8 @@ services:
         mode: host
     networks:
       - services
+    volumes:
+      - zookeeper-data:/var/zookeeper
   kafka:
     restart: unless-stopped
     image: nextbreakpoint/kafka:6.1.0-1
@@ -77,6 +80,8 @@ services:
         mode: host
     networks:
       - services
+    volumes:
+      - kafka-data:/tmp/logs/kafka-logs
   consul:
     restart: unless-stopped
     image: consul:1.11.4
@@ -157,7 +162,7 @@ services:
       - elasticsearch-data:/usr/share/elasticsearch/data
   kibana:
     restart: unless-stopped
-    image: kibana:8.1.0
+    image: kibana:7.17.1
     environment:
       xpack.security.enabled: 'false'
       elasticsearch.hosts: 'http://elasticsearch:9200'
@@ -220,42 +225,25 @@ services:
       - server
       - /var/data
       - --console-address
-      - :39090
+      - :9091
     ports:
       - target: 9000
         published: 9000
         protocol: tcp
         mode: host
-      - target: 39090
-        published: 39090
+      - target: 9091
+        published: 9091
         protocol: tcp
         mode: host
     volumes:
       - minio-data:/var/data
     networks:
       - services
-#  minio-init:
-#    restart: on-failure
-#    image: minio/mc:RELEASE.2022-02-24T22-12-01Z
-#    depends_on:
-#      - minio
-#    environment:
-#      MINIO_ROOT_USER: admin
-#      MINIO_ROOT_PASSWORD: password
-#    entrypoint: >
-#      /bin/sh -c "
-#      sleep 10;
-#      set -e
-#      mc config host add integration http://minio:9000 admin password;
-#      mc rm -r --force integration/tiles;
-#      mc mb integration/tiles;
-#      #mc policy download integration/tiles;
-#      exit 0;
-#      "
-#    networks:
-#      - services
 volumes:
+  mysql-data:
   minio-data:
+  kafka-data:
+  zookeeper-data:
   cassandra-data:
   elasticsearch-data:
 networks:

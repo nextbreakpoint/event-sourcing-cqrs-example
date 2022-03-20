@@ -2,7 +2,6 @@ CREATE ROLE IF NOT EXISTS admin WITH PASSWORD = 'password' AND LOGIN = true;
 
 GRANT ALL PERMISSIONS ON ALL KEYSPACES TO admin;
 
-
 CREATE ROLE IF NOT EXISTS verticle WITH PASSWORD = 'password' AND LOGIN = true;
 
 CREATE KEYSPACE IF NOT EXISTS designs_aggregate WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };

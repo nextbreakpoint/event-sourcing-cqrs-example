@@ -22,7 +22,3 @@ resources:
     cpu: "1.0"
 
 serviceAccount: default
-
-credentials:
-  rootUser: "admin"
-  rootPassword: "password"

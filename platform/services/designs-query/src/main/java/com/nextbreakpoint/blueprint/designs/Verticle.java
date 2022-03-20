@@ -45,6 +45,7 @@ import software.amazon.awssdk.auth.credentials.AwsCredentialsProviderChain;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3AsyncClient;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -245,9 +246,10 @@ public class Verticle extends AbstractVerticle {
 
             final HealthCheckHandler healthCheckHandler = HealthCheckHandler.createWithHealthChecks(HealthChecks.create(vertx));
 
-            healthCheckHandler.register("kafka-events-topic", future -> checkTopic(kafkaConsumer2, eventsTopic, future));
-            healthCheckHandler.register("elasticsearch-designs-index", future -> checkTable(store, future, "designs"));
-            healthCheckHandler.register("elasticsearch-designs-draft-index", future -> checkTable(store, future, "designs_draft"));
+            healthCheckHandler.register("kafka-topic-events", 2000, future -> checkTopic(kafkaConsumer2, eventsTopic, future));
+            healthCheckHandler.register("elasticsearch-index-main", 2000, future -> checkTable(store, future, "designs"));
+            healthCheckHandler.register("elasticsearch-index-draft", 2000, future -> checkTable(store, future, "designs_draft"));
+            healthCheckHandler.register("bucket-tiles", 2000, future -> checkBucket(s3AsyncClient, s3Bucket, future));
 
             final URL resource = RouterBuilder.class.getClassLoader().getResource("api-v1.yaml");
 
@@ -314,15 +316,27 @@ public class Verticle extends AbstractVerticle {
         }
     }
 
+    private void checkBucket(S3AsyncClient s3AsyncClient, String bucket, Promise<Status> promise) {
+        s3AsyncClient.listObjectsV2(ListObjectsV2Request.builder().bucket(bucket).maxKeys(1).build())
+                .orTimeout(1, TimeUnit.SECONDS)
+                .whenComplete((buckets, err) -> {
+                    if (err != null) {
+                        promise.complete(Status.KO());
+                    } else {
+                        promise.complete(Status.OK());
+                    }
+                });
+    }
+
     private void checkTable(Store store, Promise<Status> promise, String indexName) {
         store.existsIndex(indexName)
-                .timeout(5, TimeUnit.SECONDS)
+                .timeout(1, TimeUnit.SECONDS)
                 .subscribe(exists -> promise.complete(exists ? Status.OK() : Status.KO()), err -> promise.complete(Status.KO()));
     }
 
     private void checkTopic(KafkaConsumer<String, String> kafkaConsumer, String eventsTopic, Promise<Status> promise) {
         kafkaConsumer.rxPartitionsFor(eventsTopic)
-                .timeout(5, TimeUnit.SECONDS)
+                .timeout(1, TimeUnit.SECONDS)
                 .subscribe(partitions -> promise.complete(Status.OK()), err -> promise.complete(Status.KO()));
     }
 }

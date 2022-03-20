@@ -44,7 +44,7 @@ spec:
       volumes:
         - name: data-vol
           hostPath:
-            path: /var/data
+            path: /volumes/nexus-data
             type: DirectoryOrCreate
       initContainers:
         - name: take-data-dir-ownership
@@ -53,10 +53,10 @@ spec:
             - chown
             - -R
             - 200:200
-            - /nexus-data
+            - /nexus/data
           volumeMounts:
             - name: data-vol
-              mountPath: /nexus-data
+              mountPath: /nexus/data
       containers:
         - name: {{ $root.Values.name | default "nexus" | quote }}
           image: "{{ $root.Values.image.registry }}{{ $root.Values.image.repository }}:{{ $root.Values.image.tag }}"
@@ -77,10 +77,10 @@ spec:
             - name: NEXUS_CONTEXT
               value: "/"
             - name: INSTALL4J_ADD_VM_PARAMS
-              value: "-Xms1g -Xmx1g -XX:MaxDirectMemorySize=2g -Djava.util.prefs.userRoot=/nexus-data/javaPrefs"
+              value: "-Xms1g -Xmx1g -XX:MaxDirectMemorySize=2g -Djava.util.prefs.userRoot=/nexus/data/javaPrefs"
           volumeMounts:
             - name: data-vol
-              mountPath: /nexus-data
+              mountPath: /nexus/data
           {{- if $root.Values.resources }}
           resources:
             {{ $root.Values.resources | toYaml | indent 12 | trim }}

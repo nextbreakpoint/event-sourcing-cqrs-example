@@ -2,9 +2,9 @@ version: '3.8'
 services:
   accounts:
     restart: unless-stopped
-    image: integration/accounts:1.0.0-wip2-424a9a61-1647341334 
+    image: integration/accounts:${VERSION}
     environment:
-      JAEGER_ATTRIBUTES: service.name=accounts,service.version=1.0.0-wip2-424a9a61-1647341334,service.namespace=designs,environment=dev
+      JAEGER_ATTRIBUTES: service.name=accounts,service.version=${VERSION},service.namespace=designs,environment=dev
       JAEGER_ENDPOINT: http://host.docker.internal:14250
       KEYSTORE_SECRET: secret
       DATABASE_HOST: host.docker.internal
@@ -30,9 +30,9 @@ services:
       - ./secrets/keystore_auth.jceks:/secrets/keystore_auth.jceks
   authentication:
     restart: unless-stopped
-    image: integration/authentication:1.0.0-wip2-424a9a61-1647341334 
+    image: integration/authentication:${VERSION}
     environment:
-      JAEGER_ATTRIBUTES: service.name=authentication,service.version=1.0.0-wip2-424a9a61-1647341334,service.namespace=designs,environment=dev
+      JAEGER_ATTRIBUTES: service.name=authentication,service.version=${VERSION},service.namespace=designs,environment=dev
       JAEGER_ENDPOINT: http://host.docker.internal:14250
       KEYSTORE_SECRET: secret
       ACCOUNTS_URL: https://accounts:30110
@@ -62,9 +62,9 @@ services:
       - ./secrets/truststore_client.jks:/secrets/truststore_client.jks
   designs-query:
     restart: unless-stopped
-    image: integration/designs-query:1.0.0-wip2-424a9a61-1647341334 
+    image: integration/designs-query:${VERSION}
     environment:
-      JAEGER_ATTRIBUTES: service.name=designs-query,service.version=1.0.0-wip2-424a9a61-1647341334,service.namespace=designs,environment=dev
+      JAEGER_ATTRIBUTES: service.name=designs-query,service.version=${VERSION},service.namespace=designs,environment=dev
       JAEGER_ENDPOINT: http://host.docker.internal:14250
       KEYSTORE_SECRET: secret
       ELASTICSEARCH_HOST: host.docker.internal
@@ -97,9 +97,9 @@ services:
       - ./secrets/keystore_server.jks:/secrets/keystore_server.jks
   designs-command:
     restart: unless-stopped
-    image: integration/designs-command:1.0.0-wip2-424a9a61-1647341334
+    image: integration/designs-command:${VERSION}
     environment:
-      JAEGER_ATTRIBUTES: service.name=designs-command,service.version=1.0.0-wip2-424a9a61-1647341334,service.namespace=designs,environment=dev
+      JAEGER_ATTRIBUTES: service.name=designs-command,service.version=${VERSION},service.namespace=designs,environment=dev
       JAEGER_ENDPOINT: http://host.docker.internal:14250
       KEYSTORE_SECRET: secret
       DATABASE_HOST: host.docker.internal
@@ -129,9 +129,9 @@ services:
       - ./secrets/keystore_server.jks:/secrets/keystore_server.jks
   designs-aggregate:
     restart: unless-stopped
-    image: integration/designs-aggregate:1.0.0-wip2-424a9a61-1647341334 
+    image: integration/designs-aggregate:${VERSION}
     environment:
-      JAEGER_ATTRIBUTES: service.name=designs-aggregate,service.version=1.0.0-wip2-424a9a61-1647341334,service.namespace=designs,environment=dev
+      JAEGER_ATTRIBUTES: service.name=designs-aggregate,service.version=${VERSION},service.namespace=designs,environment=dev
       JAEGER_ENDPOINT: http://host.docker.internal:14250
       KEYSTORE_SECRET: secret
       DATABASE_HOST: host.docker.internal
@@ -162,9 +162,9 @@ services:
       - ./secrets/keystore_server.jks:/secrets/keystore_server.jks
   designs-notify:
     restart: unless-stopped
-    image: integration/designs-notify:1.0.0-wip2-424a9a61-1647341334
+    image: integration/designs-notify:${VERSION}
     environment:
-      JAEGER_ATTRIBUTES: service.name=designs-notify,service.version=1.0.0-wip2-424a9a61-1647341334,service.namespace=designs,environment=dev
+      JAEGER_ATTRIBUTES: service.name=designs-notify,service.version=${VERSION},service.namespace=designs,environment=dev
       JAEGER_ENDPOINT: http://host.docker.internal:14250
       KEYSTORE_SECRET: secret
       CONSUL_HOST: host.docker.internal
@@ -190,9 +190,9 @@ services:
       - ./secrets/keystore_server.jks:/secrets/keystore_server.jks
   designs-render1:
     restart: unless-stopped
-    image: integration/designs-render:1.0.0-wip2-424a9a61-1647341334
+    image: integration/designs-render:${VERSION}
     environment:
-      JAEGER_ATTRIBUTES: service.name=designs-render,service.version=1.0.0-wip2-424a9a61-1647341334,service.namespace=designs,environment=dev
+      JAEGER_ATTRIBUTES: service.name=designs-render,service.version=${VERSION},service.namespace=designs,environment=dev
       JAEGER_ENDPOINT: http://host.docker.internal:14250
       KEYSTORE_SECRET: secret
       AWS_ACCESS_KEY_ID: admin
@@ -223,9 +223,9 @@ services:
       - ./secrets/keystore_server.jks:/secrets/keystore_server.jks
   designs-render2:
     restart: unless-stopped
-    image: integration/designs-render:1.0.0-wip2-424a9a61-1647341334
+    image: integration/designs-render:${VERSION}
     environment:
-      JAEGER_ATTRIBUTES: service.name=designs-render,service.version=1.0.0-wip2-424a9a61-1647341334,service.namespace=designs,environment=dev
+      JAEGER_ATTRIBUTES: service.name=designs-render,service.version=${VERSION},service.namespace=designs,environment=dev
       JAEGER_ENDPOINT: http://host.docker.internal:14250
       KEYSTORE_SECRET: secret
       AWS_ACCESS_KEY_ID: admin
@@ -240,11 +240,11 @@ services:
       DEBUG_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:35125
       LOGGING_LEVEL: ${LOGGING_LEVEL:-INFO}
     ports:
-      - target: 30125
+      - target: 30124
         published: 30125
         protocol: tcp
         mode: host
-      - target: 35125
+      - target: 35124
         published: 35125
         protocol: tcp
         mode: host
@@ -256,9 +256,9 @@ services:
       - ./secrets/keystore_server.jks:/secrets/keystore_server.jks
   designs-render3:
     restart: unless-stopped
-    image: integration/designs-render:1.0.0-wip2-424a9a61-1647341334
+    image: integration/designs-render:${VERSION}
     environment:
-      JAEGER_ATTRIBUTES: service.name=designs-render,service.version=1.0.0-wip2-424a9a61-1647341334,service.namespace=designs,environment=dev
+      JAEGER_ATTRIBUTES: service.name=designs-render,service.version=${VERSION},service.namespace=designs,environment=dev
       JAEGER_ENDPOINT: http://host.docker.internal:14250
       KEYSTORE_SECRET: secret
       AWS_ACCESS_KEY_ID: admin
@@ -273,11 +273,11 @@ services:
       DEBUG_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:35126
       LOGGING_LEVEL: ${LOGGING_LEVEL:-INFO}
     ports:
-      - target: 30126
+      - target: 30124
         published: 30126
         protocol: tcp
         mode: host
-      - target: 35126
+      - target: 35124
         published: 35126
         protocol: tcp
         mode: host
@@ -289,9 +289,9 @@ services:
       - ./secrets/keystore_server.jks:/secrets/keystore_server.jks
   designs-render4:
     restart: unless-stopped
-    image: integration/designs-render:1.0.0-wip2-424a9a61-1647341334
+    image: integration/designs-render:${VERSION}
     environment:
-      JAEGER_ATTRIBUTES: service.name=designs-render,service.version=1.0.0-wip2-424a9a61-1647341334,service.namespace=designs,environment=dev
+      JAEGER_ATTRIBUTES: service.name=designs-render,service.version=${VERSION},service.namespace=designs,environment=dev
       JAEGER_ENDPOINT: http://host.docker.internal:14250
       KEYSTORE_SECRET: secret
       AWS_ACCESS_KEY_ID: admin
@@ -306,11 +306,11 @@ services:
       DEBUG_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:35127
       LOGGING_LEVEL: ${LOGGING_LEVEL:-INFO}
     ports:
-      - target: 30127
+      - target: 30124
         published: 30127
         protocol: tcp
         mode: host
-      - target: 35127
+      - target: 35124
         published: 35127
         protocol: tcp
         mode: host
@@ -322,9 +322,9 @@ services:
       - ./secrets/keystore_server.jks:/secrets/keystore_server.jks
   gateway:
     restart: unless-stopped
-    image: integration/gateway:1.0.0-wip2-424a9a61-1647341334
+    image: integration/gateway:${VERSION}
     environment:
-      JAEGER_ATTRIBUTES: service.name=gateway,service.version=1.0.0-wip2-424a9a61-1647341334,service.namespace=designs,environment=dev
+      JAEGER_ATTRIBUTES: service.name=gateway,service.version=${VERSION},service.namespace=designs,environment=dev
       JAEGER_ENDPOINT: http://host.docker.internal:14250
       KEYSTORE_SECRET: secret
       ACCOUNTS_URL: https://accounts:30110
@@ -354,7 +354,7 @@ services:
       - ./secrets/truststore_client.jks:/secrets/truststore_client.jks
   frontend:
     restart: unless-stopped
-    image: integration/frontend:1.0.0-wip2-424a9a61-1647341334 
+    image: integration/frontend:${VERSION}
     environment:
       CONFIG_PATH: /etc/config.json
       SECRETS_PATH: /secrets

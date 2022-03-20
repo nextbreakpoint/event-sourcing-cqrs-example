@@ -43,6 +43,10 @@ spec:
           secret:
             secretName: {{ $root.Values.secretName | quote }}
         {{- end}}
+        - name: data-vol
+          hostPath:
+            path: /volumes/kafka-data
+            type: DirectoryOrCreate
       hostname: {{ $root.Values.internalName | default "kafka" }}
       containers:
         - name: {{ $root.Values.name | default "kafka" | quote }}
@@ -120,6 +124,8 @@ spec:
               mountPath: /etc/truststore.jks
               subPath: truststore.jks
             {{- end}}
+            - name: data-vol
+              mountPath: /tmp/logs/kafka-logs
           {{- if $root.Values.resources }}
           resources:
             {{ $root.Values.resources | toYaml | indent 12 | trim }}

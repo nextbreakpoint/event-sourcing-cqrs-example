@@ -11,7 +11,7 @@ export PACTBROKER_HOST=localhost
 export PACTBROKER_PORT="9292"
 
 export NEXUS_HOST=localhost
-export NEXUS_PORT="38081"
+export NEXUS_PORT="8082"
 export NEXUS_USERNAME=admin
 export NEXUS_PASSWORD=$(./pipeline/get-nexus-password.sh)
 

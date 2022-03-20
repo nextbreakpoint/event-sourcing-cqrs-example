@@ -54,14 +54,20 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
-            - name: PACT_BROKER_DATABASE_USERNAME
-              value: "pactbrokeruser"
-            - name: PACT_BROKER_DATABASE_PASSWORD
-              value: "password"
             - name: PACT_BROKER_DATABASE_HOST
               value: "postgres"
             - name: PACT_BROKER_DATABASE_NAME
               value: "pactbroker"
+            - name: PACT_BROKER_DATABASE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: '{{ $root.Values.secretName | default "pactbroker" }}.{{ $root.Release.Revision | default "1" }}'
+                  key: PACT_BROKER_DATABASE_USERNAME
+            - name: PACT_BROKER_DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: '{{ $root.Values.secretName | default "pactbroker" }}.{{ $root.Release.Revision | default "1" }}'
+                  key: PACT_BROKER_DATABASE_PASSWORD
           {{- if $root.Values.resources }}
           resources:
             {{ $root.Values.resources | toYaml | indent 12 | trim }}

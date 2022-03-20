@@ -38,14 +38,18 @@ spec:
       {{- end}}
       {{- end}}
       volumes:
-        - name: config-vol
-          configMap:
-            name: '{{ $root.Values.configName | default "cassandra" }}.{{ $root.Release.Revision | default "1" }}'
+        - name: secret-vol
+          secret:
+            secretName: '{{ $root.Values.secretName | default "cassandra" }}.{{ $root.Release.Revision | default "1" }}'
         {{- if $root.Values.secretName}}
         - name: secret-vol
           secret:
             secretName: {{ $root.Values.secretName | quote }}
         {{- end}}
+        - name: data-vol
+          hostPath:
+            path: /volumes/cassandra-data
+            type: DirectoryOrCreate
       containers:
         - name: {{ $root.Values.name | default "cassandra" | quote }}
           image: "{{ $root.Values.image.registry }}{{ $root.Values.image.repository }}:{{ $root.Values.image.tag }}"
@@ -70,10 +74,12 @@ spec:
             - name: JVM_OPTS
               value: "-Xms2G -Xmx2G"
           volumeMounts:
-            - name: config-vol
+            - name: secret-vol
               readOnly: true
               mountPath: /docker-entrypoint-initdb.d/init.cql
               subPath: init.cql
+            - name: data-vol
+              mountPath: /var/lib/cassandra
           {{- if $root.Values.resources }}
           resources:
             {{ $root.Values.resources | toYaml | indent 12 | trim }}

@@ -260,8 +260,8 @@ public class Verticle extends AbstractVerticle {
 
             final HealthCheckHandler healthCheckHandler = HealthCheckHandler.createWithHealthChecks(HealthChecks.create(vertx));
 
-            healthCheckHandler.register("kafka-events-topic", future -> checkTopic(kafkaConsumer6, eventsTopic, future));
-            healthCheckHandler.register("bucket-tiles", future -> checkBucket(s3AsyncClient, s3Bucket, future));
+            healthCheckHandler.register("kafka-topic-events", 2000, future -> checkTopic(kafkaConsumer6, eventsTopic, future));
+            healthCheckHandler.register("bucket-tiles", 2000, future -> checkBucket(s3AsyncClient, s3Bucket, future));
 
             final URL resource = RouterBuilder.class.getClassLoader().getResource("api-v1.yaml");
 
@@ -330,6 +330,7 @@ public class Verticle extends AbstractVerticle {
 
     private void checkBucket(S3AsyncClient s3AsyncClient, String bucket, Promise<Status> promise) {
         s3AsyncClient.listObjectsV2(ListObjectsV2Request.builder().bucket(bucket).maxKeys(1).build())
+                .orTimeout(1, TimeUnit.SECONDS)
                 .whenComplete((buckets, err) -> {
                     if (err != null) {
                         promise.complete(Status.KO());
@@ -341,7 +342,7 @@ public class Verticle extends AbstractVerticle {
 
     private void checkTopic(KafkaConsumer<String, String> kafkaConsumer, String eventsTopic, Promise<Status> promise) {
         kafkaConsumer.rxPartitionsFor(eventsTopic)
-                .timeout(5, TimeUnit.SECONDS)
+                .timeout(1, TimeUnit.SECONDS)
                 .subscribe(partitions -> promise.complete(Status.OK()), err -> promise.complete(Status.KO()));
     }
 }

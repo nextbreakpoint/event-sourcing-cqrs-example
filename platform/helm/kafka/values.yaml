@@ -23,8 +23,3 @@ resources:
 
 serviceAccount: default
 
-secretName:
-
-externalName:
-
-zookeeperName:

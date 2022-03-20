@@ -23,4 +23,3 @@ resources:
 
 serviceAccount: default
 
-secretName:

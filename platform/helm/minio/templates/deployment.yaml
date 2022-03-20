@@ -37,6 +37,11 @@ spec:
         - name: {{ toYaml $root.Values.image.pullSecrets | indent 8 | trim }}
       {{- end}}
       {{- end}}
+      volumes:
+        - name: data-vol
+          hostPath:
+            path: /volumes/kafka-data
+            type: DirectoryOrCreate
       hostname: {{ $fullname }}
       containers:
         - name: {{ $root.Values.name | default "minio" | quote }}
@@ -64,9 +69,18 @@ spec:
                 fieldRef:
                   fieldPath: metadata.namespace
             - name: MINIO_ROOT_USER
-              value: "{{ $root.Values.credentials.rootUser }}"
+              valueFrom:
+                secretKeyRef:
+                  name: '{{ $root.Values.secretName | default "minio" }}.{{ $root.Release.Revision | default "1" }}'
+                  key: MINIO_ROOT_USER
             - name: MINIO_ROOT_PASSWORD
-              value: "{{ $root.Values.credentials.rootPassword }}"
+              valueFrom:
+                secretKeyRef:
+                  name: '{{ $root.Values.secretName | default "minio" }}.{{ $root.Release.Revision | default "1" }}'
+                  key: MINIO_ROOT_PASSWORD
+          volumeMounts:
+            - name: data-vol
+              mountPath: /var/lib/postgresql/data/pgdata
           {{- if $root.Values.resources }}
           resources:
             {{ $root.Values.resources | toYaml | indent 12 | trim }}

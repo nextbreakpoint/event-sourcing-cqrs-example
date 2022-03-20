@@ -38,9 +38,13 @@ spec:
       {{- end}}
       {{- end}}
       volumes:
-        - name: config-vol
-          configMap:
-            name: '{{ $root.Values.configName | default "mysql" }}.{{ $root.Release.Revision | default "1" }}'
+        - name: secret-vol
+          secret:
+            secretName: '{{ $root.Values.secretName | default "mysql" }}.{{ $root.Release.Revision | default "1" }}'
+        - name: data-vol
+          hostPath:
+            path: /volumes/mysql-data
+            type: DirectoryOrCreate
       containers:
         - name: {{ $root.Values.name | default "mysql" | quote }}
           image: "{{ $root.Values.image.registry }}{{ $root.Values.image.repository }}:{{ $root.Values.image.tag }}"
@@ -59,12 +63,17 @@ spec:
                 fieldRef:
                   fieldPath: metadata.namespace
             - name: MYSQL_ROOT_PASSWORD
-              value: password
+              valueFrom:
+                secretKeyRef:
+                  name: '{{ $root.Values.secretName | default "mysql" }}.{{ $root.Release.Revision | default "1" }}'
+                  key: MYSQL_ROOT_PASSWORD
           volumeMounts:
-            - name: config-vol
+            - name: secret-vol
               readOnly: true
               mountPath: /docker-entrypoint-initdb.d/init.sql
               subPath: init.sql
+            - name: data-vol
+              mountPath: /var/lib/mysql/
           {{- if $root.Values.resources }}
           resources:
             {{ $root.Values.resources | toYaml | indent 12 | trim }}

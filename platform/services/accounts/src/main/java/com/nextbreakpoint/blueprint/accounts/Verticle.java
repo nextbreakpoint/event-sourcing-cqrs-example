@@ -137,7 +137,7 @@ public class Verticle extends AbstractVerticle {
 
             final HealthCheckHandler healthCheckHandler = HealthCheckHandler.createWithHealthChecks(HealthChecks.create(vertx));
 
-            healthCheckHandler.register("database-accounts-table", future -> checkTable(store, future, "ACCOUNT"));
+            healthCheckHandler.register("database-table-account", 2000, future -> checkTable(store, future, "ACCOUNT"));
 
             final URL resource = RouterBuilder.class.getClassLoader().getResource("api-v1.yaml");
 
@@ -214,7 +214,7 @@ public class Verticle extends AbstractVerticle {
 
     private void checkTable(Store store, Promise<Status> promise, String tableName) {
         store.existsTable(tableName)
-                .timeout(5, TimeUnit.SECONDS)
+                .timeout(1, TimeUnit.SECONDS)
                 .subscribe(exists -> promise.complete(exists ? Status.OK() : Status.KO()), err -> promise.complete(Status.KO()));
     }
 }

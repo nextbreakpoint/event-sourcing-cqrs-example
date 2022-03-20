@@ -15,5 +15,5 @@
   "events_topic": "${EVENTS_TOPIC}",
 
   "consul_host": "${CONSUL_HOST}",
-  "consul_port": "8400"
+  "consul_port": "8500"
 }

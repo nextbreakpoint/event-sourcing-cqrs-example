@@ -247,11 +247,11 @@ public class Verticle extends AbstractVerticle {
 
             final HealthCheckHandler healthCheckHandler = HealthCheckHandler.createWithHealthChecks(HealthChecks.create(vertx));
 
-            healthCheckHandler.register("kafka-events-topic", future -> checkTopic(kafkaConsumer4, eventsTopic, future));
-            healthCheckHandler.register("kafka-render-topic", future -> checkTopic(kafkaConsumer4, renderTopic, future));
-            healthCheckHandler.register("kafka-batch-topic", future -> checkTopic(kafkaConsumer4, batchTopic, future));
-            healthCheckHandler.register("cassandra-design-table", future -> checkTable(store, future, "DESIGN"));
-            healthCheckHandler.register("cassandra-message-table", future -> checkTable(store, future, "MESSAGE"));
+            healthCheckHandler.register("kafka-topic-events", 2000, future -> checkTopic(kafkaConsumer4, eventsTopic, future));
+            healthCheckHandler.register("kafka-topic-render", 2000, future -> checkTopic(kafkaConsumer4, renderTopic, future));
+            healthCheckHandler.register("kafka-topic-batch", 2000, future -> checkTopic(kafkaConsumer4, batchTopic, future));
+            healthCheckHandler.register("cassandra-table-design", 2000, future -> checkTable(store, future, "DESIGN"));
+            healthCheckHandler.register("cassandra-table-message", 2000, future -> checkTable(store, future, "MESSAGE"));
 
             final URL resource = RouterBuilder.class.getClassLoader().getResource("api-v1.yaml");
 
@@ -311,13 +311,13 @@ public class Verticle extends AbstractVerticle {
 
     private void checkTable(Store store, Promise<Status> promise, String tableName) {
         store.existsTable(tableName)
-                .timeout(5, TimeUnit.SECONDS)
+                .timeout(1, TimeUnit.SECONDS)
                 .subscribe(exists -> promise.complete(exists ? Status.OK() : Status.KO()), err -> promise.complete(Status.KO()));
     }
 
     private void checkTopic(KafkaConsumer<String, String> kafkaConsumer, String eventsTopic, Promise<Status> promise) {
         kafkaConsumer.rxPartitionsFor(eventsTopic)
-                .timeout(5, TimeUnit.SECONDS)
+                .timeout(1, TimeUnit.SECONDS)
                 .subscribe(partitions -> promise.complete(Status.OK()), err -> promise.complete(Status.KO()));
     }
 }

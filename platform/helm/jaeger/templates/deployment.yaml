@@ -60,7 +60,7 @@ spec:
             - name: SPAN_STORAGE_TYPE
               value: "elasticsearch"
             - name: ES_SERVER_URLS
-              value: "http://elasticsearch:9200"
+              value: "http://elasticsearch.{{ $root.Release.Namespace }}:9200"
             - name: ES_TAGS_AS_FIELDS_ALL
               value: "true"
           {{- if $root.Values.resources }}

@@ -46,6 +46,10 @@ spec:
           secret:
             secretName: {{ $root.Values.secretName | quote }}
         {{- end}}
+        - name: data-vol
+          hostPath:
+            path: /volumes/elasticsearch-data
+            type: DirectoryOrCreate
       initContainers:
         - name: change-ulimit
           image: alpine:3
@@ -90,6 +94,8 @@ spec:
               readOnly: true
               mountPath: /docker-entrypoint-initdb.d/init.sh
               subPath: init.sh
+            - name: data-vol
+              mountPath: /usr/share/elasticsearch/data
           {{- if $root.Values.resources }}
           resources:
             {{ $root.Values.resources | toYaml | indent 12 | trim }}

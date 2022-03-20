@@ -42,12 +42,12 @@ spec:
 #        runAsGroup: 70
 #        fsGroup: 70
       volumes:
-        - name: config-vol
-          configMap:
-            name: '{{ $root.Values.configName | default "postgres" }}.{{ $root.Release.Revision | default "1" }}'
+        - name: secret-vol
+          secret:
+            secretName: '{{ $root.Values.secretName | default "postgres" }}.{{ $root.Release.Revision | default "1" }}'
         - name: data-vol
           hostPath:
-            path: /postgress-data
+            path: /volumes/postgress-data
             type: DirectoryOrCreate
       initContainers:
         - name: take-data-dir-ownership
@@ -78,13 +78,19 @@ spec:
                 fieldRef:
                   fieldPath: metadata.namespace
             - name: POSTGRES_USER
-              value: "admin"
+              valueFrom:
+                secretKeyRef:
+                  name: '{{ $root.Values.secretName | default "postgres" }}.{{ $root.Release.Revision | default "1" }}'
+                  key: POSTGRES_USER
             - name: POSTGRES_PASSWORD
-              value: "password"
+              valueFrom:
+                secretKeyRef:
+                  name: '{{ $root.Values.secretName | default "postgres" }}.{{ $root.Release.Revision | default "1" }}'
+                  key: POSTGRES_PASSWORD
             - name: PGDATA
               value: "/var/lib/postgresql/data/pgdata"
           volumeMounts:
-            - name: config-vol
+            - name: secret-vol
               readOnly: true
               mountPath: /docker-entrypoint-initdb.d/init.sql
               subPath: init.sql

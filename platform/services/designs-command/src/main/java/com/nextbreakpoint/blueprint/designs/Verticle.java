@@ -229,9 +229,9 @@ public class Verticle extends AbstractVerticle {
 
             final HealthCheckHandler healthCheckHandler = HealthCheckHandler.createWithHealthChecks(HealthChecks.create(vertx));
 
-            healthCheckHandler.register("kafka-events-topic", future -> checkTopic(kafkaConsumer2, eventsTopic, future));
-            healthCheckHandler.register("kafka-commands-topic", future -> checkTopic(kafkaConsumer2, commandsTopic, future));
-            healthCheckHandler.register("cassandra-message-table", future -> checkTable(store, future, "MESSAGE"));
+            healthCheckHandler.register("kafka-topic-events", 2000, future -> checkTopic(kafkaConsumer2, eventsTopic, future));
+            healthCheckHandler.register("kafka-topic-commands", 2000, future -> checkTopic(kafkaConsumer2, commandsTopic, future));
+            healthCheckHandler.register("cassandra-table-message", 2000, future -> checkTable(store, future, "MESSAGE"));
 
             final URL resource = RouterBuilder.class.getClassLoader().getResource("api-v1.yaml");
 
@@ -300,13 +300,13 @@ public class Verticle extends AbstractVerticle {
 
     private void checkTable(Store store, Promise<Status> promise, String tableName) {
         store.existsTable(tableName)
-                .timeout(5, TimeUnit.SECONDS)
+                .timeout(1, TimeUnit.SECONDS)
                 .subscribe(exists -> promise.complete(exists ? Status.OK() : Status.KO()), err -> promise.complete(Status.KO()));
     }
 
     private void checkTopic(KafkaConsumer<String, String> kafkaConsumer, String eventsTopic, Promise<Status> promise) {
         kafkaConsumer.rxPartitionsFor(eventsTopic)
-                .timeout(5, TimeUnit.SECONDS)
+                .timeout(1, TimeUnit.SECONDS)
                 .subscribe(partitions -> promise.complete(Status.OK()), err -> promise.complete(Status.KO()));
     }
 }

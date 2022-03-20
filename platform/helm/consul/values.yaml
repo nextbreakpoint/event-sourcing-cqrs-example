@@ -23,5 +23,3 @@ resources:
 
 serviceAccount: default
 
-servicePort:
-serviceName:

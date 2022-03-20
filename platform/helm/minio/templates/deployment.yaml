@@ -40,9 +40,16 @@ spec:
       volumes:
         - name: data-vol
           hostPath:
-            path: /volumes/kafka-data
+            path: {{ $root.Values.dataDirectory | default "/volumes/minio-data" | quote }}
             type: DirectoryOrCreate
       hostname: {{ $fullname }}
+      initContainers:
+        - name: change-ulimit
+          image: alpine:3
+          command:
+            - sh
+            - -c
+            - "ulimit -n 65536"
       containers:
         - name: {{ $root.Values.name | default "minio" | quote }}
           image: "{{ $root.Values.image.registry }}{{ $root.Values.image.repository }}:{{ $root.Values.image.tag }}"
@@ -80,7 +87,7 @@ spec:
                   key: MINIO_ROOT_PASSWORD
           volumeMounts:
             - name: data-vol
-              mountPath: /var/lib/postgresql/data/pgdata
+              mountPath: /var/data
           {{- if $root.Values.resources }}
           resources:
             {{ $root.Values.resources | toYaml | indent 12 | trim }}

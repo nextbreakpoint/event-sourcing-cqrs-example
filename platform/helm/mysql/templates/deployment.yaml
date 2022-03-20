@@ -43,7 +43,7 @@ spec:
             secretName: '{{ $root.Values.secretName | default "mysql" }}.{{ $root.Release.Revision | default "1" }}'
         - name: data-vol
           hostPath:
-            path: /volumes/mysql-data
+            path: {{ $root.Values.dataDirectory | default "/volumes/mysql-data" | quote }}
             type: DirectoryOrCreate
       containers:
         - name: {{ $root.Values.name | default "mysql" | quote }}
@@ -73,7 +73,7 @@ spec:
               mountPath: /docker-entrypoint-initdb.d/init.sql
               subPath: init.sql
             - name: data-vol
-              mountPath: /var/lib/mysql/
+              mountPath: /var/lib/mysql
           {{- if $root.Values.resources }}
           resources:
             {{ $root.Values.resources | toYaml | indent 12 | trim }}

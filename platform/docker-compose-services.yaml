@@ -23,7 +23,7 @@ services:
         protocol: tcp
         mode: host
     networks:
-      - platform
+      - bridge
     volumes:
       - ./services/accounts/config/integration.json:/etc/config.json
       - ./secrets/keystore_server.jks:/secrets/keystore_server.jks
@@ -53,7 +53,7 @@ services:
         protocol: tcp
         mode: host
     networks:
-      - platform
+      - bridge
     volumes:
       - ./services/authentication/config/integration.json:/etc/config.json
       - ./secrets/keystore_auth.jceks:/secrets/keystore_auth.jceks
@@ -90,7 +90,7 @@ services:
         protocol: tcp
         mode: host
     networks:
-      - platform
+      - bridge
     volumes:
       - ./services/designs-query/config/integration.json:/etc/config.json
       - ./secrets/keystore_auth.jceks:/secrets/keystore_auth.jceks
@@ -122,7 +122,7 @@ services:
         protocol: tcp
         mode: host
     networks:
-      - platform
+      - bridge
     volumes:
       - ./services/designs-command/config/integration.json:/etc/config.json
       - ./secrets/keystore_auth.jceks:/secrets/keystore_auth.jceks
@@ -155,7 +155,7 @@ services:
         protocol: tcp
         mode: host
     networks:
-      - platform
+      - bridge
     volumes:
       - ./services/designs-aggregate/config/integration.json:/etc/config.json
       - ./secrets/keystore_auth.jceks:/secrets/keystore_auth.jceks
@@ -183,7 +183,7 @@ services:
         protocol: tcp
         mode: host
     networks:
-      - platform
+      - bridge
     volumes:
       - ./services/designs-notify/config/integration.json:/etc/config.json
       - ./secrets/keystore_auth.jceks:/secrets/keystore_auth.jceks
@@ -216,7 +216,7 @@ services:
         protocol: tcp
         mode: host
     networks:
-      - platform
+      - bridge
     volumes:
       - ./services/designs-render/config/integration.json:/etc/config.json
       - ./secrets/keystore_auth.jceks:/secrets/keystore_auth.jceks
@@ -249,7 +249,7 @@ services:
         protocol: tcp
         mode: host
     networks:
-      - platform
+      - bridge
     volumes:
       - ./services/designs-render/config/integration.json:/etc/config.json
       - ./secrets/keystore_auth.jceks:/secrets/keystore_auth.jceks
@@ -282,7 +282,7 @@ services:
         protocol: tcp
         mode: host
     networks:
-      - platform
+      - bridge
     volumes:
       - ./services/designs-render/config/integration.json:/etc/config.json
       - ./secrets/keystore_auth.jceks:/secrets/keystore_auth.jceks
@@ -315,7 +315,7 @@ services:
         protocol: tcp
         mode: host
     networks:
-      - platform
+      - bridge
     volumes:
       - ./services/designs-render/config/integration.json:/etc/config.json
       - ./secrets/keystore_auth.jceks:/secrets/keystore_auth.jceks
@@ -345,7 +345,7 @@ services:
         protocol: tcp
         mode: host
     networks:
-      - platform
+      - bridge
     volumes:
       - ./services/gateway/config/integration.json:/etc/config.json
       - ./secrets/keystore_auth.jceks:/secrets/keystore_auth.jceks
@@ -365,12 +365,12 @@ services:
         protocol: tcp
         mode: host
     networks:
-      - platform
+      - bridge
     volumes:
       - ./services/frontend/config/integration.json:/etc/config.json
       - ./secrets/server_key.pem:/secrets/server_key.pem
       - ./secrets/server_cert.pem:/secrets/server_cert.pem
       - ./secrets/ca_cert.pem:/secrets/ca_cert.pem
 networks:
-  platform:
+  bridge:
     driver: bridge

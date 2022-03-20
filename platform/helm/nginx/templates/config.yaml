@@ -27,14 +27,14 @@ data:
         ssl_session_timeout   10m;
 
         server {
-          listen 80 default_server;
-          server_name {{ $root.Values.hostname | default "localhost" | quote }};
-          return 301 https://$server_name$request_uri;
+          listen 80;
+          server_name _;
+          return 301 https://$host$request_uri;
         }
 
         server {
-          listen 443 ssl;
-          server_name {{ $root.Values.hostname | default "localhost" | quote }};
+          listen 443 ssl default_server;
+          server_name _;
 
           ssl_certificate     /etc/nginx/server_cert.pem;
           ssl_certificate_key /etc/nginx/server_key.pem;

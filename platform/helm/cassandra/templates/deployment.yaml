@@ -48,8 +48,25 @@ spec:
         {{- end}}
         - name: data-vol
           hostPath:
-            path: /volumes/cassandra-data
+            path: {{ $root.Values.dataDirectory | default "/volumes/cassandra-data" | quote }}
             type: DirectoryOrCreate
+      initContainers:
+        - name: change-ulimit
+          image: alpine:3
+          command:
+            - sh
+            - -c
+            - "ulimit -n 65536"
+        - name: take-data-dir-ownership
+          image: alpine:3
+          command:
+            - chown
+            - -R
+            - 999:999
+            - /var/lib/cassandra
+          volumeMounts:
+            - name: data-vol
+              mountPath: /var/lib/cassandra
       containers:
         - name: {{ $root.Values.name | default "cassandra" | quote }}
           image: "{{ $root.Values.image.registry }}{{ $root.Values.image.repository }}:{{ $root.Values.image.tag }}"

@@ -47,7 +47,7 @@ spec:
             secretName: '{{ $root.Values.secretName | default "postgres" }}.{{ $root.Release.Revision | default "1" }}'
         - name: data-vol
           hostPath:
-            path: /volumes/postgress-data
+            path: {{ $root.Values.dataDirectory | default "/volumes/postgres-data" | quote }}
             type: DirectoryOrCreate
       initContainers:
         - name: take-data-dir-ownership

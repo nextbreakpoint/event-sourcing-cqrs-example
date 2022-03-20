@@ -12,7 +12,7 @@ services:
         protocol: tcp
         mode: host
     networks:
-      - pipeline
+      - bridge
     volumes:
       - nexus-data:/nexus/data
   pact-server:
@@ -29,7 +29,7 @@ services:
         protocol: tcp
         mode: host
     networks:
-      - pipeline
+      - bridge
   postgres:
     restart: unless-stopped
     image: postgres:14-alpine
@@ -43,7 +43,7 @@ services:
         protocol: tcp
         mode: host
     networks:
-      - pipeline
+      - bridge
     volumes:
       - ./scripts/pactbrocker.sql:/docker-entrypoint-initdb.d/pactbrocker.sql:ro
       - postgres-data:/var/lib/postgresql/data/pgdata
@@ -51,5 +51,5 @@ volumes:
   nexus-data:
   postgres-data:
 networks:
-  pipeline:
+  bridge:
     driver: bridge

@@ -127,7 +127,7 @@ public class ElasticsearchStore implements Store {
 
     private Single<Boolean> doExistsIndex(ElasticsearchAsyncClient client, String indexName) {
         try {
-            return Observable.from(client.search(builder -> createExistsIndexRequest(builder, indexName), String.class))
+            return Observable.from(client.search(builder -> createExistsIndexRequest(builder, indexName), Design.class))
                     .map(result -> true)
                     .toSingle();
         } catch (Exception e) {

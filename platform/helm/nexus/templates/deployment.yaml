@@ -44,7 +44,7 @@ spec:
       volumes:
         - name: data-vol
           hostPath:
-            path: /volumes/nexus-data
+            path: {{ $root.Values.dataDirectory | default "/volumes/nexus-data" | quote }}
             type: DirectoryOrCreate
       initContainers:
         - name: take-data-dir-ownership

@@ -4,7 +4,7 @@
 
 image:
   repository: mysql
-  tag: 8.0.28-debian
+  tag: 8.0.28
   pullPolicy: IfNotPresent
   pullSecrets:
 
@@ -15,10 +15,10 @@ strategy:
 
 resources:
   requests:
-    memory: "512Mi"
+    memory: "1024Mi"
     cpu: "0.1"
   limits:
-    memory: "512Mi"
+    memory: "1024Mi"
     cpu: "1.0"
 
 serviceAccount: default

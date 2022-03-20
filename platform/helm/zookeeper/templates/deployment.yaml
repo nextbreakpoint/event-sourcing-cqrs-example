@@ -40,8 +40,15 @@ spec:
       volumes:
         - name: data-vol
           hostPath:
-            path: /volumes/zookeeper-data
+            path: {{ $root.Values.dataDirectory | default "/volumes/zookeeper-data" | quote }}
             type: DirectoryOrCreate
+      initContainers:
+        - name: change-ulimit
+          image: alpine:3
+          command:
+            - sh
+            - -c
+            - "ulimit -n 65536"
       containers:
         - name: {{ $root.Values.name | default "zookeeper" | quote }}
           image: "{{ $root.Values.image.registry }}{{ $root.Values.image.repository }}:{{ $root.Values.image.tag }}"

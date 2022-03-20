@@ -48,7 +48,7 @@ spec:
         {{- end}}
         - name: data-vol
           hostPath:
-            path: /volumes/elasticsearch-data
+            path: {{ $root.Values.dataDirectory | default "/volumes/elasticsearch-data" | quote }}
             type: DirectoryOrCreate
       initContainers:
         - name: change-ulimit
@@ -57,6 +57,16 @@ spec:
             - sh
             - -c
             - "ulimit -n 65536"
+        - name: take-data-dir-ownership
+          image: alpine:3
+          command:
+            - chown
+            - -R
+            - 1000:1000
+            - /usr/share/elasticsearch/data
+          volumeMounts:
+            - name: data-vol
+              mountPath: /usr/share/elasticsearch/data
       containers:
         - name: {{ $root.Values.name | default "elasticsearch" | quote }}
           image: "{{ $root.Values.image.registry }}{{ $root.Values.image.repository }}:{{ $root.Values.image.tag }}"

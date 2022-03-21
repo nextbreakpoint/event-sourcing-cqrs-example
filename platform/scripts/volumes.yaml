@@ -20,7 +20,7 @@ spec:
   accessModes:
     - ReadWriteOnce
   hostPath:
-    path: "/volumes/platform/minio"
+    path: "/data/platform/minio"
     type: DirectoryOrCreate
   claimRef:
     name: minio
@@ -41,7 +41,7 @@ spec:
   accessModes:
     - ReadWriteOnce
   hostPath:
-    path: "/volumes/platform/elasticsearch"
+    path: "/data/platform/elasticsearch"
     type: DirectoryOrCreate
   claimRef:
     name: elasticsearch
@@ -62,7 +62,7 @@ spec:
   accessModes:
     - ReadWriteOnce
   hostPath:
-    path: "/volumes/platform/cassandra"
+    path: "/data/platform/cassandra"
     type: DirectoryOrCreate
   claimRef:
     name: cassandra
@@ -83,7 +83,7 @@ spec:
   accessModes:
     - ReadWriteOnce
   hostPath:
-    path: "/volumes/platform/mysql"
+    path: "/data/platform/mysql"
     type: DirectoryOrCreate
   claimRef:
     name: mysql
@@ -104,7 +104,7 @@ spec:
   accessModes:
     - ReadWriteOnce
   hostPath:
-    path: "/volumes/platform/zookeeper-data"
+    path: "/data/platform/zookeeper-data"
     type: DirectoryOrCreate
   claimRef:
     name: zookeeper-data
@@ -125,7 +125,7 @@ spec:
   accessModes:
     - ReadWriteOnce
   hostPath:
-    path: "/volumes/platform/zookeeper-datalog"
+    path: "/data/platform/zookeeper-datalog"
     type: DirectoryOrCreate
   claimRef:
     name: zookeeper-datalog
@@ -146,7 +146,7 @@ spec:
   accessModes:
     - ReadWriteOnce
   hostPath:
-    path: "/volumes/platform/kafka"
+    path: "/data/platform/kafka"
     type: DirectoryOrCreate
   claimRef:
     name: kafka
@@ -167,7 +167,7 @@ spec:
   accessModes:
     - ReadWriteOnce
   hostPath:
-    path: "/volumes/pipeline/postgres"
+    path: "/data/pipeline/postgres"
     type: DirectoryOrCreate
   claimRef:
     name: postgres
@@ -188,7 +188,7 @@ spec:
   accessModes:
     - ReadWriteOnce
   hostPath:
-    path: "/volumes/pipeline/nexus"
+    path: "/data/pipeline/nexus"
     type: DirectoryOrCreate
   claimRef:
     name: nexus
@@ -210,7 +210,7 @@ spec:
   accessModes:
     - ReadWriteOnce
   hostPath:
-    path: "/volumes/monitoring/elasticsearch"
+    path: "/data/monitoring/elasticsearch"
     type: DirectoryOrCreate
   claimRef:
     name: elasticsearch

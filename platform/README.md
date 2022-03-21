@@ -209,6 +209,18 @@ Upgrade Pact Broker (if needed):
 
     helm upgrade --install integration-pactbroker helm/pactbroker -n pipeline --set replicas=1
 
+Uninstall Nexus (if needed):
+
+    helm uninstall integration-nexus -n pipeline 
+
+Uninstall Postgres (if needed):
+
+    helm uninstall integration-postgres -n pipeline
+
+Uninstall Pact Broker (if needed):
+
+    helm uninstall integration-pactbroker -n pipeline
+
 ## Run on Minikube
 
 Setup Minikube:
@@ -427,6 +439,10 @@ Scale services:
     kubectl -n services scale deployment gateway --replicas=2
     kubectl -n services scale deployment frontend --replicas=2
 
+Scale platform:
+
+    kubectl -n platform scale deployment nginx --replicas=2
+
 Open browser:
 
     open https://$(minikube ip)/browse/designs.html
@@ -448,6 +464,22 @@ Upgrade services (if needed):
     helm upgrade --install service-gateway services/gateway/helm -n services --set image.repository=integration/gateway,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip),enableDebug=false,loggingLevel=${LOGGING_LEVEL}
 
     helm upgrade --install service-frontend services/frontend/helm -n services --set image.repository=integration/frontend,image.tag=${VERSION},replicas=1,clientWebUrl=https://$(minikube ip):443,clientApiUrl=https://$(minikube ip):443,enableDebug=false,loggingLevel=${LOGGING_LEVEL}
+
+Uninstall services (if needed):
+
+    helm uninstall service-authentication -n services
+
+    helm uninstall service-accounts -n services
+
+    helm uninstall service-designs-query -n services
+    helm uninstall service-designs-command -n services
+    helm uninstall service-designs-aggregate -n services
+    helm uninstall service-designs-notify -n services
+    helm uninstall service-designs-render -n services
+
+    helm uninstall service-gateway -n services
+
+    helm uninstall service-frontend -n services
 
 Upgrade Elasticsearch (if needed):
 
@@ -493,6 +525,50 @@ Upgrade NGINX (if needed):
 
     helm upgrade --install integration-nginx helm/nginx -n platform --set replicas=1,hostname=$(minikube ip)
 
+Uninstall Elasticsearch (if needed):
+
+    helm uninstall integration-elasticsearch -n monitoring 
+
+Uninstall Kibana (if needed):
+
+    helm uninstall integration-kibana -n monitoring
+
+Uninstall Jaeger (if needed):
+
+    helm uninstall integration-jaeger -n monitoring
+
+Uninstall Elasticsearch (if needed):
+
+    helm uninstall integration-elasticsearch -n platform
+
+Uninstall Cassandra (if needed):
+
+    helm uninstall integration-cassandra -n platform
+
+Uninstall Zookeeper (if needed):
+
+    helm uninstall integration-zookeeper -n platform
+
+Uninstall Kafka (if needed):
+
+    helm uninstall integration-kafka -n platform
+
+Uninstall MySQL (if needed):
+
+    helm uninstall integration-mysql -n platform 
+
+Uninstall Consul (if needed):
+
+    helm uninstall integration-consul -n platform 
+
+Uninstall Minio (if needed):
+
+    helm uninstall integration-minio -n platform 
+
+Uninstall NGINX (if needed):
+
+    helm uninstall integration-nginx -n platform
+
 Stop Minikube (when finished):
 
     minikube stop
@@ -500,7 +576,3 @@ Stop Minikube (when finished):
 Delete Minikube (when finished):
 
     minikube delete
-
-
-
-

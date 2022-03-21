@@ -39,9 +39,11 @@ spec:
       {{- end}}
       volumes:
         - name: data-vol
-          hostPath:
-            path: {{ $root.Values.dataDirectory | default "/volumes/zookeeper-data" | quote }}
-            type: DirectoryOrCreate
+          persistentVolumeClaim:
+            claimName: zookeeper-data
+        - name: datalog-vol
+          persistentVolumeClaim:
+            claimName: zookeeper-datalog
       initContainers:
         - name: change-ulimit
           image: alpine:3
@@ -71,7 +73,9 @@ spec:
           {{- if $root.Values.resources }}
           volumeMounts:
             - name: data-vol
-              mountPath: /tmp/zookeeper
+              mountPath: /data
+            - name: datalog-vol
+              mountPath: /datalog
           resources:
             {{ $root.Values.resources | toYaml | indent 12 | trim }}
           {{- end}}

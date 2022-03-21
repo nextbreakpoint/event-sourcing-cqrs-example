@@ -43,9 +43,8 @@ spec:
 #        fsGroup: 200
       volumes:
         - name: data-vol
-          hostPath:
-            path: {{ $root.Values.dataDirectory | default "/volumes/nexus-data" | quote }}
-            type: DirectoryOrCreate
+          persistentVolumeClaim:
+            claimName: nexus
       initContainers:
         - name: take-data-dir-ownership
           image: alpine:3

@@ -77,7 +77,7 @@ spec:
                   name: {{ $root.Values.secretName | default "designs-render" | quote }}
                   key: AWS_SECRET_ACCESS_KEY
             - name: JAEGER_ATTRIBUTES
-              value: 'service.name={{ $root.Values.name | default "gateway" }},service.version={{ $root.Values.image.tag }},service.namespace={{ $root.Release.Namespace }},environment={{ $root.Values.environment | default "dev" }},release={{ $root.Release.Name }}'
+              value: 'service.name={{ $root.Values.name | default "designs-render" }},service.version={{ $root.Values.image.tag }},service.namespace={{ $root.Release.Namespace }},environment={{ $root.Values.environment | default "dev" }},release={{ $root.Release.Name }}'
             - name: JAEGER_ENDPOINT
               value: {{ $root.Values.jaegerEndpoint | default "http://jaeger.monitoring:14250" | quote }}
             {{- if $root.Values.enableDebug }}

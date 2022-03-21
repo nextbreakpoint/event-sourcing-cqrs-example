@@ -1,0 +1,15 @@
+{{- $fullname := include "service.fullname" . -}}
+{{- $name := include "service.name" . -}}
+{{- $chart := include "service.chart" . -}}
+{{- $root := . }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ $root.Values.name | default "elasticsearch" | quote }}
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ $root.Values.volumeSize | default "5Gi" | quote }}

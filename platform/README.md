@@ -233,6 +233,10 @@ Build Docker images:
 
     ./scripts/build-images.sh 
 
+Create volumes:
+
+    kubectl apply -f scripts/volumes.yaml 
+
 Deploy Elasticsearch:
 
     helm install integration-elasticsearch helm/elasticsearch -n monitoring --set replicas=1,dataDirectory=/volumes/monitoring/elasticsearch-data
@@ -328,7 +332,6 @@ Expose servers:
     kubectl -n platform expose service/consul --name=consul-external --port=8500 --target-port=8500 --type=LoadBalancer --external-ip=$(minikube ip)
     kubectl -n platform expose service/minio --name minio-external --port 9001 --target-port 9001 --type LoadBalancer --external-ip $(minikube ip)
     kubectl -n platform expose service/nginx --name nginx-external --port 443 --target-port 443 --type LoadBalancer --external-ip $(minikube ip)
-    kubectl -n platform expose service/nginx --name nginx-external-2 --port 80 --target-port 80 --type LoadBalancer --external-ip $(minikube ip)
 
 Create Kafka topics:
 
@@ -344,6 +347,7 @@ Create Kafka topics:
 
 Create Minio bucket:
 
+    kubectl -n platform delete job -l app=minio-init 
     kubectl -n platform apply -f scripts/minio-init.yaml 
 
 Export GitHub secrets:
@@ -448,7 +452,7 @@ Upgrade services (if needed):
 
 Upgrade Elasticsearch (if needed):
 
-    helm upgrade --install integration-elasticsearch helm/elasticsearch -n monitoring --set replicas=1
+    helm upgrade --install integration-elasticsearch helm/elasticsearch -n monitoring --set replicas=1,volumeSize=20Gi
 
 Upgrade Kibana (if needed):
 
@@ -497,3 +501,7 @@ Stop Minikube (when finished):
 Delete Minikube (when finished):
 
     minikube delete
+
+
+
+

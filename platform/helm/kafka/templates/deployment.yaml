@@ -44,9 +44,8 @@ spec:
             secretName: {{ $root.Values.secretName | quote }}
         {{- end}}
         - name: data-vol
-          hostPath:
-            path: {{ $root.Values.dataDirectory | default "/volumes/kafka-data" | quote }}
-            type: DirectoryOrCreate
+          persistentVolumeClaim:
+            claimName: kafka
       hostname: {{ $root.Values.internalName | default "kafka" }}
       initContainers:
         - name: change-ulimit
@@ -55,6 +54,16 @@ spec:
             - sh
             - -c
             - "ulimit -n 65536"
+        - name: take-data-dir-ownership
+          image: alpine:3
+          command:
+            - chown
+            - -R
+            - 1000:1000
+            - /var/lib/kafka/data
+          volumeMounts:
+            - name: data-vol
+              mountPath: /var/lib/kafka/data
       containers:
         - name: {{ $root.Values.name | default "kafka" | quote }}
           image: "{{ $root.Values.image.registry }}{{ $root.Values.image.repository }}:{{ $root.Values.image.tag }}"
@@ -132,7 +141,7 @@ spec:
               subPath: truststore.jks
             {{- end}}
             - name: data-vol
-              mountPath: /tmp/logs/kafka-logs
+              mountPath: /var/lib/kafka/data
           {{- if $root.Values.resources }}
           resources:
             {{ $root.Values.resources | toYaml | indent 12 | trim }}

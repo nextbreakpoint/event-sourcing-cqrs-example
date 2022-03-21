@@ -47,9 +47,8 @@ spec:
             secretName: {{ $root.Values.secretName | quote }}
         {{- end}}
         - name: data-vol
-          hostPath:
-            path: {{ $root.Values.dataDirectory | default "/volumes/cassandra-data" | quote }}
-            type: DirectoryOrCreate
+          persistentVolumeClaim:
+            claimName: cassandra
       initContainers:
         - name: change-ulimit
           image: alpine:3

@@ -46,9 +46,8 @@ spec:
           secret:
             secretName: '{{ $root.Values.secretName | default "postgres" }}.{{ $root.Release.Revision | default "1" }}'
         - name: data-vol
-          hostPath:
-            path: {{ $root.Values.dataDirectory | default "/volumes/postgres-data" | quote }}
-            type: DirectoryOrCreate
+          persistentVolumeClaim:
+            claimName: postgres
       initContainers:
         - name: take-data-dir-ownership
           image: alpine:3

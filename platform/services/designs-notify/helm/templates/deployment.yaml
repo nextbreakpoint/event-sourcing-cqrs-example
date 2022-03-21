@@ -67,7 +67,7 @@ spec:
                   name: {{ $root.Values.secretName | default "designs-notify" | quote }}
                   key: KEYSTORE_SECRET
             - name: JAEGER_ATTRIBUTES
-              value: 'service.name={{ $root.Values.name | default "gateway" }},service.version={{ $root.Values.image.tag }},service.namespace={{ $root.Release.Namespace }},environment={{ $root.Values.environment | default "dev" }},release={{ $root.Release.Name }}'
+              value: 'service.name={{ $root.Values.name | default "designs-notify" }},service.version={{ $root.Values.image.tag }},service.namespace={{ $root.Release.Namespace }},environment={{ $root.Values.environment | default "dev" }},release={{ $root.Release.Name }}'
             - name: JAEGER_ENDPOINT
               value: {{ $root.Values.jaegerEndpoint | default "http://jaeger.monitoring:14250" | quote }}
             {{- if $root.Values.enableDebug }}

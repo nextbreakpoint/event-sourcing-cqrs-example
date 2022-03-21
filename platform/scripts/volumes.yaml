@@ -1,0 +1,210 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: platform-minio
+  labels:
+    type: local
+    app: minio
+spec:
+  storageClassName: manual
+  persistentVolumeReclaimPolicy: Retain
+  capacity:
+    storage: 50Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/volumes/platform/minio"
+    type: DirectoryOrCreate
+  claimRef:
+    name: minio
+    namespace: platform
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: platform-elasticsearch
+  labels:
+    type: local
+    app: elasticsearch
+spec:
+  storageClassName: manual
+  persistentVolumeReclaimPolicy: Retain
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/volumes/platform/elasticsearch"
+    type: DirectoryOrCreate
+  claimRef:
+    name: elasticsearch
+    namespace: platform
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: platform-cassandra
+  labels:
+    type: local
+    app: cassandra
+spec:
+  storageClassName: manual
+  persistentVolumeReclaimPolicy: Retain
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/volumes/platform/cassandra"
+    type: DirectoryOrCreate
+  claimRef:
+    name: cassandra
+    namespace: platform
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: platform-mysql
+  labels:
+    type: local
+    app: mysql
+spec:
+  storageClassName: manual
+  persistentVolumeReclaimPolicy: Retain
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/volumes/platform/mysql"
+    type: DirectoryOrCreate
+  claimRef:
+    name: mysql
+    namespace: platform
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: platform-zookeeper-data
+  labels:
+    type: local
+    app: zookeeper-data
+spec:
+  storageClassName: manual
+  persistentVolumeReclaimPolicy: Retain
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/volumes/platform/zookeeper-data"
+    type: DirectoryOrCreate
+  claimRef:
+    name: zookeeper-data
+    namespace: platform
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: platform-zookeeper-datalog
+  labels:
+    type: local
+    app: zookeeper-datalog
+spec:
+  storageClassName: manual
+  persistentVolumeReclaimPolicy: Retain
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/volumes/platform/zookeeper-datalog"
+    type: DirectoryOrCreate
+  claimRef:
+    name: zookeeper-datalog
+    namespace: platform
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: platform-kafka
+  labels:
+    type: local
+    app: kafka
+spec:
+  storageClassName: manual
+  persistentVolumeReclaimPolicy: Retain
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/volumes/platform/kafka"
+    type: DirectoryOrCreate
+  claimRef:
+    name: kafka
+    namespace: platform
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pipeline-postgres
+  labels:
+    type: local
+    app: postgres
+spec:
+  storageClassName: manual
+  persistentVolumeReclaimPolicy: Retain
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/volumes/pipeline/postgres"
+    type: DirectoryOrCreate
+  claimRef:
+    name: postgres
+    namespace: pipeline
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pipeline-nexus
+  labels:
+    type: local
+    app: nexus
+spec:
+  storageClassName: manual
+  persistentVolumeReclaimPolicy: Retain
+  capacity:
+    storage: 20Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/volumes/pipeline/nexus"
+    type: DirectoryOrCreate
+  claimRef:
+    name: nexus
+    namespace: pipeline
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: monitoring-elasticsearch
+  namespace: monitoring
+  labels:
+    type: local
+    app: elasticsearch
+spec:
+  storageClassName: manual
+  persistentVolumeReclaimPolicy: Retain
+  capacity:
+    storage: 20Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/volumes/monitoring/elasticsearch"
+    type: DirectoryOrCreate
+  claimRef:
+    name: elasticsearch
+    namespace: monitoring

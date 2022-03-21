@@ -59,7 +59,8 @@ services:
     networks:
       - bridge
     volumes:
-      - zookeeper-data:/var/zookeeper
+      - zookeeper-data:/data
+      - zookeeper-datalog:/datalog
   kafka:
     restart: unless-stopped
     image: nextbreakpoint/kafka:6.1.0-1
@@ -102,7 +103,7 @@ services:
     networks:
       - bridge
     volumes:
-      - kafka-data:/tmp/logs/kafka-logs
+      - kafka-data:/var/lib/kafka/data
   consul:
     restart: unless-stopped
     image: consul:1.11.4
@@ -272,6 +273,7 @@ volumes:
   minio-data:
   kafka-data:
   zookeeper-data:
+  zookeeper-datalog:
   cassandra-data:
   elasticsearch-data:
 networks:

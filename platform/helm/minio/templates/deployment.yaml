@@ -1,7 +1,7 @@
 {{- $fullname := include "service.fullname" . -}}
-  {{- $name := include "service.name" . -}}
-  {{- $chart := include "service.chart" . -}}
-  {{- $root := . }}
+{{- $name := include "service.name" . -}}
+{{- $chart := include "service.chart" . -}}
+{{- $root := . }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -39,9 +39,8 @@ spec:
       {{- end}}
       volumes:
         - name: data-vol
-          hostPath:
-            path: {{ $root.Values.dataDirectory | default "/volumes/minio-data" | quote }}
-            type: DirectoryOrCreate
+          persistentVolumeClaim:
+            claimName: minio
       hostname: {{ $fullname }}
       initContainers:
         - name: change-ulimit
@@ -55,10 +54,12 @@ spec:
           image: "{{ $root.Values.image.registry }}{{ $root.Values.image.repository }}:{{ $root.Values.image.tag }}"
           imagePullPolicy: {{ $root.Values.image.pullPolicy }}
           command:
-            - sh
+            - minio
           args:
-            - -c
-            - mkdir -p /var/data && minio server /var/data --console-address ":9001"
+            - server
+            - /var/data
+            - --console-address
+            - ":9001"
           ports:
             - name: minio
               containerPort: 9000

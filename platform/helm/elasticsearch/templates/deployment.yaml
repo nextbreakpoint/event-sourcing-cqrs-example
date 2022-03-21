@@ -47,9 +47,8 @@ spec:
             secretName: {{ $root.Values.secretName | quote }}
         {{- end}}
         - name: data-vol
-          hostPath:
-            path: {{ $root.Values.dataDirectory | default "/volumes/elasticsearch-data" | quote }}
-            type: DirectoryOrCreate
+          persistentVolumeClaim:
+            claimName: elasticsearch
       initContainers:
         - name: change-ulimit
           image: alpine:3
@@ -88,7 +87,7 @@ spec:
                 fieldRef:
                   fieldPath: metadata.namespace
             - name: ES_JAVA_OPTS
-              value: "-Xms2G -Xmx2G"
+              value: "-Xms3G -Xmx3G"
             - name: "node.name"
               value: "elasticsearch"
             - name: "cluster.name"

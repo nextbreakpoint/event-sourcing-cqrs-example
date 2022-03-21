@@ -40,19 +40,20 @@ cat <<EOF >/tmp/data.json
 EOF
 
 function makeIndex {
-  RESULT=$(curl -s --head http://localhost:9200/$1 | head -n 1 | cut -d$' ' -f2)
-  if [ $RESULT -eq 404 ]
-  then
-    echo "Creating index $1..."
-    until curl -s -X PUT http://localhost:9200/designs -H 'content-type: application/json' -d @/tmp/data.json; do >&2 echo "Elasticsearch is unavailable - sleeping"; sleep 5; done &
-    echo "Index $1 created"
-  else
-    echo "Index $1 already exists"
-  fi
+    RESULT=$(curl -s --head http://localhost:9200/$1 | head -n 1 | cut -d$' ' -f2)
+    if [ "$RESULT" = "200" ]
+    then
+        echo "Index $1 already exists"
+    else
+        echo "Creating index $1..."
+        curl -s -X PUT http://localhost:9200/$1 -H 'content-type: application/json' -d @/tmp/data.json
+        [ $? = 0 ]
+    fi
 }
 
-makeIndex designs
-makeIndex designs_draft
-makeIndex test_designs_query
-makeIndex test_designs_query_draft
+until makeIndex designs; do >&2 echo "Elasticsearch is unavailable - sleeping"; sleep 5; done
+until makeIndex designs_draft; do >&2 echo "Elasticsearch is unavailable - sleeping"; sleep 5; done
+
+until makeIndex test_designs_query; do >&2 echo "Elasticsearch is unavailable - sleeping"; sleep 5; done
+until makeIndex test_designs_query_draft; do >&2 echo "Elasticsearch is unavailable - sleeping"; sleep 5; done
 

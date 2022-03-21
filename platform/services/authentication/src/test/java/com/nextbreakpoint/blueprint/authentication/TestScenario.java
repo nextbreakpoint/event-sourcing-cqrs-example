@@ -33,7 +33,7 @@ public class TestScenario {
           .withEnv("LOGGING_LEVEL", "DEBUG")
           .withEnv("JAEGER_SERVICE_NAME", serviceName)
           .withEnv("KEYSTORE_SECRET", "secret")
-          .withEnv("ADMIN_EMAIL", "admin@localhost")
+          .withEnv("GITHUB_ACCOUNT_EMAIL", "admin@localhost")
           .withEnv("GITHUB_CLIENT_ID", "111")
           .withEnv("GITHUB_CLIENT_SECRET", "222")
           .withEnv("ACCOUNTS_URL", "http://" + dockerHost + ":39001")

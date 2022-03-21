@@ -7,7 +7,7 @@ kind: PersistentVolumeClaim
 metadata:
   name: {{ $root.Values.name | default "mysql" | quote }}
 spec:
-  storageClassName: manual
+  storageClassName: local
   accessModes:
     - ReadWriteOnce
   resources:

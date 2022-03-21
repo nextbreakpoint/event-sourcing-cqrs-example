@@ -7,7 +7,7 @@ kind: PersistentVolumeClaim
 metadata:
   name: {{ $root.Values.name | default "minio" | quote }}
 spec:
-  storageClassName: manual
+  storageClassName: local
   accessModes:
     - ReadWriteOnce
   resources:

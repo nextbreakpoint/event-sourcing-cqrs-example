@@ -15,10 +15,10 @@ strategy:
 
 resources:
   requests:
-    memory: "3500Mi"
+    memory: "3000Mi"
     cpu: "0.1"
   limits:
-    memory: "3500Mi"
+    memory: "3000Mi"
     cpu: "1.0"
 
 serviceAccount: default

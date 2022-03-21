@@ -7,7 +7,7 @@ kind: PersistentVolumeClaim
 metadata:
   name: {{ $root.Values.name | default "zookeeper-data" | quote }}
 spec:
-  storageClassName: manual
+  storageClassName: local
   accessModes:
     - ReadWriteOnce
   resources:
@@ -19,7 +19,7 @@ kind: PersistentVolumeClaim
 metadata:
   name: {{ $root.Values.name | default "zookeeper-datalog" | quote }}
 spec:
-  storageClassName: manual
+  storageClassName: local
   accessModes:
     - ReadWriteOnce
   resources:

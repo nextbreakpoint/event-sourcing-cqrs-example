@@ -1,3 +1,10 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: local
+provisioner: kubernetes.io/no-provisioner
+volumeBindingMode: WaitForFirstConsumer
+---
 apiVersion: v1
 kind: PersistentVolume
 metadata:
@@ -6,7 +13,7 @@ metadata:
     type: local
     app: minio
 spec:
-  storageClassName: manual
+  storageClassName: local
   persistentVolumeReclaimPolicy: Retain
   capacity:
     storage: 50Gi
@@ -27,7 +34,7 @@ metadata:
     type: local
     app: elasticsearch
 spec:
-  storageClassName: manual
+  storageClassName: local
   persistentVolumeReclaimPolicy: Retain
   capacity:
     storage: 5Gi
@@ -48,7 +55,7 @@ metadata:
     type: local
     app: cassandra
 spec:
-  storageClassName: manual
+  storageClassName: local
   persistentVolumeReclaimPolicy: Retain
   capacity:
     storage: 5Gi
@@ -69,7 +76,7 @@ metadata:
     type: local
     app: mysql
 spec:
-  storageClassName: manual
+  storageClassName: local
   persistentVolumeReclaimPolicy: Retain
   capacity:
     storage: 5Gi
@@ -90,7 +97,7 @@ metadata:
     type: local
     app: zookeeper-data
 spec:
-  storageClassName: manual
+  storageClassName: local
   persistentVolumeReclaimPolicy: Retain
   capacity:
     storage: 5Gi
@@ -111,7 +118,7 @@ metadata:
     type: local
     app: zookeeper-datalog
 spec:
-  storageClassName: manual
+  storageClassName: local
   persistentVolumeReclaimPolicy: Retain
   capacity:
     storage: 5Gi
@@ -132,7 +139,7 @@ metadata:
     type: local
     app: kafka
 spec:
-  storageClassName: manual
+  storageClassName: local
   persistentVolumeReclaimPolicy: Retain
   capacity:
     storage: 5Gi
@@ -153,7 +160,7 @@ metadata:
     type: local
     app: postgres
 spec:
-  storageClassName: manual
+  storageClassName: local
   persistentVolumeReclaimPolicy: Retain
   capacity:
     storage: 5Gi
@@ -174,7 +181,7 @@ metadata:
     type: local
     app: nexus
 spec:
-  storageClassName: manual
+  storageClassName: local
   persistentVolumeReclaimPolicy: Retain
   capacity:
     storage: 20Gi
@@ -196,7 +203,7 @@ metadata:
     type: local
     app: elasticsearch
 spec:
-  storageClassName: manual
+  storageClassName: local
   persistentVolumeReclaimPolicy: Retain
   capacity:
     storage: 20Gi

@@ -7,7 +7,7 @@ kind: PersistentVolumeClaim
 metadata:
   name: {{ $root.Values.name | default "nexus" | quote }}
 spec:
-  storageClassName: manual
+  storageClassName: local
   accessModes:
     - ReadWriteOnce
   resources:

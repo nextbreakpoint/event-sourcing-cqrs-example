@@ -7,7 +7,7 @@ kind: PersistentVolumeClaim
 metadata:
   name: {{ $root.Values.name | default "cassandra" | quote }}
 spec:
-  storageClassName: manual
+  storageClassName: local
   accessModes:
     - ReadWriteOnce
   resources:

@@ -141,6 +141,10 @@ Create namespaces:
     kubectl create ns services
     kubectl create ns monitoring
 
+Create volumes:
+
+    kubectl apply -f scripts/volumes.yaml 
+
 Deploy Nexus:
 
     helm install integration-nexus helm/nexus -n pipeline --set replicas=1
@@ -170,9 +174,7 @@ Expose services:
     kubectl -n pipeline expose service/nexus --name nexus-external --port 8081 --target-port 8081 --type LoadBalancer --external-ip $(minikube ip)
     kubectl -n pipeline expose service/pactbroker --name pactbroker-external --port 9292 --target-port 9292 --type LoadBalancer --external-ip $(minikube ip)
 
-Wait until Nexus is ready:
-
-     curl http://$(minikube ip):8081/#browse/browse:maven-public    
+Wait until Nexus is ready. It might take quite a while
 
 Export variables:
 
@@ -232,10 +234,6 @@ Configure Docker:
 Build Docker images:
 
     ./scripts/build-images.sh 
-
-Create volumes:
-
-    kubectl apply -f scripts/volumes.yaml 
 
 Deploy Elasticsearch:
 
@@ -345,6 +343,14 @@ Create Kafka topics:
 
     kubectl -n platform exec $(kubectl -n platform get pod -l app=kafka -o json | jq -r '.items[0].metadata.name') -- kafka-topics --bootstrap-server=localhost:9092 --create --topic batch --config "retention.ms=604800000" --replication-factor=1 --partitions=16
 
+Create Cassandra tables:
+
+    kubectl -n platform exec $(kubectl -n platform get pod -l app=cassandra -o json | jq -r '.items[0].metadata.name') -- cqlsh -u cassandra -p cassandra < scripts/init.cql  
+
+Create Elasticsearch index:
+
+    kubectl -n platform exec $(kubectl -n platform get pod -l app=elasticsearch -o json | jq -r '.items[0].metadata.name') -- sh -c "$(cat scripts/init.sh)"
+
 Create Minio bucket:
 
     kubectl -n platform delete job -l app=minio-init 
@@ -414,19 +420,12 @@ Expose services:
 
 Scale services:
 
-    kubectl -n services scale deployment authentication --replicas=2
-    kubectl -n services scale deployment accounts --replicas=2
     kubectl -n services scale deployment designs-query --replicas=2
-    kubectl -n services scale deployment designs-command --replicas=2
     kubectl -n services scale deployment designs-aggregate --replicas=2
     kubectl -n services scale deployment designs-notify --replicas=1
-    kubectl -n services scale deployment designs-render --replicas=8
+    kubectl -n services scale deployment designs-render --replicas=4
     kubectl -n services scale deployment gateway --replicas=2
     kubectl -n services scale deployment frontend --replicas=2
-
-Scale platform:
-
-    kubectl -n services scale deployment nginx --replicas=2
 
 Open browser:
 

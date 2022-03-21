@@ -87,7 +87,7 @@ spec:
                 fieldRef:
                   fieldPath: metadata.namespace
             - name: ES_JAVA_OPTS
-              value: "-Xms3G -Xmx3G"
+              value: "-Xms2G -Xmx2G"
             - name: "node.name"
               value: "elasticsearch"
             - name: "cluster.name"

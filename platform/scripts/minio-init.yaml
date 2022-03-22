@@ -3,7 +3,7 @@ kind: Job
 metadata:
   name: minio-init
   labels:
-    app: minio-init
+    component: minio-init
 spec:
   template:
     spec:

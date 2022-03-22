@@ -8,7 +8,7 @@ metadata:
   name: {{ $root.Values.name | default "kafka" | quote }}
   namespace: {{ $root.Release.Namespace | quote }}
   labels:
-    app: {{ $root.Values.name | default "kafka" | quote }}
+    component: {{ $root.Values.name | default "kafka" | quote }}
     chart: {{ $chart }}
     release: {{ $root.Release.Name }}
     heritage: {{ $root.Release.Service }}
@@ -20,7 +20,7 @@ spec:
   {{- end}}
   selector:
     matchLabels:
-      app: {{ $root.Values.name | default "kafka" | quote }}
+      component: {{ $root.Values.name | default "kafka" | quote }}
   template:
     metadata:
       {{- if $root.Values.annotations }}
@@ -28,7 +28,7 @@ spec:
         {{ toYaml $root.Values.annotations | indent 8 | trim }}
       {{- end}}
       labels:
-        app: {{ $root.Values.name | default "kafka" | quote }}
+        component: {{ $root.Values.name | default "kafka" | quote }}
     spec:
       serviceAccountName: {{ $root.Values.serviceAccount | default "kafka" }}
       {{- if $root.Values.image }}

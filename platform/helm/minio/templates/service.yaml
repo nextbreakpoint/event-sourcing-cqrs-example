@@ -8,7 +8,7 @@ metadata:
   name: {{ $root.Values.name | default "minio" | quote }}
   namespace: {{ $root.Release.Namespace | quote }}
   labels:
-    app: {{ $root.Values.name | default "minio" | quote }}
+    component: {{ $root.Values.name | default "minio" | quote }}
     chart: {{ $chart }}
     release: {{ $root.Release.Name }}
     heritage: {{ $root.Release.Service }}
@@ -24,4 +24,4 @@ spec:
       protocol: TCP
       name: minio-console
   selector:
-    app: {{ $root.Values.name | default "minio" | quote }}
+    component: {{ $root.Values.name | default "minio" | quote }}

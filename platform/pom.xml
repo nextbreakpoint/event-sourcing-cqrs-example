@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.nextbreakpoint</groupId>
     <artifactId>com.nextbreakpoint.blueprint.bom</artifactId>
-    <version>1.0.0-wip2-349c9679-1647873119</version>
+    <version>1.0.0-wip2-8449488e-1647958072</version>
     <packaging>pom</packaging>
     <licenses>
         <license>
@@ -455,6 +455,11 @@
             <dependency>
                 <groupId>org.apache.logging.log4j</groupId>
                 <artifactId>log4j-jul</artifactId>
+                <version>${log4j2.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-layout-template-json</artifactId>
                 <version>${log4j2.version}</version>
             </dependency>
             <dependency>

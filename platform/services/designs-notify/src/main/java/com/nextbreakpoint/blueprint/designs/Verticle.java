@@ -29,6 +29,7 @@ import io.vertx.rxjava.ext.web.handler.BodyHandler;
 import io.vertx.rxjava.ext.web.handler.CorsHandler;
 import io.vertx.rxjava.ext.web.handler.LoggerHandler;
 import io.vertx.rxjava.kafka.client.consumer.KafkaConsumer;
+import io.vertx.rxjava.micrometer.PrometheusScrapingHandler;
 import io.vertx.rxjava.servicediscovery.ServiceDiscovery;
 import io.vertx.rxjava.servicediscovery.spi.ServiceImporter;
 import io.vertx.servicediscovery.Record;
@@ -233,6 +234,8 @@ public class Verticle extends AbstractVerticle {
                         mainRouter.get("/health*").handler(healthCheckHandler);
 
                         mainRouter.options("/*").handler(ResponseHelper::sendNoContent);
+
+                        mainRouter.route("/metrics").handler(PrometheusScrapingHandler.create());
 
                         mainRouter.route().failureHandler(ResponseHelper::sendFailure);
 

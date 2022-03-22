@@ -19,6 +19,7 @@ import io.vertx.rxjava.ext.web.Router;
 import io.vertx.rxjava.ext.web.handler.CorsHandler;
 import io.vertx.rxjava.ext.web.handler.LoggerHandler;
 import io.vertx.rxjava.ext.web.handler.TimeoutHandler;
+import io.vertx.rxjava.micrometer.PrometheusScrapingHandler;
 import rx.Completable;
 
 import java.net.MalformedURLException;
@@ -112,6 +113,8 @@ public class Verticle extends AbstractVerticle {
             configureAccountRoute(mainRouter, clientConfig, accountsUrl);
 
             configureDesignsRoute(mainRouter, clientConfig, designsCommandUrl, designsRenderUrl, designsQueryUrl);
+
+            mainRouter.route("/metrics").handler(PrometheusScrapingHandler.create());
 
             final ServerConfig serverConfig = ServerConfig.builder()
                     .withJksStorePath(jksStorePath)

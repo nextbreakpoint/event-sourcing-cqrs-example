@@ -9,6 +9,7 @@ module com.nextbreakpoint.blueprint.common.vertx {
     requires static io.vertx.client.cassandra;
     requires static io.vertx.tracing.opentelemetry;
     requires static io.vertx.metrics.micrometer;
+    requires static micrometer.core;
     requires static io.opentelemetry.semconv;
     requires static io.opentelemetry.context;
     requires static io.opentelemetry.sdk.common;

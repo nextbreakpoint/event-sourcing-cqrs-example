@@ -31,6 +31,7 @@ import io.vertx.rxjava.ext.web.handler.LoggerHandler;
 import io.vertx.rxjava.ext.web.handler.TimeoutHandler;
 import io.vertx.rxjava.kafka.client.consumer.KafkaConsumer;
 import io.vertx.rxjava.kafka.client.producer.KafkaProducer;
+import io.vertx.rxjava.micrometer.PrometheusScrapingHandler;
 import rx.Completable;
 
 import java.io.File;
@@ -271,6 +272,8 @@ public class Verticle extends AbstractVerticle {
                         mainRouter.get("/health*").handler(healthCheckHandler);
 
                         mainRouter.options("/*").handler(ResponseHelper::sendNoContent);
+
+                        mainRouter.route("/metrics").handler(PrometheusScrapingHandler.create());
 
                         mainRouter.route().failureHandler(ResponseHelper::sendFailure);
 

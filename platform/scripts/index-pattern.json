@@ -1,0 +1,14 @@
+{
+  "override": false,
+  "refresh_fields": true,
+  "index_pattern": {
+    "title": "logstash-*",
+    "timeFieldName": "@timestamp",
+    "fields": {},
+    "typeMeta": {},
+    "fieldFormats": {},
+    "runtimeFieldMap": {},
+    "fieldAttrs": {},
+    "allowNoIndex": false
+  }
+}

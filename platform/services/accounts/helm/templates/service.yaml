@@ -8,7 +8,7 @@ metadata:
   name: {{ $root.Values.name | default "accounts" | quote }}
   namespace: {{ $root.Release.Namespace | quote }}
   labels:
-    app: {{ $root.Values.name | default "accounts" | quote }}
+    component: {{ $root.Values.name | default "accounts" | quote }}
     chart: {{ $chart }}
     release: {{ $root.Release.Name }}
     heritage: {{ $root.Release.Service }}
@@ -20,4 +20,4 @@ spec:
       protocol: TCP
       name: http
   selector:
-    app: {{ $root.Values.name | default "accounts" | quote }}
+    component: {{ $root.Values.name | default "accounts" | quote }}

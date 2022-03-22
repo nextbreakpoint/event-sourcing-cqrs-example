@@ -8,7 +8,7 @@ metadata:
   name: {{ $root.Values.name | default "designs-query" | quote }}
   namespace: {{ $root.Release.Namespace | quote }}
   labels:
-    app: {{ $root.Values.name | default "designs-query" | quote }}
+    component: {{ $root.Values.name | default "designs-query" | quote }}
     chart: {{ $chart }}
     release: {{ $root.Release.Name }}
     heritage: {{ $root.Release.Service }}
@@ -20,7 +20,7 @@ spec:
   {{- end}}
   selector:
     matchLabels:
-      app: {{ $root.Values.name | default "designs-query" | quote }}
+      component: {{ $root.Values.name | default "designs-query" | quote }}
   template:
     metadata:
       {{- if $root.Values.annotations }}
@@ -28,7 +28,7 @@ spec:
         {{ toYaml $root.Values.annotations | indent 8 | trim }}
       {{- end}}
       labels:
-        app: {{ $root.Values.name | default "designs-query" | quote }}
+        component: {{ $root.Values.name | default "designs-query" | quote }}
     spec:
       serviceAccountName: {{ $root.Values.serviceAccount | default "designs-query-service" }}
       {{- if $root.Values.image }}
@@ -89,7 +89,7 @@ spec:
             - name: JAEGER_ATTRIBUTES
               value: 'service.name={{ $root.Values.name | default "designs-query" }},service.version={{ $root.Values.image.tag }},service.namespace={{ $root.Release.Namespace }},environment={{ $root.Values.environment | default "dev" }},release={{ $root.Release.Name }}'
             - name: JAEGER_ENDPOINT
-              value: {{ $root.Values.jaegerEndpoint | default "http://jaeger.monitoring:14250" | quote }}
+              value: {{ $root.Values.jaegerEndpoint | default "http://jaeger-collector.monitoring:14250" | quote }}
             {{- if $root.Values.enableDebug }}
             - name: DEBUG_OPTS
               value: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"

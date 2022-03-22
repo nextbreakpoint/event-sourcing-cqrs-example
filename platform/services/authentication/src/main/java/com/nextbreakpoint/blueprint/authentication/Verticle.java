@@ -208,6 +208,10 @@ public class Verticle extends AbstractVerticle {
 
                         mainRouter.get("/health*").handler(healthCheckHandler);
 
+                        mainRouter.options("/*").handler(ResponseHelper::sendNoContent);
+
+                        mainRouter.route("/metrics").handler(PrometheusScrapingHandler.create());
+
                         mainRouter.route().failureHandler(routingContext -> redirectOnFailure(routingContext, webUrl));
 
                         final ServerConfig serverConfig = ServerConfig.builder()

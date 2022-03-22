@@ -1,0 +1,183 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: gateway
+  namespace: services
+  labels:
+    component: gateway
+spec:
+  podTargetLabels:
+    - component
+  podMetricsEndpoints:
+    - path: /metrics
+      port: http
+      scheme: https
+      tlsConfig:
+        insecureSkipVerify: true
+  namespaceSelector:
+    matchNames:
+      - services
+  selector:
+    matchLabels:
+      component: gateway
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: accounts
+  namespace: services
+  labels:
+    component: accounts
+spec:
+  podTargetLabels:
+    - component
+  podMetricsEndpoints:
+    - path: /metrics
+      port: http
+      scheme: https
+      tlsConfig:
+        insecureSkipVerify: true
+  namespaceSelector:
+    matchNames:
+      - services
+  selector:
+    matchLabels:
+      component: accounts
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: authentication
+  namespace: services
+  labels:
+    component: authentication
+spec:
+  podTargetLabels:
+    - component
+  podMetricsEndpoints:
+    - path: /metrics
+      port: http
+      scheme: https
+      tlsConfig:
+        insecureSkipVerify: true
+  namespaceSelector:
+    matchNames:
+      - services
+  selector:
+    matchLabels:
+      component: authentication
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: designs-query
+  namespace: services
+  labels:
+    component: designs-query
+spec:
+  podTargetLabels:
+    - component
+  podMetricsEndpoints:
+    - path: /metrics
+      port: http
+      scheme: https
+      tlsConfig:
+        insecureSkipVerify: true
+  namespaceSelector:
+    matchNames:
+      - services
+  selector:
+    matchLabels:
+      component: designs-query
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: designs-command
+  namespace: services
+  labels:
+    component: designs-command
+spec:
+  podTargetLabels:
+    - component
+  podMetricsEndpoints:
+    - path: /metrics
+      port: http
+      scheme: https
+      tlsConfig:
+        insecureSkipVerify: true
+  namespaceSelector:
+    matchNames:
+      - services
+  selector:
+    matchLabels:
+      component: designs-command
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: designs-aggregate
+  namespace: services
+  labels:
+    component: designs-aggregate
+spec:
+  podTargetLabels:
+    - component
+  podMetricsEndpoints:
+    - path: /metrics
+      port: http
+      scheme: https
+      tlsConfig:
+        insecureSkipVerify: true
+  namespaceSelector:
+    matchNames:
+      - services
+  selector:
+    matchLabels:
+      component: designs-aggregate
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: designs-notify
+  namespace: services
+  labels:
+    component: designs-notify
+spec:
+  podTargetLabels:
+    - component
+  podMetricsEndpoints:
+    - path: /metrics
+      port: http
+      scheme: https
+      tlsConfig:
+        insecureSkipVerify: true
+  namespaceSelector:
+    matchNames:
+      - services
+  selector:
+    matchLabels:
+      component: designs-notify
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: designs-render
+  namespace: services
+  labels:
+    component: designs-render
+spec:
+  podTargetLabels:
+    - component
+  podMetricsEndpoints:
+    - path: /metrics
+      port: http
+      scheme: https
+      tlsConfig:
+        insecureSkipVerify: true
+  namespaceSelector:
+    matchNames:
+      - services
+  selector:
+    matchLabels:
+      component: designs-render

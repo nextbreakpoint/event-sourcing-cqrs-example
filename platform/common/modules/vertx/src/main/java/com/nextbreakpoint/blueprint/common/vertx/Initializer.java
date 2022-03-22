@@ -2,6 +2,11 @@ package com.nextbreakpoint.blueprint.common.vertx;
 
 import com.nextbreakpoint.blueprint.common.core.Environment;
 import com.nextbreakpoint.blueprint.common.core.IOUtils;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.binder.jvm.*;
+import io.micrometer.core.instrument.binder.kafka.KafkaClientMetrics;
+import io.micrometer.core.instrument.binder.system.ProcessorMetrics;
+import io.micrometer.core.instrument.binder.system.UptimeMetrics;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.Context;
@@ -19,6 +24,7 @@ import io.vertx.core.dns.AddressResolverOptions;
 import io.vertx.core.json.JsonObject;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.VertxPrometheusOptions;
+import io.vertx.micrometer.backends.BackendRegistries;
 import io.vertx.rxjava.core.RxHelper;
 import io.vertx.rxjava.core.Vertx;
 import io.vertx.tracing.opentelemetry.OpenTelemetryOptions;
@@ -37,10 +43,13 @@ public class Initializer {
     private Initializer() {}
 
     public static Vertx createVertx() {
-        final VertxPrometheusOptions prometheusOptions = new VertxPrometheusOptions().setEnabled(true);
+        final VertxPrometheusOptions prometheusOptions = new VertxPrometheusOptions()
+                .setPublishQuantiles(true)
+                .setEnabled(true);
 
         final MicrometerMetricsOptions metricsOptions = new MicrometerMetricsOptions()
-                .setPrometheusOptions(prometheusOptions).setEnabled(true);
+                .setPrometheusOptions(prometheusOptions)
+                .setEnabled(true);
 
         final JaegerGrpcSpanExporter spanExporter = JaegerGrpcSpanExporter.builder()
                 .setEndpoint(Optional.ofNullable(System.getenv("JAEGER_ENDPOINT")).orElse("http://localhost:14250"))
@@ -77,6 +86,15 @@ public class Initializer {
         RxJavaHooks.setOnComputationScheduler(s -> RxHelper.scheduler(vertx));
         RxJavaHooks.setOnIOScheduler(s -> RxHelper.blockingScheduler(vertx));
         RxJavaHooks.setOnNewThreadScheduler(s -> RxHelper.blockingScheduler(vertx));
+
+        MeterRegistry registry = BackendRegistries.getDefaultNow();
+
+        new ClassLoaderMetrics().bindTo(registry);
+        new JvmMemoryMetrics().bindTo(registry);
+        new JvmGcMetrics().bindTo(registry);
+        new ProcessorMetrics().bindTo(registry);
+        new JvmThreadMetrics().bindTo(registry);
+        new UptimeMetrics().bindTo(registry);
 
         return vertx;
     }

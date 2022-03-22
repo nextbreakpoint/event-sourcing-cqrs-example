@@ -151,7 +151,7 @@ Deploy Nexus:
 
 Check Nexus:
 
-    kubectl -n pipeline logs -f --tail=-1 -l app=nexus
+    kubectl -n pipeline logs -f --tail=-1 -l component=nexus
 
 Deploy Postgres:
 
@@ -159,7 +159,7 @@ Deploy Postgres:
 
 Check Postgres:
 
-    kubectl -n pipeline logs -f --tail=-1 -l app=postgres
+    kubectl -n pipeline logs -f --tail=-1 -l component=postgres
 
 Deploy Pact Broker:
 
@@ -167,7 +167,7 @@ Deploy Pact Broker:
 
 Check Pact Broker:
 
-    kubectl -n pipeline logs -f --tail=-1 -l app=pactbroker
+    kubectl -n pipeline logs -f --tail=-1 -l component=pactbroker
 
 Expose services:
 
@@ -183,7 +183,7 @@ Export variables:
     export NEXUS_HOST=$(minikube ip)
     export NEXUS_PORT=8081
     export NEXUS_USERNAME=admin
-    export NEXUS_PASSWORD=$(kubectl -n pipeline exec $(kubectl -n pipeline get pod -l app=nexus -o json | jq -r '.items[0].metadata.name') -c nexus -- cat /opt/sonatype/sonatype-work/nexus3/admin.password)
+    export NEXUS_PASSWORD=$(kubectl -n pipeline exec $(kubectl -n pipeline get pod -l component=nexus -o json | jq -r '.items[0].metadata.name') -c nexus -- cat /opt/sonatype/sonatype-work/nexus3/admin.password)
 
 Create Maven repository (required only once):
 
@@ -239,6 +239,30 @@ Deploy secrets:
     kubectl -n services create secret generic truststore-client.jks --from-file=secrets/truststore_client.jks
     kubectl -n services create secret generic keystore-auth.jceks --from-file=secrets/keystore_auth.jceks
 
+Deploy Fluent Bit:
+
+    helm repo add fluent https://fluent.github.io/helm-charts
+    helm repo update
+    helm upgrade --install fluent-bit fluent/fluent-bit -n monitoring -f scripts/fluentbit-values.yaml
+
+Deploy Prometheus operator:
+
+    helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+    helm repo update
+    helm install kube-prometheus-stack prometheus-community/kube-prometheus-stack -n monitoring -f scripts/prometheus-values.yaml
+
+Deploy Certificate Manager:
+
+    helm repo add jetstack https://charts.jetstack.io
+    helm repo update
+    helm install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --version v1.7.1 --set installCRDs=true
+
+Deploy Jaeger operator:
+
+    helm repo add jaegertracing https://jaegertracing.github.io/helm-charts
+    helm repo update
+    helm install jaeger-operator jaegertracing/jaeger-operator --namespace monitoring --set rbac.create=true
+
 Configure Docker:
 
     eval $(minikube docker-env)
@@ -253,7 +277,7 @@ Deploy Elasticsearch:
 
 Check Elasticsearch:
 
-    kubectl -n monitoring logs -f --tail=-1 -l app=elasticsearch
+    kubectl -n monitoring logs -f --tail=-1 -l component=elasticsearch
 
 Deploy Kibana:
 
@@ -261,15 +285,7 @@ Deploy Kibana:
 
 Check Kibana:
 
-    kubectl -n monitoring logs -f --tail=-1 -l app=kibana
-
-Deploy Jaeger:
-
-    helm install integration-jaeger helm/jaeger -n monitoring --set replicas=1
-
-Check Jaeger:
-
-    kubectl -n monitoring logs -f --tail=-1 -l app=jaeger
+    kubectl -n monitoring logs -f --tail=-1 -l component=kibana
 
 Deploy Elasticsearch:
 
@@ -277,7 +293,7 @@ Deploy Elasticsearch:
 
 Check Elasticsearch:
 
-    kubectl -n platform logs -f --tail=-1 -l app=elasticsearch
+    kubectl -n platform logs -f --tail=-1 -l component=elasticsearch
 
 Deploy Cassandra:
 
@@ -285,7 +301,7 @@ Deploy Cassandra:
 
 Check Cassandra:
 
-    kubectl -n platform logs -f --tail=-1 -l app=cassandra
+    kubectl -n platform logs -f --tail=-1 -l component=cassandra
 
 Deploy Zookeeper:
 
@@ -293,7 +309,7 @@ Deploy Zookeeper:
 
 Check Zookeeper:
 
-    kubectl -n platform logs -f --tail=-1 -l app=zookeeper
+    kubectl -n platform logs -f --tail=-1 -l component=zookeeper
 
 Deploy Kafka:
 
@@ -301,7 +317,7 @@ Deploy Kafka:
 
 Check Kafka:
 
-    kubectl -n platform logs -f --tail=-1 -l app=kafka
+    kubectl -n platform logs -f --tail=-1 -l component=kafka
 
 Deploy MySQL:
 
@@ -309,7 +325,7 @@ Deploy MySQL:
 
 Check MySQL:
 
-    kubectl -n platform logs -f --tail=-1 -l app=mysql
+    kubectl -n platform logs -f --tail=-1 -l component=mysql
 
 Deploy Consul:
 
@@ -317,7 +333,7 @@ Deploy Consul:
 
 Check Consul:
 
-    kubectl -n platform logs -f --tail=-1 -l app=consul
+    kubectl -n platform logs -f --tail=-1 -l component=consul
 
 Deploy Minio:
 
@@ -325,7 +341,7 @@ Deploy Minio:
 
 Check Minio:
 
-    kubectl -n platform logs -f --tail=-1 -l app=minio
+    kubectl -n platform logs -f --tail=-1 -l component=minio
 
 Deploy NGINX:
 
@@ -333,39 +349,41 @@ Deploy NGINX:
 
 Check NGINX:
 
-    kubectl -n platform logs -f --tail=-1 -l app=nginx
+    kubectl -n platform logs -f --tail=-1 -l component=nginx
 
 Expose servers:
 
+    kubectl -n monitoring expose service/kube-prometheus-stack-grafana --name grafana-external --port 3000 --target-port 3000 --type LoadBalancer --external-ip $(minikube ip)
+    kubectl -n monitoring expose service/prometheus-operated --name prometheus-external --port 9090 --target-port 9090 --type LoadBalancer --external-ip $(minikube ip)
     kubectl -n monitoring expose service/kibana --name=kibana-external --port=5601 --target-port=5601 --type=LoadBalancer --external-ip=$(minikube ip) 
-    kubectl -n monitoring expose service/jaeger --name=jaeger-external --port=16686 --target-port=16686 --type=LoadBalancer --external-ip=$(minikube ip)
+    kubectl -n monitoring expose service/jaeger-query --name=jaeger-query-external --port=16686 --target-port=16686 --type=LoadBalancer --external-ip=$(minikube ip)
     kubectl -n platform expose service/consul --name=consul-external --port=8500 --target-port=8500 --type=LoadBalancer --external-ip=$(minikube ip)
     kubectl -n platform expose service/minio --name minio-external --port 9001 --target-port 9001 --type LoadBalancer --external-ip $(minikube ip)
     kubectl -n platform expose service/nginx --name nginx-external --port 443 --target-port 443 --type LoadBalancer --external-ip $(minikube ip)
 
 Create Kafka topics:
 
-    kubectl -n platform exec $(kubectl -n platform get pod -l app=kafka -o json | jq -r '.items[0].metadata.name') -- kafka-topics --bootstrap-server=localhost:9092 --create --topic events --config "retention.ms=604800000" --replication-factor=1 --partitions=16
+    kubectl -n platform exec $(kubectl -n platform get pod -l component=kafka -o json | jq -r '.items[0].metadata.name') -- kafka-topics --bootstrap-server=localhost:9092 --create --topic events --config "retention.ms=604800000" --replication-factor=1 --partitions=16
 
-    kubectl -n platform exec $(kubectl -n platform get pod -l app=kafka -o json | jq -r '.items[0].metadata.name') -- kafka-topics --bootstrap-server=localhost:9092 --create --topic render-0 --config "cleanup.policy=compact" --config "delete.retention.ms=5000" --config "max.compaction.lag.ms=10000" --config "min.compaction.lag.ms=5000" --config "min.cleanable.dirty.ratio=0.1" --config "segment.ms=5000" --config "retention.ms=604800000" --replication-factor=1 --partitions=64
-    kubectl -n platform exec $(kubectl -n platform get pod -l app=kafka -o json | jq -r '.items[0].metadata.name') -- kafka-topics --bootstrap-server=localhost:9092 --create --topic render-1 --config "cleanup.policy=compact" --config "delete.retention.ms=5000" --config "max.compaction.lag.ms=10000" --config "min.compaction.lag.ms=5000" --config "min.cleanable.dirty.ratio=0.1" --config "segment.ms=5000" --config "retention.ms=604800000" --replication-factor=1 --partitions=64
-    kubectl -n platform exec $(kubectl -n platform get pod -l app=kafka -o json | jq -r '.items[0].metadata.name') -- kafka-topics --bootstrap-server=localhost:9092 --create --topic render-2 --config "cleanup.policy=compact" --config "delete.retention.ms=5000" --config "max.compaction.lag.ms=10000" --config "min.compaction.lag.ms=5000" --config "min.cleanable.dirty.ratio=0.1" --config "segment.ms=5000" --config "retention.ms=604800000" --replication-factor=1 --partitions=64
-    kubectl -n platform exec $(kubectl -n platform get pod -l app=kafka -o json | jq -r '.items[0].metadata.name') -- kafka-topics --bootstrap-server=localhost:9092 --create --topic render-3 --config "cleanup.policy=compact" --config "delete.retention.ms=5000" --config "max.compaction.lag.ms=10000" --config "min.compaction.lag.ms=5000" --config "min.cleanable.dirty.ratio=0.1" --config "segment.ms=5000" --config "retention.ms=604800000" --replication-factor=1 --partitions=64
-    kubectl -n platform exec $(kubectl -n platform get pod -l app=kafka -o json | jq -r '.items[0].metadata.name') -- kafka-topics --bootstrap-server=localhost:9092 --create --topic render-4 --config "cleanup.policy=compact" --config "delete.retention.ms=5000" --config "max.compaction.lag.ms=10000" --config "min.compaction.lag.ms=5000" --config "min.cleanable.dirty.ratio=0.1" --config "segment.ms=5000" --config "retention.ms=604800000" --replication-factor=1 --partitions=64
+    kubectl -n platform exec $(kubectl -n platform get pod -l component=kafka -o json | jq -r '.items[0].metadata.name') -- kafka-topics --bootstrap-server=localhost:9092 --create --topic render-0 --config "cleanup.policy=compact" --config "delete.retention.ms=5000" --config "max.compaction.lag.ms=10000" --config "min.compaction.lag.ms=5000" --config "min.cleanable.dirty.ratio=0.1" --config "segment.ms=5000" --config "retention.ms=604800000" --replication-factor=1 --partitions=64
+    kubectl -n platform exec $(kubectl -n platform get pod -l component=kafka -o json | jq -r '.items[0].metadata.name') -- kafka-topics --bootstrap-server=localhost:9092 --create --topic render-1 --config "cleanup.policy=compact" --config "delete.retention.ms=5000" --config "max.compaction.lag.ms=10000" --config "min.compaction.lag.ms=5000" --config "min.cleanable.dirty.ratio=0.1" --config "segment.ms=5000" --config "retention.ms=604800000" --replication-factor=1 --partitions=64
+    kubectl -n platform exec $(kubectl -n platform get pod -l component=kafka -o json | jq -r '.items[0].metadata.name') -- kafka-topics --bootstrap-server=localhost:9092 --create --topic render-2 --config "cleanup.policy=compact" --config "delete.retention.ms=5000" --config "max.compaction.lag.ms=10000" --config "min.compaction.lag.ms=5000" --config "min.cleanable.dirty.ratio=0.1" --config "segment.ms=5000" --config "retention.ms=604800000" --replication-factor=1 --partitions=64
+    kubectl -n platform exec $(kubectl -n platform get pod -l component=kafka -o json | jq -r '.items[0].metadata.name') -- kafka-topics --bootstrap-server=localhost:9092 --create --topic render-3 --config "cleanup.policy=compact" --config "delete.retention.ms=5000" --config "max.compaction.lag.ms=10000" --config "min.compaction.lag.ms=5000" --config "min.cleanable.dirty.ratio=0.1" --config "segment.ms=5000" --config "retention.ms=604800000" --replication-factor=1 --partitions=64
+    kubectl -n platform exec $(kubectl -n platform get pod -l component=kafka -o json | jq -r '.items[0].metadata.name') -- kafka-topics --bootstrap-server=localhost:9092 --create --topic render-4 --config "cleanup.policy=compact" --config "delete.retention.ms=5000" --config "max.compaction.lag.ms=10000" --config "min.compaction.lag.ms=5000" --config "min.cleanable.dirty.ratio=0.1" --config "segment.ms=5000" --config "retention.ms=604800000" --replication-factor=1 --partitions=64
 
-    kubectl -n platform exec $(kubectl -n platform get pod -l app=kafka -o json | jq -r '.items[0].metadata.name') -- kafka-topics --bootstrap-server=localhost:9092 --create --topic batch --config "retention.ms=604800000" --replication-factor=1 --partitions=16
+    kubectl -n platform exec $(kubectl -n platform get pod -l component=kafka -o json | jq -r '.items[0].metadata.name') -- kafka-topics --bootstrap-server=localhost:9092 --create --topic batch --config "retention.ms=604800000" --replication-factor=1 --partitions=16
 
 Create Cassandra tables:
 
-    kubectl -n platform exec $(kubectl -n platform get pod -l app=cassandra -o json | jq -r '.items[0].metadata.name') -- cqlsh -u cassandra -p cassandra < scripts/init.cql  
+    kubectl -n platform exec $(kubectl -n platform get pod -l component=cassandra -o json | jq -r '.items[0].metadata.name') -- cqlsh -u cassandra -p cassandra < scripts/init.cql  
 
 Create Elasticsearch index:
 
-    kubectl -n platform exec $(kubectl -n platform get pod -l app=elasticsearch -o json | jq -r '.items[0].metadata.name') -- sh -c "$(cat scripts/init.sh)"
+    kubectl -n platform exec $(kubectl -n platform get pod -l component=elasticsearch -o json | jq -r '.items[0].metadata.name') -- sh -c "$(cat scripts/init.sh)"
 
 Create Minio bucket:
 
-    kubectl -n platform delete job -l app=minio-init 
+    kubectl -n platform delete job -l component=minio-init 
     kubectl -n platform apply -f scripts/minio-init.yaml 
 
 Export GitHub secrets:
@@ -416,19 +434,26 @@ Deploy services:
 
 Check services:
 
-    kubectl -n services logs -f --tail=-1 -l app=authentication
-    kubectl -n services logs -f --tail=-1 -l app=accounts
-    kubectl -n services logs -f --tail=-1 -l app=designs-query
-    kubectl -n services logs -f --tail=-1 -l app=designs-command
-    kubectl -n services logs -f --tail=-1 -l app=designs-aggregate
-    kubectl -n services logs -f --tail=-1 -l app=designs-notify
-    kubectl -n services logs -f --tail=-1 -l app=designs-render
-    kubectl -n services logs -f --tail=-1 -l app=gateway
-    kubectl -n services logs -f --tail=-1 -l app=frontend
+    kubectl -n services logs -f --tail=-1 -l component=authentication
+    kubectl -n services logs -f --tail=-1 -l component=accounts
+    kubectl -n services logs -f --tail=-1 -l component=designs-query
+    kubectl -n services logs -f --tail=-1 -l component=designs-command
+    kubectl -n services logs -f --tail=-1 -l component=designs-aggregate
+    kubectl -n services logs -f --tail=-1 -l component=designs-notify
+    kubectl -n services logs -f --tail=-1 -l component=designs-render
+    kubectl -n services logs -f --tail=-1 -l component=gateway
+    kubectl -n services logs -f --tail=-1 -l component=frontend
 
 Expose services:
 
     kubectl -n services expose service/designs-notify --name designs-notify-external --port 8000 --target-port 8080 --type LoadBalancer --external-ip $(minikube ip)
+
+Create monitoring resources:
+
+    kubectl apply -f scripts/jaeger.yaml
+    kubectl apply -f scripts/services-monitoring.yaml
+    kubectl apply -f scripts/grafana-datasource.yaml
+    kubectl apply -f scripts/grafana-dashboards.yaml
 
 Scale services:
 
@@ -442,6 +467,10 @@ Scale services:
 Scale platform:
 
     kubectl -n platform scale deployment nginx --replicas=2
+
+Create Kibana index pattern:
+
+    curl "http://$(minikube ip):5601/api/index_patterns/index_pattern" -H "kbn-xsrf: reporting" -H "Content-Type: application/json" -d @$(pwd)/scripts/index-pattern.json
 
 Open browser:
 
@@ -489,10 +518,6 @@ Upgrade Kibana (if needed):
 
     helm upgrade --install integration-kibana helm/kibana -n monitoring --set replicas=1,server.publicBaseUrl=http://$(minikube ip)::5601
 
-Upgrade Jaeger (if needed):
-
-    helm upgrade --install integration-jaeger helm/jaeger -n monitoring --set replicas=1
-
 Upgrade Elasticsearch (if needed):
 
     helm upgrade --install integration-elasticsearch helm/elasticsearch -n platform --set replicas=1
@@ -532,10 +557,6 @@ Uninstall Elasticsearch (if needed):
 Uninstall Kibana (if needed):
 
     helm uninstall integration-kibana -n monitoring
-
-Uninstall Jaeger (if needed):
-
-    helm uninstall integration-jaeger -n monitoring
 
 Uninstall Elasticsearch (if needed):
 

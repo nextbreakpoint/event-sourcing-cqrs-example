@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.nextbreakpoint</groupId>
         <artifactId>com.nextbreakpoint.blueprint.bom</artifactId>
-        <version>1.0.0-wip2-349c9679-1647873119</version>
+        <version>1.0.0-wip2-8449488e-1647958072</version>
     </parent>
     <packaging>pom</packaging>
     <licenses>
@@ -126,6 +126,10 @@
             <artifactId>log4j-jul</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-layout-template-json</artifactId>
+        </dependency>
+        <dependency>
             <groupId>io.opentelemetry</groupId>
             <artifactId>opentelemetry-extension-annotations</artifactId>
         </dependency>
@@ -177,6 +181,7 @@
                     <include>**/*.txt</include>
                     <include>**/*.xml</include>
                     <include>**/*.yaml</include>
+                    <include>**/*.json</include>
                 </includes>
             </resource>
         </resources>

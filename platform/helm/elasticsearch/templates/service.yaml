@@ -8,7 +8,7 @@ metadata:
   name: {{ $root.Values.name | default "elasticsearch" | quote }}
   namespace: {{ $root.Release.Namespace | quote }}
   labels:
-    app: {{ $root.Values.name | default "elasticsearch" | quote }}
+    component: {{ $root.Values.name | default "elasticsearch" | quote }}
     chart: {{ $chart }}
     release: {{ $root.Release.Name }}
     heritage: {{ $root.Release.Service }}
@@ -24,4 +24,4 @@ spec:
       protocol: TCP
       name: control
   selector:
-    app: {{ $root.Values.name | default "elasticsearch" | quote }}
+    component: {{ $root.Values.name | default "elasticsearch" | quote }}

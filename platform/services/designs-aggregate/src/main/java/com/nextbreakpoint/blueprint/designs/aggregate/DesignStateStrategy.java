@@ -69,7 +69,6 @@ public class DesignStateStrategy {
                 TileRenderCompleted event = Json.decodeValue(value, TileRenderCompleted.class);
                 state.design.getTiles().get(event.getLevel()).putTile(event.getRow(), event.getCol());
                 state.design = new Design(event.getDesignId(), state.design.getUserId(), state.design.getCommandId(), state.design.getData(), state.design.getChecksum(), token, state.design.getStatus(), state.design.getLevels(), state.design.getTiles(), toDateTime(timestamp));
-                System.out.println(state.design);
                 break;
             }
             default: {

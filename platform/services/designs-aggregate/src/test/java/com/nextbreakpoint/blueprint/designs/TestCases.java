@@ -35,9 +35,10 @@ public class TestCases {
     private final Vertx vertx = new Vertx(io.vertx.core.Vertx.vertx());
 
     private KafkaTestPolling eventsPolling;
+    private KafkaTestPolling updatePolling;
     private KafkaTestPolling renderPolling;
-    private KafkaTestPolling batchPolling;
     private KafkaTestEmitter eventEmitter;
+    private KafkaTestEmitter renderEmitter;
 
     private TestCassandra testCassandra;
 
@@ -62,9 +63,9 @@ public class TestCases {
 
         KafkaConsumer<String, String> eventsConsumer = KafkaClientFactory.createConsumer(vertx, createConsumerConfig(consumerGroupId));
 
-        KafkaConsumer<String, String> renderConsumer = KafkaClientFactory.createConsumer(vertx, createConsumerConfig(consumerGroupId));
+        KafkaConsumer<String, String> updateConsumer = KafkaClientFactory.createConsumer(vertx, createConsumerConfig(consumerGroupId));
 
-        KafkaConsumer<String, String> batchConsumer = KafkaClientFactory.createConsumer(vertx, createConsumerConfig(consumerGroupId));
+        KafkaConsumer<String, String> renderConsumer = KafkaClientFactory.createConsumer(vertx, createConsumerConfig(consumerGroupId));
 
         final Set<String> renderTopics = Set.of(
                 TestConstants.RENDER_TOPIC_NAME + "-0",
@@ -75,12 +76,15 @@ public class TestCases {
         );
 
         eventsPolling = new KafkaTestPolling(eventsConsumer, TestConstants.EVENTS_TOPIC_NAME);
+        updatePolling = new KafkaTestPolling(updateConsumer, TestConstants.UPDATE_TOPIC_NAME);
         renderPolling = new KafkaTestPolling(renderConsumer, renderTopics);
 
         eventsPolling.startPolling();
+        updatePolling.startPolling();
         renderPolling.startPolling();
 
         eventEmitter = new KafkaTestEmitter(producer, TestConstants.EVENTS_TOPIC_NAME);
+        renderEmitter = new KafkaTestEmitter(producer, TestConstants.RENDER_TOPIC_NAME);
 
         testCassandra.deleteMessages();
         testCassandra.deleteDesigns();
@@ -147,8 +151,8 @@ public class TestCases {
         System.out.println("designId = " + designId);
 
         eventsPolling.clearMessages();
+        updatePolling.clearMessages();
         renderPolling.clearMessages();
-        batchPolling.clearMessages();
 
         eventEmitter.send(designInsertRequestedMessage);
 
@@ -211,8 +215,8 @@ public class TestCases {
         System.out.println("designId = " + designId);
 
         eventsPolling.clearMessages();
+        updatePolling.clearMessages();
         renderPolling.clearMessages();
-        batchPolling.clearMessages();
 
         eventEmitter.send(designInsertRequestedMessage);
 
@@ -227,8 +231,8 @@ public class TestCases {
                 });
 
         eventsPolling.clearMessages();
+        updatePolling.clearMessages();
         renderPolling.clearMessages();
-        batchPolling.clearMessages();
 
         eventEmitter.send(designUpdateRequestedMessage);
 
@@ -292,8 +296,8 @@ public class TestCases {
         System.out.println("designId = " + designId);
 
         eventsPolling.clearMessages();
+        updatePolling.clearMessages();
         renderPolling.clearMessages();
-        batchPolling.clearMessages();
 
         eventEmitter.send(designInsertRequestedMessage);
 
@@ -308,8 +312,8 @@ public class TestCases {
                 });
 
         eventsPolling.clearMessages();
+        updatePolling.clearMessages();
         renderPolling.clearMessages();
-        batchPolling.clearMessages();
 
         eventEmitter.send(designDeleteRequestedMessage);
 
@@ -333,7 +337,9 @@ public class TestCases {
                 .pollInterval(ONE_SECOND)
                 .untilAsserted(() -> {
                     final List<Row> rows = testCassandra.fetchDesigns(designId);
-                    assertThat(rows).hasSize(0);
+                    assertThat(rows).hasSize(1);
+                    final List<Level> tiles = TestUtils.convertToTilesList(TestUtils.createTilesMap(TestConstants.LEVELS));
+                    TestAssertions.assertExpectedDesign(rows.get(0), TestConstants.JSON_1, "DELETED", tiles);
                 });
 
         await().atMost(TEN_SECONDS)
@@ -354,6 +360,7 @@ public class TestCases {
 
         await().atMost(Duration.ofSeconds(20))
                 .pollInterval(ONE_SECOND)
+                .pollDelay(TEN_SECONDS)
                 .untilAsserted(() -> {
                     final List<InputMessage> messages = renderPolling.findMessages(TestConstants.MESSAGE_SOURCE, TestConstants.TILE_RENDER_REQUESTED, key -> key.startsWith(designId.toString()));
                     assertThat(messages).hasSize(0);
@@ -376,8 +383,8 @@ public class TestCases {
         System.out.println("designId = " + designId);
 
         eventsPolling.clearMessages();
+        updatePolling.clearMessages();
         renderPolling.clearMessages();
-        batchPolling.clearMessages();
 
         eventEmitter.send(designInsertRequestedMessage);
 
@@ -437,18 +444,23 @@ public class TestCases {
         final OutputMessage tileRenderCompletedMessage4 = tileRenderCompletedMessages.get(3);
         final OutputMessage tileRenderCompletedMessage5 = tileRenderCompletedMessages.get(4);
 
-        eventEmitter.send(tileRenderCompletedMessage1);
-        eventEmitter.send(tileRenderCompletedMessage2);
-        eventEmitter.send(tileRenderCompletedMessage3);
-        eventEmitter.send(tileRenderCompletedMessage4);
-        eventEmitter.send(tileRenderCompletedMessage5);
+        renderEmitter.send(tileRenderCompletedMessage1);
+        renderEmitter.send(tileRenderCompletedMessage2);
+        renderEmitter.send(tileRenderCompletedMessage3);
+        renderEmitter.send(tileRenderCompletedMessage4);
+        renderEmitter.send(tileRenderCompletedMessage5);
 
         await().atMost(ONE_MINUTE)
                 .pollInterval(TEN_SECONDS)
                 .untilAsserted(() -> {
-                    final List<InputMessage> messages1 = eventsPolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, TestConstants.TILE_AGGREGATE_UPDATE_REQUIRED);
+                    final List<InputMessage> messages1 = updatePolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, TestConstants.TILE_AGGREGATE_UPDATE_REQUIRED);
                     assertThat(messages1).hasSize(5);
                     messages1.forEach(message -> TestAssertions.assertExpectedTileAggregateUpdateRequiredMessage(message, designId));
+                });
+
+        await().atMost(ONE_MINUTE)
+                .pollInterval(TEN_SECONDS)
+                .untilAsserted(() -> {
                     final List<InputMessage> messages2 = eventsPolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, TestConstants.TILE_AGGREGATE_UPDATE_REQUESTED);
                     assertThat(messages2).hasSize(1);
                     messages2.forEach(message -> TestAssertions.assertExpectedTileAggregateUpdateRequestedMessage(message, designId));

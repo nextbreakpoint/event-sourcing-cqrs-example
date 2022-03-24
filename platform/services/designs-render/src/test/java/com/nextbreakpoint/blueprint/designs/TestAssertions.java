@@ -12,7 +12,7 @@ public class TestAssertions {
 
     public static void assertExpectedTileRenderCompletedMessage(InputMessage actualMessage, TileRenderRequested tileRenderRequested) {
         assertThat(actualMessage.getTimestamp()).isNotNull();
-        assertThat(actualMessage.getKey()).isEqualTo(tileRenderRequested.getDesignId().toString());
+        assertThat(actualMessage.getKey()).isEqualTo(TestUtils.createRenderKey(tileRenderRequested));
         assertThat(actualMessage.getToken()).isNotNull();
         assertThat(actualMessage.getValue()).isNotNull();
         assertThat(actualMessage.getValue().getSource()).isEqualTo(TestConstants.MESSAGE_SOURCE);

@@ -2,6 +2,7 @@ package com.nextbreakpoint.blueprint.designs;
 
 import au.com.dius.pact.core.model.messaging.Message;
 import com.nextbreakpoint.blueprint.common.core.*;
+import com.nextbreakpoint.blueprint.common.events.TileRenderCompleted;
 import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
 import com.nextbreakpoint.blueprint.common.test.PayloadUtils;
 import com.nextbreakpoint.blueprint.designs.model.Level;
@@ -17,6 +18,11 @@ public class TestUtils {
 
     @NotNull
     public static String createRenderKey(TileRenderRequested event) {
+        return String.format("%s/%d/%04d%04d.png", event.getDesignId().toString(), event.getLevel(), event.getRow(), event.getCol());
+    }
+
+    @NotNull
+    public static String createRenderKey(TileRenderCompleted event) {
         return String.format("%s/%d/%04d%04d.png", event.getDesignId().toString(), event.getLevel(), event.getRow(), event.getCol());
     }
 

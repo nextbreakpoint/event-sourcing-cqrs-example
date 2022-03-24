@@ -180,15 +180,15 @@ public class TestCases {
         await().atMost(Duration.ofSeconds(30))
                 .pollInterval(ONE_SECOND)
                 .untilAsserted(() -> {
-                    final List<InputMessage> messages1 = renderPolling.findMessages(tileRenderRequested1.getDesignId().toString(), TestConstants.MESSAGE_SOURCE, TestConstants.TILE_RENDER_COMPLETED);
+                    final List<InputMessage> messages1 = renderPolling.findMessages(TestUtils.createRenderKey(tileRenderRequested1), TestConstants.MESSAGE_SOURCE, TestConstants.TILE_RENDER_COMPLETED);
                     assertThat(messages1).hasSize(1);
-                    final List<InputMessage> messages2 = renderPolling.findMessages(tileRenderRequested2.getDesignId().toString(), TestConstants.MESSAGE_SOURCE, TestConstants.TILE_RENDER_COMPLETED);
+                    final List<InputMessage> messages2 = renderPolling.findMessages(TestUtils.createRenderKey(tileRenderRequested2), TestConstants.MESSAGE_SOURCE, TestConstants.TILE_RENDER_COMPLETED);
                     assertThat(messages2).hasSize(1);
-                    final List<InputMessage> messages3 = renderPolling.findMessages(tileRenderRequested3.getDesignId().toString(), TestConstants.MESSAGE_SOURCE, TestConstants.TILE_RENDER_COMPLETED);
+                    final List<InputMessage> messages3 = renderPolling.findMessages(TestUtils.createRenderKey(tileRenderRequested3), TestConstants.MESSAGE_SOURCE, TestConstants.TILE_RENDER_COMPLETED);
                     assertThat(messages3).hasSize(1);
-                    final List<InputMessage> messages4 = renderPolling.findMessages(tileRenderRequested4.getDesignId().toString(), TestConstants.MESSAGE_SOURCE, TestConstants.TILE_RENDER_COMPLETED);
+                    final List<InputMessage> messages4 = renderPolling.findMessages(TestUtils.createRenderKey(tileRenderRequested4), TestConstants.MESSAGE_SOURCE, TestConstants.TILE_RENDER_COMPLETED);
                     assertThat(messages4).hasSize(1);
-                    final List<InputMessage> messages5 = renderPolling.findMessages(tileRenderRequested5.getDesignId().toString(), TestConstants.MESSAGE_SOURCE, TestConstants.TILE_RENDER_COMPLETED);
+                    final List<InputMessage> messages5 = renderPolling.findMessages(TestUtils.createRenderKey(tileRenderRequested5), TestConstants.MESSAGE_SOURCE, TestConstants.TILE_RENDER_COMPLETED);
                     assertThat(messages5).hasSize(1);
                     InputMessage message1 = messages1.get(0);
                     TestAssertions.assertExpectedTileRenderCompletedMessage(message1, tileRenderRequested1);

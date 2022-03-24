@@ -37,11 +37,7 @@ public class DesignAggregate {
     }
 
     public Single<Optional<Design>> updateDesign(Design design) {
-        if (design.getStatus().equals("DELETED")) {
-            return store.deleteDesign(design).map(ignore -> Optional.of(design));
-        } else {
-            return store.updateDesign(design).map(ignore -> Optional.of(design));
-        }
+        return store.updateDesign(design).map(ignore -> Optional.of(design));
     }
 
     private Single<Optional<Design>> projectDesign(UUID uuid, String revision, Design design) {

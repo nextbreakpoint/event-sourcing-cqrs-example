@@ -10,6 +10,7 @@ import com.nextbreakpoint.blueprint.common.events.mappers.DesignDeleteRequestedO
 import com.nextbreakpoint.blueprint.common.events.mappers.DesignInsertRequestedOutputMapper;
 import com.nextbreakpoint.blueprint.common.events.mappers.DesignUpdateRequestedOutputMapper;
 import com.nextbreakpoint.blueprint.common.events.mappers.TileRenderCompletedOutputMapper;
+import com.nextbreakpoint.blueprint.designs.common.Render;
 import org.junit.jupiter.api.*;
 
 import java.util.List;
@@ -90,11 +91,11 @@ public class IntegrationTests {
         final TileRenderCompleted tileRenderCompleted4 = new TileRenderCompleted(designId, TestConstants.REVISION_3, TestConstants.CHECKSUM_1, 2, 2, 1, "COMPLETED");
         final TileRenderCompleted tileRenderCompleted5 = new TileRenderCompleted(designId, TestConstants.REVISION_4, TestConstants.CHECKSUM_1, 2, 3, 1, "FAILED");
 
-        final OutputMessage tileRenderCompletedMessage1 = new TileRenderCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(tileRenderCompleted1);
-        final OutputMessage tileRenderCompletedMessage2 = new TileRenderCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(tileRenderCompleted2);
-        final OutputMessage tileRenderCompletedMessage3 = new TileRenderCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(tileRenderCompleted3);
-        final OutputMessage tileRenderCompletedMessage4 = new TileRenderCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(tileRenderCompleted4);
-        final OutputMessage tileRenderCompletedMessage5 = new TileRenderCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(tileRenderCompleted5);
+        final OutputMessage tileRenderCompletedMessage1 = new TileRenderCompletedOutputMapper(TestConstants.MESSAGE_SOURCE, TestUtils::createRenderKey).transform(tileRenderCompleted1);
+        final OutputMessage tileRenderCompletedMessage2 = new TileRenderCompletedOutputMapper(TestConstants.MESSAGE_SOURCE, TestUtils::createRenderKey).transform(tileRenderCompleted2);
+        final OutputMessage tileRenderCompletedMessage3 = new TileRenderCompletedOutputMapper(TestConstants.MESSAGE_SOURCE, TestUtils::createRenderKey).transform(tileRenderCompleted3);
+        final OutputMessage tileRenderCompletedMessage4 = new TileRenderCompletedOutputMapper(TestConstants.MESSAGE_SOURCE, TestUtils::createRenderKey).transform(tileRenderCompleted4);
+        final OutputMessage tileRenderCompletedMessage5 = new TileRenderCompletedOutputMapper(TestConstants.MESSAGE_SOURCE, TestUtils::createRenderKey).transform(tileRenderCompleted5);
 
         final List<OutputMessage> tileRenderCompletedMessages = List.of(tileRenderCompletedMessage1, tileRenderCompletedMessage2, tileRenderCompletedMessage3, tileRenderCompletedMessage4, tileRenderCompletedMessage5);
 

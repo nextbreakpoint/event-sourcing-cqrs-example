@@ -4,7 +4,7 @@ import au.com.dius.pact.core.model.messaging.Message;
 import com.nextbreakpoint.blueprint.common.core.*;
 import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
 import com.nextbreakpoint.blueprint.common.test.PayloadUtils;
-import com.nextbreakpoint.blueprint.designs.model.DesignTiles;
+import com.nextbreakpoint.blueprint.designs.model.Level;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -29,17 +29,17 @@ public class TestUtils {
     }
 
     @NotNull
-    public static List<DesignTiles> convertToTilesList(Map<Integer, DesignTiles> tiles) {
+    public static List<Level> convertToTilesList(Map<Integer, Level> tiles) {
         return tiles.values().stream()
-                .sorted(Comparator.comparing(DesignTiles::getLevel))
+                .sorted(Comparator.comparing(Level::getLevel))
                 .collect(Collectors.toList());
     }
 
     @NotNull
-    public static Map<Integer, DesignTiles> createTilesMap(int levels) {
+    public static Map<Integer, Level> createTilesMap(int levels) {
         return IntStream.range(0, levels)
-                .mapToObj(level -> new DesignTiles(level, totalTileByLevel(level), Collections.emptySet(), Collections.emptySet()))
-                .collect(Collectors.toMap(DesignTiles::getLevel, Function.identity()));
+                .mapToObj(level -> new Level(level, totalTileByLevel(level), Collections.emptySet(), Collections.emptySet()))
+                .collect(Collectors.toMap(Level::getLevel, Function.identity()));
     }
 
     @NotNull
@@ -57,7 +57,7 @@ public class TestUtils {
     }
 
     @NotNull
-    public static List<DesignTiles> getTiles(int levels, float completePercentage) {
+    public static List<Level> getTiles(int levels, float completePercentage) {
         return IntStream.range(0, levels)
                 .mapToObj(level -> makeTiles(level, completePercentage))
                 .collect(Collectors.toList());
@@ -77,7 +77,7 @@ public class TestUtils {
     }
 
     @NotNull
-    private static DesignTiles makeTiles(int level, float completePercentage) {
+    private static Level makeTiles(int level, float completePercentage) {
         final int requested = (int) Math.rint(Math.pow(2, level * 2));
 
         final int completedCount = (int) Math.rint(completePercentage * requested);
@@ -88,6 +88,6 @@ public class TestUtils {
                 .map(tile -> tile.getCol() << 16 | tile.getRow())
                 .collect(Collectors.toSet());
 
-        return new DesignTiles(level, requested, completed, new HashSet<>());
+        return new Level(level, requested, completed, new HashSet<>());
     }
 }

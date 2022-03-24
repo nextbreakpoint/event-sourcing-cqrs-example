@@ -13,6 +13,7 @@ import com.nextbreakpoint.blueprint.common.core.Payload;
 import com.nextbreakpoint.blueprint.common.core.Tracing;
 import com.nextbreakpoint.blueprint.designs.Store;
 import com.nextbreakpoint.blueprint.designs.model.Design;
+import com.nextbreakpoint.blueprint.designs.model.Level;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.rxjava.cassandra.CassandraClient;
@@ -178,9 +179,9 @@ public class CassandraStore implements Store {
         final Instant updated = row.getInstant("DESIGN_TIMESTAMP");
         final String revision = row.getString("DESIGN_REVISION");
         final Map<Integer, UdtValue> tilesMap = row.getMap("DESIGN_TILES", Integer.class, UdtValue.class);
-        final Map<Integer, com.nextbreakpoint.blueprint.designs.model.DesignTiles> tilesList = tilesMap != null ? tilesMap.entrySet().stream()
+        final Map<Integer, Level> tilesList = tilesMap != null ? tilesMap.entrySet().stream()
                 .map(entry -> convertUDTToTiles(entry.getKey(), entry.getValue()))
-                .collect(Collectors.toMap(com.nextbreakpoint.blueprint.designs.model.DesignTiles::getLevel, Function.identity())) : Map.of();
+                .collect(Collectors.toMap(Level::getLevel, Function.identity())) : Map.of();
         return new Design(designId, userId, commandId, data, checksum, revision, status, levels, tilesList, toDate(updated));
     }
 
@@ -228,7 +229,7 @@ public class CassandraStore implements Store {
 
     private Object[] makeInsertDesignParams(Design design, UserDefinedType levelType) {
         final Map<Integer, UdtValue> levelsMap = design.getTiles().values().stream()
-                .collect(Collectors.toMap(com.nextbreakpoint.blueprint.designs.model.DesignTiles::getLevel, x -> convertTilesToUDT(levelType, x)));
+                .collect(Collectors.toMap(Level::getLevel, x -> convertTilesToUDT(levelType, x)));
 
         return new Object[] {
                 design.getUserId(),
@@ -248,14 +249,14 @@ public class CassandraStore implements Store {
         return new Object[] { design.getDesignId() };
     }
 
-    private com.nextbreakpoint.blueprint.designs.model.DesignTiles convertUDTToTiles(Integer level, UdtValue udtValue) {
+    private Level convertUDTToTiles(Integer level, UdtValue udtValue) {
         final int requested = udtValue.getInt("REQUESTED");
         final Set<Integer> completed = udtValue.getSet("COMPLETED", Integer.class);
         final Set<Integer> failed = udtValue.getSet("FAILED", Integer.class);
-        return new com.nextbreakpoint.blueprint.designs.model.DesignTiles(level, requested, completed, failed);
+        return new Level(level, requested, completed, failed);
     }
 
-    private UdtValue convertTilesToUDT(UserDefinedType levelType, com.nextbreakpoint.blueprint.designs.model.DesignTiles tiles) {
+    private UdtValue convertTilesToUDT(UserDefinedType levelType, Level tiles) {
         return levelType.newValue()
                 .setInt("REQUESTED", tiles.getRequested())
                 .setSet("COMPLETED", tiles.getCompleted(), Integer.class)

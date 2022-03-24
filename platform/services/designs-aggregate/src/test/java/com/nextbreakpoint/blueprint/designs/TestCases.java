@@ -9,7 +9,7 @@ import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
 import com.nextbreakpoint.blueprint.common.test.KafkaTestEmitter;
 import com.nextbreakpoint.blueprint.common.test.KafkaTestPolling;
 import com.nextbreakpoint.blueprint.common.vertx.*;
-import com.nextbreakpoint.blueprint.designs.model.DesignTiles;
+import com.nextbreakpoint.blueprint.designs.model.Level;
 import io.vertx.rxjava.cassandra.CassandraClient;
 import io.vertx.rxjava.core.RxHelper;
 import io.vertx.rxjava.core.Vertx;
@@ -75,11 +75,9 @@ public class TestCases {
         );
 
         eventsPolling = new KafkaTestPolling(eventsConsumer, TestConstants.EVENTS_TOPIC_NAME);
-        batchPolling = new KafkaTestPolling(batchConsumer, TestConstants.BATCH_TOPIC_NAME);
         renderPolling = new KafkaTestPolling(renderConsumer, renderTopics);
 
         eventsPolling.startPolling();
-        batchPolling.startPolling();
         renderPolling.startPolling();
 
         eventEmitter = new KafkaTestEmitter(producer, TestConstants.EVENTS_TOPIC_NAME);
@@ -174,7 +172,7 @@ public class TestCases {
                 .untilAsserted(() -> {
                     final List<Row> rows = testCassandra.fetchDesigns(designId);
                     assertThat(rows).hasSize(1);
-                    final List<DesignTiles> tiles = TestUtils.convertToTilesList(TestUtils.createTilesMap(TestConstants.LEVELS));
+                    final List<Level> tiles = TestUtils.convertToTilesList(TestUtils.createTilesMap(TestConstants.LEVELS));
                     TestAssertions.assertExpectedDesign(rows.get(0), TestConstants.JSON_1, "CREATED", tiles);
                 });
 
@@ -255,7 +253,7 @@ public class TestCases {
                 .untilAsserted(() -> {
                     final List<Row> rows = testCassandra.fetchDesigns(designId);
                     assertThat(rows).hasSize(1);
-                    final List<DesignTiles> tiles = TestUtils.convertToTilesList(TestUtils.createTilesMap(TestConstants.LEVELS));
+                    final List<Level> tiles = TestUtils.convertToTilesList(TestUtils.createTilesMap(TestConstants.LEVELS));
                     TestAssertions.assertExpectedDesign(rows.get(0), TestConstants.JSON_2, "UPDATED", tiles);
                 });
 
@@ -403,7 +401,7 @@ public class TestCases {
                 .untilAsserted(() -> {
                     final List<Row> rows = testCassandra.fetchDesigns(designId);
                     assertThat(rows).hasSize(1);
-                    final List<DesignTiles> tiles = TestUtils.convertToTilesList(TestUtils.createTilesMap(TestConstants.LEVELS));
+                    final List<Level> tiles = TestUtils.convertToTilesList(TestUtils.createTilesMap(TestConstants.LEVELS));
                     TestAssertions.assertExpectedDesign(rows.get(0), TestConstants.JSON_1, "CREATED", tiles);
                 });
 
@@ -472,11 +470,11 @@ public class TestCases {
                 .untilAsserted(() -> {
                     final List<Row> rows = testCassandra.fetchDesigns(designId);
                     assertThat(rows).hasSize(1);
-                    final Map<Integer, DesignTiles> tilesMap = TestUtils.createTilesMap(TestConstants.LEVELS);
-                    tilesMap.put(0, new DesignTiles(0, 1, Set.of(), Set.of(0)));
-                    tilesMap.put(1, new DesignTiles(1, 4, Set.of(0, 65536), Set.of()));
-                    tilesMap.put(2, new DesignTiles(2, 16, Set.of(131073), Set.of(196609)));
-                    final List<DesignTiles> tiles = TestUtils.convertToTilesList(tilesMap);
+                    final Map<Integer, Level> tilesMap = TestUtils.createTilesMap(TestConstants.LEVELS);
+                    tilesMap.put(0, new Level(0, 1, Set.of(), Set.of(0)));
+                    tilesMap.put(1, new Level(1, 4, Set.of(0, 65536), Set.of()));
+                    tilesMap.put(2, new Level(2, 16, Set.of(131073), Set.of(196609)));
+                    final List<Level> tiles = TestUtils.convertToTilesList(tilesMap);
                     TestAssertions.assertExpectedDesign(rows.get(0), TestConstants.JSON_1, "CREATED", tiles);
                 });
     }

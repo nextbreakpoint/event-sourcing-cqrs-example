@@ -8,7 +8,9 @@ import com.nextbreakpoint.blueprint.common.events.DesignInsertRequested;
 import com.nextbreakpoint.blueprint.common.events.DesignUpdateRequested;
 import com.nextbreakpoint.blueprint.common.events.TileRenderCompleted;
 import com.nextbreakpoint.blueprint.designs.model.Design;
-import com.nextbreakpoint.blueprint.designs.model.DesignTiles;
+import com.nextbreakpoint.blueprint.designs.model.Level;
+import io.vertx.core.impl.logging.Logger;
+import io.vertx.core.impl.logging.LoggerFactory;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -20,9 +22,12 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class DesignStateStrategy {
-    private DesignTiles TILES_EMPTY = new DesignTiles(0, 0, Collections.emptySet(), Collections.emptySet());
+    private final Logger logger = LoggerFactory.getLogger(DesignStateStrategy.class.getName());
+
+    private Level TILES_EMPTY = new Level(0, 0, Collections.emptySet(), Collections.emptySet());
 
     public Optional<Design> applyEvents(Design state, List<InputMessage> messages) {
+        logger.debug("Apply events: " + messages.size());
         return applyEvents(state != null ? () -> new Accumulator(state) : this::createState, messages);
     }
 
@@ -42,16 +47,16 @@ public class DesignStateStrategy {
         return LocalDateTime.ofInstant(Instant.ofEpochMilli(timestamp), ZoneId.of("UTC"));
     }
 
-    private Map<Integer, DesignTiles> createLevelsMap(int levels) {
+    private Map<Integer, Level> createLevelsMap(int levels) {
         return IntStream.range(0, levels)
-                .mapToObj(level -> new DesignTiles(level, getTilesCount(level), Collections.emptySet(), Collections.emptySet()))
-                .collect(Collectors.toMap(DesignTiles::getLevel, Function.identity()));
+                .mapToObj(level -> new Level(level, getTilesCount(level), Collections.emptySet(), Collections.emptySet()))
+                .collect(Collectors.toMap(Level::getLevel, Function.identity()));
     }
 
-    private Map<Integer, DesignTiles> createLevelsMap(TileRenderCompleted event) {
+    private Map<Integer, Level> createLevelsMap(TileRenderCompleted event) {
         return IntStream.of(event.getLevel())
-                .mapToObj(level -> new DesignTiles(level, getTilesCount(level), getCompleted(event, level), getFailed(event, level)))
-                .collect(Collectors.toMap(DesignTiles::getLevel, Function.identity()));
+                .mapToObj(level -> new Level(level, getTilesCount(level), getCompleted(event, level), getFailed(event, level)))
+                .collect(Collectors.toMap(Level::getLevel, Function.identity()));
     }
 
     private Set<Integer> getCompleted(TileRenderCompleted event, int level) {
@@ -62,19 +67,19 @@ public class DesignStateStrategy {
         return level == event.getLevel() && isCompleted(event) ? Collections.emptySet() : Set.of((0xFFFF & event.getRow()) << 16 | (0xFFFF & event.getCol()));
     }
 
-    private Map<Integer, DesignTiles> createLevelsMap(Design state, Map<Integer, DesignTiles> elementTiles) {
+    private Map<Integer, Level> createLevelsMap(Design state, Map<Integer, Level> elementTiles) {
         return IntStream.range(0, state.getLevels())
-                .mapToObj(level -> new DesignTiles(level, getTilesCount(level), mergeCompleted(level, state.getTiles(), elementTiles), mergeFailed(level, state.getTiles(), elementTiles)))
-                .collect(Collectors.toMap(DesignTiles::getLevel, Function.identity()));
+                .mapToObj(level -> new Level(level, getTilesCount(level), mergeCompleted(level, state.getTiles(), elementTiles), mergeFailed(level, state.getTiles(), elementTiles)))
+                .collect(Collectors.toMap(Level::getLevel, Function.identity()));
     }
 
-    private Set<Integer> mergeCompleted(int level, Map<Integer, DesignTiles> tiles, Map<Integer, DesignTiles> elementTiles) {
+    private Set<Integer> mergeCompleted(int level, Map<Integer, Level> tiles, Map<Integer, Level> elementTiles) {
         Set<Integer> combined = new HashSet<>(tiles.getOrDefault(level, TILES_EMPTY).getCompleted());
         combined.addAll(elementTiles.getOrDefault(level, TILES_EMPTY).getCompleted());
         return combined;
     }
 
-    private Set<Integer> mergeFailed(int level, Map<Integer, DesignTiles> tiles, Map<Integer, DesignTiles> elementTiles) {
+    private Set<Integer> mergeFailed(int level, Map<Integer, Level> tiles, Map<Integer, Level> elementTiles) {
         Set<Integer> combined = new HashSet<>(tiles.getOrDefault(level, TILES_EMPTY).getFailed());
         combined.addAll(elementTiles.getOrDefault(level, TILES_EMPTY).getFailed());
         return combined;

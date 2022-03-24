@@ -37,7 +37,6 @@ public class TestCases {
 
     private final Vertx vertx = new Vertx(io.vertx.core.Vertx.vertx());
 
-    private KafkaTestPolling eventsPolling;
     private KafkaTestPolling renderPolling;
     private KafkaTestEmitter renderEmitter;
 
@@ -56,11 +55,10 @@ public class TestCases {
 
         KafkaProducer<String, String> producer = KafkaClientFactory.createProducer(vertx, createProducerConfig("integration"));
 
-        KafkaConsumer<String, String> eventsConsumer = KafkaClientFactory.createConsumer(vertx, createConsumerConfig(consumerGroupId));
-
         KafkaConsumer<String, String> renderConsumer = KafkaClientFactory.createConsumer(vertx, createConsumerConfig(consumerGroupId));
 
         final Set<String> renderTopics = Set.of(
+                TestConstants.RENDER_TOPIC_NAME,
                 TestConstants.RENDER_TOPIC_NAME + "-0",
                 TestConstants.RENDER_TOPIC_NAME + "-1",
                 TestConstants.RENDER_TOPIC_NAME + "-2",
@@ -68,10 +66,8 @@ public class TestCases {
                 TestConstants.RENDER_TOPIC_NAME + "-4"
         );
 
-        eventsPolling = new KafkaTestPolling(eventsConsumer, TestConstants.EVENTS_TOPIC_NAME);
         renderPolling = new KafkaTestPolling(renderConsumer, renderTopics);
 
-        eventsPolling.startPolling();
         renderPolling.startPolling();
 
         renderEmitter = new KafkaTestEmitter(producer, TestConstants.RENDER_TOPIC_NAME);
@@ -146,7 +142,6 @@ public class TestCases {
     }
 
     public void shouldStartRenderingAnImageWhenReceivingATileRenderRequestedMessage(List<OutputMessage> tileRenderRequestedMessages) {
-        eventsPolling.clearMessages();
         renderPolling.clearMessages();
 
         final OutputMessage tileRenderRequestedMessage1 = tileRenderRequestedMessages.get(0);
@@ -185,15 +180,15 @@ public class TestCases {
         await().atMost(Duration.ofSeconds(30))
                 .pollInterval(ONE_SECOND)
                 .untilAsserted(() -> {
-                    final List<InputMessage> messages1 = eventsPolling.findMessages(tileRenderRequested1.getDesignId().toString(), TestConstants.MESSAGE_SOURCE, TestConstants.TILE_RENDER_COMPLETED);
+                    final List<InputMessage> messages1 = renderPolling.findMessages(tileRenderRequested1.getDesignId().toString(), TestConstants.MESSAGE_SOURCE, TestConstants.TILE_RENDER_COMPLETED);
                     assertThat(messages1).hasSize(1);
-                    final List<InputMessage> messages2 = eventsPolling.findMessages(tileRenderRequested2.getDesignId().toString(), TestConstants.MESSAGE_SOURCE, TestConstants.TILE_RENDER_COMPLETED);
+                    final List<InputMessage> messages2 = renderPolling.findMessages(tileRenderRequested2.getDesignId().toString(), TestConstants.MESSAGE_SOURCE, TestConstants.TILE_RENDER_COMPLETED);
                     assertThat(messages2).hasSize(1);
-                    final List<InputMessage> messages3 = eventsPolling.findMessages(tileRenderRequested3.getDesignId().toString(), TestConstants.MESSAGE_SOURCE, TestConstants.TILE_RENDER_COMPLETED);
+                    final List<InputMessage> messages3 = renderPolling.findMessages(tileRenderRequested3.getDesignId().toString(), TestConstants.MESSAGE_SOURCE, TestConstants.TILE_RENDER_COMPLETED);
                     assertThat(messages3).hasSize(1);
-                    final List<InputMessage> messages4 = eventsPolling.findMessages(tileRenderRequested4.getDesignId().toString(), TestConstants.MESSAGE_SOURCE, TestConstants.TILE_RENDER_COMPLETED);
+                    final List<InputMessage> messages4 = renderPolling.findMessages(tileRenderRequested4.getDesignId().toString(), TestConstants.MESSAGE_SOURCE, TestConstants.TILE_RENDER_COMPLETED);
                     assertThat(messages4).hasSize(1);
-                    final List<InputMessage> messages5 = eventsPolling.findMessages(tileRenderRequested5.getDesignId().toString(), TestConstants.MESSAGE_SOURCE, TestConstants.TILE_RENDER_COMPLETED);
+                    final List<InputMessage> messages5 = renderPolling.findMessages(tileRenderRequested5.getDesignId().toString(), TestConstants.MESSAGE_SOURCE, TestConstants.TILE_RENDER_COMPLETED);
                     assertThat(messages5).hasSize(1);
                     InputMessage message1 = messages1.get(0);
                     TestAssertions.assertExpectedTileRenderCompletedMessage(message1, tileRenderRequested1);

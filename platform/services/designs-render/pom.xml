@@ -10,7 +10,7 @@
     <parent>
         <groupId>com.nextbreakpoint</groupId>
         <artifactId>com.nextbreakpoint.blueprint.service</artifactId>
-        <version>1.0.0-wip2-8449488e-1647958072</version>
+        <version>1.0.0-wip2-4b97ce6e-1648108851</version>
     </parent>
     <repositories>
         <repository>
@@ -75,7 +75,6 @@
                         <KAFKA_HOST>localhost</KAFKA_HOST>
                         <KAFKA_PORT>9093</KAFKA_PORT>
                         <RENDER_TOPIC>render</RENDER_TOPIC>
-                        <EVENTS_TOPIC>events</EVENTS_TOPIC>
                     </environmentVariables>
                     <arguments>
                         <argument>-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:35124</argument>
@@ -95,7 +94,6 @@
                             <environmentVariables>
                                 <LOGGING_LEVEL>DEBUG</LOGGING_LEVEL>
                                 <BUCKET_NAME>test-designs-render</BUCKET_NAME>
-                                <EVENTS_TOPIC>test-designs-render-events</EVENTS_TOPIC>
                                 <RENDER_TOPIC>test-designs-render-render</RENDER_TOPIC>
                             </environmentVariables>
                         </configuration>

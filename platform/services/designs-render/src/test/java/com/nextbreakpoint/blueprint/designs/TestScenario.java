@@ -47,7 +47,6 @@ public class TestScenario {
           .withEnv("CONSUL_HOST", "consul")
           .withEnv("KAFKA_HOST", "kafka")
           .withEnv("KAFKA_PORT", "9092")
-          .withEnv("EVENTS_TOPIC", TestConstants.EVENTS_TOPIC_NAME)
           .withEnv("RENDER_TOPIC", TestConstants.RENDER_TOPIC_NAME)
           .withEnv("BUCKET_NAME", TestConstants.BUCKET)
           .withEnv("MINIO_HOST", "minio")

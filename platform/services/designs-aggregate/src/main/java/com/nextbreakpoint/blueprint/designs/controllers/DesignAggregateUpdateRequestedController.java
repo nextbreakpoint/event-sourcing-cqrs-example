@@ -6,13 +6,17 @@ import com.nextbreakpoint.blueprint.common.core.MessageMapper;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.events.DesignAggregateUpdateCompleted;
 import com.nextbreakpoint.blueprint.common.events.DesignAggregateUpdateRequested;
+import com.nextbreakpoint.blueprint.common.events.TileAggregateUpdateCompleted;
+import com.nextbreakpoint.blueprint.common.events.TileAggregateUpdateRequested;
 import com.nextbreakpoint.blueprint.common.vertx.Controller;
 import com.nextbreakpoint.blueprint.common.vertx.MessageEmitter;
 import com.nextbreakpoint.blueprint.designs.aggregate.DesignAggregate;
 import com.nextbreakpoint.blueprint.designs.model.Design;
+import rx.Observable;
 import rx.Single;
 
 import java.util.Objects;
+import java.util.Optional;
 
 public class DesignAggregateUpdateRequestedController implements Controller<InputMessage, Void> {
     private final Mapper<InputMessage, DesignAggregateUpdateRequested> inputMapper;
@@ -31,15 +35,20 @@ public class DesignAggregateUpdateRequestedController implements Controller<Inpu
     public Single<Void> onNext(InputMessage message) {
         return Single.just(message)
                 .map(inputMapper::transform)
-                .flatMap(this::onAggregateUpdateRequested)
+                .flatMapObservable(this::onAggregateUpdateRequested)
                 .map(outputMapper::transform)
-                .flatMap(emitter::send);
+                .flatMapSingle(emitter::send)
+                .ignoreElements()
+                .toCompletable()
+                .toSingleDefault("")
+                .map(value -> null);
     }
 
-    private Single<DesignAggregateUpdateCompleted> onAggregateUpdateRequested(DesignAggregateUpdateRequested event) {
-        return aggregate.updateDesign(event.getDesignId(), event.getRevision())
-                .map(result -> result.orElseThrow(() -> new RuntimeException("Design aggregate not found " + event.getDesignId())))
-                .map(this::createEvent);
+
+    private Observable<DesignAggregateUpdateCompleted> onAggregateUpdateRequested(DesignAggregateUpdateRequested event) {
+        return aggregate.projectDesign(event.getDesignId(), event.getRevision())
+                .flatMap(result -> result.map(aggregate::updateDesign).orElseGet(() -> Single.just(Optional.empty())))
+                .flatMapObservable(result -> result.map(design -> Observable.just(createEvent(design))).orElseGet(Observable::empty));
     }
 
     private DesignAggregateUpdateCompleted createEvent(Design design) {
@@ -52,24 +61,4 @@ public class DesignAggregateUpdateRequestedController implements Controller<Inpu
                 .withStatus(design.getStatus())
                 .build();
     }
-
-//    @Override
-//    public Single<Void> onNext(Message message) {
-//        return Single.just(message)
-//                .map(inputMapper::transform)
-//                .flatMapObservable(this::onAggregateUpdateRequested)
-//                .map(outputMapper::transform)
-//                .flatMapSingle(emitter::onNext)
-//                .ignoreElements()
-//                .toCompletable()
-//                .toSingleDefault("")
-//                .map(result -> null);
-//    }
-//
-//    private Observable<DesignAggregateUpdateCompleted> onAggregateUpdateRequested(DesignAggregateUpdateRequested event) {
-//        return store.updateDesign(event.getUuid(), event.getEsid())
-////                .map(result -> result.orElseThrow(() -> new RuntimeException("Design aggregate not found " + event.getUuid())))
-//                .flatMapObservable(result -> Observable.from(result.map(Collections::singletonList).orElseGet(Collections::emptyList)))
-//                .map(this::createEvent);
-//    }
 }

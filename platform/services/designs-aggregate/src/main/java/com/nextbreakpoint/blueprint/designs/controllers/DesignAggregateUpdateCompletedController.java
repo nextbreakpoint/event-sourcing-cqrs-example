@@ -3,30 +3,30 @@ package com.nextbreakpoint.blueprint.designs.controllers;
 import com.nextbreakpoint.blueprint.common.core.*;
 import com.nextbreakpoint.blueprint.common.events.DesignAggregateUpdateCompleted;
 import com.nextbreakpoint.blueprint.common.events.DesignDocumentDeleteRequested;
-import com.nextbreakpoint.blueprint.common.events.TilesRenderRequired;
+import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
 import com.nextbreakpoint.blueprint.common.vertx.Controller;
 import com.nextbreakpoint.blueprint.common.vertx.MessageEmitter;
 import rx.Observable;
 import rx.Single;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 public class DesignAggregateUpdateCompletedController implements Controller<InputMessage, Void> {
     private final Mapper<InputMessage, DesignAggregateUpdateCompleted> inputMapper;
-    private final MessageMapper<TilesRenderRequired, OutputMessage> updateOutputMapper;
+    private final MessageMapper<TileRenderRequested, OutputMessage> renderOutputMapper;
     private final MessageMapper<DesignDocumentDeleteRequested, OutputMessage> deleteOutputMapper;
-    private final MessageEmitter updateEmitter;
-    private final MessageEmitter deleteEmitter;
+    private final MessageEmitter eventsEmitter;
+    private final MessageEmitter renderEmitter;
 
-    public DesignAggregateUpdateCompletedController(Mapper<InputMessage, DesignAggregateUpdateCompleted> inputMapper, MessageMapper<TilesRenderRequired, OutputMessage> updateOutputMapper, MessageMapper<DesignDocumentDeleteRequested, OutputMessage> deleteOutputMapper, MessageEmitter updateEmitter, MessageEmitter deleteEmitter) {
+    public DesignAggregateUpdateCompletedController(Mapper<InputMessage, DesignAggregateUpdateCompleted> inputMapper, MessageMapper<TileRenderRequested, OutputMessage> renderOutputMapper, MessageMapper<DesignDocumentDeleteRequested, OutputMessage> deleteOutputMapper, MessageEmitter eventsEmitter, MessageEmitter renderEmitter) {
         this.inputMapper = Objects.requireNonNull(inputMapper);
-        this.updateOutputMapper = Objects.requireNonNull(updateOutputMapper);
+        this.renderOutputMapper = Objects.requireNonNull(renderOutputMapper);
         this.deleteOutputMapper = Objects.requireNonNull(deleteOutputMapper);
-        this.updateEmitter = Objects.requireNonNull(updateEmitter);
-        this.deleteEmitter = Objects.requireNonNull(deleteEmitter);
+        this.eventsEmitter = Objects.requireNonNull(eventsEmitter);
+        this.renderEmitter = Objects.requireNonNull(renderEmitter);
     }
 
     @Override
@@ -45,64 +45,61 @@ public class DesignAggregateUpdateCompletedController implements Controller<Inpu
     }
 
     private Observable<Void> onDelete(DesignAggregateUpdateCompleted event) {
-        return generateEvents(event)
+        return Observable.just(createDeleteEvent(event))
                 .map(deleteOutputMapper::transform)
-                .flatMapSingle(deleteEmitter::send);
+                .flatMapSingle(eventsEmitter::send);
     }
 
     private Observable<Void> onUpdate(DesignAggregateUpdateCompleted event) {
-        return generateTiles(event.getLevels())
-                .buffer(16)
-                .map(tiles -> createEvent(event, tiles))
-                .map(updateOutputMapper::transform)
-                .flatMapSingle(updateEmitter::send);
+        return createRenderEvents(event)
+                .map(renderOutputMapper::transform)
+                .flatMapSingle(message -> renderEmitter.send(message, renderEmitter.getTopicName() + "-0"));
     }
 
-    private Observable<DesignDocumentDeleteRequested> generateEvents(DesignAggregateUpdateCompleted event) {
-        return Observable.just(createEvent(event));
-    }
-
-    private DesignDocumentDeleteRequested createEvent(DesignAggregateUpdateCompleted event) {
+    private DesignDocumentDeleteRequested createDeleteEvent(DesignAggregateUpdateCompleted event) {
         return DesignDocumentDeleteRequested.builder()
                 .withDesignId(event.getDesignId())
                 .withRevision(event.getRevision())
                 .build();
     }
 
-    private TilesRenderRequired createEvent(DesignAggregateUpdateCompleted event, List<Tile> tiles) {
-        return TilesRenderRequired.builder()
+    private Observable<TileRenderRequested> createRenderEvents(DesignAggregateUpdateCompleted event) {
+        return generateTiles(0)
+                .concatWith(generateTiles(1))
+                .concatWith(generateTiles(2))
+                .map(tile -> createRenderEvent(event, tile));
+    }
+
+    private TileRenderRequested createRenderEvent(DesignAggregateUpdateCompleted event, Tile tile) {
+        return TileRenderRequested.builder()
                 .withDesignId(event.getDesignId())
                 .withRevision(event.getRevision())
-                .withData(event.getData())
                 .withChecksum(event.getChecksum())
-                .withTiles(tiles)
+                .withData(event.getData())
+                .withLevel(tile.getLevel())
+                .withRow(tile.getRow())
+                .withCol(tile.getCol())
                 .build();
     }
 
-    private Observable<Tile> generateTiles(int maxLevel) {
-        return generateTiles(maxLevel, 0)
-                .concatWith(generateTiles(maxLevel, 1))
-                .concatWith(generateTiles(maxLevel, 2))
-                .concatWith(generateTiles(maxLevel, 3))
-                .concatWith(generateTiles(maxLevel, 4))
-                .concatWith(generateTiles(maxLevel, 5))
-                .concatWith(generateTiles(maxLevel, 6))
-                .concatWith(generateTiles(maxLevel, 7));
+    private Observable<Tile> generateTiles(int level) {
+        return Observable.from(makeTiles(level).collect(Collectors.toList()));
     }
 
-    private Observable<Tile> generateTiles(int maxLevel, int level) {
-        return maxLevel > level ? Observable.from(makeTiles(level)) : Observable.empty();
-    }
-
-    private List<Tile> makeTiles(int level) {
+    private Stream<Tile> makeTiles(int level) {
         final int size = (int) Math.rint(Math.pow(2, level));
+        return makeAll(level, size);
+    }
+
+    private Stream<Tile> makeAll(int level, int size) {
         return IntStream.range(0, size)
                 .boxed()
-                .flatMap(row ->
-                        IntStream.range(0, size)
-                                .boxed()
-                                .map(col -> new Tile(level, row, col))
-                )
-                .collect(Collectors.toList());
+                .flatMap(row -> makeRow(level, row, size));
+    }
+
+    private Stream<Tile> makeRow(int level, int row, int size) {
+        return IntStream.range(0, size)
+                .boxed()
+                .map(col -> new Tile(level, row, col));
     }
 }

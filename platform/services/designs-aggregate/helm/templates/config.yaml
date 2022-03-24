@@ -37,5 +37,5 @@ data:
       "message_source": {{ $root.Values.messageSource | default "service-designs" | quote }},
       "events_topic": {{ $root.Values.eventsTopic | default "events" | quote }},
       "render_topic": {{ $root.Values.renderTopic | default "render" | quote }},
-      "batch_topic": {{ $root.Values.batchTopic | default "batch" | quote }}
+      "update_topic": {{ $root.Values.updateTopic | default "update" | quote }}
     }

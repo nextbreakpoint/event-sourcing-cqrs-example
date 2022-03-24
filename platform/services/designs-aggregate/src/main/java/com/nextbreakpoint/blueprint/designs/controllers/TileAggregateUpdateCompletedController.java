@@ -7,12 +7,14 @@ import com.nextbreakpoint.blueprint.common.vertx.Controller;
 import com.nextbreakpoint.blueprint.common.vertx.MessageEmitter;
 import com.nextbreakpoint.blueprint.designs.aggregate.DesignAggregate;
 import com.nextbreakpoint.blueprint.designs.model.Design;
-import com.nextbreakpoint.blueprint.designs.model.DesignTiles;
+import com.nextbreakpoint.blueprint.designs.model.Level;
+import rx.Observable;
 import rx.Single;
 
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class TileAggregateUpdateCompletedController implements Controller<InputMessage, Void> {
@@ -32,21 +34,24 @@ public class TileAggregateUpdateCompletedController implements Controller<InputM
     public Single<Void> onNext(InputMessage message) {
         return Single.just(message)
                 .map(inputMapper::transform)
-                .flatMap(this::onAggregateUpdateCompleted)
+                .flatMapObservable(this::onAggregateUpdateCompleted)
                 .map(outputMapper::transform)
-                .flatMap(emitter::send);
+                .flatMapSingle(emitter::send)
+                .ignoreElements()
+                .toCompletable()
+                .toSingleDefault("")
+                .map(result -> null);
     }
 
-    private Single<DesignDocumentUpdateRequested> onAggregateUpdateCompleted(TileAggregateUpdateCompleted event) {
+    private Observable<DesignDocumentUpdateRequested> onAggregateUpdateCompleted(TileAggregateUpdateCompleted event) {
         return aggregate.findDesign(event.getDesignId())
-                .map(result -> result.orElseThrow(() -> new RuntimeException("Design aggregate not found " + event.getDesignId())))
-                .map(this::createEvent);
+                .flatMapObservable(result -> result.map(design -> Observable.just(createEvent(design))).orElseGet(Observable::empty));
     }
 
     private DesignDocumentUpdateRequested createEvent(Design design) {
         final List<Tiles> tiles = design.getTiles().values().stream()
-                .sorted(Comparator.comparing(DesignTiles::getLevel))
-                .map(DesignTiles::toTiles)
+                .sorted(Comparator.comparing(Level::getLevel))
+                .map(Level::toTiles)
                 .collect(Collectors.toList());
 
         return DesignDocumentUpdateRequested.builder()

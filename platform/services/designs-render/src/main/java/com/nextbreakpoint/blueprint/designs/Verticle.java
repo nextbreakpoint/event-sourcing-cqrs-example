@@ -144,8 +144,6 @@ public class Verticle extends AbstractVerticle {
 
             final String renderTopic = config.getString("render_topic");
 
-            final String eventsTopic = config.getString("events_topic");
-
             final String bootstrapServers = config.getString("kafka_bootstrap_servers", "localhost:9092");
 
             final String keySerializer = config.getString("kafka_key_serializer", "org.apache.kafka.common.serialization.StringSerializer");
@@ -227,7 +225,7 @@ public class Verticle extends AbstractVerticle {
 
             final Map<String, RxSingleHandler<InputMessage, ?>> messageHandlers = new HashMap<>();
 
-            messageHandlers.put(TileRenderRequested.TYPE, createTileRenderRequestedHandler(eventsTopic, kafkaProducer, messageSource, workerExecutor, s3AsyncClient, s3Bucket));
+            messageHandlers.put(TileRenderRequested.TYPE, createTileRenderRequestedHandler(renderTopic, kafkaProducer, messageSource, workerExecutor, s3AsyncClient, s3Bucket));
 
             kafkaConsumer1.subscribe(Set.of(renderTopic + "-0"));
             kafkaConsumer2.subscribe(Set.of(renderTopic + "-1"));
@@ -261,7 +259,7 @@ public class Verticle extends AbstractVerticle {
 
             final HealthCheckHandler healthCheckHandler = HealthCheckHandler.createWithHealthChecks(HealthChecks.create(vertx));
 
-            healthCheckHandler.register("kafka-topic-events", 2000, future -> checkTopic(kafkaConsumer6, eventsTopic, future));
+            healthCheckHandler.register("kafka-topic-render", 2000, future -> checkTopic(kafkaConsumer6, renderTopic, future));
             healthCheckHandler.register("bucket-tiles", 2000, future -> checkBucket(s3AsyncClient, s3Bucket, future));
 
             final URL resource = RouterBuilder.class.getClassLoader().getResource("api-v1.yaml");

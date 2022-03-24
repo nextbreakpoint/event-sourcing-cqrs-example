@@ -31,30 +31,30 @@ public class DesignAggregate {
         return store.findDesign(uuid);
     }
 
-    public Single<Optional<Design>> updateDesign(UUID uuid, String revision) {
-        return store.findDesign(uuid).flatMap(result -> updateDesign(uuid, revision, result.orElse(null)));
+    public Single<Optional<Design>> projectDesign(UUID uuid, String revision) {
+        return store.findDesign(uuid)
+                .flatMap(result -> projectDesign(uuid, revision, result.orElse(null)));
     }
 
-    private Single<Optional<Design>> updateDesign(UUID uuid, String revision, Design design) {
-        if (design == null) {
-            return store.findMessages(uuid, REVISION_NULL, revision).flatMap(messages -> updateDesign(messages, null));
-        } else {
-            return store.findMessages(uuid, design.getRevision(), revision).flatMap(messages -> updateDesign(messages, design));
-        }
-    }
-
-    private Single<Optional<Design>> updateDesign(List<InputMessage> messages, Design state) {
-        return Single.fromCallable(() -> strategy.applyEvents(state, messages))
-                .subscribeOn(Schedulers.io())
-                .observeOn(Schedulers.computation())
-                .flatMap(result -> result.map(this::updateDesign).orElseGet(() -> Single.just(Optional.empty())));
-    }
-
-    private Single<Optional<Design>> updateDesign(Design design) {
+    public Single<Optional<Design>> updateDesign(Design design) {
         if (design.getStatus().equals("DELETED")) {
-            return store.deleteDesign(design).map(ignore -> Optional.ofNullable(design));
+            return store.deleteDesign(design).map(ignore -> Optional.of(design));
         } else {
-            return store.updateDesign(design).map(ignore -> Optional.ofNullable(design));
+            return store.updateDesign(design).map(ignore -> Optional.of(design));
         }
+    }
+
+    private Single<Optional<Design>> projectDesign(UUID uuid, String revision, Design design) {
+        if (design == null) {
+            return store.findMessages(uuid, REVISION_NULL, revision)
+                    .flatMap(messages -> projectDesign(messages, null));
+        } else {
+            return store.findMessages(uuid, design.getRevision(), revision)
+                    .flatMap(messages -> projectDesign(messages, design));
+        }
+    }
+
+    private Single<Optional<Design>> projectDesign(List<InputMessage> messages, Design state) {
+        return Single.fromCallable(() -> strategy.applyEvents(state, messages));
     }
 }

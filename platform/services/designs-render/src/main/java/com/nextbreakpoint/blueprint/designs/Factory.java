@@ -4,6 +4,8 @@ import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.events.mappers.TileRenderCompletedOutputMapper;
 import com.nextbreakpoint.blueprint.common.events.mappers.TileRenderRequestedInputMapper;
 import com.nextbreakpoint.blueprint.common.vertx.*;
+import com.nextbreakpoint.blueprint.designs.common.Bucket;
+import com.nextbreakpoint.blueprint.designs.common.Render;
 import com.nextbreakpoint.blueprint.designs.common.S3Driver;
 import com.nextbreakpoint.blueprint.designs.common.TileRenderer;
 import com.nextbreakpoint.blueprint.designs.controllers.TileRenderRequestedController;
@@ -55,7 +57,7 @@ public class Factory {
                 .withOutputMapper(output -> output)
                 .withController(new TileRenderRequestedController(
                         new TileRenderRequestedInputMapper(),
-                        new TileRenderCompletedOutputMapper(messageSource),
+                        new TileRenderCompletedOutputMapper(messageSource, Render::createRenderKey),
                         new KafkaEmitter(producer, topic, 3),
                         executor,
                         new S3Driver(s3AsyncClient, bucket),

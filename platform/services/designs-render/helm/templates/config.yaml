@@ -28,7 +28,6 @@ data:
       "kafka_bootstrap_servers": {{ $root.Values.kafkaServers | default "kafka.platform:9094" | quote }},
       "kafka_group_id": {{ $root.Values.kafkaGroupId | default "designs-render" | quote }},
       "message_source": {{ $root.Values.messageSource | default "service-designs" | quote }},
-      "events_topic": {{ $root.Values.eventsTopic | default "events" | quote }},
       "render_topic": {{ $root.Values.renderTopic | default "render" | quote }},
 
       "max_execution_time_in_millis": "30000000",

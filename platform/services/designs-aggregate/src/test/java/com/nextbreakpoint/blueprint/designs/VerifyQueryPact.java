@@ -19,7 +19,7 @@ import com.nextbreakpoint.blueprint.common.events.DesignDocumentUpdateRequested;
 import com.nextbreakpoint.blueprint.common.events.mappers.DesignDocumentDeleteRequestedOutputMapper;
 import com.nextbreakpoint.blueprint.common.events.mappers.DesignDocumentUpdateRequestedOutputMapper;
 import com.nextbreakpoint.blueprint.common.test.PayloadUtils;
-import com.nextbreakpoint.blueprint.designs.model.DesignTiles;
+import com.nextbreakpoint.blueprint.designs.model.Level;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -96,7 +96,7 @@ public class VerifyQueryPact {
     }
 
     private String produceDesignDocumentUpdateRequested(UUID uuid, String data, String checksum, String status, float completePercentage) {
-        final List<Tiles> tiles = TestUtils.getTiles(TestConstants.LEVELS, completePercentage).stream().map(DesignTiles::toTiles).collect(Collectors.toList());
+        final List<Tiles> tiles = TestUtils.getTiles(TestConstants.LEVELS, completePercentage).stream().map(Level::toTiles).collect(Collectors.toList());
 
         final DesignDocumentUpdateRequested designDocumentUpdateRequested = new DesignDocumentUpdateRequested(uuid, TestConstants.USER_ID, UUID.randomUUID(), data, checksum, TestConstants.REVISION_0, status, TestConstants.LEVELS, tiles, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
 

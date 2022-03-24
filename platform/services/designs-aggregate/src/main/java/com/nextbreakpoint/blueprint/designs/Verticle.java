@@ -111,7 +111,7 @@ public class Verticle extends AbstractVerticle {
 
             final String eventsTopic = config.getString("events_topic");
 
-            final String batchTopic = config.getString("batch_topic");
+            final String updateTopic = config.getString("update_topic");
 
             final String messageSource = config.getString("message_source");
 
@@ -211,38 +211,37 @@ public class Verticle extends AbstractVerticle {
 
             kafkaConsumer1.subscribe(eventsTopic);
 
-            kafkaConsumer2.subscribe(eventsTopic);
+            kafkaConsumer2.subscribe(updateTopic);
 
-            kafkaConsumer3.subscribe(batchTopic);
+            kafkaConsumer3.subscribe(renderTopic);
 
             messageHandlers1.put(DesignInsertRequested.TYPE, createDesignInsertRequestedHandler(store, eventsTopic, kafkaProducer, messageSource));
             messageHandlers1.put(DesignUpdateRequested.TYPE, createDesignUpdateRequestedHandler(store, eventsTopic, kafkaProducer, messageSource));
             messageHandlers1.put(DesignDeleteRequested.TYPE, createDesignDeleteRequestedHandler(store, eventsTopic, kafkaProducer, messageSource));
 
             messageHandlers1.put(DesignAggregateUpdateRequested.TYPE, createDesignAggregateUpdateRequestedHandler(store, eventsTopic, kafkaProducer, messageSource));
-            messageHandlers1.put(DesignAggregateUpdateCompleted.TYPE, createDesignAggregateUpdateCompletedHandler(store, eventsTopic, batchTopic, kafkaProducer, messageSource));
+            messageHandlers1.put(DesignAggregateUpdateCompleted.TYPE, createDesignAggregateUpdateCompletedHandler(store, eventsTopic, renderTopic, kafkaProducer, messageSource));
             messageHandlers1.put(DesignAggregateUpdateCancelled.TYPE, createDesignAggregateUpdateCancelledHandler(store, eventsTopic, kafkaProducer, messageSource));
 
             messageHandlers1.put(TileAggregateUpdateRequested.TYPE, createTileAggregateUpdateRequestedHandler(store, eventsTopic, kafkaProducer, messageSource));
             messageHandlers1.put(TileAggregateUpdateCompleted.TYPE, createTileAggregateUpdateCompletedHandler(store, eventsTopic, kafkaProducer, messageSource));
-
-            messageHandlers1.put(TileRenderCompleted.TYPE, createTileRenderCompletedHandler(store, eventsTopic, kafkaProducer, messageSource));
+            messageHandlers1.put(TileRenderCompleted.TYPE, createTileRenderCompletedHandler(store, updateTopic, renderTopic, kafkaProducer, messageSource));
 
             messageHandlers2.put(TileAggregateUpdateRequired.TYPE, createTileAggregateUpdateRequiredHandler(store, eventsTopic, kafkaProducer, messageSource));
 
-            messageHandlers3.put(TilesRenderRequired.TYPE, createTilesRenderRequiredHandler(store, renderTopic, kafkaProducer, messageSource));
+            messageHandlers3.put(TileRenderCompleted.TYPE, createForwardTileRenderCompletedHandler(store, eventsTopic, kafkaProducer, messageSource));
 
             kafkaPolling1 = new KafkaPolling(kafkaConsumer1, messageHandlers1, KafkaRecordsQueue.Simple.create(), -1, 50);
 
             kafkaPolling2 = new KafkaPolling(kafkaConsumer2, messageHandlers2, KafkaRecordsQueue.Compacted.create(), 5000, 50);
 
-            kafkaPolling3 = new KafkaPolling(kafkaConsumer3, messageHandlers3, KafkaRecordsQueue.Simple.create(), 2000, 1);
+            kafkaPolling3 = new KafkaPolling(kafkaConsumer3, messageHandlers3, KafkaRecordsQueue.Compacted.create(), -1, 50);
 
-            kafkaPolling1.startPolling("kafka-polling-topic-" + eventsTopic + "-1");
+            kafkaPolling1.startPolling("kafka-polling-topic-" + eventsTopic);
 
-            kafkaPolling2.startPolling("kafka-polling-topic-" + eventsTopic + "-2");
+            kafkaPolling2.startPolling("kafka-polling-topic-" + updateTopic);
 
-            kafkaPolling3.startPolling("kafka-polling-topic-" + batchTopic);
+            kafkaPolling3.startPolling("kafka-polling-topic-" + renderTopic);
 
             final Handler<RoutingContext> apiV1DocsHandler = new OpenApiHandler(vertx.getDelegate(), executor, "api-v1.yaml");
 
@@ -250,7 +249,7 @@ public class Verticle extends AbstractVerticle {
 
             healthCheckHandler.register("kafka-topic-events", 2000, future -> checkTopic(kafkaConsumer4, eventsTopic, future));
             healthCheckHandler.register("kafka-topic-render", 2000, future -> checkTopic(kafkaConsumer4, renderTopic, future));
-            healthCheckHandler.register("kafka-topic-batch", 2000, future -> checkTopic(kafkaConsumer4, batchTopic, future));
+            healthCheckHandler.register("kafka-topic-update", 2000, future -> checkTopic(kafkaConsumer4, updateTopic, future));
             healthCheckHandler.register("cassandra-table-design", 2000, future -> checkTable(store, future, "DESIGN"));
             healthCheckHandler.register("cassandra-table-message", 2000, future -> checkTable(store, future, "MESSAGE"));
 

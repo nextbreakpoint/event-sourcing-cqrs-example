@@ -35,6 +35,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -77,6 +78,8 @@ public class Initializer {
                 .setAddressResolverOptions(addressResolverOptions)
                 .setMetricsOptions(metricsOptions)
                 .setTracingOptions(tracingOptions)
+                .setBlockedThreadCheckInterval(5000)
+                .setBlockedThreadCheckIntervalUnit(TimeUnit.SECONDS)
                 .setWorkerPoolSize(20);
 
         ContextStorage.addWrapper(CustomContextStorage::new);

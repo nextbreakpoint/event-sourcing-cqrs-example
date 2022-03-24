@@ -22,5 +22,5 @@
   "message_source": "service-designs",
   "events_topic": "${EVENTS_TOPIC}",
   "render_topic": "${RENDER_TOPIC}",
-  "batch_topic": "${BATCH_TOPIC}"
+  "update_topic": "${UPDATE_TOPIC}"
 }

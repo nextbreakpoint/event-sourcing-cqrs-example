@@ -142,7 +142,7 @@ services:
       KAFKA_PORT: 9094
       EVENTS_TOPIC: events
       RENDER_TOPIC: render
-      BATCH_TOPIC: batch
+      UPDATE_TOPIC: update
       DEBUG_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:35122
       LOGGING_LEVEL: ${LOGGING_LEVEL:-INFO}
     ports:

@@ -181,7 +181,7 @@ public class PactConsumerTests {
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
 
         PactDslJsonBody message1 = new PactDslJsonBody()
-                .stringValue("key", uuid.toString())
+                .stringValue("key", String.format("%s/%d/%04d%04d.png", uuid, 0, 0, 0))
                 .object("value", payload1);
 
         PactDslJsonBody event2 = new PactDslJsonBody()
@@ -200,7 +200,7 @@ public class PactConsumerTests {
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
 
         PactDslJsonBody message2 = new PactDslJsonBody()
-                .stringValue("key", uuid.toString())
+                .stringValue("key", String.format("%s/%d/%04d%04d.png", uuid, 1, 0, 0))
                 .object("value", payload2);
 
         PactDslJsonBody event3 = new PactDslJsonBody()
@@ -219,7 +219,7 @@ public class PactConsumerTests {
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
 
         PactDslJsonBody message3 = new PactDslJsonBody()
-                .stringValue("key", uuid.toString())
+                .stringValue("key", String.format("%s/%d/%04d%04d.png", uuid, 1, 1, 0))
                 .object("value", payload3);
 
         PactDslJsonBody event4 = new PactDslJsonBody()
@@ -238,7 +238,7 @@ public class PactConsumerTests {
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
 
         PactDslJsonBody message4 = new PactDslJsonBody()
-                .stringValue("key", uuid.toString())
+                .stringValue("key", String.format("%s/%d/%04d%04d.png", uuid, 2, 2, 1))
                 .object("value", payload4);
 
         PactDslJsonBody event5 = new PactDslJsonBody()
@@ -257,7 +257,7 @@ public class PactConsumerTests {
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
 
         PactDslJsonBody message5 = new PactDslJsonBody()
-                .stringValue("key", uuid.toString())
+                .stringValue("key", String.format("%s/%d/%04d%04d.png", uuid, 2, 3, 1))
                 .object("value", payload5);
 
         return builder.given("kafka topic exists")

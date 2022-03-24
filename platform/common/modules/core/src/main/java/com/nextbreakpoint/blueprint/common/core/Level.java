@@ -144,7 +144,7 @@ public class Level {
         }
 
         if (level == 1) {
-            return COUNT_TABLE.get(tiles.get(0) & 0x7);
+            return COUNT_TABLE.get(tiles.get(0));
         }
 
         return tiles.stream().mapToInt(tile -> COUNT_TABLE.get(0xFF & ((int) tile))).sum();

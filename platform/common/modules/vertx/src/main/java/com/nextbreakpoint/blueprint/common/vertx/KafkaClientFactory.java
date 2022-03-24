@@ -56,7 +56,8 @@ public class KafkaClientFactory {
         options.setConfig(ConsumerConfig.GROUP_ID_CONFIG, consumerConfig.getGroupId());
         options.setConfig(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, consumerConfig.getAutoOffsetReset());
         options.setConfig(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, consumerConfig.getEnableAutoCommit());
-//        options.setConfig(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, "30000");
+        options.setConfig(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, "10000");
+        options.setConfig(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, "100");
 
         if (consumerConfig.getKeystoreLocation() != null && consumerConfig.getTruststoreLocation() != null) {
             options.setConfig(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");

@@ -60,6 +60,16 @@ public class LevelTest {
         }));
     }
 
+    @ParameterizedTest
+    @MethodSource("provideArgumentsForPutTile")
+    void shouldPutAllTilesForLevel(Level level) {
+        int size = (int) Math.pow(2, level.getLevel() - 1);
+        IntStream.range(0, size).forEach(row -> IntStream.range(0, size).forEach(col -> {
+            level.putTile(row, col);
+        }));
+        assertThat(level.toTiles().getCompleted()).isEqualTo(size * size);
+    }
+
     @Test
     void shouldPutTileForLevel0() {
         Level level = Level.createEmpty(0);

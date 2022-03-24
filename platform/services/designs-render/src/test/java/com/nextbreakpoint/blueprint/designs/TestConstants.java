@@ -1,7 +1,6 @@
 package com.nextbreakpoint.blueprint.designs;
 
 import com.nextbreakpoint.blueprint.common.core.Checksum;
-import com.nextbreakpoint.blueprint.common.core.Tracing;
 
 public interface TestConstants {
     String TILE_RENDER_REQUESTED = "tile-render-requested-v1";
@@ -25,13 +24,8 @@ public interface TestConstants {
     String UUID1_REGEXP = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
     String UUID6_REGEXP = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
 
-    String TRACE_ID_REGEXP = ".+";
-    String SPAN_ID_REGEXP = ".+";
-
     String REVISION_REGEXP = "[0-9]{16}-[0-9]{16}";
 
     String REVISION_0 = "0000000000000000-0000000000000000";
     String REVISION_1 = "0000000000000000-0000000000000001";
-
-    Tracing TRACING = Tracing.of("a", "b");
 }

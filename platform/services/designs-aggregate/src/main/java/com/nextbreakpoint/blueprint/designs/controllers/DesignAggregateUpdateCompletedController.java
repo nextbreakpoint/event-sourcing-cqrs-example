@@ -87,8 +87,7 @@ public class DesignAggregateUpdateCompletedController implements Controller<Inpu
     }
 
     private Stream<Tile> makeTiles(int level) {
-        final int size = (int) Math.rint(Math.pow(2, level));
-        return makeAll(level, size);
+        return makeAll(level, (int) Math.rint(Math.pow(2, level)));
     }
 
     private Stream<Tile> makeAll(int level, int size) {

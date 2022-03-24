@@ -3,13 +3,14 @@ package com.nextbreakpoint.blueprint.designs;
 import com.datastax.oss.driver.api.core.cql.Row;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.core.Json;
+import com.nextbreakpoint.blueprint.common.core.Level;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.events.DesignInsertRequested;
+import com.nextbreakpoint.blueprint.common.events.TileRenderCompleted;
 import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
 import com.nextbreakpoint.blueprint.common.test.KafkaTestEmitter;
 import com.nextbreakpoint.blueprint.common.test.KafkaTestPolling;
 import com.nextbreakpoint.blueprint.common.vertx.*;
-import com.nextbreakpoint.blueprint.designs.model.Level;
 import io.vertx.rxjava.cassandra.CassandraClient;
 import io.vertx.rxjava.core.RxHelper;
 import io.vertx.rxjava.core.Vertx;
@@ -21,7 +22,6 @@ import rx.schedulers.Schedulers;
 
 import java.time.Duration;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -146,6 +146,8 @@ public class TestCases {
     public void shouldUpdateTheDesignWhenReceivingADesignInsertRequestedMessage(OutputMessage designInsertRequestedMessage) {
         final DesignInsertRequested designInsertRequested = Json.decodeValue(designInsertRequestedMessage.getValue().getData(), DesignInsertRequested.class);
 
+        final List<Level> tiles = TestUtils.getTiles(8, 0.0f);
+
         final UUID designId = designInsertRequested.getDesignId();
 
         System.out.println("designId = " + designId);
@@ -176,7 +178,6 @@ public class TestCases {
                 .untilAsserted(() -> {
                     final List<Row> rows = testCassandra.fetchDesigns(designId);
                     assertThat(rows).hasSize(1);
-                    final List<Level> tiles = TestUtils.convertToTilesList(TestUtils.createTilesMap(TestConstants.LEVELS));
                     TestAssertions.assertExpectedDesign(rows.get(0), TestConstants.JSON_1, "CREATED", tiles);
                 });
 
@@ -209,6 +210,8 @@ public class TestCases {
 
     public void shouldUpdateTheDesignWhenReceivingADesignUpdateRequestedMessage(OutputMessage designInsertRequestedMessage, OutputMessage designUpdateRequestedMessage) {
         final DesignInsertRequested designInsertRequested = Json.decodeValue(designInsertRequestedMessage.getValue().getData(), DesignInsertRequested.class);
+
+        final List<Level> tiles = TestUtils.getTiles(8, 0.0f);
 
         final UUID designId = designInsertRequested.getDesignId();
 
@@ -257,7 +260,6 @@ public class TestCases {
                 .untilAsserted(() -> {
                     final List<Row> rows = testCassandra.fetchDesigns(designId);
                     assertThat(rows).hasSize(1);
-                    final List<Level> tiles = TestUtils.convertToTilesList(TestUtils.createTilesMap(TestConstants.LEVELS));
                     TestAssertions.assertExpectedDesign(rows.get(0), TestConstants.JSON_2, "UPDATED", tiles);
                 });
 
@@ -290,6 +292,8 @@ public class TestCases {
 
     public void shouldUpdateTheDesignWhenReceivingADesignDeleteRequestedMessage(OutputMessage designInsertRequestedMessage, OutputMessage designDeleteRequestedMessage) {
         final DesignInsertRequested designInsertRequested = Json.decodeValue(designInsertRequestedMessage.getValue().getData(), DesignInsertRequested.class);
+
+        final List<Level> tiles = TestUtils.getTiles(8, 0.0f);
 
         final UUID designId = designInsertRequested.getDesignId();
 
@@ -338,7 +342,6 @@ public class TestCases {
                 .untilAsserted(() -> {
                     final List<Row> rows = testCassandra.fetchDesigns(designId);
                     assertThat(rows).hasSize(1);
-                    final List<Level> tiles = TestUtils.convertToTilesList(TestUtils.createTilesMap(TestConstants.LEVELS));
                     TestAssertions.assertExpectedDesign(rows.get(0), TestConstants.JSON_1, "DELETED", tiles);
                 });
 
@@ -378,6 +381,8 @@ public class TestCases {
     public void shouldUpdateTheDesignWhenReceivingATileRenderCompletedMessage(OutputMessage designInsertRequestedMessage, List<OutputMessage> tileRenderCompletedMessages) {
         final DesignInsertRequested designInsertRequested = Json.decodeValue(designInsertRequestedMessage.getValue().getData(), DesignInsertRequested.class);
 
+        final List<Level> tiles = TestUtils.getTiles(8, 0.0f);
+
         final UUID designId = designInsertRequested.getDesignId();
 
         System.out.println("designId = " + designId);
@@ -408,7 +413,6 @@ public class TestCases {
                 .untilAsserted(() -> {
                     final List<Row> rows = testCassandra.fetchDesigns(designId);
                     assertThat(rows).hasSize(1);
-                    final List<Level> tiles = TestUtils.convertToTilesList(TestUtils.createTilesMap(TestConstants.LEVELS));
                     TestAssertions.assertExpectedDesign(rows.get(0), TestConstants.JSON_1, "CREATED", tiles);
                 });
 
@@ -450,6 +454,12 @@ public class TestCases {
         renderEmitter.send(tileRenderCompletedMessage4);
         renderEmitter.send(tileRenderCompletedMessage5);
 
+        final TileRenderCompleted tileRenderCompleted1 = Json.decodeValue(tileRenderCompletedMessage1.getValue().getData(), TileRenderCompleted.class);
+        final TileRenderCompleted tileRenderCompleted2 = Json.decodeValue(tileRenderCompletedMessage2.getValue().getData(), TileRenderCompleted.class);
+        final TileRenderCompleted tileRenderCompleted3 = Json.decodeValue(tileRenderCompletedMessage3.getValue().getData(), TileRenderCompleted.class);
+        final TileRenderCompleted tileRenderCompleted4 = Json.decodeValue(tileRenderCompletedMessage4.getValue().getData(), TileRenderCompleted.class);
+        final TileRenderCompleted tileRenderCompleted5 = Json.decodeValue(tileRenderCompletedMessage5.getValue().getData(), TileRenderCompleted.class);
+
         await().atMost(ONE_MINUTE)
                 .pollInterval(TEN_SECONDS)
                 .untilAsserted(() -> {
@@ -477,16 +487,17 @@ public class TestCases {
                     messages.forEach(message -> TestAssertions.assertExpectedDesignDocumentUpdateRequestedMessage(message, designId, TestConstants.JSON_1, TestConstants.CHECKSUM_1, "CREATED"));
                 });
 
+        tiles.get(tileRenderCompleted1.getLevel()).putTile(tileRenderCompleted1.getRow(), tileRenderCompleted1.getCol());
+        tiles.get(tileRenderCompleted2.getLevel()).putTile(tileRenderCompleted2.getRow(), tileRenderCompleted2.getCol());
+        tiles.get(tileRenderCompleted3.getLevel()).putTile(tileRenderCompleted3.getRow(), tileRenderCompleted3.getCol());
+        tiles.get(tileRenderCompleted4.getLevel()).putTile(tileRenderCompleted4.getRow(), tileRenderCompleted4.getCol());
+        tiles.get(tileRenderCompleted5.getLevel()).putTile(tileRenderCompleted5.getRow(), tileRenderCompleted5.getCol());
+
         await().atMost(ONE_MINUTE)
                 .pollInterval(TEN_SECONDS)
                 .untilAsserted(() -> {
                     final List<Row> rows = testCassandra.fetchDesigns(designId);
                     assertThat(rows).hasSize(1);
-                    final Map<Integer, Level> tilesMap = TestUtils.createTilesMap(TestConstants.LEVELS);
-                    tilesMap.put(0, new Level(0, 1, Set.of(), Set.of(0)));
-                    tilesMap.put(1, new Level(1, 4, Set.of(0, 65536), Set.of()));
-                    tilesMap.put(2, new Level(2, 16, Set.of(131073), Set.of(196609)));
-                    final List<Level> tiles = TestUtils.convertToTilesList(tilesMap);
                     TestAssertions.assertExpectedDesign(rows.get(0), TestConstants.JSON_1, "CREATED", tiles);
                 });
     }

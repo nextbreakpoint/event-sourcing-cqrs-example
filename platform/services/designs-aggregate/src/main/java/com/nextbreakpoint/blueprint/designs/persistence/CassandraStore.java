@@ -7,13 +7,9 @@ import com.datastax.oss.driver.api.core.data.UdtValue;
 import com.datastax.oss.driver.api.core.metadata.Metadata;
 import com.datastax.oss.driver.api.core.metadata.schema.KeyspaceMetadata;
 import com.datastax.oss.driver.api.core.type.UserDefinedType;
-import com.nextbreakpoint.blueprint.common.core.Checksum;
-import com.nextbreakpoint.blueprint.common.core.InputMessage;
-import com.nextbreakpoint.blueprint.common.core.Payload;
-import com.nextbreakpoint.blueprint.common.core.Tracing;
+import com.nextbreakpoint.blueprint.common.core.*;
 import com.nextbreakpoint.blueprint.designs.Store;
 import com.nextbreakpoint.blueprint.designs.model.Design;
-import com.nextbreakpoint.blueprint.designs.model.Level;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.rxjava.cassandra.CassandraClient;
@@ -24,9 +20,9 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.*;
-import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class CassandraStore implements Store {
     private final Logger logger = LoggerFactory.getLogger(CassandraStore.class.getName());
@@ -77,7 +73,7 @@ public class CassandraStore implements Store {
     @Override
     public Single<Void> updateDesign(Design design) {
         return withSession()
-                .flatMap(session -> getLevelType().flatMap(levelType -> insertDesign(session, makeInsertDesignParams(design, levelType))))
+                .flatMap(session -> getTileType().flatMap(levelType -> insertDesign(session, makeInsertDesignParams(design, levelType))))
                 .doOnError(err -> handleError(ERROR_INSERT_DESIGN, err));
     }
 
@@ -105,11 +101,11 @@ public class CassandraStore implements Store {
         return rows.stream().findFirst().map(this::convertRowToDesign);
     }
 
-    private Single<UserDefinedType> getLevelType() {
-        return metadata.map(metadata -> metadata.getKeyspace(keyspace).orElseThrow()).map(this::getLevelType);
+    private Single<UserDefinedType> getTileType() {
+        return metadata.map(metadata -> metadata.getKeyspace(keyspace).orElseThrow()).map(this::getTileType);
     }
 
-    private UserDefinedType getLevelType(KeyspaceMetadata metadata) {
+    private UserDefinedType getTileType(KeyspaceMetadata metadata) {
         return metadata.getUserDefinedType("LEVEL").orElseThrow(() -> new RuntimeException("UDT not found: LEVEL"));
     }
 
@@ -178,11 +174,11 @@ public class CassandraStore implements Store {
         final int levels = row.getInt("DESIGN_LEVELS");
         final Instant updated = row.getInstant("DESIGN_TIMESTAMP");
         final String revision = row.getString("DESIGN_REVISION");
-        final Map<Integer, UdtValue> tilesMap = row.getMap("DESIGN_TILES", Integer.class, UdtValue.class);
-        final Map<Integer, Level> tilesList = tilesMap != null ? tilesMap.entrySet().stream()
-                .map(entry -> convertUDTToTiles(entry.getKey(), entry.getValue()))
-                .collect(Collectors.toMap(Level::getLevel, Function.identity())) : Map.of();
-        return new Design(designId, userId, commandId, data, checksum, revision, status, levels, tilesList, toDate(updated));
+        final List<UdtValue> udfTiles = row.getList("DESIGN_TILES", UdtValue.class);
+        final List<Level> tiles = IntStream.range(0, udfTiles.size())
+                .mapToObj(level -> convertUDTToLevel(level, udfTiles.get(level)))
+                .collect(Collectors.toList());
+        return new Design(designId, userId, commandId, data, checksum, revision, status, levels, tiles, toDate(updated));
     }
 
     private InputMessage convertRowToMessage(Row row) {
@@ -228,8 +224,9 @@ public class CassandraStore implements Store {
     }
 
     private Object[] makeInsertDesignParams(Design design, UserDefinedType levelType) {
-        final Map<Integer, UdtValue> levelsMap = design.getTiles().values().stream()
-                .collect(Collectors.toMap(Level::getLevel, x -> convertTilesToUDT(levelType, x)));
+        final List<UdtValue> tiles = design.getTiles().stream()
+                .map(level -> convertLevelToUDT(levelType, level))
+                .collect(Collectors.toList());
 
         return new Object[] {
                 design.getUserId(),
@@ -240,7 +237,7 @@ public class CassandraStore implements Store {
                 Checksum.of(design.getData()),
                 design.getStatus(),
                 design.getLevels(),
-                levelsMap,
+                tiles,
                 design.getLastModified().toInstant(ZoneOffset.UTC)
         };
     }
@@ -249,18 +246,12 @@ public class CassandraStore implements Store {
         return new Object[] { design.getDesignId() };
     }
 
-    private Level convertUDTToTiles(Integer level, UdtValue udtValue) {
-        final int requested = udtValue.getInt("REQUESTED");
-        final Set<Integer> completed = udtValue.getSet("COMPLETED", Integer.class);
-        final Set<Integer> failed = udtValue.getSet("FAILED", Integer.class);
-        return new Level(level, requested, completed, failed);
+    private Level convertUDTToLevel(Integer level, UdtValue udtValue) {
+        return Level.of(level, udtValue.getList("TILES", Byte.class));
     }
 
-    private UdtValue convertTilesToUDT(UserDefinedType levelType, Level tiles) {
-        return levelType.newValue()
-                .setInt("REQUESTED", tiles.getRequested())
-                .setSet("COMPLETED", tiles.getCompleted(), Integer.class)
-                .setSet("FAILED", tiles.getFailed(), Integer.class);
+    private UdtValue convertLevelToUDT(UserDefinedType definedType, Level level) {
+        return definedType.newValue().setList("TILES", level.getTiles(), Byte.class);
     }
 
     private void handleError(String message, Throwable err) {

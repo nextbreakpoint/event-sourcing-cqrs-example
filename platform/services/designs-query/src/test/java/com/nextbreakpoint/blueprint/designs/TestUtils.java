@@ -5,10 +5,7 @@ import com.jayway.restassured.config.LogConfig;
 import com.jayway.restassured.config.RedirectConfig;
 import com.jayway.restassured.config.RestAssuredConfig;
 import com.jayway.restassured.config.SSLConfig;
-import com.nextbreakpoint.blueprint.common.core.Json;
-import com.nextbreakpoint.blueprint.common.core.KafkaRecord;
-import com.nextbreakpoint.blueprint.common.core.OutputMessage;
-import com.nextbreakpoint.blueprint.common.core.Tiles;
+import com.nextbreakpoint.blueprint.common.core.*;
 import com.nextbreakpoint.blueprint.common.test.PayloadUtils;
 import com.nextbreakpoint.blueprint.designs.model.Design;
 import org.jetbrains.annotations.NotNull;
@@ -21,6 +18,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 public class TestUtils {
     private TestUtils() {}
@@ -87,22 +85,26 @@ public class TestUtils {
 
     @NotNull
     private static List<Tile> generateTiles(int level) {
-        final int size = (int) Math.rint(Math.pow(2, level));
+        return makeAll(level, (int) Math.rint(Math.pow(2, level))).collect(Collectors.toList());
+    }
+
+    private static Stream<Tile> makeAll(int level, int size) {
         return IntStream.range(0, size)
                 .boxed()
-                .flatMap(row ->
-                        IntStream.range(0, size)
-                                .boxed()
-                                .map(col -> new Tile(level, row, col))
-                )
-                .collect(Collectors.toList());
+                .flatMap(row -> makeRow(level, row, size));
+    }
+
+    private static Stream<Tile> makeRow(int level, int row, int size) {
+        return IntStream.range(0, size)
+                .boxed()
+                .map(col -> new Tile(level, row, col));
     }
 
     @NotNull
     private static Tiles makeTiles(int level, float completePercentage) {
-        final int requested = (int) Math.rint(Math.pow(2, level * 2));
-        final int completedCount = (int) Math.rint((completePercentage * requested) / 100f);
-        return new Tiles(level, requested, completedCount, 0);
+        final int total = (int) Math.rint(Math.pow(2, level * 2));
+        final int completed = (int) Math.rint((completePercentage * total) / 100f);
+        return new Tiles(level, completed);
     }
 
     @NotNull

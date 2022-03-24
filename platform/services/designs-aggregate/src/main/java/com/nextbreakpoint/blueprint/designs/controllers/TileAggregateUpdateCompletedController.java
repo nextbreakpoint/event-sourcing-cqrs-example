@@ -7,14 +7,12 @@ import com.nextbreakpoint.blueprint.common.vertx.Controller;
 import com.nextbreakpoint.blueprint.common.vertx.MessageEmitter;
 import com.nextbreakpoint.blueprint.designs.aggregate.DesignAggregate;
 import com.nextbreakpoint.blueprint.designs.model.Design;
-import com.nextbreakpoint.blueprint.designs.model.Level;
 import rx.Observable;
 import rx.Single;
 
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class TileAggregateUpdateCompletedController implements Controller<InputMessage, Void> {
@@ -49,7 +47,7 @@ public class TileAggregateUpdateCompletedController implements Controller<InputM
     }
 
     private DesignDocumentUpdateRequested createEvent(Design design) {
-        final List<Tiles> tiles = design.getTiles().values().stream()
+        final List<Tiles> tiles = design.getTiles().stream()
                 .sorted(Comparator.comparing(Level::getLevel))
                 .map(Level::toTiles)
                 .collect(Collectors.toList());

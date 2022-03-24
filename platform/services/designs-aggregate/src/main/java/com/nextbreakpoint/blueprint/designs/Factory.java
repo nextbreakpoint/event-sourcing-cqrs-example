@@ -5,7 +5,7 @@ import com.nextbreakpoint.blueprint.common.events.mappers.*;
 import com.nextbreakpoint.blueprint.common.vertx.*;
 import com.nextbreakpoint.blueprint.designs.aggregate.DesignAggregate;
 import com.nextbreakpoint.blueprint.designs.aggregate.DesignStateStrategy;
-import com.nextbreakpoint.blueprint.designs.common.ForwardController;
+import com.nextbreakpoint.blueprint.common.vertx.ForwardController;
 import com.nextbreakpoint.blueprint.designs.common.Render;
 import com.nextbreakpoint.blueprint.designs.controllers.*;
 import io.vertx.rxjava.kafka.client.producer.KafkaProducer;

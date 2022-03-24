@@ -3,12 +3,12 @@ package com.nextbreakpoint.blueprint.designs.aggregate;
 import com.nextbreakpoint.blueprint.common.core.Checksum;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.core.Json;
+import com.nextbreakpoint.blueprint.common.core.Level;
 import com.nextbreakpoint.blueprint.common.events.DesignDeleteRequested;
 import com.nextbreakpoint.blueprint.common.events.DesignInsertRequested;
 import com.nextbreakpoint.blueprint.common.events.DesignUpdateRequested;
 import com.nextbreakpoint.blueprint.common.events.TileRenderCompleted;
 import com.nextbreakpoint.blueprint.designs.model.Design;
-import com.nextbreakpoint.blueprint.designs.model.Level;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
 
@@ -16,15 +16,12 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
-import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class DesignStateStrategy {
     private final Logger logger = LoggerFactory.getLogger(DesignStateStrategy.class.getName());
-
-    private Level TILES_EMPTY = new Level(0, 0, Collections.emptySet(), Collections.emptySet());
 
     public Optional<Design> applyEvents(Design state, List<InputMessage> messages) {
         logger.debug("Apply events: " + messages.size());
@@ -47,52 +44,6 @@ public class DesignStateStrategy {
         return LocalDateTime.ofInstant(Instant.ofEpochMilli(timestamp), ZoneId.of("UTC"));
     }
 
-    private Map<Integer, Level> createLevelsMap(int levels) {
-        return IntStream.range(0, levels)
-                .mapToObj(level -> new Level(level, getTilesCount(level), Collections.emptySet(), Collections.emptySet()))
-                .collect(Collectors.toMap(Level::getLevel, Function.identity()));
-    }
-
-    private Map<Integer, Level> createLevelsMap(TileRenderCompleted event) {
-        return IntStream.of(event.getLevel())
-                .mapToObj(level -> new Level(level, getTilesCount(level), getCompleted(event, level), getFailed(event, level)))
-                .collect(Collectors.toMap(Level::getLevel, Function.identity()));
-    }
-
-    private Set<Integer> getCompleted(TileRenderCompleted event, int level) {
-        return level == event.getLevel() && isCompleted(event) ? Set.of((0xFFFF & event.getRow()) << 16 | (0xFFFF & event.getCol())) : Collections.emptySet();
-    }
-
-    private Set<Integer> getFailed(TileRenderCompleted event, int level) {
-        return level == event.getLevel() && isCompleted(event) ? Collections.emptySet() : Set.of((0xFFFF & event.getRow()) << 16 | (0xFFFF & event.getCol()));
-    }
-
-    private Map<Integer, Level> createLevelsMap(Design state, Map<Integer, Level> elementTiles) {
-        return IntStream.range(0, state.getLevels())
-                .mapToObj(level -> new Level(level, getTilesCount(level), mergeCompleted(level, state.getTiles(), elementTiles), mergeFailed(level, state.getTiles(), elementTiles)))
-                .collect(Collectors.toMap(Level::getLevel, Function.identity()));
-    }
-
-    private Set<Integer> mergeCompleted(int level, Map<Integer, Level> tiles, Map<Integer, Level> elementTiles) {
-        Set<Integer> combined = new HashSet<>(tiles.getOrDefault(level, TILES_EMPTY).getCompleted());
-        combined.addAll(elementTiles.getOrDefault(level, TILES_EMPTY).getCompleted());
-        return combined;
-    }
-
-    private Set<Integer> mergeFailed(int level, Map<Integer, Level> tiles, Map<Integer, Level> elementTiles) {
-        Set<Integer> combined = new HashSet<>(tiles.getOrDefault(level, TILES_EMPTY).getFailed());
-        combined.addAll(elementTiles.getOrDefault(level, TILES_EMPTY).getFailed());
-        return combined;
-    }
-
-    private boolean isCompleted(TileRenderCompleted event) {
-        return event.getStatus().equalsIgnoreCase("COMPLETED");
-    }
-
-    private int getTilesCount(int level) {
-        return (int) Math.rint(Math.pow(2, level * 2));
-    }
-
     private void mergeEvent(Accumulator state, InputMessage message) {
         final String type = message.getValue().getType();
         final String value = message.getValue().getData();
@@ -101,12 +52,12 @@ public class DesignStateStrategy {
         switch (type) {
             case DesignInsertRequested.TYPE: {
                 DesignInsertRequested event = Json.decodeValue(value, DesignInsertRequested.class);
-                state.design = new Design(event.getDesignId(), event.getUserId(), event.getCommandId(), event.getData(), Checksum.of(event.getData()), token, "CREATED", event.getLevels(), createLevelsMap(event.getLevels()), toDateTime(timestamp));
+                state.design = new Design(event.getDesignId(), event.getUserId(), event.getCommandId(), event.getData(), Checksum.of(event.getData()), token, "CREATED", event.getLevels(), createEmptyTiles(), toDateTime(timestamp));
                 break;
             }
             case DesignUpdateRequested.TYPE: {
                 DesignUpdateRequested event = Json.decodeValue(value, DesignUpdateRequested.class);
-                state.design = new Design(event.getDesignId(), event.getUserId(), event.getCommandId(), event.getData(), Checksum.of(event.getData()), token, "UPDATED", event.getLevels(), createLevelsMap(event.getLevels()), toDateTime(timestamp));
+                state.design = new Design(event.getDesignId(), event.getUserId(), event.getCommandId(), event.getData(), Checksum.of(event.getData()), token, "UPDATED", event.getLevels(), createEmptyTiles(), toDateTime(timestamp));
                 break;
             }
             case DesignDeleteRequested.TYPE: {
@@ -116,12 +67,18 @@ public class DesignStateStrategy {
             }
             case TileRenderCompleted.TYPE: {
                 TileRenderCompleted event = Json.decodeValue(value, TileRenderCompleted.class);
-                state.design = new Design(event.getDesignId(), state.design.getUserId(), state.design.getCommandId(), state.design.getData(), state.design.getChecksum(), token, state.design.getStatus(), state.design.getLevels(), createLevelsMap(state.design, createLevelsMap(event)), toDateTime(timestamp));
+                state.design.getTiles().get(event.getLevel()).putTile(event.getRow(), event.getCol());
+                state.design = new Design(event.getDesignId(), state.design.getUserId(), state.design.getCommandId(), state.design.getData(), state.design.getChecksum(), token, state.design.getStatus(), state.design.getLevels(), state.design.getTiles(), toDateTime(timestamp));
+                System.out.println(state.design);
                 break;
             }
             default: {
             }
         }
+    }
+
+    private List<Level> createEmptyTiles() {
+        return IntStream.range(0, 8).mapToObj(Level::createEmpty).collect(Collectors.toList());
     }
 
     private class Accumulator {

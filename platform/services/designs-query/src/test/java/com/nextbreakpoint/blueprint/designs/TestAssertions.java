@@ -96,17 +96,11 @@ public class TestAssertions {
         assertThat(actualDesign.getLevels()).isEqualTo(TestConstants.LEVELS);
         assertThat(actualDesign.getTiles()).isNotNull();
         assertThat(actualDesign.getTiles().get(0).getLevel()).isEqualTo(0);
-        assertThat(actualDesign.getTiles().get(0).getRequested()).isEqualTo(1);
         assertThat(actualDesign.getTiles().get(0).getCompleted()).isEqualTo(1);
-        assertThat(actualDesign.getTiles().get(0).getFailed()).isEqualTo(0);
         assertThat(actualDesign.getTiles().get(1).getLevel()).isEqualTo(1);
-        assertThat(actualDesign.getTiles().get(1).getRequested()).isEqualTo(4);
         assertThat(actualDesign.getTiles().get(1).getCompleted()).isEqualTo(4);
-        assertThat(actualDesign.getTiles().get(1).getFailed()).isEqualTo(0);
         assertThat(actualDesign.getTiles().get(2).getLevel()).isEqualTo(2);
-        assertThat(actualDesign.getTiles().get(2).getRequested()).isEqualTo(16);
         assertThat(actualDesign.getTiles().get(2).getCompleted()).isEqualTo(16);
-        assertThat(actualDesign.getTiles().get(2).getFailed()).isEqualTo(0);
         assertThat(actualDesign.getLastModified()).isNotNull();
     }
 }

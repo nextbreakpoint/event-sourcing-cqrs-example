@@ -5,11 +5,9 @@ import com.nextbreakpoint.blueprint.common.core.*;
 import com.nextbreakpoint.blueprint.common.events.TileRenderCompleted;
 import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
 import com.nextbreakpoint.blueprint.common.test.PayloadUtils;
-import com.nextbreakpoint.blueprint.designs.model.Level;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -35,20 +33,6 @@ public class TestUtils {
     }
 
     @NotNull
-    public static List<Level> convertToTilesList(Map<Integer, Level> tiles) {
-        return tiles.values().stream()
-                .sorted(Comparator.comparing(Level::getLevel))
-                .collect(Collectors.toList());
-    }
-
-    @NotNull
-    public static Map<Integer, Level> createTilesMap(int levels) {
-        return IntStream.range(0, levels)
-                .mapToObj(level -> new Level(level, totalTileByLevel(level), Collections.emptySet(), Collections.emptySet()))
-                .collect(Collectors.toMap(Level::getLevel, Function.identity()));
-    }
-
-    @NotNull
     public static List<TileRenderRequested> extractTileRenderRequestedEvents(List<InputMessage> messages, String checksum) {
         return messages.stream()
                 .map(message -> Json.decodeValue(message.getValue().getData(), TileRenderRequested.class))
@@ -65,7 +49,7 @@ public class TestUtils {
     @NotNull
     public static List<Level> getTiles(int levels, float completePercentage) {
         return IntStream.range(0, levels)
-                .mapToObj(level -> makeTiles(level, completePercentage))
+                .mapToObj(level -> makeLevel(level, completePercentage))
                 .collect(Collectors.toList());
     }
 
@@ -77,23 +61,23 @@ public class TestUtils {
                 .flatMap(row ->
                         IntStream.range(0, size)
                                 .boxed()
-                                .map(col -> new Tile(level, row, col))
+                                .map(col -> new com.nextbreakpoint.blueprint.common.core.Tile(level, row, col))
                 )
                 .collect(Collectors.toList());
     }
 
     @NotNull
-    private static Level makeTiles(int level, float completePercentage) {
-        final int requested = (int) Math.rint(Math.pow(2, level * 2));
+    private static Level makeLevel(int level, float completePercentage) {
+        final int total = (int) Math.rint(Math.pow(2, level * 2));
+        final int limit = (int) Math.rint(completePercentage * total);
 
-        final int completedCount = (int) Math.rint(completePercentage * requested);
+        final Level tiles = Level.createEmpty(level);
 
-        final Set<Integer> completed = TestUtils.generateTiles(level)
+        TestUtils.generateTiles(level)
                 .stream()
-                .limit(completedCount)
-                .map(tile -> tile.getCol() << 16 | tile.getRow())
-                .collect(Collectors.toSet());
+                .limit(limit)
+                .forEach(tile -> tiles.putTile(tile.getRow(), tile.getCol()));
 
-        return new Level(level, requested, completed, new HashSet<>());
+        return tiles;
     }
 }

@@ -1,10 +1,12 @@
 package com.nextbreakpoint.blueprint.designs.model;
 
+import com.nextbreakpoint.blueprint.common.core.Level;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -19,7 +21,7 @@ public class Design {
     private final String revision;
     private final String status;
     private final int levels;
-    private final Map<Integer, Level> tiles;
+    private final List<Level> tiles;
     private final LocalDateTime lastModified;
 
     public Design(
@@ -31,7 +33,7 @@ public class Design {
             String revision,
             String status,
             int levels,
-            Map<Integer, Level> tiles,
+            List<Level> tiles,
             LocalDateTime lastModified
     ) {
         this.designId = designId;

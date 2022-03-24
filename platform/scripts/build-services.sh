@@ -31,6 +31,12 @@ for i in "$@"; do
       VERSION="${i#*=}"
       shift
       ;;
+    --keep-version)
+      VERSION="$(mvn -q help:evaluate -Dexpression=project.version -DforceStdout)"
+      DEPLOY="false"
+      IMAGES="false"
+      shift
+      ;;
     --docker-repository=*)
       REPOSITORY="${i#*=}"
       shift
@@ -124,7 +130,9 @@ echo "Pact server is ${PACTBROKER_HOST}:${PACTBROKER_PORT}"
 
 echo "Docker host is ${TEST_DOCKER_HOST}"
 
-echo "Images version is ${REPOSITORY}:${VERSION}"
+echo "Version is ${VERSION}"
+
+echo "Tag is ${REPOSITORY}:${VERSION}"
 
 if [[ $CLEAN == "false" ]]; then
   echo "Skipping clean"

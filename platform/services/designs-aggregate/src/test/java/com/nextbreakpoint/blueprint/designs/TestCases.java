@@ -463,20 +463,20 @@ public class TestCases {
         await().atMost(ONE_MINUTE)
                 .pollInterval(TEN_SECONDS)
                 .untilAsserted(() -> {
-                    final List<InputMessage> messages1 = updatePolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, TestConstants.TILE_AGGREGATE_UPDATE_REQUIRED);
-                    assertThat(messages1).hasSize(5);
-                    messages1.forEach(message -> TestAssertions.assertExpectedTileAggregateUpdateRequiredMessage(message, designId));
+                    final List<InputMessage> messages = updatePolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, TestConstants.TILE_AGGREGATE_UPDATE_REQUIRED);
+                    assertThat(messages).isNotEmpty();
+                    messages.forEach(message -> TestAssertions.assertExpectedTileAggregateUpdateRequiredMessage(message, designId));
                 });
 
         await().atMost(ONE_MINUTE)
                 .pollInterval(TEN_SECONDS)
                 .untilAsserted(() -> {
-                    final List<InputMessage> messages2 = eventsPolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, TestConstants.TILE_AGGREGATE_UPDATE_REQUESTED);
+                    final List<InputMessage> messages1 = eventsPolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, TestConstants.TILE_AGGREGATE_UPDATE_REQUESTED);
+                    assertThat(messages1).hasSize(1);
+                    messages1.forEach(message -> TestAssertions.assertExpectedTileAggregateUpdateRequestedMessage(message, designId));
+                    final List<InputMessage> messages2 = eventsPolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, TestConstants.TILE_AGGREGATE_UPDATE_COMPLETED);
                     assertThat(messages2).hasSize(1);
-                    messages2.forEach(message -> TestAssertions.assertExpectedTileAggregateUpdateRequestedMessage(message, designId));
-                    final List<InputMessage> messages3 = eventsPolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, TestConstants.TILE_AGGREGATE_UPDATE_COMPLETED);
-                    assertThat(messages3).hasSize(1);
-                    messages3.forEach(message -> TestAssertions.assertExpectedTileAggregateUpdateCompletedMessage(message, designId));
+                    messages2.forEach(message -> TestAssertions.assertExpectedTileAggregateUpdateCompletedMessage(message, designId));
                 });
 
         await().atMost(ONE_MINUTE)

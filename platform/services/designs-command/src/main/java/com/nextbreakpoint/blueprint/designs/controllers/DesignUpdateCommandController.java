@@ -50,7 +50,7 @@ public class DesignUpdateCommandController implements Controller<InputMessage, V
                 .withCommandId(command.getCommandId())
                 .withUserId(command.getUserId())
                 .withData(command.getData())
-                .withLevels(command.getLevels())
+                .withPublished(command.getPublished())
                 .build();
     }
 }

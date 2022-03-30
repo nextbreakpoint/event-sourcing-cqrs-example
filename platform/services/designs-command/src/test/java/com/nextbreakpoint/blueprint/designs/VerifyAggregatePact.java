@@ -63,40 +63,40 @@ public class VerifyAggregatePact {
     }
 
     @PactVerifyProvider("design insert requested for design 00000000-0000-0000-0000-000000000001")
-    public String produceDesignInsertRequested1() throws MalformedURLException {
-        return produceDesignInsertRequested(new UUID(0L, 1L), TestConstants.JSON_1, TestConstants.LEVELS);
+    public String produceDesignInsertRequested1() {
+        return produceDesignInsertRequested(new UUID(0L, 1L), TestConstants.JSON_1);
     }
 
     @PactVerifyProvider("design insert requested for design 00000000-0000-0000-0000-000000000002")
-    public String produceDesignInsertRequested2() throws MalformedURLException {
-        return produceDesignInsertRequested(new UUID(0L, 2L), TestConstants.JSON_1, TestConstants.LEVELS);
+    public String produceDesignInsertRequested2() {
+        return produceDesignInsertRequested(new UUID(0L, 2L), TestConstants.JSON_1);
     }
 
     @PactVerifyProvider("design insert requested for design 00000000-0000-0000-0000-000000000003")
-    public String produceDesignInsertRequested3() throws MalformedURLException {
-        return produceDesignInsertRequested(new UUID(0L, 3L), TestConstants.JSON_1, TestConstants.LEVELS);
+    public String produceDesignInsertRequested3() {
+        return produceDesignInsertRequested(new UUID(0L, 3L), TestConstants.JSON_1);
     }
 
     @PactVerifyProvider("design update requested for design 00000000-0000-0000-0000-000000000002")
-    public String produceDesignUpdateRequested1() throws MalformedURLException {
-        return produceDesignUpdateRequested(new UUID(0L, 2L), TestConstants.JSON_2, TestConstants.LEVELS);
+    public String produceDesignUpdateRequested1() {
+        return produceDesignUpdateRequested(new UUID(0L, 2L), TestConstants.JSON_2);
     }
 
     @PactVerifyProvider("design delete requested for design 00000000-0000-0000-0000-000000000003")
-    public String produceDesignDeleteRequested1() throws MalformedURLException {
+    public String produceDesignDeleteRequested1() {
         return produceDesignDeleteRequested(new UUID(0L, 3L));
     }
 
-    private String produceDesignInsertRequested(UUID designId, String data, int levels) {
-        final DesignInsertRequested designInsertRequested = new DesignInsertRequested(designId, TestConstants.USER_ID, TimeUUID.next(), data, levels);
+    private String produceDesignInsertRequested(UUID designId, String data) {
+        final DesignInsertRequested designInsertRequested = new DesignInsertRequested(designId, TestConstants.USER_ID, TimeUUID.next(), data);
 
         final OutputMessage designInsertRequestedMessage = new DesignInsertRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designInsertRequested);
 
         return Json.encodeValue(new KafkaRecord(designInsertRequestedMessage.getKey(), PayloadUtils.payloadToMap(designInsertRequestedMessage.getValue())));
     }
 
-    private String produceDesignUpdateRequested(UUID designId, String data, int levels) {
-        final DesignUpdateRequested designUpdateRequested = new DesignUpdateRequested(designId, TestConstants.USER_ID, TimeUUID.next(), data, levels);
+    private String produceDesignUpdateRequested(UUID designId, String data) {
+        final DesignUpdateRequested designUpdateRequested = new DesignUpdateRequested(designId, TestConstants.USER_ID, TimeUUID.next(), data, false);
 
         final OutputMessage designUpdateRequestedMessage = new DesignUpdateRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designUpdateRequested);
 

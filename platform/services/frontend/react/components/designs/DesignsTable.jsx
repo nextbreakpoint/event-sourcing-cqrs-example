@@ -90,7 +90,7 @@ function getSorting(order, orderBy) {
 
 const cells = [
   { id: 'uuid', numeric: false, disablePadding: true, label: 'UUID', enableSort: true, className: '' },
-  { id: 'modified', numeric: false, disablePadding: true, label: 'Last Modified', enableSort: true, className: '' },
+  { id: 'created', numeric: false, disablePadding: true, label: 'Created', enableSort: true, className: '' },
   { id: 'draft', numeric: true, disablePadding: true, label: 'Draft', enableSort: false, className: '' },
   { id: 'checksum', numeric: false, disablePadding: true, label: 'Checksum', enableSort: false, className: '' },
   { id: 'published', numeric: false, disablePadding: true, label: 'Published', enableSort: false, className: '' },
@@ -327,43 +327,43 @@ let EnhancedTable = class EnhancedTable extends React.Component {
   }
 
   handleUpload = (e) => {
-        console.log("upload")
+    console.log("upload")
 
-        let component = this
+    let component = this
 
-        let formData = new FormData();
-        formData.append('file', e.target.files[0]);
+    let formData = new FormData();
+    formData.append('file', e.target.files[0]);
 
-        let config = {
-            timeout: 30000,
-            metadata: {'content-type': 'multipart/form-data'},
-            withCredentials: true
-        }
+    let config = {
+        timeout: 30000,
+        metadata: {'content-type': 'multipart/form-data'},
+        withCredentials: true
+    }
 
-        component.props.handleHideErrorMessage()
+    component.props.handleHideErrorMessage()
 
-        axios.post(component.props.config.api_url + '/v1/designs/upload', formData, config)
-            .then(function (response) {
-                if (response.status == 200) {
-                    if (response.data.errors.length == 0) {
-                        let design = { manifest: response.data.manifest, metadata: response.data.metadata, script: response.data.script }
-                        component.props.handleUploadedDesign(design)
-                        component.props.handleShowCreateDialog()
-                    } else {
-                        component.props.handleShowErrorMessage("Can't upload the file")
-                    }
+    axios.post(component.props.config.api_url + '/v1/designs/upload', formData, config)
+        .then(function (response) {
+            if (response.status == 200) {
+                if (response.data.errors.length == 0) {
+                    let design = { manifest: response.data.manifest, metadata: response.data.metadata, script: response.data.script }
+                    component.props.handleUploadedDesign(design)
+                    component.props.handleShowCreateDialog()
                 } else {
-                    console.log("Can't upload the file: status = " + response.status)
                     component.props.handleShowErrorMessage("Can't upload the file")
                 }
-            })
-            .catch(function (error) {
-                console.log("Can't upload the file: " + error)
+            } else {
+                console.log("Can't upload the file: status = " + response.status)
                 component.props.handleShowErrorMessage("Can't upload the file")
-            })
+            }
+        })
+        .catch(function (error) {
+            console.log("Can't upload the file: " + error)
+            component.props.handleShowErrorMessage("Can't upload the file")
+        })
   }
 
-    handleDownload = (e) => {
+  handleDownload = (e) => {
       if (this.props.selected[0]) {
         console.log("download")
 
@@ -421,7 +421,7 @@ let EnhancedTable = class EnhancedTable extends React.Component {
                 component.props.handleShowErrorMessage("Can't load design")
             })
       }
-    }
+  }
 
   isSelected = id => this.props.selected.indexOf(id) !== -1
 
@@ -464,7 +464,7 @@ let EnhancedTable = class EnhancedTable extends React.Component {
                         <a href={"/admin/designs/" + n.uuid + '.html'}><pre>{n.uuid}</pre></a>
                       </TableCell>
                       <TableCell scope="row" padding="none">
-                        <pre>{n.modified}</pre>
+                        <pre>{n.updated}</pre>
                       </TableCell>
                       <TableCell scope="row" padding="none">
                         <pre>{n.draft ? 'yes' : 'no'}</pre>

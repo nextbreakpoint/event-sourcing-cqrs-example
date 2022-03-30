@@ -103,7 +103,7 @@ let Designs = class Designs extends React.Component {
             .then(function (response) {
                 if (response.status == 200) {
                     console.log("Designs loaded")
-                    let designs = response.data.map((design) => { return { uuid: design.uuid, checksum: design.checksum, revision: design.revision, levels: design.levels, modified: design.modified, draft: design.levels != 8, published: design.levels == 8, percentage: computePercentage(design) }})
+                    let designs = response.data.map((design) => { return { uuid: design.uuid, checksum: design.checksum, revision: design.revision, levels: design.levels, created: design.created, updated: design.updated, draft: design.levels != 8, published: design.published, percentage: computePercentage(design) }})
                     component.props.handleLoadDesignsSuccess(designs, revision)
                 } else {
                     console.log("Can't load designs: status = " + content.status)

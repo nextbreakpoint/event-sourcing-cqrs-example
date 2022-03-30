@@ -50,7 +50,6 @@ public class DesignInsertCommandController implements Controller<InputMessage, V
                 .withCommandId(command.getCommandId())
                 .withUserId(command.getUserId())
                 .withData(command.getData())
-                .withLevels(command.getLevels())
                 .build();
     }
 }

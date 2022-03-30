@@ -222,9 +222,9 @@ let DesignsPage = class DesignsPage extends React.Component {
 
     createDesign = () => {
         if (this.props.uploaded_design_present == true) {
-            return { manifest: this.props.uploaded_design.manifest, script: this.props.uploaded_design.script, metadata: this.props.uploaded_design.metadata, levels: 3 }
+            return { manifest: this.props.uploaded_design.manifest, script: this.props.uploaded_design.script, metadata: this.props.uploaded_design.metadata }
         } else {
-            return { manifest: this.state.design.manifest, script: this.state.design.script, metadata: this.state.design.metadata, levels: 3 }
+            return { manifest: this.state.design.manifest, script: this.state.design.script, metadata: this.state.design.metadata }
         }
     }
 

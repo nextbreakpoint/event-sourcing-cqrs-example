@@ -29,8 +29,8 @@ public class CassandraStore implements Store {
     private static final String ERROR_INSERT_MESSAGE = "An error occurred while inserting a message";
     private static final String ERROR_SELECT_MESSAGES = "An error occurred while fetching messages";
 
-    private static final String SELECT_DESIGN = "SELECT COMMAND_USER, COMMAND_UUID, DESIGN_UUID, DESIGN_REVISION, DESIGN_DATA, DESIGN_CHECKSUM, DESIGN_STATUS, DESIGN_LEVELS, DESIGN_BITMAP, DESIGN_TIMESTAMP FROM DESIGN WHERE DESIGN_UUID = ?";
-    private static final String INSERT_DESIGN = "INSERT INTO DESIGN (COMMAND_USER, COMMAND_UUID, DESIGN_UUID, DESIGN_REVISION, DESIGN_DATA, DESIGN_CHECKSUM, DESIGN_STATUS, DESIGN_LEVELS, DESIGN_BITMAP, DESIGN_TIMESTAMP) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    private static final String SELECT_DESIGN = "SELECT COMMAND_USER, COMMAND_UUID, DESIGN_UUID, DESIGN_REVISION, DESIGN_DATA, DESIGN_CHECKSUM, DESIGN_STATUS, DESIGN_PUBLISHED, DESIGN_LEVELS, DESIGN_BITMAP, DESIGN_CREATED, DESIGN_UPDATED FROM DESIGN WHERE DESIGN_UUID = ?";
+    private static final String INSERT_DESIGN = "INSERT INTO DESIGN (COMMAND_USER, COMMAND_UUID, DESIGN_UUID, DESIGN_REVISION, DESIGN_DATA, DESIGN_CHECKSUM, DESIGN_STATUS, DESIGN_PUBLISHED, DESIGN_LEVELS, DESIGN_BITMAP, DESIGN_CREATED, DESIGN_UPDATED) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     private static final String DELETE_DESIGN = "DELETE FROM DESIGN WHERE DESIGN_UUID = ?";
     private static final String INSERT_MESSAGE = "INSERT INTO MESSAGE (MESSAGE_TOKEN, MESSAGE_KEY, MESSAGE_UUID, MESSAGE_TYPE, MESSAGE_VALUE, MESSAGE_SOURCE, MESSAGE_TIMESTAMP, TRACING_TRACE_ID, TRACING_SPAN_ID) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
     private static final String SELECT_MESSAGES = "SELECT MESSAGE_TOKEN, MESSAGE_KEY, MESSAGE_UUID, MESSAGE_TYPE, MESSAGE_VALUE, MESSAGE_SOURCE, MESSAGE_TIMESTAMP, TRACING_TRACE_ID, TRACING_SPAN_ID FROM MESSAGE WHERE MESSAGE_KEY = ? AND MESSAGE_TOKEN <= ? AND MESSAGE_TOKEN > ?";
@@ -155,11 +155,13 @@ public class CassandraStore implements Store {
         final String data = row.getString("DESIGN_DATA");
         final String checksum = row.getString("DESIGN_CHECKSUM");
         final String status = row.getString("DESIGN_STATUS");
+        final boolean published = row.getBoolean("DESIGN_PUBLISHED");
         final int levels = row.getInt("DESIGN_LEVELS");
-        final Instant updated = row.getInstant("DESIGN_TIMESTAMP");
+        final Instant created = row.getInstant("DESIGN_CREATED");
+        final Instant updated = row.getInstant("DESIGN_UPDATED");
         final String revision = row.getString("DESIGN_REVISION");
         final ByteBuffer bitmap = row.getByteBuffer("DESIGN_BITMAP");
-        return new Design(designId, userId, commandId, data, checksum, revision, status, levels, bitmap, toDate(updated));
+        return new Design(designId, userId, commandId, data, checksum, revision, status, published, levels, bitmap, toDate(created), toDate(updated));
     }
 
     private InputMessage convertRowToMessage(Row row) {
@@ -213,9 +215,11 @@ public class CassandraStore implements Store {
                 design.getData(),
                 Checksum.of(design.getData()),
                 design.getStatus(),
+                design.isPublished(),
                 design.getLevels(),
                 design.getBitmap(),
-                design.getLastModified().toInstant(ZoneOffset.UTC)
+                design.getCreated().toInstant(ZoneOffset.UTC),
+                design.getUpdated().toInstant(ZoneOffset.UTC)
         };
     }
 

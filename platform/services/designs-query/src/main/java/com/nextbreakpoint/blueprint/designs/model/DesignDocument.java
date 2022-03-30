@@ -18,7 +18,9 @@ public class DesignDocument {
     private final String json;
     private final String checksum;
     private final String revision;
-    private final String modified;
+    private final String created;
+    private final String updated;
+    private final boolean published;
     private final int levels;
     private final List<Tiles> tiles;
 
@@ -28,7 +30,9 @@ public class DesignDocument {
         @JsonProperty("json") String json,
         @JsonProperty("checksum") String checksum,
         @JsonProperty("revision") String revision,
-        @JsonProperty("modified") String modified,
+        @JsonProperty("created") String created,
+        @JsonProperty("updated") String updated,
+        @JsonProperty("published") boolean published,
         @JsonProperty("levels") int levels,
         @JsonProperty("tiles") List<Tiles> tiles
     ) {
@@ -36,7 +40,9 @@ public class DesignDocument {
         this.json = Objects.requireNonNull(json);
         this.checksum = Objects.requireNonNull(checksum);
         this.revision = Objects.requireNonNull(revision);
-        this.modified = Objects.requireNonNull(modified);
+        this.created = Objects.requireNonNull(created);
+        this.updated = Objects.requireNonNull(updated);
+        this.published = published;
         this.levels = levels;
         this.tiles = Objects.requireNonNull(tiles);
     }
@@ -47,7 +53,9 @@ public class DesignDocument {
                 .withJson(design.getData())
                 .withChecksum(design.getChecksum())
                 .withRevision(design.getRevision())
-                .withModified(design.getLastModified())
+                .withCreated(design.getCreated())
+                .withUpdated(design.getUpdated())
+                .withPublished(design.isPublished())
                 .withLevels(design.getLevels())
                 .withTiles(design.getTiles())
                 .build();

@@ -49,8 +49,7 @@ public class PactConsumerTests {
                 .uuid("designId", uuid)
                 .uuid("userId", TestConstants.USER_ID)
                 .stringMatcher("commandId", TestConstants.UUID6_REGEXP)
-                .stringValue("data", TestConstants.JSON_1)
-                .numberValue("levels", TestConstants.LEVELS);
+                .stringValue("data", TestConstants.JSON_1);
 
         PactDslJsonBody payload1 = new PactDslJsonBody()
                 .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
@@ -77,8 +76,7 @@ public class PactConsumerTests {
                 .uuid("designId", uuid)
                 .uuid("userId", TestConstants.USER_ID)
                 .stringMatcher("commandId", TestConstants.UUID6_REGEXP)
-                .stringValue("data", TestConstants.JSON_1)
-                .numberValue("levels", TestConstants.LEVELS);
+                .stringValue("data", TestConstants.JSON_1);
 
         PactDslJsonBody payload1 = new PactDslJsonBody()
                 .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
@@ -95,7 +93,7 @@ public class PactConsumerTests {
                 .uuid("userId", TestConstants.USER_ID)
                 .stringMatcher("commandId", TestConstants.UUID6_REGEXP)
                 .stringValue("data", TestConstants.JSON_2)
-                .numberValue("levels", TestConstants.LEVELS);
+                .booleanType("published");
 
         PactDslJsonBody payload2 = new PactDslJsonBody()
                 .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
@@ -124,8 +122,7 @@ public class PactConsumerTests {
                 .uuid("designId", uuid)
                 .uuid("userId", TestConstants.USER_ID)
                 .stringMatcher("commandId", TestConstants.UUID6_REGEXP)
-                .stringValue("data", TestConstants.JSON_1)
-                .numberValue("levels", TestConstants.LEVELS);
+                .stringValue("data", TestConstants.JSON_1);
 
         PactDslJsonBody payload1 = new PactDslJsonBody()
                 .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
@@ -315,7 +312,7 @@ public class PactConsumerTests {
     public void shouldUpdateTheDesignWhenReceivingATileRenderCompletedMessage(MessagePact pact) {
         assertThat(pact.getMessages()).hasSize(5);
 
-        final DesignInsertRequested designInsertRequested = new DesignInsertRequested(new UUID(0L, 4L), TestConstants.USER_ID, UUID.randomUUID(), TestConstants.JSON_1, TestConstants.LEVELS);
+        final DesignInsertRequested designInsertRequested = new DesignInsertRequested(new UUID(0L, 4L), TestConstants.USER_ID, UUID.randomUUID(), TestConstants.JSON_1);
 
         final OutputMessage designInsertRequestedMessage = new DesignInsertRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designInsertRequested);
 

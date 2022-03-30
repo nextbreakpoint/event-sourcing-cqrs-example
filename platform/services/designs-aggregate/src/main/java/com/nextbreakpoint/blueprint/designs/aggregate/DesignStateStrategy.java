@@ -12,6 +12,7 @@ import com.nextbreakpoint.blueprint.designs.model.Design;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
 
+import java.nio.ByteBuffer;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -50,23 +51,28 @@ public class DesignStateStrategy {
         switch (type) {
             case DesignInsertRequested.TYPE: {
                 DesignInsertRequested event = Json.decodeValue(value, DesignInsertRequested.class);
-                state.design = new Design(event.getDesignId(), event.getUserId(), event.getCommandId(), event.getData(), Checksum.of(event.getData()), token, "CREATED", event.getLevels(), createEmptyBitmap().getBitmap(), toDateTime(timestamp));
+                final String checksum = Checksum.of(event.getData());
+                final ByteBuffer bitmap = createEmptyBitmap().getBitmap();
+                state.design = new Design(event.getDesignId(), event.getUserId(), event.getCommandId(), event.getData(), checksum, token, "CREATED", false, 3, bitmap, toDateTime(timestamp), toDateTime(timestamp));
                 break;
             }
             case DesignUpdateRequested.TYPE: {
                 DesignUpdateRequested event = Json.decodeValue(value, DesignUpdateRequested.class);
-                state.design = new Design(event.getDesignId(), event.getUserId(), event.getCommandId(), event.getData(), Checksum.of(event.getData()), token, "UPDATED", event.getLevels(), createEmptyBitmap().getBitmap(), toDateTime(timestamp));
+                final String checksum = Checksum.of(event.getData());
+                final int levels = !checksum.equals(state.design.getChecksum()) ? 3 : (!state.design.isPublished() && event.getPublished()) ? 8 : state.design.getLevels();
+                final ByteBuffer bitmap = (!checksum.equals(state.design.getChecksum()) || (!state.design.isPublished() && event.getPublished())) ? createEmptyBitmap().getBitmap() : state.design.getBitmap();
+                state.design = new Design(event.getDesignId(), event.getUserId(), event.getCommandId(), event.getData(), checksum, token, "UPDATED", event.getPublished(), levels, bitmap, state.design.getCreated(), toDateTime(timestamp));
                 break;
             }
             case DesignDeleteRequested.TYPE: {
                 DesignDeleteRequested event = Json.decodeValue(value, DesignDeleteRequested.class);
-                state.design = new Design(event.getDesignId(), event.getUserId(), event.getCommandId(), state.design.getData(), state.design.getChecksum(), token, "DELETED", state.design.getLevels(), state.design.getBitmap(), toDateTime(timestamp));
+                state.design = new Design(event.getDesignId(), event.getUserId(), event.getCommandId(), state.design.getData(), state.design.getChecksum(), token, "DELETED", state.design.isPublished(), state.design.getLevels(), state.design.getBitmap(), state.design.getCreated(), toDateTime(timestamp));
                 break;
             }
             case TileRenderCompleted.TYPE: {
                 TileRenderCompleted event = Json.decodeValue(value, TileRenderCompleted.class);
                 TilesBitmap.of(state.design.getBitmap()).putTile(event.getLevel(), event.getRow(), event.getCol());
-                state.design = new Design(event.getDesignId(), state.design.getUserId(), state.design.getCommandId(), state.design.getData(), state.design.getChecksum(), token, state.design.getStatus(), state.design.getLevels(), state.design.getBitmap(), toDateTime(timestamp));
+                state.design = new Design(event.getDesignId(), state.design.getUserId(), state.design.getCommandId(), state.design.getData(), state.design.getChecksum(), token, state.design.getStatus(), state.design.isPublished(), state.design.getLevels(), state.design.getBitmap(), state.design.getCreated(), toDateTime(timestamp));
                 break;
             }
             default: {

@@ -109,7 +109,6 @@ let Preview = class Preview extends React.Component {
                     design.metadata = data.metadata
                     design.script = data.script
                     design.draft = design.levels != 8
-                    design.published = design.levels == 8
                     design.percentage = computePercentage(design)
                     console.log(design)
                     if (component.props.design == undefined || design.revision > component.props.revision || design.checksum != component.props.checksum) {

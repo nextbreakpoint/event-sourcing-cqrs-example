@@ -32,9 +32,11 @@ public class TestAssertions {
         assertThat(actualEvent.getData()).isEqualTo(data);
         assertThat(actualEvent.getStatus()).isEqualTo(status);
         assertThat(actualEvent.getChecksum()).isEqualTo(checksum);
+        assertThat(actualEvent.isPublished()).isFalse();
         assertThat(actualEvent.getLevels()).isEqualTo(TestConstants.LEVELS);
         assertThat(actualEvent.getTiles()).isNotNull();
-        assertThat(actualEvent.getModified()).isNotNull();
+        assertThat(actualEvent.getCreated()).isNotNull();
+        assertThat(actualEvent.getUpdated()).isNotNull();
     }
 
     public static void assertExpectedDesignDocumentUpdateCompletedMessage(InputMessage actualMessage, UUID designId) {
@@ -101,6 +103,6 @@ public class TestAssertions {
         assertThat(actualDesign.getTiles().get(1).getCompleted()).isEqualTo(4);
         assertThat(actualDesign.getTiles().get(2).getLevel()).isEqualTo(2);
         assertThat(actualDesign.getTiles().get(2).getCompleted()).isEqualTo(16);
-        assertThat(actualDesign.getLastModified()).isNotNull();
+        assertThat(actualDesign.getUpdated()).isNotNull();
     }
 }

@@ -71,8 +71,10 @@ public class PactConsumerTests {
                 .stringValue("data", TestConstants.JSON_1)
                 .stringValue("checksum", TestConstants.CHECKSUM_1)
                 .stringValue("status", "CREATED")
+                .booleanValue("published", false)
                 .numberValue("levels", TestConstants.LEVELS)
-                .date("modified", "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+                .date("created", "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+                .date("updated", "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
                 .object("tiles", tiles1);
 
         PactDslJsonBody payload1 = new PactDslJsonBody()
@@ -111,8 +113,10 @@ public class PactConsumerTests {
                 .stringValue("data", TestConstants.JSON_1)
                 .stringValue("checksum", TestConstants.CHECKSUM_1)
                 .stringValue("status", "UPDATED")
+                .booleanValue("published", false)
                 .numberValue("levels", TestConstants.LEVELS)
-                .date("modified", "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+                .date("created", "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+                .date("updated", "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
                 .object("tiles", tiles2);
 
         PactDslJsonBody payload2 = new PactDslJsonBody()
@@ -151,8 +155,10 @@ public class PactConsumerTests {
                 .stringValue("data", TestConstants.JSON_1)
                 .stringValue("checksum", TestConstants.CHECKSUM_1)
                 .stringValue("status", "UPDATED")
+                .booleanValue("published", false)
                 .numberValue("levels", TestConstants.LEVELS)
-                .date("modified", "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+                .date("created", "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+                .date("updated", "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
                 .object("tiles", tiles3);
 
         PactDslJsonBody payload3 = new PactDslJsonBody()
@@ -191,8 +197,10 @@ public class PactConsumerTests {
                 .stringValue("data", TestConstants.JSON_2)
                 .stringValue("checksum", TestConstants.CHECKSUM_2)
                 .stringValue("status", "UPDATED")
+                .booleanValue("published", false)
                 .numberValue("levels", TestConstants.LEVELS)
-                .date("modified", "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+                .date("created", "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+                .date("updated", "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
                 .object("tiles", tiles4);
 
         PactDslJsonBody payload4 = new PactDslJsonBody()
@@ -248,8 +256,10 @@ public class PactConsumerTests {
                 .stringValue("data", TestConstants.JSON_2)
                 .stringValue("checksum", TestConstants.CHECKSUM_2)
                 .stringValue("status", "CREATED")
+                .booleanValue("published", false)
                 .numberValue("levels", TestConstants.LEVELS)
-                .date("modified", "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+                .date("created", "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+                .date("updated", "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
                 .object("tiles", tiles);
 
         PactDslJsonBody payload1 = new PactDslJsonBody()

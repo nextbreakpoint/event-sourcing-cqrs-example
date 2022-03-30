@@ -23,8 +23,6 @@ public class InsertDesignRequestMapper implements Mapper<RoutingContext, InsertD
             throw new IllegalArgumentException("the request's body doesn't contain the required properties: manifest, metadata, script");
         }
 
-        final Integer levels = bodyAsJson.getInteger("levels", 3);
-
         final String json = new JsonObject()
                 .put("manifest", manifest)
                 .put("metadata", metadata)
@@ -35,6 +33,6 @@ public class InsertDesignRequestMapper implements Mapper<RoutingContext, InsertD
 
         final UUID owner = UUID.fromString(principal.getString("user"));
 
-        return new InsertDesignRequest(owner, UUID.randomUUID(), UUID.randomUUID(), json, levels);
+        return new InsertDesignRequest(owner, UUID.randomUUID(), UUID.randomUUID(), json);
     }
 }

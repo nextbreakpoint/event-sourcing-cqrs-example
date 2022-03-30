@@ -7,6 +7,7 @@ import com.nextbreakpoint.blueprint.common.vertx.Controller;
 import com.nextbreakpoint.blueprint.common.vertx.MessageEmitter;
 import com.nextbreakpoint.blueprint.designs.Store;
 import com.nextbreakpoint.blueprint.designs.model.Design;
+import com.nextbreakpoint.blueprint.designs.persistence.dto.DeleteDesignRequest;
 import com.nextbreakpoint.blueprint.designs.persistence.dto.InsertDesignRequest;
 import rx.Observable;
 import rx.Single;
@@ -45,13 +46,21 @@ public class DesignDocumentUpdateRequestedController implements Controller<Input
 
     private Observable<DesignDocumentUpdateCompleted> onDesignDocumentUpdateRequested(DesignDocumentUpdateRequested event) {
         return store.insertDesign(new InsertDesignRequest(event.getDesignId(), createDesign(event), true))
-                .flatMap(result -> isCompleted(event) ? store.insertDesign(new InsertDesignRequest(event.getDesignId(), createDesign(event), false)) : Single.just(null))
+                .flatMap(result -> updateOrDelete(event))
                 .map(result -> new DesignDocumentUpdateCompleted(event.getDesignId(), event.getRevision()))
                 .toObservable();
     }
 
-    private boolean isCompleted(DesignDocumentUpdateRequested event) {
-        return event.getLevels() == 8 && completedTiles(event.getTiles()) == 21845;
+    private Single<?> updateOrDelete(DesignDocumentUpdateRequested event) {
+        if (isCompletedAndPublished(event)) {
+            return store.insertDesign(new InsertDesignRequest(event.getDesignId(), createDesign(event), false));
+        } else {
+            return store.deleteDesign(new DeleteDesignRequest(event.getDesignId(), false));
+        }
+    }
+
+    private boolean isCompletedAndPublished(DesignDocumentUpdateRequested event) {
+        return event.getLevels() == 8 && completedTiles(event.getTiles()) == 21845 && event.isPublished();
     }
 
     private int completedTiles(List<Tiles> tiles) {
@@ -67,9 +76,11 @@ public class DesignDocumentUpdateRequestedController implements Controller<Input
                 .withRevision(event.getRevision())
                 .withData(event.getData())
                 .withStatus(event.getStatus())
+                .withPublished(event.isPublished())
                 .withLevels(event.getLevels())
                 .withTiles(event.getTiles())
-                .withLastModified(FORMATTER.format(event.getModified()))
+                .withCreated(FORMATTER.format(event.getCreated()))
+                .withUpdated(FORMATTER.format(event.getUpdated()))
                 .build();
     }
 }

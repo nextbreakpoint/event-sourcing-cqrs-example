@@ -11,7 +11,7 @@ public class UpdateDesignCommandMapper implements Mapper<UpdateDesignRequest, De
                 .withDesignId(request.getUuid())
                 .withCommandId(request.getChange())
                 .withData(request.getJson())
-                .withLevels(request.getLevels())
+                .withPublished(request.getPublished())
                 .build();
     }
 }

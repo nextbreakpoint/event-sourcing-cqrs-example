@@ -30,7 +30,11 @@ cat <<EOF >/tmp/data.json
       "status": {
         "type": "keyword"
       },
-      "modified": {
+      "created": {
+          "type": "date",
+          "format": "date_time"
+      },
+      "updated": {
         "type": "date",
         "format": "date_time"
       }

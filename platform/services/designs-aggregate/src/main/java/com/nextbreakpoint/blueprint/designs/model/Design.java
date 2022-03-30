@@ -18,9 +18,11 @@ public class Design {
     private final String checksum;
     private final String revision;
     private final String status;
+    private final boolean published;
     private final int levels;
     private final ByteBuffer bitmap;
-    private final LocalDateTime lastModified;
+    private final LocalDateTime created;
+    private final LocalDateTime updated;
 
     public Design(
             UUID designId,
@@ -30,9 +32,11 @@ public class Design {
             String checksum,
             String revision,
             String status,
+            boolean published,
             int levels,
             ByteBuffer bitmap,
-            LocalDateTime lastModified
+            LocalDateTime created,
+            LocalDateTime updated
     ) {
         this.designId = designId;
         this.userId = userId;
@@ -41,8 +45,10 @@ public class Design {
         this.checksum = checksum;
         this.revision = revision;
         this.status = status;
+        this.published = published;
         this.levels = levels;
         this.bitmap = bitmap;
-        this.lastModified = lastModified;
+        this.created = created;
+        this.updated = updated;
     }
 }

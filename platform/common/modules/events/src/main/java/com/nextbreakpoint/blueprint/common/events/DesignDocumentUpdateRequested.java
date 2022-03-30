@@ -26,9 +26,11 @@ public class DesignDocumentUpdateRequested {
     private final String checksum;
     private final String revision;
     private final String status;
+    private final boolean published;
     private final int levels;
     private final List<Tiles> tiles;
-    private final LocalDateTime modified;
+    private final LocalDateTime created;
+    private final LocalDateTime updated;
 
     @JsonCreator
     public DesignDocumentUpdateRequested(
@@ -39,9 +41,11 @@ public class DesignDocumentUpdateRequested {
             @JsonProperty("checksum") String checksum,
             @JsonProperty("revision") String revision,
             @JsonProperty("status") String status,
+            @JsonProperty("published") boolean published,
             @JsonProperty("levels") int levels,
             @JsonProperty("tiles") List<Tiles> tiles,
-            @JsonProperty("modified") @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'") LocalDateTime modified
+            @JsonProperty("created") @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'") LocalDateTime created,
+            @JsonProperty("updated") @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'") LocalDateTime updated
     ) {
         this.designId = Objects.requireNonNull(designId);
         this.userId = Objects.requireNonNull(userId);
@@ -50,8 +54,10 @@ public class DesignDocumentUpdateRequested {
         this.checksum = Objects.requireNonNull(checksum);
         this.revision = Objects.requireNonNull(revision);
         this.status = Objects.requireNonNull(status);
+        this.published = published;
         this.levels = levels;
         this.tiles = Objects.requireNonNull(tiles);
-        this.modified = Objects.requireNonNull(modified);
+        this.created = Objects.requireNonNull(created);
+        this.updated = Objects.requireNonNull(updated);
     }
 }

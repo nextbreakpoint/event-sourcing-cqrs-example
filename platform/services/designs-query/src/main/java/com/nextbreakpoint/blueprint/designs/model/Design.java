@@ -21,9 +21,11 @@ public class Design {
     private final String checksum;
     private final String revision;
     private final String status;
+    private final boolean published;
     private final int levels;
     private final List<Tiles> tiles;
-    private final String lastModified;
+    private final String created;
+    private final String updated;
 
     @JsonCreator
     public Design(
@@ -34,9 +36,11 @@ public class Design {
             @JsonProperty("checksum") String checksum,
             @JsonProperty("revision") String revision,
             @JsonProperty("status") String status,
+            @JsonProperty("published") boolean published,
             @JsonProperty("levels") int levels,
             @JsonProperty("tiles") List<Tiles> tiles,
-            @JsonProperty("lastModified") String lastModified
+            @JsonProperty("created") String created,
+            @JsonProperty("updated") String updated
     ) {
         this.designId = Objects.requireNonNull(designId);
         this.userId = Objects.requireNonNull(userId);
@@ -45,8 +49,10 @@ public class Design {
         this.checksum = Objects.requireNonNull(checksum);
         this.revision = Objects.requireNonNull(revision);
         this.status = Objects.requireNonNull(status);
+        this.published = published;
         this.levels = levels;
         this.tiles = Objects.requireNonNull(tiles);
-        this.lastModified = Objects.requireNonNull(lastModified);
+        this.created = Objects.requireNonNull(created);
+        this.updated = Objects.requireNonNull(updated);
     }
 }

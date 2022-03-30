@@ -25,6 +25,4 @@ public interface TestConstants {
     String DATABASE_KEYSPACE = "test_designs_command";
 
     UUID USER_ID = new UUID(0L, 1L);
-
-    int LEVELS = 3;
 }

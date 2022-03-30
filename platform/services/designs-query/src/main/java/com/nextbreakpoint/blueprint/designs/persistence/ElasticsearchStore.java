@@ -145,7 +145,7 @@ public class ElasticsearchStore implements Store {
         return builder
                 .index(getIndexName(request.isDraft()))
                 .query(q -> q.matchAll(MatchAllQuery.of(a -> a)))
-                .sort(x -> x.field(f -> f.field("modified").order(SortOrder.Asc).format("strict_date_optional_time_nanos")) );
+                .sort(x -> x.field(f -> f.field("created").order(SortOrder.Desc).format("strict_date_optional_time_nanos")) );
     }
 
     private SearchRequest.Builder createExistsIndexRequest(SearchRequest.Builder builder, String indexName) {

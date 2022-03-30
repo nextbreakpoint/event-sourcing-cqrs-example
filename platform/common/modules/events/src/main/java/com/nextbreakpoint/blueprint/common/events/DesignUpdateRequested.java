@@ -18,7 +18,7 @@ public class DesignUpdateRequested {
     private final UUID userId;
     private final UUID commandId;
     private final String data;
-    private final int levels;
+    private final Boolean published;
 
     @JsonCreator
     public DesignUpdateRequested(
@@ -26,12 +26,12 @@ public class DesignUpdateRequested {
             @JsonProperty("userId") UUID userId,
             @JsonProperty("commandId") UUID commandId,
             @JsonProperty("data") String data,
-            @JsonProperty("levels") int levels
+            @JsonProperty("published") Boolean published
     ) {
         this.designId = Objects.requireNonNull(designId);
         this.userId = Objects.requireNonNull(userId);
         this.commandId = Objects.requireNonNull(commandId);
         this.data = Objects.requireNonNull(data);
-        this.levels = levels;
+        this.published = Objects.requireNonNull(published);
     }
 }

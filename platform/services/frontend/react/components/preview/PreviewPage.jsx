@@ -115,7 +115,7 @@ let PreviewPage = class PreviewPage extends React.Component {
         let metadata = this.state.design.metadata ? this.state.design.metadata : this.props.design.metadata
         let manifest = this.state.design.manifest ? this.state.design.manifest : this.props.design.manifest
 
-        const design = { manifest: manifest, script: script, metadata: metadata, levels: 8 }
+        const design = { manifest: manifest, script: script, metadata: metadata }
 
 //         component.props.handleHideUpdateDialog()
         component.props.handleHideErrorMessage()
@@ -179,8 +179,9 @@ let PreviewPage = class PreviewPage extends React.Component {
         let script = this.state.design.script ? this.state.design.script : this.props.design.script
         let metadata = this.state.design.metadata ? this.state.design.metadata : this.props.design.metadata
         let manifest = this.state.design.manifest ? this.state.design.manifest : this.props.design.manifest
+        let published = this.state.design.published ? true : false
 
-        const design = { manifest: manifest, script: script, metadata: metadata, levels: 3 }
+        const design = { manifest: manifest, script: script, metadata: metadata, published: published }
 
 //         component.props.handleHideUpdateDialog()
         component.props.handleHideErrorMessage()
@@ -233,7 +234,7 @@ let PreviewPage = class PreviewPage extends React.Component {
         let metadata = this.state.design.metadata ? this.state.design.metadata : this.props.design.metadata
         let manifest = this.state.design.manifest ? this.state.design.manifest : this.props.design.manifest
 
-        const design = { manifest: manifest, script: script, metadata: metadata, levels: 8 }
+        const design = { manifest: manifest, script: script, metadata: metadata, published: true }
 
 //         component.props.handleHideUpdateDialog()
         component.props.handleHideErrorMessage()
@@ -286,7 +287,7 @@ let PreviewPage = class PreviewPage extends React.Component {
         let metadata = this.state.design.metadata ? this.state.design.metadata : this.props.design.metadata
         let manifest = this.state.design.manifest ? this.state.design.manifest : this.props.design.manifest
 
-        const design = { manifest: manifest, script: script, metadata: metadata, levels: 3 }
+        const design = { manifest: manifest, script: script, metadata: metadata, published: false }
 
 //         component.props.handleHideUpdateDialog()
         component.props.handleHideErrorMessage()
@@ -371,7 +372,7 @@ let PreviewPage = class PreviewPage extends React.Component {
                                 <Typography variant="body" color="inherit" className="status">{design.checksum}</Typography>
                             </div>
                             <div className="status">
-                                <Typography variant="body" color="inherit" className="status">{design.modified}</Typography>
+                                <Typography variant="body" color="inherit" className="status">{design.updated}</Typography>
                             </div>
                         </Grid>
                         <Grid item xs={6}>

@@ -29,7 +29,7 @@ public class UpdateDesignRequestMapper implements Mapper<RoutingContext, UpdateD
             throw new IllegalArgumentException("the request's body doesn't contain the required properties: manifest, metadata, script");
         }
 
-        final Integer levels = bodyAsJson.getInteger("levels", 3);
+        final Boolean published = bodyAsJson.getBoolean("published", false);
 
         final String json = new JsonObject()
                 .put("manifest", manifest)
@@ -41,6 +41,6 @@ public class UpdateDesignRequestMapper implements Mapper<RoutingContext, UpdateD
 
         final UUID owner = UUID.fromString(principal.getString("user"));
 
-        return new UpdateDesignRequest(owner, UUID.randomUUID(), UUID.fromString(uuid), json, levels);
+        return new UpdateDesignRequest(owner, UUID.randomUUID(), UUID.fromString(uuid), json, published);
     }
 }

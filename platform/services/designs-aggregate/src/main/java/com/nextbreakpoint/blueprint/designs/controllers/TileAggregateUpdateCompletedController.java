@@ -61,9 +61,11 @@ public class TileAggregateUpdateCompletedController implements Controller<InputM
                 .withData(design.getData())
                 .withChecksum(design.getChecksum())
                 .withStatus(design.getStatus())
+                .withPublished(design.isPublished())
                 .withLevels(design.getLevels())
                 .withTiles(tiles)
-                .withModified(design.getLastModified())
+                .withCreated(design.getCreated())
+                .withUpdated(design.getUpdated())
                 .build();
     }
 }

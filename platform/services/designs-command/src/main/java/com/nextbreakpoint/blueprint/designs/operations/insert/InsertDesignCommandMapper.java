@@ -11,7 +11,6 @@ public class InsertDesignCommandMapper implements Mapper<InsertDesignRequest, De
                 .withDesignId(request.getUuid())
                 .withCommandId(request.getChange())
                 .withData(request.getJson())
-                .withLevels(request.getLevels())
                 .build();
     }
 }

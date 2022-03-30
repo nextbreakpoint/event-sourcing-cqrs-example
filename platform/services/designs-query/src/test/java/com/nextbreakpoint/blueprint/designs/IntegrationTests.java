@@ -58,9 +58,9 @@ public class IntegrationTests {
 
   @BeforeEach
   public void setup() {
-    final Design design1 = new Design(TestConstants.DESIGN_UUID_1, TestConstants.USER_ID, UUID.randomUUID(), JSON_1, Checksum.of(JSON_1), TestConstants.REVISION_0, "CREATED", TestConstants.LEVELS, TestUtils.getTiles(TestConstants.LEVELS, 0.0f), FORMATTER.format(Instant.now()));
-    final Design design2 = new Design(TestConstants.DESIGN_UUID_2, TestConstants.USER_ID, UUID.randomUUID(), JSON_2, Checksum.of(JSON_2), TestConstants.REVISION_0, "UPDATED", TestConstants.LEVELS, TestUtils.getTiles(TestConstants.LEVELS, 0.2f), FORMATTER.format(Instant.now()));
-    final Design design3 = new Design(TestConstants.DESIGN_UUID_3, TestConstants.USER_ID, UUID.randomUUID(), JSON_3, Checksum.of(JSON_3), TestConstants.REVISION_0, "UPDATED", TestConstants.LEVELS, TestUtils.getTiles(TestConstants.LEVELS, 0.5f), FORMATTER.format(Instant.now()));
+    final Design design1 = new Design(TestConstants.DESIGN_UUID_1, TestConstants.USER_ID, UUID.randomUUID(), JSON_1, Checksum.of(JSON_1), TestConstants.REVISION_0, "CREATED", false, TestConstants.LEVELS, TestUtils.getTiles(TestConstants.LEVELS, 0.0f), FORMATTER.format(Instant.now()), FORMATTER.format(Instant.now()));
+    final Design design2 = new Design(TestConstants.DESIGN_UUID_2, TestConstants.USER_ID, UUID.randomUUID(), JSON_2, Checksum.of(JSON_2), TestConstants.REVISION_0, "UPDATED", false, TestConstants.LEVELS, TestUtils.getTiles(TestConstants.LEVELS, 0.2f), FORMATTER.format(Instant.now()), FORMATTER.format(Instant.now()));
+    final Design design3 = new Design(TestConstants.DESIGN_UUID_3, TestConstants.USER_ID, UUID.randomUUID(), JSON_3, Checksum.of(JSON_3), TestConstants.REVISION_0, "UPDATED", false, TestConstants.LEVELS, TestUtils.getTiles(TestConstants.LEVELS, 0.5f), FORMATTER.format(Instant.now()), FORMATTER.format(Instant.now()));
 
     testCases.deleteDesigns();
     testCases.deleteDraftDesigns();
@@ -85,10 +85,10 @@ public class IntegrationTests {
     final List<Tiles> tiles3 = TestUtils.getTiles(TestConstants.LEVELS, 100f);
     final List<Tiles> tiles4 = TestUtils.getTiles(TestConstants.LEVELS, 100f);
 
-    final DesignDocumentUpdateRequested designDocumentUpdateRequested1 = new DesignDocumentUpdateRequested(designId1, TestConstants.USER_ID, UUID.randomUUID(), TestConstants.JSON_1, TestConstants.CHECKSUM_1, TestConstants.REVISION_0, "CREATED", TestConstants.LEVELS, tiles1, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
-    final DesignDocumentUpdateRequested designDocumentUpdateRequested2 = new DesignDocumentUpdateRequested(designId1, TestConstants.USER_ID, UUID.randomUUID(), TestConstants.JSON_1, TestConstants.CHECKSUM_1, TestConstants.REVISION_1, "UPDATED", TestConstants.LEVELS, tiles2, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
-    final DesignDocumentUpdateRequested designDocumentUpdateRequested3 = new DesignDocumentUpdateRequested(designId1, TestConstants.USER_ID, UUID.randomUUID(), TestConstants.JSON_1, TestConstants.CHECKSUM_1, TestConstants.REVISION_2, "UPDATED", TestConstants.LEVELS, tiles3, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
-    final DesignDocumentUpdateRequested designDocumentUpdateRequested4 = new DesignDocumentUpdateRequested(designId2, TestConstants.USER_ID, UUID.randomUUID(), TestConstants.JSON_2, TestConstants.CHECKSUM_2, TestConstants.REVISION_0, "UPDATED", TestConstants.LEVELS, tiles4, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
+    final DesignDocumentUpdateRequested designDocumentUpdateRequested1 = new DesignDocumentUpdateRequested(designId1, TestConstants.USER_ID, UUID.randomUUID(), TestConstants.JSON_1, TestConstants.CHECKSUM_1, TestConstants.REVISION_0, "CREATED", false, TestConstants.LEVELS, tiles1, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")), LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
+    final DesignDocumentUpdateRequested designDocumentUpdateRequested2 = new DesignDocumentUpdateRequested(designId1, TestConstants.USER_ID, UUID.randomUUID(), TestConstants.JSON_1, TestConstants.CHECKSUM_1, TestConstants.REVISION_1, "UPDATED", false, TestConstants.LEVELS, tiles2, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")), LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
+    final DesignDocumentUpdateRequested designDocumentUpdateRequested3 = new DesignDocumentUpdateRequested(designId1, TestConstants.USER_ID, UUID.randomUUID(), TestConstants.JSON_1, TestConstants.CHECKSUM_1, TestConstants.REVISION_2, "UPDATED", false, TestConstants.LEVELS, tiles3, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")), LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
+    final DesignDocumentUpdateRequested designDocumentUpdateRequested4 = new DesignDocumentUpdateRequested(designId2, TestConstants.USER_ID, UUID.randomUUID(), TestConstants.JSON_2, TestConstants.CHECKSUM_2, TestConstants.REVISION_0, "UPDATED", false, TestConstants.LEVELS, tiles4, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")), LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
 
     final DesignDocumentUpdateRequestedOutputMapper outputMapper = new DesignDocumentUpdateRequestedOutputMapper(TestConstants.MESSAGE_SOURCE);
 
@@ -109,7 +109,7 @@ public class IntegrationTests {
 
     final List<Tiles> tiles = TestUtils.getTiles(TestConstants.LEVELS, 100.0f);
 
-    final DesignDocumentUpdateRequested designDocumentUpdateRequested = new DesignDocumentUpdateRequested(designId, TestConstants.USER_ID, UUID.randomUUID(), TestConstants.JSON_2, TestConstants.CHECKSUM_2, TestConstants.REVISION_0, "CREATED", TestConstants.LEVELS, tiles, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
+    final DesignDocumentUpdateRequested designDocumentUpdateRequested = new DesignDocumentUpdateRequested(designId, TestConstants.USER_ID, UUID.randomUUID(), TestConstants.JSON_2, TestConstants.CHECKSUM_2, TestConstants.REVISION_0, "CREATED", false, TestConstants.LEVELS, tiles, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")), LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
     final DesignDocumentDeleteRequested designDocumentDeleteRequested = new DesignDocumentDeleteRequested(designId, TestConstants.REVISION_0);
 
     final DesignDocumentUpdateRequestedOutputMapper outputMapper1 = new DesignDocumentUpdateRequestedOutputMapper(TestConstants.MESSAGE_SOURCE);
@@ -201,9 +201,12 @@ public class IntegrationTests {
     assertThat(sortedResults.get(0).getRevision()).isNotNull();
     assertThat(sortedResults.get(1).getRevision()).isNotNull();
     assertThat(sortedResults.get(2).getRevision()).isNotNull();
-    assertThat(sortedResults.get(0).getModified()).isNotNull();
-    assertThat(sortedResults.get(1).getModified()).isNotNull();
-    assertThat(sortedResults.get(2).getModified()).isNotNull();
+    assertThat(sortedResults.get(0).getCreated()).isNotNull();
+    assertThat(sortedResults.get(1).getCreated()).isNotNull();
+    assertThat(sortedResults.get(2).getCreated()).isNotNull();
+    assertThat(sortedResults.get(0).getUpdated()).isNotNull();
+    assertThat(sortedResults.get(1).getUpdated()).isNotNull();
+    assertThat(sortedResults.get(2).getUpdated()).isNotNull();
     assertThat(sortedResults.get(0).getLevels()).isEqualTo(TestConstants.LEVELS);
     assertThat(sortedResults.get(1).getLevels()).isEqualTo(TestConstants.LEVELS);
     assertThat(sortedResults.get(2).getLevels()).isEqualTo(TestConstants.LEVELS);
@@ -222,7 +225,8 @@ public class IntegrationTests {
     String json1 = new JsonObject(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT1)).toString();
     assertThat(result.getUuid()).isEqualTo(TestConstants.DESIGN_UUID_1);
     assertThat(result.getJson()).isEqualTo(json1);
-    assertThat(result.getModified()).isNotNull();
+    assertThat(result.getCreated()).isNotNull();
+    assertThat(result.getUpdated()).isNotNull();
     assertThat(result.getChecksum()).isNotNull();
     assertThat(result.getRevision()).isNotNull();
     assertThat(result.getLevels()).isEqualTo(TestConstants.LEVELS);
@@ -263,9 +267,12 @@ public class IntegrationTests {
     assertThat(sortedResults.get(0).getRevision()).isNotNull();
     assertThat(sortedResults.get(1).getRevision()).isNotNull();
     assertThat(sortedResults.get(2).getRevision()).isNotNull();
-    assertThat(sortedResults.get(0).getModified()).isNotNull();
-    assertThat(sortedResults.get(1).getModified()).isNotNull();
-    assertThat(sortedResults.get(2).getModified()).isNotNull();
+    assertThat(sortedResults.get(0).getCreated()).isNotNull();
+    assertThat(sortedResults.get(1).getCreated()).isNotNull();
+    assertThat(sortedResults.get(2).getCreated()).isNotNull();
+    assertThat(sortedResults.get(0).getUpdated()).isNotNull();
+    assertThat(sortedResults.get(1).getUpdated()).isNotNull();
+    assertThat(sortedResults.get(2).getUpdated()).isNotNull();
     assertThat(sortedResults.get(0).getLevels()).isEqualTo(TestConstants.LEVELS);
     assertThat(sortedResults.get(1).getLevels()).isEqualTo(TestConstants.LEVELS);
     assertThat(sortedResults.get(2).getLevels()).isEqualTo(TestConstants.LEVELS);
@@ -284,7 +291,8 @@ public class IntegrationTests {
     String json1 = new JsonObject(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT1)).toString();
     assertThat(result.getUuid()).isEqualTo(TestConstants.DESIGN_UUID_1);
     assertThat(result.getJson()).isEqualTo(json1);
-    assertThat(result.getModified()).isNotNull();
+    assertThat(result.getCreated()).isNotNull();
+    assertThat(result.getUpdated()).isNotNull();
     assertThat(result.getChecksum()).isNotNull();
     assertThat(result.getRevision()).isNotNull();
     assertThat(result.getLevels()).isEqualTo(TestConstants.LEVELS);
@@ -325,9 +333,12 @@ public class IntegrationTests {
     assertThat(sortedResults1.get(0).getRevision()).isNotNull();
     assertThat(sortedResults1.get(1).getRevision()).isNotNull();
     assertThat(sortedResults1.get(2).getRevision()).isNotNull();
-    assertThat(sortedResults1.get(0).getModified()).isNotNull();
-    assertThat(sortedResults1.get(1).getModified()).isNotNull();
-    assertThat(sortedResults1.get(2).getModified()).isNotNull();
+    assertThat(sortedResults1.get(0).getCreated()).isNotNull();
+    assertThat(sortedResults1.get(1).getCreated()).isNotNull();
+    assertThat(sortedResults1.get(2).getCreated()).isNotNull();
+    assertThat(sortedResults1.get(0).getUpdated()).isNotNull();
+    assertThat(sortedResults1.get(1).getUpdated()).isNotNull();
+    assertThat(sortedResults1.get(2).getUpdated()).isNotNull();
     assertThat(sortedResults1.get(0).getLevels()).isEqualTo(TestConstants.LEVELS);
     assertThat(sortedResults1.get(1).getLevels()).isEqualTo(TestConstants.LEVELS);
     assertThat(sortedResults1.get(2).getLevels()).isEqualTo(TestConstants.LEVELS);
@@ -349,8 +360,10 @@ public class IntegrationTests {
     assertThat(sortedResults2.get(1).getChecksum()).isEqualTo(Checksum.of(JSON_3));
     assertThat(sortedResults2.get(0).getRevision()).isNotNull();
     assertThat(sortedResults2.get(1).getRevision()).isNotNull();
-    assertThat(sortedResults2.get(0).getModified()).isNotNull();
-    assertThat(sortedResults2.get(1).getModified()).isNotNull();
+    assertThat(sortedResults2.get(0).getCreated()).isNotNull();
+    assertThat(sortedResults2.get(1).getCreated()).isNotNull();
+    assertThat(sortedResults2.get(0).getUpdated()).isNotNull();
+    assertThat(sortedResults2.get(1).getUpdated()).isNotNull();
     assertThat(sortedResults2.get(0).getLevels()).isEqualTo(TestConstants.LEVELS);
     assertThat(sortedResults2.get(1).getLevels()).isEqualTo(TestConstants.LEVELS);
     assertThat(sortedResults2.get(0).getTiles()).isNotNull();
@@ -367,7 +380,8 @@ public class IntegrationTests {
     String json1 = new JsonObject(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT1)).toString();
     assertThat(result1.getUuid()).isEqualTo(TestConstants.DESIGN_UUID_1);
     assertThat(result1.getJson()).isEqualTo(json1);
-    assertThat(result1.getModified()).isNotNull();
+    assertThat(result1.getCreated()).isNotNull();
+    assertThat(result1.getUpdated()).isNotNull();
     assertThat(result1.getChecksum()).isNotNull();
     assertThat(result1.getRevision()).isNotNull();
     assertThat(result1.getLevels()).isEqualTo(TestConstants.LEVELS);
@@ -378,7 +392,8 @@ public class IntegrationTests {
     String json2 = new JsonObject(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT2)).toString();
     assertThat(result2.getUuid()).isEqualTo(TestConstants.DESIGN_UUID_2);
     assertThat(result2.getJson()).isEqualTo(json2);
-    assertThat(result2.getModified()).isNotNull();
+    assertThat(result2.getCreated()).isNotNull();
+    assertThat(result2.getUpdated()).isNotNull();
     assertThat(result2.getChecksum()).isNotNull();
     assertThat(result2.getRevision()).isNotNull();
     assertThat(result2.getLevels()).isEqualTo(TestConstants.LEVELS);

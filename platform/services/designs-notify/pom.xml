@@ -10,7 +10,7 @@
     <parent>
         <groupId>com.nextbreakpoint</groupId>
         <artifactId>com.nextbreakpoint.blueprint.service</artifactId>
-        <version>1.0.0-wip2-9c3135ce-1648158732</version>
+        <version>1.0.0-wip2-93fdc42b-1648207767</version>
     </parent>
     <repositories>
         <repository>

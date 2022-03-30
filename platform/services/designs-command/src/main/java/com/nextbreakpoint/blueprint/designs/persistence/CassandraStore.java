@@ -21,7 +21,6 @@ public class CassandraStore implements Store {
     private static final String INSERT_MESSAGE = "INSERT INTO MESSAGE (MESSAGE_TOKEN, MESSAGE_KEY, MESSAGE_UUID, MESSAGE_TYPE, MESSAGE_VALUE, MESSAGE_SOURCE, MESSAGE_TIMESTAMP, TRACING_TRACE_ID, TRACING_SPAN_ID) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
     private static final String SELECT_MESSAGES = "SELECT MESSAGE_TOKEN, MESSAGE_KEY, MESSAGE_UUID, MESSAGE_TYPE, MESSAGE_VALUE, MESSAGE_SOURCE, MESSAGE_TIMESTAMP, TRACING_TRACE_ID, TRACING_SPAN_ID FROM MESSAGE WHERE MESSAGE_KEY = ? AND MESSAGE_TOKEN <= ? AND MESSAGE_TOKEN > ?";
 
-    private final String keyspace;
     private final Supplier<CassandraClient> supplier;
 
     private CassandraClient session;
@@ -29,8 +28,7 @@ public class CassandraStore implements Store {
     private Single<PreparedStatement> insertMessage;
     private Single<PreparedStatement> selectMessages;
 
-    public CassandraStore(String keyspace, Supplier<CassandraClient> supplier) {
-        this.keyspace = Objects.requireNonNull(keyspace);
+    public CassandraStore(Supplier<CassandraClient> supplier) {
         this.supplier = Objects.requireNonNull(supplier);
     }
 

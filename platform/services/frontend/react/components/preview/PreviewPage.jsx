@@ -10,7 +10,9 @@ import { Map, TileLayer } from 'react-leaflet'
 import { withStyles } from '@material-ui/core/styles'
 
 import CssBaseline from '@material-ui/core/CssBaseline'
+import Box from '@material-ui/core/Box'
 import Button from '@material-ui/core/Button'
+import Typography from '@material-ui/core/Typography'
 import Grid from '@material-ui/core/Grid'
 import Dialog from '@material-ui/core/Dialog'
 import DialogActions from '@material-ui/core/DialogActions'
@@ -178,7 +180,7 @@ let PreviewPage = class PreviewPage extends React.Component {
         let metadata = this.state.design.metadata ? this.state.design.metadata : this.props.design.metadata
         let manifest = this.state.design.manifest ? this.state.design.manifest : this.props.design.manifest
 
-        const design = { manifest: manifest, script: script, metadata: metadata, levels: 8 }
+        const design = { manifest: manifest, script: script, metadata: metadata, levels: 3 }
 
 //         component.props.handleHideUpdateDialog()
         component.props.handleHideErrorMessage()
@@ -343,7 +345,7 @@ let PreviewPage = class PreviewPage extends React.Component {
     }
 
     render() {
-        const { classes, uuid, checksum } = this.props
+        const { classes, uuid, checksum, design } = this.props
 
         let script = this.state.design.script ? this.state.design.script : this.props.design.script
         let metadata = this.state.design.metadata ? this.state.design.metadata : this.props.design.metadata
@@ -359,9 +361,18 @@ let PreviewPage = class PreviewPage extends React.Component {
                     </Grid>
                     <Grid container xs={12} justify="space-between" alignItems="center" className="container">
                         <Grid item xs={6}>
+                            <div className="status">
+                                <Typography variant="body" color="inherit" className="status">{design.draft ? 'Draft' : ''}</Typography>
+                            </div>
                             <Map center={[0, 0]} zoom={2} attributionControl={false} dragging={false} zoomControl={false} scrollWheelZoom={false} touchZoom={false}>
                                 {this.renderMapLayer(url)}
                             </Map>
+                            <div className="status">
+                                <Typography variant="body" color="inherit" className="status">{design.checksum}</Typography>
+                            </div>
+                            <div className="status">
+                                <Typography variant="body" color="inherit" className="status">{design.modified}</Typography>
+                            </div>
                         </Grid>
                         <Grid item xs={6}>
                             <DesignForm script={script} metadata={metadata} onScriptChanged={this.handleScriptChanged} onMetadataChanged={this.handleMetadataChanged}/>
@@ -372,12 +383,13 @@ let PreviewPage = class PreviewPage extends React.Component {
                                 <Button className="button" variant="outlined" color="primary" onClick={this.handleUpdate}>
                                   Update
                                 </Button>
-                                <Button className="button" variant="outlined" color="primary" onClick={this.handlePublish}>
+                                <Button disabled={design.published == true} className="button" variant="outlined" color="primary" onClick={this.handlePublish}>
                                   Publish
                                 </Button>
-                                <Button className="button" variant="outlined" color="primary" onClick={this.handleUnpublish}>
+                                <Button disabled={design.published == false} className="button" variant="outlined" color="primary" onClick={this.handleUnpublish}>
                                   Unpublish
                                 </Button>
+                                <Typography variant="body" color="inherit" className="status">Progress: {design.percentage}%</Typography>
                             </div>
                         </Grid>
                     </Grid>

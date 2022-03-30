@@ -10,10 +10,10 @@ import com.nextbreakpoint.blueprint.designs.model.Design;
 import rx.Observable;
 import rx.Single;
 
-import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class TileAggregateUpdateCompletedController implements Controller<InputMessage, Void> {
     private final Mapper<InputMessage, TileAggregateUpdateCompleted> inputMapper;
@@ -47,9 +47,10 @@ public class TileAggregateUpdateCompletedController implements Controller<InputM
     }
 
     private DesignDocumentUpdateRequested createEvent(Design design) {
-        final List<Tiles> tiles = design.getTiles().stream()
-                .sorted(Comparator.comparing(Level::getLevel))
-                .map(Level::toTiles)
+        final TilesBitmap bitmap = TilesBitmap.of(design.getBitmap());
+
+        final List<Tiles> tiles = IntStream.range(0, 8)
+                .mapToObj(bitmap::toTiles)
                 .collect(Collectors.toList());
 
         return DesignDocumentUpdateRequested.builder()

@@ -104,7 +104,7 @@ public class TestUtils {
     private static Tiles makeTiles(int level, float completePercentage) {
         final int total = (int) Math.rint(Math.pow(2, level * 2));
         final int completed = (int) Math.rint((completePercentage * total) / 100f);
-        return new Tiles(level, completed);
+        return new Tiles(level, total, completed);
     }
 
     @NotNull

@@ -3,10 +3,6 @@ package com.nextbreakpoint.blueprint.designs.persistence;
 import com.datastax.oss.driver.api.core.ConsistencyLevel;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.Row;
-import com.datastax.oss.driver.api.core.data.UdtValue;
-import com.datastax.oss.driver.api.core.metadata.Metadata;
-import com.datastax.oss.driver.api.core.metadata.schema.KeyspaceMetadata;
-import com.datastax.oss.driver.api.core.type.UserDefinedType;
 import com.nextbreakpoint.blueprint.common.core.*;
 import com.nextbreakpoint.blueprint.designs.Store;
 import com.nextbreakpoint.blueprint.designs.model.Design;
@@ -15,6 +11,7 @@ import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.rxjava.cassandra.CassandraClient;
 import rx.Single;
 
+import java.nio.ByteBuffer;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -22,7 +19,6 @@ import java.time.ZoneOffset;
 import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 public class CassandraStore implements Store {
     private final Logger logger = LoggerFactory.getLogger(CassandraStore.class.getName());
@@ -33,13 +29,12 @@ public class CassandraStore implements Store {
     private static final String ERROR_INSERT_MESSAGE = "An error occurred while inserting a message";
     private static final String ERROR_SELECT_MESSAGES = "An error occurred while fetching messages";
 
-    private static final String SELECT_DESIGN = "SELECT COMMAND_USER, COMMAND_UUID, DESIGN_UUID, DESIGN_REVISION, DESIGN_DATA, DESIGN_CHECKSUM, DESIGN_STATUS, DESIGN_LEVELS, DESIGN_TILES, DESIGN_TIMESTAMP FROM DESIGN WHERE DESIGN_UUID = ?";
-    private static final String INSERT_DESIGN = "INSERT INTO DESIGN (COMMAND_USER, COMMAND_UUID, DESIGN_UUID, DESIGN_REVISION, DESIGN_DATA, DESIGN_CHECKSUM, DESIGN_STATUS, DESIGN_LEVELS, DESIGN_TILES, DESIGN_TIMESTAMP) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    private static final String SELECT_DESIGN = "SELECT COMMAND_USER, COMMAND_UUID, DESIGN_UUID, DESIGN_REVISION, DESIGN_DATA, DESIGN_CHECKSUM, DESIGN_STATUS, DESIGN_LEVELS, DESIGN_BITMAP, DESIGN_TIMESTAMP FROM DESIGN WHERE DESIGN_UUID = ?";
+    private static final String INSERT_DESIGN = "INSERT INTO DESIGN (COMMAND_USER, COMMAND_UUID, DESIGN_UUID, DESIGN_REVISION, DESIGN_DATA, DESIGN_CHECKSUM, DESIGN_STATUS, DESIGN_LEVELS, DESIGN_BITMAP, DESIGN_TIMESTAMP) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     private static final String DELETE_DESIGN = "DELETE FROM DESIGN WHERE DESIGN_UUID = ?";
     private static final String INSERT_MESSAGE = "INSERT INTO MESSAGE (MESSAGE_TOKEN, MESSAGE_KEY, MESSAGE_UUID, MESSAGE_TYPE, MESSAGE_VALUE, MESSAGE_SOURCE, MESSAGE_TIMESTAMP, TRACING_TRACE_ID, TRACING_SPAN_ID) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
     private static final String SELECT_MESSAGES = "SELECT MESSAGE_TOKEN, MESSAGE_KEY, MESSAGE_UUID, MESSAGE_TYPE, MESSAGE_VALUE, MESSAGE_SOURCE, MESSAGE_TIMESTAMP, TRACING_TRACE_ID, TRACING_SPAN_ID FROM MESSAGE WHERE MESSAGE_KEY = ? AND MESSAGE_TOKEN <= ? AND MESSAGE_TOKEN > ?";
 
-    private final String keyspace;
     private final Supplier<CassandraClient> supplier;
 
     private CassandraClient session;
@@ -49,10 +44,8 @@ public class CassandraStore implements Store {
     private Single<PreparedStatement> deleteDesign;
     private Single<PreparedStatement> insertMessage;
     private Single<PreparedStatement> selectMessages;
-    private Single<Metadata> metadata;
 
-    public CassandraStore(String keyspace, Supplier<CassandraClient> supplier) {
-        this.keyspace = Objects.requireNonNull(keyspace);
+    public CassandraStore(Supplier<CassandraClient> supplier) {
         this.supplier = Objects.requireNonNull(supplier);
     }
 
@@ -73,7 +66,7 @@ public class CassandraStore implements Store {
     @Override
     public Single<Void> updateDesign(Design design) {
         return withSession()
-                .flatMap(session -> getTileType().flatMap(levelType -> insertDesign(session, makeInsertDesignParams(design, levelType))))
+                .flatMap(session -> insertDesign(session, makeInsertDesignParams(design)))
                 .doOnError(err -> handleError(ERROR_INSERT_DESIGN, err));
     }
 
@@ -101,21 +94,12 @@ public class CassandraStore implements Store {
         return rows.stream().findFirst().map(this::convertRowToDesign);
     }
 
-    private Single<UserDefinedType> getTileType() {
-        return metadata.map(metadata -> metadata.getKeyspace(keyspace).orElseThrow()).map(this::getTileType);
-    }
-
-    private UserDefinedType getTileType(KeyspaceMetadata metadata) {
-        return metadata.getUserDefinedType("LEVEL").orElseThrow(() -> new RuntimeException("UDT not found: LEVEL"));
-    }
-
     private Single<CassandraClient> withSession() {
         if (session == null) {
             session = supplier.get();
             if (session == null) {
                 return Single.error(new RuntimeException("Cannot create session"));
             }
-            metadata = session.rxMetadata();
             selectDesign = session.rxPrepare(SELECT_DESIGN);
             insertDesign = session.rxPrepare(INSERT_DESIGN);
             deleteDesign = session.rxPrepare(DELETE_DESIGN);
@@ -174,11 +158,8 @@ public class CassandraStore implements Store {
         final int levels = row.getInt("DESIGN_LEVELS");
         final Instant updated = row.getInstant("DESIGN_TIMESTAMP");
         final String revision = row.getString("DESIGN_REVISION");
-        final List<UdtValue> udfTiles = row.getList("DESIGN_TILES", UdtValue.class);
-        final List<Level> tiles = IntStream.range(0, udfTiles.size())
-                .mapToObj(level -> convertUDTToLevel(level, udfTiles.get(level)))
-                .collect(Collectors.toList());
-        return new Design(designId, userId, commandId, data, checksum, revision, status, levels, tiles, toDate(updated));
+        final ByteBuffer bitmap = row.getByteBuffer("DESIGN_BITMAP");
+        return new Design(designId, userId, commandId, data, checksum, revision, status, levels, bitmap, toDate(updated));
     }
 
     private InputMessage convertRowToMessage(Row row) {
@@ -223,11 +204,7 @@ public class CassandraStore implements Store {
         return new Object[] { uuid };
     }
 
-    private Object[] makeInsertDesignParams(Design design, UserDefinedType levelType) {
-        final List<UdtValue> tiles = design.getTiles().stream()
-                .map(level -> convertLevelToUDT(levelType, level))
-                .collect(Collectors.toList());
-
+    private Object[] makeInsertDesignParams(Design design) {
         return new Object[] {
                 design.getUserId(),
                 design.getCommandId(),
@@ -237,21 +214,13 @@ public class CassandraStore implements Store {
                 Checksum.of(design.getData()),
                 design.getStatus(),
                 design.getLevels(),
-                tiles,
+                design.getBitmap(),
                 design.getLastModified().toInstant(ZoneOffset.UTC)
         };
     }
 
     private Object[] makeDeleteDesignParams(Design design) {
         return new Object[] { design.getDesignId() };
-    }
-
-    private Level convertUDTToLevel(Integer level, UdtValue udtValue) {
-        return Level.of(level, udtValue.getList("TILES", Byte.class));
-    }
-
-    private UdtValue convertLevelToUDT(UserDefinedType definedType, Level level) {
-        return definedType.newValue().setList("TILES", level.getTiles(), Byte.class);
     }
 
     private void handleError(String message, Throwable err) {

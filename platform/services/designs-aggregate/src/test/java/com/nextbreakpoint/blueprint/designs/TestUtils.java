@@ -47,10 +47,23 @@ public class TestUtils {
     }
 
     @NotNull
-    public static List<Level> getTiles(int levels, float completePercentage) {
-        return IntStream.range(0, levels)
-                .mapToObj(level -> makeLevel(level, completePercentage))
-                .collect(Collectors.toList());
+    public static TilesBitmap createBitmap(int levels, float completePercentage) {
+        TilesBitmap bitmap = TilesBitmap.empty();
+
+        IntStream.range(0, levels)
+                .forEach(level -> TestUtils.makeLevel(bitmap, level, completePercentage));
+
+        return bitmap;
+    }
+
+    private static void makeLevel(TilesBitmap bitmap, int level, float completePercentage) {
+        final int total = (int) Math.rint(Math.pow(2, level * 2));
+        final int limit = (int) Math.rint(completePercentage * total);
+
+        TestUtils.generateTiles(level)
+                .stream()
+                .limit(limit)
+                .forEach(tile -> bitmap.putTile(tile.getLevel(), tile.getRow(), tile.getCol()));
     }
 
     @NotNull
@@ -64,20 +77,5 @@ public class TestUtils {
                                 .map(col -> new com.nextbreakpoint.blueprint.common.core.Tile(level, row, col))
                 )
                 .collect(Collectors.toList());
-    }
-
-    @NotNull
-    private static Level makeLevel(int level, float completePercentage) {
-        final int total = (int) Math.rint(Math.pow(2, level * 2));
-        final int limit = (int) Math.rint(completePercentage * total);
-
-        final Level tiles = Level.createEmpty(level);
-
-        TestUtils.generateTiles(level)
-                .stream()
-                .limit(limit)
-                .forEach(tile -> tiles.putTile(tile.getRow(), tile.getCol()));
-
-        return tiles;
     }
 }

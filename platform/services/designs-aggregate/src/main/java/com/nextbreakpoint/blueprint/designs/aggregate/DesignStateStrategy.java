@@ -3,7 +3,7 @@ package com.nextbreakpoint.blueprint.designs.aggregate;
 import com.nextbreakpoint.blueprint.common.core.Checksum;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.core.Json;
-import com.nextbreakpoint.blueprint.common.core.Level;
+import com.nextbreakpoint.blueprint.common.core.TilesBitmap;
 import com.nextbreakpoint.blueprint.common.events.DesignDeleteRequested;
 import com.nextbreakpoint.blueprint.common.events.DesignInsertRequested;
 import com.nextbreakpoint.blueprint.common.events.DesignUpdateRequested;
@@ -17,8 +17,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 public class DesignStateStrategy {
     private final Logger logger = LoggerFactory.getLogger(DesignStateStrategy.class.getName());
@@ -52,23 +50,23 @@ public class DesignStateStrategy {
         switch (type) {
             case DesignInsertRequested.TYPE: {
                 DesignInsertRequested event = Json.decodeValue(value, DesignInsertRequested.class);
-                state.design = new Design(event.getDesignId(), event.getUserId(), event.getCommandId(), event.getData(), Checksum.of(event.getData()), token, "CREATED", event.getLevels(), createEmptyTiles(), toDateTime(timestamp));
+                state.design = new Design(event.getDesignId(), event.getUserId(), event.getCommandId(), event.getData(), Checksum.of(event.getData()), token, "CREATED", event.getLevels(), createEmptyBitmap().getBitmap(), toDateTime(timestamp));
                 break;
             }
             case DesignUpdateRequested.TYPE: {
                 DesignUpdateRequested event = Json.decodeValue(value, DesignUpdateRequested.class);
-                state.design = new Design(event.getDesignId(), event.getUserId(), event.getCommandId(), event.getData(), Checksum.of(event.getData()), token, "UPDATED", event.getLevels(), createEmptyTiles(), toDateTime(timestamp));
+                state.design = new Design(event.getDesignId(), event.getUserId(), event.getCommandId(), event.getData(), Checksum.of(event.getData()), token, "UPDATED", event.getLevels(), createEmptyBitmap().getBitmap(), toDateTime(timestamp));
                 break;
             }
             case DesignDeleteRequested.TYPE: {
                 DesignDeleteRequested event = Json.decodeValue(value, DesignDeleteRequested.class);
-                state.design = new Design(event.getDesignId(), event.getUserId(), event.getCommandId(), state.design.getData(), state.design.getChecksum(), token, "DELETED", state.design.getLevels(), state.design.getTiles(), toDateTime(timestamp));
+                state.design = new Design(event.getDesignId(), event.getUserId(), event.getCommandId(), state.design.getData(), state.design.getChecksum(), token, "DELETED", state.design.getLevels(), state.design.getBitmap(), toDateTime(timestamp));
                 break;
             }
             case TileRenderCompleted.TYPE: {
                 TileRenderCompleted event = Json.decodeValue(value, TileRenderCompleted.class);
-                state.design.getTiles().get(event.getLevel()).putTile(event.getRow(), event.getCol());
-                state.design = new Design(event.getDesignId(), state.design.getUserId(), state.design.getCommandId(), state.design.getData(), state.design.getChecksum(), token, state.design.getStatus(), state.design.getLevels(), state.design.getTiles(), toDateTime(timestamp));
+                TilesBitmap.of(state.design.getBitmap()).putTile(event.getLevel(), event.getRow(), event.getCol());
+                state.design = new Design(event.getDesignId(), state.design.getUserId(), state.design.getCommandId(), state.design.getData(), state.design.getChecksum(), token, state.design.getStatus(), state.design.getLevels(), state.design.getBitmap(), toDateTime(timestamp));
                 break;
             }
             default: {
@@ -76,8 +74,8 @@ public class DesignStateStrategy {
         }
     }
 
-    private List<Level> createEmptyTiles() {
-        return IntStream.range(0, 8).mapToObj(Level::createEmpty).collect(Collectors.toList());
+    private TilesBitmap createEmptyBitmap() {
+        return TilesBitmap.empty();
     }
 
     private class Accumulator {

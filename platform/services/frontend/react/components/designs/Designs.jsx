@@ -88,11 +88,22 @@ let Designs = class Designs extends React.Component {
 
         component.props.handleLoadDesigns()
 
+        function computePercentage(design) {
+            const levels = [0,1,2,3,4,5,6,7];
+            let total = levels.map(i => design.tiles[i].total)
+                .reduce((previousValue, currentValue) => previousValue + currentValue, 0)
+            let completed = levels.map(i => design.tiles[i].completed)
+                .reduce((previousValue, currentValue) => previousValue + currentValue, 0)
+            let percentage = Math.round((completed * 100.0) / total)
+            console.log("uuid = " + design.uuid + ", percentage = " + percentage)
+            return percentage
+        }
+
         axios.get(component.props.config.api_url + '/v1/designs?draft=true', config)
             .then(function (response) {
                 if (response.status == 200) {
                     console.log("Designs loaded")
-                    let designs = response.data.map((design) => { return { uuid: design.uuid, checksum: design.checksum, revision: design.revision, levels: design.levels, modified: design.modified, published: design.levels == 8, percentage: 0 }})
+                    let designs = response.data.map((design) => { return { uuid: design.uuid, checksum: design.checksum, revision: design.revision, levels: design.levels, modified: design.modified, draft: design.levels != 8, published: design.levels == 8, percentage: computePercentage(design) }})
                     component.props.handleLoadDesignsSuccess(designs, revision)
                 } else {
                     console.log("Can't load designs: status = " + content.status)

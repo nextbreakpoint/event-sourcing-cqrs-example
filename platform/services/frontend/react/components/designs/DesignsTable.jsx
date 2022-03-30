@@ -91,10 +91,10 @@ function getSorting(order, orderBy) {
 const cells = [
   { id: 'uuid', numeric: false, disablePadding: true, label: 'UUID', enableSort: true, className: '' },
   { id: 'modified', numeric: false, disablePadding: true, label: 'Last Modified', enableSort: true, className: '' },
-  { id: 'levels', numeric: true, disablePadding: true, label: 'Levels', enableSort: false, className: '' },
+  { id: 'draft', numeric: true, disablePadding: true, label: 'Draft', enableSort: false, className: '' },
   { id: 'checksum', numeric: false, disablePadding: true, label: 'Checksum', enableSort: false, className: '' },
-  { id: 'percentage', numeric: true, disablePadding: true, label: 'Percentage', enableSort: false, className: '' },
   { id: 'published', numeric: false, disablePadding: true, label: 'Published', enableSort: false, className: '' },
+  { id: 'percentage', numeric: true, disablePadding: true, label: 'Progress', enableSort: false, className: '' },
   { id: 'image', numeric: false, disablePadding: true, label: '', enableSort: false, className: 'list-image' }
 ]
 
@@ -467,16 +467,16 @@ let EnhancedTable = class EnhancedTable extends React.Component {
                         <pre>{n.modified}</pre>
                       </TableCell>
                       <TableCell scope="row" padding="none">
-                        <pre>{n.levels}</pre>
+                        <pre>{n.draft ? 'yes' : 'no'}</pre>
                       </TableCell>
                       <TableCell scope="row" padding="none">
                         <pre>{n.checksum}</pre>
                       </TableCell>
                       <TableCell scope="row" padding="none">
-                        <pre>{n.percentage}%</pre>
+                        <pre>{n.published ? 'yes' : 'no'}</pre>
                       </TableCell>
                       <TableCell scope="row" padding="none">
-                        <pre>{n.published ? 'yes' : 'no'}</pre>
+                        <pre>{n.percentage}%</pre>
                       </TableCell>
                       <TableCell scope="row" padding="none" className="list-image">
                         <ButtonBase

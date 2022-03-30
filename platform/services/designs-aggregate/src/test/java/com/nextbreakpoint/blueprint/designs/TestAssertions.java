@@ -1,19 +1,14 @@
 package com.nextbreakpoint.blueprint.designs;
 
 import com.datastax.oss.driver.api.core.cql.Row;
-import com.datastax.oss.driver.api.core.data.UdtValue;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.core.Json;
-import com.nextbreakpoint.blueprint.common.core.Level;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.events.*;
-import org.jetbrains.annotations.NotNull;
 
+import java.nio.ByteBuffer;
 import java.time.Instant;
-import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -37,20 +32,17 @@ public class TestAssertions {
         assertThat(actualToken).isNotNull();
     }
 
-    public static void assertExpectedDesign(Row row, String data, String status, List<Level> tiles) {
+    public static void assertExpectedDesign(Row row, String data, String status, byte[] bitmap) {
         final String actualJson = row.getString("DESIGN_DATA");
         final String actualStatus = row.getString("DESIGN_STATUS");
         final String actualChecksum = row.getString("DESIGN_CHECKSUM");
         final int actualLevels = row.getInt("DESIGN_LEVELS");
-        final List<UdtValue> udfTiles = row.getList("DESIGN_TILES", UdtValue.class);
-        final List<Level> actualTiles = IntStream.range(0, udfTiles.size())
-                .mapToObj(level -> convertUDTToLevel(level, udfTiles.get(level)))
-                .collect(Collectors.toList());
+        final ByteBuffer actualBitmap = row.getByteBuffer("DESIGN_BITMAP");
         assertThat(actualJson).isEqualTo(data);
         assertThat(actualStatus).isEqualTo(status);
         assertThat(actualChecksum).isNotNull();
         assertThat(actualLevels).isEqualTo(TestConstants.LEVELS);
-        assertThat(actualTiles).containsExactlyElementsOf(tiles);
+        assertThat(actualBitmap.array()).isEqualTo(bitmap);
     }
 
     public static void assertExpectedDesignAggregateUpdateRequestedMessage(InputMessage actualMessage, UUID designId) {
@@ -218,10 +210,5 @@ public class TestAssertions {
         DesignDocumentDeleteRequested actualEvent = Json.decodeValue(actualMessage.getValue().getData(), DesignDocumentDeleteRequested.class);
         assertThat(actualEvent.getDesignId()).isEqualTo(designId);
         assertThat(actualEvent.getRevision()).isNotNull();
-    }
-
-    @NotNull
-    private static Level convertUDTToLevel(Integer level, UdtValue udtValue) {
-        return Level.of(level, udtValue.getList("TILES", Byte.class));
     }
 }

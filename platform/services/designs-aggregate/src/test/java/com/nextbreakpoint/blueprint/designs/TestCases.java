@@ -3,7 +3,7 @@ package com.nextbreakpoint.blueprint.designs;
 import com.datastax.oss.driver.api.core.cql.Row;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.core.Json;
-import com.nextbreakpoint.blueprint.common.core.Level;
+import com.nextbreakpoint.blueprint.common.core.TilesBitmap;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.events.DesignInsertRequested;
 import com.nextbreakpoint.blueprint.common.events.TileRenderCompleted;
@@ -146,7 +146,7 @@ public class TestCases {
     public void shouldUpdateTheDesignWhenReceivingADesignInsertRequestedMessage(OutputMessage designInsertRequestedMessage) {
         final DesignInsertRequested designInsertRequested = Json.decodeValue(designInsertRequestedMessage.getValue().getData(), DesignInsertRequested.class);
 
-        final List<Level> tiles = TestUtils.getTiles(8, 0.0f);
+        final TilesBitmap bitmap = TilesBitmap.empty();
 
         final UUID designId = designInsertRequested.getDesignId();
 
@@ -178,7 +178,7 @@ public class TestCases {
                 .untilAsserted(() -> {
                     final List<Row> rows = testCassandra.fetchDesigns(designId);
                     assertThat(rows).hasSize(1);
-                    TestAssertions.assertExpectedDesign(rows.get(0), TestConstants.JSON_1, "CREATED", tiles);
+                    TestAssertions.assertExpectedDesign(rows.get(0), TestConstants.JSON_1, "CREATED", bitmap.getBitmap().array());
                 });
 
         await().atMost(TEN_SECONDS)
@@ -211,7 +211,7 @@ public class TestCases {
     public void shouldUpdateTheDesignWhenReceivingADesignUpdateRequestedMessage(OutputMessage designInsertRequestedMessage, OutputMessage designUpdateRequestedMessage) {
         final DesignInsertRequested designInsertRequested = Json.decodeValue(designInsertRequestedMessage.getValue().getData(), DesignInsertRequested.class);
 
-        final List<Level> tiles = TestUtils.getTiles(8, 0.0f);
+        final TilesBitmap bitmap = TilesBitmap.empty();
 
         final UUID designId = designInsertRequested.getDesignId();
 
@@ -260,7 +260,7 @@ public class TestCases {
                 .untilAsserted(() -> {
                     final List<Row> rows = testCassandra.fetchDesigns(designId);
                     assertThat(rows).hasSize(1);
-                    TestAssertions.assertExpectedDesign(rows.get(0), TestConstants.JSON_2, "UPDATED", tiles);
+                    TestAssertions.assertExpectedDesign(rows.get(0), TestConstants.JSON_2, "UPDATED", bitmap.getBitmap().array());
                 });
 
         await().atMost(TEN_SECONDS)
@@ -293,7 +293,7 @@ public class TestCases {
     public void shouldUpdateTheDesignWhenReceivingADesignDeleteRequestedMessage(OutputMessage designInsertRequestedMessage, OutputMessage designDeleteRequestedMessage) {
         final DesignInsertRequested designInsertRequested = Json.decodeValue(designInsertRequestedMessage.getValue().getData(), DesignInsertRequested.class);
 
-        final List<Level> tiles = TestUtils.getTiles(8, 0.0f);
+        final TilesBitmap bitmap = TilesBitmap.empty();
 
         final UUID designId = designInsertRequested.getDesignId();
 
@@ -342,7 +342,7 @@ public class TestCases {
                 .untilAsserted(() -> {
                     final List<Row> rows = testCassandra.fetchDesigns(designId);
                     assertThat(rows).hasSize(1);
-                    TestAssertions.assertExpectedDesign(rows.get(0), TestConstants.JSON_1, "DELETED", tiles);
+                    TestAssertions.assertExpectedDesign(rows.get(0), TestConstants.JSON_1, "DELETED", bitmap.getBitmap().array());
                 });
 
         await().atMost(TEN_SECONDS)
@@ -381,7 +381,7 @@ public class TestCases {
     public void shouldUpdateTheDesignWhenReceivingATileRenderCompletedMessage(OutputMessage designInsertRequestedMessage, List<OutputMessage> tileRenderCompletedMessages) {
         final DesignInsertRequested designInsertRequested = Json.decodeValue(designInsertRequestedMessage.getValue().getData(), DesignInsertRequested.class);
 
-        final List<Level> tiles = TestUtils.getTiles(8, 0.0f);
+        final TilesBitmap bitmap = TilesBitmap.empty();
 
         final UUID designId = designInsertRequested.getDesignId();
 
@@ -413,7 +413,7 @@ public class TestCases {
                 .untilAsserted(() -> {
                     final List<Row> rows = testCassandra.fetchDesigns(designId);
                     assertThat(rows).hasSize(1);
-                    TestAssertions.assertExpectedDesign(rows.get(0), TestConstants.JSON_1, "CREATED", tiles);
+                    TestAssertions.assertExpectedDesign(rows.get(0), TestConstants.JSON_1, "CREATED", bitmap.getBitmap().array());
                 });
 
         await().atMost(TEN_SECONDS)
@@ -487,18 +487,18 @@ public class TestCases {
                     messages.forEach(message -> TestAssertions.assertExpectedDesignDocumentUpdateRequestedMessage(message, designId, TestConstants.JSON_1, TestConstants.CHECKSUM_1, "CREATED"));
                 });
 
-        tiles.get(tileRenderCompleted1.getLevel()).putTile(tileRenderCompleted1.getRow(), tileRenderCompleted1.getCol());
-        tiles.get(tileRenderCompleted2.getLevel()).putTile(tileRenderCompleted2.getRow(), tileRenderCompleted2.getCol());
-        tiles.get(tileRenderCompleted3.getLevel()).putTile(tileRenderCompleted3.getRow(), tileRenderCompleted3.getCol());
-        tiles.get(tileRenderCompleted4.getLevel()).putTile(tileRenderCompleted4.getRow(), tileRenderCompleted4.getCol());
-        tiles.get(tileRenderCompleted5.getLevel()).putTile(tileRenderCompleted5.getRow(), tileRenderCompleted5.getCol());
+        bitmap.putTile(tileRenderCompleted1.getLevel(), tileRenderCompleted1.getRow(), tileRenderCompleted1.getCol());
+        bitmap.putTile(tileRenderCompleted2.getLevel(), tileRenderCompleted2.getRow(), tileRenderCompleted2.getCol());
+        bitmap.putTile(tileRenderCompleted3.getLevel(), tileRenderCompleted3.getRow(), tileRenderCompleted3.getCol());
+        bitmap.putTile(tileRenderCompleted4.getLevel(), tileRenderCompleted4.getRow(), tileRenderCompleted4.getCol());
+        bitmap.putTile(tileRenderCompleted5.getLevel(), tileRenderCompleted5.getRow(), tileRenderCompleted5.getCol());
 
         await().atMost(ONE_MINUTE)
                 .pollInterval(TEN_SECONDS)
                 .untilAsserted(() -> {
                     final List<Row> rows = testCassandra.fetchDesigns(designId);
                     assertThat(rows).hasSize(1);
-                    TestAssertions.assertExpectedDesign(rows.get(0), TestConstants.JSON_1, "CREATED", tiles);
+                    TestAssertions.assertExpectedDesign(rows.get(0), TestConstants.JSON_1, "CREATED", bitmap.getBitmap().array());
                 });
     }
 }

@@ -61,6 +61,10 @@ footer a, footer a:active, footer a:hover, footer a:visited {
     text-decoration: none !important;
 }
 
+.status {
+    padding: 2%;
+}
+
 .leaflet-container {
     width: 1024pt;
     height: 1024pt;

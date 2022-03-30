@@ -28,6 +28,7 @@ import java.time.ZoneId;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Tag("docker")
 @Tag("pact-verify")
@@ -92,7 +93,9 @@ public class VerifyQueryPact {
     }
 
     private String produceDesignDocumentUpdateRequested(UUID uuid, String data, String checksum, String status, float completePercentage) {
-        final List<Tiles> tiles = TestUtils.getTiles(TestConstants.LEVELS, completePercentage).stream().map(Level::toTiles).collect(Collectors.toList());
+        final TilesBitmap bitmap = TestUtils.createBitmap(TestConstants.LEVELS, completePercentage);
+
+        final List<Tiles> tiles = IntStream.range(0, 8).mapToObj(bitmap::toTiles).collect(Collectors.toList());
 
         final DesignDocumentUpdateRequested designDocumentUpdateRequested = new DesignDocumentUpdateRequested(uuid, TestConstants.USER_ID, UUID.randomUUID(), data, checksum, TestConstants.REVISION_0, status, TestConstants.LEVELS, tiles, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
 

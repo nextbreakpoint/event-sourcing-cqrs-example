@@ -197,7 +197,7 @@ public class Verticle extends AbstractVerticle {
 
             final Supplier<CassandraClient> supplier = () -> CassandraClientFactory.create(vertx, cassandraConfig);
 
-            final Store store = new CassandraStore(keyspace, supplier);
+            final Store store = new CassandraStore(supplier);
 
             final Router mainRouter = Router.router(vertx);
 

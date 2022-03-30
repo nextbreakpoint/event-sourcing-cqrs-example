@@ -10,14 +10,17 @@ import lombok.Data;
 @Builder(access = AccessLevel.PUBLIC, setterPrefix = "with")
 public class Tiles {
     private final int level;
+    private final int total;
     private final int completed;
 
     @JsonCreator
     public Tiles(
         @JsonProperty("level") int level,
+        @JsonProperty("total") int total,
         @JsonProperty("completed") int completed
     ) {
         this.level = level;
+        this.total = total;
         this.completed = completed;
     }
 }

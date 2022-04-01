@@ -10,8 +10,8 @@ export const loadDesigns = () => ({
   type: Types.DESIGNS_LOAD
 })
 
-export const loadDesignsSuccess = (designs, revision) => ({
-  type: Types.DESIGNS_LOAD_SUCCESS, designs, revision
+export const loadDesignsSuccess = (designs, total, revision) => ({
+  type: Types.DESIGNS_LOAD_SUCCESS, designs, total, revision
 })
 
 export const loadDesignsFailure = (error) => ({
@@ -61,6 +61,10 @@ export const setUploadedDesign = (design) => ({
 export const resetUploadedDesign = () => ({
   type: Types.UPLOADED_DESIGN_CHANGED, present: false, design: {}
 })
+
+export const getTotal = (state) => {
+    return content.getTotal(state)
+}
 
 export const getDesigns = (state) => {
     return content.getDesigns(state)

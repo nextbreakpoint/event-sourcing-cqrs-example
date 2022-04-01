@@ -2,7 +2,7 @@ import * as Types from '../../constants/ActionTypes'
 
 const initialState = {
     page: 0,
-    rowsPerPage: 10
+    rowsPerPage: 5
 }
 
 function reducer (state = initialState, action) {

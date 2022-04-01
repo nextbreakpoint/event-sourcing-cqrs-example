@@ -12,10 +12,22 @@ public class ListDesignsRequestMapper implements Mapper<RoutingContext, ListDesi
 
         final String draftParam = request.getParam("draft", "false");
 
+        final String fromParam = request.getParam("from", "0");
+
+        final String sizeParam = request.getParam("size", "20");
+
         try {
             final boolean draft = Boolean.parseBoolean(draftParam);
 
-            return new ListDesignsRequest(draft);
+            final int from = Integer.parseInt(fromParam);
+
+            final int size = Integer.parseInt(sizeParam);
+
+            return ListDesignsRequest.builder()
+                    .withDraft(draft)
+                    .withFrom(from)
+                    .withSize(size)
+                    .build();
         } catch (Exception e) {
             throw new IllegalStateException("invalid parameters: " + e.getMessage());
         }

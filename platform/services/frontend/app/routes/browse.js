@@ -69,7 +69,7 @@ router.get('/designs.html', function(req, res, next) {
                         console.log("designs = " + JSON.stringify(response.data))
                     }
                     console.log(account)
-                    let designs = response.data.map((design) => ({
+                    let designs = response.data.designs.map((design) => ({
                         uuid: design.uuid,
                         checksum: design.checksum,
                         location: appConfig.client_web_url + '/browse/designs/' + design.uuid + ".html",

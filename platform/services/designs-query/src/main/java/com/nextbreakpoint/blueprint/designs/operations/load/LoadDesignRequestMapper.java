@@ -22,9 +22,13 @@ public class LoadDesignRequestMapper implements Mapper<RoutingContext, LoadDesig
 
         try {
             final UUID uuid = UUID.fromString(uuidParam);
+
             final boolean draft = Boolean.parseBoolean(draftParam);
 
-            return new LoadDesignRequest(uuid, draft);
+            return LoadDesignRequest.builder()
+                    .withUuid(uuid)
+                    .withDraft(draft)
+                    .build();
         } catch (Exception e) {
             throw new IllegalStateException("invalid parameters: " + e.getMessage());
         }

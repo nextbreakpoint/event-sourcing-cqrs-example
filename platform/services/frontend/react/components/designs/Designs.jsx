@@ -20,6 +20,8 @@ import {
     getDesignsStatus,
     getRevision,
     loadDesigns,
+    getPage,
+    getRowsPerPage,
     loadDesignsSuccess,
     loadDesignsFailure,
     showErrorMessage,
@@ -99,21 +101,22 @@ let Designs = class Designs extends React.Component {
             return percentage
         }
 
-        axios.get(component.props.config.api_url + '/v1/designs?draft=true', config)
+        axios.get(component.props.config.api_url + '/v1/designs?draft=true&from=' + (component.props.page * component.props.rowsPerPage) + '&size=' + component.props.rowsPerPage, config)
             .then(function (response) {
                 if (response.status == 200) {
                     console.log("Designs loaded")
-                    let designs = response.data.map((design) => { return { uuid: design.uuid, checksum: design.checksum, revision: design.revision, levels: design.levels, created: design.created, updated: design.updated, draft: design.levels != 8, published: design.published, percentage: computePercentage(design) }})
-                    component.props.handleLoadDesignsSuccess(designs, revision)
+                    let designs = response.data.designs.map((design) => { return { uuid: design.uuid, checksum: design.checksum, revision: design.revision, levels: design.levels, created: design.created, updated: design.updated, draft: design.levels != 8, published: design.published, percentage: computePercentage(design) }})
+                    let total = response.data.total
+                    component.props.handleLoadDesignsSuccess(designs, total, revision)
                 } else {
                     console.log("Can't load designs: status = " + content.status)
-                    component.props.handleLoadDesignsSuccess([], 0)
+                    component.props.handleLoadDesignsSuccess([], 0, 0)
                     component.props.handleShowErrorMessage("Can't load designs")
                 }
             })
             .catch(function (error) {
                 console.log("Can't load designs " + error)
-                component.props.handleLoadDesignsSuccess([], 0)
+                component.props.handleLoadDesignsSuccess([], 0, 0)
                 component.props.handleShowErrorMessage("Can't load designs")
             })
     }
@@ -130,6 +133,8 @@ Designs.propTypes = {
     account: PropTypes.object.isRequired,
     status: PropTypes.object.isRequired,
     revision: PropTypes.string.isRequired,
+    page: PropTypes.number,
+    rowsPerPage: PropTypes.number,
     classes: PropTypes.object.isRequired,
     theme: PropTypes.object.isRequired
 }
@@ -141,7 +146,9 @@ const mapStateToProps = state => ({
     account: getAccount(state),
     designs: getDesigns(state),
     status: getDesignsStatus(state),
-    revision: getRevision(state)
+    revision: getRevision(state),
+    page: getPage(state),
+    rowsPerPage: getRowsPerPage(state)
 })
 
 const mapDispatchToProps = dispatch => ({

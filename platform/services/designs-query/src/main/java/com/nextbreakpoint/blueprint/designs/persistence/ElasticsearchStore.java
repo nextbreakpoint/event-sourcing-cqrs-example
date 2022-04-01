@@ -7,6 +7,7 @@ import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch._types.query_dsl.MatchAllQuery;
 import co.elastic.clients.elasticsearch.core.DeleteRequest;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
+import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.UpdateRequest;
 import co.elastic.clients.elasticsearch.core.search.Hit;
 import com.nextbreakpoint.blueprint.designs.Store;
@@ -17,6 +18,7 @@ import io.vertx.core.impl.logging.LoggerFactory;
 import rx.Observable;
 import rx.Single;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -94,10 +96,8 @@ public class ElasticsearchStore implements Store {
     private Single<ListDesignsResponse> doListDesigns(ElasticsearchAsyncClient client, ListDesignsRequest request) {
         try {
             return Observable.from(client.search(builder -> createListDesignsRequest(builder, request), Design.class))
-                    .flatMap(search -> Observable.from(search.hits().hits()))
-                    .map(Hit::source)
-                    .toList()
-                    .map(ListDesignsResponse::new)
+                    .map(SearchResponse::hits)
+                    .flatMap(hits -> Observable.from(hits.hits()).map(Hit::source).toList().map(designs -> new ListDesignsResponse(designs, hits.total().value())))
                     .toSingle();
         } catch (Exception e) {
             return Single.error(e);
@@ -145,6 +145,8 @@ public class ElasticsearchStore implements Store {
         return builder
                 .index(getIndexName(request.isDraft()))
                 .query(q -> q.matchAll(MatchAllQuery.of(a -> a)))
+                .from(request.getFrom())
+                .size(request.getSize())
                 .sort(x -> x.field(f -> f.field("created").order(SortOrder.Desc).format("strict_date_optional_time_nanos")) );
     }
 

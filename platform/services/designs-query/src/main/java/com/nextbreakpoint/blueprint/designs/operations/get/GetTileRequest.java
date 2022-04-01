@@ -1,8 +1,13 @@
 package com.nextbreakpoint.blueprint.designs.operations.get;
 
+import lombok.Builder;
+import lombok.Data;
+
 import java.util.Objects;
 import java.util.UUID;
 
+@Data
+@Builder(setterPrefix = "with")
 public class GetTileRequest {
     private final UUID uuid;
     private final int level;
@@ -18,29 +23,5 @@ public class GetTileRequest {
         this.col = col;
         this.size = size;
         this.draft = draft;
-    }
-
-    public UUID getUuid() {
-        return uuid;
-    }
-
-    public int getLevel() {
-        return level;
-    }
-
-    public int getRow() {
-        return row;
-    }
-
-    public int getCol() {
-        return col;
-    }
-
-    public int getSize() {
-        return size;
-    }
-
-    public boolean isDraft() {
-        return draft;
     }
 }

@@ -2,6 +2,7 @@ import * as Types from '../../constants/ActionTypes'
 
 const initialState = {
     data: undefined,
+    total: 0,
     revision: "0000000000000000-0000000000000000",
     status: {
         message: "Loading designs...",
@@ -27,6 +28,7 @@ function reducer (state = initialState, action) {
             error: false
         },
         data: action.designs,
+        total: action.total,
         revision: action.revision
       }
     case Types.DESIGNS_LOAD_FAILURE:
@@ -37,11 +39,16 @@ function reducer (state = initialState, action) {
             error: true
         },
         data: [],
+        total: 0,
         revision: "0000000000000000-0000000000000000"
       }
     default:
       return state
   }
+}
+
+export const getTotal = (state) => {
+    return state.designs.content.total
 }
 
 export const getDesigns = (state) => {

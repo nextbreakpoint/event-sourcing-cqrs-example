@@ -45,12 +45,25 @@ public class GetTileRequestMapper implements Mapper<RoutingContext, GetTileReque
 
         try {
             final UUID uuid = UUID.fromString(uuidParam);
+
             final int level = Integer.parseInt(levelParam);
+
             final int row = Integer.parseInt(rowParam);
+
             final int col = Integer.parseInt(colParam);
+
             final int size = Integer.parseInt(sizePram);
+
             final boolean draft = Boolean.parseBoolean(draftParam);
-            return new GetTileRequest(uuid, level, row, col, size, draft);
+
+            return GetTileRequest.builder()
+                    .withUuid(uuid)
+                    .withLevel(level)
+                    .withRow(row)
+                    .withCol(col)
+                    .withSize(size)
+                    .withDraft(draft)
+                    .build();
         } catch (Exception e) {
             throw new IllegalStateException("invalid parameters: " + e.getMessage());
         }

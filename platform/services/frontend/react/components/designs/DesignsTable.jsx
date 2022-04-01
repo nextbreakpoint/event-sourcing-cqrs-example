@@ -44,13 +44,17 @@ import {
     setDesignsSorting,
     setDesignsSelection,
     setDesignsPagination,
+    getTotal,
     getDesigns,
     getRevision,
     getSelected,
     getOrder,
     getOrderBy,
+    loadDesigns,
     getPage,
     getRowsPerPage,
+    loadDesignsSuccess,
+    loadDesignsFailure,
     getShowErrorMessage,
     getErrorMessage,
     showErrorMessage,
@@ -91,9 +95,10 @@ function getSorting(order, orderBy) {
 const cells = [
   { id: 'uuid', numeric: false, disablePadding: true, label: 'UUID', enableSort: true, className: '' },
   { id: 'created', numeric: false, disablePadding: true, label: 'Created', enableSort: true, className: '' },
-  { id: 'draft', numeric: true, disablePadding: true, label: 'Draft', enableSort: false, className: '' },
-  { id: 'checksum', numeric: false, disablePadding: true, label: 'Checksum', enableSort: false, className: '' },
-  { id: 'published', numeric: false, disablePadding: true, label: 'Published', enableSort: false, className: '' },
+  { id: 'updated', numeric: false, disablePadding: true, label: 'Updated', enableSort: true, className: '' },
+  { id: 'checksum', numeric: false, disablePadding: true, label: 'Checksum', enableSort: true, className: '' },
+  { id: 'draft', numeric: true, disablePadding: true, label: 'Draft', enableSort: true, className: '' },
+  { id: 'published', numeric: false, disablePadding: true, label: 'Published', enableSort: true, className: '' },
   { id: 'percentage', numeric: true, disablePadding: true, label: 'Progress', enableSort: false, className: '' },
   { id: 'image', numeric: false, disablePadding: true, label: '', enableSort: false, className: 'list-image' }
 ]
@@ -423,10 +428,56 @@ let EnhancedTable = class EnhancedTable extends React.Component {
       }
   }
 
+    loadDesigns = (page, rowsPerPage, revision) => {
+        console.log("Load designs")
+
+        let component = this
+
+        let config = {
+            timeout: 30000,
+            withCredentials: true
+        }
+
+        component.props.handleLoadDesigns()
+        component.props.handleChangePagination(page, rowsPerPage)
+
+        console.log("page " + page)
+
+        function computePercentage(design) {
+            const levels = [0,1,2,3,4,5,6,7];
+            let total = levels.map(i => design.tiles[i].total)
+                .reduce((previousValue, currentValue) => previousValue + currentValue, 0)
+            let completed = levels.map(i => design.tiles[i].completed)
+                .reduce((previousValue, currentValue) => previousValue + currentValue, 0)
+            let percentage = Math.round((completed * 100.0) / total)
+            console.log("uuid = " + design.uuid + ", percentage = " + percentage)
+            return percentage
+        }
+
+        axios.get(component.props.config.api_url + '/v1/designs?draft=true&from=' + (page * rowsPerPage) + '&size=' + rowsPerPage, config)
+            .then(function (response) {
+                if (response.status == 200) {
+                    console.log("Designs loaded")
+                    let designs = response.data.designs.map((design) => { return { uuid: design.uuid, checksum: design.checksum, revision: design.revision, levels: design.levels, created: design.created, updated: design.updated, draft: design.levels != 8, published: design.published, percentage: computePercentage(design) }})
+                    let total = response.data.total
+                    component.props.handleLoadDesignsSuccess(designs, total, revision)
+                } else {
+                    console.log("Can't load designs: status = " + content.status)
+                    component.props.handleLoadDesignsSuccess([], 0, 0)
+                    component.props.handleShowErrorMessage("Can't load designs")
+                }
+            })
+            .catch(function (error) {
+                console.log("Can't load designs " + error)
+                component.props.handleLoadDesignsSuccess([], 0, 0)
+                component.props.handleShowErrorMessage("Can't load designs")
+            })
+    }
+
   isSelected = id => this.props.selected.indexOf(id) !== -1
 
   render() {
-    const { classes, config, designs, revision, account, order, orderBy, selected, rowsPerPage, page } = this.props
+    const { classes, config, designs, revision, account, order, orderBy, selected, rowsPerPage, page, total } = this.props
     const emptyRows = 0 //rowsPerPage - Math.min(rowsPerPage, designs.length - page * rowsPerPage)
 
     return (
@@ -443,45 +494,46 @@ let EnhancedTable = class EnhancedTable extends React.Component {
               role={account.role}
             />
             <TableBody>
-              {stableSort(designs, getSorting(order, orderBy))
-                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                .map(n => {
-                  const isSelected = this.isSelected(n.uuid)
+              {designs.map(design => {
+                  const isSelected = this.isSelected(design.uuid)
                   return (
                     <TableRow
                       hover={false}
-                      onClick={event => this.handleClick(event, n.uuid)}
+                      onClick={event => this.handleClick(event, design.uuid)}
                       role="checkbox"
                       aria-checked={isSelected}
                       tabIndex={-1}
-                      key={n.uuid}
+                      key={design.uuid}
                       selected={isSelected}
                     >
                       <TableCell padding="checkbox">
                         {account.role == 'admin' && <Checkbox checked={isSelected} />}
                       </TableCell>
                       <TableCell scope="row" padding="none">
-                        <a href={"/admin/designs/" + n.uuid + '.html'}><pre>{n.uuid}</pre></a>
+                        <a href={"/admin/designs/" + design.uuid + '.html'}><pre>{design.uuid}</pre></a>
                       </TableCell>
                       <TableCell scope="row" padding="none">
-                        <pre>{n.updated}</pre>
+                        <pre>{design.created}</pre>
                       </TableCell>
                       <TableCell scope="row" padding="none">
-                        <pre>{n.draft ? 'yes' : 'no'}</pre>
+                        <pre>{design.updated}</pre>
                       </TableCell>
                       <TableCell scope="row" padding="none">
-                        <pre>{n.checksum}</pre>
+                        <pre>{design.checksum}</pre>
                       </TableCell>
                       <TableCell scope="row" padding="none">
-                        <pre>{n.published ? 'yes' : 'no'}</pre>
+                        <pre>{design.draft ? 'yes' : 'no'}</pre>
                       </TableCell>
                       <TableCell scope="row" padding="none">
-                        <pre>{n.percentage}%</pre>
+                        <pre>{design.published ? 'yes' : 'no'}</pre>
+                      </TableCell>
+                      <TableCell scope="row" padding="none">
+                        <pre>{design.percentage}%</pre>
                       </TableCell>
                       <TableCell scope="row" padding="none" className="list-image">
                         <ButtonBase
                                 focusRipple
-                                key={n.uuid}
+                                key={design.uuid}
                                 focusVisibleClassName={classes.focusVisible}
                                 style={{
                                   width: 256,
@@ -490,8 +542,8 @@ let EnhancedTable = class EnhancedTable extends React.Component {
                                   borderRadius: '1em'
                                 }}
                               >
-                            <a href={"/admin/designs/" + n.uuid + ".html"}>
-                                <img className={classes.image} width="256" height="256" src={config.api_url + "/v1/designs/" + n.uuid + "/0/0/0/256.png?draft=true&t=" + n.checksum}/>
+                            <a href={"/admin/designs/" + design.uuid + ".html"}>
+                                <img className={classes.image} width="256" height="256" src={config.api_url + "/v1/designs/" + design.uuid + "/0/0/0/256.png?draft=true&t=" + design.checksum}/>
                             </a>
                         </ButtonBase>
                       </TableCell>
@@ -507,8 +559,9 @@ let EnhancedTable = class EnhancedTable extends React.Component {
           </Table>
         <TablePagination
           component="div"
-          count={designs.length}
-          rowsPerPage={rowsPerPage}
+          count={total}
+          rowsPerPage={5}
+          rowsPerPageOptions={[5]}
           page={page}
           backIconButtonProps={{
             'aria-label': 'Previous Page',
@@ -516,8 +569,12 @@ let EnhancedTable = class EnhancedTable extends React.Component {
           nextIconButtonProps={{
             'aria-label': 'Next Page',
           }}
-          onChangePage={(event, value) => this.props.handleChangePagination(value, this.props.rowsPerPage)}
-          onChangeRowsPerPage={event => this.props.handleChangePagination(this.props.page, event.target.value)}
+          onPageChange={(event, value) => {
+            this.loadDesigns(value, this.props.rowsPerPage, "0")
+          }}
+          onRowsPerPageChange={event => {
+            this.loadDesigns(this.props.page, event.target.value, "0")
+          }}
         />
       </Paper>
     )
@@ -527,6 +584,7 @@ let EnhancedTable = class EnhancedTable extends React.Component {
 EnhancedTable.propTypes = {
     config: PropTypes.object,
     account: PropTypes.object,
+    total: PropTypes.number,
     designs: PropTypes.array,
     revision: PropTypes.number,
     selected: PropTypes.array,
@@ -542,6 +600,7 @@ const mapStateToProps = state => ({
     config: getConfig(state),
     account: getAccount(state),
     designs: getDesigns(state),
+    total: getTotal(state),
     revision: getRevision(state),
     selected: getSelected(state),
     order: getOrder(state),
@@ -562,6 +621,15 @@ const mapDispatchToProps = dispatch => ({
     },
     handleHideErrorMessage: () => {
         dispatch(hideErrorMessage())
+    },
+    handleLoadDesigns: () => {
+        dispatch(loadDesigns())
+    },
+    handleLoadDesignsSuccess: (designs, revision) => {
+        dispatch(loadDesignsSuccess(designs, revision))
+    },
+    handleLoadDesignsFailure: (error) => {
+        dispatch(loadDesignsFailure(error))
     },
     handleChangePagination: (page, rowsPerPage) => {
         dispatch(setDesignsPagination(page, rowsPerPage))

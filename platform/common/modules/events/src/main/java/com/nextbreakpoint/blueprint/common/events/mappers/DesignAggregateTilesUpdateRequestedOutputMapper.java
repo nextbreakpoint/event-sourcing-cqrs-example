@@ -1,25 +1,25 @@
 package com.nextbreakpoint.blueprint.common.events.mappers;
 
 import com.nextbreakpoint.blueprint.common.core.*;
-import com.nextbreakpoint.blueprint.common.events.TileAggregateUpdateRequested;
+import com.nextbreakpoint.blueprint.common.events.DesignAggregateTilesUpdateRequested;
 
 import java.util.Objects;
 import java.util.UUID;
 
-public class TileAggregateUpdateRequestedOutputMapper implements MessageMapper<TileAggregateUpdateRequested, OutputMessage> {
+public class DesignAggregateTilesUpdateRequestedOutputMapper implements MessageMapper<DesignAggregateTilesUpdateRequested, OutputMessage> {
     private final String messageSource;
 
-    public TileAggregateUpdateRequestedOutputMapper(String messageSource) {
+    public DesignAggregateTilesUpdateRequestedOutputMapper(String messageSource) {
         this.messageSource = Objects.requireNonNull(messageSource);
     }
 
     @Override
-    public OutputMessage transform(TileAggregateUpdateRequested event) {
+    public OutputMessage transform(DesignAggregateTilesUpdateRequested event) {
         return new OutputMessage(
                 event.getDesignId().toString(),
                 new Payload(
                         UUID.randomUUID(),
-                        TileAggregateUpdateRequested.TYPE,
+                        DesignAggregateTilesUpdateRequested.TYPE,
                         Json.encodeValue(event),
                         messageSource
                 )

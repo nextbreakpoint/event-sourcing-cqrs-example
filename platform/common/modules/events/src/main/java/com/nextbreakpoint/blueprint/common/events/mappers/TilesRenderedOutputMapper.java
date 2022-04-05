@@ -1,32 +1,32 @@
 package com.nextbreakpoint.blueprint.common.events.mappers;
 
 import com.nextbreakpoint.blueprint.common.core.*;
-import com.nextbreakpoint.blueprint.common.events.TilesRenderRequired;
+import com.nextbreakpoint.blueprint.common.events.TilesRendered;
 
 import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Function;
 
-public class TilesRenderRequiredOutputMapper implements MessageMapper<TilesRenderRequired, OutputMessage> {
+public class TilesRenderedOutputMapper implements MessageMapper<TilesRendered, OutputMessage> {
     private final String messageSource;
-    private final Function<TilesRenderRequired, String> keyMapper;
+    private final Function<TilesRendered, String> keyMapper;
 
-    public TilesRenderRequiredOutputMapper(String messageSource, Function<TilesRenderRequired, String> keyMapper) {
+    public TilesRenderedOutputMapper(String messageSource, Function<TilesRendered, String> keyMapper) {
         this.messageSource = Objects.requireNonNull(messageSource);
         this.keyMapper = Objects.requireNonNull(keyMapper);
     }
 
-    public TilesRenderRequiredOutputMapper(String messageSource) {
+    public TilesRenderedOutputMapper(String messageSource) {
         this(messageSource, event -> event.getDesignId().toString());
     }
 
     @Override
-    public OutputMessage transform(TilesRenderRequired event) {
+    public OutputMessage transform(TilesRendered event) {
         return new OutputMessage(
                 keyMapper.apply(event),
                 new Payload(
                         UUID.randomUUID(),
-                        TilesRenderRequired.TYPE,
+                        TilesRendered.TYPE,
                         Json.encodeValue(event),
                         messageSource
                 )

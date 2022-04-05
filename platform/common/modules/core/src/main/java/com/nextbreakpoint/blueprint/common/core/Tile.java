@@ -10,8 +10,8 @@ import lombok.Data;
 @Builder(access = AccessLevel.PUBLIC, setterPrefix = "with")
 public class Tile {
     private final int level;
-    private final int col;
     private final int row;
+    private final int col;
 
     @JsonCreator
     public Tile(

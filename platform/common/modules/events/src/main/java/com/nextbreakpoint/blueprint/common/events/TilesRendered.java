@@ -13,8 +13,8 @@ import java.util.UUID;
 
 @Data
 @Builder(access = AccessLevel.PUBLIC, setterPrefix = "with")
-public class TilesRenderRequired {
-    public static final String TYPE = "tiles-render-required-v1";
+public class TilesRendered {
+    public static final String TYPE = "tiles-rendered-v1";
 
     private final UUID designId;
     private final String revision;
@@ -23,7 +23,7 @@ public class TilesRenderRequired {
     private final List<Tile> tiles;
 
     @JsonCreator
-    public TilesRenderRequired(
+    public TilesRendered(
             @JsonProperty("designId") UUID designId,
             @JsonProperty("revision") String revision,
             @JsonProperty("checksum") String checksum,

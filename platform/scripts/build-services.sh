@@ -34,7 +34,6 @@ for i in "$@"; do
     --keep-version)
       VERSION="$(mvn -q help:evaluate -Dexpression=project.version -DforceStdout)"
       DEPLOY="false"
-      IMAGES="false"
       shift
       ;;
     --docker-repository=*)

@@ -140,9 +140,9 @@ services:
       DATABASE_KEYSPACE: designs_aggregate
       KAFKA_HOST: host.docker.internal
       KAFKA_PORT: 9094
+      RENDER_TOPIC_PREFIX: render
       EVENTS_TOPIC: events
-      RENDER_TOPIC: render
-      UPDATE_TOPIC: update
+      BUFFER_TOPIC: buffer
       DEBUG_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:35122
       LOGGING_LEVEL: ${LOGGING_LEVEL:-INFO}
     ports:
@@ -202,7 +202,7 @@ services:
       BUCKET_NAME: tiles
       KAFKA_HOST: host.docker.internal
       KAFKA_PORT: 9094
-      RENDER_TOPIC: render
+      RENDER_TOPIC_PREFIX: render
       EVENTS_TOPIC: events
       DEBUG_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:35124
       LOGGING_LEVEL: ${LOGGING_LEVEL:-INFO}
@@ -235,7 +235,7 @@ services:
       BUCKET_NAME: tiles
       KAFKA_HOST: host.docker.internal
       KAFKA_PORT: 9094
-      RENDER_TOPIC: render
+      RENDER_TOPIC_PREFIX: render
       EVENTS_TOPIC: events
       DEBUG_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:35125
       LOGGING_LEVEL: ${LOGGING_LEVEL:-INFO}
@@ -268,7 +268,7 @@ services:
       BUCKET_NAME: tiles
       KAFKA_HOST: host.docker.internal
       KAFKA_PORT: 9094
-      RENDER_TOPIC: render
+      RENDER_TOPIC_PREFIX: render
       EVENTS_TOPIC: events
       DEBUG_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:35126
       LOGGING_LEVEL: ${LOGGING_LEVEL:-INFO}
@@ -301,7 +301,7 @@ services:
       BUCKET_NAME: tiles
       KAFKA_HOST: host.docker.internal
       KAFKA_PORT: 9094
-      RENDER_TOPIC: render
+      RENDER_TOPIC_PREFIX: render
       EVENTS_TOPIC: events
       DEBUG_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:35127
       LOGGING_LEVEL: ${LOGGING_LEVEL:-INFO}

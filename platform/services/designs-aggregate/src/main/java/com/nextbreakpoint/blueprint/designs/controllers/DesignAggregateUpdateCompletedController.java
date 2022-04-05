@@ -6,6 +6,7 @@ import com.nextbreakpoint.blueprint.common.events.DesignDocumentDeleteRequested;
 import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
 import com.nextbreakpoint.blueprint.common.vertx.Controller;
 import com.nextbreakpoint.blueprint.common.vertx.MessageEmitter;
+import com.nextbreakpoint.blueprint.designs.common.Render;
 import rx.Observable;
 import rx.Single;
 
@@ -53,7 +54,7 @@ public class DesignAggregateUpdateCompletedController implements Controller<Inpu
     private Observable<Void> onUpdate(DesignAggregateUpdateCompleted event) {
         return createRenderEvents(event)
                 .map(renderOutputMapper::transform)
-                .flatMapSingle(message -> renderEmitter.send(message, renderEmitter.getTopicName() + "-0"));
+                .flatMapSingle(message -> renderEmitter.send(message, Render.getTopicName(renderEmitter.getTopicName() + "-requested", 0)));
     }
 
     private DesignDocumentDeleteRequested createDeleteEvent(DesignAggregateUpdateCompleted event) {

@@ -12,6 +12,7 @@ import com.nextbreakpoint.blueprint.common.events.mappers.DesignDocumentDeleteRe
 import com.nextbreakpoint.blueprint.common.events.mappers.DesignDocumentUpdateRequestedOutputMapper;
 import com.nextbreakpoint.blueprint.designs.model.Design;
 import com.nextbreakpoint.blueprint.designs.model.DesignDocument;
+import com.nextbreakpoint.blueprint.designs.model.DesignDocuments;
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.*;
 
@@ -184,9 +185,9 @@ public class IntegrationTests {
   public void shouldAllowGetOnDesignsWhenUserIsAnonymous() throws MalformedURLException {
     final String authorization = testCases.makeAuthorization("test", Authority.ANONYMOUS);
 
-    DesignDocument[] results = listDesigns(authorization);
+    DesignDocuments results = listDesigns(authorization);
 
-    List<DesignDocument> sortedResults = Stream.of(results)
+    List<DesignDocument> sortedResults = results.getDesigns().stream()
             .sorted(Comparator.comparing(DesignDocument::getUuid))
             .collect(Collectors.toList());
 
@@ -250,9 +251,9 @@ public class IntegrationTests {
   public void shouldAllowGetOnDesignsWhenUserIsAdmin() throws MalformedURLException {
     final String authorization = testCases.makeAuthorization("test", Authority.ADMIN);
 
-    DesignDocument[] results = listDesigns(authorization);
+    DesignDocuments results = listDesigns(authorization);
 
-    List<DesignDocument> sortedResults = Stream.of(results)
+    List<DesignDocument> sortedResults = results.getDesigns().stream()
             .sorted(Comparator.comparing(DesignDocument::getUuid))
             .collect(Collectors.toList());
 
@@ -316,9 +317,9 @@ public class IntegrationTests {
   public void shouldAllowGetOnDesignsWhenUserIsGuest() throws MalformedURLException {
     final String authorization = testCases.makeAuthorization("test", Authority.GUEST);
 
-    DesignDocument[] results1 = listDesigns(authorization, true);
+    DesignDocuments results1 = listDesigns(authorization, true);
 
-    List<DesignDocument> sortedResults1 = Stream.of(results1)
+    List<DesignDocument> sortedResults1 = results1.getDesigns().stream()
             .sorted(Comparator.comparing(DesignDocument::getUuid))
             .collect(Collectors.toList());
 
@@ -346,9 +347,9 @@ public class IntegrationTests {
     assertThat(sortedResults1.get(1).getTiles()).isNotNull();
     assertThat(sortedResults1.get(2).getTiles()).isNotNull();
 
-    DesignDocument[] results2 = listDesigns(authorization, false);
+    DesignDocuments results2 = listDesigns(authorization, false);
 
-    List<DesignDocument> sortedResults2 = Stream.of(results2)
+    List<DesignDocument> sortedResults2 = results2.getDesigns().stream()
             .sorted(Comparator.comparing(DesignDocument::getUuid))
             .collect(Collectors.toList());
 
@@ -454,7 +455,7 @@ public class IntegrationTests {
             .then().assertThat().statusCode(404);
   }
 
-  private static DesignDocument[] listDesigns(String authorization) throws MalformedURLException {
+  private static DesignDocuments listDesigns(String authorization) throws MalformedURLException {
     return listDesigns(authorization, true);
   }
 
@@ -466,13 +467,13 @@ public class IntegrationTests {
     return getTile(authorization, uuid, true);
   }
 
-  private static DesignDocument[] listDesigns(String authorization, boolean draft) throws MalformedURLException {
+  private static DesignDocuments listDesigns(String authorization, boolean draft) throws MalformedURLException {
     return given().config(TestUtils.getRestAssuredConfig())
             .with().header(AUTHORIZATION, authorization)
             .and().accept(ContentType.JSON)
             .when().get(testCases.makeBaseURL("/v1/designs" + (draft ? "?draft=true" : "")))
             .then().assertThat().statusCode(200)
-            .extract().body().as(DesignDocument[].class);
+            .extract().body().as(DesignDocuments.class);
   }
 
   private static DesignDocument loadDesign(String authorization, UUID uuid, boolean draft) throws MalformedURLException {

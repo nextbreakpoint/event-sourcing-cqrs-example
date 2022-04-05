@@ -4,5 +4,5 @@ import rx.Single;
 
 @FunctionalInterface
 public interface RxSingleHandler<T, R> {
-    Single<R> handleSingle(T message);
+    Single<R> handleSingle(T value);
 }

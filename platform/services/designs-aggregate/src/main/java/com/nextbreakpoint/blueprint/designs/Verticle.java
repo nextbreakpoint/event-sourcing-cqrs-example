@@ -38,6 +38,7 @@ import java.io.FileOutputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -51,9 +52,12 @@ import static java.util.Arrays.asList;
 public class Verticle extends AbstractVerticle {
     private static final Logger logger = LoggerFactory.getLogger(Verticle.class.getName());
 
-    private KafkaPolling kafkaPolling1;
-    private KafkaPolling kafkaPolling2;
-    private KafkaPolling kafkaPolling3;
+    private KafkaPolling eventsKafkaPolling;
+    private KafkaPolling bufferKafkaPolling;
+    private KafkaPolling renderKafkaPolling0;
+    private KafkaPolling renderKafkaPolling1;
+    private KafkaPolling renderKafkaPolling2;
+    private KafkaPolling renderKafkaPolling3;
 
     public static void main(String[] args) {
         try {
@@ -80,14 +84,23 @@ public class Verticle extends AbstractVerticle {
     @Override
     public Completable rxStop() {
         return Completable.fromCallable(() -> {
-            if (kafkaPolling1 != null) {
-                kafkaPolling1.stopPolling();
+            if (eventsKafkaPolling != null) {
+                eventsKafkaPolling.stopPolling();
             }
-            if (kafkaPolling2 != null) {
-                kafkaPolling2.stopPolling();
+            if (bufferKafkaPolling != null) {
+                bufferKafkaPolling.stopPolling();
             }
-            if (kafkaPolling3 != null) {
-                kafkaPolling3.stopPolling();
+            if (renderKafkaPolling0 != null) {
+                renderKafkaPolling0.stopPolling();
+            }
+            if (renderKafkaPolling1 != null) {
+                renderKafkaPolling1.stopPolling();
+            }
+            if (renderKafkaPolling2 != null) {
+                renderKafkaPolling2.stopPolling();
+            }
+            if (renderKafkaPolling3 != null) {
+                renderKafkaPolling3.stopPolling();
             }
             return null;
         });
@@ -107,11 +120,11 @@ public class Verticle extends AbstractVerticle {
 
             final String jksStoreSecret = config.getString("server_keystore_secret");
 
-            final String renderTopic = config.getString("render_topic");
+            final String renderTopicPrefix = config.getString("render_topic_prefix");
 
             final String eventsTopic = config.getString("events_topic");
 
-            final String updateTopic = config.getString("update_topic");
+            final String bufferTopic = config.getString("buffer_topic");
 
             final String messageSource = config.getString("message_source");
 
@@ -181,10 +194,13 @@ public class Verticle extends AbstractVerticle {
                     .withEnableAutoCommit(enableAutoCommit)
                     .build();
 
-            final KafkaConsumer<String, String> kafkaConsumer1 = KafkaClientFactory.createConsumer(vertx, consumerConfig.toBuilder().withGroupId(groupId + "-1").build());
-            final KafkaConsumer<String, String> kafkaConsumer2 = KafkaClientFactory.createConsumer(vertx, consumerConfig.toBuilder().withGroupId(groupId + "-2").build());
-            final KafkaConsumer<String, String> kafkaConsumer3 = KafkaClientFactory.createConsumer(vertx, consumerConfig.toBuilder().withGroupId(groupId + "-3").build());
-            final KafkaConsumer<String, String> kafkaConsumer4 = KafkaClientFactory.createConsumer(vertx, consumerConfig.toBuilder().withGroupId(groupId + "-4").build());
+            final KafkaConsumer<String, String> healthKafkaConsumer = KafkaClientFactory.createConsumer(vertx, consumerConfig.toBuilder().withGroupId(groupId + "-health").build());
+            final KafkaConsumer<String, String> eventsKafkaConsumer = KafkaClientFactory.createConsumer(vertx, consumerConfig.toBuilder().withGroupId(groupId + "-events").build());
+            final KafkaConsumer<String, String> bufferKafkaConsumer = KafkaClientFactory.createConsumer(vertx, consumerConfig.toBuilder().withGroupId(groupId + "-buffer").build());
+            final KafkaConsumer<String, String> renderKafkaConsumer0 = KafkaClientFactory.createConsumer(vertx, consumerConfig.toBuilder().withGroupId(groupId + "-render-completed-0").build());
+            final KafkaConsumer<String, String> renderKafkaConsumer1 = KafkaClientFactory.createConsumer(vertx, consumerConfig.toBuilder().withGroupId(groupId + "-render-completed-1").build());
+            final KafkaConsumer<String, String> renderKafkaConsumer2 = KafkaClientFactory.createConsumer(vertx, consumerConfig.toBuilder().withGroupId(groupId + "-render-completed-2").build());
+            final KafkaConsumer<String, String> renderKafkaConsumer3 = KafkaClientFactory.createConsumer(vertx, consumerConfig.toBuilder().withGroupId(groupId + "-render-completed-3").build());
 
             final CassandraClientConfig cassandraConfig = CassandraClientConfig.builder()
                     .withClusterName(clusterName)
@@ -203,53 +219,70 @@ public class Verticle extends AbstractVerticle {
 
             final CorsHandler corsHandler = CorsHandlerFactory.createWithAll(originPattern, asList(AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN), asList(CONTENT_TYPE, X_XSRF_TOKEN));
 
-            final Map<String, RxSingleHandler<InputMessage, ?>> messageHandlers1 = new HashMap<>();
+            final Map<String, RxSingleHandler<InputMessage, ?>> eventsMessageHandlers = new HashMap<>();
 
-            final Map<String, RxSingleHandler<InputMessage, ?>> messageHandlers2 = new HashMap<>();
+            final Map<String, RxSingleHandler<InputMessage, ?>> renderMessageHandlers = new HashMap<>();
 
-            final Map<String, RxSingleHandler<InputMessage, ?>> messageHandlers3 = new HashMap<>();
+            final Map<String, RxSingleHandler<List<InputMessage>, ?>> bufferMessageHandlers = new HashMap<>();
 
-            kafkaConsumer1.subscribe(eventsTopic);
+            eventsKafkaConsumer.subscribe(eventsTopic);
 
-            kafkaConsumer2.subscribe(updateTopic);
+            bufferKafkaConsumer.subscribe(bufferTopic);
 
-            kafkaConsumer3.subscribe(renderTopic);
+            renderKafkaConsumer0.subscribe(renderTopicPrefix + "-completed-0");
+            renderKafkaConsumer1.subscribe(renderTopicPrefix + "-completed-1");
+            renderKafkaConsumer2.subscribe(renderTopicPrefix + "-completed-2");
+            renderKafkaConsumer3.subscribe(renderTopicPrefix + "-completed-3");
 
-            messageHandlers1.put(DesignInsertRequested.TYPE, createDesignInsertRequestedHandler(store, eventsTopic, kafkaProducer, messageSource));
-            messageHandlers1.put(DesignUpdateRequested.TYPE, createDesignUpdateRequestedHandler(store, eventsTopic, kafkaProducer, messageSource));
-            messageHandlers1.put(DesignDeleteRequested.TYPE, createDesignDeleteRequestedHandler(store, eventsTopic, kafkaProducer, messageSource));
+            eventsMessageHandlers.put(DesignInsertRequested.TYPE, createDesignInsertRequestedHandler(store, eventsTopic, kafkaProducer, messageSource));
+            eventsMessageHandlers.put(DesignUpdateRequested.TYPE, createDesignUpdateRequestedHandler(store, eventsTopic, kafkaProducer, messageSource));
+            eventsMessageHandlers.put(DesignDeleteRequested.TYPE, createDesignDeleteRequestedHandler(store, eventsTopic, kafkaProducer, messageSource));
 
-            messageHandlers1.put(DesignAggregateUpdateRequested.TYPE, createDesignAggregateUpdateRequestedHandler(store, eventsTopic, kafkaProducer, messageSource));
-            messageHandlers1.put(DesignAggregateUpdateCompleted.TYPE, createDesignAggregateUpdateCompletedHandler(store, eventsTopic, renderTopic, kafkaProducer, messageSource));
-            messageHandlers1.put(DesignAggregateUpdateCancelled.TYPE, createDesignAggregateUpdateCancelledHandler(store, eventsTopic, kafkaProducer, messageSource));
+            eventsMessageHandlers.put(DesignAggregateUpdateRequested.TYPE, createDesignAggregateUpdateRequestedHandler(store, eventsTopic, kafkaProducer, messageSource));
+            eventsMessageHandlers.put(DesignAggregateUpdateCompleted.TYPE, createDesignAggregateUpdateCompletedHandler(store, eventsTopic, renderTopicPrefix, kafkaProducer, messageSource));
+            eventsMessageHandlers.put(DesignAggregateUpdateCancelled.TYPE, createDesignAggregateUpdateCancelledHandler(store, eventsTopic, kafkaProducer, messageSource));
 
-            messageHandlers1.put(TileAggregateUpdateRequested.TYPE, createTileAggregateUpdateRequestedHandler(store, eventsTopic, kafkaProducer, messageSource));
-            messageHandlers1.put(TileAggregateUpdateCompleted.TYPE, createTileAggregateUpdateCompletedHandler(store, eventsTopic, kafkaProducer, messageSource));
-            messageHandlers1.put(TileRenderCompleted.TYPE, createTileRenderCompletedHandler(store, updateTopic, renderTopic, kafkaProducer, messageSource));
+            eventsMessageHandlers.put(DesignAggregateTilesUpdateRequested.TYPE, createDesignAggregateTilesUpdateRequestedHandler(store, eventsTopic, kafkaProducer, messageSource));
+            eventsMessageHandlers.put(DesignAggregateTilesUpdateCompleted.TYPE, createDesignAggregateTilesUpdateCompletedHandler(store, eventsTopic, kafkaProducer, messageSource));
 
-            messageHandlers2.put(TileAggregateUpdateRequired.TYPE, createTileAggregateUpdateRequiredHandler(store, eventsTopic, kafkaProducer, messageSource));
+            eventsMessageHandlers.put(TilesRendered.TYPE, createTilesRenderedHandler(store, eventsTopic, renderTopicPrefix, kafkaProducer, messageSource));
 
-            messageHandlers3.put(TileRenderCompleted.TYPE, createForwardTileRenderCompletedHandler(store, eventsTopic, kafkaProducer, messageSource));
+            bufferMessageHandlers.put(TileRenderCompleted.TYPE, createTileRenderCompletedHandler(store, eventsTopic, kafkaProducer, messageSource));
 
-            kafkaPolling1 = new KafkaPolling(kafkaConsumer1, messageHandlers1, KafkaRecordsQueue.Simple.create(), -1, 50);
+            renderMessageHandlers.put(TileRenderCompleted.TYPE, createForwardTileRenderCompletedHandler(store, bufferTopic, kafkaProducer, messageSource));
 
-            kafkaPolling2 = new KafkaPolling(kafkaConsumer2, messageHandlers2, KafkaRecordsQueue.Compacted.create(), 5000, 50);
+            eventsKafkaPolling = new KafkaPolling<>(eventsKafkaConsumer, eventsMessageHandlers, KafkaRecordsConsumer.Simple.create(eventsMessageHandlers), KafkaRecordsQueue.Simple.create(), -1, 20);
 
-            kafkaPolling3 = new KafkaPolling(kafkaConsumer3, messageHandlers3, KafkaRecordsQueue.Compacted.create(), -1, 50);
+            bufferKafkaPolling = new KafkaPolling<>(bufferKafkaConsumer, bufferMessageHandlers, KafkaRecordsConsumer.Buffered.create(bufferMessageHandlers), KafkaRecordsQueue.Simple.create(), 2500, 500);
 
-            kafkaPolling1.startPolling("kafka-polling-topic-" + eventsTopic);
+            renderKafkaPolling0 = new KafkaPolling<>(renderKafkaConsumer0, renderMessageHandlers, KafkaRecordsConsumer.Simple.create(renderMessageHandlers), KafkaRecordsQueue.Compacted.create(), -1, 50);
+            renderKafkaPolling1 = new KafkaPolling<>(renderKafkaConsumer1, renderMessageHandlers, KafkaRecordsConsumer.Simple.create(renderMessageHandlers), KafkaRecordsQueue.Compacted.create(), -1, 50);
+            renderKafkaPolling2 = new KafkaPolling<>(renderKafkaConsumer2, renderMessageHandlers, KafkaRecordsConsumer.Simple.create(renderMessageHandlers), KafkaRecordsQueue.Compacted.create(), -1, 50);
+            renderKafkaPolling3 = new KafkaPolling<>(renderKafkaConsumer3, renderMessageHandlers, KafkaRecordsConsumer.Simple.create(renderMessageHandlers), KafkaRecordsQueue.Compacted.create(), -1, 50);
 
-            kafkaPolling2.startPolling("kafka-polling-topic-" + updateTopic);
+            eventsKafkaPolling.startPolling("kafka-polling-topic-" + eventsTopic);
 
-            kafkaPolling3.startPolling("kafka-polling-topic-" + renderTopic);
+            bufferKafkaPolling.startPolling("kafka-polling-topic-" + bufferTopic);
+
+            renderKafkaPolling0.startPolling("kafka-polling-topic-" + renderTopicPrefix + "-completed-0");
+            renderKafkaPolling1.startPolling("kafka-polling-topic-" + renderTopicPrefix + "-completed-1");
+            renderKafkaPolling2.startPolling("kafka-polling-topic-" + renderTopicPrefix + "-completed-2");
+            renderKafkaPolling3.startPolling("kafka-polling-topic-" + renderTopicPrefix + "-completed-3");
 
             final Handler<RoutingContext> apiV1DocsHandler = new OpenApiHandler(vertx.getDelegate(), executor, "api-v1.yaml");
 
             final HealthCheckHandler healthCheckHandler = HealthCheckHandler.createWithHealthChecks(HealthChecks.create(vertx));
 
-            healthCheckHandler.register("kafka-topic-events", 2000, future -> checkTopic(kafkaConsumer4, eventsTopic, future));
-            healthCheckHandler.register("kafka-topic-render", 2000, future -> checkTopic(kafkaConsumer4, renderTopic, future));
-            healthCheckHandler.register("kafka-topic-update", 2000, future -> checkTopic(kafkaConsumer4, updateTopic, future));
+            healthCheckHandler.register("kafka-topic-events", 2000, future -> checkTopic(healthKafkaConsumer, eventsTopic, future));
+            healthCheckHandler.register("kafka-topic-buffer", 2000, future -> checkTopic(healthKafkaConsumer, bufferTopic, future));
+            healthCheckHandler.register("kafka-topic-render-completed-0", 2000, future -> checkTopic(healthKafkaConsumer, renderTopicPrefix + "-completed-0", future));
+            healthCheckHandler.register("kafka-topic-render-completed-1", 2000, future -> checkTopic(healthKafkaConsumer, renderTopicPrefix + "-completed-1", future));
+            healthCheckHandler.register("kafka-topic-render-completed-2", 2000, future -> checkTopic(healthKafkaConsumer, renderTopicPrefix + "-completed-2", future));
+            healthCheckHandler.register("kafka-topic-render-completed-3", 2000, future -> checkTopic(healthKafkaConsumer, renderTopicPrefix + "-completed-3", future));
+            healthCheckHandler.register("kafka-topic-render-requested-0", 2000, future -> checkTopic(healthKafkaConsumer, renderTopicPrefix + "-requested-0", future));
+            healthCheckHandler.register("kafka-topic-render-requested-1", 2000, future -> checkTopic(healthKafkaConsumer, renderTopicPrefix + "-requested-1", future));
+            healthCheckHandler.register("kafka-topic-render-requested-2", 2000, future -> checkTopic(healthKafkaConsumer, renderTopicPrefix + "-requested-2", future));
+            healthCheckHandler.register("kafka-topic-render-requested-3", 2000, future -> checkTopic(healthKafkaConsumer, renderTopicPrefix + "-requested-3", future));
             healthCheckHandler.register("cassandra-table-design", 2000, future -> checkTable(store, future, "DESIGN"));
             healthCheckHandler.register("cassandra-table-message", 2000, future -> checkTable(store, future, "MESSAGE"));
 

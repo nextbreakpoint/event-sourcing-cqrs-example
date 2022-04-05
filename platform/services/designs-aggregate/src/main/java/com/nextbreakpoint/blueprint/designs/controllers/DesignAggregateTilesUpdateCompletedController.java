@@ -2,7 +2,7 @@ package com.nextbreakpoint.blueprint.designs.controllers;
 
 import com.nextbreakpoint.blueprint.common.core.*;
 import com.nextbreakpoint.blueprint.common.events.DesignDocumentUpdateRequested;
-import com.nextbreakpoint.blueprint.common.events.TileAggregateUpdateCompleted;
+import com.nextbreakpoint.blueprint.common.events.DesignAggregateTilesUpdateCompleted;
 import com.nextbreakpoint.blueprint.common.vertx.Controller;
 import com.nextbreakpoint.blueprint.common.vertx.MessageEmitter;
 import com.nextbreakpoint.blueprint.designs.aggregate.DesignAggregate;
@@ -15,13 +15,13 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public class TileAggregateUpdateCompletedController implements Controller<InputMessage, Void> {
-    private final Mapper<InputMessage, TileAggregateUpdateCompleted> inputMapper;
+public class DesignAggregateTilesUpdateCompletedController implements Controller<InputMessage, Void> {
+    private final Mapper<InputMessage, DesignAggregateTilesUpdateCompleted> inputMapper;
     private final MessageMapper<DesignDocumentUpdateRequested, OutputMessage> outputMapper;
     private final MessageEmitter emitter;
     private final DesignAggregate aggregate;
 
-    public TileAggregateUpdateCompletedController(DesignAggregate aggregate, Mapper<InputMessage, TileAggregateUpdateCompleted> inputMapper, MessageMapper<DesignDocumentUpdateRequested, OutputMessage> outputMapper, MessageEmitter emitter) {
+    public DesignAggregateTilesUpdateCompletedController(DesignAggregate aggregate, Mapper<InputMessage, DesignAggregateTilesUpdateCompleted> inputMapper, MessageMapper<DesignDocumentUpdateRequested, OutputMessage> outputMapper, MessageEmitter emitter) {
         this.aggregate = Objects.requireNonNull(aggregate);
         this.inputMapper = Objects.requireNonNull(inputMapper);
         this.outputMapper = Objects.requireNonNull(outputMapper);
@@ -41,7 +41,7 @@ public class TileAggregateUpdateCompletedController implements Controller<InputM
                 .map(result -> null);
     }
 
-    private Observable<DesignDocumentUpdateRequested> onAggregateUpdateCompleted(TileAggregateUpdateCompleted event) {
+    private Observable<DesignDocumentUpdateRequested> onAggregateUpdateCompleted(DesignAggregateTilesUpdateCompleted event) {
         return aggregate.findDesign(event.getDesignId())
                 .flatMapObservable(result -> result.map(design -> Observable.just(createEvent(design))).orElseGet(Observable::empty));
     }

@@ -4,10 +4,7 @@ import com.nextbreakpoint.blueprint.common.core.Checksum;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.core.Json;
 import com.nextbreakpoint.blueprint.common.core.TilesBitmap;
-import com.nextbreakpoint.blueprint.common.events.DesignDeleteRequested;
-import com.nextbreakpoint.blueprint.common.events.DesignInsertRequested;
-import com.nextbreakpoint.blueprint.common.events.DesignUpdateRequested;
-import com.nextbreakpoint.blueprint.common.events.TileRenderCompleted;
+import com.nextbreakpoint.blueprint.common.events.*;
 import com.nextbreakpoint.blueprint.designs.model.Design;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
@@ -69,9 +66,9 @@ public class DesignStateStrategy {
                 state.design = new Design(event.getDesignId(), event.getUserId(), event.getCommandId(), state.design.getData(), state.design.getChecksum(), token, "DELETED", state.design.isPublished(), state.design.getLevels(), state.design.getBitmap(), state.design.getCreated(), toDateTime(timestamp));
                 break;
             }
-            case TileRenderCompleted.TYPE: {
-                TileRenderCompleted event = Json.decodeValue(value, TileRenderCompleted.class);
-                TilesBitmap.of(state.design.getBitmap()).putTile(event.getLevel(), event.getRow(), event.getCol());
+            case TilesRendered.TYPE: {
+                TilesRendered event = Json.decodeValue(value, TilesRendered.class);
+                event.getTiles().forEach(tile -> TilesBitmap.of(state.design.getBitmap()).putTile(tile.getLevel(), tile.getRow(), tile.getCol()));
                 state.design = new Design(event.getDesignId(), state.design.getUserId(), state.design.getCommandId(), state.design.getData(), state.design.getChecksum(), token, state.design.getStatus(), state.design.isPublished(), state.design.getLevels(), state.design.getBitmap(), state.design.getCreated(), toDateTime(timestamp));
                 break;
             }

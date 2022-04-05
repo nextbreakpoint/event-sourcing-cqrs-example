@@ -16,6 +16,7 @@ import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.events.TileRenderCompleted;
 import com.nextbreakpoint.blueprint.common.events.mappers.TileRenderCompletedOutputMapper;
 import com.nextbreakpoint.blueprint.common.test.PayloadUtils;
+import com.nextbreakpoint.blueprint.designs.common.Render;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -86,6 +87,6 @@ public class VerifyAggregatePact {
 
         final OutputMessage tileRenderCompletedMessage = new TileRenderCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(tileRenderCompleted);
 
-        return Json.encodeValue(new KafkaRecord(tileRenderCompletedMessage.getKey(), PayloadUtils.payloadToMap(tileRenderCompletedMessage.getValue())));
+        return Json.encodeValue(new KafkaRecord(Render.createRenderKey(tileRenderCompleted), PayloadUtils.payloadToMap(tileRenderCompletedMessage.getValue())));
     }
 }

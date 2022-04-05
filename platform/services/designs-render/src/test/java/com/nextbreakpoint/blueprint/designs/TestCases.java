@@ -58,19 +58,21 @@ public class TestCases {
         KafkaConsumer<String, String> renderConsumer = KafkaClientFactory.createConsumer(vertx, createConsumerConfig(consumerGroupId));
 
         final Set<String> renderTopics = Set.of(
-                TestConstants.RENDER_TOPIC_NAME,
-                TestConstants.RENDER_TOPIC_NAME + "-0",
-                TestConstants.RENDER_TOPIC_NAME + "-1",
-                TestConstants.RENDER_TOPIC_NAME + "-2",
-                TestConstants.RENDER_TOPIC_NAME + "-3",
-                TestConstants.RENDER_TOPIC_NAME + "-4"
+                TestConstants.RENDER_TOPIC_PREFIX + "-completed-0",
+                TestConstants.RENDER_TOPIC_PREFIX + "-completed-1",
+                TestConstants.RENDER_TOPIC_PREFIX + "-completed-2",
+                TestConstants.RENDER_TOPIC_PREFIX + "-completed-3",
+                TestConstants.RENDER_TOPIC_PREFIX + "-requested-0",
+                TestConstants.RENDER_TOPIC_PREFIX + "-requested-1",
+                TestConstants.RENDER_TOPIC_PREFIX + "-requested-2",
+                TestConstants.RENDER_TOPIC_PREFIX + "-requested-3"
         );
 
         renderPolling = new KafkaTestPolling(renderConsumer, renderTopics);
 
         renderPolling.startPolling();
 
-        renderEmitter = new KafkaTestEmitter(producer, TestConstants.RENDER_TOPIC_NAME);
+        renderEmitter = new KafkaTestEmitter(producer, TestConstants.RENDER_TOPIC_PREFIX);
 
         final S3Client s3Client = TestS3.createS3Client(URI.create("http://" + scenario.getMinioHost() + ":" + scenario.getMinioPort()));
 
@@ -156,11 +158,11 @@ public class TestCases {
         final TileRenderRequested tileRenderRequested4 = Json.decodeValue(tileRenderRequestedMessage2.getValue().getData(), TileRenderRequested.class);
         final TileRenderRequested tileRenderRequested5 = Json.decodeValue(tileRenderRequestedMessage2.getValue().getData(), TileRenderRequested.class);
 
-        renderEmitter.send(tileRenderRequestedMessage1, renderEmitter.getTopicName() + "-0");
-        renderEmitter.send(tileRenderRequestedMessage2, renderEmitter.getTopicName() + "-1");
-        renderEmitter.send(tileRenderRequestedMessage3, renderEmitter.getTopicName() + "-2");
-        renderEmitter.send(tileRenderRequestedMessage4, renderEmitter.getTopicName() + "-3");
-        renderEmitter.send(tileRenderRequestedMessage5, renderEmitter.getTopicName() + "-4");
+        renderEmitter.send(tileRenderRequestedMessage1, renderEmitter.getTopicName() + "-requested-0");
+        renderEmitter.send(tileRenderRequestedMessage2, renderEmitter.getTopicName() + "-requested-1");
+        renderEmitter.send(tileRenderRequestedMessage3, renderEmitter.getTopicName() + "-requested-1");
+        renderEmitter.send(tileRenderRequestedMessage4, renderEmitter.getTopicName() + "-requested-2");
+        renderEmitter.send(tileRenderRequestedMessage5, renderEmitter.getTopicName() + "-requested-3");
 
         await().atMost(Duration.ofSeconds(30))
                 .pollInterval(ONE_SECOND)

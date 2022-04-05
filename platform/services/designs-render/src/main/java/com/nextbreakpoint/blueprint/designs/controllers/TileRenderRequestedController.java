@@ -8,6 +8,7 @@ import com.nextbreakpoint.blueprint.common.events.TileRenderCompleted;
 import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
 import com.nextbreakpoint.blueprint.common.vertx.Controller;
 import com.nextbreakpoint.blueprint.common.vertx.MessageEmitter;
+import com.nextbreakpoint.blueprint.designs.common.Render;
 import com.nextbreakpoint.blueprint.designs.common.Result;
 import com.nextbreakpoint.blueprint.designs.common.S3Driver;
 import com.nextbreakpoint.blueprint.designs.common.TileRenderer;
@@ -43,13 +44,13 @@ public class TileRenderRequestedController implements Controller<InputMessage, V
     public Single<Void> onNext(InputMessage message) {
         return Single.just(message)
                 .map(inputMapper::transform)
-                .flatMap(this::onTileRenderRequested)
-                .map(outputMapper::transform)
-                .flatMap(emitter::send);
+                .flatMap(this::onTileRenderRequested);
     }
 
-    private Single<TileRenderCompleted> onTileRenderRequested(TileRenderRequested event) {
-        return renderImage(event).map(result -> createEvent(event, makeStatus(result)));
+    private Single<Void> onTileRenderRequested(TileRenderRequested event) {
+        return renderImage(event).map(result -> createEvent(event, makeStatus(result)))
+                .map(outputMapper::transform)
+                .flatMap(message -> emitter.send(message, Render.getTopicName(emitter.getTopicName() + "-completed", event.getLevel())));
     }
 
     private String makeStatus(Result result) {

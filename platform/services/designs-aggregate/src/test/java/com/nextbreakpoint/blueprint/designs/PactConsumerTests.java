@@ -241,7 +241,7 @@ public class PactConsumerTests {
         PactDslJsonBody event5 = new PactDslJsonBody()
                 .uuid("designId", uuid)
                 .stringMatcher("revision", TestConstants.REVISION_REGEXP)
-                .stringValue("checksum", TestConstants.CHECKSUM_2)
+                .stringValue("checksum", TestConstants.CHECKSUM_1)
                 .numberValue("level", 2)
                 .numberValue("row", 3)
                 .numberValue("col", 1)

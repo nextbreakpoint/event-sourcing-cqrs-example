@@ -1,33 +1,34 @@
 package com.nextbreakpoint.blueprint.common.vertx;
 
+import com.nextbreakpoint.blueprint.common.core.Payload;
 import io.vertx.rxjava.kafka.client.consumer.KafkaConsumerRecord;
 
 import java.util.*;
 
 public interface KafkaRecordsQueue {
-    void addRecord(KafkaConsumerRecord<String, String> record);
+    void addRecord(QueuedRecord entry);
 
-    Collection<KafkaConsumerRecord<String, String>> getRecords();
+    List<QueuedRecord> getRecords();
 
-    void deleteRecord(KafkaConsumerRecord<String, String> record);
+    void deleteRecord(QueuedRecord entry);
 
     int size();
 
     void clear();
 
     class Simple implements KafkaRecordsQueue {
-        private List<KafkaConsumerRecord<String, String>> records = new ArrayList<>();
+        private List<QueuedRecord> records = new ArrayList<>();
 
         @Override
-        public void addRecord(KafkaConsumerRecord<String, String> record) {
+        public void addRecord(QueuedRecord record) {
             records.add(record);
         }
 
         @Override
-        public void deleteRecord(KafkaConsumerRecord<String, String> record) {}
+        public void deleteRecord(QueuedRecord record) {}
 
         @Override
-        public Collection<KafkaConsumerRecord<String, String>> getRecords() {
+        public List<QueuedRecord> getRecords() {
             return new ArrayList<>(records);
         }
 
@@ -47,21 +48,21 @@ public interface KafkaRecordsQueue {
     }
 
     class Compacted implements KafkaRecordsQueue {
-        private Map<String, KafkaConsumerRecord<String, String>> records = new HashMap<>();
+        private Map<String, QueuedRecord> records = new HashMap<>();
 
         @Override
-        public void addRecord(KafkaConsumerRecord<String, String> record) {
-            records.put(record.key(), record);
+        public void addRecord(QueuedRecord record) {
+            records.put(record.record.key(), record);
         }
 
         @Override
-        public void deleteRecord(KafkaConsumerRecord<String, String> record) {
-            records.remove(record.key());
+        public void deleteRecord(QueuedRecord record) {
+            records.remove(record.record.key());
         }
 
         @Override
-        public Collection<KafkaConsumerRecord<String, String>> getRecords() {
-            return records.values();
+        public List<QueuedRecord> getRecords() {
+            return new ArrayList<>(records.values());
         }
 
         @Override
@@ -76,6 +77,24 @@ public interface KafkaRecordsQueue {
 
         public static Compacted create() {
             return new Compacted();
+        }
+    }
+
+    class QueuedRecord {
+        private KafkaConsumerRecord<String, String> record;
+        private Payload payload;
+
+        public QueuedRecord(KafkaConsumerRecord<String, String> record, Payload payload) {
+            this.record = record;
+            this.payload = payload;
+        }
+
+        public KafkaConsumerRecord<String, String> getRecord() {
+            return record;
+        }
+
+        public Payload getPayload() {
+            return payload;
         }
     }
 }

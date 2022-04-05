@@ -154,8 +154,8 @@ public class Verticle extends AbstractVerticle {
                     .withEnableAutoCommit(enableAutoCommit)
                     .build();
 
-            final KafkaConsumer<String, String> kafkaConsumer1 = KafkaClientFactory.createConsumer(vertx, consumerConfig.toBuilder().withGroupId(groupId + "-1").build());
-            final KafkaConsumer<String, String> kafkaConsumer2 = KafkaClientFactory.createConsumer(vertx, consumerConfig.toBuilder().withGroupId(groupId + "-2").build());
+            final KafkaConsumer<String, String> eventsKafkaConsumer = KafkaClientFactory.createConsumer(vertx, consumerConfig.toBuilder().withGroupId(groupId + "-events").build());
+            final KafkaConsumer<String, String> healthKafkaConsumer = KafkaClientFactory.createConsumer(vertx, consumerConfig.toBuilder().withGroupId(groupId + "-health").build());
 
             final Router mainRouter = Router.router(vertx);
 
@@ -174,9 +174,9 @@ public class Verticle extends AbstractVerticle {
             messageHandlers.put(DesignDocumentUpdateCompleted.TYPE, Factory.createDesignDocumentUpdateCompletedHandler(new DesignDocumentUpdateCompletedController(vertx, "notifications")));
             messageHandlers.put(DesignDocumentDeleteCompleted.TYPE, Factory.createDesignDocumentDeleteCompletedHandler(new DesignDocumentDeleteCompletedController(vertx, "notifications")));
 
-            kafkaConsumer1.subscribe(eventsTopic);
+            eventsKafkaConsumer.subscribe(eventsTopic);
 
-            kafkaPolling = new KafkaPolling(kafkaConsumer1, messageHandlers);
+            kafkaPolling = new KafkaPolling<>(eventsKafkaConsumer, messageHandlers, KafkaRecordsConsumer.Simple.create(messageHandlers));
 
             kafkaPolling.startPolling("kafka-polling-topic-" + eventsTopic);
 
@@ -184,7 +184,7 @@ public class Verticle extends AbstractVerticle {
 
             final HealthCheckHandler healthCheckHandler = HealthCheckHandler.createWithHealthChecks(HealthChecks.create(vertx));
 
-            healthCheckHandler.register("kafka-topic-events", 2000, future -> checkTopic(kafkaConsumer2, eventsTopic, future));
+            healthCheckHandler.register("kafka-topic-events", 2000, future -> checkTopic(healthKafkaConsumer, eventsTopic, future));
             healthCheckHandler.register("service-discovery-importer", 2000, future -> checkDiscoveryImporter(serviceDiscovery, future));
             healthCheckHandler.register("service-discovery-records", 2000, future -> checkDiscoveryRecords(serviceDiscovery, future));
 

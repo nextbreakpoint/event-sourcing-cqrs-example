@@ -186,8 +186,8 @@ public class Verticle extends AbstractVerticle {
                     .withEnableAutoCommit(enableAutoCommit)
                     .build();
 
-            final KafkaConsumer<String, String> kafkaConsumer1 = KafkaClientFactory.createConsumer(vertx, consumerConfig.toBuilder().withGroupId(groupId + "-1").build());
-            final KafkaConsumer<String, String> kafkaConsumer2 = KafkaClientFactory.createConsumer(vertx, consumerConfig.toBuilder().withGroupId(groupId + "-2").build());
+            final KafkaConsumer<String, String> commandsKafkaConsumer = KafkaClientFactory.createConsumer(vertx, consumerConfig.toBuilder().withGroupId(groupId + "-commands").build());
+            final KafkaConsumer<String, String> healthKafkaConsumer = KafkaClientFactory.createConsumer(vertx, consumerConfig.toBuilder().withGroupId(groupId + "-health").build());
 
             final CassandraClientConfig cassandraConfig = CassandraClientConfig.builder()
                     .withClusterName(clusterName)
@@ -204,7 +204,7 @@ public class Verticle extends AbstractVerticle {
 
             final Router mainRouter = Router.router(vertx);
 
-            kafkaConsumer1.subscribe(commandsTopic);
+            commandsKafkaConsumer.subscribe(commandsTopic);
 
             final Map<String, RxSingleHandler<InputMessage, ?>> messageHandlers = new HashMap<>();
 
@@ -212,7 +212,7 @@ public class Verticle extends AbstractVerticle {
             messageHandlers.put(DesignUpdateCommand.TYPE, createDesignUpdateCommandHandler(store, eventsTopic, kafkaProducer, messageSource));
             messageHandlers.put(DesignDeleteCommand.TYPE, createDesignDeleteCommandHandler(store, eventsTopic, kafkaProducer, messageSource));
 
-            kafkaPolling = new KafkaPolling(kafkaConsumer1, messageHandlers);
+            kafkaPolling = new KafkaPolling<>(commandsKafkaConsumer, messageHandlers, KafkaRecordsConsumer.Simple.create(messageHandlers));
 
             kafkaPolling.startPolling("kafka-polling-topic-" + commandsTopic);
 
@@ -230,8 +230,8 @@ public class Verticle extends AbstractVerticle {
 
             final HealthCheckHandler healthCheckHandler = HealthCheckHandler.createWithHealthChecks(HealthChecks.create(vertx));
 
-            healthCheckHandler.register("kafka-topic-events", 2000, future -> checkTopic(kafkaConsumer2, eventsTopic, future));
-            healthCheckHandler.register("kafka-topic-commands", 2000, future -> checkTopic(kafkaConsumer2, commandsTopic, future));
+            healthCheckHandler.register("kafka-topic-events", 2000, future -> checkTopic(healthKafkaConsumer, eventsTopic, future));
+            healthCheckHandler.register("kafka-topic-commands", 2000, future -> checkTopic(healthKafkaConsumer, commandsTopic, future));
             healthCheckHandler.register("cassandra-table-message", 2000, future -> checkTable(store, future, "MESSAGE"));
 
             final URL resource = RouterBuilder.class.getClassLoader().getResource("api-v1.yaml");

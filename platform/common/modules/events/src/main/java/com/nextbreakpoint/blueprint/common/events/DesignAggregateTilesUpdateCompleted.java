@@ -11,14 +11,14 @@ import java.util.UUID;
 
 @Data
 @Builder(access = AccessLevel.PUBLIC, setterPrefix = "with")
-public class TileAggregateUpdateCompleted {
-    public static final String TYPE = "tile-aggregate-update-completed-v1";
+public class DesignAggregateTilesUpdateCompleted {
+    public static final String TYPE = "design-aggregate-tiles-update-completed-v1";
 
     private final UUID designId;
     private final String revision;
 
     @JsonCreator
-    public TileAggregateUpdateCompleted(
+    public DesignAggregateTilesUpdateCompleted(
             @JsonProperty("designId") UUID designId,
             @JsonProperty("revision") String revision
     ) {

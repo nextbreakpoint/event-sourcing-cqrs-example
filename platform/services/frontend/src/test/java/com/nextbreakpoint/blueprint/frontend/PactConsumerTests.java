@@ -19,6 +19,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -77,15 +78,63 @@ public class PactConsumerTests {
                 .headers(headers)
                 .status(200)
                 .body(
-                        new PactDslJsonArray()
-                                .object()
-                                .stringValue("uuid", TestConstants.DESIGN_UUID_1.toString())
-                                .stringMatcher("checksum", ".+")
-                                .closeObject()
-                                .object()
-                                .stringValue("uuid", TestConstants.DESIGN_UUID_2.toString())
-                                .stringMatcher("checksum", ".+")
-                                .closeObject()
+                        new PactDslJsonBody()
+                                .array("designs")
+                                    .object()
+                                        .stringValue("uuid", TestConstants.DESIGN_UUID_1.toString())
+                                        .stringMatcher("checksum", ".+")
+                                        .stringMatcher("revision", ".+")
+                                        .stringMatcher("json", ".+")
+                                        .datetime("created", "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+                                        .datetime("updated", "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+                                        .booleanValue("published", false)
+                                        .integerType("levels", 3)
+                                        .array("tiles")
+                                            .object()
+                                                .integerType("level", 0)
+                                                .integerType("total", 1)
+                                                .integerType("completed", 0)
+                                                .closeObject()
+                                            .object()
+                                                .integerType("level", 1)
+                                                .integerType("total", 4)
+                                                .integerType("completed", 0)
+                                                .closeObject()
+                                            .object()
+                                                .integerType("level", 2)
+                                                .integerType("total", 16)
+                                                .integerType("completed", 0)
+                                                .closeObject()
+                                            .closeArray()
+                                        .closeObject()
+                                    .object()
+                                        .stringValue("uuid", TestConstants.DESIGN_UUID_2.toString())
+                                        .stringMatcher("checksum", ".+")
+                                        .stringMatcher("revision", ".+")
+                                        .stringMatcher("json", ".+")
+                                        .datetime("created", "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+                                        .datetime("updated", "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+                                        .booleanValue("published", false)
+                                        .integerType("levels", 3)
+                                        .array("tiles")
+                                            .object()
+                                                .integerType("level", 0)
+                                                .integerType("total", 1)
+                                                .integerType("completed", 0)
+                                                .closeObject()
+                                            .object()
+                                                .integerType("level", 1)
+                                                .integerType("total", 4)
+                                                .integerType("completed", 0)
+                                                .closeObject()
+                                            .object()
+                                                .integerType("level", 2)
+                                                .integerType("total", 16)
+                                                .integerType("completed", 0)
+                                                .closeObject()
+                                            .closeArray()
+                                        .closeObject()
+                                    .closeArray()
                 )
                 .toPact();
     }
@@ -200,7 +249,29 @@ public class PactConsumerTests {
                                 .stringValue("uuid", TestConstants.DESIGN_UUID_1.toString())
                                 .stringMatcher("json", ".+")
                                 .stringMatcher("checksum", ".+")
-                                .datetime("modified", "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+                                .stringMatcher("revision", ".+")
+                                .stringMatcher("json", ".+")
+                                .datetime("created", "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+                                .datetime("updated", "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+                                .booleanValue("published", false)
+                                .integerType("levels", 3)
+                                .array("tiles")
+                                    .object()
+                                        .integerType("level", 0)
+                                        .integerType("total", 1)
+                                        .integerType("completed", 0)
+                                        .closeObject()
+                                    .object()
+                                        .integerType("level", 1)
+                                        .integerType("total", 4)
+                                        .integerType("completed", 0)
+                                        .closeObject()
+                                    .object()
+                                        .integerType("level", 2)
+                                        .integerType("total", 16)
+                                        .integerType("completed", 0)
+                                        .closeObject()
+                                    .closeArray()
                 )
                 .toPact();
     }
@@ -366,10 +437,24 @@ public class PactConsumerTests {
                 .handleResponse(httpResponse -> {
                     assertThat(httpResponse.getStatusLine().getStatusCode()).isEqualTo(200);
                     final DocumentContext content = JsonPath.parse(httpResponse.getEntity().getContent());
-                    assertThat(content.read("$.[0].uuid").toString()).isEqualTo(TestConstants.DESIGN_UUID_1.toString());
-                    assertThat(content.read("$.[0].checksum").toString()).isNotBlank();
-                    assertThat(content.read("$.[1].uuid").toString()).isEqualTo(TestConstants.DESIGN_UUID_2.toString());
-                    assertThat(content.read("$.[1].checksum").toString()).isNotBlank();
+                    assertThat(content.read("$.designs[0].uuid").toString()).isEqualTo(TestConstants.DESIGN_UUID_1.toString());
+                    assertThat(content.read("$.designs[0].checksum").toString()).isNotBlank();
+                    assertThat(content.read("$.designs[0].revision").toString()).isNotBlank();
+                    assertThat(content.read("$.designs[0].updated").toString()).isNotBlank();
+                    assertThat(content.read("$.designs[0].created").toString()).isNotBlank();
+                    assertThat(content.read("$.designs[0].revision").toString()).isNotBlank();
+                    assertThat((Integer) content.read("$.designs[0].levels")).isNotNull();
+                    assertThat((Boolean) content.read("$.designs[0].published")).isNotNull();
+                    assertThat((List) content.read("$.designs[0].tiles")).isNotEmpty();
+                    assertThat(content.read("$.designs[1].uuid").toString()).isEqualTo(TestConstants.DESIGN_UUID_2.toString());
+                    assertThat(content.read("$.designs[1].checksum").toString()).isNotBlank();
+                    assertThat(content.read("$.designs[1].revision").toString()).isNotBlank();
+                    assertThat(content.read("$.designs[1].updated").toString()).isNotBlank();
+                    assertThat(content.read("$.designs[1].created").toString()).isNotBlank();
+                    assertThat(content.read("$.designs[1].revision").toString()).isNotBlank();
+                    assertThat((Integer) content.read("$.designs[1].levels")).isNotNull();
+                    assertThat((Boolean) content.read("$.designs[1].published")).isNotNull();
+                    assertThat((List) content.read("$.designs[1].tiles")).isNotEmpty();
                     return null;
                 });
     }
@@ -387,7 +472,13 @@ public class PactConsumerTests {
                     assertThat(content.read("$.uuid").toString()).isEqualTo(TestConstants.DESIGN_UUID_1.toString());
                     assertThat(content.read("$.json").toString()).isNotBlank();
                     assertThat(content.read("$.checksum").toString()).isNotBlank();
-                    assertThat(content.read("$.modified").toString()).isNotBlank();
+                    assertThat(content.read("$.revision").toString()).isNotBlank();
+                    assertThat(content.read("$.updated").toString()).isNotBlank();
+                    assertThat(content.read("$.created").toString()).isNotBlank();
+                    assertThat(content.read("$.revision").toString()).isNotBlank();
+                    assertThat((Integer) content.read("$.levels")).isNotNull();
+                    assertThat((Boolean) content.read("$.published")).isNotNull();
+                    assertThat((List) content.read("$.tiles")).isNotEmpty();
                     return null;
                 });
     }

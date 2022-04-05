@@ -35,12 +35,10 @@ import software.amazon.awssdk.auth.credentials.AwsCredentialsProviderChain;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3AsyncClient;
-import software.amazon.awssdk.services.s3.model.ListObjectsRequest;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.LineNumberInputStream;
 import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -60,11 +58,10 @@ import static java.util.Collections.singletonList;
 public class Verticle extends AbstractVerticle {
     private static final Logger logger = LoggerFactory.getLogger(Verticle.class.getName());
 
-    private KafkaPolling kafkaPolling1;
-    private KafkaPolling kafkaPolling2;
-    private KafkaPolling kafkaPolling3;
-    private KafkaPolling kafkaPolling4;
-    private KafkaPolling kafkaPolling5;
+    private KafkaPolling renderKafkaPolling0;
+    private KafkaPolling renderKafkaPolling1;
+    private KafkaPolling renderKafkaPolling2;
+    private KafkaPolling renderKafkaPolling3;
 
     public static void main(String[] args) {
         try {
@@ -89,20 +86,17 @@ public class Verticle extends AbstractVerticle {
     @Override
     public Completable rxStop() {
         return Completable.fromCallable(() -> {
-            if (kafkaPolling1 != null) {
-                kafkaPolling1.stopPolling();
+            if (renderKafkaPolling0 != null) {
+                renderKafkaPolling0.stopPolling();
             }
-            if (kafkaPolling2 != null) {
-                kafkaPolling2.stopPolling();
+            if (renderKafkaPolling1 != null) {
+                renderKafkaPolling1.stopPolling();
             }
-            if (kafkaPolling3 != null) {
-                kafkaPolling3.stopPolling();
+            if (renderKafkaPolling2 != null) {
+                renderKafkaPolling2.stopPolling();
             }
-            if (kafkaPolling4 != null) {
-                kafkaPolling4.stopPolling();
-            }
-            if (kafkaPolling5 != null) {
-                kafkaPolling5.stopPolling();
+            if (renderKafkaPolling3 != null) {
+                renderKafkaPolling3.stopPolling();
             }
             return null;
         });
@@ -142,7 +136,7 @@ public class Verticle extends AbstractVerticle {
 
             final String messageSource = config.getString("message_source");
 
-            final String renderTopic = config.getString("render_topic");
+            final String renderTopicPrefix = config.getString("render_topic_prefix");
 
             final String bootstrapServers = config.getString("kafka_bootstrap_servers", "localhost:9092");
 
@@ -198,12 +192,11 @@ public class Verticle extends AbstractVerticle {
                     .withEnableAutoCommit(enableAutoCommit)
                     .build();
 
-            final KafkaConsumer<String, String> kafkaConsumer1 = KafkaClientFactory.createConsumer(vertx, consumerConfig.toBuilder().withGroupId(groupId + "-1").build());
-            final KafkaConsumer<String, String> kafkaConsumer2 = KafkaClientFactory.createConsumer(vertx, consumerConfig.toBuilder().withGroupId(groupId + "-2").build());
-            final KafkaConsumer<String, String> kafkaConsumer3 = KafkaClientFactory.createConsumer(vertx, consumerConfig.toBuilder().withGroupId(groupId + "-3").build());
-            final KafkaConsumer<String, String> kafkaConsumer4 = KafkaClientFactory.createConsumer(vertx, consumerConfig.toBuilder().withGroupId(groupId + "-4").build());
-            final KafkaConsumer<String, String> kafkaConsumer5 = KafkaClientFactory.createConsumer(vertx, consumerConfig.toBuilder().withGroupId(groupId + "-5").build());
-            final KafkaConsumer<String, String> kafkaConsumer6 = KafkaClientFactory.createConsumer(vertx, consumerConfig.toBuilder().withGroupId(groupId + "-6").build());
+            final KafkaConsumer<String, String> healthKafkaConsumer = KafkaClientFactory.createConsumer(vertx, consumerConfig.toBuilder().withGroupId(groupId + "-health").build());
+            final KafkaConsumer<String, String> renderKafkaConsumer0 = KafkaClientFactory.createConsumer(vertx, consumerConfig.toBuilder().withGroupId(groupId + "-render-requested-0").build());
+            final KafkaConsumer<String, String> renderKafkaConsumer1 = KafkaClientFactory.createConsumer(vertx, consumerConfig.toBuilder().withGroupId(groupId + "-render-requested-1").build());
+            final KafkaConsumer<String, String> renderKafkaConsumer2 = KafkaClientFactory.createConsumer(vertx, consumerConfig.toBuilder().withGroupId(groupId + "-render-requested-2").build());
+            final KafkaConsumer<String, String> renderKafkaConsumer3 = KafkaClientFactory.createConsumer(vertx, consumerConfig.toBuilder().withGroupId(groupId + "-render-requested-3").build());
 
             final AwsCredentialsProvider credentialsProvider = AwsCredentialsProviderChain.of(DefaultCredentialsProvider.create());
 
@@ -225,25 +218,22 @@ public class Verticle extends AbstractVerticle {
 
             final Map<String, RxSingleHandler<InputMessage, ?>> messageHandlers = new HashMap<>();
 
-            messageHandlers.put(TileRenderRequested.TYPE, createTileRenderRequestedHandler(renderTopic, kafkaProducer, messageSource, workerExecutor, s3AsyncClient, s3Bucket));
+            messageHandlers.put(TileRenderRequested.TYPE, createTileRenderRequestedHandler(renderTopicPrefix, kafkaProducer, messageSource, workerExecutor, s3AsyncClient, s3Bucket));
 
-            kafkaConsumer1.subscribe(Set.of(renderTopic + "-0"));
-            kafkaConsumer2.subscribe(Set.of(renderTopic + "-1"));
-            kafkaConsumer3.subscribe(Set.of(renderTopic + "-2"));
-            kafkaConsumer4.subscribe(Set.of(renderTopic + "-3"));
-            kafkaConsumer5.subscribe(Set.of(renderTopic + "-4"));
+            renderKafkaConsumer0.subscribe(Set.of(renderTopicPrefix + "-requested-0"));
+            renderKafkaConsumer1.subscribe(Set.of(renderTopicPrefix + "-requested-1"));
+            renderKafkaConsumer2.subscribe(Set.of(renderTopicPrefix + "-requested-2"));
+            renderKafkaConsumer3.subscribe(Set.of(renderTopicPrefix + "-requested-3"));
 
-            kafkaPolling1 = new KafkaPolling(kafkaConsumer1, messageHandlers, KafkaRecordsQueue.Compacted.create(), -1, 20);
-            kafkaPolling2 = new KafkaPolling(kafkaConsumer2, messageHandlers, KafkaRecordsQueue.Compacted.create(), -1, 20);
-            kafkaPolling3 = new KafkaPolling(kafkaConsumer3, messageHandlers, KafkaRecordsQueue.Compacted.create(), -1, 20);
-            kafkaPolling4 = new KafkaPolling(kafkaConsumer4, messageHandlers, KafkaRecordsQueue.Compacted.create(), -1, 20);
-            kafkaPolling5 = new KafkaPolling(kafkaConsumer5, messageHandlers, KafkaRecordsQueue.Compacted.create(), -1, 20);
+            renderKafkaPolling0 = new KafkaPolling<>(renderKafkaConsumer0, messageHandlers, KafkaRecordsConsumer.Simple.create(messageHandlers), KafkaRecordsQueue.Compacted.create(), -1, 50);
+            renderKafkaPolling1 = new KafkaPolling<>(renderKafkaConsumer1, messageHandlers, KafkaRecordsConsumer.Simple.create(messageHandlers), KafkaRecordsQueue.Compacted.create(), -1, 50);
+            renderKafkaPolling2 = new KafkaPolling<>(renderKafkaConsumer2, messageHandlers, KafkaRecordsConsumer.Simple.create(messageHandlers), KafkaRecordsQueue.Compacted.create(), -1, 50);
+            renderKafkaPolling3 = new KafkaPolling<>(renderKafkaConsumer3, messageHandlers, KafkaRecordsConsumer.Simple.create(messageHandlers), KafkaRecordsQueue.Compacted.create(), -1, 50);
 
-            kafkaPolling1.startPolling("kafka-polling-topic-" + renderTopic + "-1");
-            kafkaPolling2.startPolling("kafka-polling-topic-" + renderTopic + "-2");
-            kafkaPolling3.startPolling("kafka-polling-topic-" + renderTopic + "-3");
-            kafkaPolling4.startPolling("kafka-polling-topic-" + renderTopic + "-4");
-            kafkaPolling5.startPolling("kafka-polling-topic-" + renderTopic + "-5");
+            renderKafkaPolling0.startPolling("kafka-polling-topic-" + renderTopicPrefix + "-requested-0");
+            renderKafkaPolling1.startPolling("kafka-polling-topic-" + renderTopicPrefix + "-requested-1");
+            renderKafkaPolling2.startPolling("kafka-polling-topic-" + renderTopicPrefix + "-requested-2");
+            renderKafkaPolling3.startPolling("kafka-polling-topic-" + renderTopicPrefix + "-requested-3");
 
             final CorsHandler corsHandler = CorsHandlerFactory.createWithAll(originPattern, asList(COOKIE, AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN), asList(COOKIE, CONTENT_TYPE, X_XSRF_TOKEN));
 
@@ -259,7 +249,14 @@ public class Verticle extends AbstractVerticle {
 
             final HealthCheckHandler healthCheckHandler = HealthCheckHandler.createWithHealthChecks(HealthChecks.create(vertx));
 
-            healthCheckHandler.register("kafka-topic-render", 2000, future -> checkTopic(kafkaConsumer6, renderTopic, future));
+            healthCheckHandler.register("kafka-topic-render-requested-0", 2000, future -> checkTopic(healthKafkaConsumer, renderTopicPrefix + "-requested-0", future));
+            healthCheckHandler.register("kafka-topic-render-requested-1", 2000, future -> checkTopic(healthKafkaConsumer, renderTopicPrefix + "-requested-1", future));
+            healthCheckHandler.register("kafka-topic-render-requested-2", 2000, future -> checkTopic(healthKafkaConsumer, renderTopicPrefix + "-requested-2", future));
+            healthCheckHandler.register("kafka-topic-render-requested-3", 2000, future -> checkTopic(healthKafkaConsumer, renderTopicPrefix + "-requested-3", future));
+            healthCheckHandler.register("kafka-topic-render-completed-0", 2000, future -> checkTopic(healthKafkaConsumer, renderTopicPrefix + "-completed-0", future));
+            healthCheckHandler.register("kafka-topic-render-completed-1", 2000, future -> checkTopic(healthKafkaConsumer, renderTopicPrefix + "-completed-1", future));
+            healthCheckHandler.register("kafka-topic-render-completed-2", 2000, future -> checkTopic(healthKafkaConsumer, renderTopicPrefix + "-completed-2", future));
+            healthCheckHandler.register("kafka-topic-render-completed-3", 2000, future -> checkTopic(healthKafkaConsumer, renderTopicPrefix + "-completed-3", future));
             healthCheckHandler.register("bucket-tiles", 2000, future -> checkBucket(s3AsyncClient, s3Bucket, future));
 
             final URL resource = RouterBuilder.class.getClassLoader().getResource("api-v1.yaml");

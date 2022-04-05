@@ -12,13 +12,13 @@ import rx.Single;
 import java.util.Objects;
 import java.util.Optional;
 
-public class TileAggregateUpdateRequestedController implements Controller<InputMessage, Void> {
-    private final Mapper<InputMessage, TileAggregateUpdateRequested> inputMapper;
-    private final MessageMapper<TileAggregateUpdateCompleted, OutputMessage> updateOutputMapper;
+public class DesignAggregateTilesUpdateRequestedController implements Controller<InputMessage, Void> {
+    private final Mapper<InputMessage, DesignAggregateTilesUpdateRequested> inputMapper;
+    private final MessageMapper<DesignAggregateTilesUpdateCompleted, OutputMessage> updateOutputMapper;
     private final MessageEmitter emitter;
     private final DesignAggregate aggregate;
 
-    public TileAggregateUpdateRequestedController(DesignAggregate aggregate, Mapper<InputMessage, TileAggregateUpdateRequested> inputMapper, MessageMapper<TileAggregateUpdateCompleted, OutputMessage> updateOutputMapper, MessageEmitter emitter) {
+    public DesignAggregateTilesUpdateRequestedController(DesignAggregate aggregate, Mapper<InputMessage, DesignAggregateTilesUpdateRequested> inputMapper, MessageMapper<DesignAggregateTilesUpdateCompleted, OutputMessage> updateOutputMapper, MessageEmitter emitter) {
         this.aggregate = Objects.requireNonNull(aggregate);
         this.inputMapper =  Objects.requireNonNull(inputMapper);
         this.updateOutputMapper = Objects.requireNonNull(updateOutputMapper);
@@ -38,14 +38,14 @@ public class TileAggregateUpdateRequestedController implements Controller<InputM
                 .map(value -> null);
     }
 
-    private Observable<TileAggregateUpdateCompleted> onAggregateUpdateRequested(TileAggregateUpdateRequested event) {
+    private Observable<DesignAggregateTilesUpdateCompleted> onAggregateUpdateRequested(DesignAggregateTilesUpdateRequested event) {
         return aggregate.projectDesign(event.getDesignId(), event.getRevision())
                 .flatMap(result -> result.map(aggregate::updateDesign).orElseGet(() -> Single.just(Optional.empty())))
                 .flatMapObservable(result -> result.map(design -> Observable.just(createEvent(design))).orElseGet(Observable::empty));
     }
 
-    private TileAggregateUpdateCompleted createEvent(Design design) {
-        return TileAggregateUpdateCompleted.builder()
+    private DesignAggregateTilesUpdateCompleted createEvent(Design design) {
+        return DesignAggregateTilesUpdateCompleted.builder()
                 .withDesignId(design.getDesignId())
                 .withRevision(design.getRevision())
                 .build();

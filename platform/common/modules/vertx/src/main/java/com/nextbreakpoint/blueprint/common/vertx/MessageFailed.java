@@ -11,6 +11,6 @@ public class MessageFailed implements BiConsumer<InputMessage, Throwable> {
 
     @Override
     public void accept(InputMessage message, Throwable error) {
-        logger.error("An error occurred while consuming message " + message.getValue().getUuid(), error);
+        logger.error("An error occurred while consuming 1 message", error);
     }
 }

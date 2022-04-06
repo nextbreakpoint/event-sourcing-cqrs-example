@@ -1,10 +1,19 @@
 package com.nextbreakpoint.blueprint.designs;
 
+import com.datastax.oss.driver.api.core.CqlSession;
 import com.nextbreakpoint.blueprint.common.commands.DesignDeleteCommand;
 import com.nextbreakpoint.blueprint.common.commands.DesignInsertCommand;
 import com.nextbreakpoint.blueprint.common.commands.DesignUpdateCommand;
 import com.nextbreakpoint.blueprint.common.core.IOUtils;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
+import com.nextbreakpoint.blueprint.common.core.RxSingleHandler;
+import com.nextbreakpoint.blueprint.common.drivers.CassandraClientConfig;
+import com.nextbreakpoint.blueprint.common.drivers.CassandraClientFactory;
+import com.nextbreakpoint.blueprint.common.drivers.KafkaClientFactory;
+import com.nextbreakpoint.blueprint.common.drivers.KafkaConsumerConfig;
+import com.nextbreakpoint.blueprint.common.drivers.KafkaPolling;
+import com.nextbreakpoint.blueprint.common.drivers.KafkaProducerConfig;
+import com.nextbreakpoint.blueprint.common.drivers.KafkaRecordsConsumer;
 import com.nextbreakpoint.blueprint.common.vertx.*;
 import com.nextbreakpoint.blueprint.designs.persistence.CassandraStore;
 import io.vertx.core.DeploymentOptions;
@@ -16,7 +25,6 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.healthchecks.Status;
 import io.vertx.ext.web.handler.LoggerFormat;
 import io.vertx.ext.web.openapi.RouterBuilder;
-import io.vertx.rxjava.cassandra.CassandraClient;
 import io.vertx.rxjava.core.AbstractVerticle;
 import io.vertx.rxjava.core.Promise;
 import io.vertx.rxjava.core.Vertx;
@@ -29,16 +37,18 @@ import io.vertx.rxjava.ext.web.handler.BodyHandler;
 import io.vertx.rxjava.ext.web.handler.CorsHandler;
 import io.vertx.rxjava.ext.web.handler.LoggerHandler;
 import io.vertx.rxjava.ext.web.handler.TimeoutHandler;
-import io.vertx.rxjava.kafka.client.consumer.KafkaConsumer;
-import io.vertx.rxjava.kafka.client.producer.KafkaProducer;
 import io.vertx.rxjava.micrometer.PrometheusScrapingHandler;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.producer.KafkaProducer;
 import rx.Completable;
+import rx.Single;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -172,7 +182,7 @@ public class Verticle extends AbstractVerticle {
                     .withKafkaAcks(acks)
                     .build();
 
-            final KafkaProducer<String, String> kafkaProducer = KafkaClientFactory.createProducer(vertx, producerConfig);
+            final KafkaProducer<String, String> kafkaProducer = KafkaClientFactory.createProducer(producerConfig);
 
             final KafkaConsumerConfig consumerConfig = KafkaConsumerConfig.builder()
                     .withBootstrapServers(bootstrapServers)
@@ -186,8 +196,8 @@ public class Verticle extends AbstractVerticle {
                     .withEnableAutoCommit(enableAutoCommit)
                     .build();
 
-            final KafkaConsumer<String, String> commandsKafkaConsumer = KafkaClientFactory.createConsumer(vertx, consumerConfig.toBuilder().withGroupId(groupId + "-commands").build());
-            final KafkaConsumer<String, String> healthKafkaConsumer = KafkaClientFactory.createConsumer(vertx, consumerConfig.toBuilder().withGroupId(groupId + "-health").build());
+            final KafkaConsumer<String, String> commandsKafkaConsumer = KafkaClientFactory.createConsumer(consumerConfig.toBuilder().withGroupId(groupId + "-commands").build());
+            final KafkaConsumer<String, String> healthKafkaConsumer = KafkaClientFactory.createConsumer(consumerConfig.toBuilder().withGroupId(groupId + "-health").build());
 
             final CassandraClientConfig cassandraConfig = CassandraClientConfig.builder()
                     .withClusterName(clusterName)
@@ -198,13 +208,13 @@ public class Verticle extends AbstractVerticle {
                     .withPort(cassandraPort)
                     .build();
 
-            final Supplier<CassandraClient> supplier = () -> CassandraClientFactory.create(vertx, cassandraConfig);
+            final Supplier<CqlSession> supplier = () -> CassandraClientFactory.create(cassandraConfig);
 
             final Store store = new CassandraStore(supplier);
 
             final Router mainRouter = Router.router(vertx);
 
-            commandsKafkaConsumer.subscribe(commandsTopic);
+            commandsKafkaConsumer.subscribe(List.of(commandsTopic));
 
             final Map<String, RxSingleHandler<InputMessage, ?>> messageHandlers = new HashMap<>();
 
@@ -308,7 +318,7 @@ public class Verticle extends AbstractVerticle {
     }
 
     private void checkTopic(KafkaConsumer<String, String> kafkaConsumer, String eventsTopic, Promise<Status> promise) {
-        kafkaConsumer.rxPartitionsFor(eventsTopic)
+        Single.fromCallable(() -> kafkaConsumer.partitionsFor(eventsTopic))
                 .timeout(1, TimeUnit.SECONDS)
                 .subscribe(partitions -> promise.complete(Status.OK()), err -> promise.complete(Status.KO()));
     }

@@ -1,16 +1,20 @@
 package com.nextbreakpoint.blueprint.common.test;
 
 import com.nextbreakpoint.blueprint.common.core.*;
-import io.vertx.rxjava.kafka.client.consumer.KafkaConsumer;
-import io.vertx.rxjava.kafka.client.consumer.KafkaConsumerRecord;
-import io.vertx.rxjava.kafka.client.consumer.KafkaConsumerRecords;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import rx.Single;
 import rx.schedulers.Schedulers;
 
 import java.time.Duration;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
+import java.util.stream.StreamSupport;
 
 public class KafkaTestPolling {
     private final List<InputMessage> messages = new ArrayList<>();
@@ -38,7 +42,6 @@ public class KafkaTestPolling {
                     .filter(message -> keyPredicate.test(message.getKey()))
                     .filter(message -> message.getValue().getSource().equals(messageSource))
                     .filter(message -> message.getValue().getType().equals(messageType))
-//                    .sorted(Comparator.comparing(Message::getTimestamp))
                     .collect(Collectors.toList());
         }
     }
@@ -50,58 +53,56 @@ public class KafkaTestPolling {
     }
 
     public void startPolling() {
-        kafkaConsumer.rxSubscribe(topicNames)
-                .flatMap(ignore -> kafkaConsumer.rxPoll(Duration.ofSeconds(5)))
-                .flatMap(records -> kafkaConsumer.rxAssignment())
-                .flatMap(kafkaConsumer::rxSeekToEnd)
-                .doOnError(Throwable::printStackTrace)
-                .subscribeOn(Schedulers.io())
-                .toBlocking()
-                .value();
+        Single.fromCallable(() -> {
+            kafkaConsumer.subscribe(topicNames);
 
-        kafkaConsumer.rxPoll(Duration.ofSeconds(10))
-                .doOnSuccess(records -> System.out.println("Received " + records.size() + " messages"))
-                .doOnSuccess(this::consumeMessages)
-                .flatMap(result -> kafkaConsumer.rxCommit())
-                .doOnError(Throwable::printStackTrace)
-                .doAfterTerminate(this::pollMessages)
-                .subscribeOn(Schedulers.io())
-                .toBlocking()
-                .value();
+            kafkaConsumer.seekToEnd(kafkaConsumer.assignment());
+
+            return null;
+        })
+        .subscribeOn(Schedulers.newThread())
+        .doAfterTerminate(this::pollMessages)
+        .subscribe();
     }
 
-    private void appendMessage(InputMessage message) {
-        synchronized (messages) {
-            messages.add(message);
-        }
+    private void pollMessages() {
+        Single.fromCallable(() -> {
+            ConsumerRecords<String, String> records = kafkaConsumer.poll(Duration.ofSeconds(10));
+
+            System.out.println("Received " + records.count() + " messages");
+
+            consumeMessages(records);
+
+            kafkaConsumer.commitSync();
+
+            return null;
+        })
+        .subscribeOn(Schedulers.newThread())
+        .doAfterTerminate(this::pollMessages)
+        .subscribe();
     }
 
-    private void consumeMessages(KafkaConsumerRecords<String, String> consumerRecords) {
-        IntStream.range(0, consumerRecords.size())
-                .mapToObj(consumerRecords::recordAt)
+    private void consumeMessages(ConsumerRecords<String, String> consumerRecords) {
+        StreamSupport.stream(consumerRecords.spliterator(), false)
                 .filter(record -> record.value() != null)
                 .map(this::convertToMessage)
                 .peek(message -> System.out.println("Received message: " + message))
                 .forEach(this::appendMessage);
     }
 
-    private InputMessage convertToMessage(KafkaConsumerRecord<String, String> record) {
+    private InputMessage convertToMessage(ConsumerRecord<String, String> record) {
         final Payload payload = Json.decodeValue(record.value(), Payload.class);
 
         final String token = Token.from(record.timestamp(), record.offset());
 
         final Tracing tracing = Tracing.of(UUID.randomUUID().toString(), UUID.randomUUID().toString());
 
-        return new InputMessage(record.key(), token, payload, tracing, record.timestamp());
+        return new InputMessage(record.key(), token, payload, record.timestamp());
     }
 
-    private void pollMessages() {
-        kafkaConsumer.rxPoll(Duration.ofSeconds(10))
-                .doOnSuccess(records -> System.out.println("Received " + records.size() + " messages"))
-                .doOnSuccess(this::consumeMessages)
-                .flatMap(result -> kafkaConsumer.rxCommit())
-                .doOnError(Throwable::printStackTrace)
-                .doAfterTerminate(this::pollMessages)
-                .subscribe();
+    private void appendMessage(InputMessage message) {
+        synchronized (messages) {
+            messages.add(message);
+        }
     }
 }

@@ -1,7 +1,10 @@
 package com.nextbreakpoint.blueprint.common.commands.mappers;
 
 import com.nextbreakpoint.blueprint.common.commands.DesignDeleteCommand;
-import com.nextbreakpoint.blueprint.common.core.*;
+import com.nextbreakpoint.blueprint.common.core.Json;
+import com.nextbreakpoint.blueprint.common.core.MessageMapper;
+import com.nextbreakpoint.blueprint.common.core.OutputMessage;
+import com.nextbreakpoint.blueprint.common.core.Payload;
 
 import java.util.Objects;
 import java.util.UUID;

@@ -1,12 +1,12 @@
 package com.nextbreakpoint.blueprint.designs.persistence;
 
 import com.datastax.oss.driver.api.core.ConsistencyLevel;
+import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.designs.Store;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
-import io.vertx.rxjava.cassandra.CassandraClient;
 import rx.Single;
 
 import java.time.Instant;
@@ -18,17 +18,17 @@ public class CassandraStore implements Store {
 
     private static final String ERROR_INSERT_MESSAGE = "An error occurred while inserting a message";
 
-    private static final String INSERT_MESSAGE = "INSERT INTO MESSAGE (MESSAGE_TOKEN, MESSAGE_KEY, MESSAGE_UUID, MESSAGE_TYPE, MESSAGE_VALUE, MESSAGE_SOURCE, MESSAGE_TIMESTAMP, TRACING_TRACE_ID, TRACING_SPAN_ID) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-    private static final String SELECT_MESSAGES = "SELECT MESSAGE_TOKEN, MESSAGE_KEY, MESSAGE_UUID, MESSAGE_TYPE, MESSAGE_VALUE, MESSAGE_SOURCE, MESSAGE_TIMESTAMP, TRACING_TRACE_ID, TRACING_SPAN_ID FROM MESSAGE WHERE MESSAGE_KEY = ? AND MESSAGE_TOKEN <= ? AND MESSAGE_TOKEN > ?";
+    private static final String INSERT_MESSAGE = "INSERT INTO MESSAGE (MESSAGE_TOKEN, MESSAGE_KEY, MESSAGE_UUID, MESSAGE_TYPE, MESSAGE_VALUE, MESSAGE_SOURCE, MESSAGE_TIMESTAMP) VALUES (?, ?, ?, ?, ?, ?, ?)";
+    private static final String SELECT_MESSAGES = "SELECT MESSAGE_TOKEN, MESSAGE_KEY, MESSAGE_UUID, MESSAGE_TYPE, MESSAGE_VALUE, MESSAGE_SOURCE, MESSAGE_TIMESTAMP FROM MESSAGE WHERE MESSAGE_KEY = ? AND MESSAGE_TOKEN <= ? AND MESSAGE_TOKEN > ?";
 
-    private final Supplier<CassandraClient> supplier;
+    private final Supplier<CqlSession> supplier;
 
-    private CassandraClient session;
+    private CqlSession session;
 
     private Single<PreparedStatement> insertMessage;
     private Single<PreparedStatement> selectMessages;
 
-    public CassandraStore(Supplier<CassandraClient> supplier) {
+    public CassandraStore(Supplier<CqlSession> supplier) {
         this.supplier = Objects.requireNonNull(supplier);
     }
 
@@ -45,27 +45,27 @@ public class CassandraStore implements Store {
                 .flatMap(session -> existsTable(session, tableName));
     }
 
-    private Single<CassandraClient> withSession() {
+    private Single<CqlSession> withSession() {
         if (session == null) {
             session = supplier.get();
             if (session == null) {
                 return Single.error(new RuntimeException("Cannot create session"));
             }
-            insertMessage = session.rxPrepare(INSERT_MESSAGE);
-            selectMessages = session.rxPrepare(SELECT_MESSAGES);
+            insertMessage = Single.fromCallable(() -> session.prepare(INSERT_MESSAGE));
+            selectMessages = Single.fromCallable(() -> session.prepare(SELECT_MESSAGES));
         }
         return Single.just(session);
     }
 
-    private Single<Void> insertMessage(CassandraClient session, Object[] values) {
+    private Single<Void> insertMessage(CqlSession session, Object[] values) {
         return insertMessage
                 .map(pst -> pst.bind(values).setConsistencyLevel(ConsistencyLevel.QUORUM))
-                .flatMap(session::rxExecute)
+                .map(session::execute)
                 .map(rs -> null);
     }
 
-    private Single<Boolean> existsTable(CassandraClient session, String tableName) {
-        return session.rxExecute("SELECT now() FROM " + tableName).map(result -> true);
+    private Single<Boolean> existsTable(CqlSession session, String tableName) {
+        return Single.fromCallable(() -> session.execute("SELECT now() FROM " + tableName)).map(result -> true);
     }
 
     private Object[] makeInsertMessageParams(InputMessage message) {
@@ -76,9 +76,7 @@ public class CassandraStore implements Store {
                 message.getValue().getType(),
                 message.getValue().getData(),
                 message.getValue().getSource(),
-                Instant.ofEpochMilli(message.getTimestamp()),
-                message.getTrace().getTraceId(),
-                message.getTrace().getSpanId()
+                Instant.ofEpochMilli(message.getTimestamp())
         };
     }
 

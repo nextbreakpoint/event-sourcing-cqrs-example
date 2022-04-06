@@ -10,8 +10,9 @@ module com.nextbreakpoint.blueprint.common.test {
     requires static io.vertx.auth.common;
     requires static io.vertx.client.kafka;
     requires static kafka.clients;
+    requires static com.datastax.oss.driver.core;
     requires static rxjava;
     requires static testcontainers;
-    requires static java.driver.core;
+    requires static org.apache.logging.log4j;
     exports com.nextbreakpoint.blueprint.common.test;
 }

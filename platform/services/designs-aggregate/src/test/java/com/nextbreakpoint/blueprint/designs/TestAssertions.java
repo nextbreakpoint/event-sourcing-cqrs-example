@@ -53,9 +53,6 @@ public class TestAssertions {
         assertThat(actualMessage.getValue().getSource()).isEqualTo(TestConstants.MESSAGE_SOURCE);
         assertThat(actualMessage.getValue().getUuid()).isNotNull();
         assertThat(actualMessage.getValue().getType()).isEqualTo(TestConstants.DESIGN_AGGREGATE_UPDATE_REQUESTED);
-        assertThat(actualMessage.getTrace()).isNotNull();
-        assertThat(actualMessage.getTrace().getTraceId()).isNotNull();
-        assertThat(actualMessage.getTrace().getSpanId()).isNotNull();
         DesignAggregateUpdateRequested actualEvent = Json.decodeValue(actualMessage.getValue().getData(), DesignAggregateUpdateRequested.class);
         assertThat(actualEvent.getDesignId()).isEqualTo(designId);
         assertThat(actualEvent.getRevision()).isNotNull();
@@ -69,9 +66,6 @@ public class TestAssertions {
         assertThat(actualMessage.getValue().getSource()).isEqualTo(TestConstants.MESSAGE_SOURCE);
         assertThat(actualMessage.getValue().getUuid()).isNotNull();
         assertThat(actualMessage.getValue().getType()).isEqualTo(TestConstants.DESIGN_AGGREGATE_UPDATE_COMPLETED);
-        assertThat(actualMessage.getTrace()).isNotNull();
-        assertThat(actualMessage.getTrace().getTraceId()).isNotNull();
-        assertThat(actualMessage.getTrace().getSpanId()).isNotNull();
         DesignAggregateUpdateCompleted actualEvent = Json.decodeValue(actualMessage.getValue().getData(), DesignAggregateUpdateCompleted.class);
         assertThat(actualEvent.getDesignId()).isEqualTo(designId);
         assertThat(actualEvent.getRevision()).isNotNull();
@@ -99,9 +93,6 @@ public class TestAssertions {
         assertThat(actualMessage.getValue().getSource()).isEqualTo(TestConstants.MESSAGE_SOURCE);
         assertThat(actualMessage.getValue().getUuid()).isNotNull();
         assertThat(actualMessage.getValue().getType()).isEqualTo(TestConstants.DESIGN_AGGREGATE_TILES_UPDATE_REQUESTED);
-        assertThat(actualMessage.getTrace()).isNotNull();
-        assertThat(actualMessage.getTrace().getTraceId()).isNotNull();
-        assertThat(actualMessage.getTrace().getSpanId()).isNotNull();
         DesignAggregateTilesUpdateRequested actualEvent = Json.decodeValue(actualMessage.getValue().getData(), DesignAggregateTilesUpdateRequested.class);
         assertThat(actualEvent.getDesignId()).isEqualTo(designId);
         assertThat(actualEvent.getRevision()).isNotNull();
@@ -111,12 +102,9 @@ public class TestAssertions {
         assertThat(actualMessage.getTimestamp()).isNotNull();
         assertThat(actualMessage.getKey()).isEqualTo(designId.toString());
         assertThat(actualMessage.getToken()).isNotNull();
-        assertThat(actualMessage.getTrace()).isNotNull();
         assertThat(actualMessage.getValue().getSource()).isEqualTo(TestConstants.MESSAGE_SOURCE);
         assertThat(actualMessage.getValue().getUuid()).isNotNull();
         assertThat(actualMessage.getValue().getType()).isEqualTo(TestConstants.DESIGN_AGGREGATE_TILES_UPDATE_COMPLETED);
-        assertThat(actualMessage.getTrace().getTraceId()).isNotNull();
-        assertThat(actualMessage.getTrace().getSpanId()).isNotNull();
         DesignAggregateTilesUpdateCompleted actualEvent = Json.decodeValue(actualMessage.getValue().getData(), DesignAggregateTilesUpdateCompleted.class);
         assertThat(actualEvent.getDesignId()).isEqualTo(designId);
         assertThat(actualEvent.getRevision()).isNotNull();
@@ -126,12 +114,9 @@ public class TestAssertions {
         assertThat(actualMessage.getTimestamp()).isNotNull();
         assertThat(actualMessage.getKey()).isEqualTo(designId.toString());
         assertThat(actualMessage.getToken()).isNotNull();
-        assertThat(actualMessage.getTrace()).isNotNull();
         assertThat(actualMessage.getValue().getSource()).isEqualTo(TestConstants.MESSAGE_SOURCE);
         assertThat(actualMessage.getValue().getUuid()).isNotNull();
         assertThat(actualMessage.getValue().getType()).isEqualTo(TestConstants.DESIGN_DOCUMENT_UPDATE_REQUESTED);
-        assertThat(actualMessage.getTrace().getTraceId()).isNotNull();
-        assertThat(actualMessage.getTrace().getSpanId()).isNotNull();
         DesignDocumentUpdateRequested actualEvent = Json.decodeValue(actualMessage.getValue().getData(), DesignDocumentUpdateRequested.class);
         assertThat(actualEvent.getUserId()).isEqualTo(TestConstants.USER_ID);
         assertThat(actualEvent.getDesignId()).isEqualTo(designId);
@@ -153,9 +138,6 @@ public class TestAssertions {
         assertThat(actualMessage.getValue().getSource()).isEqualTo(TestConstants.MESSAGE_SOURCE);
         assertThat(actualMessage.getValue().getUuid()).isNotNull();
         assertThat(actualMessage.getValue().getType()).isEqualTo(TestConstants.DESIGN_DOCUMENT_DELETED_REQUESTED);
-        assertThat(actualMessage.getTrace()).isNotNull();
-        assertThat(actualMessage.getTrace().getTraceId()).isNotNull();
-        assertThat(actualMessage.getTrace().getSpanId()).isNotNull();
         DesignDocumentDeleteRequested actualEvent = Json.decodeValue(actualMessage.getValue().getData(), DesignDocumentDeleteRequested.class);
         assertThat(actualEvent.getDesignId()).isEqualTo(designId);
         assertThat(actualEvent.getRevision()).isNotNull();

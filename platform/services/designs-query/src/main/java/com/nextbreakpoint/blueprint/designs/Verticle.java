@@ -10,6 +10,13 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.nextbreakpoint.blueprint.common.core.IOUtils;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
+import com.nextbreakpoint.blueprint.common.core.RxSingleHandler;
+import com.nextbreakpoint.blueprint.common.drivers.*;
+import com.nextbreakpoint.blueprint.common.drivers.KafkaClientFactory;
+import com.nextbreakpoint.blueprint.common.drivers.KafkaConsumerConfig;
+import com.nextbreakpoint.blueprint.common.drivers.KafkaPolling;
+import com.nextbreakpoint.blueprint.common.drivers.KafkaProducerConfig;
+import com.nextbreakpoint.blueprint.common.drivers.KafkaRecordsConsumer;
 import com.nextbreakpoint.blueprint.common.events.DesignDocumentDeleteRequested;
 import com.nextbreakpoint.blueprint.common.events.DesignDocumentUpdateRequested;
 import com.nextbreakpoint.blueprint.common.vertx.*;
@@ -35,12 +42,13 @@ import io.vertx.rxjava.ext.web.handler.BodyHandler;
 import io.vertx.rxjava.ext.web.handler.CorsHandler;
 import io.vertx.rxjava.ext.web.handler.LoggerHandler;
 import io.vertx.rxjava.ext.web.handler.TimeoutHandler;
-import io.vertx.rxjava.kafka.client.consumer.KafkaConsumer;
-import io.vertx.rxjava.kafka.client.producer.KafkaProducer;
 import io.vertx.rxjava.micrometer.PrometheusScrapingHandler;
 import org.apache.http.HttpHost;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.producer.KafkaProducer;
 import org.elasticsearch.client.RestClient;
 import rx.Completable;
+import rx.Single;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProviderChain;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
@@ -54,6 +62,7 @@ import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -203,7 +212,7 @@ public class Verticle extends AbstractVerticle {
                     .withKafkaAcks(acks)
                     .build();
 
-            final KafkaProducer<String, String> kafkaProducer = KafkaClientFactory.createProducer(vertx, producerConfig);
+            final KafkaProducer<String, String> kafkaProducer = KafkaClientFactory.createProducer(producerConfig);
 
             final KafkaConsumerConfig consumerConfig = KafkaConsumerConfig.builder()
                     .withBootstrapServers(bootstrapServers)
@@ -217,8 +226,8 @@ public class Verticle extends AbstractVerticle {
                     .withEnableAutoCommit(enableAutoCommit)
                     .build();
 
-            final KafkaConsumer<String, String> eventsKafkaConsumer = KafkaClientFactory.createConsumer(vertx, consumerConfig.toBuilder().withGroupId(groupId + "-events").build());
-            final KafkaConsumer<String, String> healthKafkaConsumer = KafkaClientFactory.createConsumer(vertx, consumerConfig.toBuilder().withGroupId(groupId + "-health").build());
+            final KafkaConsumer<String, String> eventsKafkaConsumer = KafkaClientFactory.createConsumer(consumerConfig.toBuilder().withGroupId(groupId + "-events").build());
+            final KafkaConsumer<String, String> healthKafkaConsumer = KafkaClientFactory.createConsumer(consumerConfig.toBuilder().withGroupId(groupId + "-health").build());
 
             final Router mainRouter = Router.router(vertx);
 
@@ -237,7 +246,7 @@ public class Verticle extends AbstractVerticle {
             messageHandlers.put(DesignDocumentUpdateRequested.TYPE, Factory.createDesignDocumentUpdateRequestedHandler(store, eventsTopic, kafkaProducer, messageSource));
             messageHandlers.put(DesignDocumentDeleteRequested.TYPE, Factory.createDesignDocumentDeleteRequestedHandler(store, eventsTopic, kafkaProducer, messageSource));
 
-            eventsKafkaConsumer.subscribe(eventsTopic);
+            eventsKafkaConsumer.subscribe(List.of(eventsTopic));
 
             kafkaPolling = new KafkaPolling<>(eventsKafkaConsumer, messageHandlers, KafkaRecordsConsumer.Simple.create(messageHandlers));
 
@@ -338,7 +347,7 @@ public class Verticle extends AbstractVerticle {
     }
 
     private void checkTopic(KafkaConsumer<String, String> kafkaConsumer, String eventsTopic, Promise<Status> promise) {
-        kafkaConsumer.rxPartitionsFor(eventsTopic)
+        Single.fromCallable(() -> kafkaConsumer.partitionsFor(eventsTopic))
                 .timeout(1, TimeUnit.SECONDS)
                 .subscribe(partitions -> promise.complete(Status.OK()), err -> promise.complete(Status.KO()));
     }

@@ -1,6 +1,7 @@
 module com.nextbreakpoint.blueprint.designs.render {
     requires com.nextbreakpoint.blueprint.common.core;
     requires com.nextbreakpoint.blueprint.common.events;
+    requires com.nextbreakpoint.blueprint.common.drivers;
     requires com.nextbreakpoint.blueprint.common.vertx;
     requires com.nextbreakpoint.nextfractal.core;
     requires com.nextbreakpoint.nextfractal.mandelbrot;
@@ -9,7 +10,6 @@ module com.nextbreakpoint.blueprint.designs.render {
     requires io.vertx.web.openapi;
     requires io.vertx.healthcheck;
     requires io.vertx.metrics.micrometer;
-    requires io.vertx.client.kafka;
     requires io.vertx.tracing.opentelemetry;
     requires io.opentelemetry.semconv;
     requires io.opentelemetry.context;
@@ -19,6 +19,7 @@ module com.nextbreakpoint.blueprint.designs.render {
     requires io.opentelemetry.sdk.common;
     requires io.opentelemetry.exporter.jaeger;
     requires io.opentelemetry.exporter.otlp.trace;
+    requires kafka.clients;
     requires vertx.rx.java;
     requires rxjava;
     requires com.fasterxml.jackson.core;

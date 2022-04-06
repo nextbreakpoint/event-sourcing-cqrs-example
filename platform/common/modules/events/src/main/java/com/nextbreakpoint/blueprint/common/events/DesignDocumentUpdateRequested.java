@@ -3,6 +3,7 @@ package com.nextbreakpoint.blueprint.common.events;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.nextbreakpoint.blueprint.common.core.Tiles;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -11,10 +12,23 @@ import lombok.Data;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import java.util.UUID;
 
 @Data
+@JsonPropertyOrder({
+        "designId",
+        "userId",
+        "commandId",
+        "data",
+        "checksum",
+        "revision",
+        "status",
+        "published",
+        "levels",
+        "tiles",
+        "created",
+        "updated"
+})
 @Builder(access = AccessLevel.PUBLIC, setterPrefix = "with")
 public class DesignDocumentUpdateRequested {
     public static final String TYPE = "design-document-update-requested-v1";

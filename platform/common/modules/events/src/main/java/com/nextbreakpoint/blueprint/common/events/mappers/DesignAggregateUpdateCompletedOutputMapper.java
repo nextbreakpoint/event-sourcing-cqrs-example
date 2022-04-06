@@ -1,6 +1,9 @@
 package com.nextbreakpoint.blueprint.common.events.mappers;
 
-import com.nextbreakpoint.blueprint.common.core.*;
+import com.nextbreakpoint.blueprint.common.core.Json;
+import com.nextbreakpoint.blueprint.common.core.MessageMapper;
+import com.nextbreakpoint.blueprint.common.core.OutputMessage;
+import com.nextbreakpoint.blueprint.common.core.Payload;
 import com.nextbreakpoint.blueprint.common.events.DesignAggregateUpdateCompleted;
 
 import java.util.Objects;

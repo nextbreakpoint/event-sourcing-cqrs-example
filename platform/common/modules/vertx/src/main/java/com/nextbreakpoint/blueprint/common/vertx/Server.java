@@ -10,6 +10,7 @@ public class Server {
         final JksOptions storeOptions = new JksOptions()
                 .setPath(serverConfig.getJksStorePath())
                 .setPassword(serverConfig.getJksStoreSecret());
+
         return new HttpServerOptions().setSsl(true).setKeyStoreOptions(storeOptions);
     }
 }

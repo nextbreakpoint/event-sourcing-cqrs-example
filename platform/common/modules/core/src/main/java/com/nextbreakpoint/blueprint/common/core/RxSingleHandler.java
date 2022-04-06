@@ -1,4 +1,4 @@
-package com.nextbreakpoint.blueprint.common.vertx;
+package com.nextbreakpoint.blueprint.common.core;
 
 import rx.Single;
 

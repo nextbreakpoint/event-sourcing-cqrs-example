@@ -5,6 +5,8 @@ import io.vertx.cassandra.CassandraClientOptions;
 import io.vertx.rxjava.cassandra.CassandraClient;
 import io.vertx.rxjava.core.Vertx;
 
+import java.net.InetSocketAddress;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class CassandraClientFactory {
@@ -15,12 +17,9 @@ public class CassandraClientFactory {
                 .setKeyspace(clientConfig.getKeyspace())
                 .dataStaxClusterBuilder()
                 .withLocalDatacenter(clientConfig.getClusterName())
-                .withAuthCredentials(clientConfig.getUsername(), clientConfig.getPassword(), "");
+                .withAuthCredentials(clientConfig.getUsername(), clientConfig.getPassword(), "")
+                .addContactPoints(Stream.of(clientConfig.getContactPoints()).map(contactPoint -> new InetSocketAddress(contactPoint, clientConfig.getPort())).collect(Collectors.toList()));
 
-        final CassandraClientOptions options = new CassandraClientOptions(sessionBuilder);
-
-        Stream.of(clientConfig.getContactPoints()).forEach(contactPoint -> options.addContactPoint(contactPoint, clientConfig.getPort()));
-
-        return CassandraClient.createShared(vertx, clientConfig.getClusterName(), options);
+        return CassandraClient.createShared(vertx, clientConfig.getClusterName(), new CassandraClientOptions(sessionBuilder));
     }
 }

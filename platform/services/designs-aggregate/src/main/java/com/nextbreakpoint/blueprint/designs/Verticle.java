@@ -1,8 +1,18 @@
 package com.nextbreakpoint.blueprint.designs;
 
+import com.datastax.oss.driver.api.core.CqlSession;
 import com.fasterxml.jackson.core.JsonParser;
 import com.nextbreakpoint.blueprint.common.core.IOUtils;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
+import com.nextbreakpoint.blueprint.common.core.RxSingleHandler;
+import com.nextbreakpoint.blueprint.common.drivers.CassandraClientConfig;
+import com.nextbreakpoint.blueprint.common.drivers.CassandraClientFactory;
+import com.nextbreakpoint.blueprint.common.drivers.KafkaClientFactory;
+import com.nextbreakpoint.blueprint.common.drivers.KafkaConsumerConfig;
+import com.nextbreakpoint.blueprint.common.drivers.KafkaPolling;
+import com.nextbreakpoint.blueprint.common.drivers.KafkaProducerConfig;
+import com.nextbreakpoint.blueprint.common.drivers.KafkaRecordsConsumer;
+import com.nextbreakpoint.blueprint.common.drivers.KafkaRecordsQueue;
 import com.nextbreakpoint.blueprint.common.events.*;
 import com.nextbreakpoint.blueprint.common.vertx.*;
 import com.nextbreakpoint.blueprint.designs.persistence.CassandraStore;
@@ -16,7 +26,6 @@ import io.vertx.core.json.jackson.DatabindCodec;
 import io.vertx.ext.healthchecks.Status;
 import io.vertx.ext.web.handler.LoggerFormat;
 import io.vertx.ext.web.openapi.RouterBuilder;
-import io.vertx.rxjava.cassandra.CassandraClient;
 import io.vertx.rxjava.core.AbstractVerticle;
 import io.vertx.rxjava.core.Promise;
 import io.vertx.rxjava.core.Vertx;
@@ -28,10 +37,11 @@ import io.vertx.rxjava.ext.web.handler.BodyHandler;
 import io.vertx.rxjava.ext.web.handler.CorsHandler;
 import io.vertx.rxjava.ext.web.handler.LoggerHandler;
 import io.vertx.rxjava.ext.web.handler.TimeoutHandler;
-import io.vertx.rxjava.kafka.client.consumer.KafkaConsumer;
-import io.vertx.rxjava.kafka.client.producer.KafkaProducer;
 import io.vertx.rxjava.micrometer.PrometheusScrapingHandler;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.producer.KafkaProducer;
 import rx.Completable;
+import rx.Single;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -180,7 +190,7 @@ public class Verticle extends AbstractVerticle {
                     .withKafkaAcks(acks)
                     .build();
 
-            final KafkaProducer<String, String> kafkaProducer = KafkaClientFactory.createProducer(vertx, producerConfig);
+            final KafkaProducer<String, String> kafkaProducer = KafkaClientFactory.createProducer(producerConfig);
 
             final KafkaConsumerConfig consumerConfig = KafkaConsumerConfig.builder()
                     .withBootstrapServers(bootstrapServers)
@@ -194,13 +204,13 @@ public class Verticle extends AbstractVerticle {
                     .withEnableAutoCommit(enableAutoCommit)
                     .build();
 
-            final KafkaConsumer<String, String> healthKafkaConsumer = KafkaClientFactory.createConsumer(vertx, consumerConfig.toBuilder().withGroupId(groupId + "-health").build());
-            final KafkaConsumer<String, String> eventsKafkaConsumer = KafkaClientFactory.createConsumer(vertx, consumerConfig.toBuilder().withGroupId(groupId + "-events").build());
-            final KafkaConsumer<String, String> bufferKafkaConsumer = KafkaClientFactory.createConsumer(vertx, consumerConfig.toBuilder().withGroupId(groupId + "-buffer").build());
-            final KafkaConsumer<String, String> renderKafkaConsumer0 = KafkaClientFactory.createConsumer(vertx, consumerConfig.toBuilder().withGroupId(groupId + "-render-completed-0").build());
-            final KafkaConsumer<String, String> renderKafkaConsumer1 = KafkaClientFactory.createConsumer(vertx, consumerConfig.toBuilder().withGroupId(groupId + "-render-completed-1").build());
-            final KafkaConsumer<String, String> renderKafkaConsumer2 = KafkaClientFactory.createConsumer(vertx, consumerConfig.toBuilder().withGroupId(groupId + "-render-completed-2").build());
-            final KafkaConsumer<String, String> renderKafkaConsumer3 = KafkaClientFactory.createConsumer(vertx, consumerConfig.toBuilder().withGroupId(groupId + "-render-completed-3").build());
+            final KafkaConsumer<String, String> healthKafkaConsumer = KafkaClientFactory.createConsumer(consumerConfig.toBuilder().withGroupId(groupId + "-health").build());
+            final KafkaConsumer<String, String> eventsKafkaConsumer = KafkaClientFactory.createConsumer(consumerConfig.toBuilder().withGroupId(groupId + "-events").build());
+            final KafkaConsumer<String, String> bufferKafkaConsumer = KafkaClientFactory.createConsumer(consumerConfig.toBuilder().withGroupId(groupId + "-buffer").build());
+            final KafkaConsumer<String, String> renderKafkaConsumer0 = KafkaClientFactory.createConsumer(consumerConfig.toBuilder().withGroupId(groupId + "-render-completed-0").build());
+            final KafkaConsumer<String, String> renderKafkaConsumer1 = KafkaClientFactory.createConsumer(consumerConfig.toBuilder().withGroupId(groupId + "-render-completed-1").build());
+            final KafkaConsumer<String, String> renderKafkaConsumer2 = KafkaClientFactory.createConsumer(consumerConfig.toBuilder().withGroupId(groupId + "-render-completed-2").build());
+            final KafkaConsumer<String, String> renderKafkaConsumer3 = KafkaClientFactory.createConsumer(consumerConfig.toBuilder().withGroupId(groupId + "-render-completed-3").build());
 
             final CassandraClientConfig cassandraConfig = CassandraClientConfig.builder()
                     .withClusterName(clusterName)
@@ -211,7 +221,7 @@ public class Verticle extends AbstractVerticle {
                     .withPort(cassandraPort)
                     .build();
 
-            final Supplier<CassandraClient> supplier = () -> CassandraClientFactory.create(vertx, cassandraConfig);
+            final Supplier<CqlSession> supplier = () -> CassandraClientFactory.create(cassandraConfig);
 
             final Store store = new CassandraStore(supplier);
 
@@ -225,14 +235,14 @@ public class Verticle extends AbstractVerticle {
 
             final Map<String, RxSingleHandler<List<InputMessage>, ?>> bufferMessageHandlers = new HashMap<>();
 
-            eventsKafkaConsumer.subscribe(eventsTopic);
+            eventsKafkaConsumer.subscribe(List.of(eventsTopic));
 
-            bufferKafkaConsumer.subscribe(bufferTopic);
+            bufferKafkaConsumer.subscribe(List.of(bufferTopic));
 
-            renderKafkaConsumer0.subscribe(renderTopicPrefix + "-completed-0");
-            renderKafkaConsumer1.subscribe(renderTopicPrefix + "-completed-1");
-            renderKafkaConsumer2.subscribe(renderTopicPrefix + "-completed-2");
-            renderKafkaConsumer3.subscribe(renderTopicPrefix + "-completed-3");
+            renderKafkaConsumer0.subscribe(List.of(renderTopicPrefix + "-completed-0"));
+            renderKafkaConsumer1.subscribe(List.of(renderTopicPrefix + "-completed-1"));
+            renderKafkaConsumer2.subscribe(List.of(renderTopicPrefix + "-completed-2"));
+            renderKafkaConsumer3.subscribe(List.of(renderTopicPrefix + "-completed-3"));
 
             eventsMessageHandlers.put(DesignInsertRequested.TYPE, createDesignInsertRequestedHandler(store, eventsTopic, kafkaProducer, messageSource));
             eventsMessageHandlers.put(DesignUpdateRequested.TYPE, createDesignUpdateRequestedHandler(store, eventsTopic, kafkaProducer, messageSource));
@@ -253,7 +263,7 @@ public class Verticle extends AbstractVerticle {
 
             eventsKafkaPolling = new KafkaPolling<>(eventsKafkaConsumer, eventsMessageHandlers, KafkaRecordsConsumer.Simple.create(eventsMessageHandlers), KafkaRecordsQueue.Simple.create(), -1, 20);
 
-            bufferKafkaPolling = new KafkaPolling<>(bufferKafkaConsumer, bufferMessageHandlers, KafkaRecordsConsumer.Buffered.create(bufferMessageHandlers), KafkaRecordsQueue.Simple.create(), 2500, 500);
+            bufferKafkaPolling = new KafkaPolling<>(bufferKafkaConsumer, bufferMessageHandlers, KafkaRecordsConsumer.Buffered.create(bufferMessageHandlers), KafkaRecordsQueue.Simple.create(), 2500, 100);
 
             renderKafkaPolling0 = new KafkaPolling<>(renderKafkaConsumer0, renderMessageHandlers, KafkaRecordsConsumer.Simple.create(renderMessageHandlers), KafkaRecordsQueue.Compacted.create(), -1, 50);
             renderKafkaPolling1 = new KafkaPolling<>(renderKafkaConsumer1, renderMessageHandlers, KafkaRecordsConsumer.Simple.create(renderMessageHandlers), KafkaRecordsQueue.Compacted.create(), -1, 50);
@@ -351,7 +361,7 @@ public class Verticle extends AbstractVerticle {
     }
 
     private void checkTopic(KafkaConsumer<String, String> kafkaConsumer, String eventsTopic, Promise<Status> promise) {
-        kafkaConsumer.rxPartitionsFor(eventsTopic)
+        Single.fromCallable(() -> kafkaConsumer.partitionsFor(eventsTopic))
                 .timeout(1, TimeUnit.SECONDS)
                 .subscribe(partitions -> promise.complete(Status.OK()), err -> promise.complete(Status.KO()));
     }

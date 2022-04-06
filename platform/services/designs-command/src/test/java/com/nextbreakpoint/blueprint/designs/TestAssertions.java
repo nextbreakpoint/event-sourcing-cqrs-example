@@ -27,8 +27,6 @@ public class TestAssertions {
         assertThat(actualMessage.getValue().getUuid()).isNotNull();
         assertThat(actualMessage.getValue().getType()).isEqualTo(TestConstants.DESIGN_INSERT_REQUESTED);
         assertThat(actualMessage.getValue()).isNotNull();
-        assertThat(actualMessage.getTrace().getTraceId()).isNotNull();
-        assertThat(actualMessage.getTrace().getSpanId()).isNotNull();
         DesignInsertRequested actualEvent = Json.decodeValue(actualMessage.getValue().getData(), DesignInsertRequested.class);
         assertThat(actualEvent.getUserId()).isEqualTo(TestConstants.USER_ID);
         assertThat(actualEvent.getCommandId()).isNotNull();
@@ -49,8 +47,6 @@ public class TestAssertions {
         assertThat(actualMessage.getValue().getUuid()).isNotNull();
         assertThat(actualMessage.getValue().getType()).isEqualTo(TestConstants.DESIGN_UPDATE_REQUESTED);
         assertThat(actualMessage.getValue()).isNotNull();
-        assertThat(actualMessage.getTrace().getTraceId()).isNotNull();
-        assertThat(actualMessage.getTrace().getSpanId()).isNotNull();
         DesignUpdateRequested actualEvent = Json.decodeValue(actualMessage.getValue().getData(), DesignUpdateRequested.class);
         assertThat(actualEvent.getUserId()).isEqualTo(TestConstants.USER_ID);
         assertThat(actualEvent.getCommandId()).isNotNull();
@@ -72,8 +68,6 @@ public class TestAssertions {
         assertThat(actualMessage.getValue().getUuid()).isNotNull();
         assertThat(actualMessage.getValue().getType()).isEqualTo(TestConstants.DESIGN_DELETE_REQUESTED);
         assertThat(actualMessage.getValue()).isNotNull();
-        assertThat(actualMessage.getTrace().getTraceId()).isNotNull();
-        assertThat(actualMessage.getTrace().getSpanId()).isNotNull();
         DesignDeleteRequested actualEvent = Json.decodeValue(actualMessage.getValue().getData(), DesignDeleteRequested.class);
         assertThat(actualEvent.getUserId()).isEqualTo(TestConstants.USER_ID);
         assertThat(actualEvent.getCommandId()).isNotNull();

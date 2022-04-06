@@ -1,11 +1,5 @@
-package com.nextbreakpoint.blueprint.common.vertx;
+package com.nextbreakpoint.blueprint.common.core;
 
-import com.nextbreakpoint.blueprint.common.core.InputMessage;
-import com.nextbreakpoint.blueprint.common.core.Mapper;
-import com.nextbreakpoint.blueprint.common.core.MessageMapper;
-import com.nextbreakpoint.blueprint.common.core.OutputMessage;
-import com.nextbreakpoint.blueprint.common.vertx.Controller;
-import com.nextbreakpoint.blueprint.common.vertx.MessageEmitter;
 import rx.Single;
 
 import java.util.Objects;

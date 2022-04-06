@@ -1,7 +1,7 @@
 package com.nextbreakpoint.blueprint.designs.operations.get;
 
+import com.nextbreakpoint.blueprint.common.core.Controller;
 import com.nextbreakpoint.blueprint.common.core.Image;
-import com.nextbreakpoint.blueprint.common.vertx.Controller;
 import com.nextbreakpoint.blueprint.designs.Store;
 import com.nextbreakpoint.blueprint.designs.common.S3Driver;
 import com.nextbreakpoint.blueprint.designs.model.Design;

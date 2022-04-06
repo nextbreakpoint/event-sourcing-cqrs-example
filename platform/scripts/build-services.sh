@@ -92,6 +92,7 @@ for i in "$@"; do
       ;;
     --skip-pact-tests)
       PACT_TESTS="false"
+      PACT_VERIFY="false"
       shift
       ;;
     --skip-pact-verify)

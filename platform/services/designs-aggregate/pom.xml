@@ -10,7 +10,7 @@
     <parent>
         <groupId>com.nextbreakpoint</groupId>
         <artifactId>com.nextbreakpoint.blueprint.service</artifactId>
-        <version>1.0.0-wip2-306fef40-1649168651</version>
+        <version>1.0.0-wip2-adeb66b5-1649277253</version>
     </parent>
     <repositories>
         <repository>
@@ -121,12 +121,16 @@
     </build>
     <dependencies>
         <dependency>
-            <groupId>io.vertx</groupId>
-            <artifactId>vertx-kafka-client</artifactId>
+            <groupId>io.reactivex</groupId>
+            <artifactId>rxjava</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.vertx</groupId>
-            <artifactId>vertx-cassandra-client</artifactId>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka-clients</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.datastax.oss</groupId>
+            <artifactId>java-driver-core</artifactId>
         </dependency>
         <dependency>
             <groupId>au.com.dius.pact</groupId>

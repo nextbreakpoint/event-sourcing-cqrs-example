@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.nextbreakpoint</groupId>
     <artifactId>com.nextbreakpoint.blueprint.bom</artifactId>
-    <version>1.0.0-wip2-306fef40-1649168651</version>
+    <version>1.0.0-wip2-adeb66b5-1649277253</version>
     <packaging>pom</packaging>
     <licenses>
         <license>
@@ -25,7 +25,9 @@
         <jackson.version>2.13.1</jackson.version>
         <activation.version>1.1.1</activation.version>
         <jaxb-api.version>2.4.0-b180830.0359</jaxb-api.version>
-        <cassandra-driver-core.version>4.0.0</cassandra-driver-core.version>
+        <rxjava.version>1.3.8</rxjava.version>
+        <kafka-clients.version>2.6.3</kafka-clients.version>
+        <cassandra-driver-core.version>4.11.1</cassandra-driver-core.version>
         <mysql-connector.version>8.0.28</mysql-connector.version>
         <micrometer.version>1.8.3</micrometer.version>
         <log4j2.version>2.17.1</log4j2.version>
@@ -373,6 +375,21 @@
                 </exclusions>
             </dependency>
             <dependency>
+                <groupId>io.reactivex</groupId>
+                <artifactId>rxjava</artifactId>
+                <version>${rxjava.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.kafka</groupId>
+                <artifactId>kafka-clients</artifactId>
+                <version>${kafka-clients.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.datastax.oss</groupId>
+                <artifactId>java-driver-core</artifactId>
+                <version>${cassandra-driver-core.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>io.micrometer</groupId>
                 <artifactId>micrometer-registry-prometheus</artifactId>
                 <version>${micrometer.version}</version>
@@ -461,17 +478,6 @@
                 <groupId>org.apache.logging.log4j</groupId>
                 <artifactId>log4j-layout-template-json</artifactId>
                 <version>${log4j2.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.datastax.cassandra</groupId>
-                <artifactId>cassandra-driver-core</artifactId>
-                <version>${cassandra-driver-core.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>io.netty</groupId>
-                        <artifactId>netty-codec</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
             <dependency>
                 <groupId>mysql</groupId>

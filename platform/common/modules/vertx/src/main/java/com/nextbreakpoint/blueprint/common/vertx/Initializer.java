@@ -3,8 +3,10 @@ package com.nextbreakpoint.blueprint.common.vertx;
 import com.nextbreakpoint.blueprint.common.core.Environment;
 import com.nextbreakpoint.blueprint.common.core.IOUtils;
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.binder.jvm.*;
-import io.micrometer.core.instrument.binder.kafka.KafkaClientMetrics;
+import io.micrometer.core.instrument.binder.jvm.ClassLoaderMetrics;
+import io.micrometer.core.instrument.binder.jvm.JvmGcMetrics;
+import io.micrometer.core.instrument.binder.jvm.JvmMemoryMetrics;
+import io.micrometer.core.instrument.binder.jvm.JvmThreadMetrics;
 import io.micrometer.core.instrument.binder.system.ProcessorMetrics;
 import io.micrometer.core.instrument.binder.system.UptimeMetrics;
 import io.opentelemetry.api.OpenTelemetry;
@@ -88,7 +90,6 @@ public class Initializer {
 
         RxJavaHooks.setOnComputationScheduler(s -> RxHelper.scheduler(vertx));
         RxJavaHooks.setOnIOScheduler(s -> RxHelper.blockingScheduler(vertx));
-        RxJavaHooks.setOnNewThreadScheduler(s -> RxHelper.blockingScheduler(vertx));
 
         MeterRegistry registry = BackendRegistries.getDefaultNow();
 

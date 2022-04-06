@@ -10,7 +10,6 @@ import com.nextbreakpoint.blueprint.common.events.mappers.DesignDeleteRequestedO
 import com.nextbreakpoint.blueprint.common.events.mappers.DesignInsertRequestedOutputMapper;
 import com.nextbreakpoint.blueprint.common.events.mappers.DesignUpdateRequestedOutputMapper;
 import com.nextbreakpoint.blueprint.common.events.mappers.TileRenderCompletedOutputMapper;
-import com.nextbreakpoint.blueprint.designs.common.Render;
 import org.junit.jupiter.api.*;
 
 import java.util.List;

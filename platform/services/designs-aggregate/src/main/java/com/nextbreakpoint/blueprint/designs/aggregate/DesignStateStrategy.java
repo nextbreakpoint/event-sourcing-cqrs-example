@@ -4,7 +4,10 @@ import com.nextbreakpoint.blueprint.common.core.Checksum;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.core.Json;
 import com.nextbreakpoint.blueprint.common.core.TilesBitmap;
-import com.nextbreakpoint.blueprint.common.events.*;
+import com.nextbreakpoint.blueprint.common.events.DesignDeleteRequested;
+import com.nextbreakpoint.blueprint.common.events.DesignInsertRequested;
+import com.nextbreakpoint.blueprint.common.events.DesignUpdateRequested;
+import com.nextbreakpoint.blueprint.common.events.TilesRendered;
 import com.nextbreakpoint.blueprint.designs.model.Design;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
@@ -13,7 +16,8 @@ import java.nio.ByteBuffer;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 public class DesignStateStrategy {

@@ -2,6 +2,8 @@ package com.nextbreakpoint.blueprint.designs;
 
 import com.nextbreakpoint.blueprint.common.core.Image;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
+import com.nextbreakpoint.blueprint.common.core.RxSingleHandler;
+import com.nextbreakpoint.blueprint.common.drivers.MessageEmitter;
 import com.nextbreakpoint.blueprint.common.events.mappers.DesignDocumentDeleteCompletedOutputMapper;
 import com.nextbreakpoint.blueprint.common.events.mappers.DesignDocumentDeleteRequestedInputMapper;
 import com.nextbreakpoint.blueprint.common.events.mappers.DesignDocumentUpdateCompletedOutputMapper;
@@ -23,7 +25,7 @@ import com.nextbreakpoint.blueprint.designs.persistence.dto.LoadDesignRequest;
 import com.nextbreakpoint.blueprint.designs.persistence.dto.LoadDesignResponse;
 import io.vertx.core.Handler;
 import io.vertx.rxjava.ext.web.RoutingContext;
-import io.vertx.rxjava.kafka.client.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.KafkaProducer;
 import software.amazon.awssdk.services.s3.S3AsyncClient;
 
 import java.util.Optional;
@@ -69,7 +71,7 @@ public class Factory {
                         store,
                         new DesignDocumentUpdateRequestedInputMapper(),
                         new DesignDocumentUpdateCompletedOutputMapper(messageSource),
-                        new KafkaEmitter(producer, topic, 3)
+                        new MessageEmitter(producer, topic, 3)
                 ))
                 .onSuccess(new MessageConsumed())
                 .onFailure(new MessageFailed())
@@ -84,7 +86,7 @@ public class Factory {
                         store,
                         new DesignDocumentDeleteRequestedInputMapper(),
                         new DesignDocumentDeleteCompletedOutputMapper(messageSource),
-                        new KafkaEmitter(producer, topic, 3)
+                        new MessageEmitter(producer, topic, 3)
                 ))
                 .onSuccess(new MessageConsumed())
                 .onFailure(new MessageFailed())

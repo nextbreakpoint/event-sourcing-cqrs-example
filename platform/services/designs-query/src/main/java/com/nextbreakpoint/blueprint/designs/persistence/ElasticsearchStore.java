@@ -18,8 +18,6 @@ import io.vertx.core.impl.logging.LoggerFactory;
 import rx.Observable;
 import rx.Single;
 
-import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 

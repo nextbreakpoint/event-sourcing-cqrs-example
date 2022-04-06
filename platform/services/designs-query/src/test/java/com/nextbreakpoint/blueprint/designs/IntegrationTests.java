@@ -29,7 +29,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static com.jayway.restassured.RestAssured.given;
 import static com.nextbreakpoint.blueprint.common.core.Headers.AUTHORIZATION;

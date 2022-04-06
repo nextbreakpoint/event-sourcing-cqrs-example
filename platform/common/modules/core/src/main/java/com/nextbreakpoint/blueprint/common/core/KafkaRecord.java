@@ -2,10 +2,15 @@ package com.nextbreakpoint.blueprint.common.core;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import java.util.Map;
 import java.util.Objects;
 
+@JsonPropertyOrder({
+        "key",
+        "value"
+})
 public class KafkaRecord {
     private final String key;
     private final Map<String, Object> value;

@@ -4,7 +4,6 @@ import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.designs.Store;
 import com.nextbreakpoint.blueprint.designs.model.Design;
 import rx.Single;
-import rx.schedulers.Schedulers;
 
 import java.util.List;
 import java.util.Objects;

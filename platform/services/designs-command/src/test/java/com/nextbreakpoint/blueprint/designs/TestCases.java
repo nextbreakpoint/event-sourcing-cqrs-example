@@ -5,15 +5,14 @@ import com.datastax.oss.driver.api.core.cql.Row;
 import com.jayway.restassured.http.ContentType;
 import com.nextbreakpoint.blueprint.common.core.Authority;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
+import com.nextbreakpoint.blueprint.common.drivers.CassandraClientConfig;
+import com.nextbreakpoint.blueprint.common.drivers.CassandraClientFactory;
+import com.nextbreakpoint.blueprint.common.drivers.KafkaClientFactory;
+import com.nextbreakpoint.blueprint.common.drivers.KafkaConsumerConfig;
 import com.nextbreakpoint.blueprint.common.test.KafkaTestPolling;
-import com.nextbreakpoint.blueprint.common.vertx.CassandraClientConfig;
-import com.nextbreakpoint.blueprint.common.vertx.CassandraClientFactory;
-import com.nextbreakpoint.blueprint.common.vertx.KafkaClientFactory;
-import com.nextbreakpoint.blueprint.common.vertx.KafkaConsumerConfig;
-import io.vertx.rxjava.cassandra.CassandraClient;
 import io.vertx.rxjava.core.RxHelper;
 import io.vertx.rxjava.core.Vertx;
-import io.vertx.rxjava.kafka.client.consumer.KafkaConsumer;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.jetbrains.annotations.NotNull;
 import rx.plugins.RxJavaHooks;
 import rx.schedulers.Schedulers;
@@ -54,15 +53,12 @@ public class TestCases {
 
         RxJavaHooks.setOnComputationScheduler(s -> RxHelper.scheduler(vertx));
         RxJavaHooks.setOnIOScheduler(s -> RxHelper.blockingScheduler(vertx));
-        RxJavaHooks.setOnNewThreadScheduler(s -> RxHelper.blockingScheduler(vertx));
 
-        CassandraClient session = CassandraClientFactory.create(vertx, createCassandraConfig());
+        testCassandra = new TestCassandra(CassandraClientFactory.create(createCassandraConfig()));
 
-        testCassandra = new TestCassandra(session);
+        KafkaConsumer<String, String> commandsConsumer = KafkaClientFactory.createConsumer(createConsumerConfig(consumerGroupId));
 
-        KafkaConsumer<String, String> commandsConsumer = KafkaClientFactory.createConsumer(vertx, createConsumerConfig(consumerGroupId));
-
-        KafkaConsumer<String, String> eventsConsumer = KafkaClientFactory.createConsumer(vertx, createConsumerConfig(consumerGroupId));
+        KafkaConsumer<String, String> eventsConsumer = KafkaClientFactory.createConsumer(createConsumerConfig(consumerGroupId));
 
         commandsPolling = new KafkaTestPolling(commandsConsumer, TestConstants.COMMANDS_TOPIC_NAME);
         eventsPolling = new KafkaTestPolling(eventsConsumer, TestConstants.EVENTS_TOPIC_NAME);

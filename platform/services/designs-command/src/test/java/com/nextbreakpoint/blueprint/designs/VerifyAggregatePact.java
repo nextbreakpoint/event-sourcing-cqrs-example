@@ -27,7 +27,6 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import java.net.MalformedURLException;
 import java.util.UUID;
 
 @Tag("docker")

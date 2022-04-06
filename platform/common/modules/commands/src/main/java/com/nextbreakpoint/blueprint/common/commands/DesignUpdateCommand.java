@@ -2,6 +2,7 @@ package com.nextbreakpoint.blueprint.common.commands;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -10,6 +11,13 @@ import java.util.Objects;
 import java.util.UUID;
 
 @Data
+@JsonPropertyOrder({
+        "designId",
+        "userId",
+        "commandId",
+        "data",
+        "published"
+})
 @Builder(access = AccessLevel.PUBLIC, setterPrefix = "with")
 public class DesignUpdateCommand {
     public static final String TYPE = "design-update-command-v1";

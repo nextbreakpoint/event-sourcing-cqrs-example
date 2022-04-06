@@ -2,6 +2,11 @@ package com.nextbreakpoint.blueprint.designs;
 
 import com.nextbreakpoint.blueprint.common.core.IOUtils;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
+import com.nextbreakpoint.blueprint.common.core.RxSingleHandler;
+import com.nextbreakpoint.blueprint.common.drivers.KafkaClientFactory;
+import com.nextbreakpoint.blueprint.common.drivers.KafkaConsumerConfig;
+import com.nextbreakpoint.blueprint.common.drivers.KafkaPolling;
+import com.nextbreakpoint.blueprint.common.drivers.KafkaRecordsConsumer;
 import com.nextbreakpoint.blueprint.common.events.DesignDocumentDeleteCompleted;
 import com.nextbreakpoint.blueprint.common.events.DesignDocumentUpdateCompleted;
 import com.nextbreakpoint.blueprint.common.vertx.*;
@@ -28,13 +33,13 @@ import io.vertx.rxjava.ext.web.RoutingContext;
 import io.vertx.rxjava.ext.web.handler.BodyHandler;
 import io.vertx.rxjava.ext.web.handler.CorsHandler;
 import io.vertx.rxjava.ext.web.handler.LoggerHandler;
-import io.vertx.rxjava.kafka.client.consumer.KafkaConsumer;
 import io.vertx.rxjava.micrometer.PrometheusScrapingHandler;
 import io.vertx.rxjava.servicediscovery.ServiceDiscovery;
 import io.vertx.rxjava.servicediscovery.spi.ServiceImporter;
-import io.vertx.servicediscovery.Record;
 import io.vertx.servicediscovery.consul.ConsulServiceImporter;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
 import rx.Completable;
+import rx.Single;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -154,8 +159,8 @@ public class Verticle extends AbstractVerticle {
                     .withEnableAutoCommit(enableAutoCommit)
                     .build();
 
-            final KafkaConsumer<String, String> eventsKafkaConsumer = KafkaClientFactory.createConsumer(vertx, consumerConfig.toBuilder().withGroupId(groupId + "-events").build());
-            final KafkaConsumer<String, String> healthKafkaConsumer = KafkaClientFactory.createConsumer(vertx, consumerConfig.toBuilder().withGroupId(groupId + "-health").build());
+            final KafkaConsumer<String, String> eventsKafkaConsumer = KafkaClientFactory.createConsumer(consumerConfig.toBuilder().withGroupId(groupId + "-events").build());
+            final KafkaConsumer<String, String> healthKafkaConsumer = KafkaClientFactory.createConsumer(consumerConfig.toBuilder().withGroupId(groupId + "-health").build());
 
             final Router mainRouter = Router.router(vertx);
 
@@ -174,7 +179,7 @@ public class Verticle extends AbstractVerticle {
             messageHandlers.put(DesignDocumentUpdateCompleted.TYPE, Factory.createDesignDocumentUpdateCompletedHandler(new DesignDocumentUpdateCompletedController(vertx, "notifications")));
             messageHandlers.put(DesignDocumentDeleteCompleted.TYPE, Factory.createDesignDocumentDeleteCompletedHandler(new DesignDocumentDeleteCompletedController(vertx, "notifications")));
 
-            eventsKafkaConsumer.subscribe(eventsTopic);
+            eventsKafkaConsumer.subscribe(List.of(eventsTopic));
 
             kafkaPolling = new KafkaPolling<>(eventsKafkaConsumer, messageHandlers, KafkaRecordsConsumer.Simple.create(messageHandlers));
 
@@ -291,7 +296,7 @@ public class Verticle extends AbstractVerticle {
     }
 
     private void checkTopic(KafkaConsumer<String, String> kafkaConsumer, String eventsTopic, Promise<Status> promise) {
-        kafkaConsumer.rxPartitionsFor(eventsTopic)
+        Single.fromCallable(() -> kafkaConsumer.partitionsFor(eventsTopic))
                 .timeout(1, TimeUnit.SECONDS)
                 .subscribe(partitions -> promise.complete(Status.OK()), err -> promise.complete(Status.KO()));
     }

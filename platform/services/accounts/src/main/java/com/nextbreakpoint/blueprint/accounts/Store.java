@@ -8,7 +8,6 @@ import com.nextbreakpoint.blueprint.accounts.operations.list.ListAccountsRequest
 import com.nextbreakpoint.blueprint.accounts.operations.list.ListAccountsResponse;
 import com.nextbreakpoint.blueprint.accounts.operations.load.LoadAccountRequest;
 import com.nextbreakpoint.blueprint.accounts.operations.load.LoadAccountResponse;
-import rx.Completable;
 import rx.Single;
 
 public interface Store {

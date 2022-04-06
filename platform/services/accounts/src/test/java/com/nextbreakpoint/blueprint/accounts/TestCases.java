@@ -25,7 +25,6 @@ public class TestCases {
 
         RxJavaHooks.setOnComputationScheduler(s -> RxHelper.scheduler(vertx));
         RxJavaHooks.setOnIOScheduler(s -> RxHelper.blockingScheduler(vertx));
-        RxJavaHooks.setOnNewThreadScheduler(s -> RxHelper.blockingScheduler(vertx));
     }
 
     public void after() {

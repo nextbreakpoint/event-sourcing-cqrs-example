@@ -1,20 +1,21 @@
-package com.nextbreakpoint.blueprint.common.vertx;
+package com.nextbreakpoint.blueprint.common.drivers;
 
-import com.nextbreakpoint.blueprint.common.core.*;
-import io.vertx.core.impl.logging.Logger;
-import io.vertx.core.impl.logging.LoggerFactory;
-import io.vertx.kafka.client.common.TopicPartition;
-import io.vertx.rxjava.kafka.client.consumer.KafkaConsumer;
-import io.vertx.rxjava.kafka.client.consumer.KafkaConsumerRecord;
-import io.vertx.rxjava.kafka.client.consumer.KafkaConsumerRecords;
-import rx.schedulers.Schedulers;
+import com.nextbreakpoint.blueprint.common.core.Json;
+import com.nextbreakpoint.blueprint.common.core.Payload;
+import com.nextbreakpoint.blueprint.common.core.RxSingleHandler;
+import lombok.extern.log4j.Log4j2;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.TopicPartition;
 
 import java.time.Duration;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
+@Log4j2
 public class KafkaPolling<T> {
-    private static final Logger logger = LoggerFactory.getLogger(KafkaPolling.class.getName());
+    private final Map<TopicPartition, Long> suspendedPartitions = new HashMap<>();
 
     private final KafkaConsumer<String, String> kafkaConsumer;
 
@@ -68,8 +69,10 @@ public class KafkaPolling<T> {
                             Thread.currentThread().interrupt();
                         }
                     }
+
+                    resumePartitions();
                 } catch (Exception e) {
-                    logger.error("Error occurred while consuming messages", e);
+                    log.error("Error occurred while consuming messages", e);
 
                     try {
                         Thread.sleep(5000);
@@ -89,7 +92,7 @@ public class KafkaPolling<T> {
                 pollingThread.interrupt();
                 pollingThread.join();
             } catch (InterruptedException e) {
-                logger.warn("Can't stop polling thread", e);
+                log.warn("Can't stop polling thread", e);
             }
 
             pollingThread = null;
@@ -101,16 +104,16 @@ public class KafkaPolling<T> {
             try {
                 enqueueRecords(topicPartition, records);
             } catch (RecordProcessingException e) {
-                retryPartition(topicPartition, e.getRecord().offset());
+                suspendPartition(topicPartition, e.getRecord().offset());
             }
         });
     }
 
-    private void enqueueRecords(TopicPartition topicPartition, List<KafkaConsumerRecord<String, String>> records) {
+    private void enqueueRecords(TopicPartition topicPartition, List<ConsumerRecord<String, String>> records) {
         records.forEach(record -> {
             try {
                 if (record.value() == null) {
-                    logger.debug("Skipping tombstone record " + record.key() + " in partition (" + topicPartition + ")");
+                    log.debug("Skipping tombstone record " + record.key() + " in partition (" + topicPartition + ")");
 
                     queue.deleteRecord(new KafkaRecordsQueue.QueuedRecord(record, null));
 
@@ -131,7 +134,7 @@ public class KafkaPolling<T> {
 
                 queue.addRecord(new KafkaRecordsQueue.QueuedRecord(record, payload));
             } catch (Exception e) {
-                logger.error("Failed to process record: " + record.key());
+                log.error("Failed to process record: " + record.key());
 
                 throw new RecordProcessingException(record);
             }
@@ -140,13 +143,13 @@ public class KafkaPolling<T> {
 
     private void processRecords() {
         if (queue.size() > 0 && System.currentTimeMillis() - timestamp > latency) {
-            logger.debug("Received " + queue.size() + " " + (queue.size() > 0 ? "messages" : "message"));
+            log.debug("Received " + queue.size() + " " + (queue.size() > 0 ? "messages" : "message"));
 
             partitionQueuedRecords(queue.getRecords()).forEach((topicPartition, records) -> {
                 try {
                     consumeRecords(topicPartition, records);
                 } catch (RecordProcessingException e) {
-                    retryPartition(topicPartition, e.getRecord().offset());
+                    suspendPartition(topicPartition, e.getRecord().offset());
                 }
             });
 
@@ -170,46 +173,48 @@ public class KafkaPolling<T> {
         }
     }
 
-    private KafkaConsumerRecords<String, String> pollRecords() {
-        return kafkaConsumer.fetch(Math.min(25, maxRecords))
-                .rxPoll(Duration.ofSeconds(10))
-                .subscribeOn(Schedulers.computation())
-                .doOnError(err -> logger.error("Failed to consume records", err))
-                .toBlocking()
-                .value();
+    private void resumePartitions() {
+        long timestamp = System.currentTimeMillis();
+
+        List<TopicPartition> resumePartitions = suspendedPartitions.entrySet().stream()
+                .filter(entry -> timestamp - entry.getValue() > 5000)
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toList());
+
+        resumePartitions(resumePartitions);
+    }
+
+    private ConsumerRecords<String, String> pollRecords() {
+        return kafkaConsumer.poll(Duration.ofSeconds(5));
     }
 
     private void commitOffsets() {
-        kafkaConsumer.rxCommit()
-                .subscribeOn(Schedulers.computation())
-                .doOnError(err -> logger.error("Failed to commit offsets", err))
-                .toCompletable()
-                .await();
+        kafkaConsumer.commitSync();
     }
 
-    private void retryPartition(TopicPartition topicPartition, long offset) {
-        kafkaConsumer.rxPause(topicPartition)
-                .subscribeOn(Schedulers.computation())
-                .flatMap(x -> kafkaConsumer.rxSeek(topicPartition, offset))
-                .delay(10, TimeUnit.SECONDS)
-                .flatMap(x -> kafkaConsumer.rxResume(topicPartition))
-                .doOnError(err -> logger.error("Failed to resume partition (" + topicPartition + ")", err))
-                .toCompletable()
-                .await();
+    private void suspendPartition(TopicPartition topicPartition, long offset) {
+        kafkaConsumer.pause(List.of(topicPartition));
+        kafkaConsumer.seek(topicPartition, offset);
+        suspendedPartitions.put(topicPartition, System.currentTimeMillis());
     }
 
-    private Map<TopicPartition, List<KafkaConsumerRecord<String, String>>> partitionRecords(KafkaConsumerRecords<String, String> records) {
-        final Map<TopicPartition, List<KafkaConsumerRecord<String, String>>> partitionedRecords = new HashMap<>();
+    private void resumePartitions(List<TopicPartition> topicPartitions) {
+        if (topicPartitions.size() > 0) {
+            kafkaConsumer.resume(topicPartitions);
+            topicPartitions.forEach(suspendedPartitions::remove);
+        }
+    }
 
-        for (int i = 0; i < records.size(); i++) {
-            final KafkaConsumerRecord<String, String> record = records.recordAt(i);
+    private Map<TopicPartition, List<ConsumerRecord<String, String>>> partitionRecords(ConsumerRecords<String, String> records) {
+        final Map<TopicPartition, List<ConsumerRecord<String, String>>> partitionedRecords = new HashMap<>();
 
+        records.forEach(record -> {
             final TopicPartition topicPartition = new TopicPartition(record.topic(), record.partition());
 
-            final List<KafkaConsumerRecord<String, String>> recordList = partitionedRecords.computeIfAbsent(topicPartition, key -> new ArrayList<>());
+            final List<ConsumerRecord<String, String>> recordList = partitionedRecords.computeIfAbsent(topicPartition, key -> new ArrayList<>());
 
             recordList.add(record);
-        }
+        });
 
         return partitionedRecords;
     }
@@ -229,13 +234,13 @@ public class KafkaPolling<T> {
     }
 
     public static class RecordProcessingException extends RuntimeException {
-        private KafkaConsumerRecord<String, String> record;
+        private ConsumerRecord<String, String> record;
 
-        public RecordProcessingException(KafkaConsumerRecord<String, String> record) {
+        public RecordProcessingException(ConsumerRecord<String, String> record) {
             this.record = record;
         }
 
-        public KafkaConsumerRecord<String, String> getRecord() {
+        public ConsumerRecord<String, String> getRecord() {
             return record;
         }
     }

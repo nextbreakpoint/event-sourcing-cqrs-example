@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.nextbreakpoint</groupId>
         <artifactId>com.nextbreakpoint.blueprint.bom</artifactId>
-        <version>1.0.0-wip2-306fef40-1649168651</version>
+        <version>1.0.0-wip2-adeb66b5-1649277253</version>
     </parent>
     <packaging>pom</packaging>
     <licenses>
@@ -29,6 +29,11 @@
         <dependency>
             <groupId>com.nextbreakpoint</groupId>
             <artifactId>com.nextbreakpoint.blueprint.common.vertx</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.nextbreakpoint</groupId>
+            <artifactId>com.nextbreakpoint.blueprint.common.drivers</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

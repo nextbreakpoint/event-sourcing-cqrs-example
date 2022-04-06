@@ -1,8 +1,8 @@
 package com.nextbreakpoint.blueprint.designs.controllers;
 
+import com.nextbreakpoint.blueprint.common.core.Controller;
 import com.nextbreakpoint.blueprint.common.core.Json;
 import com.nextbreakpoint.blueprint.common.events.DesignDocumentUpdateCompleted;
-import com.nextbreakpoint.blueprint.common.vertx.Controller;
 import com.nextbreakpoint.blueprint.designs.model.DesignChangedNotification;
 import io.vertx.rxjava.core.Vertx;
 import rx.Single;

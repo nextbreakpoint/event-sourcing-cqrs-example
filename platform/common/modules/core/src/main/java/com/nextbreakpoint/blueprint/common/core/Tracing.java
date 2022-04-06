@@ -2,6 +2,7 @@ package com.nextbreakpoint.blueprint.common.core;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -9,6 +10,10 @@ import lombok.Data;
 import java.util.Objects;
 
 @Data
+@JsonPropertyOrder({
+        "traceId",
+        "spanId"
+})
 @Builder(access = AccessLevel.PUBLIC, setterPrefix = "with")
 public class Tracing {
     private final String traceId;

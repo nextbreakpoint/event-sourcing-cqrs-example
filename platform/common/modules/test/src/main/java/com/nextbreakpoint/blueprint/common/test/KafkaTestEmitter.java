@@ -2,9 +2,10 @@ package com.nextbreakpoint.blueprint.common.test;
 
 import com.nextbreakpoint.blueprint.common.core.Json;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
-import io.vertx.rxjava.kafka.client.producer.KafkaHeader;
-import io.vertx.rxjava.kafka.client.producer.KafkaProducer;
-import io.vertx.rxjava.kafka.client.producer.KafkaProducerRecord;
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.header.Header;
+import rx.Single;
 import rx.schedulers.Schedulers;
 
 import java.util.ArrayList;
@@ -28,7 +29,7 @@ public class KafkaTestEmitter {
     }
 
     public void send(OutputMessage message, String topicName) {
-        kafkaProducer.rxSend(createKafkaRecord(message, topicName))
+        Single.fromCallable(() -> kafkaProducer.send(createKafkaRecord(message, topicName)))
                 .doOnEach(action -> System.out.println("Sending message " + message + " to topic " + topicName))
                 .doOnError(Throwable::printStackTrace)
                 .subscribeOn(Schedulers.io())
@@ -37,19 +38,18 @@ public class KafkaTestEmitter {
     }
 
     public void sendAsync(OutputMessage message, String topicName) {
-        kafkaProducer.rxSend(createKafkaRecord(message, topicName))
+        Single.fromCallable(() -> kafkaProducer.send(createKafkaRecord(message, topicName)))
                 .doOnEach(action -> System.out.println("Sending message " + message + " to topic " + topicName))
                 .doOnError(Throwable::printStackTrace)
+                .subscribeOn(Schedulers.io())
                 .subscribe();
     }
 
-    private KafkaProducerRecord<String, String> createKafkaRecord(OutputMessage message, String topicName) {
-        final KafkaProducerRecord<String, String> record = KafkaProducerRecord.create(topicName, message.getKey(), Json.encodeValue(message.getValue()));
-        record.addHeaders(makeHeaders(message));
-        return record;
+    private ProducerRecord<String, String> createKafkaRecord(OutputMessage message, String topicName) {
+        return new ProducerRecord<>(topicName, null, message.getKey(), Json.encodeValue(message.getValue()), makeHeaders(message));
     }
 
-    private List<KafkaHeader> makeHeaders(OutputMessage message) {
+    private List<Header> makeHeaders(OutputMessage message) {
         return new ArrayList<>();
     }
 

@@ -1,6 +1,6 @@
 package com.nextbreakpoint.blueprint.designs.operations.list;
 
-import com.nextbreakpoint.blueprint.common.vertx.Controller;
+import com.nextbreakpoint.blueprint.common.core.Controller;
 import com.nextbreakpoint.blueprint.designs.Store;
 import com.nextbreakpoint.blueprint.designs.persistence.dto.ListDesignsRequest;
 import com.nextbreakpoint.blueprint.designs.persistence.dto.ListDesignsResponse;

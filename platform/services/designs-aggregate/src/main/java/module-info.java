@@ -2,12 +2,11 @@ module com.nextbreakpoint.blueprint.designs.aggregate {
     requires com.nextbreakpoint.blueprint.common.core;
     requires com.nextbreakpoint.blueprint.common.vertx;
     requires com.nextbreakpoint.blueprint.common.events;
+    requires com.nextbreakpoint.blueprint.common.drivers;
     requires io.vertx.core;
     requires io.vertx.web;
     requires io.vertx.web.openapi;
     requires io.vertx.healthcheck;
-    requires io.vertx.client.cassandra;
-    requires io.vertx.client.kafka;
     requires io.vertx.metrics.micrometer;
     requires io.vertx.tracing.opentelemetry;
     requires io.opentelemetry.semconv;
@@ -24,6 +23,7 @@ module com.nextbreakpoint.blueprint.designs.aggregate {
     requires com.fasterxml.jackson.databind;
     requires org.apache.logging.log4j;
     requires java.sql;
+    requires kafka.clients;
     requires com.datastax.oss.driver.core;
     requires static lombok;
     exports com.nextbreakpoint.blueprint.designs.model to com.fasterxml.jackson.databind;

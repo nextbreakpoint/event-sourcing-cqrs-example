@@ -1,6 +1,5 @@
-package com.nextbreakpoint.blueprint.common.vertx;
+package com.nextbreakpoint.blueprint.common.core;
 
-import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import rx.Single;
 
 public interface MessageEmitter {

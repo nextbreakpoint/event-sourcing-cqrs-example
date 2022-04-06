@@ -1,14 +1,16 @@
 package com.nextbreakpoint.blueprint.designs.persistence;
 
 import com.datastax.oss.driver.api.core.ConsistencyLevel;
+import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.Row;
-import com.nextbreakpoint.blueprint.common.core.*;
+import com.nextbreakpoint.blueprint.common.core.Checksum;
+import com.nextbreakpoint.blueprint.common.core.InputMessage;
+import com.nextbreakpoint.blueprint.common.core.Payload;
+import com.nextbreakpoint.blueprint.common.core.Tracing;
 import com.nextbreakpoint.blueprint.designs.Store;
 import com.nextbreakpoint.blueprint.designs.model.Design;
-import io.vertx.core.impl.logging.Logger;
-import io.vertx.core.impl.logging.LoggerFactory;
-import io.vertx.rxjava.cassandra.CassandraClient;
+import lombok.extern.log4j.Log4j2;
 import rx.Single;
 
 import java.nio.ByteBuffer;
@@ -16,13 +18,16 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
-import java.util.*;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
+@Log4j2
 public class CassandraStore implements Store {
-    private final Logger logger = LoggerFactory.getLogger(CassandraStore.class.getName());
-
     private static final String ERROR_SELECT_DESIGN = "An error occurred while fetching a design";
     private static final String ERROR_INSERT_DESIGN = "An error occurred while inserting a design";
     private static final String ERROR_DELETE_DESIGN = "An error occurred while deleting a design";
@@ -32,12 +37,12 @@ public class CassandraStore implements Store {
     private static final String SELECT_DESIGN = "SELECT COMMAND_USER, COMMAND_UUID, DESIGN_UUID, DESIGN_REVISION, DESIGN_DATA, DESIGN_CHECKSUM, DESIGN_STATUS, DESIGN_PUBLISHED, DESIGN_LEVELS, DESIGN_BITMAP, DESIGN_CREATED, DESIGN_UPDATED FROM DESIGN WHERE DESIGN_UUID = ?";
     private static final String INSERT_DESIGN = "INSERT INTO DESIGN (COMMAND_USER, COMMAND_UUID, DESIGN_UUID, DESIGN_REVISION, DESIGN_DATA, DESIGN_CHECKSUM, DESIGN_STATUS, DESIGN_PUBLISHED, DESIGN_LEVELS, DESIGN_BITMAP, DESIGN_CREATED, DESIGN_UPDATED) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     private static final String DELETE_DESIGN = "DELETE FROM DESIGN WHERE DESIGN_UUID = ?";
-    private static final String INSERT_MESSAGE = "INSERT INTO MESSAGE (MESSAGE_TOKEN, MESSAGE_KEY, MESSAGE_UUID, MESSAGE_TYPE, MESSAGE_VALUE, MESSAGE_SOURCE, MESSAGE_TIMESTAMP, TRACING_TRACE_ID, TRACING_SPAN_ID) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-    private static final String SELECT_MESSAGES = "SELECT MESSAGE_TOKEN, MESSAGE_KEY, MESSAGE_UUID, MESSAGE_TYPE, MESSAGE_VALUE, MESSAGE_SOURCE, MESSAGE_TIMESTAMP, TRACING_TRACE_ID, TRACING_SPAN_ID FROM MESSAGE WHERE MESSAGE_KEY = ? AND MESSAGE_TOKEN <= ? AND MESSAGE_TOKEN > ?";
+    private static final String INSERT_MESSAGE = "INSERT INTO MESSAGE (MESSAGE_TOKEN, MESSAGE_KEY, MESSAGE_UUID, MESSAGE_TYPE, MESSAGE_VALUE, MESSAGE_SOURCE, MESSAGE_TIMESTAMP) VALUES (?, ?, ?, ?, ?, ?, ?)";
+    private static final String SELECT_MESSAGES = "SELECT MESSAGE_TOKEN, MESSAGE_KEY, MESSAGE_UUID, MESSAGE_TYPE, MESSAGE_VALUE, MESSAGE_SOURCE, MESSAGE_TIMESTAMP FROM MESSAGE WHERE MESSAGE_KEY = ? AND MESSAGE_TOKEN <= ? AND MESSAGE_TOKEN > ?";
 
-    private final Supplier<CassandraClient> supplier;
+    private final Supplier<CqlSession> supplier;
 
-    private CassandraClient session;
+    private CqlSession session;
 
     private Single<PreparedStatement> selectDesign;
     private Single<PreparedStatement> insertDesign;
@@ -45,7 +50,7 @@ public class CassandraStore implements Store {
     private Single<PreparedStatement> insertMessage;
     private Single<PreparedStatement> selectMessages;
 
-    public CassandraStore(Supplier<CassandraClient> supplier) {
+    public CassandraStore(Supplier<CqlSession> supplier) {
         this.supplier = Objects.requireNonNull(supplier);
     }
 
@@ -90,62 +95,59 @@ public class CassandraStore implements Store {
                 .flatMap(session -> existsTable(session, tableName));
     }
 
-    private Optional<Design> findFirstDesign(List<Row> rows) {
-        return rows.stream().findFirst().map(this::convertRowToDesign);
-    }
-
-    private Single<CassandraClient> withSession() {
+    private Single<CqlSession> withSession() {
         if (session == null) {
             session = supplier.get();
             if (session == null) {
                 return Single.error(new RuntimeException("Cannot create session"));
             }
-            selectDesign = session.rxPrepare(SELECT_DESIGN);
-            insertDesign = session.rxPrepare(INSERT_DESIGN);
-            deleteDesign = session.rxPrepare(DELETE_DESIGN);
-            insertMessage = session.rxPrepare(INSERT_MESSAGE);
-            selectMessages = session.rxPrepare(SELECT_MESSAGES);
+            selectDesign = Single.fromCallable(() -> session.prepare(SELECT_DESIGN));
+            insertDesign = Single.fromCallable(() -> session.prepare(INSERT_DESIGN));
+            deleteDesign = Single.fromCallable(() -> session.prepare(DELETE_DESIGN));
+            insertMessage = Single.fromCallable(() -> session.prepare(INSERT_MESSAGE));
+            selectMessages = Single.fromCallable(() -> session.prepare(SELECT_MESSAGES));
         }
         return Single.just(session);
     }
 
-    private Single<List<InputMessage>> selectMessages(CassandraClient session, Object[] values) {
+    private Single<List<InputMessage>> selectMessages(CqlSession session, Object[] values) {
         return selectMessages
                 .map(pst -> pst.bind(values).setConsistencyLevel(ConsistencyLevel.QUORUM))
-                .flatMap(session::rxExecuteWithFullFetch)
-                .map(rows -> rows.stream().map(this::convertRowToMessage).collect(Collectors.toList()));
+                .map(session::execute)
+                .map(rows -> StreamSupport.stream(rows.spliterator(), false).map(this::convertRowToMessage).collect(Collectors.toList()));
     }
 
-    private Single<Void> insertMessage(CassandraClient session, Object[] values) {
+    private Single<Void> insertMessage(CqlSession session, Object[] values) {
         return insertMessage
                 .map(pst -> pst.bind(values).setConsistencyLevel(ConsistencyLevel.QUORUM))
-                .flatMap(session::rxExecute)
+                .map(session::execute)
                 .map(rs -> null);
     }
 
-    private Single<Void> insertDesign(CassandraClient session, Object[] values) {
+    private Single<Void> insertDesign(CqlSession session, Object[] values) {
         return insertDesign
                 .map(pst -> pst.bind(values).setConsistencyLevel(ConsistencyLevel.QUORUM))
-                .flatMap(session::rxExecute)
+                .map(session::execute)
                 .map(rs -> null);
     }
 
-    private Single<Void> deleteDesign(CassandraClient session, Object[] values) {
+    private Single<Void> deleteDesign(CqlSession session, Object[] values) {
         return deleteDesign
                 .map(pst -> pst.bind(values).setConsistencyLevel(ConsistencyLevel.QUORUM))
-                .flatMap(session::rxExecute)
+                .map(session::execute)
                 .map(rs -> null);
     }
 
-    private Single<Optional<Design>> selectDesign(CassandraClient session, Object[] values) {
+    private Single<Optional<Design>> selectDesign(CqlSession session, Object[] values) {
         return selectDesign
                 .map(pst -> pst.bind(values).setConsistencyLevel(ConsistencyLevel.QUORUM))
-                .flatMap(session::rxExecuteWithFullFetch)
-                .map(this::findFirstDesign);
+                .map(session::execute)
+                .map(rows -> StreamSupport.stream(rows.spliterator(), false).limit(1).findFirst())
+                .map(result -> result.map(this::convertRowToDesign));
     }
 
-    private Single<Boolean> existsTable(CassandraClient session, String tableName) {
-        return session.rxExecute("SELECT now() FROM " + tableName).map(result -> true);
+    private Single<Boolean> existsTable(CqlSession session, String tableName) {
+        return Single.fromCallable(() -> session.execute("SELECT now() FROM " + tableName)).map(result -> true);
     }
 
     private Design convertRowToDesign(Row row) {
@@ -171,13 +173,10 @@ public class CassandraStore implements Store {
         final String type = row.getString("MESSAGE_TYPE");
         final String value = row.getString("MESSAGE_VALUE");
         final String source = row.getString("MESSAGE_SOURCE");
-        final String traceId = row.getString("TRACING_TRACE_ID");
-        final String spanId = row.getString("TRACING_SPAN_ID");
         final Instant timestamp = row.getInstant("MESSAGE_TIMESTAMP");
         final Payload payload = new Payload(uuid, type, value, source);
-        final Tracing trace = new Tracing(traceId, spanId);
         final long messageTimestamp = timestamp != null ? timestamp.toEpochMilli() : 0L;
-        return new InputMessage(key, token, payload, trace, messageTimestamp);
+        return new InputMessage(key, token, payload, messageTimestamp);
     }
 
     private LocalDateTime toDate(Instant instant) {
@@ -196,9 +195,7 @@ public class CassandraStore implements Store {
                 message.getValue().getType(),
                 message.getValue().getData(),
                 message.getValue().getSource(),
-                Instant.ofEpochMilli(message.getTimestamp()),
-                message.getTrace().getTraceId(),
-                message.getTrace().getSpanId()
+                Instant.ofEpochMilli(message.getTimestamp())
         };
     }
 
@@ -228,6 +225,6 @@ public class CassandraStore implements Store {
     }
 
     private void handleError(String message, Throwable err) {
-        logger.error(message, err);
+        log.error(message, err);
     }
 }

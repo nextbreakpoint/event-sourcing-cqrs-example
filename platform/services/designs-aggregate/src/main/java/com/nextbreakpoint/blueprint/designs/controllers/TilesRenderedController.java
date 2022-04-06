@@ -4,15 +4,12 @@ import com.nextbreakpoint.blueprint.common.core.*;
 import com.nextbreakpoint.blueprint.common.events.DesignAggregateTilesUpdateRequested;
 import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
 import com.nextbreakpoint.blueprint.common.events.TilesRendered;
-import com.nextbreakpoint.blueprint.common.vertx.Controller;
-import com.nextbreakpoint.blueprint.common.vertx.MessageEmitter;
 import com.nextbreakpoint.blueprint.designs.aggregate.DesignAggregate;
 import com.nextbreakpoint.blueprint.designs.common.Render;
 import com.nextbreakpoint.blueprint.designs.model.Design;
 import rx.Observable;
 import rx.Single;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 

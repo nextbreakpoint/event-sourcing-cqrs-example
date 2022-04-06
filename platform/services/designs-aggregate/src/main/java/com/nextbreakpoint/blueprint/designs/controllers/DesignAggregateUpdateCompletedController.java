@@ -4,8 +4,6 @@ import com.nextbreakpoint.blueprint.common.core.*;
 import com.nextbreakpoint.blueprint.common.events.DesignAggregateUpdateCompleted;
 import com.nextbreakpoint.blueprint.common.events.DesignDocumentDeleteRequested;
 import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
-import com.nextbreakpoint.blueprint.common.vertx.Controller;
-import com.nextbreakpoint.blueprint.common.vertx.MessageEmitter;
 import com.nextbreakpoint.blueprint.designs.common.Render;
 import rx.Observable;
 import rx.Single;

@@ -2,6 +2,8 @@ package com.nextbreakpoint.blueprint.designs;
 
 import com.nextbreakpoint.blueprint.common.commands.mappers.*;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
+import com.nextbreakpoint.blueprint.common.core.RxSingleHandler;
+import com.nextbreakpoint.blueprint.common.drivers.MessageEmitter;
 import com.nextbreakpoint.blueprint.common.events.mappers.DesignDeleteRequestedOutputMapper;
 import com.nextbreakpoint.blueprint.common.events.mappers.DesignInsertRequestedOutputMapper;
 import com.nextbreakpoint.blueprint.common.events.mappers.DesignUpdateRequestedOutputMapper;
@@ -14,7 +16,7 @@ import com.nextbreakpoint.blueprint.designs.operations.insert.*;
 import com.nextbreakpoint.blueprint.designs.operations.update.*;
 import io.vertx.core.Handler;
 import io.vertx.rxjava.ext.web.RoutingContext;
-import io.vertx.rxjava.kafka.client.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.KafkaProducer;
 
 public class Factory {
     private Factory() {}
@@ -25,7 +27,7 @@ public class Factory {
                 .withController(new InsertDesignController(
                         new InsertDesignCommandMapper(),
                         new DesignInsertCommandOutputMapper(messageSource),
-                        new KafkaEmitter(producer, topic, 3)
+                        new MessageEmitter(producer, topic, 3)
                 ))
                 .withOutputMapper(new InsertDesignResponseMapper())
                 .onSuccess(new JsonConsumer(202))
@@ -39,7 +41,7 @@ public class Factory {
                 .withController(new UpdateDesignController(
                         new UpdateDesignCommandMapper(),
                         new DesignUpdateCommandOutputMapper(messageSource),
-                        new KafkaEmitter(producer, topic, 3)
+                        new MessageEmitter(producer, topic, 3)
                 ))
                 .withOutputMapper(new UpdateDesignResponseMapper())
                 .onSuccess(new JsonConsumer(202))
@@ -53,7 +55,7 @@ public class Factory {
                 .withController(new DeleteDesignController(
                         new DeleteDesignCommandMapper(),
                         new DesignDeleteCommandOutputMapper(messageSource),
-                        new KafkaEmitter(producer, topic, 3)
+                        new MessageEmitter(producer, topic, 3)
                 ))
                 .withOutputMapper(new DeleteDesignResponseMapper())
                 .onSuccess(new JsonConsumer(202))
@@ -69,7 +71,7 @@ public class Factory {
                         store,
                         new DesignInsertCommandInputMapper(),
                         new DesignInsertRequestedOutputMapper(messageSource),
-                        new KafkaEmitter(producer, topic, 3)
+                        new MessageEmitter(producer, topic, 3)
                 ))
                 .onSuccess(new MessageConsumed())
                 .onFailure(new MessageFailed())
@@ -84,7 +86,7 @@ public class Factory {
                         store,
                         new DesignUpdateCommandInputMapper(),
                         new DesignUpdateRequestedOutputMapper(messageSource),
-                        new KafkaEmitter(producer, topic, 3)
+                        new MessageEmitter(producer, topic, 3)
                 ))
                 .onSuccess(new MessageConsumed())
                 .onFailure(new MessageFailed())
@@ -99,7 +101,7 @@ public class Factory {
                         store,
                         new DesignDeleteCommandInputMapper(),
                         new DesignDeleteRequestedOutputMapper(messageSource),
-                        new KafkaEmitter(producer, topic, 3)
+                        new MessageEmitter(producer, topic, 3)
                 ))
                 .onSuccess(new MessageConsumed())
                 .onFailure(new MessageFailed())

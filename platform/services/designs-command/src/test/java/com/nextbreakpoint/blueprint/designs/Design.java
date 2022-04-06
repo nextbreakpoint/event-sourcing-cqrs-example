@@ -2,7 +2,13 @@ package com.nextbreakpoint.blueprint.designs;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
+@JsonPropertyOrder({
+        "manifest",
+        "metadata",
+        "script"
+})
 public class Design {
     private final String manifest;
     private final String metadata;

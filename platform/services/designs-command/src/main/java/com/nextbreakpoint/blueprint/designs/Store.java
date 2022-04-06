@@ -1,7 +1,6 @@
 package com.nextbreakpoint.blueprint.designs;
 
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
-import rx.Completable;
 import rx.Single;
 
 public interface Store {

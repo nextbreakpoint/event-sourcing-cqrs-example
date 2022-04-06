@@ -1,6 +1,8 @@
 package com.nextbreakpoint.blueprint.common.vertx;
 
+import com.nextbreakpoint.blueprint.common.core.Controller;
 import com.nextbreakpoint.blueprint.common.core.Mapper;
+import com.nextbreakpoint.blueprint.common.core.RxSingleHandler;
 import io.vertx.core.Handler;
 import rx.Single;
 import rx.schedulers.Schedulers;
@@ -30,18 +32,15 @@ public class TemplateHandler<T, I, O, R> implements Handler<T>, RxSingleHandler<
                 .map(inputMapper::transform)
                 .flatMap(controller::onNext)
                 .map(outputMapper::transform)
-                .observeOn(Schedulers.io())
                 .subscribe(result -> successHandler.accept(message, result), err -> failureHandler.accept(message, err));
     }
 
     @Override
     public Single<R> handleSingle(T value) {
         return Single.just(value)
-                .subscribeOn(Schedulers.computation())
                 .map(inputMapper::transform)
                 .flatMap(controller::onNext)
                 .map(outputMapper::transform)
-                .observeOn(Schedulers.io())
                 .doOnSuccess(result -> successHandler.accept(value, null))
                 .doOnError(err -> failureHandler.accept(value, err));
     }

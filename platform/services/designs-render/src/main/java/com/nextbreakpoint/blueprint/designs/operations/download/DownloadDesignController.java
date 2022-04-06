@@ -1,7 +1,7 @@
 package com.nextbreakpoint.blueprint.designs.operations.download;
 
 import com.nextbreakpoint.Try;
-import com.nextbreakpoint.blueprint.common.vertx.Controller;
+import com.nextbreakpoint.blueprint.common.core.Controller;
 import com.nextbreakpoint.blueprint.designs.common.BundleUtils;
 import com.nextbreakpoint.nextfractal.core.common.Bundle;
 import rx.Single;

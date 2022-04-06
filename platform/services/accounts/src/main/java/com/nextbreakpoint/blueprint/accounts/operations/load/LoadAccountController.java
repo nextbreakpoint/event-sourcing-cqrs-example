@@ -1,7 +1,7 @@
 package com.nextbreakpoint.blueprint.accounts.operations.load;
 
 import com.nextbreakpoint.blueprint.accounts.Store;
-import com.nextbreakpoint.blueprint.common.vertx.Controller;
+import com.nextbreakpoint.blueprint.common.core.Controller;
 import rx.Single;
 
 import java.util.Objects;

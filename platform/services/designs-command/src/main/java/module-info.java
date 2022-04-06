@@ -3,14 +3,13 @@ module com.nextbreakpoint.blueprint.designs.command {
     requires com.nextbreakpoint.blueprint.common.vertx;
     requires com.nextbreakpoint.blueprint.common.events;
     requires com.nextbreakpoint.blueprint.common.commands;
+    requires com.nextbreakpoint.blueprint.common.drivers;
     requires com.nextbreakpoint.nextfractal.core;
     requires com.nextbreakpoint.nextfractal.mandelbrot;
     requires io.vertx.core;
     requires io.vertx.web;
     requires io.vertx.web.openapi;
     requires io.vertx.healthcheck;
-    requires io.vertx.client.cassandra;
-    requires io.vertx.client.kafka;
     requires io.vertx.metrics.micrometer;
     requires io.vertx.tracing.opentelemetry;
     requires io.opentelemetry.semconv;
@@ -21,6 +20,7 @@ module com.nextbreakpoint.blueprint.designs.command {
     requires io.opentelemetry.sdk.common;
     requires io.opentelemetry.exporter.jaeger;
     requires io.opentelemetry.exporter.otlp.trace;
+    requires kafka.clients;
     requires com.datastax.oss.driver.core;
     requires vertx.rx.java;
     requires rxjava;

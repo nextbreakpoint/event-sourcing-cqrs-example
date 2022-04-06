@@ -1,11 +1,11 @@
 package com.nextbreakpoint.blueprint.designs.controllers;
 
+import com.nextbreakpoint.blueprint.common.core.Controller;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.Tombstone;
+import com.nextbreakpoint.blueprint.common.drivers.TombstoneEmitter;
 import com.nextbreakpoint.blueprint.common.events.TileRenderAborted;
-import com.nextbreakpoint.blueprint.common.vertx.Controller;
-import com.nextbreakpoint.blueprint.common.vertx.TombstoneEmitter;
 import com.nextbreakpoint.blueprint.designs.common.Render;
 import rx.Single;
 

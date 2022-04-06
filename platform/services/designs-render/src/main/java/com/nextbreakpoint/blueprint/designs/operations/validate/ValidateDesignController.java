@@ -1,7 +1,7 @@
 package com.nextbreakpoint.blueprint.designs.operations.validate;
 
+import com.nextbreakpoint.blueprint.common.core.Controller;
 import com.nextbreakpoint.blueprint.common.core.ValidationStatus;
-import com.nextbreakpoint.blueprint.common.vertx.Controller;
 import com.nextbreakpoint.blueprint.designs.common.BundleUtils;
 import com.nextbreakpoint.nextfractal.core.common.Bundle;
 import com.nextbreakpoint.nextfractal.mandelbrot.dsl.DSLCompiler;

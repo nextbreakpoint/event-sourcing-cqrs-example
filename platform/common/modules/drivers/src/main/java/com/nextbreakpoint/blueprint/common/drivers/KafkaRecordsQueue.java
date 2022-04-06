@@ -1,9 +1,12 @@
-package com.nextbreakpoint.blueprint.common.vertx;
+package com.nextbreakpoint.blueprint.common.drivers;
 
 import com.nextbreakpoint.blueprint.common.core.Payload;
-import io.vertx.rxjava.kafka.client.consumer.KafkaConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public interface KafkaRecordsQueue {
     void addRecord(QueuedRecord entry);
@@ -81,15 +84,15 @@ public interface KafkaRecordsQueue {
     }
 
     class QueuedRecord {
-        private KafkaConsumerRecord<String, String> record;
+        private ConsumerRecord<String, String> record;
         private Payload payload;
 
-        public QueuedRecord(KafkaConsumerRecord<String, String> record, Payload payload) {
+        public QueuedRecord(ConsumerRecord<String, String> record, Payload payload) {
             this.record = record;
             this.payload = payload;
         }
 
-        public KafkaConsumerRecord<String, String> getRecord() {
+        public ConsumerRecord<String, String> getRecord() {
             return record;
         }
 

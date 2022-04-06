@@ -4,16 +4,16 @@ import au.com.dius.pact.provider.junit5.HttpsTestTarget;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.core.Json;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
+import com.nextbreakpoint.blueprint.common.drivers.KafkaClientFactory;
+import com.nextbreakpoint.blueprint.common.drivers.KafkaConsumerConfig;
+import com.nextbreakpoint.blueprint.common.drivers.KafkaProducerConfig;
 import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
 import com.nextbreakpoint.blueprint.common.test.KafkaTestEmitter;
 import com.nextbreakpoint.blueprint.common.test.KafkaTestPolling;
-import com.nextbreakpoint.blueprint.common.vertx.KafkaClientFactory;
-import com.nextbreakpoint.blueprint.common.vertx.KafkaConsumerConfig;
-import com.nextbreakpoint.blueprint.common.vertx.KafkaProducerConfig;
 import io.vertx.rxjava.core.RxHelper;
 import io.vertx.rxjava.core.Vertx;
-import io.vertx.rxjava.kafka.client.consumer.KafkaConsumer;
-import io.vertx.rxjava.kafka.client.producer.KafkaProducer;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.producer.KafkaProducer;
 import org.jetbrains.annotations.NotNull;
 import rx.plugins.RxJavaHooks;
 import rx.schedulers.Schedulers;
@@ -51,11 +51,10 @@ public class TestCases {
 
         RxJavaHooks.setOnComputationScheduler(s -> RxHelper.scheduler(vertx));
         RxJavaHooks.setOnIOScheduler(s -> RxHelper.blockingScheduler(vertx));
-        RxJavaHooks.setOnNewThreadScheduler(s -> RxHelper.blockingScheduler(vertx));
 
-        KafkaProducer<String, String> producer = KafkaClientFactory.createProducer(vertx, createProducerConfig("integration"));
+        KafkaProducer<String, String> producer = KafkaClientFactory.createProducer(createProducerConfig("integration"));
 
-        KafkaConsumer<String, String> renderConsumer = KafkaClientFactory.createConsumer(vertx, createConsumerConfig(consumerGroupId));
+        KafkaConsumer<String, String> renderConsumer = KafkaClientFactory.createConsumer(createConsumerConfig(consumerGroupId));
 
         final Set<String> renderTopics = Set.of(
                 TestConstants.RENDER_TOPIC_PREFIX + "-completed-0",

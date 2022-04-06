@@ -2,6 +2,7 @@ package com.nextbreakpoint.blueprint.designs.model;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.nextbreakpoint.blueprint.common.core.Tiles;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -12,6 +13,17 @@ import java.util.Objects;
 import java.util.UUID;
 
 @Data
+@JsonPropertyOrder({
+        "uuid",
+        "json",
+        "checksum",
+        "revision",
+        "created",
+        "updated",
+        "published",
+        "levels",
+        "tiles"
+})
 @Builder(access = AccessLevel.PUBLIC, setterPrefix = "with")
 public class DesignDocument {
     private final UUID uuid;

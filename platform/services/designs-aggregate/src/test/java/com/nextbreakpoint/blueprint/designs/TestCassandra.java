@@ -1,57 +1,50 @@
 package com.nextbreakpoint.blueprint.designs;
 
 import com.datastax.oss.driver.api.core.ConsistencyLevel;
+import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.Row;
-import io.vertx.rxjava.cassandra.CassandraClient;
 import org.jetbrains.annotations.NotNull;
+import rx.Single;
 import rx.schedulers.Schedulers;
 
 import java.util.List;
 import java.util.UUID;
 
 public class TestCassandra {
-    private CassandraClient session;
+    private CqlSession session;
 
-    public TestCassandra(CassandraClient session) {
+    public TestCassandra(CqlSession session) {
         this.session = session;
     }
 
     @NotNull
     public List<Row> fetchMessages(UUID designId) {
-        return session.rxPrepare("SELECT * FROM MESSAGE WHERE MESSAGE_KEY = ?")
-                .map(stmt -> stmt.bind(designId.toString()).setConsistencyLevel(ConsistencyLevel.QUORUM))
-                .flatMap(session::rxExecuteWithFullFetch)
-                .subscribeOn(Schedulers.io())
+        return Single.fromCallable(() -> session.execute(session.prepare("SELECT * FROM MESSAGE WHERE MESSAGE_KEY = ?").bind(designId.toString()).setConsistencyLevel(ConsistencyLevel.QUORUM)).all())
+                .subscribeOn(Schedulers.immediate())
                 .toBlocking()
                 .value();
     }
 
     @NotNull
     public List<Row> fetchDesigns(UUID designId) {
-        return session.rxPrepare("SELECT * FROM DESIGN WHERE DESIGN_UUID = ?")
-                .map(stmt -> stmt.bind(designId).setConsistencyLevel(ConsistencyLevel.QUORUM))
-                .flatMap(session::rxExecuteWithFullFetch)
-                .subscribeOn(Schedulers.io())
+        return Single.fromCallable(() -> session.execute(session.prepare("SELECT * FROM DESIGN WHERE DESIGN_UUID = ?").bind(designId).setConsistencyLevel(ConsistencyLevel.QUORUM)).all())
+                .subscribeOn(Schedulers.immediate())
                 .toBlocking()
                 .value();
     }
 
     public void deleteMessages() {
-        session.rxPrepare("TRUNCATE TABLE MESSAGE")
-                .map(stmt -> stmt.bind().setConsistencyLevel(ConsistencyLevel.QUORUM))
-                .flatMap(session::rxExecute)
-                .subscribeOn(Schedulers.io())
-                .toBlocking()
-                .value();
+        Single.fromCallable(() -> session.execute(session.prepare("TRUNCATE TABLE MESSAGE").bind().setConsistencyLevel(ConsistencyLevel.QUORUM)))
+                .subscribeOn(Schedulers.immediate())
+                .toCompletable()
+                .await();
     }
 
     public void deleteDesigns() {
-        session.rxPrepare("TRUNCATE TABLE DESIGN")
-                .map(stmt -> stmt.bind().setConsistencyLevel(ConsistencyLevel.QUORUM))
-                .flatMap(session::rxExecute)
-                .subscribeOn(Schedulers.io())
-                .toBlocking()
-                .value();
+        Single.fromCallable(() -> session.execute(session.prepare("TRUNCATE TABLE DESIGN").bind().setConsistencyLevel(ConsistencyLevel.QUORUM)))
+                .subscribeOn(Schedulers.immediate())
+                .toCompletable()
+                .await();
     }
 
 //    public void insertDesign(Design design) {

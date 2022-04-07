@@ -16,12 +16,12 @@ public class TestUtils {
 
     @NotNull
     public static String createRenderKey(TileRenderRequested event) {
-        return String.format("%s/%d/%04d%04d.png", event.getDesignId().toString(), event.getLevel(), event.getRow(), event.getCol());
+        return String.format("%s/%s/%d/%04d%04d.png", event.getDesignId(), event.getChecksum(), event.getLevel(), event.getRow(), event.getCol());
     }
 
     @NotNull
     public static String createRenderKey(TileRenderCompleted event) {
-        return String.format("%s/%d/%04d%04d.png", event.getDesignId().toString(), event.getLevel(), event.getRow(), event.getCol());
+        return String.format("%s/%s/%d/%04d%04d.png", event.getDesignId(), event.getChecksum(), event.getLevel(), event.getRow(), event.getCol());
     }
 
     public static int totalTilesByLevels(int levels) {

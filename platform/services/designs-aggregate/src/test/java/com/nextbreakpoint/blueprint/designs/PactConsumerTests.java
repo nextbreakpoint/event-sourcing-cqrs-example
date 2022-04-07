@@ -179,7 +179,7 @@ public class PactConsumerTests {
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
 
         PactDslJsonBody message1 = new PactDslJsonBody()
-                .stringValue("key", String.format("%s/%d/%04d%04d.png", uuid, 0, 0, 0))
+                .stringValue("key", String.format("%s/%s/%d/%04d%04d.png", uuid, TestConstants.CHECKSUM_1, 0, 0, 0))
                 .object("value", payload1);
 
         PactDslJsonBody event2 = new PactDslJsonBody()
@@ -199,7 +199,7 @@ public class PactConsumerTests {
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
 
         PactDslJsonBody message2 = new PactDslJsonBody()
-                .stringValue("key", String.format("%s/%d/%04d%04d.png", uuid, 1, 0, 0))
+                .stringValue("key", String.format("%s/%s/%d/%04d%04d.png", uuid, TestConstants.CHECKSUM_1, 1, 0, 0))
                 .object("value", payload2);
 
         PactDslJsonBody event3 = new PactDslJsonBody()
@@ -219,7 +219,7 @@ public class PactConsumerTests {
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
 
         PactDslJsonBody message3 = new PactDslJsonBody()
-                .stringValue("key", String.format("%s/%d/%04d%04d.png", uuid, 1, 1, 0))
+                .stringValue("key", String.format("%s/%s/%d/%04d%04d.png", uuid, TestConstants.CHECKSUM_1, 1, 1, 0))
                 .object("value", payload3);
 
         PactDslJsonBody event4 = new PactDslJsonBody()
@@ -239,18 +239,18 @@ public class PactConsumerTests {
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
 
         PactDslJsonBody message4 = new PactDslJsonBody()
-                .stringValue("key", String.format("%s/%d/%04d%04d.png", uuid, 2, 2, 1))
+                .stringValue("key", String.format("%s/%s/%d/%04d%04d.png", uuid, TestConstants.CHECKSUM_1, 2, 2, 1))
                 .object("value", payload4);
 
         PactDslJsonBody event5 = new PactDslJsonBody()
                 .uuid("designId", uuid)
                 .uuid("commandId", TestConstants.COMMAND_ID)
                 .stringMatcher("revision", TestConstants.REVISION_REGEXP)
-                .stringValue("checksum", TestConstants.CHECKSUM_1)
+                .stringValue("checksum", TestConstants.CHECKSUM_2)
                 .numberValue("level", 2)
                 .numberValue("row", 3)
                 .numberValue("col", 1)
-                .stringValue("status", "FAILED");
+                .stringValue("status", "COMPLETED");
 
         PactDslJsonBody payload5 = new PactDslJsonBody()
                 .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
@@ -259,7 +259,7 @@ public class PactConsumerTests {
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
 
         PactDslJsonBody message5 = new PactDslJsonBody()
-                .stringValue("key", String.format("%s/%d/%04d%04d.png", uuid, 2, 3, 1))
+                .stringValue("key", String.format("%s/%s/%d/%04d%04d.png", uuid, TestConstants.CHECKSUM_2, 2, 3, 1))
                 .object("value", payload5);
 
         return builder.given("kafka topic exists")
@@ -271,7 +271,7 @@ public class PactConsumerTests {
                 .withContent(message3)
                 .expectsToReceive("tile render completed with status COMPLETED for tile 2/00020001.png of design 00000000-0000-0000-0000-000000000004 with checksum 1")
                 .withContent(message4)
-                .expectsToReceive("tile render completed with status FAILED for tile 2/00030001.png of design 00000000-0000-0000-0000-000000000004 with checksum 2")
+                .expectsToReceive("tile render completed with status COMPLETED for tile 2/00030001.png of design 00000000-0000-0000-0000-000000000004 with checksum 2")
                 .withContent(message5)
                 .toPact();
     }

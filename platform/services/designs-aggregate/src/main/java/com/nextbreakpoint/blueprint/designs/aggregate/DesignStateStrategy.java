@@ -122,7 +122,9 @@ public class DesignStateStrategy {
             case TilesRendered.TYPE: {
                 final TilesRendered event = Json.decodeValue(value, TilesRendered.class);
 
-                event.getTiles().forEach(tile -> TilesBitmap.of(state.design.getBitmap()).putTile(tile.getLevel(), tile.getRow(), tile.getCol()));
+                if (state.design.getChecksum().equals(event.getChecksum())) {
+                    event.getTiles().forEach(tile -> TilesBitmap.of(state.design.getBitmap()).putTile(tile.getLevel(), tile.getRow(), tile.getCol()));
+                }
 
                 state.design = Design.builder()
                         .withDesignId(event.getDesignId())

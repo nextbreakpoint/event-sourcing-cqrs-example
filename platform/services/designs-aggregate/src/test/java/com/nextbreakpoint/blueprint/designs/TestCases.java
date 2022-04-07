@@ -471,7 +471,6 @@ public class TestCases {
         bitmap.putTile(tileRenderCompleted2.getLevel(), tileRenderCompleted2.getRow(), tileRenderCompleted2.getCol());
         bitmap.putTile(tileRenderCompleted3.getLevel(), tileRenderCompleted3.getRow(), tileRenderCompleted3.getCol());
         bitmap.putTile(tileRenderCompleted4.getLevel(), tileRenderCompleted4.getRow(), tileRenderCompleted4.getCol());
-        bitmap.putTile(tileRenderCompleted5.getLevel(), tileRenderCompleted5.getRow(), tileRenderCompleted5.getCol());
 
         await().atMost(ONE_MINUTE)
                 .pollInterval(TEN_SECONDS)

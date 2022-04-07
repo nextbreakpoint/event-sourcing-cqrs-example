@@ -89,7 +89,7 @@ public class IntegrationTests {
         final TileRenderCompleted tileRenderCompleted2 = new TileRenderCompleted(designId, commandId, TestConstants.REVISION_1, TestConstants.CHECKSUM_1, 1, 0, 0, "COMPLETED");
         final TileRenderCompleted tileRenderCompleted3 = new TileRenderCompleted(designId, commandId, TestConstants.REVISION_2, TestConstants.CHECKSUM_1, 1, 1, 0, "COMPLETED");
         final TileRenderCompleted tileRenderCompleted4 = new TileRenderCompleted(designId, commandId, TestConstants.REVISION_3, TestConstants.CHECKSUM_1, 2, 2, 1, "COMPLETED");
-        final TileRenderCompleted tileRenderCompleted5 = new TileRenderCompleted(designId, commandId, TestConstants.REVISION_4, TestConstants.CHECKSUM_1, 2, 3, 1, "FAILED");
+        final TileRenderCompleted tileRenderCompleted5 = new TileRenderCompleted(designId, commandId, TestConstants.REVISION_4, TestConstants.CHECKSUM_2, 2, 3, 1, "COMPLETED");
 
         final OutputMessage tileRenderCompletedMessage1 = new TileRenderCompletedOutputMapper(TestConstants.MESSAGE_SOURCE, TestUtils::createRenderKey).transform(tileRenderCompleted1);
         final OutputMessage tileRenderCompletedMessage2 = new TileRenderCompletedOutputMapper(TestConstants.MESSAGE_SOURCE, TestUtils::createRenderKey).transform(tileRenderCompleted2);

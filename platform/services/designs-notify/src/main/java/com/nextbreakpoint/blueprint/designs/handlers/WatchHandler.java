@@ -1,11 +1,10 @@
 package com.nextbreakpoint.blueprint.designs.handlers;
 
 import io.vertx.core.Handler;
-import io.vertx.core.impl.logging.Logger;
-import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.rxjava.ext.web.RoutingContext;
 import io.vertx.rxjava.servicediscovery.ServiceDiscovery;
 import io.vertx.servicediscovery.Record;
+import lombok.extern.log4j.Log4j2;
 
 import java.util.List;
 import java.util.Objects;
@@ -13,9 +12,8 @@ import java.util.concurrent.TimeUnit;
 
 import static com.nextbreakpoint.blueprint.common.core.Headers.LOCATION;
 
+@Log4j2
 public class WatchHandler implements Handler<RoutingContext> {
-    private static final Logger logger = LoggerFactory.getLogger(WatchHandler.class.getName());
-
     private final ServiceDiscovery serviceDiscovery;
 
     public WatchHandler(ServiceDiscovery serviceDiscovery) {
@@ -46,11 +44,11 @@ public class WatchHandler implements Handler<RoutingContext> {
 
             final String resource = "https://" + host + ":" + port + uri;
 
-            logger.info("Redirect watch request to resource " + resource);
+            log.info("Redirect watch request to resource " + resource);
 
             context.response().putHeader(LOCATION, resource).setStatusCode(200).end();
         } else {
-            logger.warn("No records found for service designs-sse");
+            log.warn("No records found for service designs-sse");
 
             context.response().setStatusCode(404).end();
         }

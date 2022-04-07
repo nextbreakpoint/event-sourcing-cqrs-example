@@ -1,8 +1,13 @@
 package com.nextbreakpoint.blueprint.designs.operations.insert;
 
+import lombok.Builder;
+import lombok.Data;
+
 import java.util.Objects;
 import java.util.UUID;
 
+@Data
+@Builder(setterPrefix = "with")
 public class InsertDesignRequest {
     private final UUID owner;
     private final UUID change;
@@ -14,21 +19,5 @@ public class InsertDesignRequest {
         this.change = Objects.requireNonNull(change);
         this.uuid = Objects.requireNonNull(uuid);
         this.json = Objects.requireNonNull(json);
-    }
-
-    public UUID getOwner() {
-        return owner;
-    }
-
-    public UUID getChange() {
-        return change;
-    }
-
-    public UUID getUuid() {
-        return uuid;
-    }
-
-    public String getJson() {
-        return json;
     }
 }

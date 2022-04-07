@@ -11,7 +11,6 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -94,8 +93,6 @@ public class KafkaTestPolling {
         final Payload payload = Json.decodeValue(record.value(), Payload.class);
 
         final String token = Token.from(record.timestamp(), record.offset());
-
-        final Tracing tracing = Tracing.of(UUID.randomUUID().toString(), UUID.randomUUID().toString());
 
         return new InputMessage(record.key(), token, payload, record.timestamp());
     }

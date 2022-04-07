@@ -27,12 +27,4 @@ public class DesignChangedNotification {
         this.key = Objects.requireNonNull(key);
         this.revision = Objects.requireNonNull(revision);
     }
-
-    public String getKey() {
-        return key;
-    }
-
-    public String getRevision() {
-        return revision;
-    }
 }

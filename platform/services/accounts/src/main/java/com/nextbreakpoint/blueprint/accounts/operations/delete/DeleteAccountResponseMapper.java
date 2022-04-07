@@ -6,10 +6,8 @@ import io.vertx.core.json.JsonObject;
 public class DeleteAccountResponseMapper implements Mapper<DeleteAccountResponse, String> {
     @Override
     public String transform(DeleteAccountResponse response) {
-        final String json = new JsonObject()
+        return new JsonObject()
                 .put("uuid", response.getUuid().toString())
                 .encode();
-
-        return json;
     }
 }

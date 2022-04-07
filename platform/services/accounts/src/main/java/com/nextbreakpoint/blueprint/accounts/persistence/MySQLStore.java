@@ -10,8 +10,6 @@ import com.nextbreakpoint.blueprint.accounts.operations.list.ListAccountsRequest
 import com.nextbreakpoint.blueprint.accounts.operations.list.ListAccountsResponse;
 import com.nextbreakpoint.blueprint.accounts.operations.load.LoadAccountRequest;
 import com.nextbreakpoint.blueprint.accounts.operations.load.LoadAccountResponse;
-import io.vertx.core.impl.logging.Logger;
-import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.sql.ResultSet;
@@ -20,6 +18,7 @@ import io.vertx.ext.sql.TransactionIsolation;
 import io.vertx.ext.sql.UpdateResult;
 import io.vertx.rxjava.ext.jdbc.JDBCClient;
 import io.vertx.rxjava.ext.sql.SQLConnection;
+import lombok.extern.log4j.Log4j2;
 import rx.Single;
 
 import java.util.List;
@@ -27,13 +26,8 @@ import java.util.Optional;
 
 import static java.util.stream.Collectors.toList;
 
+@Log4j2
 public class MySQLStore implements Store {
-    private final Logger logger = LoggerFactory.getLogger(MySQLStore.class.getName());
-
-    private static final SQLOptions OPTIONS = new SQLOptions()
-            .setTransactionIsolation(TransactionIsolation.READ_UNCOMMITTED)
-            .setQueryTimeout(10000);
-
     private static final String ERROR_GET_CONNECTION = "An error occurred while getting a connection";
     private static final String ERROR_INSERT_ACCOUNT = "An error occurred while inserting an account";
     private static final String ERROR_LOAD_ACCOUNT = "An error occurred while loading an account";
@@ -45,6 +39,10 @@ public class MySQLStore implements Store {
     private static final String DELETE_ACCOUNT = "DELETE FROM ACCOUNT WHERE ACCOUNT_UUID = ?";
     private static final String SELECT_ACCOUNTS = "SELECT ACCOUNT_UUID, ACCOUNT_NAME, ACCOUNT_EMAIL, ACCOUNT_AUTHORITIES, ACCOUNT_CREATED FROM ACCOUNT";
     private static final String SELECT_ACCOUNTS_BY_EMAIL = "SELECT ACCOUNT_UUID, ACCOUNT_NAME, ACCOUNT_EMAIL, ACCOUNT_AUTHORITIES, ACCOUNT_CREATED FROM ACCOUNT WHERE ACCOUNT_EMAIL = ?";
+
+    private static final SQLOptions OPTIONS = new SQLOptions()
+            .setTransactionIsolation(TransactionIsolation.READ_UNCOMMITTED)
+            .setQueryTimeout(10000);
 
     private final JDBCClient client;
 
@@ -150,7 +148,12 @@ public class MySQLStore implements Store {
         final String uuid = row.getString("ACCOUNT_UUID");
         final String name = row.getString("ACCOUNT_NAME");
         final String role = row.getString("ACCOUNT_AUTHORITIES");
-        return new Account(uuid, name, role);
+
+        return Account.builder()
+                .withUuid(uuid)
+                .withName(name)
+                .withAuthorities(role)
+                .build();
     }
 
     private Optional<JsonObject> exactlyOne(List<JsonObject> list) {
@@ -158,7 +161,7 @@ public class MySQLStore implements Store {
     }
 
     private void handleError(String message, Throwable err) {
-        logger.error(message, err);
+        log.error(message, err);
     }
 
     private JsonArray makeInsertParams(InsertAccountRequest request) {

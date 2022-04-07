@@ -3,6 +3,9 @@ module com.nextbreakpoint.blueprint.designs.aggregate {
     requires com.nextbreakpoint.blueprint.common.vertx;
     requires com.nextbreakpoint.blueprint.common.events;
     requires com.nextbreakpoint.blueprint.common.drivers;
+    requires org.apache.logging.log4j;
+    requires com.fasterxml.jackson.core;
+    requires com.fasterxml.jackson.databind;
     requires io.vertx.core;
     requires io.vertx.web;
     requires io.vertx.web.openapi;
@@ -19,10 +22,6 @@ module com.nextbreakpoint.blueprint.designs.aggregate {
     requires io.opentelemetry.exporter.otlp.trace;
     requires vertx.rx.java;
     requires rxjava;
-    requires com.fasterxml.jackson.core;
-    requires com.fasterxml.jackson.databind;
-    requires org.apache.logging.log4j;
-    requires java.sql;
     requires kafka.clients;
     requires com.datastax.oss.driver.core;
     requires static lombok;

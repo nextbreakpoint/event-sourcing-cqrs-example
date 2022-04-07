@@ -16,13 +16,21 @@ public class DownloadDesignController implements Controller<DownloadDesignReques
 
     private Single<DownloadDesignResponse> onRequest(DownloadDesignRequest request) {
         try {
-            Bundle bundle = BundleUtils.createBundle(request.getManifest(), request.getMetadata(), request.getScript());
+            final Bundle bundle = BundleUtils.createBundle(request.getManifest(), request.getMetadata(), request.getScript());
 
-            Try<byte[], Exception> result = BundleUtils.writeBundle(bundle);
+            final Try<byte[], Exception> result = BundleUtils.writeBundle(bundle);
 
-            return Single.just(new DownloadDesignResponse(result.orElse(null)));
+            final DownloadDesignResponse response = DownloadDesignResponse.builder()
+                    .withBytes(result.orElse(null))
+                    .build();
+
+            return Single.just(response);
         } catch (Exception e) {
-            return Single.just(new DownloadDesignResponse(null));
+            final DownloadDesignResponse response = DownloadDesignResponse.builder()
+                    .withBytes(null)
+                    .build();
+
+            return Single.just(response);
         }
     }
 }

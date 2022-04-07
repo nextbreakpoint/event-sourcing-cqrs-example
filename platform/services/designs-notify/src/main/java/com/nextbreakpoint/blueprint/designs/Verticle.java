@@ -17,8 +17,6 @@ import com.nextbreakpoint.blueprint.designs.handlers.WatchHandler;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServerOptions;
-import io.vertx.core.impl.logging.Logger;
-import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.healthchecks.Status;
 import io.vertx.ext.web.openapi.RouterBuilder;
@@ -37,6 +35,7 @@ import io.vertx.rxjava.micrometer.PrometheusScrapingHandler;
 import io.vertx.rxjava.servicediscovery.ServiceDiscovery;
 import io.vertx.rxjava.servicediscovery.spi.ServiceImporter;
 import io.vertx.servicediscovery.consul.ConsulServiceImporter;
+import lombok.extern.log4j.Log4j2;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import rx.Completable;
 import rx.Single;
@@ -54,11 +53,9 @@ import java.util.concurrent.TimeUnit;
 
 import static com.nextbreakpoint.blueprint.common.core.Authority.*;
 import static com.nextbreakpoint.blueprint.common.core.Headers.*;
-import static java.util.Arrays.asList;
 
+@Log4j2
 public class Verticle extends AbstractVerticle {
-    private static final Logger logger = LoggerFactory.getLogger(Verticle.class.getName());
-
     private KafkaPolling kafkaPolling;
 
     private boolean discoveryStarted;
@@ -72,9 +69,9 @@ public class Verticle extends AbstractVerticle {
             vertx.rxDeployVerticle(new Verticle(), new DeploymentOptions().setConfig(config))
                     .delay(30, TimeUnit.SECONDS)
                     .retry(3)
-                    .subscribe(o -> logger.info("Verticle deployed"), err -> logger.error("Can't deploy verticle"));
+                    .subscribe(o -> log.info("Verticle deployed"), err -> log.error("Can't deploy verticle"));
         } catch (Exception e) {
-            logger.error("Can't start service", e);
+            log.error("Can't start service", e);
         }
     }
 
@@ -166,13 +163,13 @@ public class Verticle extends AbstractVerticle {
 
             final ServiceDiscovery serviceDiscovery = ServiceDiscovery.create(vertx);
 
-            final CorsHandler corsHandler = CorsHandlerFactory.createWithAll(originPattern, asList(COOKIE, AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN));
+            final CorsHandler corsHandler = CorsHandlerFactory.createWithAll(originPattern, List.of(COOKIE, AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN));
 
             final Handler<RoutingContext> onAccessDenied = routingContext -> routingContext.fail(Failure.accessDenied("Authorisation failed"));
 
-            final Handler<RoutingContext> watchHandler = new AccessHandler(jwtProvider, new WatchHandler(serviceDiscovery), onAccessDenied, asList(ANONYMOUS, ADMIN, GUEST));
+            final Handler<RoutingContext> watchHandler = new AccessHandler(jwtProvider, new WatchHandler(serviceDiscovery), onAccessDenied, List.of(ANONYMOUS, ADMIN, GUEST));
 
-            final Handler<RoutingContext> sseHandler = new AccessHandler(jwtProvider, NotificationHandler.create(vertx), onAccessDenied, asList(ANONYMOUS, ADMIN, GUEST));
+            final Handler<RoutingContext> sseHandler = new AccessHandler(jwtProvider, NotificationHandler.create(vertx), onAccessDenied, List.of(ANONYMOUS, ADMIN, GUEST));
 
             final Map<String, RxSingleHandler<InputMessage, ?>> messageHandlers = new HashMap<>();
 
@@ -254,16 +251,16 @@ public class Verticle extends AbstractVerticle {
                         vertx.createHttpServer(options)
                                 .requestHandler(mainRouter)
                                 .rxListen(port)
-                                .doOnSuccess(result -> logger.info("Service listening on port " + port))
-                                .doOnError(err -> logger.error("Can't create server", err))
+                                .doOnSuccess(result -> log.info("Service listening on port " + port))
+                                .doOnError(err -> log.error("Can't create server", err))
                                 .subscribe(result -> promise.complete(), promise::fail);
                     })
                     .onFailure(err -> {
-                        logger.error("Can't create router", err);
+                        log.error("Can't create router", err);
                         promise.fail(err);
                     });
         } catch (Exception e) {
-            logger.error("Failed to start server", e);
+            log.error("Failed to start server", e);
             promise.fail(e);
         }
     }
@@ -273,9 +270,9 @@ public class Verticle extends AbstractVerticle {
             discoveryStarted = result.succeeded();
 
             if (result.succeeded()) {
-                logger.info("Service importer registered", result.cause());
+                log.info("Service importer registered", result.cause());
             } else {
-                logger.error("Can't register service importer", result.cause());
+                log.error("Can't register service importer", result.cause());
             }
         });
     }

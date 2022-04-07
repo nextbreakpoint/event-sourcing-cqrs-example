@@ -7,18 +7,16 @@ import com.nextbreakpoint.blueprint.designs.common.Render;
 import com.nextbreakpoint.blueprint.designs.common.Result;
 import com.nextbreakpoint.blueprint.designs.common.S3Driver;
 import com.nextbreakpoint.blueprint.designs.common.TileRenderer;
-import io.vertx.core.impl.logging.Logger;
-import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.rxjava.core.WorkerExecutor;
+import lombok.extern.log4j.Log4j2;
 import rx.Single;
 
 import java.util.Objects;
 
 import static com.nextbreakpoint.blueprint.designs.common.Bucket.createBucketKey;
 
+@Log4j2
 public class TileRenderRequestedController implements Controller<InputMessage, Void> {
-    private final Logger logger = LoggerFactory.getLogger(TileRenderRequestedController.class.getName());
-
     private Mapper<InputMessage, TileRenderRequested> inputMapper;
     private final MessageMapper<TileRenderCompleted, OutputMessage> outputMapper;
     private final MessageEmitter emitter;
@@ -66,24 +64,24 @@ public class TileRenderRequestedController implements Controller<InputMessage, V
 
     private Single<Result> uploadImage(TileRenderRequested event, Result result) {
         return s3Driver.putObject(createBucketKey(event), result.getImage())
-                .doOnSuccess(response -> logger.info("Image uploaded: " + createBucketKey(event)))
-                .doOnError(response -> logger.info("Can't upload image: " + createBucketKey(event)))
+                .doOnSuccess(response -> log.info("Image uploaded: " + createBucketKey(event)))
+                .doOnError(response -> log.info("Can't upload image: " + createBucketKey(event)))
                 .map(response -> result);
     }
 
     private Single<Result> renderImage(TileRenderRequested event) {
         return s3Driver.getObject(createBucketKey(event))
-                .doOnError(err -> logger.debug("Image not found: " + createBucketKey(event)))
+                .doOnError(err -> log.debug("Image not found: " + createBucketKey(event)))
                 .map(image -> Result.of(image, null))
-                .doOnSuccess(result -> logger.info("Image found: " + createBucketKey(event)))
+                .doOnSuccess(result -> log.info("Image found: " + createBucketKey(event)))
                 .onErrorResumeNext(err -> renderImageBlocking(event).flatMap(result -> uploadImage(event, result)));
     }
 
     private Single<Result> renderImageBlocking(TileRenderRequested event) {
         return executor.rxExecuteBlocking(promise -> {
-            logger.debug("Render image: " + createBucketKey(event));
+            log.debug("Render image: " + createBucketKey(event));
             renderer.renderImage(event, promise);
-            logger.debug("Image rendered: " + createBucketKey(event));
+            log.debug("Image rendered: " + createBucketKey(event));
         }, false);
     }
 }

@@ -1,11 +1,9 @@
 package com.nextbreakpoint.blueprint.common.vertx;
 
-import io.vertx.core.impl.logging.Logger;
-import io.vertx.core.impl.logging.LoggerFactory;
+import lombok.extern.log4j.Log4j2;
 
+@Log4j2
 public class Failure extends RuntimeException {
-    private static final Logger logger = LoggerFactory.getLogger(Failure.class.getName());
-
     private final int statusCode;
 
     public Failure(int statusCode, String message) {
@@ -30,19 +28,19 @@ public class Failure extends RuntimeException {
     }
 
     public static Failure authenticationError(Throwable err) {
-        logger.error("An error occurred while authenticating user", err);
+        log.error("An error occurred while authenticating user", err);
 
         return new Failure(500, "Failed to authenticate user");
     }
 
     public static Failure databaseError(Throwable err) {
-        logger.error("An error occurred while accessing database", err);
+        log.error("An error occurred while accessing database", err);
 
         return new Failure(500, "Failed to execute statement");
     }
 
     public static Failure requestFailed(Throwable err) {
-        logger.error("An error occurred while processing request", err);
+        log.error("An error occurred while processing request", err);
 
         return new Failure(500, "Failed to process request");
     }

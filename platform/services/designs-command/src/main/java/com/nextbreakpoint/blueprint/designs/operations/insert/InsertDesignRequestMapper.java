@@ -33,6 +33,11 @@ public class InsertDesignRequestMapper implements Mapper<RoutingContext, InsertD
 
         final UUID owner = UUID.fromString(principal.getString("user"));
 
-        return new InsertDesignRequest(owner, UUID.randomUUID(), UUID.randomUUID(), json);
+        return InsertDesignRequest.builder()
+                .withOwner(owner)
+                .withUuid(UUID.randomUUID())
+                .withChange(UUID.randomUUID())
+                .withJson(json)
+                .build();
     }
 }

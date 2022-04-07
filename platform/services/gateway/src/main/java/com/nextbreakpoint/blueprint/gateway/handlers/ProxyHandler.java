@@ -1,19 +1,17 @@
 package com.nextbreakpoint.blueprint.gateway.handlers;
 
 import io.vertx.core.Handler;
-import io.vertx.core.impl.logging.Logger;
-import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.rxjava.core.buffer.Buffer;
 import io.vertx.rxjava.core.http.HttpClient;
 import io.vertx.rxjava.core.http.HttpServerRequest;
 import io.vertx.rxjava.core.http.HttpServerResponse;
 import io.vertx.rxjava.ext.web.RoutingContext;
+import lombok.extern.log4j.Log4j2;
 
 import java.util.Objects;
 
+@Log4j2
 public class ProxyHandler implements Handler<RoutingContext> {
-    private final Logger logger = LoggerFactory.getLogger(ProxyHandler.class.getName());
-
     private final HttpClient client;
 
     public ProxyHandler(HttpClient client) {
@@ -25,7 +23,7 @@ public class ProxyHandler implements Handler<RoutingContext> {
         context.request()
             .bodyHandler(buffer -> handle(context, buffer))
             .exceptionHandler(err -> {
-                logger.error("Error occurred while reading request", err);
+                log.error("Error occurred while reading request", err);
                 context.response().setStatusCode(500).end();
             })
             .end();
@@ -50,7 +48,7 @@ public class ProxyHandler implements Handler<RoutingContext> {
                             });
                 })
                 .doOnError(err -> {
-                    logger.error("Error occurred while processing request", err);
+                    log.error("Error occurred while processing request", err);
                     response.setStatusCode(500).end();
                 })
                 .subscribe();

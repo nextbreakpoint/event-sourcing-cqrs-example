@@ -1,7 +1,12 @@
 package com.nextbreakpoint.blueprint.designs.operations.validate;
 
+import lombok.Builder;
+import lombok.Data;
+
 import java.util.Objects;
 
+@Data
+@Builder(setterPrefix = "with")
 public class ValidateDesignRequest {
     private final String manifest;
     private final String metadata;
@@ -11,17 +16,5 @@ public class ValidateDesignRequest {
         this.manifest = Objects.requireNonNull(manifest);
         this.metadata = Objects.requireNonNull(metadata);
         this.script = Objects.requireNonNull(script);
-    }
-
-    public String getManifest() {
-        return manifest;
-    }
-
-    public String getMetadata() {
-        return metadata;
-    }
-
-    public String getScript() {
-        return script;
     }
 }

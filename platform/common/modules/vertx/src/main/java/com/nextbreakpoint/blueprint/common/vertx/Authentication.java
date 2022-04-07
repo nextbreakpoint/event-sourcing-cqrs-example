@@ -2,14 +2,13 @@ package com.nextbreakpoint.blueprint.common.vertx;
 
 import com.nextbreakpoint.blueprint.common.core.Authority;
 import com.nextbreakpoint.blueprint.common.core.Headers;
-import io.vertx.core.impl.logging.Logger;
-import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.auth.JWTOptions;
 import io.vertx.rxjava.core.http.Cookie;
 import io.vertx.rxjava.ext.auth.User;
 import io.vertx.rxjava.ext.auth.jwt.JWTAuth;
 import io.vertx.rxjava.ext.web.RoutingContext;
+import lombok.extern.log4j.Log4j2;
 import rx.Single;
 
 import java.util.List;
@@ -18,9 +17,8 @@ import java.util.UUID;
 
 import static rx.Single.fromCallable;
 
+@Log4j2
 public class Authentication {
-    private static final Logger logger = LoggerFactory.getLogger(Authentication.class.getName());
-
     public static final String NULL_USER_UUID = new UUID(0, 0).toString();
 
     public static final String JWT_SUBJECT = "designs";
@@ -41,7 +39,7 @@ public class Authentication {
     }
 
     public static String generateToken(JWTAuth jwtProvider, String userUuid, List<String> authorities) {
-        logger.debug("Generate new JWT token for user " + userUuid);
+        log.debug("Generate new JWT token for user " + userUuid);
         return jwtProvider.generateToken(makeUserObject(userUuid), makeJWTOptions(authorities));
     }
 
@@ -78,16 +76,16 @@ public class Authentication {
     private static String getToken(RoutingContext routingContext) {
         final String authorization = routingContext.request().getHeader(Headers.AUTHORIZATION);
         if (authorization != null && authorization.startsWith("Bearer ")) {
-            logger.debug("Authorisation header is present");
+            log.debug("Authorisation header is present");
             return authorization.substring("Bearer ".length());
         } else {
             final Cookie cookie = routingContext.getCookie("token");
             if (cookie != null && !cookie.getValue().isEmpty()) {
-                logger.debug("Token cookie is present");
+                log.debug("Token cookie is present");
                 return cookie.getValue();
             }
         }
-        logger.debug("Authorisation header and token cookie not present");
+        log.debug("Authorisation header and token cookie not present");
         return null;
     }
 

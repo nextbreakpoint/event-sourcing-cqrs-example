@@ -11,12 +11,10 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.nextbreakpoint.blueprint.common.core.IOUtils;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.core.RxSingleHandler;
-import com.nextbreakpoint.blueprint.common.drivers.*;
 import com.nextbreakpoint.blueprint.common.drivers.KafkaClientFactory;
 import com.nextbreakpoint.blueprint.common.drivers.KafkaConsumerConfig;
-import com.nextbreakpoint.blueprint.common.drivers.KafkaPolling;
 import com.nextbreakpoint.blueprint.common.drivers.KafkaProducerConfig;
-import com.nextbreakpoint.blueprint.common.drivers.KafkaRecordsConsumer;
+import com.nextbreakpoint.blueprint.common.drivers.*;
 import com.nextbreakpoint.blueprint.common.events.DesignDocumentDeleteRequested;
 import com.nextbreakpoint.blueprint.common.events.DesignDocumentUpdateRequested;
 import com.nextbreakpoint.blueprint.common.vertx.*;
@@ -24,8 +22,6 @@ import com.nextbreakpoint.blueprint.designs.persistence.ElasticsearchStore;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServerOptions;
-import io.vertx.core.impl.logging.Logger;
-import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.healthchecks.Status;
 import io.vertx.ext.web.handler.LoggerFormat;
@@ -43,6 +39,7 @@ import io.vertx.rxjava.ext.web.handler.CorsHandler;
 import io.vertx.rxjava.ext.web.handler.LoggerHandler;
 import io.vertx.rxjava.ext.web.handler.TimeoutHandler;
 import io.vertx.rxjava.micrometer.PrometheusScrapingHandler;
+import lombok.extern.log4j.Log4j2;
 import org.apache.http.HttpHost;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
@@ -70,11 +67,9 @@ import java.util.concurrent.TimeUnit;
 
 import static com.nextbreakpoint.blueprint.common.core.Authority.*;
 import static com.nextbreakpoint.blueprint.common.core.Headers.*;
-import static java.util.Arrays.asList;
 
+@Log4j2
 public class Verticle extends AbstractVerticle {
-    private static final Logger logger = LoggerFactory.getLogger(Verticle.class.getName());
-
     private KafkaPolling kafkaPolling;
 
     public static void main(String[] args) {
@@ -86,9 +81,9 @@ public class Verticle extends AbstractVerticle {
             vertx.rxDeployVerticle(new Verticle(), new DeploymentOptions().setConfig(config))
                     .delay(30, TimeUnit.SECONDS)
                     .retry(3)
-                    .subscribe(o -> logger.info("Verticle deployed"), err -> logger.error("Can't deploy verticle"));
+                    .subscribe(o -> log.info("Verticle deployed"), err -> log.error("Can't deploy verticle"));
         } catch (Exception e) {
-            logger.error("Can't start service", e);
+            log.error("Can't start service", e);
         }
     }
 
@@ -231,15 +226,15 @@ public class Verticle extends AbstractVerticle {
 
             final Router mainRouter = Router.router(vertx);
 
-            final CorsHandler corsHandler = CorsHandlerFactory.createWithAll(originPattern, asList(COOKIE, AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN), asList(COOKIE, CONTENT_TYPE, X_XSRF_TOKEN));
+            final CorsHandler corsHandler = CorsHandlerFactory.createWithAll(originPattern, List.of(COOKIE, AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN), List.of(COOKIE, CONTENT_TYPE, X_XSRF_TOKEN));
 
             final Handler<RoutingContext> onAccessDenied = routingContext -> routingContext.fail(Failure.accessDenied("Authorisation failed"));
 
-            final Handler<RoutingContext> listDesignsHandler = new AccessHandler(jwtProvider, Factory.createListDesignsHandler(store), onAccessDenied, asList(ADMIN, GUEST, ANONYMOUS));
+            final Handler<RoutingContext> listDesignsHandler = new AccessHandler(jwtProvider, Factory.createListDesignsHandler(store), onAccessDenied, List.of(ADMIN, GUEST, ANONYMOUS));
 
-            final Handler<RoutingContext> loadDesignHandler = new AccessHandler(jwtProvider, Factory.createLoadDesignHandler(store), onAccessDenied, asList(ADMIN, GUEST, ANONYMOUS));
+            final Handler<RoutingContext> loadDesignHandler = new AccessHandler(jwtProvider, Factory.createLoadDesignHandler(store), onAccessDenied, List.of(ADMIN, GUEST, ANONYMOUS));
 
-            final Handler<RoutingContext> getTileHandler = new AccessHandler(jwtProvider, Factory.createGetTileHandler(store, s3AsyncClient, s3Bucket), onAccessDenied, asList(ADMIN, GUEST, ANONYMOUS));
+            final Handler<RoutingContext> getTileHandler = new AccessHandler(jwtProvider, Factory.createGetTileHandler(store, s3AsyncClient, s3Bucket), onAccessDenied, List.of(ADMIN, GUEST, ANONYMOUS));
 
             final Map<String, RxSingleHandler<InputMessage, ?>> messageHandlers = new HashMap<>();
 
@@ -284,10 +279,8 @@ public class Verticle extends AbstractVerticle {
 
                         final Router apiRouter = Router.newInstance(routerBuilder.createRouter());
 
-                        mainRouter.route().handler(MDCHandler.create());
                         mainRouter.route().handler(LoggerHandler.create(true, LoggerFormat.DEFAULT));
                         mainRouter.route().handler(BodyHandler.create());
-                        //mainRouter.route().handler(CookieHandler.create());
                         mainRouter.route().handler(TimeoutHandler.create(30000));
 
                         mainRouter.route("/*").handler(corsHandler);
@@ -314,16 +307,16 @@ public class Verticle extends AbstractVerticle {
                         vertx.createHttpServer(options)
                                 .requestHandler(mainRouter)
                                 .rxListen(port)
-                                .doOnSuccess(result -> logger.info("Service listening on port " + port))
-                                .doOnError(err -> logger.error("Can't create server", err))
+                                .doOnSuccess(result -> log.info("Service listening on port " + port))
+                                .doOnError(err -> log.error("Can't create server", err))
                                 .subscribe(result -> promise.complete(), promise::fail);
                     })
                     .onFailure(err -> {
-                        logger.error("Can't create router", err);
+                        log.error("Can't create router", err);
                         promise.fail(err);
                     });
         } catch (Exception e) {
-            logger.error("Failed to start server", e);
+            log.error("Failed to start server", e);
             promise.fail(e);
         }
     }

@@ -1,16 +1,14 @@
 package com.nextbreakpoint.blueprint.common.commands.mappers;
 
 import com.nextbreakpoint.blueprint.common.commands.DesignInsertCommand;
+import com.nextbreakpoint.blueprint.common.core.DecodeException;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.core.Json;
 import com.nextbreakpoint.blueprint.common.core.Mapper;
-import io.vertx.core.impl.logging.Logger;
-import io.vertx.core.impl.logging.LoggerFactory;
-import io.vertx.core.json.DecodeException;
+import lombok.extern.log4j.Log4j2;
 
+@Log4j2
 public class DesignInsertCommandInputMapper implements Mapper<InputMessage, DesignInsertCommand> {
-    private final Logger logger = LoggerFactory.getLogger(DesignInsertCommandInputMapper.class.getName());
-
     @Override
     public DesignInsertCommand transform(InputMessage message) {
         if (!message.getValue().getType().equals(DesignInsertCommand.TYPE)) {
@@ -19,7 +17,7 @@ public class DesignInsertCommandInputMapper implements Mapper<InputMessage, Desi
         try {
             return Json.decodeValue(message.getValue().getData(), DesignInsertCommand.class);
         } catch (DecodeException e) {
-            logger.warn("Cannot decode message body: " + message.getValue(), e);
+            log.warn("Cannot decode message body: " + message.getValue(), e);
             throw new IllegalArgumentException("Message body cannot be decoded");
         }
     }

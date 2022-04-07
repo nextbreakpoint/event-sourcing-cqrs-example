@@ -7,8 +7,6 @@ import com.nextbreakpoint.blueprint.common.vertx.*;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServerOptions;
-import io.vertx.core.impl.logging.Logger;
-import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.auth.oauth2.OAuth2Options;
 import io.vertx.ext.web.handler.LoggerFormat;
@@ -28,12 +26,14 @@ import io.vertx.rxjava.ext.web.handler.CorsHandler;
 import io.vertx.rxjava.ext.web.handler.LoggerHandler;
 import io.vertx.rxjava.ext.web.handler.OAuth2AuthHandler;
 import io.vertx.rxjava.micrometer.PrometheusScrapingHandler;
+import lombok.extern.log4j.Log4j2;
 import rx.Completable;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -41,11 +41,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.nextbreakpoint.blueprint.common.core.Headers.*;
-import static java.util.Arrays.asList;
 
+@Log4j2
 public class Verticle extends AbstractVerticle {
-    private static final Logger logger = LoggerFactory.getLogger(Verticle.class.getName());
-
     private static final String CALLBACK_PATH = "/v1/auth/callback";
 
     public static void main(String[] args) {
@@ -57,9 +55,9 @@ public class Verticle extends AbstractVerticle {
             vertx.rxDeployVerticle(new Verticle(), new DeploymentOptions().setConfig(config))
                     .delay(30, TimeUnit.SECONDS)
                     .retry(3)
-                    .subscribe(o -> logger.info("Verticle deployed"), err -> logger.error("Can't deploy verticle"));
+                    .subscribe(o -> log.info("Verticle deployed"), err -> log.error("Can't deploy verticle"));
         } catch (Exception e) {
-            logger.error("Can't start service", e);
+            log.error("Can't start service", e);
         }
     }
 
@@ -127,12 +125,10 @@ public class Verticle extends AbstractVerticle {
 
             final Router mainRouter = Router.router(vertx);
 
-            mainRouter.route().handler(MDCHandler.create());
             mainRouter.route().handler(LoggerHandler.create(true, LoggerFormat.DEFAULT));
-            //mainRouter.route().handler(CookieHandler.create());
             mainRouter.route().handler(BodyHandler.create());
 
-            final CorsHandler corsHandler = CorsHandlerFactory.createWithGetOnly(originPattern, asList(COOKIE, AUTHORIZATION, CONTENT_TYPE, ACCEPT));
+            final CorsHandler corsHandler = CorsHandlerFactory.createWithGetOnly(originPattern, List.of(COOKIE, AUTHORIZATION, CONTENT_TYPE, ACCEPT));
 
             mainRouter.route("/*").handler(corsHandler);
 
@@ -224,16 +220,16 @@ public class Verticle extends AbstractVerticle {
                         vertx.createHttpServer(options)
                                 .requestHandler(mainRouter)
                                 .rxListen(port)
-                                .doOnSuccess(result -> logger.info("Service listening on port " + port))
-                                .doOnError(err -> logger.error("Can't create server", err))
+                                .doOnSuccess(result -> log.info("Service listening on port " + port))
+                                .doOnError(err -> log.error("Can't create server", err))
                                 .subscribe(result -> promise.complete(), promise::fail);
                     })
                     .onFailure(err -> {
-                        logger.error("Can't create router", err);
+                        log.error("Can't create router", err);
                         promise.fail(err);
                     });
         } catch (Exception e) {
-            logger.error("Failed to start server", e);
+            log.error("Failed to start server", e);
             promise.fail(e);
         }
     }

@@ -41,6 +41,12 @@ public class UpdateDesignRequestMapper implements Mapper<RoutingContext, UpdateD
 
         final UUID owner = UUID.fromString(principal.getString("user"));
 
-        return new UpdateDesignRequest(owner, UUID.randomUUID(), UUID.fromString(uuid), json, published);
+        return UpdateDesignRequest.builder()
+                .withOwner(owner)
+                .withUuid(UUID.fromString(uuid))
+                .withChange(UUID.randomUUID())
+                .withJson(json)
+                .withPublished(published)
+                .build();
     }
 }

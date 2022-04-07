@@ -22,10 +22,11 @@ public class ValidateDesignController implements Controller<ValidateDesignReques
 
     private Single<ValidateDesignResponse> onRequest(ValidateDesignRequest request) {
         try {
-            Bundle bundle = BundleUtils.createBundle(request.getManifest(), request.getMetadata(), request.getScript());
+            final Bundle bundle = BundleUtils.createBundle(request.getManifest(), request.getMetadata(), request.getScript());
 
-            DSLParser parser = new DSLParser(DSLParser.class.getPackage().getName() + ".generated", "Compile" + System.nanoTime());
-            ParserResult result = parser.parse(bundle.getSession().getScript());
+            final DSLParser parser = new DSLParser(DSLParser.class.getPackage().getName() + ".generated", "Compile" + System.nanoTime());
+
+            final ParserResult result = parser.parse(bundle.getSession().getScript());
 
             if (result.getErrors().isEmpty()) {
                 DSLCompiler compiler = new DSLCompiler();
@@ -33,13 +34,23 @@ public class ValidateDesignController implements Controller<ValidateDesignReques
                 compiler.compileColor(result).create();
             }
 
-            List<String> errors = result.getErrors().stream()
+            final List<String> errors = result.getErrors().stream()
                     .map(sourceError -> String.format("[%d:%d] %s", sourceError.getLine(), sourceError.getCharPositionInLine(), sourceError.getMessage()))
                     .collect(Collectors.toList());
 
-            return Single.just(new ValidateDesignResponse(errors.isEmpty() ? ValidationStatus.ACCEPTED : ValidationStatus.REJECTED, errors));
+            final ValidateDesignResponse response = ValidateDesignResponse.builder()
+                    .withStatus(errors.isEmpty() ? ValidationStatus.ACCEPTED : ValidationStatus.REJECTED)
+                    .withErrors(errors)
+                    .build();
+
+            return Single.just(response);
         } catch (Exception e) {
-            return Single.just(new ValidateDesignResponse(ValidationStatus.REJECTED, List.of(e.getMessage())));
+            final ValidateDesignResponse response = ValidateDesignResponse.builder()
+                    .withStatus(ValidationStatus.REJECTED)
+                    .withErrors(List.of(e.getMessage()))
+                    .build();
+
+            return Single.just(response);
         }
     }
 }

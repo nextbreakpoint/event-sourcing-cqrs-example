@@ -4,8 +4,6 @@ import com.nextbreakpoint.blueprint.common.core.Authority;
 import com.nextbreakpoint.blueprint.common.vertx.Authentication;
 import com.nextbreakpoint.blueprint.common.vertx.Failure;
 import io.vertx.core.Handler;
-import io.vertx.core.impl.logging.Logger;
-import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.rxjava.core.buffer.Buffer;
@@ -15,8 +13,10 @@ import io.vertx.rxjava.ext.web.RoutingContext;
 import io.vertx.rxjava.ext.web.client.HttpResponse;
 import io.vertx.rxjava.ext.web.client.WebClient;
 import io.vertx.rxjava.ext.web.handler.OAuth2AuthHandler;
+import lombok.extern.log4j.Log4j2;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -24,9 +24,8 @@ import static com.nextbreakpoint.blueprint.common.core.ContentType.APPLICATION_J
 import static com.nextbreakpoint.blueprint.common.core.Headers.*;
 import static com.nextbreakpoint.blueprint.common.vertx.Authentication.NULL_USER_UUID;
 
+@Log4j2
 public class GitHubSignInHandler implements Handler<RoutingContext> {
-    private static final Logger logger = LoggerFactory.getLogger(GitHubSignInHandler.class.getName());
-
     private final OAuth2AuthHandler oauthHandler;
     private final WebClient accountsClient;
     private final WebClient githubClient;
@@ -83,7 +82,7 @@ public class GitHubSignInHandler implements Handler<RoutingContext> {
         try {
             if (response.statusCode() == 200) {
                 final String userEmail = extractPrimaryEmail(response.bodyAsJsonArray());
-                logger.info("User email: " + userEmail);
+                log.info("User email: " + userEmail);
                 findAccount(routingContext, redirectTo, oauthAccessToken, userEmail);
             } else {
                 routingContext.fail(Failure.accessDenied("Cannot retrieve user's email"));
@@ -145,7 +144,7 @@ public class GitHubSignInHandler implements Handler<RoutingContext> {
 
     protected void createAccount(RoutingContext routingContext, String redirectTo, String accessToken, String userEmail, JsonObject userInfo) {
         JsonObject account = makeAccount(userEmail, userInfo);
-        logger.info("User account: " + account.encode());
+        log.info("User account: " + account.encode());
         accountsClient.post("/v1/accounts")
                 .putHeader(AUTHORIZATION, Authentication.makeAuthorization(accessToken))
                 .putHeader(CONTENT_TYPE, APPLICATION_JSON)
@@ -178,8 +177,8 @@ public class GitHubSignInHandler implements Handler<RoutingContext> {
         final String uuid = account.getString("uuid");
         final String role = account.getString("role");
         if (uuid != null && role != null) {
-            logger.info("User role: " + role);
-            final String token = Authentication.generateToken(jwtProvider, uuid, Arrays.asList(role));
+            log.info("User role: " + role);
+            final String token = Authentication.generateToken(jwtProvider, uuid, List.of(role));
             sendRedirectResponse(routingContext, redirectTo, Authentication.createCookie(token, cookieDomain));
         } else {
             routingContext.fail(Failure.accessDenied("Missing account's uuid or role"));

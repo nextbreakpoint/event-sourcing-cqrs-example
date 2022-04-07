@@ -27,6 +27,10 @@ public class ValidateDesignRequestMapper implements Mapper<RoutingContext, Valid
             throw new IllegalStateException("the required parameter script is missing");
         }
 
-        return new ValidateDesignRequest(manifest, metadata, script);
+        return ValidateDesignRequest.builder()
+                .withManifest(manifest)
+                .withMetadata(metadata)
+                .withScript(script)
+                .build();
     }
 }

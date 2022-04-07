@@ -27,6 +27,10 @@ public class DownloadDesignRequestMapper implements Mapper<RoutingContext, Downl
             throw new IllegalStateException("the required parameter script is missing");
         }
 
-        return new DownloadDesignRequest(manifest, metadata, script);
+        return DownloadDesignRequest.builder()
+                .withManifest(manifest)
+                .withMetadata(metadata)
+                .withScript(script)
+                .build();
     }
 }

@@ -467,44 +467,4 @@ public class IntegrationTests {
             .once(post(TestConstants.OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
             .then().never(get(TestConstants.OAUTH_USER_EMAILS_PATH));
   }
-
-  @Test
-  @DisplayName("should propagate the trace id when creating an account")
-  public void shouldPropagateTheTraceIdWhenCreatingAnAccount() throws MalformedURLException {
-    whenHttp(githubStub)
-            .match(post(TestConstants.OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
-            .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"access_token\":\"abcdef\"}"));
-
-    whenHttp(githubStub)
-            .match(get(TestConstants.OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"))
-            .then(status(HttpStatus.OK_200), stringContent("{\"name\":\"test\"}"));
-
-    whenHttp(githubStub)
-            .match(get(TestConstants.OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
-            .then(status(HttpStatus.OK_200), stringContent("[{\"email\":\"test@localhost\", \"primary\":true}]"));
-
-    whenHttp(accountsStub)
-            .match(get(TestConstants.ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"))
-            .then(status(HttpStatus.OK_200), stringContent("[]"));
-
-    whenHttp(accountsStub)
-            .match(post(TestConstants.ACCOUNTS_PATH), withPostBody(), withHeader("Authorization"))
-            .then(status(HttpStatus.CREATED_201), stringContent("{\"role\":\"guest\", \"uuid\":\"" + TestConstants.ACCOUNT_UUID + "\"}"));
-
-    given().config(TestUtils.getRestAssuredConfig())
-            .with().param("code", "xxx")
-            .and().param("state", "/v1/auth/signin/content/designs")
-            .when().get(testCases.makeBaseURL("/v1/auth/callback"))
-            .then().assertThat().statusCode(303)
-            .and().header("Location", startsWith("https://localhost:8080/content/designs"));
-
-    verifyHttp(accountsStub)
-            .once(post(TestConstants.ACCOUNTS_PATH), withPostBody(), withHeader("authorization"));
-//          .once(get(ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"))
-
-    verifyHttp(githubStub)
-            .once(post(TestConstants.OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
-            .then().once(get(TestConstants.OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
-            .then().once(get(TestConstants.OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"));
-  }
 }

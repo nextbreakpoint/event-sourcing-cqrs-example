@@ -23,5 +23,6 @@ module com.nextbreakpoint.blueprint.common.vertx {
     requires static com.datastax.oss.driver.core;
     requires static rxjava;
     requires static lombok;
+    requires static org.apache.logging.log4j;
     exports com.nextbreakpoint.blueprint.common.vertx;
 }

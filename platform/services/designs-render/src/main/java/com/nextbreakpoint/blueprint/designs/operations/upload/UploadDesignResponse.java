@@ -1,9 +1,14 @@
 package com.nextbreakpoint.blueprint.designs.operations.upload;
 
+import lombok.Builder;
+import lombok.Data;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+@Data
+@Builder(setterPrefix = "with")
 public class UploadDesignResponse {
     private final String manifest;
     private final String metadata;
@@ -15,18 +20,6 @@ public class UploadDesignResponse {
         this.metadata = metadata;
         this.script = script;
         this.errors = Objects.requireNonNull(errors);
-    }
-
-    public String getManifest() {
-        return manifest;
-    }
-
-    public String getMetadata() {
-        return metadata;
-    }
-
-    public String getScript() {
-        return script;
     }
 
     public List<String> getErrors() {

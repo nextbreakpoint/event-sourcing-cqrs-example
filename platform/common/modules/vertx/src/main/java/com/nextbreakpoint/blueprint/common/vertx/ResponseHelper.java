@@ -2,18 +2,16 @@ package com.nextbreakpoint.blueprint.common.vertx;
 
 import com.nextbreakpoint.blueprint.common.core.ContentType;
 import com.nextbreakpoint.blueprint.common.core.Headers;
-import io.vertx.core.impl.logging.Logger;
-import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.JsonObject;
 import io.vertx.rxjava.ext.web.RoutingContext;
+import lombok.extern.log4j.Log4j2;
 
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+@Log4j2
 public class ResponseHelper {
-    private static final Logger logger = LoggerFactory.getLogger(ResponseHelper.class.getName());
-
     private ResponseHelper() {}
 
     public static void sendFailure(RoutingContext routingContext) {
@@ -27,9 +25,9 @@ public class ResponseHelper {
                 .orElseGet(() -> routingContext.statusCode() > 0 ? routingContext.statusCode() : 500);
 
         if (throwable.isPresent()) {
-            logger.warn(message, throwable.get());
+            log.warn(message, throwable.get());
         } else {
-            logger.warn(message);
+            log.warn(message);
         }
 
         routingContext.response()
@@ -49,9 +47,9 @@ public class ResponseHelper {
                 .orElseGet(() -> routingContext.statusCode() > 0 ? routingContext.statusCode() : 500);
 
         if (throwable.isPresent()) {
-            logger.warn(message, throwable.get());
+            log.warn(message, throwable.get());
         } else {
-            logger.warn(message);
+            log.warn(message);
         }
 
         routingContext.response()

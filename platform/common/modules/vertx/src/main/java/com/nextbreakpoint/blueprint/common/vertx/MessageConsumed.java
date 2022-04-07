@@ -1,16 +1,14 @@
 package com.nextbreakpoint.blueprint.common.vertx;
 
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
-import io.vertx.core.impl.logging.Logger;
-import io.vertx.core.impl.logging.LoggerFactory;
+import lombok.extern.log4j.Log4j2;
 
 import java.util.function.BiConsumer;
 
+@Log4j2
 public class MessageConsumed implements BiConsumer<InputMessage, Void> {
-    private final Logger logger = LoggerFactory.getLogger(MessageConsumed.class.getName());
-
     @Override
     public void accept(InputMessage message, Void ignore) {
-        logger.debug("Consumed 1 message");
+        log.debug("Consumed 1 message");
     }
 }

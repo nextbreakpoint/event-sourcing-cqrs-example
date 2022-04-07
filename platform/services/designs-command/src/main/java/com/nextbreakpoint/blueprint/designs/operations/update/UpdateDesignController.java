@@ -2,15 +2,13 @@ package com.nextbreakpoint.blueprint.designs.operations.update;
 
 import com.nextbreakpoint.blueprint.common.commands.DesignUpdateCommand;
 import com.nextbreakpoint.blueprint.common.core.*;
-import io.vertx.core.impl.logging.Logger;
-import io.vertx.core.impl.logging.LoggerFactory;
+import lombok.extern.log4j.Log4j2;
 import rx.Single;
 
 import java.util.Objects;
 
+@Log4j2
 public class UpdateDesignController implements Controller<UpdateDesignRequest, UpdateDesignResponse> {
-    private static final Logger logger = LoggerFactory.getLogger(UpdateDesignController.class.getName());
-
     private final Mapper<UpdateDesignRequest, DesignUpdateCommand> inputMapper;
     private final MessageMapper<DesignUpdateCommand, OutputMessage> outputMapper;
     private final MessageEmitter emitter;
@@ -25,11 +23,11 @@ public class UpdateDesignController implements Controller<UpdateDesignRequest, U
     public Single<UpdateDesignResponse> onNext(UpdateDesignRequest request) {
         return Single.just(request)
                 .map(this.inputMapper::transform)
-                .doOnSuccess(command -> logger.info("Processing update command " + command.getDesignId()))
+                .doOnSuccess(command -> log.info("Processing update command " + command.getDesignId()))
                 .map(outputMapper::transform)
                 .flatMap(emitter::send)
-                .map(ignore -> new UpdateDesignResponse(request.getUuid(), ResultStatus.SUCCESS))
-                .doOnError(err -> logger.info("Can't process update command", err))
-                .onErrorReturn(err -> new UpdateDesignResponse(request.getUuid(), ResultStatus.FAILURE, err.getMessage()));
+                .map(ignore -> UpdateDesignResponse.builder().withUuid(request.getUuid()).withStatus(ResultStatus.SUCCESS).build())
+                .doOnError(err -> log.info("Can't process update command", err))
+                .onErrorReturn(err -> UpdateDesignResponse.builder().withUuid(request.getUuid()).withStatus(ResultStatus.FAILURE).withError(err.getMessage()).build());
     }
 }

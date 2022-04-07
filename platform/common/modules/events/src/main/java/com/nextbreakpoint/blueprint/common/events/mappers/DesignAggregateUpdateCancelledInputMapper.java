@@ -5,12 +5,10 @@ import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.core.Json;
 import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.events.DesignAggregateUpdateCancelled;
-import io.vertx.core.impl.logging.Logger;
-import io.vertx.core.impl.logging.LoggerFactory;
+import lombok.extern.log4j.Log4j2;
 
+@Log4j2
 public class DesignAggregateUpdateCancelledInputMapper implements Mapper<InputMessage, DesignAggregateUpdateCancelled> {
-    private final Logger logger = LoggerFactory.getLogger(DesignAggregateUpdateCancelledInputMapper.class.getName());
-
     @Override
     public DesignAggregateUpdateCancelled transform(InputMessage message) {
         if (!message.getValue().getType().equals(DesignAggregateUpdateCancelled.TYPE)) {
@@ -19,7 +17,7 @@ public class DesignAggregateUpdateCancelledInputMapper implements Mapper<InputMe
         try {
             return Json.decodeValue(message.getValue().getData(), DesignAggregateUpdateCancelled.class);
         } catch (DecodeException e) {
-            logger.warn("Cannot decode message body: " + message.getValue(), e);
+            log.warn("Cannot decode message body: " + message.getValue(), e);
             throw new IllegalArgumentException("Message body cannot be decoded");
         }
     }

@@ -135,8 +135,6 @@ public class TestCases {
     public String shouldPublishDesignInsertRequestedEventWhenReceivingAInsertDesignRequest() throws MalformedURLException {
         final String authorization = scenario.makeAuthorization(TestConstants.USER_ID.toString(), Authority.ADMIN);
 
-        long timestamp = System.currentTimeMillis();
-
         commandsPolling.clearMessages();
         eventsPolling.clearMessages();
 
@@ -171,8 +169,6 @@ public class TestCases {
 
     public String shouldPublishDesignUpdateRequestedEventWhenReceivingAUpdateDesignRequest() throws MalformedURLException {
         final String authorization = scenario.makeAuthorization(TestConstants.USER_ID.toString(), Authority.ADMIN);
-
-        long timestamp = System.currentTimeMillis();
 
         commandsPolling.clearMessages();
         eventsPolling.clearMessages();
@@ -210,8 +206,6 @@ public class TestCases {
 
     public String shouldPublishDesignDeleteRequestedEventWhenReceivingADeleteDesignRequest() throws MalformedURLException {
         final String authorization = scenario.makeAuthorization(TestConstants.USER_ID.toString(), Authority.ADMIN);
-
-        long timestamp = System.currentTimeMillis();
 
         commandsPolling.clearMessages();
         eventsPolling.clearMessages();

@@ -21,12 +21,25 @@ public class UploadDesignController implements Controller<UploadDesignRequest, U
     private Single<UploadDesignResponse> onRequest(UploadDesignRequest request) {
         try {
             final Bundle bundle = FileManager.loadFile(new File(request.getFile())).orThrow();
+
             final String manifest = Json.encodeValue(new FileManifest(bundle.getSession().getPluginId()));
             final String metadata = Json.encodeValue(bundle.getSession().getMetadata());
             final String script = bundle.getSession().getScript();
-            return Single.just(new UploadDesignResponse(manifest, metadata, script, List.of()));
+
+            final UploadDesignResponse response = UploadDesignResponse.builder()
+                    .withManifest(manifest)
+                    .withMetadata(metadata)
+                    .withScript(script)
+                    .withErrors(List.of())
+                    .build();
+
+            return Single.just(response);
         } catch (Exception e) {
-            return Single.just(new UploadDesignResponse(null, null, null, List.of(e.getMessage())));
+            final UploadDesignResponse response = UploadDesignResponse.builder()
+                    .withErrors(List.of(e.getMessage()))
+                    .build();
+
+            return Single.just(response);
         }
     }
 }

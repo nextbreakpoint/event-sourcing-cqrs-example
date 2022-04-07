@@ -2,16 +2,21 @@ package com.nextbreakpoint.blueprint.designs.persistence;
 
 import com.datastax.oss.driver.api.core.ConsistencyLevel;
 import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.BoundStatement;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.cql.ResultSet;
 import com.datastax.oss.driver.api.core.cql.Row;
-import com.nextbreakpoint.blueprint.common.core.Checksum;
-import com.nextbreakpoint.blueprint.common.core.InputMessage;
-import com.nextbreakpoint.blueprint.common.core.Payload;
-import com.nextbreakpoint.blueprint.common.core.Tracing;
+import com.nextbreakpoint.blueprint.common.core.*;
 import com.nextbreakpoint.blueprint.designs.Store;
 import com.nextbreakpoint.blueprint.designs.model.Design;
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.context.Scope;
 import lombok.extern.log4j.Log4j2;
 import rx.Single;
+import rx.functions.Func1;
+import rx.schedulers.Schedulers;
 
 import java.nio.ByteBuffer;
 import java.time.Instant;
@@ -42,6 +47,8 @@ public class CassandraStore implements Store {
 
     private final Supplier<CqlSession> supplier;
 
+    private final Tracer tracer;
+
     private CqlSession session;
 
     private Single<PreparedStatement> selectDesign;
@@ -52,6 +59,8 @@ public class CassandraStore implements Store {
 
     public CassandraStore(Supplier<CqlSession> supplier) {
         this.supplier = Objects.requireNonNull(supplier);
+
+        tracer = GlobalOpenTelemetry.getTracer("com.nextbreakpoint.blueprint");
     }
 
     @Override
@@ -113,37 +122,51 @@ public class CassandraStore implements Store {
     private Single<List<InputMessage>> selectMessages(CqlSession session, Object[] values) {
         return selectMessages
                 .map(pst -> pst.bind(values).setConsistencyLevel(ConsistencyLevel.QUORUM))
-                .map(session::execute)
+                .map(stmt -> execute(session, stmt))
                 .map(rows -> StreamSupport.stream(rows.spliterator(), false).map(this::convertRowToMessage).collect(Collectors.toList()));
     }
 
     private Single<Void> insertMessage(CqlSession session, Object[] values) {
         return insertMessage
                 .map(pst -> pst.bind(values).setConsistencyLevel(ConsistencyLevel.QUORUM))
-                .map(session::execute)
+                .map(stmt -> execute(session, stmt))
                 .map(rs -> null);
     }
 
     private Single<Void> insertDesign(CqlSession session, Object[] values) {
         return insertDesign
                 .map(pst -> pst.bind(values).setConsistencyLevel(ConsistencyLevel.QUORUM))
-                .map(session::execute)
+                .map(stmt -> execute(session, stmt))
                 .map(rs -> null);
     }
 
     private Single<Void> deleteDesign(CqlSession session, Object[] values) {
         return deleteDesign
                 .map(pst -> pst.bind(values).setConsistencyLevel(ConsistencyLevel.QUORUM))
-                .map(session::execute)
+                .map(stmt -> execute(session, stmt))
                 .map(rs -> null);
     }
 
     private Single<Optional<Design>> selectDesign(CqlSession session, Object[] values) {
         return selectDesign
                 .map(pst -> pst.bind(values).setConsistencyLevel(ConsistencyLevel.QUORUM))
-                .map(session::execute)
+                .map(stmt -> execute(session, stmt))
                 .map(rows -> StreamSupport.stream(rows.spliterator(), false).limit(1).findFirst())
                 .map(result -> result.map(this::convertRowToDesign));
+    }
+
+    private ResultSet execute(CqlSession session, BoundStatement statement) {
+        final Span executeSpan = tracer.spanBuilder("Execute statement").startSpan();
+
+        try (Scope scope = executeSpan.makeCurrent()) {
+            final Span span = Span.current();
+
+            span.setAttribute("statement.query", statement.getPreparedStatement().getQuery());
+
+            return session.execute(statement);
+        } finally {
+            executeSpan.end();
+        }
     }
 
     private Single<Boolean> existsTable(CqlSession session, String tableName) {

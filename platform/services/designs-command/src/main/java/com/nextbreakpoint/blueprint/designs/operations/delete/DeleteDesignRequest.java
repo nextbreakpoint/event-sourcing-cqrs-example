@@ -1,8 +1,13 @@
 package com.nextbreakpoint.blueprint.designs.operations.delete;
 
+import lombok.Builder;
+import lombok.Data;
+
 import java.util.Objects;
 import java.util.UUID;
 
+@Data
+@Builder(setterPrefix = "with")
 public class DeleteDesignRequest {
     private final UUID owner;
     private final UUID change;
@@ -12,17 +17,5 @@ public class DeleteDesignRequest {
         this.owner = Objects.requireNonNull(owner);
         this.change = Objects.requireNonNull(change);
         this.uuid = Objects.requireNonNull(uuid);
-    }
-
-    public UUID getOwner() {
-        return owner;
-    }
-
-    public UUID getChange() {
-        return change;
-    }
-
-    public UUID getUuid() {
-        return uuid;
     }
 }

@@ -13,17 +13,15 @@ import co.elastic.clients.elasticsearch.core.search.Hit;
 import com.nextbreakpoint.blueprint.designs.Store;
 import com.nextbreakpoint.blueprint.designs.model.Design;
 import com.nextbreakpoint.blueprint.designs.persistence.dto.*;
-import io.vertx.core.impl.logging.Logger;
-import io.vertx.core.impl.logging.LoggerFactory;
+import lombok.extern.log4j.Log4j2;
 import rx.Observable;
 import rx.Single;
 
 import java.util.Objects;
 import java.util.Optional;
 
+@Log4j2
 public class ElasticsearchStore implements Store {
-    private final Logger logger = LoggerFactory.getLogger(ElasticsearchStore.class.getName());
-
     private static final String ERROR_LOAD_DESIGN = "An error occurred while loading a design";
     private static final String ERROR_LIST_DESIGNS = "An error occurred while loading designs";
     private static final String ERROR_INSERT_DESIGN = "An error occurred while inserting design";
@@ -176,6 +174,6 @@ public class ElasticsearchStore implements Store {
     }
 
     private void handleError(String message, Throwable err) {
-        logger.error(message, err);
+        log.error(message, err);
     }
 }

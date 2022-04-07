@@ -7,16 +7,14 @@ import com.nextbreakpoint.blueprint.designs.common.S3Driver;
 import com.nextbreakpoint.blueprint.designs.model.Design;
 import com.nextbreakpoint.blueprint.designs.persistence.dto.LoadDesignRequest;
 import com.nextbreakpoint.blueprint.designs.persistence.dto.LoadDesignResponse;
-import io.vertx.core.impl.logging.Logger;
-import io.vertx.core.impl.logging.LoggerFactory;
+import lombok.extern.log4j.Log4j2;
 import rx.Single;
 
 import java.util.Objects;
 
+@Log4j2
 public class GetTileController implements Controller<GetTileRequest, GetTileResponse> {
-    private static final Logger logger = LoggerFactory.getLogger(GetTileController.class.getName());
-
-    private Store store;
+    private final Store store;
     private final S3Driver s3Driver;
 
     public GetTileController(Store store, S3Driver s3Driver) {
@@ -34,7 +32,7 @@ public class GetTileController implements Controller<GetTileRequest, GetTileResp
     private Single<GetTileResponse> getImage(GetTileRequest request, Design document) {
         return s3Driver.getObject(getBucketKey(request, document.getChecksum()))
                 .map(bytes -> new Image(bytes, document.getChecksum()))
-                .doOnError(error -> logger.warn("Failed to load image: " + error.getMessage()))
+                .doOnError(error -> log.warn("Failed to load image: " + error.getMessage()))
                 .onErrorReturn(error -> null)
                 .map(GetTileResponse::new);
     }

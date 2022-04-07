@@ -9,8 +9,7 @@ import com.nextbreakpoint.blueprint.common.events.DesignInsertRequested;
 import com.nextbreakpoint.blueprint.common.events.DesignUpdateRequested;
 import com.nextbreakpoint.blueprint.common.events.TilesRendered;
 import com.nextbreakpoint.blueprint.designs.model.Design;
-import io.vertx.core.impl.logging.Logger;
-import io.vertx.core.impl.logging.LoggerFactory;
+import lombok.extern.log4j.Log4j2;
 
 import java.nio.ByteBuffer;
 import java.time.Instant;
@@ -20,11 +19,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+@Log4j2
 public class DesignStateStrategy {
-    private final Logger logger = LoggerFactory.getLogger(DesignStateStrategy.class.getName());
-
     public Optional<Design> applyEvents(Design state, List<InputMessage> messages) {
-        logger.debug("Apply events: " + messages.size());
+        log.debug("Apply events: " + messages.size());
         return applyEvents(state != null ? () -> new Accumulator(state) : this::createState, messages);
     }
 
@@ -49,31 +47,98 @@ public class DesignStateStrategy {
         final String value = message.getValue().getData();
         final String token = message.getToken();
         final long timestamp = message.getTimestamp();
+
         switch (type) {
             case DesignInsertRequested.TYPE: {
-                DesignInsertRequested event = Json.decodeValue(value, DesignInsertRequested.class);
+                final DesignInsertRequested event = Json.decodeValue(value, DesignInsertRequested.class);
+
                 final String checksum = Checksum.of(event.getData());
-                final ByteBuffer bitmap = createEmptyBitmap().getBitmap();
-                state.design = new Design(event.getDesignId(), event.getUserId(), event.getCommandId(), event.getData(), checksum, token, "CREATED", false, 3, bitmap, toDateTime(timestamp), toDateTime(timestamp));
+
+                final ByteBuffer bitmap = TilesBitmap.empty().getBitmap();
+
+                state.design = Design.builder()
+                        .withDesignId(event.getDesignId())
+                        .withUserId(event.getUserId())
+                        .withCommandId(event.getCommandId())
+                        .withData(event.getData())
+                        .withChecksum(checksum)
+                        .withRevision(token)
+                        .withStatus("CREATED")
+                        .withPublished(false)
+                        .withLevels(3)
+                        .withBitmap(bitmap)
+                        .withCreated(toDateTime(timestamp))
+                        .withUpdated(toDateTime(timestamp))
+                        .build();
+
                 break;
             }
             case DesignUpdateRequested.TYPE: {
-                DesignUpdateRequested event = Json.decodeValue(value, DesignUpdateRequested.class);
+                final DesignUpdateRequested event = Json.decodeValue(value, DesignUpdateRequested.class);
+
                 final String checksum = Checksum.of(event.getData());
+
                 final int levels = !checksum.equals(state.design.getChecksum()) ? 3 : (!state.design.isPublished() && event.getPublished()) ? 8 : state.design.getLevels();
-                final ByteBuffer bitmap = (!checksum.equals(state.design.getChecksum()) || (!state.design.isPublished() && event.getPublished())) ? createEmptyBitmap().getBitmap() : state.design.getBitmap();
-                state.design = new Design(event.getDesignId(), event.getUserId(), event.getCommandId(), event.getData(), checksum, token, "UPDATED", event.getPublished(), levels, bitmap, state.design.getCreated(), toDateTime(timestamp));
+
+                final ByteBuffer bitmap = (!checksum.equals(state.design.getChecksum()) || (!state.design.isPublished() && event.getPublished())) ? TilesBitmap.empty().getBitmap() : state.design.getBitmap();
+
+                state.design = Design.builder()
+                        .withDesignId(event.getDesignId())
+                        .withUserId(event.getUserId())
+                        .withCommandId(event.getCommandId())
+                        .withData(event.getData())
+                        .withChecksum(checksum)
+                        .withRevision(token)
+                        .withStatus("UPDATED")
+                        .withPublished(event.getPublished())
+                        .withLevels(levels)
+                        .withBitmap(bitmap)
+                        .withCreated(state.design.getCreated())
+                        .withUpdated(toDateTime(timestamp))
+                        .build();
+
                 break;
             }
             case DesignDeleteRequested.TYPE: {
-                DesignDeleteRequested event = Json.decodeValue(value, DesignDeleteRequested.class);
-                state.design = new Design(event.getDesignId(), event.getUserId(), event.getCommandId(), state.design.getData(), state.design.getChecksum(), token, "DELETED", state.design.isPublished(), state.design.getLevels(), state.design.getBitmap(), state.design.getCreated(), toDateTime(timestamp));
+                final DesignDeleteRequested event = Json.decodeValue(value, DesignDeleteRequested.class);
+
+                state.design = Design.builder()
+                        .withDesignId(event.getDesignId())
+                        .withUserId(event.getUserId())
+                        .withCommandId(event.getCommandId())
+                        .withData(state.design.getData())
+                        .withChecksum(state.design.getChecksum())
+                        .withRevision(token)
+                        .withStatus("DELETED")
+                        .withPublished(state.design.isPublished())
+                        .withLevels(state.design.getLevels())
+                        .withBitmap(state.design.getBitmap())
+                        .withCreated(state.design.getCreated())
+                        .withUpdated(toDateTime(timestamp))
+                        .build();
+
                 break;
             }
             case TilesRendered.TYPE: {
-                TilesRendered event = Json.decodeValue(value, TilesRendered.class);
+                final TilesRendered event = Json.decodeValue(value, TilesRendered.class);
+
                 event.getTiles().forEach(tile -> TilesBitmap.of(state.design.getBitmap()).putTile(tile.getLevel(), tile.getRow(), tile.getCol()));
-                state.design = new Design(event.getDesignId(), state.design.getUserId(), state.design.getCommandId(), state.design.getData(), state.design.getChecksum(), token, state.design.getStatus(), state.design.isPublished(), state.design.getLevels(), state.design.getBitmap(), state.design.getCreated(), toDateTime(timestamp));
+
+                state.design = Design.builder()
+                        .withDesignId(event.getDesignId())
+                        .withUserId(state.design.getUserId())
+                        .withCommandId(state.design.getCommandId())
+                        .withData(state.design.getData())
+                        .withChecksum(state.design.getChecksum())
+                        .withRevision(token)
+                        .withStatus(state.design.getStatus())
+                        .withPublished(state.design.isPublished())
+                        .withLevels(state.design.getLevels())
+                        .withBitmap(state.design.getBitmap())
+                        .withCreated(state.design.getCreated())
+                        .withUpdated(toDateTime(timestamp))
+                        .build();
+
                 break;
             }
             default: {
@@ -81,11 +146,7 @@ public class DesignStateStrategy {
         }
     }
 
-    private TilesBitmap createEmptyBitmap() {
-        return TilesBitmap.empty();
-    }
-
-    private class Accumulator {
+    private static class Accumulator {
         private Design design;
 
         public Accumulator(Design design) {

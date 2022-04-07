@@ -6,8 +6,6 @@ import com.nextbreakpoint.blueprint.common.vertx.*;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServerOptions;
-import io.vertx.core.impl.logging.Logger;
-import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.healthchecks.Status;
 import io.vertx.ext.web.handler.LoggerFormat;
@@ -26,24 +24,23 @@ import io.vertx.rxjava.ext.web.handler.CorsHandler;
 import io.vertx.rxjava.ext.web.handler.LoggerHandler;
 import io.vertx.rxjava.ext.web.handler.TimeoutHandler;
 import io.vertx.rxjava.micrometer.PrometheusScrapingHandler;
+import lombok.extern.log4j.Log4j2;
 import rx.Completable;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import static com.nextbreakpoint.blueprint.common.core.Authority.*;
 import static com.nextbreakpoint.blueprint.common.core.Headers.*;
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 
+@Log4j2
 public class Verticle extends AbstractVerticle {
-    private static final Logger logger = LoggerFactory.getLogger(Verticle.class.getName());
-
     public static void main(String[] args) {
         try {
             final JsonObject config = Initializer.loadConfig(args.length > 0 ? args[0] : "config/localhost.json");
@@ -53,9 +50,9 @@ public class Verticle extends AbstractVerticle {
             vertx.rxDeployVerticle(new Verticle(), new DeploymentOptions().setConfig(config))
                     .delay(5, TimeUnit.SECONDS)
                     .retry(3)
-                    .subscribe(o -> logger.info("Verticle deployed"), err -> logger.error("Can't deploy verticle"));
+                    .subscribe(o -> log.info("Verticle deployed"), err -> log.error("Can't deploy verticle"));
         } catch (Exception e) {
-            logger.error("Can't start service", e);
+            log.error("Can't start service", e);
         }
     }
 
@@ -119,19 +116,19 @@ public class Verticle extends AbstractVerticle {
 
             final Router mainRouter = Router.router(vertx);
 
-            final CorsHandler corsHandler = CorsHandlerFactory.createWithAll(originPattern, asList(COOKIE, AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN));
+            final CorsHandler corsHandler = CorsHandlerFactory.createWithAll(originPattern, List.of(COOKIE, AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN));
 
             final Handler<RoutingContext> onAccessDenied = routingContext -> routingContext.fail(Failure.accessDenied("Authentication failed"));
 
-            final Handler<RoutingContext> listAccountsHandler = new AccessHandler(jwtProvider, Factory.createListAccountsHandler(store), onAccessDenied, asList(ADMIN, PLATFORM));
+            final Handler<RoutingContext> listAccountsHandler = new AccessHandler(jwtProvider, Factory.createListAccountsHandler(store), onAccessDenied, List.of(ADMIN, PLATFORM));
 
-            final Handler<RoutingContext> loadSelfAccountHandler = new AccessHandler(jwtProvider, Factory.createLoadSelfAccountHandler(store), onAccessDenied, asList(ADMIN, GUEST));
+            final Handler<RoutingContext> loadSelfAccountHandler = new AccessHandler(jwtProvider, Factory.createLoadSelfAccountHandler(store), onAccessDenied, List.of(ADMIN, GUEST));
 
-            final Handler<RoutingContext> loadAccountHandler = new AccessHandler(jwtProvider, Factory.createLoadAccountHandler(store), onAccessDenied, asList(ADMIN, PLATFORM));
+            final Handler<RoutingContext> loadAccountHandler = new AccessHandler(jwtProvider, Factory.createLoadAccountHandler(store), onAccessDenied, List.of(ADMIN, PLATFORM));
 
-            final Handler<RoutingContext> insertAccountHandler = new AccessHandler(jwtProvider, Factory.createInsertAccountHandler(store), onAccessDenied, asList(ADMIN, PLATFORM));
+            final Handler<RoutingContext> insertAccountHandler = new AccessHandler(jwtProvider, Factory.createInsertAccountHandler(store), onAccessDenied, List.of(ADMIN, PLATFORM));
 
-            final Handler<RoutingContext> deleteAccountHandler = new AccessHandler(jwtProvider, Factory.createDeleteAccountHandler(store), onAccessDenied, singletonList(ADMIN));
+            final Handler<RoutingContext> deleteAccountHandler = new AccessHandler(jwtProvider, Factory.createDeleteAccountHandler(store), onAccessDenied, List.of(ADMIN));
 
             final Handler<RoutingContext> apiV1DocsHandler = new OpenApiHandler(vertx.getDelegate(), executor, "api-v1.yaml");
 
@@ -168,10 +165,8 @@ public class Verticle extends AbstractVerticle {
 
                         final Router apiRouter = Router.newInstance(routerBuilder.createRouter());
 
-                        mainRouter.route().handler(MDCHandler.create());
                         mainRouter.route().handler(LoggerHandler.create(true, LoggerFormat.DEFAULT));
                         mainRouter.route().handler(BodyHandler.create());
-                        //mainRouter.route().handler(CookieHandler.create());
                         mainRouter.route().handler(TimeoutHandler.create(30000));
 
                         mainRouter.route("/*").handler(corsHandler);
@@ -198,16 +193,16 @@ public class Verticle extends AbstractVerticle {
                         vertx.createHttpServer(options)
                                 .requestHandler(mainRouter)
                                 .rxListen(port)
-                                .doOnSuccess(result -> logger.info("Service listening on port " + port))
-                                .doOnError(err -> logger.error("Can't create server", err))
+                                .doOnSuccess(result -> log.info("Service listening on port " + port))
+                                .doOnError(err -> log.error("Can't create server", err))
                                 .subscribe(result -> promise.complete(), promise::fail);
                     })
                     .onFailure(err -> {
-                        logger.error("Can't create router", err);
+                        log.error("Can't create router", err);
                         promise.fail(err);
                     });
         } catch (Exception e) {
-            logger.error("Failed to start server", e);
+            log.error("Failed to start server", e);
             promise.fail(e);
         }
     }

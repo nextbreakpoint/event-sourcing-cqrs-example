@@ -19,6 +19,10 @@ public class DeleteDesignRequestMapper implements Mapper<RoutingContext, DeleteD
 
         final UUID owner = UUID.fromString(principal.getString("user"));
 
-        return new DeleteDesignRequest(owner, UUID.randomUUID(), UUID.fromString(uuid));
+        return DeleteDesignRequest.builder()
+                .withOwner(owner)
+                .withUuid(UUID.fromString(uuid))
+                .withChange(UUID.randomUUID())
+                .build();
     }
 }

@@ -79,17 +79,18 @@ public class IntegrationTests {
     public void shouldUpdateTheDesignWhenReceivingATileRenderCompletedMessage() {
         final UUID designId = UUID.randomUUID();
 
-        final UUID commandId = UUID.randomUUID();
+        final UUID commandId1 = UUID.randomUUID();
+        final UUID commandId2 = UUID.randomUUID();
 
-        final DesignInsertRequested designInsertRequested = new DesignInsertRequested(designId, commandId, TestConstants.USER_ID, TestConstants.JSON_1);
+        final DesignInsertRequested designInsertRequested = new DesignInsertRequested(designId, commandId1, TestConstants.USER_ID, TestConstants.JSON_1);
 
         final OutputMessage designInsertRequestedMessage = new DesignInsertRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designInsertRequested);
 
-        final TileRenderCompleted tileRenderCompleted1 = new TileRenderCompleted(designId, commandId, TestConstants.REVISION_0, TestConstants.CHECKSUM_1, 0, 0, 0, "FAILED");
-        final TileRenderCompleted tileRenderCompleted2 = new TileRenderCompleted(designId, commandId, TestConstants.REVISION_1, TestConstants.CHECKSUM_1, 1, 0, 0, "COMPLETED");
-        final TileRenderCompleted tileRenderCompleted3 = new TileRenderCompleted(designId, commandId, TestConstants.REVISION_2, TestConstants.CHECKSUM_1, 1, 1, 0, "COMPLETED");
-        final TileRenderCompleted tileRenderCompleted4 = new TileRenderCompleted(designId, commandId, TestConstants.REVISION_3, TestConstants.CHECKSUM_1, 2, 2, 1, "COMPLETED");
-        final TileRenderCompleted tileRenderCompleted5 = new TileRenderCompleted(designId, commandId, TestConstants.REVISION_4, TestConstants.CHECKSUM_2, 2, 3, 1, "COMPLETED");
+        final TileRenderCompleted tileRenderCompleted1 = new TileRenderCompleted(designId, commandId1, TestConstants.REVISION_0, TestConstants.CHECKSUM_1, 0, 0, 0, "FAILED");
+        final TileRenderCompleted tileRenderCompleted2 = new TileRenderCompleted(designId, commandId1, TestConstants.REVISION_1, TestConstants.CHECKSUM_1, 1, 0, 0, "COMPLETED");
+        final TileRenderCompleted tileRenderCompleted3 = new TileRenderCompleted(designId, commandId1, TestConstants.REVISION_2, TestConstants.CHECKSUM_1, 1, 1, 0, "COMPLETED");
+        final TileRenderCompleted tileRenderCompleted4 = new TileRenderCompleted(designId, commandId1, TestConstants.REVISION_3, TestConstants.CHECKSUM_1, 2, 2, 1, "COMPLETED");
+        final TileRenderCompleted tileRenderCompleted5 = new TileRenderCompleted(designId, commandId2, TestConstants.REVISION_4, TestConstants.CHECKSUM_2, 2, 3, 1, "COMPLETED");
 
         final OutputMessage tileRenderCompletedMessage1 = new TileRenderCompletedOutputMapper(TestConstants.MESSAGE_SOURCE, TestUtils::createRenderKey).transform(tileRenderCompleted1);
         final OutputMessage tileRenderCompletedMessage2 = new TileRenderCompletedOutputMapper(TestConstants.MESSAGE_SOURCE, TestUtils::createRenderKey).transform(tileRenderCompleted2);

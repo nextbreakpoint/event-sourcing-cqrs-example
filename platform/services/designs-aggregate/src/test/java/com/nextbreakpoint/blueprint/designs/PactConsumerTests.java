@@ -164,7 +164,7 @@ public class PactConsumerTests {
 
         PactDslJsonBody event1 = new PactDslJsonBody()
                 .uuid("designId", uuid)
-                .uuid("commandId", TestConstants.COMMAND_ID)
+                .uuid("commandId", TestConstants.COMMAND_1)
                 .stringMatcher("revision", TestConstants.REVISION_REGEXP)
                 .stringValue("checksum", TestConstants.CHECKSUM_1)
                 .numberValue("level", 0)
@@ -179,12 +179,12 @@ public class PactConsumerTests {
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
 
         PactDslJsonBody message1 = new PactDslJsonBody()
-                .stringValue("key", String.format("%s/%s/%d/%04d%04d.png", uuid, TestConstants.CHECKSUM_1, 0, 0, 0))
+                .stringValue("key", String.format("%s/%s/%d/%04d%04d.png", uuid, TestConstants.COMMAND_1, 0, 0, 0))
                 .object("value", payload1);
 
         PactDslJsonBody event2 = new PactDslJsonBody()
                 .uuid("designId", uuid)
-                .uuid("commandId", TestConstants.COMMAND_ID)
+                .uuid("commandId", TestConstants.COMMAND_1)
                 .stringMatcher("revision", TestConstants.REVISION_REGEXP)
                 .stringValue("checksum", TestConstants.CHECKSUM_1)
                 .numberValue("level", 1)
@@ -199,12 +199,12 @@ public class PactConsumerTests {
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
 
         PactDslJsonBody message2 = new PactDslJsonBody()
-                .stringValue("key", String.format("%s/%s/%d/%04d%04d.png", uuid, TestConstants.CHECKSUM_1, 1, 0, 0))
+                .stringValue("key", String.format("%s/%s/%d/%04d%04d.png", uuid, TestConstants.COMMAND_1, 1, 0, 0))
                 .object("value", payload2);
 
         PactDslJsonBody event3 = new PactDslJsonBody()
                 .uuid("designId", uuid)
-                .uuid("commandId", TestConstants.COMMAND_ID)
+                .uuid("commandId", TestConstants.COMMAND_1)
                 .stringMatcher("revision", TestConstants.REVISION_REGEXP)
                 .stringValue("checksum", TestConstants.CHECKSUM_1)
                 .numberValue("level", 1)
@@ -219,12 +219,12 @@ public class PactConsumerTests {
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
 
         PactDslJsonBody message3 = new PactDslJsonBody()
-                .stringValue("key", String.format("%s/%s/%d/%04d%04d.png", uuid, TestConstants.CHECKSUM_1, 1, 1, 0))
+                .stringValue("key", String.format("%s/%s/%d/%04d%04d.png", uuid, TestConstants.COMMAND_1, 1, 1, 0))
                 .object("value", payload3);
 
         PactDslJsonBody event4 = new PactDslJsonBody()
                 .uuid("designId", uuid)
-                .uuid("commandId", TestConstants.COMMAND_ID)
+                .uuid("commandId", TestConstants.COMMAND_1)
                 .stringMatcher("revision", TestConstants.REVISION_REGEXP)
                 .stringValue("checksum", TestConstants.CHECKSUM_1)
                 .numberValue("level", 2)
@@ -239,12 +239,12 @@ public class PactConsumerTests {
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
 
         PactDslJsonBody message4 = new PactDslJsonBody()
-                .stringValue("key", String.format("%s/%s/%d/%04d%04d.png", uuid, TestConstants.CHECKSUM_1, 2, 2, 1))
+                .stringValue("key", String.format("%s/%s/%d/%04d%04d.png", uuid, TestConstants.COMMAND_1, 2, 2, 1))
                 .object("value", payload4);
 
         PactDslJsonBody event5 = new PactDslJsonBody()
                 .uuid("designId", uuid)
-                .uuid("commandId", TestConstants.COMMAND_ID)
+                .uuid("commandId", TestConstants.COMMAND_2)
                 .stringMatcher("revision", TestConstants.REVISION_REGEXP)
                 .stringValue("checksum", TestConstants.CHECKSUM_2)
                 .numberValue("level", 2)
@@ -259,7 +259,7 @@ public class PactConsumerTests {
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
 
         PactDslJsonBody message5 = new PactDslJsonBody()
-                .stringValue("key", String.format("%s/%s/%d/%04d%04d.png", uuid, TestConstants.CHECKSUM_2, 2, 3, 1))
+                .stringValue("key", String.format("%s/%s/%d/%04d%04d.png", uuid, TestConstants.COMMAND_2, 2, 3, 1))
                 .object("value", payload5);
 
         return builder.given("kafka topic exists")
@@ -317,7 +317,7 @@ public class PactConsumerTests {
     public void shouldUpdateTheDesignWhenReceivingATileRenderCompletedMessage(MessagePact pact) {
         assertThat(pact.getMessages()).hasSize(5);
 
-        final DesignInsertRequested designInsertRequested = new DesignInsertRequested(new UUID(0L, 4L), TestConstants.COMMAND_ID, TestConstants.USER_ID, TestConstants.JSON_1);
+        final DesignInsertRequested designInsertRequested = new DesignInsertRequested(new UUID(0L, 4L), TestConstants.COMMAND_1, TestConstants.USER_ID, TestConstants.JSON_1);
 
         final OutputMessage designInsertRequestedMessage = new DesignInsertRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designInsertRequested);
 

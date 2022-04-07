@@ -58,31 +58,31 @@ public class VerifyRenderPact {
 
     @PactVerifyProvider("tile render requested for tile 0/00000000.png of design 00000000-0000-0000-0000-000000000005 with checksum 1")
     public String produceTileRenderRequested1() {
-        return produceTileRenderRequested(new UUID(0L, 5L), 0, 0, 0, TestConstants.JSON_1, TestConstants.CHECKSUM_1);
+        return produceTileRenderRequested(new UUID(0L, 5L), 0, 0, 0, TestConstants.COMMAND_1, TestConstants.JSON_1, TestConstants.CHECKSUM_1);
     }
 
     @PactVerifyProvider("tile render requested for tile 4/00010002.png of design 00000000-0000-0000-0000-000000000006 with checksum 2")
     public String produceTileRenderRequested2() {
-        return produceTileRenderRequested(new UUID(0L, 6L), 4, 1, 2, TestConstants.JSON_2, TestConstants.CHECKSUM_2);
+        return produceTileRenderRequested(new UUID(0L, 6L), 4, 1, 2, TestConstants.COMMAND_2, TestConstants.JSON_2, TestConstants.CHECKSUM_2);
     }
 
     @PactVerifyProvider("tile render requested for tile 5/00010002.png of design 00000000-0000-0000-0000-000000000007 with checksum 2")
     public String produceTileRenderRequested3() {
-        return produceTileRenderRequested(new UUID(0L, 7L), 5, 1, 2, TestConstants.JSON_2, TestConstants.CHECKSUM_2);
+        return produceTileRenderRequested(new UUID(0L, 7L), 5, 1, 2, TestConstants.COMMAND_2, TestConstants.JSON_2, TestConstants.CHECKSUM_2);
     }
 
     @PactVerifyProvider("tile render requested for tile 6/00010002.png of design 00000000-0000-0000-0000-000000000008 with checksum 2")
     public String produceTileRenderRequested4() {
-        return produceTileRenderRequested(new UUID(0L, 8L), 6, 1, 2, TestConstants.JSON_2, TestConstants.CHECKSUM_2);
+        return produceTileRenderRequested(new UUID(0L, 8L), 6, 1, 2, TestConstants.COMMAND_2, TestConstants.JSON_2, TestConstants.CHECKSUM_2);
     }
 
     @PactVerifyProvider("tile render requested for tile 7/00010002.png of design 00000000-0000-0000-0000-000000000009 with checksum 2")
     public String produceTileRenderRequested5() {
-        return produceTileRenderRequested(new UUID(0L, 9L), 7, 1, 2, TestConstants.JSON_2, TestConstants.CHECKSUM_2);
+        return produceTileRenderRequested(new UUID(0L, 9L), 7, 1, 2, TestConstants.COMMAND_2, TestConstants.JSON_2, TestConstants.CHECKSUM_2);
     }
 
-    private String produceTileRenderRequested(UUID uuid, int level, int row, int col, String data, String checksum) {
-        final TileRenderRequested tileRenderRequested = new TileRenderRequested(uuid, UUID.randomUUID(), TestConstants.REVISION_0, checksum, data, level,  row, col);
+    private String produceTileRenderRequested(UUID uuid, int level, int row, int col, UUID commandId, String data, String checksum) {
+        final TileRenderRequested tileRenderRequested = new TileRenderRequested(uuid, commandId, TestConstants.REVISION_0, checksum, data, level,  row, col);
 
         final OutputMessage tileRenderRequestedMessage = new TileRenderRequestedOutputMapper(TestConstants.MESSAGE_SOURCE, event -> TestUtils.createRenderKey(tileRenderRequested)).transform(tileRenderRequested);
 

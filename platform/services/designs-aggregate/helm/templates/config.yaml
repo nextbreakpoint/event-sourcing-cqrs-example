@@ -36,6 +36,7 @@ data:
       "kafka_group_id": {{ $root.Values.kafkaGroupId | default "designs-aggregate" | quote }},
       "message_source": {{ $root.Values.messageSource | default "service-designs" | quote }},
       "events_topic": {{ $root.Values.eventsTopic | default "events" | quote }},
+      "cancel_topic": {{ $root.Values.cancelTopic | default "cancel" | quote }},
       "buffer_topic": {{ $root.Values.bufferTopic | default "buffer" | quote }},
       "render_topic_prefix": {{ $root.Values.renderTopicPrefix | default "render" | quote }}
     }

@@ -64,7 +64,7 @@ public class PactConsumerTests {
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
 
         PactDslJsonBody message1 = new PactDslJsonBody()
-                .stringValue("key", uuid1 + "/" + TestConstants.CHECKSUM_1 + "/0/00000000.png")
+                .stringValue("key", uuid1 + "/" + TestConstants.COMMAND_1 + "/0/00000000.png")
                 .object("value", payload1);
 
         PactDslJsonBody event2 = new PactDslJsonBody()
@@ -84,7 +84,7 @@ public class PactConsumerTests {
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
 
         PactDslJsonBody message2 = new PactDslJsonBody()
-                .stringValue("key", uuid2 + "/" + TestConstants.CHECKSUM_2 + "/4/00010002.png")
+                .stringValue("key", uuid2 + "/" + TestConstants.COMMAND_2 + "/4/00010002.png")
                 .object("value", payload2);
 
         PactDslJsonBody event3 = new PactDslJsonBody()
@@ -104,7 +104,7 @@ public class PactConsumerTests {
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
 
         PactDslJsonBody message3 = new PactDslJsonBody()
-                .stringValue("key", uuid3 + "/" + TestConstants.CHECKSUM_2 + "/5/00010002.png")
+                .stringValue("key", uuid3 + "/" + TestConstants.COMMAND_2 + "/5/00010002.png")
                 .object("value", payload3);
 
         PactDslJsonBody event4 = new PactDslJsonBody()
@@ -124,7 +124,7 @@ public class PactConsumerTests {
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
 
         PactDslJsonBody message4 = new PactDslJsonBody()
-                .stringValue("key", uuid4 + "/" + TestConstants.CHECKSUM_2 + "/6/00010002.png")
+                .stringValue("key", uuid4 + "/" + TestConstants.COMMAND_2 + "/6/00010002.png")
                 .object("value", payload4);
 
         PactDslJsonBody event5 = new PactDslJsonBody()
@@ -144,7 +144,7 @@ public class PactConsumerTests {
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
 
         PactDslJsonBody message5 = new PactDslJsonBody()
-                .stringValue("key", uuid5 + "/" + TestConstants.CHECKSUM_2 + "/7/00010002.png")
+                .stringValue("key", uuid5 + "/" + TestConstants.COMMAND_2 + "/7/00010002.png")
                 .object("value", payload5);
 
         return builder.given("kafka topic exists")

@@ -1,7 +1,7 @@
 package com.nextbreakpoint.blueprint.designs.controllers;
 
 import com.nextbreakpoint.blueprint.common.core.*;
-import com.nextbreakpoint.blueprint.common.events.DesignAggregateTilesUpdateRequested;
+import com.nextbreakpoint.blueprint.common.events.DesignAggregateUpdated;
 import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
 import com.nextbreakpoint.blueprint.common.events.TilesRendered;
 import com.nextbreakpoint.blueprint.designs.aggregate.DesignAggregate;
@@ -15,13 +15,20 @@ import java.util.Objects;
 
 public class TilesRenderedController implements Controller<InputMessage, Void> {
     private final Mapper<InputMessage, TilesRendered> inputMapper;
-    private final MessageMapper<DesignAggregateTilesUpdateRequested, OutputMessage> updateOutputMapper;
+    private final MessageMapper<DesignAggregateUpdated, OutputMessage> updateOutputMapper;
     private final MessageMapper<TileRenderRequested, OutputMessage> renderOutputMapper;
     private final MessageEmitter eventsEmitter;
     private final MessageEmitter renderEmitter;
     private final DesignAggregate aggregate;
 
-    public TilesRenderedController(DesignAggregate aggregate, Mapper<InputMessage, TilesRendered> inputMapper, MessageMapper<DesignAggregateTilesUpdateRequested, OutputMessage> updateOutputMapper, MessageMapper<TileRenderRequested, OutputMessage> renderOutputMapper, MessageEmitter eventsEmitter, MessageEmitter renderEmitter) {
+    public TilesRenderedController(
+            DesignAggregate aggregate,
+            Mapper<InputMessage, TilesRendered> inputMapper,
+            MessageMapper<DesignAggregateUpdated, OutputMessage> updateOutputMapper,
+            MessageMapper<TileRenderRequested, OutputMessage> renderOutputMapper,
+            MessageEmitter eventsEmitter,
+            MessageEmitter renderEmitter
+    ) {
         this.aggregate = Objects.requireNonNull(aggregate);
         this.inputMapper = Objects.requireNonNull(inputMapper);
         this.updateOutputMapper = Objects.requireNonNull(updateOutputMapper);
@@ -35,7 +42,7 @@ public class TilesRenderedController implements Controller<InputMessage, Void> {
         return Single.just(message)
                 .flatMap(this::onMessageReceived)
                 .map(inputMapper::transform)
-                .flatMapObservable(event -> createEvents(event, message.getToken()))
+                .flatMapObservable(event -> onUpdateRequested(event, message.getToken()))
                 .ignoreElements()
                 .toCompletable()
                 .toSingleDefault("")
@@ -46,35 +53,64 @@ public class TilesRenderedController implements Controller<InputMessage, Void> {
         return aggregate.appendMessage(message).map(result -> message);
     }
 
-    private Observable<Void> createEvents(TilesRendered event, String revision) {
-        return aggregate.findDesign(event.getDesignId())
-                .flatMapObservable(result -> result.map(design -> createEvents(event, design, revision)).orElseGet(Observable::empty));
+    private Observable<Void> onUpdateRequested(TilesRendered event, String revision) {
+        return updateDesign(event, revision).flatMap(design -> sendEvents(event, design, revision));
     }
 
-    private Observable<Void> createEvents(TilesRendered event, Design design, String revision) {
-        return (design.getCommandId().equals(event.getCommandId()) && design.getChecksum().equals(event.getChecksum())) ? generateEvents(event, design, revision) : Observable.empty();
+    private Observable<Design> updateDesign(TilesRendered event, String revision) {
+        return aggregate.projectDesign(event.getDesignId(), revision)
+                .flatMapObservable(result -> result.map(Observable::just).orElseGet(Observable::empty))
+                .flatMapSingle(aggregate::updateDesign)
+                .flatMap(result -> result.map(Observable::just).orElseGet(Observable::empty));
     }
 
-    private Observable<Void> generateEvents(TilesRendered event, Design design, String revision) {
-        return generateRenderEvents(event, design, revision).concatWith(generateAggregateEvent(design, revision));
+    private Observable<? extends Void> sendEvents(TilesRendered event, Design design, String revision) {
+        return sendUpdateEvents(design).concatWith(sendRenderEvents(event, design, revision));
     }
 
-    private Observable<Void> generateRenderEvents(TilesRendered event, Design design, String revision) {
-        return Observable.from(event.getTiles())
-                .flatMap(tile -> Observable.from(generateTiles(tile, design.getLevels(), TilesBitmap.of(design.getBitmap()))))
-                .flatMap(tile -> generateRenderEvent(design, tile, revision));
-    }
-
-    private Observable<Void> generateRenderEvent(Design design, Tile tile, String revision) {
-        return Observable.just(createRenderEvent(design, tile, revision))
-                .map(renderOutputMapper::transform)
-                .flatMapSingle(message -> renderEmitter.send(message, Render.getTopicName(renderEmitter.getTopicName() + "-requested", tile.getLevel())));
-    }
-
-    private Observable<Void> generateAggregateEvent(Design design, String revision) {
-        return Observable.just(createAggregateEvent(design, revision))
+    private Observable<Void> sendUpdateEvents(Design design) {
+        return createUpdateEvents(design)
                 .map(updateOutputMapper::transform)
                 .flatMapSingle(eventsEmitter::send);
+    }
+
+    private Observable<DesignAggregateUpdated> createUpdateEvents(Design design) {
+        return Observable.just(createUpdateEvent(design));
+    }
+
+    private DesignAggregateUpdated createUpdateEvent(Design design) {
+        return DesignAggregateUpdated.builder()
+                .withDesignId(design.getDesignId())
+                .withCommandId(design.getCommandId())
+                .withUserId(design.getUserId())
+                .withRevision(design.getRevision())
+                .withChecksum(design.getChecksum())
+                .withData(design.getData())
+                .withStatus(design.getStatus())
+                .withPublished(design.isPublished())
+                .withLevels(design.getLevels())
+                .withBitmap(design.getBitmap())
+                .withCreated(design.getCreated())
+                .withUpdated(design.getUpdated())
+                .build();
+    }
+
+    private Observable<Void> sendRenderEvents(TilesRendered event, Design design, String revision) {
+        return createRenderEvents(event, design, revision).flatMapSingle(this::sendRenderEvent);
+    }
+
+    private Single<Void> sendRenderEvent(TileRenderRequested event) {
+        return renderEmitter.send(renderOutputMapper.transform(event), Render.getTopicName(renderEmitter.getTopicName() + "-requested", event.getLevel()));
+    }
+
+    private Observable<TileRenderRequested> createRenderEvents(TilesRendered event, Design design, String revision) {
+        return design.getCommandId().equals(event.getCommandId()) ? generateRenderEvents(event, design, revision) : Observable.empty();
+    }
+
+    private Observable<TileRenderRequested> generateRenderEvents(TilesRendered event, Design design, String revision) {
+        return Observable.from(event.getTiles())
+                .flatMap(tile -> Observable.from(generateTiles(tile, design.getLevels())))
+                .map(tile -> createRenderEvent(design, tile, revision));
     }
 
     private TileRenderRequested createRenderEvent(Design design, Tile tile, String revision) {
@@ -90,15 +126,7 @@ public class TilesRenderedController implements Controller<InputMessage, Void> {
                 .build();
     }
 
-    private DesignAggregateTilesUpdateRequested createAggregateEvent(Design design, String revision) {
-        return DesignAggregateTilesUpdateRequested.builder()
-                .withDesignId(design.getDesignId())
-                .withCommandId(design.getCommandId())
-                .withRevision(revision)
-                .build();
-    }
-
-    private List<Tile> generateTiles(Tile tile, int levels, TilesBitmap bitmap) {
+    private List<Tile> generateTiles(Tile tile, int levels) {
         int level = tile.getLevel() + 1;
         int row = tile.getRow() * 2;
         int col = tile.getCol() * 2;
@@ -109,29 +137,7 @@ public class TilesRenderedController implements Controller<InputMessage, Void> {
             final Tile tile2 = new Tile(level, row + 1, col + 0);
             final Tile tile3 = new Tile(level, row + 1, col + 1);
 
-//            if (level < 7) {
-                return List.of(tile0, tile1, tile2, tile3);
-//            } else {
-//                List<Tile> tiles = new ArrayList<>();
-//
-//                if (!bitmap.hasTile(level, tile0.getRow(), tile0.getCol())) {
-//                    tiles.add(tile0);
-//                }
-//
-//                if (!bitmap.hasTile(level, tile1.getRow(), tile1.getCol())) {
-//                    tiles.add(tile1);
-//                }
-//
-//                if (!bitmap.hasTile(level, tile2.getRow(), tile2.getCol())) {
-//                    tiles.add(tile2);
-//                }
-//
-//                if (!bitmap.hasTile(level, tile3.getRow(), tile3.getCol())) {
-//                    tiles.add(tile3);
-//                }
-//
-//                return tiles;
-//            }
+            return List.of(tile0, tile1, tile2, tile3);
         } else {
             return List.of();
         }

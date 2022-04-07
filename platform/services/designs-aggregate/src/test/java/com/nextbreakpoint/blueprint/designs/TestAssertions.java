@@ -45,36 +45,26 @@ public class TestAssertions {
         assertThat(actualBitmap.array()).isEqualTo(bitmap);
     }
 
-    public static void assertExpectedDesignAggregateUpdateRequestedMessage(InputMessage actualMessage, UUID designId) {
+    public static void assertExpectedDesignAggregateUpdatedMessage(InputMessage actualMessage, UUID designId, String data, String checksum, String status) {
         assertThat(actualMessage.getTimestamp()).isNotNull();
         assertThat(actualMessage.getKey()).isEqualTo(designId.toString());
         assertThat(actualMessage.getToken()).isNotNull();
         assertThat(actualMessage.getValue()).isNotNull();
         assertThat(actualMessage.getValue().getSource()).isEqualTo(TestConstants.MESSAGE_SOURCE);
         assertThat(actualMessage.getValue().getUuid()).isNotNull();
-        assertThat(actualMessage.getValue().getType()).isEqualTo(TestConstants.DESIGN_AGGREGATE_UPDATE_REQUESTED);
-        DesignAggregateUpdateRequested actualEvent = Json.decodeValue(actualMessage.getValue().getData(), DesignAggregateUpdateRequested.class);
+        assertThat(actualMessage.getValue().getType()).isEqualTo(TestConstants.DESIGN_AGGREGATE_UPDATED);
+        DesignAggregateUpdated actualEvent = Json.decodeValue(actualMessage.getValue().getData(), DesignAggregateUpdated.class);
         assertThat(actualEvent.getDesignId()).isEqualTo(designId);
         assertThat(actualEvent.getCommandId()).isNotNull();
+        assertThat(actualEvent.getUserId()).isNotNull();
         assertThat(actualEvent.getRevision()).isNotNull();
-    }
-
-    public static void assertExpectedDesignAggregateUpdateCompletedMessage(InputMessage actualMessage, UUID designId, String data, String checksum, String status) {
-        assertThat(actualMessage.getTimestamp()).isNotNull();
-        assertThat(actualMessage.getKey()).isEqualTo(designId.toString());
-        assertThat(actualMessage.getToken()).isNotNull();
-        assertThat(actualMessage.getValue()).isNotNull();
-        assertThat(actualMessage.getValue().getSource()).isEqualTo(TestConstants.MESSAGE_SOURCE);
-        assertThat(actualMessage.getValue().getUuid()).isNotNull();
-        assertThat(actualMessage.getValue().getType()).isEqualTo(TestConstants.DESIGN_AGGREGATE_UPDATE_COMPLETED);
-        DesignAggregateUpdateCompleted actualEvent = Json.decodeValue(actualMessage.getValue().getData(), DesignAggregateUpdateCompleted.class);
-        assertThat(actualEvent.getDesignId()).isEqualTo(designId);
-        assertThat(actualEvent.getCommandId()).isNotNull();
-        assertThat(actualEvent.getRevision()).isNotNull();
+        assertThat(actualEvent.getChecksum()).isEqualTo(checksum);
         assertThat(actualEvent.getData()).isEqualTo(data);
         assertThat(actualEvent.getStatus()).isEqualTo(status);
-        assertThat(actualEvent.getChecksum()).isEqualTo(checksum);
         assertThat(actualEvent.getLevels()).isEqualTo(3);
+        assertThat(actualEvent.getBitmap()).isNotNull();
+        assertThat(actualEvent.getUpdated()).isNotNull();
+        assertThat(actualEvent.getCreated()).isNotNull();
     }
 
     public static void assertExpectedTileRenderRequestedEvent(TileRenderRequested actualEvent, UUID designId, String data, String checksum) {
@@ -86,33 +76,6 @@ public class TestAssertions {
         assertThat(actualEvent.getLevel()).isNotNull();
         assertThat(actualEvent.getRow()).isNotNull();
         assertThat(actualEvent.getCol()).isNotNull();
-    }
-
-    public static void assertExpectedDesignAggregateTilesUpdateRequestedMessage(InputMessage actualMessage, UUID designId) {
-        assertThat(actualMessage.getTimestamp()).isNotNull();
-        assertThat(actualMessage.getKey()).isEqualTo(designId.toString());
-        assertThat(actualMessage.getToken()).isNotNull();
-        assertThat(actualMessage.getValue()).isNotNull();
-        assertThat(actualMessage.getValue().getSource()).isEqualTo(TestConstants.MESSAGE_SOURCE);
-        assertThat(actualMessage.getValue().getUuid()).isNotNull();
-        assertThat(actualMessage.getValue().getType()).isEqualTo(TestConstants.DESIGN_AGGREGATE_TILES_UPDATE_REQUESTED);
-        DesignAggregateTilesUpdateRequested actualEvent = Json.decodeValue(actualMessage.getValue().getData(), DesignAggregateTilesUpdateRequested.class);
-        assertThat(actualEvent.getDesignId()).isEqualTo(designId);
-        assertThat(actualEvent.getCommandId()).isNotNull();
-        assertThat(actualEvent.getRevision()).isNotNull();
-    }
-
-    public static void assertExpectedDesignAggregateTilesUpdateCompletedMessage(InputMessage actualMessage, UUID designId) {
-        assertThat(actualMessage.getTimestamp()).isNotNull();
-        assertThat(actualMessage.getKey()).isEqualTo(designId.toString());
-        assertThat(actualMessage.getToken()).isNotNull();
-        assertThat(actualMessage.getValue().getSource()).isEqualTo(TestConstants.MESSAGE_SOURCE);
-        assertThat(actualMessage.getValue().getUuid()).isNotNull();
-        assertThat(actualMessage.getValue().getType()).isEqualTo(TestConstants.DESIGN_AGGREGATE_TILES_UPDATE_COMPLETED);
-        DesignAggregateTilesUpdateCompleted actualEvent = Json.decodeValue(actualMessage.getValue().getData(), DesignAggregateTilesUpdateCompleted.class);
-        assertThat(actualEvent.getDesignId()).isEqualTo(designId);
-        assertThat(actualEvent.getCommandId()).isNotNull();
-        assertThat(actualEvent.getRevision()).isNotNull();
     }
 
     public static void assertExpectedDesignDocumentUpdateRequestedMessage(InputMessage actualMessage, UUID designId, String data, String checksum, String status) {

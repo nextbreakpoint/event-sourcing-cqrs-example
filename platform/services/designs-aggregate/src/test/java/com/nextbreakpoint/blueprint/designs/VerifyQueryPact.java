@@ -64,48 +64,48 @@ public class VerifyQueryPact {
 
     @PactVerifyProvider("design document update requested for design 00000000-0000-0000-0000-000000000001 and 0% tiles completed")
     public String produceDesignDocumentUpdateRequested1() {
-        return produceDesignDocumentUpdateRequested(new UUID(0L, 1L), TestConstants.JSON_1, TestConstants.CHECKSUM_1, "CREATED", 0.0f);
+        return produceDesignDocumentUpdateRequested(new UUID(0L, 1L), TestConstants.COMMAND_1, TestConstants.JSON_1, TestConstants.CHECKSUM_1, "CREATED", 0.0f);
     }
 
     @PactVerifyProvider("design document update requested for design 00000000-0000-0000-0000-000000000001 and 50% tiles completed")
     public String produceDesignDocumentUpdateRequested2() {
-        return produceDesignDocumentUpdateRequested(new UUID(0L, 1L), TestConstants.JSON_1, TestConstants.CHECKSUM_1, "UPDATED", 0.5f);
+        return produceDesignDocumentUpdateRequested(new UUID(0L, 1L), TestConstants.COMMAND_1, TestConstants.JSON_1, TestConstants.CHECKSUM_1, "UPDATED", 0.5f);
     }
 
     @PactVerifyProvider("design document update requested for design 00000000-0000-0000-0000-000000000001 and 100% tiles completed")
     public String produceDesignDocumentUpdateRequested3() {
-        return produceDesignDocumentUpdateRequested(new UUID(0L, 1L), TestConstants.JSON_1, TestConstants.CHECKSUM_1, "UPDATED", 1.0f);
+        return produceDesignDocumentUpdateRequested(new UUID(0L, 1L), TestConstants.COMMAND_1, TestConstants.JSON_1, TestConstants.CHECKSUM_1, "UPDATED", 1.0f);
     }
 
     @PactVerifyProvider("design document update requested for design 00000000-0000-0000-0000-000000000002 and 100% tiles completed")
     public String produceDesignDocumentUpdateRequested4() {
-        return produceDesignDocumentUpdateRequested(new UUID(0L, 2L), TestConstants.JSON_2, TestConstants.CHECKSUM_2, "UPDATED", 1.0f);
+        return produceDesignDocumentUpdateRequested(new UUID(0L, 2L), TestConstants.COMMAND_1, TestConstants.JSON_2, TestConstants.CHECKSUM_2, "UPDATED", 1.0f);
     }
 
     @PactVerifyProvider("design document update requested for design 00000000-0000-0000-0000-000000000003 and 100% tiles completed")
     public String produceDesignDocumentUpdateRequested5() {
-        return produceDesignDocumentUpdateRequested(new UUID(0L, 3L), TestConstants.JSON_2, TestConstants.CHECKSUM_2, "CREATED", 1.0f);
+        return produceDesignDocumentUpdateRequested(new UUID(0L, 3L), TestConstants.COMMAND_1, TestConstants.JSON_2, TestConstants.CHECKSUM_2, "CREATED", 1.0f);
     }
 
     @PactVerifyProvider("design document delete requested for design 00000000-0000-0000-0000-000000000003")
     public String produceDesignDocumentDeleteRequested() {
-        return produceDesignDocumentDeleteRequested(new UUID(0L, 3L));
+        return produceDesignDocumentDeleteRequested(new UUID(0L, 3L), TestConstants.COMMAND_1);
     }
 
-    private String produceDesignDocumentUpdateRequested(UUID uuid, String data, String checksum, String status, float completePercentage) {
+    private String produceDesignDocumentUpdateRequested(UUID uuid, UUID commandId, String data, String checksum, String status, float completePercentage) {
         final TilesBitmap bitmap = TestUtils.createBitmap(TestConstants.LEVELS, completePercentage);
 
         final List<Tiles> tiles = IntStream.range(0, 8).mapToObj(bitmap::toTiles).collect(Collectors.toList());
 
-        final DesignDocumentUpdateRequested designDocumentUpdateRequested = new DesignDocumentUpdateRequested(uuid, UUID.randomUUID(), TestConstants.USER_ID, TestConstants.REVISION_0, checksum, data, status, false, TestConstants.LEVELS, tiles, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")), LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
+        final DesignDocumentUpdateRequested designDocumentUpdateRequested = new DesignDocumentUpdateRequested(uuid, commandId, TestConstants.USER_ID, TestConstants.REVISION_0, checksum, data, status, false, TestConstants.LEVELS, tiles, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")), LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
 
         final OutputMessage designDocumentUpdateRequestedMessage = new DesignDocumentUpdateRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designDocumentUpdateRequested);
 
         return Json.encodeValue(new KafkaRecord(designDocumentUpdateRequestedMessage.getKey(), PayloadUtils.payloadToMap(designDocumentUpdateRequestedMessage.getValue())));
     }
 
-    private String produceDesignDocumentDeleteRequested(UUID uuid) {
-        final DesignDocumentDeleteRequested designDocumentDeleteRequested = new DesignDocumentDeleteRequested(uuid, UUID.randomUUID(), TestConstants.REVISION_0);
+    private String produceDesignDocumentDeleteRequested(UUID uuid, UUID commandId) {
+        final DesignDocumentDeleteRequested designDocumentDeleteRequested = new DesignDocumentDeleteRequested(uuid, commandId, TestConstants.REVISION_0);
 
         final OutputMessage designDocumentDeleteRequestedMessage = new DesignDocumentDeleteRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designDocumentDeleteRequested);
 

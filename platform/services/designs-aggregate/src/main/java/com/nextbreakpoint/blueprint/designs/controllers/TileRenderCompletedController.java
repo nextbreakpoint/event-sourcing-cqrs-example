@@ -18,7 +18,12 @@ public class TileRenderCompletedController implements Controller<List<InputMessa
     private final MessageEmitter emitter;
     private final DesignAggregate aggregate;
 
-    public TileRenderCompletedController(DesignAggregate aggregate, Mapper<InputMessage, TileRenderCompleted> inputMapper, MessageMapper<TilesRendered, OutputMessage> outputMapper, MessageEmitter emitter) {
+    public TileRenderCompletedController(
+            DesignAggregate aggregate,
+            Mapper<InputMessage, TileRenderCompleted> inputMapper,
+            MessageMapper<TilesRendered, OutputMessage> outputMapper,
+            MessageEmitter emitter
+    ) {
         this.aggregate = Objects.requireNonNull(aggregate);
         this.inputMapper = Objects.requireNonNull(inputMapper);
         this.outputMapper = Objects.requireNonNull(outputMapper);
@@ -28,23 +33,23 @@ public class TileRenderCompletedController implements Controller<List<InputMessa
     @Override
     public Single<Void> onNext(List<InputMessage> messages) {
         return aggregate.findDesign(inputMapper.transform(messages.get(0)).getDesignId())
-                .flatMapObservable(result -> result.map(design -> createEvents(design, messages)).orElseGet(Observable::empty))
-                .map(outputMapper::transform)
-                .flatMapSingle(emitter::send)
+                .flatMapObservable(result -> result.map(Observable::just).orElseGet(Observable::empty))
+                .flatMap(design -> sendEvents(design, messages))
                 .ignoreElements()
                 .toCompletable()
                 .toSingleDefault("")
                 .map(result -> null);
     }
 
-    private Observable<TilesRendered> createEvents(Design design, List<InputMessage> messages) {
+    private Observable<Void> sendEvents(Design design, List<InputMessage> messages) {
         return Observable.from(messages)
                 .map(inputMapper::transform)
                 .filter(event -> event.getCommandId().equals(design.getCommandId()))
-                .filter(event -> event.getChecksum().equals(design.getChecksum()))
                 .map(this::createTile)
                 .collect(ArrayList<Tile>::new, ArrayList::add)
-                .map(tiles -> createEvent(design, tiles));
+                .map(tiles -> createEvent(design, tiles))
+                .map(outputMapper::transform)
+                .flatMapSingle(emitter::send);
     }
 
     private Tile createTile(TileRenderCompleted event) {

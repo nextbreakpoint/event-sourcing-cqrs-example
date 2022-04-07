@@ -4,25 +4,25 @@ import com.nextbreakpoint.blueprint.common.core.Json;
 import com.nextbreakpoint.blueprint.common.core.MessageMapper;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.core.Payload;
-import com.nextbreakpoint.blueprint.common.events.DesignAggregateUpdateCompleted;
+import com.nextbreakpoint.blueprint.common.events.DesignAggregateUpdated;
 
 import java.util.Objects;
 import java.util.UUID;
 
-public class DesignAggregateUpdateCompletedOutputMapper implements MessageMapper<DesignAggregateUpdateCompleted, OutputMessage> {
+public class DesignAggregateUpdatedOutputMapper implements MessageMapper<DesignAggregateUpdated, OutputMessage> {
     private final String messageSource;
 
-    public DesignAggregateUpdateCompletedOutputMapper(String messageSource) {
+    public DesignAggregateUpdatedOutputMapper(String messageSource) {
         this.messageSource = Objects.requireNonNull(messageSource);
     }
 
     @Override
-    public OutputMessage transform(DesignAggregateUpdateCompleted event) {
+    public OutputMessage transform(DesignAggregateUpdated event) {
         return new OutputMessage(
                 event.getDesignId().toString(),
                 new Payload(
                         UUID.randomUUID(),
-                        DesignAggregateUpdateCompleted.TYPE,
+                        DesignAggregateUpdated.TYPE,
                         Json.encodeValue(event),
                         messageSource
                 )

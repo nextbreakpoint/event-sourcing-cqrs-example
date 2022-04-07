@@ -8,12 +8,9 @@ public interface TestConstants {
     String DESIGN_INSERT_REQUESTED = "design-insert-requested-v1";
     String DESIGN_UPDATE_REQUESTED = "design-update-requested-v1";
     String DESIGN_DELETE_REQUESTED = "design-delete-requested-v1";
-    String DESIGN_AGGREGATE_UPDATE_REQUESTED = "design-aggregate-update-requested-v1";
-    String DESIGN_AGGREGATE_UPDATE_COMPLETED = "design-aggregate-update-completed-v1";
+    String DESIGN_AGGREGATE_UPDATED = "design-aggregate-updated-v1";
     String TILE_RENDER_REQUESTED = "tile-render-requested-v1";
     String TILE_RENDER_COMPLETED = "tile-render-completed-v1";
-    String DESIGN_AGGREGATE_TILES_UPDATE_REQUESTED = "design-aggregate-tiles-update-requested-v1";
-    String DESIGN_AGGREGATE_TILES_UPDATE_COMPLETED = "design-aggregate-tiles-update-completed-v1";
     String DESIGN_DOCUMENT_UPDATE_REQUESTED = "design-document-update-requested-v1";
     String DESIGN_DOCUMENT_DELETED_REQUESTED = "design-document-delete-requested-v1";
 
@@ -45,5 +42,6 @@ public interface TestConstants {
     String REVISION_3 = "0000000000000000-0000000000000003";
     String REVISION_4 = "0000000000000000-0000000000000004";
 
-    UUID COMMAND_ID = new UUID(1L, 100L);
+    UUID COMMAND_1 = new UUID(1L, 100L);
+    UUID COMMAND_2 = new UUID(2L, 100L);
 }

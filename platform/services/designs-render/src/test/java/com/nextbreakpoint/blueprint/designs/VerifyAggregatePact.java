@@ -59,31 +59,31 @@ public class VerifyAggregatePact {
 
     @PactVerifyProvider("tile render completed with status FAILED for tile 0/00000000.png of design 00000000-0000-0000-0000-000000000004 with checksum 1")
     public String produceTileRenderCompleted1() {
-        return produceTileRenderCompleted(new UUID(0L, 4L), 0, 0, 0, TestConstants.CHECKSUM_1, "FAILED");
+        return produceTileRenderCompleted(new UUID(0L, 4L), 0, 0, 0, TestConstants.COMMAND_1, TestConstants.CHECKSUM_1, "FAILED");
     }
 
     @PactVerifyProvider("tile render completed with status COMPLETED for tile 1/00010000.png of design 00000000-0000-0000-0000-000000000004 with checksum 1")
     public String produceTileRenderCompleted2() {
-        return produceTileRenderCompleted(new UUID(0L, 4L), 1, 0, 0, TestConstants.CHECKSUM_1, "COMPLETED");
+        return produceTileRenderCompleted(new UUID(0L, 4L), 1, 0, 0, TestConstants.COMMAND_1, TestConstants.CHECKSUM_1, "COMPLETED");
     }
 
     @PactVerifyProvider("tile render completed with status COMPLETED for tile 1/00010001.png of design 00000000-0000-0000-0000-000000000004 with checksum 1")
     public String produceTileRenderCompleted3() {
-        return produceTileRenderCompleted(new UUID(0L, 4L), 1, 1, 0, TestConstants.CHECKSUM_1, "COMPLETED");
+        return produceTileRenderCompleted(new UUID(0L, 4L), 1, 1, 0, TestConstants.COMMAND_1, TestConstants.CHECKSUM_1, "COMPLETED");
     }
 
     @PactVerifyProvider("tile render completed with status COMPLETED for tile 2/00020001.png of design 00000000-0000-0000-0000-000000000004 with checksum 1")
     public String produceTileRenderCompleted4() {
-        return produceTileRenderCompleted(new UUID(0L, 4L), 2, 2, 1, TestConstants.CHECKSUM_1, "COMPLETED");
+        return produceTileRenderCompleted(new UUID(0L, 4L), 2, 2, 1, TestConstants.COMMAND_1, TestConstants.CHECKSUM_1, "COMPLETED");
     }
 
-    @PactVerifyProvider("tile render completed with status FAILED for tile 2/00030001.png of design 00000000-0000-0000-0000-000000000004 with checksum 2")
+    @PactVerifyProvider("tile render completed with status COMPLETED for tile 2/00030001.png of design 00000000-0000-0000-0000-000000000004 with checksum 2")
     public String produceTileRenderCompleted5() {
-        return produceTileRenderCompleted(new UUID(0L, 4L), 2, 3, 1, TestConstants.CHECKSUM_2, "FAILED");
+        return produceTileRenderCompleted(new UUID(0L, 4L), 2, 3, 1, TestConstants.COMMAND_2, TestConstants.CHECKSUM_2, "COMPLETED");
     }
 
-    private String produceTileRenderCompleted(UUID uuid, int level, int row, int col, String checksum, String status) {
-        final TileRenderCompleted tileRenderCompleted = new TileRenderCompleted(uuid, UUID.randomUUID(), TestConstants.REVISION_0, checksum, level, row, col, status);
+    private String produceTileRenderCompleted(UUID uuid, int level, int row, int col, UUID commandId, String checksum, String status) {
+        final TileRenderCompleted tileRenderCompleted = new TileRenderCompleted(uuid, commandId, TestConstants.REVISION_0, checksum, level, row, col, status);
 
         final OutputMessage tileRenderCompletedMessage = new TileRenderCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(tileRenderCompleted);
 

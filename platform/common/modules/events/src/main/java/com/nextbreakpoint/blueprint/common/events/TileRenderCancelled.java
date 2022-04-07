@@ -14,24 +14,40 @@ import java.util.UUID;
 @JsonPropertyOrder({
         "designId",
         "commandId",
-        "revision"
+        "revision",
+        "checksum",
+        "level",
+        "row",
+        "col"
 })
 @Builder(access = AccessLevel.PUBLIC, setterPrefix = "with")
-public class DesignAggregateUpdateRequested {
-    public static final String TYPE = "design-aggregate-update-requested-v1";
+public class TileRenderCancelled {
+    public static final String TYPE = "tile-render-cancelled-v1";
 
     private final UUID designId;
     private final UUID commandId;
     private final String revision;
+    private final String checksum;
+    private final int level;
+    private final int row;
+    private final int col;
 
     @JsonCreator
-    public DesignAggregateUpdateRequested(
+    public TileRenderCancelled(
             @JsonProperty("designId") UUID designId,
             @JsonProperty("commandId") UUID commandId,
-            @JsonProperty("revision") String revision
+            @JsonProperty("revision") String revision,
+            @JsonProperty("checksum") String checksum,
+            @JsonProperty("level") int level,
+            @JsonProperty("row") int row,
+            @JsonProperty("col") int col
     ) {
         this.designId = Objects.requireNonNull(designId);
         this.commandId = Objects.requireNonNull(commandId);
         this.revision = Objects.requireNonNull(revision);
+        this.checksum = Objects.requireNonNull(checksum);
+        this.level = level;
+        this.row = row;
+        this.col = col;
     }
 }

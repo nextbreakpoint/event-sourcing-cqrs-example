@@ -42,6 +42,7 @@ public class DesignDeleteRequestedController implements Controller<InputMessage,
     private DesignAggregateUpdateRequested createEvent(DesignDeleteRequested event, String revision) {
         return DesignAggregateUpdateRequested.builder()
                 .withDesignId(event.getDesignId())
+                .withCommandId(event.getCommandId())
                 .withRevision(revision)
                 .build();
     }

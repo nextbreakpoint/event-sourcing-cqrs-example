@@ -37,7 +37,6 @@ public class DesignAggregateUpdateRequestedController implements Controller<Inpu
                 .map(value -> null);
     }
 
-
     private Observable<DesignAggregateUpdateCompleted> onAggregateUpdateRequested(DesignAggregateUpdateRequested event) {
         return aggregate.projectDesign(event.getDesignId(), event.getRevision())
                 .flatMap(result -> result.map(aggregate::updateDesign).orElseGet(() -> Single.just(Optional.empty())))
@@ -47,6 +46,7 @@ public class DesignAggregateUpdateRequestedController implements Controller<Inpu
     private DesignAggregateUpdateCompleted createEvent(Design design) {
         return DesignAggregateUpdateCompleted.builder()
                 .withDesignId(design.getDesignId())
+                .withCommandId(design.getCommandId())
                 .withRevision(design.getRevision())
                 .withData(design.getData())
                 .withChecksum(design.getChecksum())

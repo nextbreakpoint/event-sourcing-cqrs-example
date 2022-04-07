@@ -79,7 +79,7 @@ public class VerifyNotifyPact {
     }
 
     private String produceDesignDocumentUpdateCompleted(UUID uuid) {
-        final DesignDocumentUpdateCompleted designDocumentUpdateCompleted = new DesignDocumentUpdateCompleted(uuid, TestConstants.REVISION_0);
+        final DesignDocumentUpdateCompleted designDocumentUpdateCompleted = new DesignDocumentUpdateCompleted(uuid, UUID.randomUUID(), TestConstants.REVISION_0);
 
         final OutputMessage designDocumentUpdateCompletedMessage = new DesignDocumentUpdateCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designDocumentUpdateCompleted);
 
@@ -87,7 +87,7 @@ public class VerifyNotifyPact {
     }
 
     private String produceDesignDocumentDeleteCompleted(UUID uuid) {
-        final DesignDocumentDeleteCompleted designDocumentDeleteCompleted = new DesignDocumentDeleteCompleted(uuid, TestConstants.REVISION_0);
+        final DesignDocumentDeleteCompleted designDocumentDeleteCompleted = new DesignDocumentDeleteCompleted(uuid, UUID.randomUUID(), TestConstants.REVISION_0);
 
         final OutputMessage designDocumentDeleteCompletedMessage = new DesignDocumentDeleteCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designDocumentDeleteCompleted);
 

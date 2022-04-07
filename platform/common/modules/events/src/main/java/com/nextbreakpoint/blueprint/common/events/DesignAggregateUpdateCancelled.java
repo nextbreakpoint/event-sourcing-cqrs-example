@@ -13,25 +13,25 @@ import java.util.UUID;
 @Data
 @JsonPropertyOrder({
         "designId",
-        "revision",
-        "checksum"
+        "commandId",
+        "revision"
 })
 @Builder(access = AccessLevel.PUBLIC, setterPrefix = "with")
 public class DesignAggregateUpdateCancelled {
     public static final String TYPE = "design-aggregate-update-cancelled-v1";
 
     private final UUID designId;
+    private final UUID commandId;
     private final String revision;
-    private final String checksum;
 
     @JsonCreator
     public DesignAggregateUpdateCancelled(
             @JsonProperty("designId") UUID designId,
-            @JsonProperty("revision") String revision,
-            @JsonProperty("checksum") String checksum
+            @JsonProperty("commandId") UUID commandId,
+            @JsonProperty("revision") String revision
     ) {
         this.designId = Objects.requireNonNull(designId);
+        this.commandId = Objects.requireNonNull(commandId);
         this.revision = Objects.requireNonNull(revision);
-        this.checksum = Objects.requireNonNull(checksum);
     }
 }

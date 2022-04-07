@@ -49,6 +49,7 @@ public class PactConsumerTests {
 
         PactDslJsonBody event1 = new PactDslJsonBody()
                 .uuid("designId", uuid1)
+                .stringMatcher("commandId", TestConstants.UUID6_REGEXP)
                 .stringMatcher("revision", TestConstants.REVISION_REGEXP)
                 .stringValue("data", TestConstants.JSON_1)
                 .stringValue("checksum", TestConstants.CHECKSUM_1)
@@ -68,6 +69,7 @@ public class PactConsumerTests {
 
         PactDslJsonBody event2 = new PactDslJsonBody()
                 .uuid("designId", uuid2)
+                .stringMatcher("commandId", TestConstants.UUID6_REGEXP)
                 .stringMatcher("revision", TestConstants.REVISION_REGEXP)
                 .stringValue("data", TestConstants.JSON_2)
                 .stringValue("checksum", TestConstants.CHECKSUM_2)
@@ -87,6 +89,7 @@ public class PactConsumerTests {
 
         PactDslJsonBody event3 = new PactDslJsonBody()
                 .uuid("designId", uuid3)
+                .stringMatcher("commandId", TestConstants.UUID6_REGEXP)
                 .stringMatcher("revision", TestConstants.REVISION_REGEXP)
                 .stringValue("data", TestConstants.JSON_2)
                 .stringValue("checksum", TestConstants.CHECKSUM_2)
@@ -106,6 +109,7 @@ public class PactConsumerTests {
 
         PactDslJsonBody event4 = new PactDslJsonBody()
                 .uuid("designId", uuid4)
+                .stringMatcher("commandId", TestConstants.UUID6_REGEXP)
                 .stringMatcher("revision", TestConstants.REVISION_REGEXP)
                 .stringValue("data", TestConstants.JSON_2)
                 .stringValue("checksum", TestConstants.CHECKSUM_2)
@@ -125,6 +129,7 @@ public class PactConsumerTests {
 
         PactDslJsonBody event5 = new PactDslJsonBody()
                 .uuid("designId", uuid5)
+                .stringMatcher("commandId", TestConstants.UUID6_REGEXP)
                 .stringMatcher("revision", TestConstants.REVISION_REGEXP)
                 .stringValue("data", TestConstants.JSON_2)
                 .stringValue("checksum", TestConstants.CHECKSUM_2)

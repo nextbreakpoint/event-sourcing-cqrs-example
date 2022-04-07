@@ -3,7 +3,7 @@ package com.nextbreakpoint.blueprint.designs;
 import com.nextbreakpoint.blueprint.common.core.ForwardController;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.core.RxSingleHandler;
-import com.nextbreakpoint.blueprint.common.drivers.MessageEmitter;
+import com.nextbreakpoint.blueprint.common.drivers.KafkaMessageEmitter;
 import com.nextbreakpoint.blueprint.common.events.mappers.*;
 import com.nextbreakpoint.blueprint.common.vertx.*;
 import com.nextbreakpoint.blueprint.designs.aggregate.DesignAggregate;
@@ -25,7 +25,7 @@ public class Factory {
                     new DesignAggregate(store, new DesignStateStrategy()),
                     new DesignInsertRequestedInputMapper(),
                     new DesignAggregateUpdateRequestedOutputMapper(messageSource),
-                    new MessageEmitter(producer, topic, 3)
+                    new KafkaMessageEmitter(producer, topic, 3)
                 ))
                 .onSuccess(new MessageConsumed())
                 .onFailure(new MessageFailed())
@@ -40,7 +40,7 @@ public class Factory {
                     new DesignAggregate(store, new DesignStateStrategy()),
                     new DesignUpdateRequestedInputMapper(),
                     new DesignAggregateUpdateRequestedOutputMapper(messageSource),
-                    new MessageEmitter(producer, topic, 3)
+                    new KafkaMessageEmitter(producer, topic, 3)
                 ))
                 .onSuccess(new MessageConsumed())
                 .onFailure(new MessageFailed())
@@ -55,22 +55,7 @@ public class Factory {
                     new DesignAggregate(store, new DesignStateStrategy()),
                     new DesignDeleteRequestedInputMapper(),
                     new DesignAggregateUpdateRequestedOutputMapper(messageSource),
-                    new MessageEmitter(producer, topic, 3)
-                ))
-                .onSuccess(new MessageConsumed())
-                .onFailure(new MessageFailed())
-                .build();
-    }
-
-    public static RxSingleHandler<InputMessage, ?> createDesignAggregateUpdateCancelledHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
-        return TemplateHandler.<InputMessage, InputMessage, Void, Void>builder()
-                .withInputMapper(input -> input)
-                .withOutputMapper(output -> output)
-                .withController(new DesignAggregateUpdateCancelledController(
-                    new DesignAggregate(store, new DesignStateStrategy()),
-                    new DesignAggregateUpdateCancelledInputMapper(),
-                    new TileRenderAbortedOutputMapper(messageSource),
-                    new MessageEmitter(producer, topic, 3)
+                    new KafkaMessageEmitter(producer, topic, 3)
                 ))
                 .onSuccess(new MessageConsumed())
                 .onFailure(new MessageFailed())
@@ -85,7 +70,7 @@ public class Factory {
                     new DesignAggregate(store, new DesignStateStrategy()),
                     new DesignAggregateUpdateRequestedInputMapper(),
                     new DesignAggregateUpdateCompletedOutputMapper(messageSource),
-                    new MessageEmitter(producer, topic, 3)
+                    new KafkaMessageEmitter(producer, topic, 3)
                 ))
                 .onSuccess(new MessageConsumed())
                 .onFailure(new MessageFailed())
@@ -97,11 +82,12 @@ public class Factory {
                 .withInputMapper(input -> input)
                 .withOutputMapper(output -> output)
                 .withController(new DesignAggregateUpdateCompletedController(
+                    new DesignAggregate(store, new DesignStateStrategy()),
                     new DesignAggregateUpdateCompletedInputMapper(),
                     new TileRenderRequestedOutputMapper(messageSource, Render::createRenderKey),
                     new DesignDocumentDeleteRequestedOutputMapper(messageSource),
-                    new MessageEmitter(producer, eventsTopic, 3),
-                    new MessageEmitter(producer, renderTopic, 3)
+                    new KafkaMessageEmitter(producer, eventsTopic, 3),
+                    new KafkaMessageEmitter(producer, renderTopic, 3)
                 ))
                 .onSuccess(new MessageConsumed())
                 .onFailure(new MessageFailed())
@@ -116,7 +102,7 @@ public class Factory {
                     new DesignAggregate(store, new DesignStateStrategy()),
                     new DesignAggregateTilesUpdateRequestedInputMapper(),
                     new DesignAggregateTilesUpdateCompletedOutputMapper(messageSource),
-                    new MessageEmitter(producer, topic, 3)
+                    new KafkaMessageEmitter(producer, topic, 3)
                 ))
                 .onSuccess(new MessageConsumed())
                 .onFailure(new MessageFailed())
@@ -131,7 +117,7 @@ public class Factory {
                     new DesignAggregate(store, new DesignStateStrategy()),
                     new DesignAggregateTilesUpdateCompletedInputMapper(),
                     new DesignDocumentUpdateRequestedOutputMapper(messageSource),
-                    new MessageEmitter(producer, topic, 3)
+                    new KafkaMessageEmitter(producer, topic, 3)
                 ))
                 .onSuccess(new MessageConsumed())
                 .onFailure(new MessageFailed())
@@ -146,24 +132,10 @@ public class Factory {
                     new DesignAggregate(store, new DesignStateStrategy()),
                     new TileRenderCompletedInputMapper(),
                     new TilesRenderedOutputMapper(messageSource),
-                    new MessageEmitter(producer, topic, 3)
+                    new KafkaMessageEmitter(producer, topic, 3)
                 ))
                 .onSuccess(new MessagesConsumed())
                 .onFailure(new MessagesFailed())
-                .build();
-    }
-
-    public static RxSingleHandler<InputMessage, ?> createForwardTileRenderCompletedHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
-        return TemplateHandler.<InputMessage, InputMessage, Void, Void>builder()
-                .withInputMapper(input -> input)
-                .withOutputMapper(output -> output)
-                .withController(new ForwardController<>(
-                        new TileRenderCompletedInputMapper(),
-                        new TileRenderCompletedOutputMapper(messageSource),
-                        new MessageEmitter(producer, topic, 3)
-                ))
-                .onSuccess(new MessageConsumed())
-                .onFailure(new MessageFailed())
                 .build();
     }
 
@@ -176,8 +148,22 @@ public class Factory {
                         new TilesRenderedInputMapper(),
                         new DesignAggregateTilesUpdateRequestedOutputMapper(messageSource),
                         new TileRenderRequestedOutputMapper(messageSource, Render::createRenderKey),
-                        new MessageEmitter(producer, eventTopic, 3),
-                        new MessageEmitter(producer, renderTopic, 3)
+                        new KafkaMessageEmitter(producer, eventTopic, 3),
+                        new KafkaMessageEmitter(producer, renderTopic, 3)
+                ))
+                .onSuccess(new MessageConsumed())
+                .onFailure(new MessageFailed())
+                .build();
+    }
+
+    public static RxSingleHandler<InputMessage, ?> createForwardTileRenderCompletedHandler(String topic, KafkaProducer<String, String> producer, String messageSource) {
+        return TemplateHandler.<InputMessage, InputMessage, Void, Void>builder()
+                .withInputMapper(input -> input)
+                .withOutputMapper(output -> output)
+                .withController(new ForwardController<>(
+                        new TileRenderCompletedInputMapper(),
+                        new TileRenderCompletedOutputMapper(messageSource),
+                        new KafkaMessageEmitter(producer, topic, 3)
                 ))
                 .onSuccess(new MessageConsumed())
                 .onFailure(new MessageFailed())

@@ -45,7 +45,7 @@ public class DesignDocumentUpdateRequestedController implements Controller<Input
     private Observable<DesignDocumentUpdateCompleted> onDesignDocumentUpdateRequested(DesignDocumentUpdateRequested event) {
         return store.insertDesign(new InsertDesignRequest(event.getDesignId(), createDesign(event), true))
                 .flatMap(result -> updateOrDelete(event))
-                .map(result -> new DesignDocumentUpdateCompleted(event.getDesignId(), event.getRevision()))
+                .map(result -> new DesignDocumentUpdateCompleted(event.getDesignId(), event.getCommandId(), event.getRevision()))
                 .toObservable();
     }
 

@@ -21,6 +21,7 @@ public class TestAssertions {
         TileRenderCompleted actualEvent = Json.decodeValue(actualMessage.getValue().getData(), TileRenderCompleted.class);
         assertThat(actualEvent.getRevision()).isNotNull();
         assertThat(actualEvent.getDesignId()).isEqualTo(tileRenderRequested.getDesignId());
+        assertThat(actualEvent.getCommandId()).isEqualTo(tileRenderRequested.getCommandId());
         assertThat(actualEvent.getLevel()).isEqualTo(tileRenderRequested.getLevel());
         assertThat(actualEvent.getRow()).isEqualTo(tileRenderRequested.getRow());
         assertThat(actualEvent.getCol()).isEqualTo(tileRenderRequested.getCol());

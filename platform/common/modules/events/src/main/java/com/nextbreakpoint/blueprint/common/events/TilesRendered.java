@@ -15,6 +15,7 @@ import java.util.UUID;
 @Data
 @JsonPropertyOrder({
         "designId",
+        "commandId",
         "revision",
         "checksum",
         "data",
@@ -25,6 +26,7 @@ public class TilesRendered {
     public static final String TYPE = "tiles-rendered-v1";
 
     private final UUID designId;
+    private final UUID commandId;
     private final String revision;
     private final String checksum;
     private final String data;
@@ -33,12 +35,14 @@ public class TilesRendered {
     @JsonCreator
     public TilesRendered(
             @JsonProperty("designId") UUID designId,
+            @JsonProperty("commandId") UUID commandId,
             @JsonProperty("revision") String revision,
             @JsonProperty("checksum") String checksum,
             @JsonProperty("data") String data,
             @JsonProperty("tiles") List<Tile> tiles
     ) {
         this.designId = Objects.requireNonNull(designId);
+        this.commandId = Objects.requireNonNull(commandId);
         this.revision = Objects.requireNonNull(revision);
         this.checksum = Objects.requireNonNull(checksum);
         this.data = Objects.requireNonNull(data);

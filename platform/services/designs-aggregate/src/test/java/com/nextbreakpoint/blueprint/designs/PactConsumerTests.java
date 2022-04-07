@@ -164,6 +164,7 @@ public class PactConsumerTests {
 
         PactDslJsonBody event1 = new PactDslJsonBody()
                 .uuid("designId", uuid)
+                .uuid("commandId", TestConstants.COMMAND_ID)
                 .stringMatcher("revision", TestConstants.REVISION_REGEXP)
                 .stringValue("checksum", TestConstants.CHECKSUM_1)
                 .numberValue("level", 0)
@@ -183,6 +184,7 @@ public class PactConsumerTests {
 
         PactDslJsonBody event2 = new PactDslJsonBody()
                 .uuid("designId", uuid)
+                .uuid("commandId", TestConstants.COMMAND_ID)
                 .stringMatcher("revision", TestConstants.REVISION_REGEXP)
                 .stringValue("checksum", TestConstants.CHECKSUM_1)
                 .numberValue("level", 1)
@@ -202,6 +204,7 @@ public class PactConsumerTests {
 
         PactDslJsonBody event3 = new PactDslJsonBody()
                 .uuid("designId", uuid)
+                .uuid("commandId", TestConstants.COMMAND_ID)
                 .stringMatcher("revision", TestConstants.REVISION_REGEXP)
                 .stringValue("checksum", TestConstants.CHECKSUM_1)
                 .numberValue("level", 1)
@@ -221,6 +224,7 @@ public class PactConsumerTests {
 
         PactDslJsonBody event4 = new PactDslJsonBody()
                 .uuid("designId", uuid)
+                .uuid("commandId", TestConstants.COMMAND_ID)
                 .stringMatcher("revision", TestConstants.REVISION_REGEXP)
                 .stringValue("checksum", TestConstants.CHECKSUM_1)
                 .numberValue("level", 2)
@@ -240,6 +244,7 @@ public class PactConsumerTests {
 
         PactDslJsonBody event5 = new PactDslJsonBody()
                 .uuid("designId", uuid)
+                .uuid("commandId", TestConstants.COMMAND_ID)
                 .stringMatcher("revision", TestConstants.REVISION_REGEXP)
                 .stringValue("checksum", TestConstants.CHECKSUM_1)
                 .numberValue("level", 2)
@@ -312,7 +317,7 @@ public class PactConsumerTests {
     public void shouldUpdateTheDesignWhenReceivingATileRenderCompletedMessage(MessagePact pact) {
         assertThat(pact.getMessages()).hasSize(5);
 
-        final DesignInsertRequested designInsertRequested = new DesignInsertRequested(new UUID(0L, 4L), TestConstants.USER_ID, UUID.randomUUID(), TestConstants.JSON_1);
+        final DesignInsertRequested designInsertRequested = new DesignInsertRequested(new UUID(0L, 4L), TestConstants.COMMAND_ID, TestConstants.USER_ID, TestConstants.JSON_1);
 
         final OutputMessage designInsertRequestedMessage = new DesignInsertRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designInsertRequested);
 

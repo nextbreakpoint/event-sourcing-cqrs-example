@@ -53,6 +53,7 @@ public class TileRenderRequestedController implements Controller<InputMessage, V
     private TileRenderCompleted createEvent(TileRenderRequested event, String status) {
         return TileRenderCompleted.builder()
                 .withDesignId(event.getDesignId())
+                .withCommandId(event.getCommandId())
                 .withRevision(event.getRevision())
                 .withChecksum(event.getChecksum())
                 .withLevel(event.getLevel())

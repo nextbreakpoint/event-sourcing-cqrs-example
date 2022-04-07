@@ -47,23 +47,25 @@ public class IntegrationTests {
         final UUID designId4 = UUID.randomUUID();
         final UUID designId5 = UUID.randomUUID();
 
-        final TileRenderRequested tileRenderRequested1 = new TileRenderRequested(designId1, TestConstants.REVISION_0, Checksum.of(TestConstants.JSON_1), TestConstants.JSON_1, 0, 0, 0);
+        final UUID commandId = UUID.randomUUID();
+
+        final TileRenderRequested tileRenderRequested1 = new TileRenderRequested(designId1, commandId, TestConstants.REVISION_0, Checksum.of(TestConstants.JSON_1), TestConstants.JSON_1, 0, 0, 0);
 
         final OutputMessage tileRenderRequestedMessage1 = new TileRenderRequestedOutputMapper(TestConstants.MESSAGE_SOURCE, TestUtils::createRenderKey).transform(tileRenderRequested1);
 
-        final TileRenderRequested tileRenderRequested2 = new TileRenderRequested(designId2, TestConstants.REVISION_1, Checksum.of(TestConstants.JSON_2), TestConstants.JSON_2, 4, 1, 2);
+        final TileRenderRequested tileRenderRequested2 = new TileRenderRequested(designId2, commandId, TestConstants.REVISION_1, Checksum.of(TestConstants.JSON_2), TestConstants.JSON_2, 4, 1, 2);
 
         final OutputMessage tileRenderRequestedMessage2 = new TileRenderRequestedOutputMapper(TestConstants.MESSAGE_SOURCE, TestUtils::createRenderKey).transform(tileRenderRequested2);
 
-        final TileRenderRequested tileRenderRequested3 = new TileRenderRequested(designId3, TestConstants.REVISION_1, Checksum.of(TestConstants.JSON_2), TestConstants.JSON_2, 5, 1, 2);
+        final TileRenderRequested tileRenderRequested3 = new TileRenderRequested(designId3, commandId, TestConstants.REVISION_1, Checksum.of(TestConstants.JSON_2), TestConstants.JSON_2, 5, 1, 2);
 
         final OutputMessage tileRenderRequestedMessage3 = new TileRenderRequestedOutputMapper(TestConstants.MESSAGE_SOURCE, TestUtils::createRenderKey).transform(tileRenderRequested3);
 
-        final TileRenderRequested tileRenderRequested4 = new TileRenderRequested(designId4, TestConstants.REVISION_1, Checksum.of(TestConstants.JSON_2), TestConstants.JSON_2, 6, 1, 2);
+        final TileRenderRequested tileRenderRequested4 = new TileRenderRequested(designId4, commandId, TestConstants.REVISION_1, Checksum.of(TestConstants.JSON_2), TestConstants.JSON_2, 6, 1, 2);
 
         final OutputMessage tileRenderRequestedMessage4 = new TileRenderRequestedOutputMapper(TestConstants.MESSAGE_SOURCE, TestUtils::createRenderKey).transform(tileRenderRequested4);
 
-        final TileRenderRequested tileRenderRequested5 = new TileRenderRequested(designId5, TestConstants.REVISION_1, Checksum.of(TestConstants.JSON_2), TestConstants.JSON_2, 7, 1, 2);
+        final TileRenderRequested tileRenderRequested5 = new TileRenderRequested(designId5, commandId, TestConstants.REVISION_1, Checksum.of(TestConstants.JSON_2), TestConstants.JSON_2, 7, 1, 2);
 
         final OutputMessage tileRenderRequestedMessage5 = new TileRenderRequestedOutputMapper(TestConstants.MESSAGE_SOURCE, TestUtils::createRenderKey).transform(tileRenderRequested5);
 

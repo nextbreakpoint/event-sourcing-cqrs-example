@@ -32,17 +32,18 @@ public class TilesRenderedController implements Controller<InputMessage, Void> {
 
     @Override
     public Single<Void> onNext(InputMessage message) {
-        return Single.just(message).flatMap(this::onMessageReceived);
-    }
-
-    private Single<Void> onMessageReceived(InputMessage message) {
-        return aggregate.appendMessage(message)
-                .map(result -> inputMapper.transform(message))
+        return Single.just(message)
+                .flatMap(this::onMessageReceived)
+                .map(inputMapper::transform)
                 .flatMapObservable(event -> createEvents(event, message.getToken()))
                 .ignoreElements()
                 .toCompletable()
                 .toSingleDefault("")
                 .map(value -> null);
+    }
+
+    private Single<InputMessage> onMessageReceived(InputMessage message) {
+        return aggregate.appendMessage(message).map(result -> message);
     }
 
     private Observable<Void> createEvents(TilesRendered event, String revision) {
@@ -51,7 +52,7 @@ public class TilesRenderedController implements Controller<InputMessage, Void> {
     }
 
     private Observable<Void> createEvents(TilesRendered event, Design design, String revision) {
-        return design.getChecksum().equals(event.getChecksum()) ? generateEvents(event, design, revision) : Observable.empty();
+        return (design.getCommandId().equals(event.getCommandId()) && design.getChecksum().equals(event.getChecksum())) ? generateEvents(event, design, revision) : Observable.empty();
     }
 
     private Observable<Void> generateEvents(TilesRendered event, Design design, String revision) {
@@ -79,6 +80,7 @@ public class TilesRenderedController implements Controller<InputMessage, Void> {
     private TileRenderRequested createRenderEvent(Design design, Tile tile, String revision) {
         return TileRenderRequested.builder()
                 .withDesignId(design.getDesignId())
+                .withCommandId(design.getCommandId())
                 .withRevision(revision)
                 .withData(design.getData())
                 .withChecksum(design.getChecksum())
@@ -91,6 +93,7 @@ public class TilesRenderedController implements Controller<InputMessage, Void> {
     private DesignAggregateTilesUpdateRequested createAggregateEvent(Design design, String revision) {
         return DesignAggregateTilesUpdateRequested.builder()
                 .withDesignId(design.getDesignId())
+                .withCommandId(design.getCommandId())
                 .withRevision(revision)
                 .build();
     }

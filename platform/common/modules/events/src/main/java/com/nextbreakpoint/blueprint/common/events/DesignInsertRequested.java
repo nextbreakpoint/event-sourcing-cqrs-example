@@ -13,8 +13,8 @@ import java.util.UUID;
 @Data
 @JsonPropertyOrder({
         "designId",
-        "userId",
         "commandId",
+        "userId",
         "data"
 })
 @Builder(access = AccessLevel.PUBLIC, setterPrefix = "with")
@@ -22,20 +22,20 @@ public class DesignInsertRequested {
     public static final String TYPE = "design-insert-requested-v1";
 
     private final UUID designId;
-    private final UUID userId;
     private final UUID commandId;
+    private final UUID userId;
     private final String data;
 
     @JsonCreator
     public DesignInsertRequested(
             @JsonProperty("designId") UUID designId,
-            @JsonProperty("userId") UUID userId,
             @JsonProperty("commandId") UUID commandId,
+            @JsonProperty("userId") UUID userId,
             @JsonProperty("data") String data
     ) {
         this.designId = Objects.requireNonNull(designId);
-        this.userId = Objects.requireNonNull(userId);
         this.commandId = Objects.requireNonNull(commandId);
+        this.userId = Objects.requireNonNull(userId);
         this.data = Objects.requireNonNull(data);
     }
 }

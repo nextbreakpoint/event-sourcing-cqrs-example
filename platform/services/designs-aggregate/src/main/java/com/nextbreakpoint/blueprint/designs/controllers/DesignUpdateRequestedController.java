@@ -42,6 +42,7 @@ public class DesignUpdateRequestedController implements Controller<InputMessage,
     private DesignAggregateUpdateRequested createEvent(DesignUpdateRequested event, String revision) {
         return DesignAggregateUpdateRequested.builder()
                 .withDesignId(event.getDesignId())
+                .withCommandId(event.getCommandId())
                 .withRevision(revision)
                 .build();
     }

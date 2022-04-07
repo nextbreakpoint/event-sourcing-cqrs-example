@@ -46,6 +46,7 @@ public class DesignAggregateTilesUpdateRequestedController implements Controller
     private DesignAggregateTilesUpdateCompleted createEvent(Design design) {
         return DesignAggregateTilesUpdateCompleted.builder()
                 .withDesignId(design.getDesignId())
+                .withCommandId(design.getCommandId())
                 .withRevision(design.getRevision())
                 .build();
     }

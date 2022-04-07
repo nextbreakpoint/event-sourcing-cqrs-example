@@ -19,6 +19,7 @@ public interface TestConstants {
 
     String MESSAGE_SOURCE = "service-designs";
     String EVENTS_TOPIC_NAME = "test-designs-aggregate-events";
+    String CANCEL_TOPIC_NAME = "test-designs-aggregate-cancel";
     String BUFFER_TOPIC_NAME = "test-designs-aggregate-buffer";
     String RENDER_TOPIC_PREFIX = "test-designs-aggregate-render";
 
@@ -43,4 +44,6 @@ public interface TestConstants {
     String REVISION_2 = "0000000000000000-0000000000000002";
     String REVISION_3 = "0000000000000000-0000000000000003";
     String REVISION_4 = "0000000000000000-0000000000000004";
+
+    UUID COMMAND_ID = new UUID(1L, 100L);
 }

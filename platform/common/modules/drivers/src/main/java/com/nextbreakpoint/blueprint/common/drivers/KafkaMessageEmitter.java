@@ -1,6 +1,7 @@
 package com.nextbreakpoint.blueprint.common.drivers;
 
 import com.nextbreakpoint.blueprint.common.core.Json;
+import com.nextbreakpoint.blueprint.common.core.MessageEmitter;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.core.Payload;
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -26,7 +27,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Log4j2
-public class MessageEmitter implements com.nextbreakpoint.blueprint.common.core.MessageEmitter {
+public class KafkaMessageEmitter implements MessageEmitter {
     private final KafkaProducer<String, String> producer;
     private final String topicName;
     private final int retries;
@@ -35,7 +36,7 @@ public class MessageEmitter implements com.nextbreakpoint.blueprint.common.core.
 
     private final TextMapSetter<Map<String, String>> setter = Map::put;
 
-    public MessageEmitter(KafkaProducer<String, String> producer, String topicName, int retries) {
+    public KafkaMessageEmitter(KafkaProducer<String, String> producer, String topicName, int retries) {
         this.producer = Objects.requireNonNull(producer);
         this.topicName = Objects.requireNonNull(topicName);
         this.retries = retries;

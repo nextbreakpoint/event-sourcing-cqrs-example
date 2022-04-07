@@ -1,7 +1,7 @@
 package com.nextbreakpoint.blueprint.common.drivers;
 
-import com.nextbreakpoint.blueprint.common.core.Controller;
 import com.nextbreakpoint.blueprint.common.core.Tombstone;
+import com.nextbreakpoint.blueprint.common.core.TombstoneEmitter;
 import lombok.extern.log4j.Log4j2;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -12,19 +12,24 @@ import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 @Log4j2
-public class TombstoneEmitter implements Controller<Tombstone, Void> {
+public class KafkaTombstoneEmitter implements TombstoneEmitter {
     private final KafkaProducer<String, String> producer;
     private final String topicName;
     private final int retries;
 
-    public TombstoneEmitter(KafkaProducer<String, String> producer, String topicName, int retries) {
+    public KafkaTombstoneEmitter(KafkaProducer<String, String> producer, String topicName, int retries) {
         this.producer = Objects.requireNonNull(producer);
         this.topicName = Objects.requireNonNull(topicName);
         this.retries = retries;
     }
 
     @Override
-    public Single<Void> onNext(Tombstone tombstone) {
+    public Single<Void> send(Tombstone tombstone) {
+        return send(tombstone, topicName);
+    }
+
+    @Override
+    public Single<Void> send(Tombstone tombstone, String topicName) {
         return Single.just(tombstone)
                 .doOnEach(notification -> log.debug("Sending tombstone to topic " + topicName + ": " + notification.getValue()))
                 .map(this::writeRecord)
@@ -43,5 +48,10 @@ public class TombstoneEmitter implements Controller<Tombstone, Void> {
 
     private ProducerRecord<String, String> createRecord(Tombstone tombstone) {
         return new ProducerRecord<>(topicName, tombstone.getKey(), null);
+    }
+
+    @Override
+    public String getTopicName() {
+        return topicName;
     }
 }

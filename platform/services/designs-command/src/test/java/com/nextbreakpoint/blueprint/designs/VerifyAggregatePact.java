@@ -13,7 +13,6 @@ import au.com.dius.pact.provider.junitsupport.loader.PactBroker;
 import com.nextbreakpoint.blueprint.common.core.Json;
 import com.nextbreakpoint.blueprint.common.core.KafkaRecord;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
-import com.nextbreakpoint.blueprint.common.core.TimeUUID;
 import com.nextbreakpoint.blueprint.common.events.DesignDeleteRequested;
 import com.nextbreakpoint.blueprint.common.events.DesignInsertRequested;
 import com.nextbreakpoint.blueprint.common.events.DesignUpdateRequested;
@@ -87,7 +86,7 @@ public class VerifyAggregatePact {
     }
 
     private String produceDesignInsertRequested(UUID designId, String data) {
-        final DesignInsertRequested designInsertRequested = new DesignInsertRequested(designId, TestConstants.USER_ID, TimeUUID.next(), data);
+        final DesignInsertRequested designInsertRequested = new DesignInsertRequested(designId, UUID.randomUUID(), TestConstants.USER_ID, data);
 
         final OutputMessage designInsertRequestedMessage = new DesignInsertRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designInsertRequested);
 
@@ -95,7 +94,7 @@ public class VerifyAggregatePact {
     }
 
     private String produceDesignUpdateRequested(UUID designId, String data) {
-        final DesignUpdateRequested designUpdateRequested = new DesignUpdateRequested(designId, TestConstants.USER_ID, TimeUUID.next(), data, false);
+        final DesignUpdateRequested designUpdateRequested = new DesignUpdateRequested(designId, UUID.randomUUID(), TestConstants.USER_ID, data, false);
 
         final OutputMessage designUpdateRequestedMessage = new DesignUpdateRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designUpdateRequested);
 
@@ -103,7 +102,7 @@ public class VerifyAggregatePact {
     }
 
     private String produceDesignDeleteRequested(UUID designId) {
-        final DesignDeleteRequested designDeleteRequested = new DesignDeleteRequested(designId, TestConstants.USER_ID, TimeUUID.next());
+        final DesignDeleteRequested designDeleteRequested = new DesignDeleteRequested(designId, UUID.randomUUID(), TestConstants.USER_ID);
 
         final OutputMessage designDeleteRequestedMessage = new DesignDeleteRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designDeleteRequested);
 

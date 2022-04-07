@@ -201,6 +201,7 @@ public class Verticle extends AbstractVerticle {
 
             final KafkaConsumer<String, String> healthKafkaConsumer = KafkaClientFactory.createConsumer(consumerConfig.toBuilder().withGroupId(groupId + "-health").build());
             final KafkaConsumer<String, String> eventsKafkaConsumer = KafkaClientFactory.createConsumer(consumerConfig.toBuilder().withGroupId(groupId + "-events").build());
+            final KafkaConsumer<String, String> cancelKafkaConsumer = KafkaClientFactory.createConsumer(consumerConfig.toBuilder().withGroupId(groupId + "-cancel").build());
             final KafkaConsumer<String, String> bufferKafkaConsumer = KafkaClientFactory.createConsumer(consumerConfig.toBuilder().withGroupId(groupId + "-buffer").build());
             final KafkaConsumer<String, String> renderKafkaConsumer0 = KafkaClientFactory.createConsumer(consumerConfig.toBuilder().withGroupId(groupId + "-render-completed-0").build());
             final KafkaConsumer<String, String> renderKafkaConsumer1 = KafkaClientFactory.createConsumer(consumerConfig.toBuilder().withGroupId(groupId + "-render-completed-1").build());
@@ -226,6 +227,8 @@ public class Verticle extends AbstractVerticle {
 
             final Map<String, RxSingleHandler<InputMessage, ?>> eventsMessageHandlers = new HashMap<>();
 
+            final Map<String, RxSingleHandler<InputMessage, ?>> cancelMessageHandlers = new HashMap<>();
+
             final Map<String, RxSingleHandler<InputMessage, ?>> renderMessageHandlers = new HashMap<>();
 
             final Map<String, RxSingleHandler<List<InputMessage>, ?>> bufferMessageHandlers = new HashMap<>();
@@ -245,7 +248,6 @@ public class Verticle extends AbstractVerticle {
 
             eventsMessageHandlers.put(DesignAggregateUpdateRequested.TYPE, createDesignAggregateUpdateRequestedHandler(store, eventsTopic, kafkaProducer, messageSource));
             eventsMessageHandlers.put(DesignAggregateUpdateCompleted.TYPE, createDesignAggregateUpdateCompletedHandler(store, eventsTopic, renderTopicPrefix, kafkaProducer, messageSource));
-            eventsMessageHandlers.put(DesignAggregateUpdateCancelled.TYPE, createDesignAggregateUpdateCancelledHandler(store, eventsTopic, kafkaProducer, messageSource));
 
             eventsMessageHandlers.put(DesignAggregateTilesUpdateRequested.TYPE, createDesignAggregateTilesUpdateRequestedHandler(store, eventsTopic, kafkaProducer, messageSource));
             eventsMessageHandlers.put(DesignAggregateTilesUpdateCompleted.TYPE, createDesignAggregateTilesUpdateCompletedHandler(store, eventsTopic, kafkaProducer, messageSource));
@@ -254,7 +256,7 @@ public class Verticle extends AbstractVerticle {
 
             bufferMessageHandlers.put(TileRenderCompleted.TYPE, createTileRenderCompletedHandler(store, eventsTopic, kafkaProducer, messageSource));
 
-            renderMessageHandlers.put(TileRenderCompleted.TYPE, createForwardTileRenderCompletedHandler(store, bufferTopic, kafkaProducer, messageSource));
+            renderMessageHandlers.put(TileRenderCompleted.TYPE, createForwardTileRenderCompletedHandler(bufferTopic, kafkaProducer, messageSource));
 
             eventsKafkaPolling = new KafkaPolling<>(eventsKafkaConsumer, eventsMessageHandlers, KafkaRecordsConsumer.Simple.create(eventsMessageHandlers), KafkaRecordsQueue.Simple.create(), -1, 20);
 

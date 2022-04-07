@@ -17,11 +17,11 @@ import java.util.UUID;
 @Data
 @JsonPropertyOrder({
         "designId",
-        "userId",
         "commandId",
-        "data",
-        "checksum",
+        "userId",
         "revision",
+        "checksum",
+        "data",
         "status",
         "published",
         "levels",
@@ -34,11 +34,11 @@ public class DesignDocumentUpdateRequested {
     public static final String TYPE = "design-document-update-requested-v1";
 
     private final UUID designId;
-    private final UUID userId;
     private final UUID commandId;
-    private final String data;
-    private final String checksum;
+    private final UUID userId;
     private final String revision;
+    private final String checksum;
+    private final String data;
     private final String status;
     private final boolean published;
     private final int levels;
@@ -49,11 +49,11 @@ public class DesignDocumentUpdateRequested {
     @JsonCreator
     public DesignDocumentUpdateRequested(
             @JsonProperty("designId") UUID designId,
-            @JsonProperty("userId") UUID userId,
             @JsonProperty("commandId") UUID commandId,
-            @JsonProperty("data") String data,
-            @JsonProperty("checksum") String checksum,
+            @JsonProperty("userId") UUID userId,
             @JsonProperty("revision") String revision,
+            @JsonProperty("checksum") String checksum,
+            @JsonProperty("data") String data,
             @JsonProperty("status") String status,
             @JsonProperty("published") boolean published,
             @JsonProperty("levels") int levels,
@@ -62,8 +62,8 @@ public class DesignDocumentUpdateRequested {
             @JsonProperty("updated") @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'") LocalDateTime updated
     ) {
         this.designId = Objects.requireNonNull(designId);
-        this.userId = Objects.requireNonNull(userId);
         this.commandId = Objects.requireNonNull(commandId);
+        this.userId = Objects.requireNonNull(userId);
         this.data = Objects.requireNonNull(data);
         this.checksum = Objects.requireNonNull(checksum);
         this.revision = Objects.requireNonNull(revision);

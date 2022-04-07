@@ -97,7 +97,7 @@ public class VerifyQueryPact {
 
         final List<Tiles> tiles = IntStream.range(0, 8).mapToObj(bitmap::toTiles).collect(Collectors.toList());
 
-        final DesignDocumentUpdateRequested designDocumentUpdateRequested = new DesignDocumentUpdateRequested(uuid, TestConstants.USER_ID, UUID.randomUUID(), data, checksum, TestConstants.REVISION_0, status, false, TestConstants.LEVELS, tiles, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")), LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
+        final DesignDocumentUpdateRequested designDocumentUpdateRequested = new DesignDocumentUpdateRequested(uuid, UUID.randomUUID(), TestConstants.USER_ID, TestConstants.REVISION_0, checksum, data, status, false, TestConstants.LEVELS, tiles, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")), LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
 
         final OutputMessage designDocumentUpdateRequestedMessage = new DesignDocumentUpdateRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designDocumentUpdateRequested);
 
@@ -105,7 +105,7 @@ public class VerifyQueryPact {
     }
 
     private String produceDesignDocumentDeleteRequested(UUID uuid) {
-        final DesignDocumentDeleteRequested designDocumentDeleteRequested = new DesignDocumentDeleteRequested(uuid, TestConstants.REVISION_0);
+        final DesignDocumentDeleteRequested designDocumentDeleteRequested = new DesignDocumentDeleteRequested(uuid, UUID.randomUUID(), TestConstants.REVISION_0);
 
         final OutputMessage designDocumentDeleteRequestedMessage = new DesignDocumentDeleteRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designDocumentDeleteRequested);
 

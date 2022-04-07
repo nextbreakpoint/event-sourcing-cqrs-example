@@ -1,7 +1,6 @@
 package com.nextbreakpoint.blueprint.designs;
 
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
-import com.nextbreakpoint.blueprint.common.core.TimeUUID;
 import com.nextbreakpoint.blueprint.common.events.DesignDeleteRequested;
 import com.nextbreakpoint.blueprint.common.events.DesignInsertRequested;
 import com.nextbreakpoint.blueprint.common.events.DesignUpdateRequested;
@@ -36,7 +35,7 @@ public class IntegrationTests {
     public void shouldUpdateTheDesignWhenReceivingADesignInsertRequestedMessage() {
         final UUID designId = UUID.randomUUID();
 
-        final DesignInsertRequested designInsertRequested = new DesignInsertRequested(designId, TestConstants.USER_ID, TimeUUID.next(), TestConstants.JSON_1);
+        final DesignInsertRequested designInsertRequested = new DesignInsertRequested(designId, UUID.randomUUID(), TestConstants.USER_ID, TestConstants.JSON_1);
 
         final OutputMessage designInsertRequestedMessage = new DesignInsertRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designInsertRequested);
 
@@ -48,11 +47,11 @@ public class IntegrationTests {
     public void shouldUpdateTheDesignWhenReceivingADesignUpdateRequestedMessage() {
         final UUID designId = UUID.randomUUID();
 
-        final DesignInsertRequested designInsertRequested = new DesignInsertRequested(designId, TestConstants.USER_ID, TimeUUID.next(), TestConstants.JSON_1);
+        final DesignInsertRequested designInsertRequested = new DesignInsertRequested(designId, UUID.randomUUID(), TestConstants.USER_ID, TestConstants.JSON_1);
 
         final OutputMessage designInsertRequestedMessage = new DesignInsertRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designInsertRequested);
 
-        final DesignUpdateRequested designUpdateRequested = new DesignUpdateRequested(designId, TestConstants.USER_ID, TimeUUID.next(), TestConstants.JSON_2, false);
+        final DesignUpdateRequested designUpdateRequested = new DesignUpdateRequested(designId, UUID.randomUUID(), TestConstants.USER_ID, TestConstants.JSON_2, false);
 
         final OutputMessage designUpdateRequestedMessage = new DesignUpdateRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designUpdateRequested);
 
@@ -64,11 +63,11 @@ public class IntegrationTests {
     public void shouldUpdateTheDesignWhenReceivingADesignDeleteRequestedMessage() {
         final UUID designId = UUID.randomUUID();
 
-        final DesignInsertRequested designInsertRequested = new DesignInsertRequested(designId, TestConstants.USER_ID, TimeUUID.next(), TestConstants.JSON_1);
+        final DesignInsertRequested designInsertRequested = new DesignInsertRequested(designId, UUID.randomUUID(), TestConstants.USER_ID, TestConstants.JSON_1);
 
         final OutputMessage designInsertRequestedMessage = new DesignInsertRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designInsertRequested);
 
-        final DesignDeleteRequested designDeleteRequested = new DesignDeleteRequested(designId, TestConstants.USER_ID, TimeUUID.next());
+        final DesignDeleteRequested designDeleteRequested = new DesignDeleteRequested(designId, UUID.randomUUID(), TestConstants.USER_ID);
 
         final OutputMessage designDeleteRequestedMessage = new DesignDeleteRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designDeleteRequested);
 
@@ -80,15 +79,17 @@ public class IntegrationTests {
     public void shouldUpdateTheDesignWhenReceivingATileRenderCompletedMessage() {
         final UUID designId = UUID.randomUUID();
 
-        final DesignInsertRequested designInsertRequested = new DesignInsertRequested(designId, TestConstants.USER_ID, TimeUUID.next(), TestConstants.JSON_1);
+        final UUID commandId = UUID.randomUUID();
+
+        final DesignInsertRequested designInsertRequested = new DesignInsertRequested(designId, commandId, TestConstants.USER_ID, TestConstants.JSON_1);
 
         final OutputMessage designInsertRequestedMessage = new DesignInsertRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designInsertRequested);
 
-        final TileRenderCompleted tileRenderCompleted1 = new TileRenderCompleted(designId, TestConstants.REVISION_0, TestConstants.CHECKSUM_1, 0, 0, 0, "FAILED");
-        final TileRenderCompleted tileRenderCompleted2 = new TileRenderCompleted(designId, TestConstants.REVISION_1, TestConstants.CHECKSUM_1, 1, 0, 0, "COMPLETED");
-        final TileRenderCompleted tileRenderCompleted3 = new TileRenderCompleted(designId, TestConstants.REVISION_2, TestConstants.CHECKSUM_1, 1, 1, 0, "COMPLETED");
-        final TileRenderCompleted tileRenderCompleted4 = new TileRenderCompleted(designId, TestConstants.REVISION_3, TestConstants.CHECKSUM_1, 2, 2, 1, "COMPLETED");
-        final TileRenderCompleted tileRenderCompleted5 = new TileRenderCompleted(designId, TestConstants.REVISION_4, TestConstants.CHECKSUM_1, 2, 3, 1, "FAILED");
+        final TileRenderCompleted tileRenderCompleted1 = new TileRenderCompleted(designId, commandId, TestConstants.REVISION_0, TestConstants.CHECKSUM_1, 0, 0, 0, "FAILED");
+        final TileRenderCompleted tileRenderCompleted2 = new TileRenderCompleted(designId, commandId, TestConstants.REVISION_1, TestConstants.CHECKSUM_1, 1, 0, 0, "COMPLETED");
+        final TileRenderCompleted tileRenderCompleted3 = new TileRenderCompleted(designId, commandId, TestConstants.REVISION_2, TestConstants.CHECKSUM_1, 1, 1, 0, "COMPLETED");
+        final TileRenderCompleted tileRenderCompleted4 = new TileRenderCompleted(designId, commandId, TestConstants.REVISION_3, TestConstants.CHECKSUM_1, 2, 2, 1, "COMPLETED");
+        final TileRenderCompleted tileRenderCompleted5 = new TileRenderCompleted(designId, commandId, TestConstants.REVISION_4, TestConstants.CHECKSUM_1, 2, 3, 1, "FAILED");
 
         final OutputMessage tileRenderCompletedMessage1 = new TileRenderCompletedOutputMapper(TestConstants.MESSAGE_SOURCE, TestUtils::createRenderKey).transform(tileRenderCompleted1);
         final OutputMessage tileRenderCompletedMessage2 = new TileRenderCompletedOutputMapper(TestConstants.MESSAGE_SOURCE, TestUtils::createRenderKey).transform(tileRenderCompleted2);

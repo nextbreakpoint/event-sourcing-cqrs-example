@@ -83,7 +83,7 @@ public class VerifyAggregatePact {
     }
 
     private String produceTileRenderCompleted(UUID uuid, int level, int row, int col, String checksum, String status) {
-        final TileRenderCompleted tileRenderCompleted = new TileRenderCompleted(uuid, TestConstants.REVISION_0, checksum, level, row, col, status);
+        final TileRenderCompleted tileRenderCompleted = new TileRenderCompleted(uuid, UUID.randomUUID(), TestConstants.REVISION_0, checksum, level, row, col, status);
 
         final OutputMessage tileRenderCompletedMessage = new TileRenderCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(tileRenderCompleted);
 

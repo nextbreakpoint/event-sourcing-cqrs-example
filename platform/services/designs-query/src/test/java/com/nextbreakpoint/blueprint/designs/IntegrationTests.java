@@ -85,10 +85,10 @@ public class IntegrationTests {
     final List<Tiles> tiles3 = TestUtils.getTiles(TestConstants.LEVELS, 100f);
     final List<Tiles> tiles4 = TestUtils.getTiles(TestConstants.LEVELS, 100f);
 
-    final DesignDocumentUpdateRequested designDocumentUpdateRequested1 = new DesignDocumentUpdateRequested(designId1, TestConstants.USER_ID, UUID.randomUUID(), TestConstants.JSON_1, TestConstants.CHECKSUM_1, TestConstants.REVISION_0, "CREATED", false, TestConstants.LEVELS, tiles1, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")), LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
-    final DesignDocumentUpdateRequested designDocumentUpdateRequested2 = new DesignDocumentUpdateRequested(designId1, TestConstants.USER_ID, UUID.randomUUID(), TestConstants.JSON_1, TestConstants.CHECKSUM_1, TestConstants.REVISION_1, "UPDATED", false, TestConstants.LEVELS, tiles2, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")), LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
-    final DesignDocumentUpdateRequested designDocumentUpdateRequested3 = new DesignDocumentUpdateRequested(designId1, TestConstants.USER_ID, UUID.randomUUID(), TestConstants.JSON_1, TestConstants.CHECKSUM_1, TestConstants.REVISION_2, "UPDATED", false, TestConstants.LEVELS, tiles3, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")), LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
-    final DesignDocumentUpdateRequested designDocumentUpdateRequested4 = new DesignDocumentUpdateRequested(designId2, TestConstants.USER_ID, UUID.randomUUID(), TestConstants.JSON_2, TestConstants.CHECKSUM_2, TestConstants.REVISION_0, "UPDATED", false, TestConstants.LEVELS, tiles4, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")), LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
+    final DesignDocumentUpdateRequested designDocumentUpdateRequested1 = new DesignDocumentUpdateRequested(designId1, UUID.randomUUID(), TestConstants.USER_ID, TestConstants.REVISION_0, TestConstants.CHECKSUM_1, TestConstants.JSON_1, "CREATED", false, TestConstants.LEVELS, tiles1, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")), LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
+    final DesignDocumentUpdateRequested designDocumentUpdateRequested2 = new DesignDocumentUpdateRequested(designId1, UUID.randomUUID(), TestConstants.USER_ID, TestConstants.REVISION_1, TestConstants.CHECKSUM_1, TestConstants.JSON_1, "UPDATED", false, TestConstants.LEVELS, tiles2, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")), LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
+    final DesignDocumentUpdateRequested designDocumentUpdateRequested3 = new DesignDocumentUpdateRequested(designId1, UUID.randomUUID(), TestConstants.USER_ID, TestConstants.REVISION_2, TestConstants.CHECKSUM_1, TestConstants.JSON_1, "UPDATED", false, TestConstants.LEVELS, tiles3, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")), LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
+    final DesignDocumentUpdateRequested designDocumentUpdateRequested4 = new DesignDocumentUpdateRequested(designId2, UUID.randomUUID(), TestConstants.USER_ID, TestConstants.REVISION_0, TestConstants.CHECKSUM_2, TestConstants.JSON_2, "UPDATED", false, TestConstants.LEVELS, tiles4, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")), LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
 
     final DesignDocumentUpdateRequestedOutputMapper outputMapper = new DesignDocumentUpdateRequestedOutputMapper(TestConstants.MESSAGE_SOURCE);
 
@@ -109,8 +109,8 @@ public class IntegrationTests {
 
     final List<Tiles> tiles = TestUtils.getTiles(TestConstants.LEVELS, 100.0f);
 
-    final DesignDocumentUpdateRequested designDocumentUpdateRequested = new DesignDocumentUpdateRequested(designId, TestConstants.USER_ID, UUID.randomUUID(), TestConstants.JSON_2, TestConstants.CHECKSUM_2, TestConstants.REVISION_0, "CREATED", false, TestConstants.LEVELS, tiles, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")), LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
-    final DesignDocumentDeleteRequested designDocumentDeleteRequested = new DesignDocumentDeleteRequested(designId, TestConstants.REVISION_0);
+    final DesignDocumentUpdateRequested designDocumentUpdateRequested = new DesignDocumentUpdateRequested(designId, UUID.randomUUID(), TestConstants.USER_ID, TestConstants.REVISION_0, TestConstants.CHECKSUM_2, TestConstants.JSON_2, "CREATED", false, TestConstants.LEVELS, tiles, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")), LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
+    final DesignDocumentDeleteRequested designDocumentDeleteRequested = new DesignDocumentDeleteRequested(designId, UUID.randomUUID(), TestConstants.REVISION_0);
 
     final DesignDocumentUpdateRequestedOutputMapper outputMapper1 = new DesignDocumentUpdateRequestedOutputMapper(TestConstants.MESSAGE_SOURCE);
     final DesignDocumentDeleteRequestedOutputMapper outputMapper2 = new DesignDocumentDeleteRequestedOutputMapper(TestConstants.MESSAGE_SOURCE);

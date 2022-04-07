@@ -2,7 +2,7 @@ package com.nextbreakpoint.blueprint.designs;
 
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.core.RxSingleHandler;
-import com.nextbreakpoint.blueprint.common.drivers.MessageEmitter;
+import com.nextbreakpoint.blueprint.common.drivers.KafkaMessageEmitter;
 import com.nextbreakpoint.blueprint.common.events.mappers.TileRenderCompletedOutputMapper;
 import com.nextbreakpoint.blueprint.common.events.mappers.TileRenderRequestedInputMapper;
 import com.nextbreakpoint.blueprint.common.vertx.*;
@@ -59,7 +59,7 @@ public class Factory {
                 .withController(new TileRenderRequestedController(
                         new TileRenderRequestedInputMapper(),
                         new TileRenderCompletedOutputMapper(messageSource, Render::createRenderKey),
-                        new MessageEmitter(producer, topic, 3),
+                        new KafkaMessageEmitter(producer, topic, 3),
                         executor,
                         new S3Driver(s3AsyncClient, bucket),
                         new TileRenderer()

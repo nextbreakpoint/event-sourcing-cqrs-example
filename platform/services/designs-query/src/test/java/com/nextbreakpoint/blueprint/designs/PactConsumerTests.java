@@ -399,6 +399,7 @@ public class PactConsumerTests {
 
         PactDslJsonBody event2 = new PactDslJsonBody()
                 .uuid("designId", uuid)
+                .stringMatcher("commandId", TestConstants.UUID6_REGEXP)
                 .stringMatcher("revision", TestConstants.REVISION_REGEXP);
 
         PactDslJsonBody payload2 = new PactDslJsonBody()

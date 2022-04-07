@@ -4,6 +4,7 @@ import com.nextbreakpoint.blueprint.common.core.*;
 import com.nextbreakpoint.blueprint.common.events.DesignAggregateUpdateCompleted;
 import com.nextbreakpoint.blueprint.common.events.DesignDocumentDeleteRequested;
 import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
+import com.nextbreakpoint.blueprint.designs.aggregate.DesignAggregate;
 import com.nextbreakpoint.blueprint.designs.common.Render;
 import rx.Observable;
 import rx.Single;
@@ -19,8 +20,10 @@ public class DesignAggregateUpdateCompletedController implements Controller<Inpu
     private final MessageMapper<DesignDocumentDeleteRequested, OutputMessage> deleteOutputMapper;
     private final MessageEmitter eventsEmitter;
     private final MessageEmitter renderEmitter;
+    private final DesignAggregate aggregate;
 
-    public DesignAggregateUpdateCompletedController(Mapper<InputMessage, DesignAggregateUpdateCompleted> inputMapper, MessageMapper<TileRenderRequested, OutputMessage> renderOutputMapper, MessageMapper<DesignDocumentDeleteRequested, OutputMessage> deleteOutputMapper, MessageEmitter eventsEmitter, MessageEmitter renderEmitter) {
+    public DesignAggregateUpdateCompletedController(DesignAggregate aggregate, Mapper<InputMessage, DesignAggregateUpdateCompleted> inputMapper, MessageMapper<TileRenderRequested, OutputMessage> renderOutputMapper, MessageMapper<DesignDocumentDeleteRequested, OutputMessage> deleteOutputMapper, MessageEmitter eventsEmitter, MessageEmitter renderEmitter) {
+        this.aggregate = Objects.requireNonNull(aggregate);
         this.inputMapper = Objects.requireNonNull(inputMapper);
         this.renderOutputMapper = Objects.requireNonNull(renderOutputMapper);
         this.deleteOutputMapper = Objects.requireNonNull(deleteOutputMapper);
@@ -58,6 +61,7 @@ public class DesignAggregateUpdateCompletedController implements Controller<Inpu
     private DesignDocumentDeleteRequested createDeleteEvent(DesignAggregateUpdateCompleted event) {
         return DesignDocumentDeleteRequested.builder()
                 .withDesignId(event.getDesignId())
+                .withCommandId(event.getCommandId())
                 .withRevision(event.getRevision())
                 .build();
     }
@@ -72,6 +76,7 @@ public class DesignAggregateUpdateCompletedController implements Controller<Inpu
     private TileRenderRequested createRenderEvent(DesignAggregateUpdateCompleted event, Tile tile) {
         return TileRenderRequested.builder()
                 .withDesignId(event.getDesignId())
+                .withCommandId(event.getCommandId())
                 .withRevision(event.getRevision())
                 .withChecksum(event.getChecksum())
                 .withData(event.getData())

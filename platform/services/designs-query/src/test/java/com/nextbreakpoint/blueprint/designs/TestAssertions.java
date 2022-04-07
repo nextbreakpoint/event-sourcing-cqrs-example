@@ -25,6 +25,7 @@ public class TestAssertions {
         assertThat(actualMessage.getValue().getType()).isEqualTo(TestConstants.DESIGN_DOCUMENT_UPDATE_REQUESTED);
         DesignDocumentUpdateRequested actualEvent = Json.decodeValue(actualMessage.getValue().getData(), DesignDocumentUpdateRequested.class);
         assertThat(actualEvent.getDesignId()).isEqualTo(designId);
+        assertThat(actualEvent.getCommandId()).isNotNull();
         assertThat(actualEvent.getRevision()).isNotNull();
         assertThat(actualEvent.getData()).isEqualTo(data);
         assertThat(actualEvent.getStatus()).isEqualTo(status);
@@ -46,6 +47,7 @@ public class TestAssertions {
         assertThat(actualMessage.getValue().getType()).isEqualTo(TestConstants.DESIGN_DOCUMENT_UPDATE_COMPLETED);
         DesignDocumentUpdateCompleted actualEvent = Json.decodeValue(actualMessage.getValue().getData(), DesignDocumentUpdateCompleted.class);
         assertThat(actualEvent.getDesignId()).isEqualTo(designId);
+        assertThat(actualEvent.getCommandId()).isNotNull();
         assertThat(actualEvent.getRevision()).isNotNull();
     }
 
@@ -59,6 +61,7 @@ public class TestAssertions {
         assertThat(actualMessage.getValue().getType()).isEqualTo(TestConstants.DESIGN_DOCUMENT_DELETE_REQUESTED);
         DesignDocumentDeleteRequested actualEvent = Json.decodeValue(actualMessage.getValue().getData(), DesignDocumentDeleteRequested.class);
         assertThat(actualEvent.getDesignId()).isEqualTo(designId);
+        assertThat(actualEvent.getCommandId()).isNotNull();
         assertThat(actualEvent.getRevision()).isNotNull();
     }
 
@@ -72,6 +75,7 @@ public class TestAssertions {
         assertThat(actualMessage.getValue().getType()).isEqualTo(TestConstants.DESIGN_DOCUMENT_DELETE_COMPLETED);
         DesignDocumentDeleteCompleted actualEvent = Json.decodeValue(actualMessage.getValue().getData(), DesignDocumentDeleteCompleted.class);
         assertThat(actualEvent.getDesignId()).isEqualTo(designId);
+        assertThat(actualEvent.getCommandId()).isNotNull();
         assertThat(actualEvent.getRevision()).isNotNull();
     }
 

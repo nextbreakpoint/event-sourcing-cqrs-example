@@ -40,6 +40,7 @@ public class TileRenderCompletedController implements Controller<List<InputMessa
     private Observable<TilesRendered> createEvents(Design design, List<InputMessage> messages) {
         return Observable.from(messages)
                 .map(inputMapper::transform)
+                .filter(event -> event.getCommandId().equals(design.getCommandId()))
                 .filter(event -> event.getChecksum().equals(design.getChecksum()))
                 .map(this::createTile)
                 .collect(ArrayList<Tile>::new, ArrayList::add)
@@ -57,6 +58,7 @@ public class TileRenderCompletedController implements Controller<List<InputMessa
     private TilesRendered createEvent(Design design, List<Tile> tiles) {
         return TilesRendered.builder()
                 .withDesignId(design.getDesignId())
+                .withCommandId(design.getCommandId())
                 .withRevision(design.getRevision())
                 .withChecksum(design.getChecksum())
                 .withData(design.getData())

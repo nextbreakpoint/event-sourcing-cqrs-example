@@ -2,57 +2,100 @@ package com.nextbreakpoint.blueprint.designs.controllers;
 
 import com.nextbreakpoint.blueprint.common.core.*;
 import com.nextbreakpoint.blueprint.common.events.TileRenderCompleted;
-import com.nextbreakpoint.blueprint.common.events.TilesRendered;
+import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
 import com.nextbreakpoint.blueprint.designs.aggregate.DesignAggregate;
+import com.nextbreakpoint.blueprint.designs.common.Render;
 import com.nextbreakpoint.blueprint.designs.model.Design;
+import lombok.extern.log4j.Log4j2;
 import rx.Observable;
 import rx.Single;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
-public class TileRenderCompletedController implements Controller<List<InputMessage>, Void> {
+@Log4j2
+public class TileRenderCompletedController implements Controller<InputMessage, Void> {
     private final Mapper<InputMessage, TileRenderCompleted> inputMapper;
-    private final MessageMapper<TilesRendered, OutputMessage> outputMapper;
-    private final MessageEmitter emitter;
+    private final MessageMapper<TileRenderCompleted, OutputMessage> bufferOutputMapper;
+    private final MessageMapper<TileRenderRequested, OutputMessage> renderOutputMapper;
+    private final MessageEmitter bufferEmitter;
+    private final MessageEmitter renderEmitter;
     private final DesignAggregate aggregate;
 
     public TileRenderCompletedController(
             DesignAggregate aggregate,
             Mapper<InputMessage, TileRenderCompleted> inputMapper,
-            MessageMapper<TilesRendered, OutputMessage> outputMapper,
-            MessageEmitter emitter
+            MessageMapper<TileRenderCompleted, OutputMessage> bufferOutputMapper,
+            MessageMapper<TileRenderRequested, OutputMessage> renderOutputMapper,
+            MessageEmitter bufferEmitter,
+            MessageEmitter renderEmitter
     ) {
         this.aggregate = Objects.requireNonNull(aggregate);
         this.inputMapper = Objects.requireNonNull(inputMapper);
-        this.outputMapper = Objects.requireNonNull(outputMapper);
-        this.emitter = Objects.requireNonNull(emitter);
+        this.bufferOutputMapper = Objects.requireNonNull(bufferOutputMapper);
+        this.renderOutputMapper = Objects.requireNonNull(renderOutputMapper);
+        this.bufferEmitter = Objects.requireNonNull(bufferEmitter);
+        this.renderEmitter = Objects.requireNonNull(renderEmitter);
     }
 
     @Override
-    public Single<Void> onNext(List<InputMessage> messages) {
-        return aggregate.findDesign(inputMapper.transform(messages.get(0)).getDesignId())
-                .flatMapObservable(result -> result.map(Observable::just).orElseGet(Observable::empty))
-                .flatMap(design -> sendEvents(design, messages))
+    public Single<Void> onNext(InputMessage message) {
+        return Single.just(message)
+                .map(inputMapper::transform)
+                .flatMapObservable(event -> onUpdateRequested(event, message.getToken()))
                 .ignoreElements()
                 .toCompletable()
                 .toSingleDefault("")
-                .map(result -> null);
+                .map(value -> null);
     }
 
-    private Observable<Void> sendEvents(Design design, List<InputMessage> messages) {
-        return Observable.from(messages)
-                .map(inputMapper::transform)
-                .filter(event -> event.getCommandId().equals(design.getCommandId()))
-                .map(this::createTile)
-                .collect(ArrayList<Tile>::new, ArrayList::add)
-                .map(tiles -> createEvent(design, tiles))
-                .map(outputMapper::transform)
-                .flatMapSingle(emitter::send);
+    private Observable<Void> onUpdateRequested(TileRenderCompleted event, String revision) {
+        return findDesign(event.getDesignId()).flatMap(design -> sendEvents(event, design, revision));
     }
 
-    private Tile createTile(TileRenderCompleted event) {
+    private Observable<Design> findDesign(UUID designId) {
+        return aggregate.findDesign(designId)
+                .flatMapObservable(result -> result.map(Observable::just).orElseGet(Observable::empty));
+    }
+
+    private Observable<? extends Void> sendEvents(TileRenderCompleted event, Design design, String revision) {
+        return sendTileCompletedEvent(event).concatWith(sendRenderEvents(event, design, revision));
+    }
+
+    private Observable<Void> sendTileCompletedEvent(TileRenderCompleted event) {
+        return Observable.just(event)
+                .map(bufferOutputMapper::transform)
+                .flatMapSingle(bufferEmitter::send);
+    }
+
+    private Observable<Void> sendRenderEvents(TileRenderCompleted event, Design design, String revision) {
+        return createRenderEvents(event, design, revision).flatMapSingle(this::sendRenderEvent);
+    }
+
+    private Single<Void> sendRenderEvent(TileRenderRequested event) {
+        return renderEmitter.send(renderOutputMapper.transform(event), Render.getTopicName(renderEmitter.getTopicName() + "-requested", event.getLevel()));
+    }
+
+    private Observable<TileRenderRequested> createRenderEvents(TileRenderCompleted event, Design design, String revision) {
+        return isLateEvent(event, design) ? Observable.empty() : generateRenderEvents(event, design, revision);
+    }
+
+    private boolean isLateEvent(TileRenderCompleted event, Design design) {
+        final boolean value = !event.getCommandId().equals(design.getCommandId());
+        if (value) {
+            log.debug("Discard late event " + event);
+        }
+        return value;
+    }
+
+    private Observable<TileRenderRequested> generateRenderEvents(TileRenderCompleted event, Design design, String revision) {
+        final TilesBitmap bitmap = TilesBitmap.of(design.getBitmap());
+
+        return Observable.from(Render.generateTiles(creteTile(event), design.getLevels(), bitmap))
+                .map(tile -> createRenderEvent(design, tile, revision));
+    }
+
+    private Tile creteTile(TileRenderCompleted event) {
         return Tile.builder()
                 .withLevel(event.getLevel())
                 .withRow(event.getRow())
@@ -60,14 +103,16 @@ public class TileRenderCompletedController implements Controller<List<InputMessa
                 .build();
     }
 
-    private TilesRendered createEvent(Design design, List<Tile> tiles) {
-        return TilesRendered.builder()
+    private TileRenderRequested createRenderEvent(Design design, Tile tile, String revision) {
+        return TileRenderRequested.builder()
                 .withDesignId(design.getDesignId())
                 .withCommandId(design.getCommandId())
-                .withRevision(design.getRevision())
-                .withChecksum(design.getChecksum())
+                .withRevision(revision)
                 .withData(design.getData())
-                .withTiles(tiles)
+                .withChecksum(design.getChecksum())
+                .withLevel(tile.getLevel())
+                .withRow(tile.getRow())
+                .withCol(tile.getCol())
                 .build();
     }
 }

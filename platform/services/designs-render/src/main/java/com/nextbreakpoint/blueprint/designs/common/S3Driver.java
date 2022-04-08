@@ -38,7 +38,7 @@ public class S3Driver {
     }
 
     private ResponseBytes<GetObjectResponse> getContent(String key) {
-        final Span objectSpan = tracer.spanBuilder("Get object " + key).startSpan();
+        final Span objectSpan = tracer.spanBuilder("Get object").startSpan();
 
         try (Scope scope = objectSpan.makeCurrent()) {
             final Span span = Span.current();
@@ -54,7 +54,7 @@ public class S3Driver {
     }
 
     private PutObjectResponse putContent(String key, byte[] data) {
-        final Span objectSpan = tracer.spanBuilder("Put object " + key).startSpan();
+        final Span objectSpan = tracer.spanBuilder("Put object").startSpan();
 
         try (Scope scope = objectSpan.makeCurrent()) {
             final Span span = Span.current();

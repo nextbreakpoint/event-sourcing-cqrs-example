@@ -16,7 +16,6 @@ public interface TestConstants {
 
     String MESSAGE_SOURCE = "service-designs";
     String EVENTS_TOPIC_NAME = "test-designs-aggregate-events";
-    String CANCEL_TOPIC_NAME = "test-designs-aggregate-cancel";
     String BUFFER_TOPIC_NAME = "test-designs-aggregate-buffer";
     String RENDER_TOPIC_PREFIX = "test-designs-aggregate-render";
 

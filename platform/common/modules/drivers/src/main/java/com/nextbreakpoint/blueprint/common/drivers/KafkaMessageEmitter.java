@@ -52,7 +52,7 @@ public class KafkaMessageEmitter implements MessageEmitter {
     @Override
     public Single<Void> send(OutputMessage message, String topicName) {
         return Single.just(message)
-                .doOnEach(notification -> log.debug("Sending message to topic " + topicName + ": " + notification.getValue()))
+                .doOnEach(notification -> log.trace("Sending message to topic " + topicName + ": " + notification.getValue()))
                 .map(outputMessage -> writeRecord(outputMessage, topicName))
                 .doOnError(err -> log.error("Error occurred while writing record. Retrying...", err))
                 .retry(retries)

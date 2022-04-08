@@ -4,14 +4,12 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.nextbreakpoint.blueprint.common.core.Tiles;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 
 import java.nio.ByteBuffer;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 

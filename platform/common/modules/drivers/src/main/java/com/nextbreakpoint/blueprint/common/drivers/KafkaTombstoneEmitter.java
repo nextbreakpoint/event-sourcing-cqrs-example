@@ -30,23 +30,22 @@ public class KafkaTombstoneEmitter implements TombstoneEmitter {
 
     @Override
     public Single<Void> send(Tombstone tombstone, String topicName) {
-        return Single.just(tombstone)
-                .doOnEach(notification -> log.debug("Sending tombstone to topic " + topicName + ": " + notification.getValue()))
+        return Single.just(createRecord(tombstone, topicName))
                 .map(this::writeRecord)
                 .doOnError(err -> log.error("Error occurred while writing record. Retrying...", err))
                 .retry(retries)
                 .map(result -> null);
     }
 
-    private RecordMetadata writeRecord(Tombstone tombstone) {
+    private RecordMetadata writeRecord(ProducerRecord<String, String> record) {
         try {
-            return producer.send(createRecord(tombstone)).get(2000, TimeUnit.SECONDS);
+            return producer.send(record).get(2000, TimeUnit.SECONDS);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    private ProducerRecord<String, String> createRecord(Tombstone tombstone) {
+    private ProducerRecord<String, String> createRecord(Tombstone tombstone, String topicName) {
         return new ProducerRecord<>(topicName, tombstone.getKey(), null);
     }
 

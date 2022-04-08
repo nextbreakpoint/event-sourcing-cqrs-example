@@ -18,10 +18,8 @@ import java.util.stream.Stream;
 public abstract class DesignUpdateController<T> implements Controller<InputMessage, Void> {
     private final Mapper<InputMessage, T> inputMapper;
     private final MessageMapper<DesignAggregateUpdated, OutputMessage> updateOutputMapper;
-    private final MessageMapper<TileRenderCancelled, OutputMessage> cancelOutputMapper;
     private final MessageMapper<TileRenderRequested, OutputMessage> renderOutputMapper;
     private final MessageEmitter updateEmitter;
-    private final MessageEmitter cancelEmitter;
     private final MessageEmitter renderEmitter;
     private final DesignAggregate aggregate;
     private final Function<T, UUID> extractor;
@@ -30,20 +28,16 @@ public abstract class DesignUpdateController<T> implements Controller<InputMessa
             DesignAggregate aggregate,
             Mapper<InputMessage, T> inputMapper,
             MessageMapper<DesignAggregateUpdated, OutputMessage> updateOutputMapper,
-            MessageMapper<TileRenderCancelled, OutputMessage> cancelOutputMapper,
             MessageMapper<TileRenderRequested, OutputMessage> renderOutputMapper,
             MessageEmitter updateEmitter,
-            MessageEmitter cancelEmitter,
             MessageEmitter renderEmitter,
             Function<T, UUID> extractor
     ) {
         this.aggregate = Objects.requireNonNull(aggregate);
         this.inputMapper = Objects.requireNonNull(inputMapper);
         this.updateOutputMapper = Objects.requireNonNull(updateOutputMapper);
-        this.cancelOutputMapper = Objects.requireNonNull(cancelOutputMapper);
         this.renderOutputMapper = Objects.requireNonNull(renderOutputMapper);
         this.updateEmitter = Objects.requireNonNull(updateEmitter);
-        this.cancelEmitter = Objects.requireNonNull(cancelEmitter);
         this.renderEmitter = Objects.requireNonNull(renderEmitter);
         this.extractor = Objects.requireNonNull(extractor);
     }
@@ -66,18 +60,6 @@ public abstract class DesignUpdateController<T> implements Controller<InputMessa
 
     private Observable<Void> onEventReceived(UUID designId, String revision) {
         return updateDesign(designId, revision).flatMap(this::sendEvents);
-//        return cancelDesign(designId).concatWith(updateDesign(designId, revision).flatMap(this::sendEvents));
-    }
-
-    private Observable<Void> cancelDesign(UUID designId) {
-        return aggregate.findDesign(designId)
-                .flatMapObservable(result -> result.map(this::cancelDesign).orElseGet(Observable::empty));
-    }
-
-    private Observable<Void> cancelDesign(Design design) {
-        return createCancelEvents(design)
-                .map(cancelOutputMapper::transform)
-                .flatMapSingle(cancelEmitter::send);
     }
 
     private Observable<Design> updateDesign(UUID designId, String revision) {
@@ -150,25 +132,6 @@ public abstract class DesignUpdateController<T> implements Controller<InputMessa
                 .build();
     }
 
-    private Observable<TileRenderCancelled> createCancelEvents(Design design) {
-        return generateTiles(0)
-                .concatWith(generateTiles(1))
-                .concatWith(generateTiles(2))
-                .map(tile -> createCancelEvent(design, tile));
-    }
-
-    private TileRenderCancelled createCancelEvent(Design design, Tile tile) {
-        return TileRenderCancelled.builder()
-                .withDesignId(design.getDesignId())
-                .withCommandId(design.getCommandId())
-                .withRevision(design.getRevision())
-                .withChecksum(design.getChecksum())
-                .withLevel(tile.getLevel())
-                .withRow(tile.getRow())
-                .withCol(tile.getCol())
-                .build();
-    }
-
     private Observable<Tile> generateTiles(int level) {
         return Observable.from(makeTiles(level).collect(Collectors.toList()));
     }
@@ -194,13 +157,11 @@ public abstract class DesignUpdateController<T> implements Controller<InputMessa
                 DesignAggregate aggregate,
                 Mapper<InputMessage, DesignInsertRequested> inputMapper,
                 MessageMapper<DesignAggregateUpdated, OutputMessage> updateOutputMapper,
-                MessageMapper<TileRenderCancelled, OutputMessage> cancelOutputMapper,
                 MessageMapper<TileRenderRequested, OutputMessage> renderOutputMapper,
                 MessageEmitter eventsEmitter,
-                MessageEmitter cancelEmitter,
                 MessageEmitter renderEmitter
         ) {
-            super(aggregate, inputMapper, updateOutputMapper, cancelOutputMapper, renderOutputMapper, eventsEmitter, cancelEmitter, renderEmitter, DesignInsertRequested::getDesignId);
+            super(aggregate, inputMapper, updateOutputMapper, renderOutputMapper, eventsEmitter, renderEmitter, DesignInsertRequested::getDesignId);
         }
     }
 
@@ -209,13 +170,11 @@ public abstract class DesignUpdateController<T> implements Controller<InputMessa
                 DesignAggregate aggregate,
                 Mapper<InputMessage, DesignUpdateRequested> inputMapper,
                 MessageMapper<DesignAggregateUpdated, OutputMessage> updateOutputMapper,
-                MessageMapper<TileRenderCancelled, OutputMessage> cancelOutputMapper,
                 MessageMapper<TileRenderRequested, OutputMessage> renderOutputMapper,
                 MessageEmitter eventsEmitter,
-                MessageEmitter cancelEmitter,
                 MessageEmitter renderEmitter
         ) {
-            super(aggregate, inputMapper, updateOutputMapper, cancelOutputMapper, renderOutputMapper, eventsEmitter, cancelEmitter, renderEmitter, DesignUpdateRequested::getDesignId);
+            super(aggregate, inputMapper, updateOutputMapper, renderOutputMapper, eventsEmitter, renderEmitter, DesignUpdateRequested::getDesignId);
         }
     }
 
@@ -224,13 +183,11 @@ public abstract class DesignUpdateController<T> implements Controller<InputMessa
                 DesignAggregate aggregate,
                 Mapper<InputMessage, DesignDeleteRequested> inputMapper,
                 MessageMapper<DesignAggregateUpdated, OutputMessage> updateOutputMapper,
-                MessageMapper<TileRenderCancelled, OutputMessage> cancelOutputMapper,
                 MessageMapper<TileRenderRequested, OutputMessage> renderOutputMapper,
                 MessageEmitter eventsEmitter,
-                MessageEmitter cancelEmitter,
                 MessageEmitter renderEmitter
         ) {
-            super(aggregate, inputMapper, updateOutputMapper, cancelOutputMapper, renderOutputMapper, eventsEmitter, cancelEmitter, renderEmitter, DesignDeleteRequested::getDesignId);
+            super(aggregate, inputMapper, updateOutputMapper, renderOutputMapper, eventsEmitter, renderEmitter, DesignDeleteRequested::getDesignId);
         }
     }
 }

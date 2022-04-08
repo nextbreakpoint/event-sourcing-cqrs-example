@@ -113,7 +113,7 @@ public class KafkaPolling<T> {
         records.forEach(record -> {
             try {
                 if (record.value() == null) {
-                    log.debug("Skipping tombstone record " + record.key() + " in partition (" + topicPartition + ")");
+                    log.trace("Skipping tombstone record " + record.key() + " in partition (" + topicPartition + ")");
 
                     queue.deleteRecord(new KafkaRecordsQueue.QueuedRecord(record, null));
 
@@ -143,7 +143,7 @@ public class KafkaPolling<T> {
 
     private void processRecords() {
         if (queue.size() > 0 && System.currentTimeMillis() - timestamp > latency) {
-            log.debug("Received " + queue.size() + " " + (queue.size() > 0 ? "messages" : "message"));
+            log.trace("Received " + queue.size() + " " + (queue.size() > 0 ? "messages" : "message"));
 
             partitionQueuedRecords(queue.getRecords()).forEach((topicPartition, records) -> {
                 try {

@@ -26,7 +26,8 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
-import static org.awaitility.Durations.*;
+import static org.awaitility.Durations.ONE_SECOND;
+import static org.awaitility.Durations.TEN_SECONDS;
 
 public class TestCases {
     private final TestScenario scenario = new TestScenario();

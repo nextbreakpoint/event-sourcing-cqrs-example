@@ -33,11 +33,11 @@ public class DesignAggregateUpdatedController implements Controller<InputMessage
     public Single<Void> onNext(InputMessage message) {
         return Single.just(message)
                 .map(inputMapper::transform)
-                .map(this::createEvent)
+                .map(this::onUpdateReceived)
                 .flatMap(emitter::send);
     }
 
-    private OutputMessage createEvent(DesignAggregateUpdated event) {
+    private OutputMessage onUpdateReceived(DesignAggregateUpdated event) {
         if ("DELETED".equalsIgnoreCase(event.getStatus())) {
             return deleteOutputMapper.transform(createDeleteEvent(event));
         } else {

@@ -17,6 +17,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalUnit;
 import java.util.List;
 import java.util.UUID;
 
@@ -69,8 +70,11 @@ public class VerifyFrontendPact {
     final String json1 = new JsonObject(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT1)).toString();
     final String json2 = new JsonObject(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT2)).toString();
 
-    final Design design1 = new Design(TestConstants.DESIGN_UUID_1, TestConstants.USER_ID, UUID.randomUUID(), json1, Checksum.of(json1), TestConstants.REVISION_0, "CREATED", false, TestConstants.LEVELS, TestUtils.getTiles(TestConstants.LEVELS, 0.0f), FORMATTER.format(Instant.now()), FORMATTER.format(Instant.now()));
-    final Design design2 = new Design(TestConstants.DESIGN_UUID_2, TestConstants.USER_ID, UUID.randomUUID(), json2, Checksum.of(json1), TestConstants.REVISION_1, "UPDATED", false, TestConstants.LEVELS, TestUtils.getTiles(TestConstants.LEVELS, 0.5f), FORMATTER.format(Instant.now()), FORMATTER.format(Instant.now()));
+    final Instant now = Instant.now();
+
+    final Design design1 = new Design(TestConstants.DESIGN_UUID_1, TestConstants.USER_ID, UUID.randomUUID(), json1, Checksum.of(json1), TestConstants.REVISION_0, "CREATED", false, TestConstants.LEVELS, TestUtils.getTiles(TestConstants.LEVELS, 0.0f), FORMATTER.format(now.minusSeconds(10)), FORMATTER.format(now));
+
+    final Design design2 = new Design(TestConstants.DESIGN_UUID_2, TestConstants.USER_ID, UUID.randomUUID(), json2, Checksum.of(json1), TestConstants.REVISION_1, "UPDATED", false, TestConstants.LEVELS, TestUtils.getTiles(TestConstants.LEVELS, 0.5f), FORMATTER.format(now.minusSeconds(5)), FORMATTER.format(now));
 
     List.of(design1, design2).forEach(testCases::insertDraftDesign);
     List.of(design1, design2).forEach(testCases::insertDesign);
@@ -80,7 +84,9 @@ public class VerifyFrontendPact {
   public void designExistsForUuid() {
     final String json = new JsonObject(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT1)).toString();
 
-    final Design design = new Design(TestConstants.DESIGN_UUID_1, TestConstants.USER_ID, UUID.randomUUID(), json, Checksum.of(json), TestConstants.REVISION_0, "CREATED", false, TestConstants.LEVELS, TestUtils.getTiles(TestConstants.LEVELS, 0.0f), FORMATTER.format(Instant.now()), FORMATTER.format(Instant.now()));
+    final Instant now = Instant.now();
+
+    final Design design = new Design(TestConstants.DESIGN_UUID_1, TestConstants.USER_ID, UUID.randomUUID(), json, Checksum.of(json), TestConstants.REVISION_0, "CREATED", false, TestConstants.LEVELS, TestUtils.getTiles(TestConstants.LEVELS, 0.0f), FORMATTER.format(now.minusSeconds(5)), FORMATTER.format(Instant.now()));
 
     List.of(design).forEach(testCases::insertDraftDesign);
     List.of(design).forEach(testCases::insertDesign);

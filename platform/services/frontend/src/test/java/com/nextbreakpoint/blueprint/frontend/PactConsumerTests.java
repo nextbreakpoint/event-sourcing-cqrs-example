@@ -80,7 +80,7 @@ public class PactConsumerTests {
                         new PactDslJsonBody()
                                 .array("designs")
                                     .object()
-                                        .stringValue("uuid", TestConstants.DESIGN_UUID_1.toString())
+                                        .stringValue("uuid", TestConstants.DESIGN_UUID_2.toString())
                                         .stringMatcher("checksum", ".+")
                                         .stringMatcher("revision", ".+")
                                         .stringMatcher("json", ".+")
@@ -107,7 +107,7 @@ public class PactConsumerTests {
                                             .closeArray()
                                         .closeObject()
                                     .object()
-                                        .stringValue("uuid", TestConstants.DESIGN_UUID_2.toString())
+                                        .stringValue("uuid", TestConstants.DESIGN_UUID_1.toString())
                                         .stringMatcher("checksum", ".+")
                                         .stringMatcher("revision", ".+")
                                         .stringMatcher("json", ".+")
@@ -436,7 +436,7 @@ public class PactConsumerTests {
                 .handleResponse(httpResponse -> {
                     assertThat(httpResponse.getStatusLine().getStatusCode()).isEqualTo(200);
                     final DocumentContext content = JsonPath.parse(httpResponse.getEntity().getContent());
-                    assertThat(content.read("$.designs[0].uuid").toString()).isEqualTo(TestConstants.DESIGN_UUID_1.toString());
+                    assertThat(content.read("$.designs[0].uuid").toString()).isEqualTo(TestConstants.DESIGN_UUID_2.toString());
                     assertThat(content.read("$.designs[0].checksum").toString()).isNotBlank();
                     assertThat(content.read("$.designs[0].revision").toString()).isNotBlank();
                     assertThat(content.read("$.designs[0].updated").toString()).isNotBlank();
@@ -445,7 +445,7 @@ public class PactConsumerTests {
                     assertThat((Integer) content.read("$.designs[0].levels")).isNotNull();
                     assertThat((Boolean) content.read("$.designs[0].published")).isNotNull();
                     assertThat((List) content.read("$.designs[0].tiles")).isNotEmpty();
-                    assertThat(content.read("$.designs[1].uuid").toString()).isEqualTo(TestConstants.DESIGN_UUID_2.toString());
+                    assertThat(content.read("$.designs[1].uuid").toString()).isEqualTo(TestConstants.DESIGN_UUID_1.toString());
                     assertThat(content.read("$.designs[1].checksum").toString()).isNotBlank();
                     assertThat(content.read("$.designs[1].revision").toString()).isNotBlank();
                     assertThat(content.read("$.designs[1].updated").toString()).isNotBlank();

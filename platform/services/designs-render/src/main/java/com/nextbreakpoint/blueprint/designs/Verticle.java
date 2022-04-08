@@ -228,10 +228,10 @@ public class Verticle extends AbstractVerticle {
             renderKafkaConsumer2.subscribe(Set.of(renderTopicPrefix + "-requested-2"));
             renderKafkaConsumer3.subscribe(Set.of(renderTopicPrefix + "-requested-3"));
 
-            renderKafkaPolling0 = new KafkaPolling<>(renderKafkaConsumer0, messageHandlers, KafkaRecordsConsumer.Simple.create(messageHandlers), KafkaRecordsQueue.Compacted.create(), -1, 50);
-            renderKafkaPolling1 = new KafkaPolling<>(renderKafkaConsumer1, messageHandlers, KafkaRecordsConsumer.Simple.create(messageHandlers), KafkaRecordsQueue.Compacted.create(), -1, 50);
-            renderKafkaPolling2 = new KafkaPolling<>(renderKafkaConsumer2, messageHandlers, KafkaRecordsConsumer.Simple.create(messageHandlers), KafkaRecordsQueue.Compacted.create(), -1, 50);
-            renderKafkaPolling3 = new KafkaPolling<>(renderKafkaConsumer3, messageHandlers, KafkaRecordsConsumer.Simple.create(messageHandlers), KafkaRecordsQueue.Compacted.create(), -1, 50);
+            renderKafkaPolling0 = new KafkaPolling<>(renderKafkaConsumer0, messageHandlers, KafkaRecordsConsumer.Simple.create(messageHandlers), KafkaRecordsQueue.Compacted.create(), -1, 10);
+            renderKafkaPolling1 = new KafkaPolling<>(renderKafkaConsumer1, messageHandlers, KafkaRecordsConsumer.Simple.create(messageHandlers), KafkaRecordsQueue.Compacted.create(), -1, 10);
+            renderKafkaPolling2 = new KafkaPolling<>(renderKafkaConsumer2, messageHandlers, KafkaRecordsConsumer.Simple.create(messageHandlers), KafkaRecordsQueue.Compacted.create(), -1, 10);
+            renderKafkaPolling3 = new KafkaPolling<>(renderKafkaConsumer3, messageHandlers, KafkaRecordsConsumer.Simple.create(messageHandlers), KafkaRecordsQueue.Compacted.create(), -1, 10);
 
             renderKafkaPolling0.startPolling("kafka-polling-topic-" + renderTopicPrefix + "-requested-0");
             renderKafkaPolling1.startPolling("kafka-polling-topic-" + renderTopicPrefix + "-requested-1");

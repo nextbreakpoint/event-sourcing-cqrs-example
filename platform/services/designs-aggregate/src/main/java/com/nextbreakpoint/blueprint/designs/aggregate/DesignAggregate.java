@@ -3,6 +3,7 @@ package com.nextbreakpoint.blueprint.designs.aggregate;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.designs.Store;
 import com.nextbreakpoint.blueprint.designs.model.Design;
+import com.nextbreakpoint.blueprint.designs.model.DesignSummary;
 import rx.Single;
 
 import java.util.List;
@@ -28,6 +29,10 @@ public class DesignAggregate {
 
     public Single<Optional<Design>> findDesign(UUID uuid) {
         return store.findDesign(uuid);
+    }
+
+    public Single<Optional<DesignSummary>> findDesignSummary(UUID uuid) {
+        return store.findDesignSummary(uuid);
     }
 
     public Single<Optional<Design>> projectDesign(UUID uuid, String revision) {

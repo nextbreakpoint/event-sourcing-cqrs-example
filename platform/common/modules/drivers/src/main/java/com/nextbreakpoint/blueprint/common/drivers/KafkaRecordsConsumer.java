@@ -55,10 +55,10 @@ public interface KafkaRecordsConsumer {
 
         @Override
         public void consumeRecords(TopicPartition topicPartition, List<KafkaRecordsQueue.QueuedRecord> records) {
-            records.forEach(this::consumeMessage);
+            records.forEach(record -> consumeMessage(topicPartition, record));
         }
 
-        private void consumeMessage(KafkaRecordsQueue.QueuedRecord record) {
+        private void consumeMessage(TopicPartition topicPartition, KafkaRecordsQueue.QueuedRecord record) {
             try {
                 final Payload payload = record.getPayload();
 
@@ -90,6 +90,8 @@ public interface KafkaRecordsConsumer {
                     if (handler == null) {
                         return;
                     }
+
+                    log.trace("Received message from topic " + topicPartition.topic() + ": " + message);
 
                     handler.handleSingle(message)
                             .subscribeOn(Schedulers.immediate())
@@ -146,6 +148,7 @@ public interface KafkaRecordsConsumer {
                         .values()
                         .forEach(groupedMessages -> {
                             Map<String, List<InputMessage>> messagesByType = groupedMessages.stream()
+                                    .peek(message -> log.trace("Received message from topic " + topicPartition.topic() + ": " + message))
                                     .collect(Collectors.groupingBy(message -> message.getValue().getType()));
 
                             messagesByType.keySet().forEach(type -> {

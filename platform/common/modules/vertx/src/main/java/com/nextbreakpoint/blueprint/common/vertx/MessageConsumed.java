@@ -9,6 +9,6 @@ import java.util.function.BiConsumer;
 public class MessageConsumed implements BiConsumer<InputMessage, Void> {
     @Override
     public void accept(InputMessage message, Void ignore) {
-        log.debug("Consumed 1 message");
+        log.trace("Consumed 1 message");
     }
 }

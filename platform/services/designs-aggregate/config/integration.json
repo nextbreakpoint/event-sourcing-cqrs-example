@@ -21,7 +21,6 @@
   "kafka_group_id": "designs-aggregate",
   "message_source": "service-designs",
   "events_topic": "${EVENTS_TOPIC}",
-  "cancel_topic": "${CANCEL_TOPIC}",
   "buffer_topic": "${BUFFER_TOPIC}",
   "render_topic_prefix": "${RENDER_TOPIC_PREFIX}"
 }

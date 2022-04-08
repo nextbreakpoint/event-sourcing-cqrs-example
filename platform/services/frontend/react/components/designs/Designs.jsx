@@ -96,7 +96,7 @@ let Designs = class Designs extends React.Component {
                 .reduce((previousValue, currentValue) => previousValue + currentValue, 0)
             let completed = levels.map(i => design.tiles[i].completed)
                 .reduce((previousValue, currentValue) => previousValue + currentValue, 0)
-            let percentage = Math.round((completed * 100.0) / total)
+            let percentage = Math.floor((completed * 100.0) / total)
             console.log("uuid = " + design.uuid + ", percentage = " + percentage)
             return percentage
         }

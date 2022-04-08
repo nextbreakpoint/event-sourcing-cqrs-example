@@ -22,7 +22,8 @@ import java.util.function.Supplier;
 @Log4j2
 public class DesignStateStrategy {
     public Optional<Design> applyEvents(Design state, List<InputMessage> messages) {
-        log.debug("Apply events: " + messages.size());
+        log.trace("Apply events: " + messages.size());
+
         return applyEvents(state != null ? () -> new Accumulator(state) : this::createState, messages);
     }
 
@@ -80,7 +81,7 @@ public class DesignStateStrategy {
 
                 final int levels = !checksum.equals(state.design.getChecksum()) ? 3 : (!state.design.isPublished() && event.getPublished()) ? 8 : state.design.getLevels();
 
-                final ByteBuffer bitmap = (!checksum.equals(state.design.getChecksum()) || (!state.design.isPublished() && event.getPublished())) ? TilesBitmap.empty().getBitmap() : state.design.getBitmap();
+                final ByteBuffer bitmap = !checksum.equals(state.design.getChecksum()) ? TilesBitmap.empty().getBitmap() : state.design.getBitmap();
 
                 state.design = Design.builder()
                         .withDesignId(event.getDesignId())
@@ -124,6 +125,8 @@ public class DesignStateStrategy {
 
                 if (state.design.getChecksum().equals(event.getChecksum())) {
                     event.getTiles().forEach(tile -> TilesBitmap.of(state.design.getBitmap()).putTile(tile.getLevel(), tile.getRow(), tile.getCol()));
+                } else {
+                    log.trace("Skipping event: " + event);
                 }
 
                 state.design = Design.builder()

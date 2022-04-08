@@ -1,10 +1,8 @@
 package com.nextbreakpoint.blueprint.designs;
 
-import com.nextbreakpoint.blueprint.common.core.ForwardController;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.core.RxSingleHandler;
 import com.nextbreakpoint.blueprint.common.drivers.KafkaMessageEmitter;
-import com.nextbreakpoint.blueprint.common.drivers.KafkaTombstoneEmitter;
 import com.nextbreakpoint.blueprint.common.events.mappers.*;
 import com.nextbreakpoint.blueprint.common.vertx.*;
 import com.nextbreakpoint.blueprint.designs.aggregate.DesignAggregate;
@@ -18,7 +16,7 @@ import java.util.List;
 public class Factory {
     private Factory() {}
 
-    public static RxSingleHandler<InputMessage, ?> createDesignInsertRequestedHandler(Store store, String eventsTopic, String cancelTopic, String renderTopic, KafkaProducer<String, String> producer, String messageSource) {
+    public static RxSingleHandler<InputMessage, ?> createDesignInsertRequestedHandler(Store store, String eventsTopic, String renderTopic, KafkaProducer<String, String> producer, String messageSource) {
         return TemplateHandler.<InputMessage, InputMessage, Void, Void>builder()
                 .withInputMapper(input -> input)
                 .withOutputMapper(output -> output)
@@ -26,10 +24,8 @@ public class Factory {
                     new DesignAggregate(store, new DesignStateStrategy()),
                     new DesignInsertRequestedInputMapper(),
                     new DesignAggregateUpdatedOutputMapper(messageSource),
-                    new TileRenderCancelledOutputMapper(messageSource, Render::createRenderKey),
                     new TileRenderRequestedOutputMapper(messageSource, Render::createRenderKey),
                     new KafkaMessageEmitter(producer, eventsTopic, 3),
-                    new KafkaMessageEmitter(producer, cancelTopic, 3),
                     new KafkaMessageEmitter(producer, renderTopic, 3)
                 ))
                 .onSuccess(new MessageConsumed())
@@ -37,7 +33,7 @@ public class Factory {
                 .build();
     }
 
-    public static RxSingleHandler<InputMessage, ?> createDesignUpdateRequestedHandler(Store store, String eventsTopic, String cancelTopic, String renderTopic, KafkaProducer<String, String> producer, String messageSource) {
+    public static RxSingleHandler<InputMessage, ?> createDesignUpdateRequestedHandler(Store store, String eventsTopic, String renderTopic, KafkaProducer<String, String> producer, String messageSource) {
         return TemplateHandler.<InputMessage, InputMessage, Void, Void>builder()
                 .withInputMapper(input -> input)
                 .withOutputMapper(output -> output)
@@ -45,10 +41,8 @@ public class Factory {
                     new DesignAggregate(store, new DesignStateStrategy()),
                     new DesignUpdateRequestedInputMapper(),
                     new DesignAggregateUpdatedOutputMapper(messageSource),
-                    new TileRenderCancelledOutputMapper(messageSource, Render::createRenderKey),
                     new TileRenderRequestedOutputMapper(messageSource, Render::createRenderKey),
                     new KafkaMessageEmitter(producer, eventsTopic, 3),
-                    new KafkaMessageEmitter(producer, cancelTopic, 3),
                     new KafkaMessageEmitter(producer, renderTopic, 3)
                 ))
                 .onSuccess(new MessageConsumed())
@@ -56,7 +50,7 @@ public class Factory {
                 .build();
     }
 
-    public static RxSingleHandler<InputMessage, ?> createDesignDeleteRequestedHandler(Store store, String eventsTopic, String cancelTopic, String renderTopic, KafkaProducer<String, String> producer, String messageSource) {
+    public static RxSingleHandler<InputMessage, ?> createDesignDeleteRequestedHandler(Store store, String eventsTopic, String renderTopic, KafkaProducer<String, String> producer, String messageSource) {
         return TemplateHandler.<InputMessage, InputMessage, Void, Void>builder()
                 .withInputMapper(input -> input)
                 .withOutputMapper(output -> output)
@@ -64,10 +58,8 @@ public class Factory {
                     new DesignAggregate(store, new DesignStateStrategy()),
                     new DesignDeleteRequestedInputMapper(),
                     new DesignAggregateUpdatedOutputMapper(messageSource),
-                    new TileRenderCancelledOutputMapper(messageSource, Render::createRenderKey),
                     new TileRenderRequestedOutputMapper(messageSource, Render::createRenderKey),
                     new KafkaMessageEmitter(producer, eventsTopic, 3),
-                    new KafkaMessageEmitter(producer, cancelTopic, 3),
                     new KafkaMessageEmitter(producer, renderTopic, 3)
                 ))
                 .onSuccess(new MessageConsumed())
@@ -90,11 +82,11 @@ public class Factory {
                 .build();
     }
 
-    public static RxSingleHandler<List<InputMessage>, ?> createTileRenderCompletedHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
+    public static RxSingleHandler<List<InputMessage>, ?> createBufferedTileRenderCompletedHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
         return TemplateHandler.<List<InputMessage>, List<InputMessage>, Void, Void>builder()
                 .withInputMapper(input -> input)
                 .withOutputMapper(output -> output)
-                .withController(new TileRenderCompletedController(
+                .withController(new BufferedTileRenderCompletedController(
                     new DesignAggregate(store, new DesignStateStrategy()),
                     new TileRenderCompletedInputMapper(),
                     new TilesRenderedOutputMapper(messageSource),
@@ -102,6 +94,23 @@ public class Factory {
                 ))
                 .onSuccess(new MessagesConsumed())
                 .onFailure(new MessagesFailed())
+                .build();
+    }
+
+    public static RxSingleHandler<InputMessage, ?> createTileRenderCompletedHandler(Store store, String bufferTopic, String renderTopic, KafkaProducer<String, String> producer, String messageSource) {
+        return TemplateHandler.<InputMessage, InputMessage, Void, Void>builder()
+                .withInputMapper(input -> input)
+                .withOutputMapper(output -> output)
+                .withController(new TileRenderCompletedController(
+                        new DesignAggregate(store, new DesignStateStrategy()),
+                        new TileRenderCompletedInputMapper(),
+                        new TileRenderCompletedOutputMapper(messageSource),
+                        new TileRenderRequestedOutputMapper(messageSource, Render::createRenderKey),
+                        new KafkaMessageEmitter(producer, bufferTopic, 3),
+                        new KafkaMessageEmitter(producer, renderTopic, 3)
+                ))
+                .onSuccess(new MessageConsumed())
+                .onFailure(new MessageFailed())
                 .build();
     }
 
@@ -113,38 +122,7 @@ public class Factory {
                         new DesignAggregate(store, new DesignStateStrategy()),
                         new TilesRenderedInputMapper(),
                         new DesignAggregateUpdatedOutputMapper(messageSource),
-                        new TileRenderRequestedOutputMapper(messageSource, Render::createRenderKey),
-                        new KafkaMessageEmitter(producer, eventsTopic, 3),
-                        new KafkaMessageEmitter(producer, renderTopic, 3)
-                ))
-                .onSuccess(new MessageConsumed())
-                .onFailure(new MessageFailed())
-                .build();
-    }
-
-    public static RxSingleHandler<InputMessage, ?> createTileRenderCancelledHandler(String cancelTopic, String renderTopic, KafkaProducer<String, String> producer, String messageSource) {
-        return TemplateHandler.<InputMessage, InputMessage, Void, Void>builder()
-                .withInputMapper(input -> input)
-                .withOutputMapper(output -> output)
-                .withController(new TileRenderCancelledController(
-                        new TileRenderCancelledInputMapper(),
-                        new TileRenderCancelledOutputMapper(messageSource),
-                        new KafkaMessageEmitter(producer, cancelTopic, 3),
-                        new KafkaTombstoneEmitter(producer, renderTopic, 3)
-                ))
-                .onSuccess(new MessageConsumed())
-                .onFailure(new MessageFailed())
-                .build();
-    }
-
-    public static RxSingleHandler<InputMessage, ?> createForwardTileRenderCompletedHandler(String topic, KafkaProducer<String, String> producer, String messageSource) {
-        return TemplateHandler.<InputMessage, InputMessage, Void, Void>builder()
-                .withInputMapper(input -> input)
-                .withOutputMapper(output -> output)
-                .withController(new ForwardController<>(
-                        new TileRenderCompletedInputMapper(),
-                        new TileRenderCompletedOutputMapper(messageSource),
-                        new KafkaMessageEmitter(producer, topic, 3)
+                        new KafkaMessageEmitter(producer, eventsTopic, 3)
                 ))
                 .onSuccess(new MessageConsumed())
                 .onFailure(new MessageFailed())

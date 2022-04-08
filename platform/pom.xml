@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.nextbreakpoint</groupId>
     <artifactId>com.nextbreakpoint.blueprint.bom</artifactId>
-    <version>1.0.0-wip2-d9ec463c-1649358484</version>
+    <version>1.0.0-wip2-0b76fefa-1649418646</version>
     <packaging>pom</packaging>
     <licenses>
         <license>
@@ -179,7 +179,7 @@
                         <include>**/*Test.java</include>
                     </includes>
                     <useSystemClassLoader>false</useSystemClassLoader>
-                    <argLine>--add-opens=com.nextbreakpoint.blueprint.common.core/com.nextbreakpoint.blueprint.common.core=ALL-UNNAMED</argLine>
+                    <argLine>--add-opens=com.nextbreakpoint.blueprint.common.core/com.nextbreakpoint.blueprint.common.core=ALL-UNNAMED --add-opens=com.nextbreakpoint.blueprint.designs.aggregate/com.nextbreakpoint.blueprint.designs.common=ALL-UNNAMED</argLine>
                 </configuration>
             </plugin>
             <plugin>

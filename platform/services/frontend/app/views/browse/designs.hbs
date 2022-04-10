@@ -1,8 +1,7 @@
 <body>
     <header><p><b>The Beauty of Chaos</b> | Fractals</p></header>
-    {{#each grid}}
     <div class="elements-grid">
-    {{#each .}}
+    {{#each grid}}
     <div class="elements-row">
     {{#each .}}
         <div id="{{design.uuid}}" class="element"><a href="{{design.location}}"><img src="{{imageUrl}}" alt="{{design.location}}"/></a></div>
@@ -10,7 +9,11 @@
     </div>
     {{/each}}
     </div>
-    {{/each}}
+    {{#if show}}
+    <div class="elements-more">
+        <a href="/browse/designs.html?from={{next}}&size={{size}}">Show more</a>
+    </div>
+    {{/if}}
     <footer>
         <p>Powered by <a href="https://nextbreakpoint.com">NextBreakpoint</a>{{#if admin}} | <a href="../admin/designs.html">Edit</a>{{/if}}{{#if login}} | <a href="{{config.api_url}}/v1/auth/signin/admin/designs.html">Login</a>{{/if}}</p>
     </footer>

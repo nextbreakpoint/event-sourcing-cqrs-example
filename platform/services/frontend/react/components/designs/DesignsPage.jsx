@@ -392,17 +392,3 @@ const mapDispatchToProps = dispatch => ({
 })
 
 export default withStyles(styles, { withTheme: true })(connect(mapStateToProps, mapDispatchToProps)(DesignsPage))
-
-{/*                 {this.props.account.role == 'admin' && ( */}
-{/*                     <div className={this.props.classes.fabcontainer}> */}
-{/*                         <Button variant="fab" className={this.props.classes.fab} color="primary" onClick={this.props.handleShowCreateDialog}> */}
-{/*                             <AddIcon /> */}
-{/*                         </Button> */}
-{/*                         <Button variant="fab" className={this.props.classes.fab} color="secondary" onClick={this.handleModify} disabled={this.props.selected.length != 1}> */}
-{/*                             <EditIcon /> */}
-{/*                         </Button> */}
-{/*                         <Button variant="fab" className={this.props.classes.fab} color="inherit" onClick={this.props.handleShowConfirmDelete} disabled={this.props.selected.length == 0}> */}
-{/*                             <DeleteIcon /> */}
-{/*                         </Button> */}
-{/*                     </div> */}
-{/*                 )} */}

@@ -60,8 +60,11 @@ router.get('/designs.html', function(req, res, next) {
 
     req.pause()
 
+    let from = req.query.from ? new Number(req.query.from) : 0
+    let size = req.query.size ? new Number(req.query.size) : 20
+
     loadAccount(config, req, (account) => {
-        axios.get(appConfig.server_api_url + '/v1/designs', config)
+        axios.get(appConfig.server_api_url + '/v1/designs?from=' + from + "&size=" + size, config)
             .then(function (response) {
                 req.resume()
                 if (response.status == 200) {
@@ -84,7 +87,10 @@ router.get('/designs.html', function(req, res, next) {
                         url: appConfig.client_web_url,
                         login: account.role == null,
                         admin: account.role === 'admin',
-                        grid: grid.make(designs)
+                        grid: grid.make(designs, from, size),
+                        next: (response.data.total > from + size) ? from + size : from,
+                        show: response.data.total > from + size,
+                        size: size
                     })
                 } else {
                     console.log("Can't load designs: status = " + content.status)
@@ -95,7 +101,10 @@ router.get('/designs.html', function(req, res, next) {
                         url: appConfig.client_web_url,
                         login: account.role == null,
                         admin: account.role === 'admin',
-                        grid: []
+                        grid: [],
+                        next: from,
+                        show: false,
+                        size: size
                     })
                 }
             })

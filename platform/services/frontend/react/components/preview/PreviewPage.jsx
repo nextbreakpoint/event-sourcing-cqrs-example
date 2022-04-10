@@ -65,41 +65,6 @@ let PreviewPage = class PreviewPage extends React.Component {
         design: {}
     }
 
-//     handleUpload = (e) => {
-//         let component = this
-//
-//         let formData = new FormData();
-//         formData.append('file', e.target.files[0]);
-//
-//         let config = {
-//             timeout: 30000,
-//             metadata: {'content-type': 'multipart/form-data'},
-//             withCredentials: true
-//         }
-//
-//         component.props.handleHideErrorMessage()
-//
-//         axios.post(component.props.config.api_url + '/v1/designs/upload', formData, config)
-//             .then(function (response) {
-//                 if (response.status == 200) {
-//                     if (response.data.errors.length == 0) {
-//                         let design = { manifest: response.data.manifest, metadata: response.data.metadata, script: response.data.script }
-//                         component.setState({design: design})
-//                         component.props.handleShowErrorMessage("The file has been uploaded")
-//                     } else {
-//                         component.props.handleShowErrorMessage("Can't upload the file")
-//                     }
-//                 } else {
-//                     console.log("Can't upload the file: status = " + response.status)
-//                     component.props.handleShowErrorMessage("Can't upload the file")
-//                 }
-//             })
-//             .catch(function (error) {
-//                 console.log("Can't upload the file: " + error)
-//                 component.props.handleShowErrorMessage("Can't upload the file")
-//             })
-//     }
-
     handleDownload = (e) => {
         console.log("download")
 
@@ -117,7 +82,6 @@ let PreviewPage = class PreviewPage extends React.Component {
 
         const design = { manifest: manifest, script: script, metadata: metadata }
 
-//         component.props.handleHideUpdateDialog()
         component.props.handleHideErrorMessage()
 
         axios.post(component.props.config.api_url + '/v1/designs/validate', design, config)
@@ -183,7 +147,6 @@ let PreviewPage = class PreviewPage extends React.Component {
 
         const design = { manifest: manifest, script: script, metadata: metadata, published: published }
 
-//         component.props.handleHideUpdateDialog()
         component.props.handleHideErrorMessage()
 
         axios.post(component.props.config.api_url + '/v1/designs/validate', design, config)
@@ -236,7 +199,6 @@ let PreviewPage = class PreviewPage extends React.Component {
 
         const design = { manifest: manifest, script: script, metadata: metadata, published: true }
 
-//         component.props.handleHideUpdateDialog()
         component.props.handleHideErrorMessage()
 
         axios.post(component.props.config.api_url + '/v1/designs/validate', design, config)
@@ -289,7 +251,6 @@ let PreviewPage = class PreviewPage extends React.Component {
 
         const design = { manifest: manifest, script: script, metadata: metadata, published: false }
 
-//         component.props.handleHideUpdateDialog()
         component.props.handleHideErrorMessage()
 
         axios.post(component.props.config.api_url + '/v1/designs/validate', design, config)
@@ -454,9 +415,6 @@ const themeStyles = theme => ({
   fab: {
     margin: theme.spacing.unit
   }
-//   uploadFile: {
-//     display: 'none'
-//   }
 })
 
 const mapStateToProps = state => ({
@@ -492,26 +450,3 @@ const mapDispatchToProps = dispatch => ({
 
 export default withStyles(themeStyles, { withTheme: true })(connect(mapStateToProps, mapDispatchToProps)(PreviewPage))
 
-{/*                 {this.props.account.role == 'admin' && ( */}
-{/*                     <div className={this.props.classes.fabcontainer}> */}
-{/*                         <Button variant="fab" className={this.props.classes.fab} color="primary" onClick={this.props.handleShowUpdateDialog}> */}
-{/*                             <EditIcon /> */}
-{/*                         </Button> */}
-{/*                     </div> */}
-{/*                 )} */}
-{/*                 {this.props.account.role == 'admin' && ( */}
-{/*                     <Dialog className={this.props.classes.dialog} open={this.props.show_update_design} onClose={this.props.handleHideUpdateDialog} scroll={"paper"} TransitionComponent={SlideTransition}> */}
-{/*                         <DialogTitle>Update Design</DialogTitle> */}
-{/*                         <DialogContent> */}
-{/*                             <DesignForm script={this.props.design.script} metadata={this.props.design.metadata} onScriptChanged={this.handleScriptChanged} onMetadataChanged={this.handleMetadataChanged}/> */}
-{/*                         </DialogContent> */}
-{/*                         <DialogActions> */}
-{/*                             <Button variant="outlined" color="primary" onClick={this.props.handleHideUpdateDialog}> */}
-{/*                               Cancel */}
-{/*                             </Button> */}
-{/*                             <Button variant="outlined" color="primary" onClick={this.handleUpdate} autoFocus> */}
-{/*                               Update */}
-{/*                             </Button> */}
-{/*                         </DialogActions> */}
-{/*                     </Dialog> */}
-{/*                 )} */}

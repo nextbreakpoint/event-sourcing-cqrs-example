@@ -13,7 +13,6 @@
 *.tf.backup
 *.tfstate
 *.tfstate.backup
-main.json
 terraform.tfstate*
 .terraform
 **/tfplan

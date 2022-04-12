@@ -16,7 +16,7 @@ Vagrant.configure(2) do |config|
 #       netmask: "255.255.255.0",
 #       auto_config: true
     s.vm.provision :shell,
-      path: "platform/pipeline/setup.sh",
+      path: "pipeline/setup.sh",
       privileged: false
     s.vm.provider "virtualbox" do |v|
       v.name = "blueprint"

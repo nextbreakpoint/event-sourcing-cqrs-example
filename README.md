@@ -80,19 +80,19 @@ Create Minio bucket:
 
     docker run -i --network platform_bridge -e MINIO_ROOT_USER=admin -e MINIO_ROOT_PASSWORD=password --entrypoint sh minio/mc:latest < scripts/minio-init.sh
 
-See Jaeger console:
+Open Jaeger console:
 
     open http://localhost:16686
 
-See Kibana console:
+Open Kibana console:
 
     open http://localhost:5601
 
-See Consul console:
+Open Consul console:
 
     open http://localhost:8500
 
-See Minio console:
+Open Minio console:
 
     open http://localhost:9091
 
@@ -116,7 +116,7 @@ Start services:
 
     docker compose -f docker-compose-services.yaml -p services up -d
 
-Open browser:
+Open application:
 
     open https://localhost:8080/browse/designs.html
 
@@ -302,11 +302,39 @@ Create Kibana index pattern:
 
     curl "http://$(minikube ip):5601/api/index_patterns/index_pattern" -H "kbn-xsrf: reporting" -H "Content-Type: application/json" -d @$(pwd)/scripts/index-pattern.json
 
-Open browser:
+Open application:
 
     open https://$(minikube ip)/browse/designs.html
 
 Login with your GitHub account associated with the admin email for getting admin access
+
+Open Jaeger console:
+
+    open http://$(minikube ip):16686
+
+Open Kibana console:
+
+    open http://$(minikube ip):5601
+
+Open Consul console:
+
+    open http://$(minikube ip):8500
+
+Open Prometheus console:
+
+    open http://$(minikube ip):9090
+
+Open Grafana console:
+
+    open http://$(minikube ip):3000
+
+Login with user 'admin' and password 'password'.
+
+Open Minio console:
+
+    open http://$(minikube ip):9091
+
+Login with user 'admin' and password 'password'.
 
 ## Troubleshooting
 

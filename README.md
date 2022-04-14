@@ -1,8 +1,13 @@
 # event-sourcing-cqrs-example
 
-TODO
+This project is an example of web application using event-driven services and distributed data stores. 
+The frontend is Node.js with Express, Handlebars, and React. The backend is Java with Vertx, Kafka, Cassandra, Elasticsearch, and Minio.
+The application runs on Kubernetes. Helm charts for deploying the entire stack on Minikube for testing the application are provided.
+The application can also run on Docker. Docker compose files for running and debugging the application are provided. 
 
-## Requirements
+## Preparation
+
+There are few certificates which are required to run the application. For the purpose of this example we use self-signed certificates. 
 
 Generate secrets:
 
@@ -52,7 +57,7 @@ Stop pipeline (when finished):
 
     docker compose -f docker-compose-pipeline.yaml -p pipeline down
 
-Update dependencies (if needed):
+Update dependencies (be careful when changing the dependencies versions):
 
     mvn versions:update-properties -Dcommon=true -Dservices=true -Dplatform=true
     mvn versions:commit
@@ -123,7 +128,7 @@ Stop platform (when finished):
 
     docker compose -f docker-compose-platform.yaml -p platform down
 
-## Build on Minikube
+## Prepare Minikube
 
 Setup Minikube:
 
@@ -135,45 +140,29 @@ Create alias (unless you already have kubectl installed):
 
 Create namespaces:
 
-    kubectl create ns pipeline
-    kubectl create ns platform
-    kubectl create ns services
-    kubectl create ns monitoring
+    ./scripts/kube-create-namespaces.sh
 
 Create volumes:
 
     kubectl apply -f scripts/volumes.yaml 
 
-Deploy Nexus:
+Install addons:
 
-    helm install integration-nexus helm/nexus -n pipeline --set replicas=1
+    minikube addons enable metrics-server
+    minikube addons enable dashboard
+    minikube addons enable registry
 
-Check Nexus:
+## Build on Minikube
 
-    kubectl -n pipeline logs -f --tail=-1 -l component=nexus
+Deploy Nexus and Pact Broker:
 
-Deploy Postgres:
+    ./scripts/helm-install-pipeline.sh
 
-    helm install integration-postgres helm/postgres -n pipeline --set replicas=1
+It might take quite a while before Nexus is ready.
 
-Check Postgres:
+Expose Nexus and Pact Broker:
 
-    kubectl -n pipeline logs -f --tail=-1 -l component=postgres
-
-Deploy Pact Broker:
-
-    helm install integration-pactbroker helm/pactbroker -n pipeline --set replicas=1
-
-Check Pact Broker:
-
-    kubectl -n pipeline logs -f --tail=-1 -l component=pactbroker
-
-Expose services:
-
-    kubectl -n pipeline expose service/nexus --name nexus-external --port 8081 --target-port 8081 --type LoadBalancer --external-ip $(minikube ip)
-    kubectl -n pipeline expose service/pactbroker --name pactbroker-external --port 9292 --target-port 9292 --type LoadBalancer --external-ip $(minikube ip)
-
-Wait until Nexus is ready. It might take quite a while
+    ./scripts/kube-expose-pipeline.sh
 
 Export variables:
 
@@ -184,7 +173,7 @@ Export variables:
     export NEXUS_USERNAME=admin
     export NEXUS_PASSWORD=$(kubectl -n pipeline exec $(kubectl -n pipeline get pod -l component=nexus -o json | jq -r '.items[0].metadata.name') -c nexus -- cat /opt/sonatype/sonatype-work/nexus3/admin.password)
 
-Create Maven repository (required only once):
+Create Maven repository:
 
     ./scripts/create-repository.sh --nexus-host=${NEXUS_HOST} --nexus-port=${NEXUS_PORT} --nexus-username=${NEXUS_USERNAME} --nexus-password=${NEXUS_PASSWORD}
 
@@ -196,59 +185,11 @@ Build services:
 
     ./scripts/build-services.sh --pactbroker-host=${PACTBROKER_HOST} --pactbroker-port=${PACTBROKER_PORT} --nexus-host=${NEXUS_HOST} --nexus-port=${NEXUS_PORT} --nexus-username=${NEXUS_USERNAME} --nexus-password=${NEXUS_PASSWORD} --docker-host=$(minikube ip) --skip-tests
 
-Upgrade Nexus (if needed):
-
-    helm upgrade --install integration-nexus helm/nexus -n pipeline --set replicas=1
-
-Upgrade Postgres (if needed):
-
-    helm upgrade --install integration-postgres helm/postgres -n pipeline --set replicas=1
-
-Upgrade Pact Broker (if needed):
-
-    helm upgrade --install integration-pactbroker helm/pactbroker -n pipeline --set replicas=1
-
-Uninstall Nexus (if needed):
-
-    helm uninstall integration-nexus -n pipeline 
-
-Uninstall Postgres (if needed):
-
-    helm uninstall integration-postgres -n pipeline
-
-Uninstall Pact Broker (if needed):
-
-    helm uninstall integration-pactbroker -n pipeline
-
 ## Run on Minikube
-
-Setup Minikube:
-
-    minikube addons enable metrics-server
-    minikube addons enable dashboard
-    minikube addons enable registry
 
 Deploy secrets:
 
-    kubectl -n platform create secret generic nginx --from-file server_cert.pem=secrets/nginx_server_cert.pem --from-file server_key.pem=secrets/nginx_server_key.pem
-    
-    kubectl -n services create secret generic keystore-server.jks --from-file=secrets/keystore_server.jks
-    kubectl -n services create secret generic keystore-client.jks --from-file=secrets/keystore_client.jks
-    kubectl -n services create secret generic truststore-server.jks --from-file=secrets/truststore_server.jks
-    kubectl -n services create secret generic truststore-client.jks --from-file=secrets/truststore_client.jks
-    kubectl -n services create secret generic keystore-auth.jceks --from-file=secrets/keystore_auth.jceks
-
-Deploy Fluent Bit:
-
-    helm repo add fluent https://fluent.github.io/helm-charts
-    helm repo update
-    helm upgrade --install fluent-bit fluent/fluent-bit -n monitoring -f scripts/fluentbit-values.yaml
-
-Deploy Prometheus operator:
-
-    helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-    helm repo update
-    helm install kube-prometheus-stack prometheus-community/kube-prometheus-stack -n monitoring -f scripts/prometheus-values.yaml
+    ./scripts/kube-create-secrets.sh
 
 Deploy Certificate Manager:
 
@@ -256,11 +197,23 @@ Deploy Certificate Manager:
     helm repo update
     helm install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --version v1.7.1 --set installCRDs=true
 
+Deploy Prometheus operator:
+
+    helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+    helm repo update
+    helm install kube-prometheus-stack prometheus-community/kube-prometheus-stack -n monitoring -f scripts/prometheus-values.yaml
+
 Deploy Jaeger operator:
 
     helm repo add jaegertracing https://jaegertracing.github.io/helm-charts
     helm repo update
     helm install jaeger-operator jaegertracing/jaeger-operator --namespace monitoring --set rbac.create=true
+
+Deploy Fluent Bit:
+
+    helm repo add fluent https://fluent.github.io/helm-charts
+    helm repo update
+    helm upgrade --install fluent-bit fluent/fluent-bit -n monitoring -f scripts/fluentbit-values.yaml
 
 Configure Docker:
 
@@ -270,110 +223,25 @@ Build Docker images:
 
     ./scripts/build-images.sh 
 
-Deploy Elasticsearch:
+Deploy monitoring:
 
-    helm install integration-elasticsearch helm/elasticsearch -n monitoring --set replicas=1,dataDirectory=/volumes/monitoring/elasticsearch-data
+    ./scripts/helm-install-monitoring.sh
 
-Check Elasticsearch:
+Expose monitoring:
 
-    kubectl -n monitoring logs -f --tail=-1 -l component=elasticsearch
+    ./scripts/kube-expose-monitoring.sh
 
-Deploy Kibana:
+Deploy platform:
 
-    helm install integration-kibana helm/kibana -n monitoring --set replicas=1,server.publicBaseUrl=http://$(minikube ip)::5601
+    ./scripts/helm-install-platform.sh
 
-Check Kibana:
+Expose platform:
 
-    kubectl -n monitoring logs -f --tail=-1 -l component=kibana
-
-Deploy Elasticsearch:
-
-    helm install integration-elasticsearch helm/elasticsearch -n platform --set replicas=1
-
-Check Elasticsearch:
-
-    kubectl -n platform logs -f --tail=-1 -l component=elasticsearch
-
-Deploy Cassandra:
-
-    helm install integration-cassandra helm/cassandra -n platform --set replicas=1
-
-Check Cassandra:
-
-    kubectl -n platform logs -f --tail=-1 -l component=cassandra
-
-Deploy Zookeeper:
-
-    helm install integration-zookeeper helm/zookeeper -n platform --set replicas=1
-
-Check Zookeeper:
-
-    kubectl -n platform logs -f --tail=-1 -l component=zookeeper
-
-Deploy Kafka:
-
-    helm install integration-kafka helm/kafka -n platform --set replicas=1,externalName=$(minikube ip):9093
-
-Check Kafka:
-
-    kubectl -n platform logs -f --tail=-1 -l component=kafka
-
-Deploy MySQL:
-
-    helm install integration-mysql helm/mysql -n platform --set replicas=1
-
-Check MySQL:
-
-    kubectl -n platform logs -f --tail=-1 -l component=mysql
-
-Deploy Consul:
-
-    helm install integration-consul helm/consul -n platform --set replicas=1,servicePort=8000,serviceName=$(minikube ip)
-
-Check Consul:
-
-    kubectl -n platform logs -f --tail=-1 -l component=consul
-
-Deploy Minio:
-
-    helm install integration-minio helm/minio -n platform --set replicas=1
-
-Check Minio:
-
-    kubectl -n platform logs -f --tail=-1 -l component=minio
-
-Deploy NGINX:
-
-    helm install integration-nginx helm/nginx -n platform --set replicas=1,hostname=$(minikube ip)
-
-Check NGINX:
-
-    kubectl -n platform logs -f --tail=-1 -l component=nginx
-
-Expose servers:
-
-    kubectl -n monitoring expose service/kube-prometheus-stack-grafana --name grafana-external --port 3000 --target-port 3000 --type LoadBalancer --external-ip $(minikube ip)
-    kubectl -n monitoring expose service/prometheus-operated --name prometheus-external --port 9090 --target-port 9090 --type LoadBalancer --external-ip $(minikube ip)
-    kubectl -n monitoring expose service/kibana --name=kibana-external --port=5601 --target-port=5601 --type=LoadBalancer --external-ip=$(minikube ip) 
-    kubectl -n monitoring expose service/jaeger-query --name=jaeger-query-external --port=16686 --target-port=16686 --type=LoadBalancer --external-ip=$(minikube ip)
-    kubectl -n platform expose service/consul --name=consul-external --port=8500 --target-port=8500 --type=LoadBalancer --external-ip=$(minikube ip)
-    kubectl -n platform expose service/minio --name minio-external --port 9001 --target-port 9001 --type LoadBalancer --external-ip $(minikube ip)
-    kubectl -n platform expose service/nginx --name nginx-external --port 443 --target-port 443 --type LoadBalancer --external-ip $(minikube ip)
+    ./scripts/kube-expose-platform.sh
 
 Create Kafka topics:
 
-    kubectl -n platform exec $(kubectl -n platform get pod -l component=kafka -o json | jq -r '.items[0].metadata.name') -- kafka-topics --bootstrap-server=localhost:9092 --create --topic events --config "retention.ms=604800000" --replication-factor=1 --partitions=16
-    kubectl -n platform exec $(kubectl -n platform get pod -l component=kafka -o json | jq -r '.items[0].metadata.name') -- kafka-topics --bootstrap-server=localhost:9092 --create --topic buffer --config "retention.ms=604800000" --replication-factor=1 --partitions=16
-
-    kubectl -n platform exec $(kubectl -n platform get pod -l component=kafka -o json | jq -r '.items[0].metadata.name') -- kafka-topics --bootstrap-server=localhost:9092 --create --topic render-requested-0 --config "cleanup.policy=compact" --config "delete.retention.ms=5000" --config "max.compaction.lag.ms=10000" --config "min.compaction.lag.ms=5000" --config "min.cleanable.dirty.ratio=0.1" --config "segment.ms=5000" --config "retention.ms=604800000" --replication-factor=1 --partitions=16
-    kubectl -n platform exec $(kubectl -n platform get pod -l component=kafka -o json | jq -r '.items[0].metadata.name') -- kafka-topics --bootstrap-server=localhost:9092 --create --topic render-requested-1 --config "cleanup.policy=compact" --config "delete.retention.ms=5000" --config "max.compaction.lag.ms=10000" --config "min.compaction.lag.ms=5000" --config "min.cleanable.dirty.ratio=0.1" --config "segment.ms=5000" --config "retention.ms=604800000" --replication-factor=1 --partitions=16
-    kubectl -n platform exec $(kubectl -n platform get pod -l component=kafka -o json | jq -r '.items[0].metadata.name') -- kafka-topics --bootstrap-server=localhost:9092 --create --topic render-requested-2 --config "cleanup.policy=compact" --config "delete.retention.ms=5000" --config "max.compaction.lag.ms=10000" --config "min.compaction.lag.ms=5000" --config "min.cleanable.dirty.ratio=0.1" --config "segment.ms=5000" --config "retention.ms=604800000" --replication-factor=1 --partitions=32
-    kubectl -n platform exec $(kubectl -n platform get pod -l component=kafka -o json | jq -r '.items[0].metadata.name') -- kafka-topics --bootstrap-server=localhost:9092 --create --topic render-requested-3 --config "cleanup.policy=compact" --config "delete.retention.ms=5000" --config "max.compaction.lag.ms=10000" --config "min.compaction.lag.ms=5000" --config "min.cleanable.dirty.ratio=0.1" --config "segment.ms=5000" --config "retention.ms=604800000" --replication-factor=1 --partitions=64
-
-    kubectl -n platform exec $(kubectl -n platform get pod -l component=kafka -o json | jq -r '.items[0].metadata.name') -- kafka-topics --bootstrap-server=localhost:9092 --create --topic render-completed-0 --config "cleanup.policy=compact" --config "delete.retention.ms=5000" --config "max.compaction.lag.ms=10000" --config "min.compaction.lag.ms=5000" --config "min.cleanable.dirty.ratio=0.1" --config "segment.ms=5000" --config "retention.ms=604800000" --replication-factor=1 --partitions=16
-    kubectl -n platform exec $(kubectl -n platform get pod -l component=kafka -o json | jq -r '.items[0].metadata.name') -- kafka-topics --bootstrap-server=localhost:9092 --create --topic render-completed-1 --config "cleanup.policy=compact" --config "delete.retention.ms=5000" --config "max.compaction.lag.ms=10000" --config "min.compaction.lag.ms=5000" --config "min.cleanable.dirty.ratio=0.1" --config "segment.ms=5000" --config "retention.ms=604800000" --replication-factor=1 --partitions=16
-    kubectl -n platform exec $(kubectl -n platform get pod -l component=kafka -o json | jq -r '.items[0].metadata.name') -- kafka-topics --bootstrap-server=localhost:9092 --create --topic render-completed-2 --config "cleanup.policy=compact" --config "delete.retention.ms=5000" --config "max.compaction.lag.ms=10000" --config "min.compaction.lag.ms=5000" --config "min.cleanable.dirty.ratio=0.1" --config "segment.ms=5000" --config "retention.ms=604800000" --replication-factor=1 --partitions=32
-    kubectl -n platform exec $(kubectl -n platform get pod -l component=kafka -o json | jq -r '.items[0].metadata.name') -- kafka-topics --bootstrap-server=localhost:9092 --create --topic render-completed-3 --config "cleanup.policy=compact" --config "delete.retention.ms=5000" --config "max.compaction.lag.ms=10000" --config "min.compaction.lag.ms=5000" --config "min.cleanable.dirty.ratio=0.1" --config "segment.ms=5000" --config "retention.ms=604800000" --replication-factor=1 --partitions=64
+    ./scripts/kube-create-topics.sh
 
 Create Cassandra tables:
 
@@ -394,22 +262,6 @@ Export GitHub secrets:
     export GITHUB_CLIENT_ID=your-client-id
     export GITHUB_CLIENT_SECRET=your-client-secret
 
-Create secrets for services:
-
-    kubectl -n services create secret generic authentication --from-file keystore_client.jks=secrets/keystore_client.jks --from-file truststore_client.jks=secrets/truststore_client.jks --from-file keystore_server.jks=secrets/keystore_server.jks --from-file keystore_auth.jceks=secrets/keystore_auth.jceks --from-literal KEYSTORE_SECRET=secret --from-literal GITHUB_ACCOUNT_EMAIL=$GITHUB_ACCOUNT_EMAIL --from-literal GITHUB_CLIENT_ID=$GITHUB_CLIENT_ID --from-literal GITHUB_CLIENT_SECRET=$GITHUB_CLIENT_SECRET
-
-    kubectl -n services create secret generic accounts --from-file keystore_server.jks=secrets/keystore_server.jks --from-file keystore_auth.jceks=secrets/keystore_auth.jceks --from-literal KEYSTORE_SECRET=secret --from-literal DATABASE_USERNAME=verticle --from-literal DATABASE_PASSWORD=password
-
-    kubectl -n services create secret generic designs-query --from-file keystore_server.jks=secrets/keystore_server.jks --from-file keystore_auth.jceks=secrets/keystore_auth.jceks --from-literal KEYSTORE_SECRET=secret --from-literal DATABASE_USERNAME=verticle --from-literal DATABASE_PASSWORD=password --from-literal AWS_ACCESS_KEY_ID=admin --from-literal AWS_SECRET_ACCESS_KEY=password
-    kubectl -n services create secret generic designs-command --from-file keystore_server.jks=secrets/keystore_server.jks --from-file keystore_auth.jceks=secrets/keystore_auth.jceks --from-literal KEYSTORE_SECRET=secret --from-literal DATABASE_USERNAME=verticle --from-literal DATABASE_PASSWORD=password
-    kubectl -n services create secret generic designs-aggregate --from-file keystore_server.jks=secrets/keystore_server.jks --from-file keystore_auth.jceks=secrets/keystore_auth.jceks --from-literal KEYSTORE_SECRET=secret --from-literal DATABASE_USERNAME=verticle --from-literal DATABASE_PASSWORD=password
-    kubectl -n services create secret generic designs-notify --from-file keystore_server.jks=secrets/keystore_server.jks --from-file keystore_auth.jceks=secrets/keystore_auth.jceks --from-literal KEYSTORE_SECRET=secret 
-    kubectl -n services create secret generic designs-render --from-file keystore_server.jks=secrets/keystore_server.jks --from-file keystore_auth.jceks=secrets/keystore_auth.jceks --from-literal KEYSTORE_SECRET=secret --from-literal AWS_ACCESS_KEY_ID=admin --from-literal AWS_SECRET_ACCESS_KEY=password
-
-    kubectl -n services create secret generic gateway --from-file keystore_client.jks=secrets/keystore_client.jks --from-file truststore_client.jks=secrets/truststore_client.jks --from-file keystore_server.jks=secrets/keystore_server.jks --from-file keystore_auth.jceks=secrets/keystore_auth.jceks --from-literal KEYSTORE_SECRET=secret
-
-    kubectl -n services create secret generic frontend --from-file ca_cert.pem=secrets/ca_cert.pem --from-file server_cert.pem=secrets/server_cert.pem --from-file server_key.pem=secrets/server_key.pem
-
 Export version:
 
     export VERSION=$(mvn -q help:evaluate -Dexpression=project.version -DforceStdout)
@@ -420,35 +272,11 @@ Export logging level:
 
 Deploy services:
 
-    helm install service-authentication services/authentication/helm -n services --set image.repository=integration/authentication,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip),clientWebUrl=https://$(minikube ip):443,clientAuthUrl=https://$(minikube ip):443,enableDebug=false,loggingLevel=${LOGGING_LEVEL}
-
-    helm install service-accounts services/accounts/helm -n services --set image.repository=integration/accounts,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip),enableDebug=false,loggingLevel=${LOGGING_LEVEL}
-
-    helm install service-designs-query services/designs-query/helm -n services --set image.repository=integration/designs-query,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip),enableDebug=false,loggingLevel=${LOGGING_LEVEL}
-    helm install service-designs-command services/designs-command/helm -n services --set image.repository=integration/designs-command,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip),enableDebug=false,loggingLevel=${LOGGING_LEVEL}
-    helm install service-designs-aggregate services/designs-aggregate/helm -n services --set image.repository=integration/designs-aggregate,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip),enableDebug=false,loggingLevel=${LOGGING_LEVEL}
-    helm install service-designs-notify services/designs-notify/helm -n services --set image.repository=integration/designs-notify,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip),enableDebug=false,loggingLevel=${LOGGING_LEVEL}
-    helm install service-designs-render services/designs-render/helm -n services --set image.repository=integration/designs-render,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip),enableDebug=false,loggingLevel=${LOGGING_LEVEL}
-
-    helm install service-gateway services/gateway/helm -n services --set image.repository=integration/gateway,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip),enableDebug=false,loggingLevel=${LOGGING_LEVEL}
-
-    helm install service-frontend services/frontend/helm -n services --set image.repository=integration/frontend,image.tag=${VERSION},replicas=1,clientWebUrl=https://$(minikube ip):443,clientApiUrl=https://$(minikube ip):443,enableDebug=false,loggingLevel=${LOGGING_LEVEL}
-
-Check services:
-
-    kubectl -n services logs -f --tail=-1 -l component=authentication
-    kubectl -n services logs -f --tail=-1 -l component=accounts
-    kubectl -n services logs -f --tail=-1 -l component=designs-query
-    kubectl -n services logs -f --tail=-1 -l component=designs-command
-    kubectl -n services logs -f --tail=-1 -l component=designs-aggregate
-    kubectl -n services logs -f --tail=-1 -l component=designs-notify
-    kubectl -n services logs -f --tail=-1 -l component=designs-render
-    kubectl -n services logs -f --tail=-1 -l component=gateway
-    kubectl -n services logs -f --tail=-1 -l component=frontend
+    ./scripts/helm-install-services.sh
 
 Expose services:
 
-    kubectl -n services expose service/designs-notify --name designs-notify-external --port 8000 --target-port 8080 --type LoadBalancer --external-ip $(minikube ip)
+    ./scripts/kube-expose-services.sh
 
 Create monitoring resources:
 
@@ -480,122 +308,53 @@ Open browser:
 
 Login with your GitHub account associated with the admin email for getting admin access
 
-Upgrade services (if needed):
+## Troubleshooting
 
-    helm upgrade --install service-authentication services/authentication/helm -n services --set image.repository=integration/authentication,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip),clientWebUrl=https://$(minikube ip):443,clientAuthUrl=https://$(minikube ip):443,enableDebug=false,loggingLevel=${LOGGING_LEVEL}
+Tail services:
 
-    helm upgrade --install service-accounts services/accounts/helm -n services --set image.repository=integration/accounts,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip),enableDebug=false,loggingLevel=${LOGGING_LEVEL}
+    kubectl -n services logs -f --tail=-1 -l component=authentication
+    kubectl -n services logs -f --tail=-1 -l component=accounts
+    kubectl -n services logs -f --tail=-1 -l component=designs-query
+    kubectl -n services logs -f --tail=-1 -l component=designs-command
+    kubectl -n services logs -f --tail=-1 -l component=designs-aggregate
+    kubectl -n services logs -f --tail=-1 -l component=designs-notify
+    kubectl -n services logs -f --tail=-1 -l component=designs-render
+    kubectl -n services logs -f --tail=-1 -l component=gateway
+    kubectl -n services logs -f --tail=-1 -l component=frontend
 
-    helm upgrade --install service-designs-query services/designs-query/helm -n services --set image.repository=integration/designs-query,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip),enableDebug=false,loggingLevel=${LOGGING_LEVEL}
-    helm upgrade --install service-designs-command services/designs-command/helm -n services --set image.repository=integration/designs-command,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip),enableDebug=false,loggingLevel=${LOGGING_LEVEL}
-    helm upgrade --install service-designs-aggregate services/designs-aggregate/helm -n services --set image.repository=integration/designs-aggregate,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip),enableDebug=false,loggingLevel=${LOGGING_LEVEL}
-    helm upgrade --install service-designs-notify services/designs-notify/helm -n services --set image.repository=integration/designs-notify,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip),enableDebug=false,loggingLevel=${LOGGING_LEVEL}
-    helm upgrade --install service-designs-render services/designs-render/helm -n services --set image.repository=integration/designs-render,image.tag=${VERSION},replicas=4,clientDomain=$(minikube ip),enableDebug=false,loggingLevel=${LOGGING_LEVEL}
+Tail platform:
 
-    helm upgrade --install service-gateway services/gateway/helm -n services --set image.repository=integration/gateway,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip),enableDebug=false,loggingLevel=${LOGGING_LEVEL}
+    kubectl -n platform logs -f --tail=-1 -l component=kafka
+    kubectl -n platform logs -f --tail=-1 -l component=zookeeper
+    kubectl -n platform logs -f --tail=-1 -l component=elastichsearch
+    kubectl -n platform logs -f --tail=-1 -l component=cassandra
+    kubectl -n platform logs -f --tail=-1 -l component=minio
+    kubectl -n platform logs -f --tail=-1 -l component=consul
+    kubectl -n platform logs -f --tail=-1 -l component=mysql
+    kubectl -n platform logs -f --tail=-1 -l component=nginx
 
-    helm upgrade --install service-frontend services/frontend/helm -n services --set image.repository=integration/frontend,image.tag=${VERSION},replicas=1,clientWebUrl=https://$(minikube ip):443,clientApiUrl=https://$(minikube ip):443,enableDebug=false,loggingLevel=${LOGGING_LEVEL}
+## Cleanup
 
-Uninstall services (if needed):
+Uninstall services:
 
-    helm uninstall service-authentication -n services
+    ./scripts/helm-uninstall-services.sh
 
-    helm uninstall service-accounts -n services
+Uninstall platform:
 
-    helm uninstall service-designs-query -n services
-    helm uninstall service-designs-command -n services
-    helm uninstall service-designs-aggregate -n services
-    helm uninstall service-designs-notify -n services
-    helm uninstall service-designs-render -n services
+    ./scripts/helm-uninstall-platform.sh
 
-    helm uninstall service-gateway -n services
+Uninstall monitoring:
 
-    helm uninstall service-frontend -n services
+    ./scripts/helm-uninstall-monitoring.sh
 
-Upgrade Elasticsearch (if needed):
+Uninstall Nexus and Pact Broker:
 
-    helm upgrade --install integration-elasticsearch helm/elasticsearch -n monitoring --set replicas=1,volumeSize=20Gi
+    ./scripts/helm-uninstall-pipeline.sh
 
-Upgrade Kibana (if needed):
-
-    helm upgrade --install integration-kibana helm/kibana -n monitoring --set replicas=1,server.publicBaseUrl=http://$(minikube ip)::5601
-
-Upgrade Elasticsearch (if needed):
-
-    helm upgrade --install integration-elasticsearch helm/elasticsearch -n platform --set replicas=1
-
-Upgrade Cassandra (if needed):
-
-    helm upgrade --install integration-cassandra helm/cassandra -n platform --set replicas=1
-
-Upgrade Zookeeper (if needed):
-
-    helm upgrade --install integration-zookeeper helm/zookeeper -n platform --set replicas=1
-
-Upgrade Kafka (if needed):
-
-    helm upgrade --install integration-kafka helm/kafka -n platform --set replicas=1,externalName=$(minikube ip):9093
-
-Upgrade MySQL (if needed):
-
-    helm upgrade --install integration-mysql helm/mysql -n platform --set replicas=1
-
-Upgrade Consul (if needed):
-
-    helm upgrade --install integration-consul helm/consul -n platform --set replicas=1,servicePort=8000,serviceName=$(minikube ip)
-
-Upgrade Minio (if needed):
-
-    helm upgrade --install integration-minio helm/minio -n platform --set replicas=1
-
-Upgrade NGINX (if needed):
-
-    helm upgrade --install integration-nginx helm/nginx -n platform --set replicas=1,hostname=$(minikube ip)
-
-Uninstall Elasticsearch (if needed):
-
-    helm uninstall integration-elasticsearch -n monitoring 
-
-Uninstall Kibana (if needed):
-
-    helm uninstall integration-kibana -n monitoring
-
-Uninstall Elasticsearch (if needed):
-
-    helm uninstall integration-elasticsearch -n platform
-
-Uninstall Cassandra (if needed):
-
-    helm uninstall integration-cassandra -n platform
-
-Uninstall Zookeeper (if needed):
-
-    helm uninstall integration-zookeeper -n platform
-
-Uninstall Kafka (if needed):
-
-    helm uninstall integration-kafka -n platform
-
-Uninstall MySQL (if needed):
-
-    helm uninstall integration-mysql -n platform 
-
-Uninstall Consul (if needed):
-
-    helm uninstall integration-consul -n platform 
-
-Uninstall Minio (if needed):
-
-    helm uninstall integration-minio -n platform 
-
-Uninstall NGINX (if needed):
-
-    helm uninstall integration-nginx -n platform
-
-Stop Minikube (when finished):
+Stop Minikube:
 
     minikube stop
 
-Delete Minikube (when finished):
+Delete Minikube:
 
     minikube delete

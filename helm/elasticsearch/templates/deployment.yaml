@@ -13,7 +13,7 @@ metadata:
     release: {{ $root.Release.Name }}
     heritage: {{ $root.Release.Service }}
 spec:
-  replicas: {{ $root.Values.replicas | default 0 }}
+  replicas: {{ $root.Values.replicas | default 1 }}
   {{- if $root.Values.strategy }}
   strategy:
     {{ toYaml $root.Values.strategy | indent 4 | trim }}

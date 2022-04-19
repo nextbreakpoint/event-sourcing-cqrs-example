@@ -1,0 +1,25 @@
+# Default values.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+image:
+  repository: consul
+  tag: 1.11.4
+  pullPolicy: IfNotPresent
+  pullSecrets:
+
+annotations:
+
+strategy:
+  type: Recreate
+
+resources:
+  requests:
+    memory: "512Mi"
+    cpu: "0.1"
+  limits:
+    memory: "512Mi"
+    cpu: "1.0"
+
+serviceAccount: default
+

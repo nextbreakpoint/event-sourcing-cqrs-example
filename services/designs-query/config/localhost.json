@@ -1,0 +1,24 @@
+{
+  "host_port": "30120",
+
+  "server_keystore_path": "../../secrets/keystore_server.jks",
+  "server_keystore_secret": "${KEYSTORE_SECRET}",
+
+  "jwt_keystore_path": "../../secrets/keystore_auth.jceks",
+  "jwt_keystore_type": "jceks",
+  "jwt_keystore_secret": "${KEYSTORE_SECRET}",
+
+  "origin_pattern": "https://localhost(:[0-9]+)?",
+
+  "elasticsearch_host": "${ELASTICSEARCH_HOST}",
+  "elasticsearch_port": "9200",
+  "elasticsearch_index": "${ELASTICSEARCH_INDEX}",
+
+  "kafka_bootstrap_servers": "${KAFKA_HOST}:${KAFKA_PORT}",
+  "kafka_group_id": "designs-query",
+  "message_source": "service-designs",
+  "events_topic": "${EVENTS_TOPIC}",
+
+  "s3_endpoint": "http://${MINIO_HOST}:${MINIO_PORT}",
+  "s3_bucket": "${BUCKET_NAME}"
+}

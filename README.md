@@ -1,154 +1,475 @@
 # event-sourcing-cqrs-example
 
-This repository contains the source code and the deployment scripts of an application using Micro-Services Architecture, CQRS and Event Sourcing. The application requires the infrastructure documented in the repository [infrastructure-as-code](https://github.com/nextbreakpoint/infrastructure-as-code). The micro-services are written in Java using [Vert.x](https://vertx.io) framework and they depend on Apache Cassandra, Apache Kafka and Apache Zookeeper.
+This project is an example of web application using event-driven services and distributed data stores.
+The frontend is Node.js with Express, Handlebars, and React. The backend is Java with Vertx, Kafka, Cassandra, Elasticsearch, and Minio.
+The application runs on Kubernetes. Helm charts for deploying the entire stack on Minikube for testing the application are provided.
+The application can also run on Docker. Docker compose files for running and debugging the application are provided.
 
-    THIS PROJECT IS WORK IN PROGRESS
+## Preparation
 
-## Configure and generate secrets
+There are few certificates which are required to run the application. For the purpose of this example we use self-signed certificates.
 
-Create a file main.json in the config directory. Copy the content from the file template-main.json. The file should look like:
+Generate secrets:
 
-    {
-      "account_id": "your_account_id",
-      "environment": "prod",
-      "colour": "green",
-      "hosted_zone_name": "yourdomain.com",
-      "hosted_zone_id": "your_public_zone_id",
-      "secrets_bucket_name": "your_secrets_bucket_name",
+    ./scripts/secrets.sh
 
-      "shop_external_hostname": "prod-green-shop.yourdomain.com",
-      "shop_internal_hostname": "prod-green-swarm-worker-int.yourdomain.com",
-      "shop_sse_external_hostname_a": "prod-green-swarm-worker-ext-pub-a.yourdomain.com",
-      "shop_sse_external_hostname_b": "prod-green-swarm-worker-ext-pub-b.yourdomain.com",
-      "shop_sse_external_hostname_c": "prod-green-swarm-worker-ext-pub-c.yourdomain.com",
+Add trusted certificates (for Mac only):
 
-      "github_user_email": "your_github_user_email",
-      "github_client_id": "your_github_client_id",
-      "github_client_secret": "your_github_client_secret",
+    security -v add-trusted-cert -r trustRoot -k ~/Library/Keychains/login.keychain secrets/ca_cert.pem
 
-      "key_password": "your_key_password",
-      "keystore_password": "your_keystore_password",
-      "truststore_password": "your_truststore_password",
+## Build on Docker
 
-      "cassandra_username": "cassandra",
-      "cassandra_password": "cassandra",
+Start Nexus and Pact Broker:
 
-      "mysql_username": "shop",
-      "mysql_password": "changeme"
-    }
+    docker compose -f docker-compose-pipeline.yaml -p pipeline up -d
 
-Configure Terraform's backend with command:
+It might take quite a while before Nexus is ready:
 
-    ./docker_run.sh configure_terraform your_terraform_bucket
+    ./scripts/wait-for.sh --timeout=60 --command="docker logs --tail=100 $(docker ps | grep nexus | cut -d ' ' -f 1) | grep 'Started Sonatype Nexus'"
 
-Generate secrets with command:
+Export Nexus password (wait until Nexus has started):
 
-    ./docker_run.sh generate_secrets
+    export NEXUS_PASSWORD=$(docker exec $(docker container ls -f name=pipeline-nexus-1 -q) cat /opt/sonatype/sonatype-work/nexus3/admin.password)
 
-## Deploy the application
+Create Maven repository (required only once):
 
-Create ECR repositories with command:
+    ./scripts/create-repository.sh --nexus-host=localhost --nexus-port=8082 --nexus-username=admin --nexus-password=${NEXUS_PASSWORD}
 
-    ./docker_run.sh module_create ecr
+Build services:
 
-Build Docker images and push images to ECR with command:
+    ./scripts/build-services.sh --nexus-host=localhost --nexus-port=8082 --nexus-username=admin --nexus-password=${NEXUS_PASSWORD}
 
-    ./build_and_push_images.sh your_aws_account_id.dkr.ecr.eu-west-1.amazonaws.com your_access_id your_secret_access_key
+See results of Pact tests:
 
-Create configuration files with command:
+    open http://localhost:9292
 
-    ./docker_run.sh module_create config
+Build services without tests:
 
-Fetch common secrets from S3 bucket (see secrets in [infrastructure-as-code](https://github.com/nextbreakpoint/infrastructure-as-code)):
+    ./scripts/build-services.sh --nexus-host=localhost --nexus-port=8082 --nexus-username=admin --nexus-password=${NEXUS_PASSWORD} --skip-tests
 
-    ./docker_run.sh fetch_secrets
+Build services and run tests but skip Pact tests:
 
-Create target groups and Route53's records with command:
+    ./scripts/build-services.sh --nexus-host=localhost --nexus-port=8082 --nexus-username=admin --nexus-password=${NEXUS_PASSWORD} --skip-pact-tests --skip-pact-verify
 
-    ./docker_run.sh module_create targets
+Run tests without building:
 
-In order to create the targets groups you must create the Load Balancers as documented in [infrastructure-as-code](https://github.com/nextbreakpoint/infrastructure-as-code).
+    ./scripts/build-services.sh --nexus-host=localhost --nexus-port=8082 --nexus-username=admin --nexus-password=${NEXUS_PASSWORD} --skip-images --skip-deploy --version=$(./scripts/get-version.sh)
 
-Copy SSH key for accessing EC2 machines and change permissions:
+Only run Pact tests:
 
-    chmod 600 prod-green-deployer.pem
+    ./scripts/build-services.sh --nexus-host=localhost --nexus-port=8082 --nexus-username=admin --nexus-password=${NEXUS_PASSWORD} --skip-images --skip-deploy --version=$(./scripts/get-version.sh) --skip-integration-tests
 
-Create Cassandra keyspaces and users with command:
+Only run Pact verify:
 
-    ./cassandra_script.sh create
+    ./scripts/build-services.sh --nexus-host=localhost --nexus-port=8082 --nexus-username=admin --nexus-password=${NEXUS_PASSWORD} --skip-images --skip-deploy --version=$(./scripts/get-version.sh) --skip-integration-tests --skip-pact-tests
 
-Deploy NGINX server on Docker Swarm with command:
+Update dependencies (only if you know what you are doing):
 
-    ./swarm_run.sh deploy_stack shop-nginx
+    ./scripts/update-dependencies.sh
 
-Deploy MySQL server on Docker Swarm with command:
+## Run on Docker
 
-    ./swarm_run.sh deploy_stack shop-mysql
+Build Docker images:
 
-Configure MySQL server with command:
+    ./scripts/build-images.sh
 
-    ./swarm_run.sh setup_mysql
+Start platform:
 
-Configure Kafka topics with command:
+    docker compose -f docker-compose-platform.yaml -p platform up -d
 
-    ./kafka_run.sh create_kafka_topics
+Wait until Kafka is ready:
 
-Deploy services on Docker Swarm with commands:
+    ./scripts/wait-for.sh --timeout=60 --command="docker logs --tail=-1 $(docker ps | grep kafka | cut -d ' ' -f 1) | grep 'started (kafka.server.KafkaServer)'"
 
-    ./swarm_run.sh deploy_stack shop-authentication
-    ./swarm_run.sh deploy_stack shop-accounts
-    ./swarm_run.sh deploy_stack shop-designs
-    ./swarm_run.sh deploy_stack shop-weblets
-    ./swarm_run.sh deploy_stack shop-gateway
+Create Kafka topics:
 
-## Access the application
+    ./scripts/docker-create-topics.sh
 
-Open a browser at https://prod-green-shop.yourdomain.com:7443 or https://prod-green-shop.yourdomain.com when using the Load Balancer.
+Create Minio bucket:
 
-You will be redirected to GitHub for authentication. Use the email you configured in the main.json to login as admin.
+    docker run -i --network platform_bridge -e MINIO_ROOT_USER=admin -e MINIO_ROOT_PASSWORD=password --entrypoint sh minio/mc:latest < scripts/minio-create-bucket.sh
 
-## Destroy the application
+Export GitHub secrets (very important):
 
-Remove services with commands:
+    export GITHUB_ACCOUNT_EMAIL=your-account-id
+    export GITHUB_CLIENT_ID=your-client-id
+    export GITHUB_CLIENT_SECRET=your-client-secret
 
-    ./swarm_run.sh remove_stack shop-gateway
-    ./swarm_run.sh remove_stack shop-weblets
-    ./swarm_run.sh remove_stack shop-designs
-    ./swarm_run.sh remove_stack shop-accounts
-    ./swarm_run.sh remove_stack shop-authentication
+Export version:
 
-Remove MySQL server with command:
+    export VERSION=$(./scripts/get-version.sh)
 
-    ./swarm_run.sh remove_stack shop-mysql
+Export logging level:
 
-Remove NGINX server with command:
+    export LOGGING_LEVEL=INFO
 
-    ./swarm_run.sh remove_stack shop-nginx
+Start services:
 
-Delete Kafka topics with command:
+    docker compose -f docker-compose-services.yaml -p services up -d
 
-    ./kafka_run.sh delete_kafka_topics
+Open application:
 
-Delete Cassandra keyspaces and users with command:
+    open https://localhost:8080/browse/designs.html
 
-    ./cassandra_script.sh destroy
+Login with your GitHub account associated with the admin email for getting admin access
 
-Destroy target groups and Route53's records with command:
+Open Jaeger console:
 
-    ./docker_run.sh module_destroy targets
+    open http://localhost:16686
 
-Destroy configuration files with command:
+Open Kibana console:
 
-    ./docker_run.sh module_destroy config
+    open http://localhost:5601
 
-Destroy ECR repositories with command:
+Open Consul console:
 
-    ./docker_run.sh module_destroy ecr
+    open http://localhost:8500
 
-## Reset Terraform
+Open Minio console:
 
-Reset Terraform's state with command:
+    open http://localhost:9091
 
-    ./docker_run.sh reset_terraform
+Login with user 'admin' and password 'password'.
 
-Be careful to don't reset the state before destroying the infrastructure.
+## Troubleshooting on Docker
+
+Change logging level:
+
+    export LOGGING_LEVEL=DEBUG
+
+Restart services:
+
+    docker compose -f docker-compose-services.yaml -p services up -d
+
+Tail services:
+
+    docker logs -f --tail=-1 $(docker ps | grep authentication | cut -d ' ' -f 1)
+    docker logs -f --tail=-1 $(docker ps | grep accounts | cut -d ' ' -f 1)
+    docker logs -f --tail=-1 $(docker ps | grep designs-query | cut -d ' ' -f 1)
+    docker logs -f --tail=-1 $(docker ps | grep designs-command | cut -d ' ' -f 1)
+    docker logs -f --tail=-1 $(docker ps | grep designs-aggregate | cut -d ' ' -f 1)
+    docker logs -f --tail=-1 $(docker ps | grep designs-notify | cut -d ' ' -f 1)
+    docker logs -f --tail=-1 $(docker ps | grep designs-render1 | cut -d ' ' -f 1)
+    docker logs -f --tail=-1 $(docker ps | grep designs-render2 | cut -d ' ' -f 1)
+    docker logs -f --tail=-1 $(docker ps | grep designs-render3 | cut -d ' ' -f 1)
+    docker logs -f --tail=-1 $(docker ps | grep designs-render4 | cut -d ' ' -f 1)
+    docker logs -f --tail=-1 $(docker ps | grep gateway | cut -d ' ' -f 1)
+    docker logs -f --tail=-1 $(docker ps | grep frontend | cut -d ' ' -f 1)
+
+Tail platform:
+
+    docker logs -f --tail=-1 $(docker ps | grep kafka | cut -d ' ' -f 1)
+    docker logs -f --tail=-1 $(docker ps | grep zookeeper | cut -d ' ' -f 1)
+    docker logs -f --tail=-1 $(docker ps | grep elasticsearch | cut -d ' ' -f 1)
+    docker logs -f --tail=-1 $(docker ps | grep cassandra | cut -d ' ' -f 1)
+    docker logs -f --tail=-1 $(docker ps | grep minio | cut -d ' ' -f 1)
+    docker logs -f --tail=-1 $(docker ps | grep consul | cut -d ' ' -f 1)
+    docker logs -f --tail=-1 $(docker ps | grep mysql | cut -d ' ' -f 1)
+    docker logs -f --tail=-1 $(docker ps | grep nginx | cut -d ' ' -f 1)
+
+## Cleanup on Docker
+
+Stop services:
+
+    docker compose -f docker-compose-services.yaml -p services down
+
+Stop platform:
+
+    docker compose -f docker-compose-platform.yaml -p platform down
+
+Stop Nexus and Pact Broker:
+
+    docker compose -f docker-compose-pipeline.yaml -p pipeline down
+
+Remove Docker images:
+
+    docker image rm -f $(docker image ls 'integration/*' -q)
+    docker image rm $(docker image ls -f dangling=true -q)
+
+Remove Docker volumes:
+
+    docker volume rm $(docker volume ls | grep pipeline_ | cut -w -f 2)
+    docker volume rm $(docker volume ls | grep platform_ | cut -w -f 2)
+
+## Prepare Minikube
+
+Setup Minikube:
+
+    minikube start --vm-driver=hyperkit --cpus 8 --memory 32768m --disk-size 64g --kubernetes-version=v1.23.3
+
+Create alias (unless you already have kubectl installed):
+
+    alias kubectl="minikube kubectl --"
+
+Create namespaces:
+
+    ./scripts/kube-create-namespaces.sh
+
+Create volumes:
+
+    kubectl apply -f scripts/volumes.yaml
+
+Install addons:
+
+    minikube addons enable metrics-server
+    minikube addons enable dashboard
+    minikube addons enable registry
+
+Configure Docker:
+
+    eval $(minikube docker-env)
+
+Build Docker images:
+
+    ./scripts/build-images.sh
+
+## Build on Minikube
+
+Deploy Nexus and Pact Broker:
+
+    ./scripts/helm-install-pipeline.sh
+
+It might take quite a while before Nexus is ready:
+
+    ./scripts/wait-for.sh --timeout=60 --command="kubectl -n pipeline logs --tail=100 -l component=nexus | grep 'Started Sonatype Nexus'"
+
+Expose Nexus and Pact Broker:
+
+    ./scripts/kube-expose-pipeline.sh
+
+Export variables:
+
+    export PACTBROKER_HOST=$(minikube ip)
+    export PACTBROKER_PORT=9092
+    export NEXUS_HOST=$(minikube ip)
+    export NEXUS_PORT=8081
+    export NEXUS_USERNAME=admin
+    export NEXUS_PASSWORD=$(kubectl -n pipeline exec $(kubectl -n pipeline get pod -l component=nexus -o json | jq -r '.items[0].metadata.name') -c nexus -- cat /opt/sonatype/sonatype-work/nexus3/admin.password)
+
+Create Maven repository:
+
+    ./scripts/create-repository.sh --nexus-host=${NEXUS_HOST} --nexus-port=${NEXUS_PORT} --nexus-username=${NEXUS_USERNAME} --nexus-password=${NEXUS_PASSWORD}
+
+Configure Docker:
+
+    eval $(minikube docker-env)
+
+Build services:
+
+    ./scripts/build-services.sh --pactbroker-host=${PACTBROKER_HOST} --pactbroker-port=${PACTBROKER_PORT} --nexus-host=${NEXUS_HOST} --nexus-port=${NEXUS_PORT} --nexus-username=${NEXUS_USERNAME} --nexus-password=${NEXUS_PASSWORD} --docker-host=$(minikube ip) --skip-tests
+
+Please note that integration tests or pact tests on Minikube are not currently supported.
+
+## Run on Minikube
+
+Export GitHub secrets:
+
+    export GITHUB_ACCOUNT_EMAIL=your-account-id
+    export GITHUB_CLIENT_ID=your-client-id
+    export GITHUB_CLIENT_SECRET=your-client-secret
+
+Deploy secrets:
+
+    ./scripts/kube-create-secrets.sh
+
+Deploy Certificate Manager:
+
+    helm repo add jetstack https://charts.jetstack.io
+    helm repo update
+    helm upgrade --install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --version v1.7.1 --set installCRDs=true
+
+Deploy Prometheus operator:
+
+    helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+    helm repo update
+    helm upgrade --install kube-prometheus-stack prometheus-community/kube-prometheus-stack -n monitoring -f scripts/prometheus-values.yaml
+
+Deploy Jaeger operator:
+
+    helm repo add jaegertracing https://jaegertracing.github.io/helm-charts
+    helm repo update
+    helm upgrade --install jaeger-operator jaegertracing/jaeger-operator --namespace monitoring --set rbac.create=true --version 2.29.0
+
+Deploy Fluent Bit:
+
+    helm repo add fluent https://fluent.github.io/helm-charts
+    helm repo update
+    helm upgrade --install fluent-bit fluent/fluent-bit -n monitoring -f scripts/fluentbit-values.yaml
+
+Configure Docker (very important):
+
+    eval $(minikube docker-env)
+
+Deploy monitoring:
+
+    ./scripts/helm-install-monitoring.sh
+
+Expose monitoring:
+
+    ./scripts/kube-expose-monitoring.sh
+
+Deploy platform:
+
+    ./scripts/helm-install-platform.sh
+
+Expose platform:
+
+    ./scripts/kube-expose-platform.sh
+
+Create Kafka topics:
+
+    ./scripts/kube-create-topics.sh
+
+Create Cassandra tables:
+
+    kubectl -n platform exec $(kubectl -n platform get pod -l component=cassandra -o json | jq -r '.items[0].metadata.name') -- cqlsh -u cassandra -p cassandra < scripts/init.cql  
+
+Create Elasticsearch index:
+
+    kubectl -n platform exec $(kubectl -n platform get pod -l component=elasticsearch -o json | jq -r '.items[0].metadata.name') -- sh -c "$(cat scripts/init.sh)"
+
+Create Minio bucket:
+
+    kubectl -n platform delete job -l component=minio-init
+    kubectl -n platform apply -f scripts/minio-init.yaml
+
+Export version:
+
+    export VERSION=$(./scripts/get-version.sh)
+
+Export logging level:
+
+    export LOGGING_LEVEL=INFO
+
+Deploy services:
+
+    ./scripts/helm-install-services.sh
+
+Expose services:
+
+    ./scripts/kube-expose-services.sh
+
+Create monitoring resources:
+
+    kubectl apply -f scripts/jaeger.yaml
+    kubectl apply -f scripts/services-monitoring.yaml
+    kubectl apply -f scripts/grafana-datasource.yaml
+    kubectl apply -f scripts/grafana-dashboards.yaml
+
+Scale services:
+
+    kubectl -n services scale deployment designs-query --replicas=2
+    kubectl -n services scale deployment designs-aggregate --replicas=2
+    kubectl -n services scale deployment designs-notify --replicas=1
+    kubectl -n services scale deployment designs-render --replicas=4
+    kubectl -n services scale deployment gateway --replicas=2
+    kubectl -n services scale deployment frontend --replicas=2
+
+Scale platform:
+
+    kubectl -n platform scale deployment nginx --replicas=2
+
+Configure autoscaling:
+
+    kubectl -n services apply -f scripts/services-autoscaling.yaml
+
+Create Kibana index pattern:
+
+    curl "http://$(minikube ip):5601/api/index_patterns/index_pattern" -H "kbn-xsrf: reporting" -H "Content-Type: application/json" -d @$(pwd)/scripts/index-pattern.json
+
+Open application:
+
+    open https://$(minikube ip)/browse/designs.html
+
+Login with your GitHub account associated with the admin email for getting admin access
+
+Open Jaeger console:
+
+    open http://$(minikube ip):16686
+
+Open Kibana console:
+
+    open http://$(minikube ip):5601
+
+Open Consul console:
+
+    open http://$(minikube ip):8500
+
+Open Prometheus console:
+
+    open http://$(minikube ip):9090
+
+Open Grafana console:
+
+    open http://$(minikube ip):3000
+
+Login with user 'admin' and password 'password'.
+
+Open Minio console:
+
+    open http://$(minikube ip):9001
+
+Login with user 'admin' and password 'password'.
+
+Open Minikube dashboard:
+
+    minikube dashboard
+
+## Troubleshooting on Minikube
+
+Change logging level:
+
+    export LOGGING_LEVEL=DEBUG
+
+Redeploy services:
+
+    ./scripts/helm-install-services.sh
+
+Tail services:
+
+    kubectl -n services logs -f --tail=-1 -l component=authentication
+    kubectl -n services logs -f --tail=-1 -l component=accounts
+    kubectl -n services logs -f --tail=-1 -l component=designs-query
+    kubectl -n services logs -f --tail=-1 -l component=designs-command
+    kubectl -n services logs -f --tail=-1 -l component=designs-aggregate
+    kubectl -n services logs -f --tail=-1 -l component=designs-notify
+    kubectl -n services logs -f --tail=-1 -l component=designs-render
+    kubectl -n services logs -f --tail=-1 -l component=gateway
+    kubectl -n services logs -f --tail=-1 -l component=frontend
+
+Tail platform:
+
+    kubectl -n platform logs -f --tail=-1 -l component=kafka
+    kubectl -n platform logs -f --tail=-1 -l component=zookeeper
+    kubectl -n platform logs -f --tail=-1 -l component=elastichsearch
+    kubectl -n platform logs -f --tail=-1 -l component=cassandra
+    kubectl -n platform logs -f --tail=-1 -l component=minio
+    kubectl -n platform logs -f --tail=-1 -l component=consul
+    kubectl -n platform logs -f --tail=-1 -l component=mysql
+    kubectl -n platform logs -f --tail=-1 -l component=nginx
+
+## Cleanup on Minikube
+
+Uninstall services:
+
+    ./scripts/helm-uninstall-services.sh
+
+Uninstall platform:
+
+    ./scripts/helm-uninstall-platform.sh
+
+Uninstall monitoring:
+
+    ./scripts/helm-uninstall-monitoring.sh
+
+Uninstall Nexus and Pact Broker:
+
+    ./scripts/helm-uninstall-pipeline.sh
+
+Stop Minikube:
+
+    minikube stop
+
+Delete Minikube (all data saved in hostpath volumes will be lost):
+
+    minikube delete

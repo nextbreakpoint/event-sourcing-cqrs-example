@@ -1,0 +1,50 @@
+<body>
+    <header><p><b>The Beauty of Chaos</b> | <a href="../designs.html">Fractals</a> | {{uuid}}</p></header>
+    <div id="fractal" class="preview"></div>
+    <footer>
+        <p>Powered by <a href="https://nextbreakpoint.com">NextBreakpoint</a>{{#if admin}} | <a href="../../admin/designs/{{uuid}}.html">Edit</a>{{/if}}{{#if login}} | <a href="{{config.api_url}}/v1/auth/signin/admin/designs/{{uuid}}.html">Login</a>{{/if}}</p>
+    </footer>
+    <input type="hidden" id="uuid" value="{{uuid}}"/>
+    <script>
+        domReady(function(event) {
+            var map = L.map('fractal').setView([0, 0], 3);
+
+            var url = '{{config.api_url}}/v1/designs/{{design.uuid}}/{z}/{x}/{y}/256.png?t={{design.checksum}}';
+
+            var layer = L.tileLayer(url, {
+                attribution: '',
+                detectRetina: true,
+                bounds: [[-180, -180],[180, 180]],
+                noWrap: true,
+                minZoom: 3,
+                maxZoom: 7,
+                tileSize: 256,
+                updateWhenIdle: true,
+                updateWhenZooming: false,
+                updateInterval: 500,
+                keepBuffer: 2,
+                noWrap: true
+            });
+
+            map.zoomControl.setPosition('bottomleft');
+            map.attributionControl.setPrefix('');
+
+            layer.addTo(map);
+        });
+        function resize() {
+            let width = window.innerWidth;
+            let height = window.innerHeight;
+            let elements = document.querySelectorAll(".preview");
+            for (let i = 0; i < elements.length; i++) {
+                elements[i].style.width = width + "px";
+                elements[i].style.height = height + "px";
+            }
+        }
+        domReady(function(event) {
+            window.addEventListener('resize', function(e) {
+                resize();
+            });
+        })
+        resize();
+    </script>
+</body>

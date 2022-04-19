@@ -1,0 +1,28 @@
+{
+  "host_port": "30100",
+
+  "server_keystore_path": "../../secrets/keystore_server.jks",
+  "server_keystore_secret": "${KEYSTORE_SECRET}",
+
+  "client_keystore_path": "../../secrets/keystore_client.jks",
+  "client_keystore_secret": "${KEYSTORE_SECRET}",
+
+  "client_truststore_path": "../../secrets/truststore_client.jks",
+  "client_truststore_secret": "${KEYSTORE_SECRET}",
+
+  "client_verify_host": "false",
+  "client_keep_alive": "true",
+
+  "jwt_keystore_path": "../../secrets/keystore_auth.jceks",
+  "jwt_keystore_type": "jceks",
+  "jwt_keystore_secret": "${KEYSTORE_SECRET}",
+
+  "origin_pattern": "https://localhost(:[0-9]+)?",
+
+  "server_auth_url": "${AUTHENTICATION_URL}/auth",
+  "server_accounts_url": "${ACCOUNTS_URL}/accounts",
+  "server_designs_query_url": "${DESIGNS_QUERY_URL}/designs",
+  "server_designs_command_url": "${DESIGNS_COMMAND_URL}/designs",
+  "server_designs_render_url": "${DESIGNS_RENDER_URL}/designs",
+  "server_designs_watch_url": "${DESIGNS_WATCH_URL}/watch/designs"
+}

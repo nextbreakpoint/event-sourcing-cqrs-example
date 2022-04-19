@@ -1,0 +1,39 @@
+{{- $fullname := include "service.fullname" . -}}
+{{- $name := include "service.name" . -}}
+{{- $chart := include "service.chart" . -}}
+{{- $root := . }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $root.Values.name | default "consul" | quote }}
+  namespace: {{ $root.Release.Namespace | quote }}
+  labels:
+    component: {{ $root.Values.name | default "consul" | quote }}
+    chart: {{ $chart }}
+    release: {{ $root.Release.Name }}
+    heritage: {{ $root.Release.Service }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8300
+      targetPort: control1
+      protocol: TCP
+      name: control1
+    - port: 8301
+      targetPort: control2
+      protocol: TCP
+      name: control2
+    - port: 8302
+      targetPort: control3
+      protocol: TCP
+      name: control3
+    - port: 8500
+      targetPort: control4
+      protocol: TCP
+      name: control4
+    - port: 8600
+      targetPort: control5
+      protocol: TCP
+      name: control5
+  selector:
+    component: {{ $root.Values.name | default "consul" | quote }}

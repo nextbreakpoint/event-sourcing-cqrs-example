@@ -1,0 +1,69 @@
+{{- $fullname := include "service.fullname" . -}}
+{{- $name := include "service.name" . -}}
+{{- $chart := include "service.chart" . -}}
+{{- $root := . }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $root.Values.name | default "jaeger" | quote }}
+  namespace: {{ $root.Release.Namespace | quote }}
+  labels:
+    component: {{ $root.Values.name | default "jaeger" | quote }}
+    chart: {{ $chart }}
+    release: {{ $root.Release.Name }}
+    heritage: {{ $root.Release.Service }}
+spec:
+  replicas: {{ $root.Values.replicas | default 1 }}
+  {{- if $root.Values.strategy }}
+  strategy:
+    {{ toYaml $root.Values.strategy | indent 4 | trim }}
+  {{- end}}
+  selector:
+    matchLabels:
+      component: {{ $root.Values.name | default "jaeger" | quote }}
+  template:
+    metadata:
+      {{- if $root.Values.annotations }}
+      annotations:
+        {{ toYaml $root.Values.annotations | indent 8 | trim }}
+      {{- end}}
+      labels:
+        component: {{ $root.Values.name | default "jaeger" | quote }}
+    spec:
+      serviceAccountName: {{ $root.Values.serviceAccount | default "jaeger" }}
+      {{- if $root.Values.image }}
+      {{- if $root.Values.image.pullSecrets }}
+      imagePullSecrets:
+        - name: {{ toYaml $root.Values.image.pullSecrets | indent 8 | trim }}
+      {{- end}}
+      {{- end}}
+      containers:
+        - name: {{ $root.Values.name | default "jaeger" | quote }}
+          image: "{{ $root.Values.image.registry }}{{ $root.Values.image.repository }}:{{ $root.Values.image.tag }}"
+          imagePullPolicy: {{ $root.Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 16686
+              protocol: TCP
+            - name: agent
+              containerPort: 14250
+              protocol: TCP
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: SPAN_STORAGE_TYPE
+              value: "elasticsearch"
+            - name: ES_SERVER_URLS
+              value: "http://elasticsearch.{{ $root.Release.Namespace }}:9200"
+            - name: ES_TAGS_AS_FIELDS_ALL
+              value: "true"
+          {{- if $root.Values.resources }}
+          resources:
+            {{ $root.Values.resources | toYaml | indent 12 | trim }}
+          {{- end}}

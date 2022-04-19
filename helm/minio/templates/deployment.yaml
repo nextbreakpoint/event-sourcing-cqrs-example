@@ -1,0 +1,95 @@
+{{- $fullname := include "service.fullname" . -}}
+{{- $name := include "service.name" . -}}
+{{- $chart := include "service.chart" . -}}
+{{- $root := . }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $root.Values.name | default "minio" | quote }}
+  namespace: {{ $root.Release.Namespace | quote }}
+  labels:
+    component: {{ $root.Values.name | default "minio" | quote }}
+    chart: {{ $chart }}
+    release: {{ $root.Release.Name }}
+    heritage: {{ $root.Release.Service }}
+spec:
+  replicas: {{ $root.Values.replicas | default 1 }}
+  {{- if $root.Values.strategy }}
+  strategy:
+    {{ toYaml $root.Values.strategy | indent 4 | trim }}
+  {{- end}}
+  selector:
+    matchLabels:
+      component: {{ $root.Values.name | default "minio" | quote }}
+  template:
+    metadata:
+      {{- if $root.Values.annotations }}
+      annotations:
+        {{ toYaml $root.Values.annotations | indent 8 | trim }}
+      {{- end}}
+      labels:
+        component: {{ $root.Values.name | default "minio" | quote }}
+    spec:
+      serviceAccountName: {{ $root.Values.serviceAccount | default "minio" }}
+      {{- if $root.Values.image }}
+      {{- if $root.Values.image.pullSecrets }}
+      imagePullSecrets:
+        - name: {{ toYaml $root.Values.image.pullSecrets | indent 8 | trim }}
+      {{- end}}
+      {{- end}}
+      volumes:
+        - name: data-vol
+          persistentVolumeClaim:
+            claimName: minio
+      hostname: {{ $fullname }}
+      initContainers:
+        - name: change-ulimit
+          image: alpine:3
+          command:
+            - sh
+            - -c
+            - "ulimit -n 65536"
+      containers:
+        - name: {{ $root.Values.name | default "minio" | quote }}
+          image: "{{ $root.Values.image.registry }}{{ $root.Values.image.repository }}:{{ $root.Values.image.tag }}"
+          imagePullPolicy: {{ $root.Values.image.pullPolicy }}
+          command:
+            - minio
+          args:
+            - server
+            - /var/data
+            - --console-address
+            - ":9001"
+          ports:
+            - name: minio
+              containerPort: 9000
+              protocol: TCP
+            - name: minio-console
+              containerPort: 9001
+              protocol: TCP
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: MINIO_ROOT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: '{{ $root.Values.secretName | default "minio" }}.{{ $root.Release.Revision | default "1" }}'
+                  key: MINIO_ROOT_USER
+            - name: MINIO_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: '{{ $root.Values.secretName | default "minio" }}.{{ $root.Release.Revision | default "1" }}'
+                  key: MINIO_ROOT_PASSWORD
+          volumeMounts:
+            - name: data-vol
+              mountPath: /var/data
+          {{- if $root.Values.resources }}
+          resources:
+            {{ $root.Values.resources | toYaml | indent 12 | trim }}
+          {{- end}}

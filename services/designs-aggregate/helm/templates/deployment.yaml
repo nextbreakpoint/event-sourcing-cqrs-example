@@ -1,0 +1,131 @@
+{{- $fullname := include "service.fullname" . -}}
+{{- $name := include "service.name" . -}}
+{{- $chart := include "service.chart" . -}}
+{{- $root := . }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $root.Values.name | default "designs-aggregate" | quote }}
+  namespace: {{ $root.Release.Namespace | quote }}
+  labels:
+    component: {{ $root.Values.name | default "designs-aggregate" | quote }}
+    chart: {{ $chart }}
+    release: {{ $root.Release.Name }}
+    heritage: {{ $root.Release.Service }}
+spec:
+  replicas: {{ $root.Values.replicas | default 0 }}
+  {{- if $root.Values.strategy }}
+  strategy:
+    {{ toYaml $root.Values.strategy | indent 4 | trim }}
+  {{- end}}
+  selector:
+    matchLabels:
+      component: {{ $root.Values.name | default "designs-aggregate" | quote }}
+  template:
+    metadata:
+      {{- if $root.Values.annotations }}
+      annotations:
+        {{ toYaml $root.Values.annotations | indent 8 | trim }}
+      {{- end}}
+      labels:
+        component: {{ $root.Values.name | default "designs-aggregate" | quote }}
+    spec:
+      serviceAccountName: {{ $root.Values.serviceAccount | default "designs-aggregate-service" }}
+      {{- if $root.Values.image }}
+      {{- if $root.Values.image.pullSecrets }}
+      imagePullSecrets:
+        - name: {{ toYaml $root.Values.image.pullSecrets | indent 8 | trim }}
+      {{- end}}
+      {{- end}}
+      volumes:
+        - name: config-vol
+          configMap:
+            name: '{{ $root.Values.configName | default "designs-aggregate" }}.{{ $root.Release.Revision | default "1" }}'
+        - name: secret-vol
+          secret:
+            secretName: {{ $root.Values.secretName | default "designs-aggregate" | quote }}
+      containers:
+        - name: {{ $root.Values.name | default "designs-aggregate" | quote }}
+          image: "{{ $root.Values.image.registry }}{{ $root.Values.image.repository }}:{{ $root.Values.image.tag }}"
+          imagePullPolicy: {{ $root.Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ $root.Values.controlPort | default 8080 }}
+              protocol: TCP
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: KEYSTORE_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $root.Values.secretName | default "designs-aggregate" | quote }}
+                  key: KEYSTORE_SECRET
+            - name: DATABASE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $root.Values.secretName | default "designs-aggregate" | quote }}
+                  key: DATABASE_USERNAME
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $root.Values.secretName | default "designs-aggregate" | quote }}
+                  key: DATABASE_PASSWORD
+            - name: JAEGER_ATTRIBUTES
+              value: 'service.name={{ $root.Values.name | default "designs-aggregate" }},service.version={{ $root.Values.image.tag }},service.namespace={{ $root.Release.Namespace }},environment={{ $root.Values.environment | default "dev" }},release={{ $root.Release.Name }}'
+            - name: JAEGER_ENDPOINT
+              value: {{ $root.Values.jaegerEndpoint | default "http://jaeger-collector.monitoring:14250" | quote }}
+            {{- if $root.Values.enableDebug }}
+            - name: DEBUG_OPTS
+              value: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
+            {{- end}}
+            - name: LOGGING_LEVEL
+              value: {{ $root.Values.loggingLevel | default "INFO" | quote }}
+          volumeMounts:
+            - name: config-vol
+              readOnly: true
+              mountPath: /etc/config.json
+              subPath: config.json
+            - name: secret-vol
+              readOnly: true
+              mountPath: /etc/keystore_server.jks
+              subPath: keystore_server.jks
+            - name: secret-vol
+              readOnly: true
+              mountPath: /etc/keystore_auth.jceks
+              subPath: keystore_auth.jceks
+          {{- if $root.Values.resources }}
+          resources:
+            {{ $root.Values.resources | toYaml | indent 12 | trim }}
+          {{- end}}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+              scheme: HTTPS
+            failureThreshold: 2
+            initialDelaySeconds: 5
+            timeoutSeconds: 2
+            periodSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+              scheme: HTTPS
+            failureThreshold: 2
+            initialDelaySeconds: 5
+            timeoutSeconds: 2
+            periodSeconds: 5
+          startupProbe:
+            httpGet:
+              path: /health
+              port: http
+              scheme: HTTPS
+            failureThreshold: 12
+            timeoutSeconds: 2
+            periodSeconds: 5

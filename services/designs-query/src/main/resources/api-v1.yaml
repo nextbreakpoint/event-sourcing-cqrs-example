@@ -1,0 +1,187 @@
+openapi: 3.0.1
+info:
+  title: Designs Query API
+  description: API contract of service Designs Query
+  version: 1.0.0
+externalDocs:
+  description: Find out more about Swagger
+  url: http://swagger.io
+servers:
+  - url: https://localhost/v1
+tags:
+  - name: designs
+    description: Everything about querying designs
+paths:
+  /designs/{designId}:
+    get:
+      tags:
+        - designs
+      summary: Load design
+      operationId: loadDesign
+      parameters:
+        - name: designId
+          in: path
+          description: uuid of design to return
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: draft
+          in: query
+          description: select draft designs
+          required: false
+          schema:
+            type: boolean
+      responses:
+        200:
+          description: Return design
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DesignDocument'
+        400:
+          description: Invalid uuid supplied
+          content: {}
+        404:
+          description: Design not found
+          content: {}
+#      security:
+#        - design_auth:
+#            - admin
+#            - guest
+#            - anonymous
+  /designs:
+    get:
+      tags:
+        - designs
+      summary: List designs
+      operationId: listDesigns
+      parameters:
+        - name: draft
+          in: query
+          description: select draft designs
+          required: false
+          schema:
+            type: boolean
+      responses:
+        200:
+          description: Return designs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DesignDocuments'
+#      security:
+#        - design_auth:
+#            - admin
+#            - guest
+#            - anonymous
+  /designs/{designId}/{level}/{col}/{row}/{size}.png:
+    get:
+      tags:
+        - designs
+      summary: Get tile
+      operationId: getTile
+      parameters:
+        - name: designId
+          in: path
+          description: uuid of the design
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: level
+          in: path
+          description: zoom level
+          required: true
+          schema:
+            type: integer
+        - name: col
+          in: path
+          description: horizontal location
+          required: true
+          schema:
+            type: integer
+        - name: row
+          in: path
+          description: vertical location
+          required: true
+          schema:
+            type: integer
+        - name: size
+          in: path
+          description: Size
+          required: true
+          schema:
+            type: integer
+        - name: draft
+          in: query
+          description: select draft designs
+          required: false
+          schema:
+            type: boolean
+      responses:
+        200:
+          description: Return tile
+          content:
+            image/png:
+              {}
+        400:
+          description: Invalid uuid supplied
+          content: {}
+        404:
+          description: Tile not found
+          content: {}
+#      security:
+#        - design_auth:
+#            - admin
+#            - guest
+#            - anonymous
+components:
+  schemas:
+    DesignDocuments:
+      type: object
+      properties:
+        total:
+          type: integer
+        designs:
+          type: array
+          items:
+            $ref: '#/components/schemas/DesignDocument'
+    DesignDocument:
+      type: object
+      properties:
+        uuid:
+          type: string
+          format: uuid
+        json:
+          type: string
+        modified:
+          type: string
+        checksum:
+          type: string
+        revision:
+          type: string
+        tiles:
+          type: array
+          items:
+            type: object
+            properties:
+              level:
+                type: integer
+              requested:
+                type: integer
+              completed:
+                type: integer
+              failed:
+                type: integer
+#  securitySchemes:
+#    design_auth:
+#      type: oauth2
+#      flows:
+#        implicit:
+#          authorizationUrl: https://localhost:8081/auth/signin
+#          scopes:
+#            anonymous: user not logged
+#            admin: user logged as admin
+#            guest: user logged as guest
+#            platform: platform token

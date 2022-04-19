@@ -1,0 +1,17 @@
+grafana:
+  adminPassword: password
+  sidecar:
+    dashboards:
+      enabled: true
+    datasources:
+      enabled: true
+prometheusOperator:
+  namespaces:
+    releaseNamespace: true
+    additional:
+      - "services"
+prometheus:
+  prometheusSpec:
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    ruleSelectorNilUsesHelmValues: false

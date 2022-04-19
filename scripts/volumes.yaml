@@ -1,0 +1,217 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: local
+provisioner: kubernetes.io/no-provisioner
+volumeBindingMode: WaitForFirstConsumer
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: platform-minio
+  labels:
+    type: local
+    component: minio
+spec:
+  storageClassName: local
+  persistentVolumeReclaimPolicy: Retain
+  capacity:
+    storage: 50Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/data/platform/minio"
+    type: DirectoryOrCreate
+  claimRef:
+    name: minio
+    namespace: platform
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: platform-elasticsearch
+  labels:
+    type: local
+    component: elasticsearch
+spec:
+  storageClassName: local
+  persistentVolumeReclaimPolicy: Retain
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/data/platform/elasticsearch"
+    type: DirectoryOrCreate
+  claimRef:
+    name: elasticsearch
+    namespace: platform
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: platform-cassandra
+  labels:
+    type: local
+    component: cassandra
+spec:
+  storageClassName: local
+  persistentVolumeReclaimPolicy: Retain
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/data/platform/cassandra"
+    type: DirectoryOrCreate
+  claimRef:
+    name: cassandra
+    namespace: platform
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: platform-mysql
+  labels:
+    type: local
+    component: mysql
+spec:
+  storageClassName: local
+  persistentVolumeReclaimPolicy: Retain
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/data/platform/mysql"
+    type: DirectoryOrCreate
+  claimRef:
+    name: mysql
+    namespace: platform
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: platform-zookeeper-data
+  labels:
+    type: local
+    component: zookeeper-data
+spec:
+  storageClassName: local
+  persistentVolumeReclaimPolicy: Retain
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/data/platform/zookeeper-data"
+    type: DirectoryOrCreate
+  claimRef:
+    name: zookeeper-data
+    namespace: platform
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: platform-zookeeper-datalog
+  labels:
+    type: local
+    component: zookeeper-datalog
+spec:
+  storageClassName: local
+  persistentVolumeReclaimPolicy: Retain
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/data/platform/zookeeper-datalog"
+    type: DirectoryOrCreate
+  claimRef:
+    name: zookeeper-datalog
+    namespace: platform
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: platform-kafka
+  labels:
+    type: local
+    component: kafka
+spec:
+  storageClassName: local
+  persistentVolumeReclaimPolicy: Retain
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/data/platform/kafka"
+    type: DirectoryOrCreate
+  claimRef:
+    name: kafka
+    namespace: platform
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pipeline-postgres
+  labels:
+    type: local
+    component: postgres
+spec:
+  storageClassName: local
+  persistentVolumeReclaimPolicy: Retain
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/data/pipeline/postgres"
+    type: DirectoryOrCreate
+  claimRef:
+    name: postgres
+    namespace: pipeline
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pipeline-nexus
+  labels:
+    type: local
+    component: nexus
+spec:
+  storageClassName: local
+  persistentVolumeReclaimPolicy: Retain
+  capacity:
+    storage: 20Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/data/pipeline/nexus"
+    type: DirectoryOrCreate
+  claimRef:
+    name: nexus
+    namespace: pipeline
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: monitoring-elasticsearch
+  namespace: monitoring
+  labels:
+    type: local
+    component: elasticsearch
+spec:
+  storageClassName: local
+  persistentVolumeReclaimPolicy: Retain
+  capacity:
+    storage: 20Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/data/monitoring/elasticsearch"
+    type: DirectoryOrCreate
+  claimRef:
+    name: elasticsearch
+    namespace: monitoring

@@ -1,0 +1,23 @@
+{{- $fullname := include "service.fullname" . -}}
+{{- $name := include "service.name" . -}}
+{{- $chart := include "service.chart" . -}}
+{{- $root := . }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $root.Values.name | default "gateway" | quote }}
+  namespace: {{ $root.Release.Namespace | quote }}
+  labels:
+    component: {{ $root.Values.name | default "gateway" | quote }}
+    chart: {{ $chart }}
+    release: {{ $root.Release.Name }}
+    heritage: {{ $root.Release.Service }}
+spec:
+  type: "ClusterIP"
+  ports:
+    - port: {{ $root.Values.controlPort | default 8080 }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    component: {{ $root.Values.name | default "gateway" | quote }}

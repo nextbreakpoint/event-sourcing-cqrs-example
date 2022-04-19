@@ -1,0 +1,40 @@
+name: Blueprint
+on:
+  push:
+    branches:
+      - master
+      - wip2
+  pull_request:
+  release:
+    types:
+      - published
+jobs:
+  build:
+    runs-on: ubuntu-18.04
+    if: github.actor == github.event.repository.owner.login
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Set up JDK
+      uses: actions/setup-java@v2
+      with:
+        distribution: adopt
+        java-version: 11
+        cache: maven
+        check-latest: true
+    - name: List JDKs
+      run: ls /usr/lib/jvm
+    - name: Copy Toolchains
+      run: cp toolchains.xml ~/.m2/toolchains.xml
+    - name: Start Pipeline
+      run: pipeline/pipeline-start.sh
+    - name: Configure Nexus
+      run: pipeline/configure-nexus.sh
+    - name: Create Secrets
+      run: pipeline/create-secrets.sh
+    - name: Build Images
+      run: pipeline/build-images.sh
+    - name: Build Platform
+      run: pipeline/build-platform.sh
+    - name: Stop Pipeline
+      run: pipeline/pipeline-stop.sh

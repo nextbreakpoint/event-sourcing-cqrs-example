@@ -1,0 +1,95 @@
+body {
+    font-family: "Roboto";
+    color: #080808;
+    min-width: 800px;
+    max-width: 2600px;
+}
+
+header {
+    font-size: 1.8em;
+    padding: 10px;
+}
+
+footer {
+    font-size: 1.6em;
+    padding: 24px;
+    text-align: center;
+}
+
+.controls .button {
+    margin: 1%;
+}
+
+.container {
+    background-color: #ededed;
+    text-align: center;
+    padding: 5% 0;
+}
+
+.controls {
+    padding: 2%;
+    text-align: right;
+}
+
+.script {
+    padding-left: 2%;
+    padding-right: 1%;
+}
+
+.metadata {
+    padding-left: 1%;
+    padding-right: 2%;
+}
+
+.list-image {
+    padding-right: 24px !important;
+    text-align: right !important;
+}
+
+a, a:active, a:hover, a:visited {
+    color: #222222;
+    text-decoration: none;
+}
+
+header a, header a:active, header a:hover, header a:visited {
+    color: #fdfdfd !important;
+    text-decoration: none !important;
+}
+
+footer a, footer a:active, footer a:hover, footer a:visited {
+    color: #222222 !important;
+    text-decoration: none !important;
+}
+
+.status {
+    padding: 2%;
+}
+
+.leaflet-container {
+    width: 1024pt;
+    height: 1024pt;
+    position: relative;
+    display: inline-block;
+    background: transparent;
+}
+
+@media (max-width: 2000pt) {
+    .leaflet-container {
+        width: 768pt;
+        height: 768pt;
+    }
+}
+
+@media (max-width: 1500pt) {
+    .leaflet-container {
+        width: 512pt;
+        height: 512pt;
+    }
+}
+
+@media (max-width: 1100pt) {
+    .leaflet-container {
+        width: 256pt;
+        height: 256pt;
+    }
+}

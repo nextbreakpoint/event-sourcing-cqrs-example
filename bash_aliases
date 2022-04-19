@@ -1,5 +1,0 @@
-alias tf_init='terraform init -input=true -var-file=../../config/main.json -var-file=../../config/misc.json -var-file=../../config/network.json'
-alias tf_plan='terraform plan -input=true -out=tfplan -var-file=../../config/main.json -var-file=../../config/misc.json -var-file=../../config/network.json'
-alias tf_apply='terraform apply -input=false tfplan'
-alias tf_destroy='terraform destroy -var-file=../../config/main.json -var-file=../../config/misc.json -var-file=../../config/network.json'
-alias tf_refresh='terraform refresh -input=true -var-file=../../config/main.json -var-file=../../config/misc.json -var-file=../../config/network.json'

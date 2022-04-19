@@ -1,0 +1,20 @@
+{{- $fullname := include "service.fullname" . -}}
+{{- $name := include "service.name" . -}}
+{{- $chart := include "service.chart" . -}}
+{{- $root := . }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: '{{ $root.Values.configName | default "frontend" }}.{{ $root.Release.Revision | default "1" }}'
+  namespace: {{ $root.Release.Namespace | quote }}
+  labels:
+    chart: {{ $chart }}
+    release: {{ $root.Release.Name }}
+    heritage: {{ $root.Release.Service }}
+data:
+  config.json: |
+    {
+      "client_web_url": {{ $root.Values.clientWebUrl | default "https://localhost:8080" | quote }},
+      "client_api_url": {{ $root.Values.clientApiUrl | default "https://localhost:8080" | quote }},
+      "server_api_url": {{ $root.Values.serverApiUrl | default "https://gateway:8080" | quote }}
+    }

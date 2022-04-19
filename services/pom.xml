@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.nextbreakpoint</groupId>
         <artifactId>com.nextbreakpoint.blueprint</artifactId>
-        <version>1.0.0-wip2-1149e931-1650300325</version>
+        <version>1.0.0-wip2-9a2a502f-1650377124</version>
     </parent>
     <packaging>pom</packaging>
     <dependencies>

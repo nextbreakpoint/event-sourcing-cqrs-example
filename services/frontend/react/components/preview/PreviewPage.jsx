@@ -339,18 +339,26 @@ let PreviewPage = class PreviewPage extends React.Component {
                         <Grid item xs={6}>
                             <DesignForm script={script} metadata={metadata} onScriptChanged={this.handleScriptChanged} onMetadataChanged={this.handleMetadataChanged}/>
                             <div className="controls">
-                                <Button className="button" variant="outlined" color="primary" onClick={this.handleDownload}>
-                                  Download
-                                </Button>
-                                <Button className="button" variant="outlined" color="primary" onClick={this.handleUpdate}>
-                                  Update
-                                </Button>
-                                <Button disabled={design.published == true} className="button" variant="outlined" color="primary" onClick={this.handlePublish}>
-                                  Publish
-                                </Button>
-                                <Button disabled={design.published == false} className="button" variant="outlined" color="primary" onClick={this.handleUnpublish}>
-                                  Unpublish
-                                </Button>
+                                {this.props.account.role == 'admin' && (
+                                    <Button className="button" variant="outlined" color="primary" onClick={this.handleDownload}>
+                                      Download
+                                    </Button>
+                                )}
+                                {this.props.account.role == 'admin' && (
+                                    <Button className="button" variant="outlined" color="primary" onClick={this.handleUpdate}>
+                                      Update
+                                    </Button>
+                                )}
+                                {this.props.account.role == 'admin' && (
+                                    <Button disabled={design.published == true} className="button" variant="outlined" color="primary" onClick={this.handlePublish}>
+                                      Publish
+                                    </Button>
+                                )}
+                                {this.props.account.role == 'admin' && (
+                                    <Button disabled={design.published == false} className="button" variant="outlined" color="primary" onClick={this.handleUnpublish}>
+                                      Unpublish
+                                    </Button>
+                                )}
                                 <Typography variant="body" color="inherit" className="status">Progress: {design.percentage}%</Typography>
                             </div>
                         </Grid>

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set +e
 
 helm uninstall integration-elasticsearch -n platform
 helm uninstall integration-cassandra -n platform

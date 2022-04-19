@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set +e
 
 helm uninstall service-frontend -n services
 

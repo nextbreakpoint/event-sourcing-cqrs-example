@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set +e
 
 kubectl -n platform exec $(kubectl -n platform get pod -l component=kafka -o json | jq -r '.items[0].metadata.name') -- kafka-topics --bootstrap-server=localhost:9092 --create --topic events --config "retention.ms=604800000" --replication-factor=1 --partitions=16
 kubectl -n platform exec $(kubectl -n platform get pod -l component=kafka -o json | jq -r '.items[0].metadata.name') -- kafka-topics --bootstrap-server=localhost:9092 --create --topic buffer --config "retention.ms=604800000" --replication-factor=1 --partitions=16

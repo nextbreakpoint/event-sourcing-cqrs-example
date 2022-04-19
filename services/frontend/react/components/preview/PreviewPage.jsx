@@ -307,12 +307,12 @@ let PreviewPage = class PreviewPage extends React.Component {
     }
 
     render() {
-        const { classes, uuid, checksum, design } = this.props
+        const { classes, uuid, design } = this.props
 
         let script = this.state.design.script ? this.state.design.script : this.props.design.script
         let metadata = this.state.design.metadata ? this.state.design.metadata : this.props.design.metadata
 
-        const url = this.props.config.api_url + '/v1/designs/' + uuid + '/{z}/{x}/{y}/256.png?draft=true&t=' + checksum
+        const url = this.props.config.api_url + '/v1/designs/' + uuid + '/{z}/{x}/{y}/256.png?draft=true&t=' + design.checksum
 
         return (
             <React.Fragment>
@@ -449,4 +449,3 @@ const mapDispatchToProps = dispatch => ({
 })
 
 export default withStyles(themeStyles, { withTheme: true })(connect(mapStateToProps, mapDispatchToProps)(PreviewPage))
-

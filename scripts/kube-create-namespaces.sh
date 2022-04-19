@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set +e
 
 kubectl create ns pipeline
 kubectl create ns platform

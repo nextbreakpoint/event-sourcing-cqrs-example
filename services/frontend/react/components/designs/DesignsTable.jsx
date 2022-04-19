@@ -477,7 +477,7 @@ let EnhancedTable = class EnhancedTable extends React.Component {
   isSelected = id => this.props.selected.indexOf(id) !== -1
 
   render() {
-    const { classes, config, designs, revision, account, order, orderBy, selected, rowsPerPage, page, total } = this.props
+    const { classes, config, designs, account, order, orderBy, selected, rowsPerPage, page, total } = this.props
     const emptyRows = 0 //rowsPerPage - Math.min(rowsPerPage, designs.length - page * rowsPerPage)
 
     return (

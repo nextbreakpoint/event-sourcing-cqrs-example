@@ -173,8 +173,20 @@ services=(
   frontend
 )
 
+if [[ $NEXUS_HOST == "localhost" ]]; then
+  DOCKER_NEXUS_HOST="host.docker.internal"
+else
+  DOCKER_NEXUS_HOST=$NEXUS_HOST
+fi
+
+if [[ $PACTBROKER_HOST == "localhost" ]]; then
+  DOCKER_PACTBROKER_HOST="host.docker.internal"
+else
+  DOCKER_PACTBROKER_HOST=$PACTBROKER_HOST
+fi
+
 MAVEN_ARGS="-q -e -Dnexus.host=${NEXUS_HOST} -Dnexus.port=${NEXUS_PORT} -Dpactbroker.host=${PACTBROKER_HOST} -Dpactbroker.port=${PACTBROKER_PORT}"
-BUILD_ARGS="-q -e -Dnexus.host=${TEST_DOCKER_HOST} -Dnexus.port=${NEXUS_PORT} -Dpactbroker.host=${TEST_DOCKER_HOST} -Dpactbroker.port=${PACTBROKER_PORT}"
+DOCKER_MAVEN_ARGS="-q -e -Dnexus.host=${DOCKER_NEXUS_HOST} -Dnexus.port=${NEXUS_PORT} -Dpactbroker.host=${DOCKER_PACTBROKER_HOST} -Dpactbroker.port=${PACTBROKER_PORT}"
 
 if [ "$CLEAN" == "true" ]; then
   mvn clean -q -e -Dcommon=true -Dservices=true -Dplatform=true -Dnexus=true
@@ -194,7 +206,7 @@ if [ "$IMAGES" == "true" ]; then
 
 for service in ${services[@]}; do
   pushd services/$service
-   docker build --progress=plain -t ${REPOSITORY}/$service:${VERSION} --build-arg maven_args="${BUILD_ARGS}" .
+   docker build --progress=plain -t ${REPOSITORY}/$service:${VERSION} --build-arg maven_args="${DOCKER_MAVEN_ARGS}" .
   popd
 done
 

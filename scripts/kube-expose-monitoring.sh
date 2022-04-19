@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set +e
 
 kubectl -n monitoring expose service/kube-prometheus-stack-grafana --name grafana-external --port 3000 --target-port 3000 --type LoadBalancer --external-ip $(minikube ip)
 kubectl -n monitoring expose service/prometheus-operated --name prometheus-external --port 9090 --target-port 9090 --type LoadBalancer --external-ip $(minikube ip)

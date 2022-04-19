@@ -1,7 +1,7 @@
 #!/bin/bash
 
-set -e
+set +e
 
-helm uninstall integration-pactbroker helm/pactbroker -n pipeline
-helm uninstall integration-postgres helm/postgres -n pipeline
-helm uninstall integration-nexus helm/nexus -n pipeline
+helm uninstall integration-pactbroker -n pipeline
+helm uninstall integration-postgres -n pipeline
+helm uninstall integration-nexus -n pipeline

@@ -15,8 +15,6 @@ export NEXUS_PORT="8082"
 export NEXUS_USERNAME=admin
 export NEXUS_PASSWORD=password
 
-POSITIONAL_ARGS=()
-
 CLEAN="true"
 PACKAGE="true"
 DEPLOY="true"
@@ -24,6 +22,8 @@ IMAGES="true"
 PACT_TESTS="true"
 PACT_VERIFY="true"
 INTEGRATION_TESTS="true"
+
+POSITIONAL_ARGS=()
 
 for i in "$@"; do
   case $i in

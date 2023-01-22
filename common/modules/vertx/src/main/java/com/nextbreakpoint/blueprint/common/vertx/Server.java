@@ -7,7 +7,7 @@ public class Server {
     private Server() {}
 
     public static HttpServerOptions makeOptions(ServerConfig serverConfig) {
-        if (serverConfig.getJksStorePath() != null) {
+        if (serverConfig.getJksStorePath() != null && serverConfig.getJksStoreSecret() != null) {
             final JksOptions storeOptions = new JksOptions()
                     .setPath(serverConfig.getJksStorePath())
                     .setPassword(serverConfig.getJksStoreSecret());

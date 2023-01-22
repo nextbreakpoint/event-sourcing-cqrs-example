@@ -270,7 +270,8 @@ Export GitHub secrets:
 
 Deploy secrets:
 
-    ./scripts/kube-create-secrets.sh
+    ./scripts/kube-create-nginx-secrets.sh
+    ./scripts/kube-create-services-secrets.sh
 
 Deploy Certificate Manager:
 
@@ -473,3 +474,25 @@ Stop Minikube:
 Delete Minikube (all data saved in hostpath volumes will be lost):
 
     minikube delete
+
+## Run on Kubernetes
+
+Export GitHub secrets:
+
+    export GITHUB_ACCOUNT_EMAIL=your-account-id
+    export GITHUB_CLIENT_ID=your-client-id
+    export GITHUB_CLIENT_SECRET=your-client-secret
+
+Deploy secrets:
+
+    ./scripts/kube-create-services-secrets.sh
+
+Export version:
+
+    export VERSION=$(./scripts/get-version.sh)
+
+Export logging level:
+
+    export LOGGING_LEVEL=INFO
+
+Deploy services:

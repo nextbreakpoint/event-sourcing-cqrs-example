@@ -2,8 +2,6 @@
 
 set +e
 
-kubectl -n platform delete secret nginx
-
 kubectl -n services delete secret keystore-server.jks
 kubectl -n services delete secret keystore-client.jks
 kubectl -n services delete secret truststore-server.jks

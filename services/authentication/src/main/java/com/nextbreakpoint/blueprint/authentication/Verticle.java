@@ -145,7 +145,7 @@ public class Verticle extends AbstractVerticle {
                     .build();
 
             final OAuth2Options oauth2Options = new OAuth2Options()
-                    .setClientID(clientId)
+                    .setClientId(clientId)
                     .setClientSecret(clientSecret)
                     .setSite(oauthLoginUrl)
                     .setTokenPath(oauthTokenPath)

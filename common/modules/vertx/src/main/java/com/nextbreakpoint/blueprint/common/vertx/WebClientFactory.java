@@ -14,13 +14,9 @@ public class WebClientFactory {
     public static WebClient create(Vertx vertx, String serviceUrl, WebClientConfig webClientConfig) throws MalformedURLException {
         final URL url = new URL(serviceUrl);
 
-        final JksOptions keyStoreOptions = new JksOptions()
-                .setPath(webClientConfig.getKeyStorePath())
-                .setPassword(webClientConfig.getKeyStoreSecret());
+        final JksOptions keyStoreOptions = createKeyStoreOptions(webClientConfig);
 
-        final JksOptions trustStoreOptions = new JksOptions()
-                .setPath(webClientConfig.getTrustStorePath())
-                .setPassword(webClientConfig.getTrustStoreSecret());
+        final JksOptions trustStoreOptions = createTrustStoreOptions(webClientConfig);
 
         final WebClientOptions clientOptions = new WebClientOptions()
                 .setLogActivity(true)
@@ -33,6 +29,26 @@ public class WebClientFactory {
                 .setVerifyHost(webClientConfig.getVerifyHost());
 
         return WebClient.create(vertx, clientOptions);
+    }
+
+    private static JksOptions createKeyStoreOptions(WebClientConfig webClientConfig) {
+        if (webClientConfig.getKeyStorePath() != null && webClientConfig.getKeyStoreSecret() != null) {
+            return new JksOptions()
+                    .setPath(webClientConfig.getKeyStorePath())
+                    .setPassword(webClientConfig.getKeyStoreSecret());
+        } else {
+            return null;
+        }
+    }
+
+    private static JksOptions createTrustStoreOptions(WebClientConfig webClientConfig) {
+        if (webClientConfig.getTrustStorePath() != null && webClientConfig.getTrustStoreSecret() != null) {
+            return new JksOptions()
+                    .setPath(webClientConfig.getTrustStorePath())
+                    .setPassword(webClientConfig.getTrustStoreSecret());
+        } else {
+            return null;
+        }
     }
 
     public static WebClient create(Vertx vertx, String serviceUrl) throws MalformedURLException {

@@ -2,8 +2,6 @@
 
 set +e
 
-kubectl -n platform create secret generic nginx --from-file server_cert.pem=secrets/nginx_server_cert.pem --from-file server_key.pem=secrets/nginx_server_key.pem
-
 kubectl -n services create secret generic keystore-server.jks --from-file=secrets/keystore_server.jks
 kubectl -n services create secret generic keystore-client.jks --from-file=secrets/keystore_client.jks
 kubectl -n services create secret generic truststore-server.jks --from-file=secrets/truststore_server.jks

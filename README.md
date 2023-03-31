@@ -19,6 +19,10 @@ Add trusted certificates (for Mac only):
 
 ## Build on Docker
 
+Build Docker images:
+
+    ./scripts/build-images.sh
+
 Start Nexus and Pact Broker:
 
     docker compose -f docker-compose-pipeline.yaml -p pipeline up -d
@@ -55,11 +59,11 @@ Run tests without building:
 
     ./scripts/build-services.sh --nexus-host=localhost --nexus-port=8082 --nexus-username=admin --nexus-password=${NEXUS_PASSWORD} --skip-images --skip-deploy --version=$(./scripts/get-version.sh)
 
-Only run Pact tests:
+Run Pact tests only:
 
     ./scripts/build-services.sh --nexus-host=localhost --nexus-port=8082 --nexus-username=admin --nexus-password=${NEXUS_PASSWORD} --skip-images --skip-deploy --version=$(./scripts/get-version.sh) --skip-integration-tests
 
-Only run Pact verify:
+Run Pact verify only:
 
     ./scripts/build-services.sh --nexus-host=localhost --nexus-port=8082 --nexus-username=admin --nexus-password=${NEXUS_PASSWORD} --skip-images --skip-deploy --version=$(./scripts/get-version.sh) --skip-integration-tests --skip-pact-tests
 
@@ -68,10 +72,6 @@ Update dependencies (only if you know what you are doing):
     ./scripts/update-dependencies.sh
 
 ## Run on Docker
-
-Build Docker images:
-
-    ./scripts/build-images.sh
 
 Start platform:
 

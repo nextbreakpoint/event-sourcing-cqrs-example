@@ -153,10 +153,10 @@ public class Verticle extends AbstractVerticle {
 
             final OAuth2Auth oauth2Provider = OAuth2Auth.create(vertx, oauth2Options);
 
-            final OAuth2AuthHandler oauthHandler = OAuth2AuthHandler
-                    .create(vertx, oauth2Provider, authUrl + CALLBACK_PATH)
+            final OAuth2AuthHandler oauthHandler = OAuth2AuthHandler.newInstance(io.vertx.ext.web.handler.OAuth2AuthHandler
+                    .create(vertx.getDelegate(), oauth2Provider.getDelegate(), authUrl + CALLBACK_PATH)
                     .withScope(oauthAuthority)
-                    .setupCallback(mainRouter.route(CALLBACK_PATH));
+                    .setupCallback(mainRouter.getDelegate().route(CALLBACK_PATH)));
 
             final JWTProviderConfig jwtProviderConfig = JWTProviderConfig.builder()
                     .withKeyStoreType(jwtKeystoreType)

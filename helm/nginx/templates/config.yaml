@@ -21,6 +21,28 @@ data:
       }
 
       user nginx nginx;
+      
+      upstream designs_GET {
+        server designs-query.services.svc.cluster.local:8080;
+      }
+      upstream designs_HEAD {
+        server designs-query.services.svc.cluster.local:8080;
+      }
+      upstream designs_OPTIONS {
+        server designs-command.services.svc.cluster.local:8080;
+      }
+      upstream designs_DELETE {
+        server designs-command.services.svc.cluster.local:8080;
+      }
+      upstream designs_PATCH {
+        server designs-command.services.svc.cluster.local:8080;
+      }
+      upstream designs_POST {
+        server designs-command.services.svc.cluster.local:8080;
+      }
+      upstream designs_PUT {
+        server designs-command.services.svc.cluster.local:8080;
+      }
 
       http {
         ssl_session_cache     shared:SSL:10m;
@@ -45,17 +67,74 @@ data:
           proxy_set_header X-Real-IP $remote_addr;
           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
 
-          #resolver 127.0.0.11 valid=30s;
           resolver kube-dns.kube-system.svc.cluster.local valid=30s;
 
-          location /v1 {
-            set $upstream_gateway gateway.services.svc.cluster.local;
-            proxy_pass https://$upstream_gateway:8080$request_uri;
+          location /v1/watch/designs {
+            proxy_set_header Connection '';
+            proxy_http_version 1.1;
+            chunked_transfer_encoding off;
+            proxy_buffering off;
+            proxy_cache off;
+            set $upstream_location designs-notify.services.svc.cluster.local:8080;
+            proxy_pass https://$upstream_location$request_uri;
+            limit_except GET {
+                allow all;
+            }
           }
-
+            
+          location /v1/designs/validate {
+            set $upstream_location designs-render.services.svc.cluster.local:8080;
+            proxy_pass https://$upstream_location$request_uri;
+            limit_except POST {
+                allow all;
+            }
+          }
+            
+          location /v1/designs/download {
+            set $upstream_location designs-render.services.svc.cluster.local:8080;
+            proxy_pass https://$upstream_location$request_uri;
+            limit_except POST {
+                allow all;
+            }
+          }
+            
+          location /v1/designs/upload {
+            set $upstream_location designs-render.services.svc.cluster.local:8080;
+            proxy_pass https://$upstream_location$request_uri;
+            limit_except POST {
+                allow all;
+            }
+          }
+            
+          location /v1/designs {
+            proxy_pass https://designs_$request_method$request_uri;
+            limit_except OPTIONS GET POST PUT PATCH DELETE {
+                allow all;
+            }
+          }
+            
+          location /v1/accounts {
+            set $upstream_location accounts.services.svc.cluster.local:8080;
+            proxy_pass https://$upstream_location$request_uri;
+            limit_except OPTIONS GET POST {
+                allow all;
+            }
+          }
+            
+          location /v1/auth {
+            set $upstream_location authenticate.services.svc.cluster.local:8080;
+            proxy_pass https://$upstream_location$request_uri;
+            limit_except OPTIONS GET {
+                allow all;
+            }
+          }
+            
           location / {
-            set $upstream_frontend frontend.services.svc.cluster.local;
-            proxy_pass https://$upstream_frontend:8080$request_uri;
+            set $upstream_location frontend.services.svc.cluster.local:8080;
+            proxy_pass https://$upstream_location$request_uri;
+            limit_except OPTIONS GET POST {
+                allow all;
+            }
           }
         }
       }

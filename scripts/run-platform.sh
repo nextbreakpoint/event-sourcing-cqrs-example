@@ -77,7 +77,6 @@ services=(
   designs-render
   accounts
   authentication
-  gateway
 )
 
 export MAVEN_ARGS="-q -e -Dnexus.host=${NEXUS_HOST} -Dnexus.port=${NEXUS_PORT} -Dpactbroker.host=${PACTBROKER_HOST} -Dpactbroker.port=${PACTBROKER_PORT}"

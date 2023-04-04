@@ -13,5 +13,3 @@ helm uninstall service-designs-render -n services
 helm uninstall service-authentication -n services
 
 helm uninstall service-accounts -n services
-
-helm uninstall service-gateway -n services

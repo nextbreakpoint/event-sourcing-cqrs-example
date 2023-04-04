@@ -153,7 +153,6 @@ Tail services:
     docker logs -f --tail=-1 $(docker ps | grep designs-render2 | cut -d ' ' -f 1)
     docker logs -f --tail=-1 $(docker ps | grep designs-render3 | cut -d ' ' -f 1)
     docker logs -f --tail=-1 $(docker ps | grep designs-render4 | cut -d ' ' -f 1)
-    docker logs -f --tail=-1 $(docker ps | grep gateway | cut -d ' ' -f 1)
     docker logs -f --tail=-1 $(docker ps | grep frontend | cut -d ' ' -f 1)
 
 Tail platform:
@@ -346,10 +345,6 @@ Deploy services:
 
     ./scripts/helm-install-services.sh
 
-Expose services:
-
-    ./scripts/kube-expose-services.sh
-
 Create monitoring resources:
 
     kubectl apply -f scripts/jaeger.yaml
@@ -363,7 +358,6 @@ Scale services:
     kubectl -n services scale deployment designs-aggregate --replicas=2
     kubectl -n services scale deployment designs-notify --replicas=1
     kubectl -n services scale deployment designs-render --replicas=4
-    kubectl -n services scale deployment gateway --replicas=2
     kubectl -n services scale deployment frontend --replicas=2
 
 Scale platform:
@@ -435,7 +429,6 @@ Tail services:
     kubectl -n services logs -f --tail=-1 -l component=designs-aggregate
     kubectl -n services logs -f --tail=-1 -l component=designs-notify
     kubectl -n services logs -f --tail=-1 -l component=designs-render
-    kubectl -n services logs -f --tail=-1 -l component=gateway
     kubectl -n services logs -f --tail=-1 -l component=frontend
 
 Tail platform:

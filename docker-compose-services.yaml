@@ -320,38 +320,6 @@ services:
       - ./services/designs-render/config/integration.json:/etc/config.json
       - ./secrets/keystore_auth.jceks:/secrets/keystore_auth.jceks
       - ./secrets/keystore_server.jks:/secrets/keystore_server.jks
-  gateway:
-    restart: unless-stopped
-    image: integration/gateway:${VERSION}
-    environment:
-      JAEGER_ATTRIBUTES: service.name=gateway,service.version=${VERSION},service.namespace=designs,environment=dev
-      JAEGER_ENDPOINT: http://host.docker.internal:14250
-      KEYSTORE_SECRET: secret
-      ACCOUNTS_URL: https://accounts:30110
-      AUTHENTICATION_URL: https://authentication:30101
-      DESIGNS_QUERY_URL: https://designs-query:30120
-      DESIGNS_COMMAND_URL: https://designs-command:30121
-      DESIGNS_RENDER_URL: https://designs-render1:30124
-      DESIGNS_WATCH_URL: https://designs-notify:30123
-      DEBUG_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:35100
-      LOGGING_LEVEL: ${LOGGING_LEVEL:-INFO}
-    ports:
-      - target: 30100
-        published: 30100
-        protocol: tcp
-        mode: host
-      - target: 35100
-        published: 35100
-        protocol: tcp
-        mode: host
-    networks:
-      - bridge
-    volumes:
-      - ./services/gateway/config/integration.json:/etc/config.json
-      - ./secrets/keystore_auth.jceks:/secrets/keystore_auth.jceks
-      - ./secrets/keystore_server.jks:/secrets/keystore_server.jks
-      - ./secrets/keystore_client.jks:/secrets/keystore_client.jks
-      - ./secrets/truststore_client.jks:/secrets/truststore_client.jks
   frontend:
     restart: unless-stopped
     image: integration/frontend:${VERSION}

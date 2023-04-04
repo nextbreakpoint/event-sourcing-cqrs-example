@@ -12,6 +12,4 @@ helm upgrade --install service-designs-aggregate services/designs-aggregate/helm
 helm upgrade --install service-designs-notify services/designs-notify/helm -n services --set image.repository=integration/designs-notify,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip),enableDebug=false,loggingLevel=${LOGGING_LEVEL}
 helm upgrade --install service-designs-render services/designs-render/helm -n services --set image.repository=integration/designs-render,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip),enableDebug=false,loggingLevel=${LOGGING_LEVEL}
 
-helm upgrade --install service-gateway services/gateway/helm -n services --set image.repository=integration/gateway,image.tag=${VERSION},replicas=1,clientDomain=$(minikube ip),enableDebug=false,loggingLevel=${LOGGING_LEVEL}
-
 helm upgrade --install service-frontend services/frontend/helm -n services --set image.repository=integration/frontend,image.tag=${VERSION},replicas=1,clientWebUrl=https://$(minikube ip),clientApiUrl=https://$(minikube ip),enableDebug=false,loggingLevel=${LOGGING_LEVEL}

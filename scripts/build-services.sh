@@ -169,7 +169,6 @@ services=(
   designs-render
   accounts
   authentication
-  gateway
   frontend
 )
 

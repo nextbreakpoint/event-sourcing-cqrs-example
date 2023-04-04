@@ -19,6 +19,4 @@ kubectl -n services delete secret designs-aggregate
 kubectl -n services delete secret designs-notify
 kubectl -n services delete secret designs-render
 
-kubectl -n services delete secret gateway
-
 kubectl -n services delete secret frontend

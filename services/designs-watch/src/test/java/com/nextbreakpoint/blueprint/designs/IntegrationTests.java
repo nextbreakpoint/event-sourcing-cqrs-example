@@ -10,7 +10,7 @@ import java.util.UUID;
 
 @Tag("docker")
 @Tag("integration")
-@DisplayName("Verify behaviour of designs-notify service")
+@DisplayName("Verify behaviour of designs-watch service")
 public class IntegrationTests {
     private static TestCases testCases = new TestCases();
 

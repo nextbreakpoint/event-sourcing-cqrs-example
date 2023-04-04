@@ -20,7 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @Tag("docker")
 @Tag("pact")
-@DisplayName("Test designs-notify pact")
+@DisplayName("Test designs-watch pact")
 @ExtendWith(PactConsumerTestExt.class)
 public class PactConsumerTests {
     private static TestCases testCases = new TestCases();
@@ -35,7 +35,7 @@ public class PactConsumerTests {
         testCases.after();
     }
 
-    @Pact(consumer = "designs-notify")
+    @Pact(consumer = "designs-watch")
     public MessagePact designDocumentUpdateCompleted(MessagePactBuilder builder) {
         UUID uuid1 = new UUID(0L, 1L);
         UUID uuid2 = new UUID(0L, 2L);
@@ -78,7 +78,7 @@ public class PactConsumerTests {
                 .toPact();
     }
 
-    @Pact(consumer = "designs-notify")
+    @Pact(consumer = "designs-watch")
     public MessagePact designDocumentDeleteCompleted(MessagePactBuilder builder) {
         UUID uuid1 = new UUID(0L, 1L);
         UUID uuid2 = new UUID(0L, 2L);

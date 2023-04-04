@@ -11,6 +11,6 @@
   "origin_pattern": "https://localhost(:[0-9]+)?",
 
   "kafka_bootstrap_servers": "${KAFKA_HOST}:${KAFKA_PORT}",
-  "kafka_group_id": "designs-notify",
+  "kafka_group_id": "designs-watch",
   "events_topic": "${EVENTS_TOPIC}"
 }

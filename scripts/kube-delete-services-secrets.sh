@@ -16,7 +16,7 @@ kubectl -n services delete secret accounts
 kubectl -n services delete secret designs-query
 kubectl -n services delete secret designs-command
 kubectl -n services delete secret designs-aggregate
-kubectl -n services delete secret designs-notify
+kubectl -n services delete secret designs-watch
 kubectl -n services delete secret designs-render
 
 kubectl -n services delete secret frontend

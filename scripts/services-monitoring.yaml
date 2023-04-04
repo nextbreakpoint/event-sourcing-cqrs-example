@@ -116,10 +116,10 @@ spec:
 apiVersion: monitoring.coreos.com/v1
 kind: PodMonitor
 metadata:
-  name: designs-notify
+  name: designs-watch
   namespace: services
   labels:
-    component: designs-notify
+    component: designs-watch
 spec:
   podTargetLabels:
     - component
@@ -134,7 +134,7 @@ spec:
       - services
   selector:
     matchLabels:
-      component: designs-notify
+      component: designs-watch
 ---
 apiVersion: monitoring.coreos.com/v1
 kind: PodMonitor

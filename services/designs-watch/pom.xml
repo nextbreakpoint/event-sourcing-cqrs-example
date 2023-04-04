@@ -3,14 +3,14 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>com.nextbreakpoint.blueprint.designs-notify</artifactId>
+    <artifactId>com.nextbreakpoint.blueprint.designs-watch</artifactId>
     <properties>
         <mainClass>com.nextbreakpoint.blueprint.designs.Verticle</mainClass>
     </properties>
     <parent>
         <groupId>com.nextbreakpoint</groupId>
         <artifactId>com.nextbreakpoint.blueprint.service</artifactId>
-        <version>1.0.0-wip-d1826f26-1680605162</version>
+        <version>1.0.0-wip-06e84f28-1680618780</version>
     </parent>
     <repositories>
         <repository>
@@ -64,7 +64,7 @@
                     <toolchain>jdk</toolchain>
                     <executable>java</executable>
                     <environmentVariables>
-                        <JAEGER_ATTRIBUTES>service.name=designs-notify,service.version=${project.version},service.namespace=designs,environment=dev</JAEGER_ATTRIBUTES>
+                        <JAEGER_ATTRIBUTES>service.name=designs-watch,service.version=${project.version},service.namespace=designs,environment=dev</JAEGER_ATTRIBUTES>
                         <JAEGER_ENDPOINT>http://host.docker.internal:14250</JAEGER_ENDPOINT>
                         <KEYSTORE_SECRET>secret</KEYSTORE_SECRET>
                         <CONSUL_HOST>localhost</CONSUL_HOST>
@@ -77,7 +77,7 @@
                         <argument>--module-path</argument>
                         <modulepath/>
                         <argument>--module</argument>
-                        <argument>com.nextbreakpoint.blueprint.designs.notify/com.nextbreakpoint.blueprint.designs.Verticle</argument>
+                        <argument>com.nextbreakpoint.blueprint.designs.watch/com.nextbreakpoint.blueprint.designs.Verticle</argument>
                     </arguments>
                 </configuration>
                 <executions>
@@ -89,7 +89,7 @@
                         <configuration>
                             <environmentVariables>
                                 <LOGGING_LEVEL>DEBUG</LOGGING_LEVEL>
-                                <EVENTS_TOPIC>test-designs-notify-events</EVENTS_TOPIC>
+                                <EVENTS_TOPIC>test-designs-watch-events</EVENTS_TOPIC>
                             </environmentVariables>
                         </configuration>
                     </execution>

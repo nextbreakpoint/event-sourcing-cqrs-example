@@ -5,10 +5,10 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ $root.Values.name | default "designs-notify" | quote }}
+  name: {{ $root.Values.name | default "designs-watch" | quote }}
   namespace: {{ $root.Release.Namespace | quote }}
   labels:
-    component: {{ $root.Values.name | default "designs-notify" | quote }}
+    component: {{ $root.Values.name | default "designs-watch" | quote }}
     chart: {{ $chart }}
     release: {{ $root.Release.Name }}
     heritage: {{ $root.Release.Service }}
@@ -20,7 +20,7 @@ spec:
   {{- end}}
   selector:
     matchLabels:
-      component: {{ $root.Values.name | default "designs-notify" | quote }}
+      component: {{ $root.Values.name | default "designs-watch" | quote }}
   template:
     metadata:
       {{- if $root.Values.annotations }}
@@ -28,9 +28,9 @@ spec:
         {{ toYaml $root.Values.annotations | indent 8 | trim }}
       {{- end}}
       labels:
-        component: {{ $root.Values.name | default "designs-notify" | quote }}
+        component: {{ $root.Values.name | default "designs-watch" | quote }}
     spec:
-      serviceAccountName: {{ $root.Values.serviceAccount | default "designs-notify-service" }}
+      serviceAccountName: {{ $root.Values.serviceAccount | default "designs-watch-service" }}
       {{- if $root.Values.image }}
       {{- if $root.Values.image.pullSecrets }}
       imagePullSecrets:
@@ -40,12 +40,12 @@ spec:
       volumes:
         - name: config-vol
           configMap:
-            name: '{{ $root.Values.configName | default "designs-notify" }}.{{ $root.Release.Revision | default "1" }}'
+            name: '{{ $root.Values.configName | default "designs-watch" }}.{{ $root.Release.Revision | default "1" }}'
         - name: secret-vol
           secret:
-            secretName: {{ $root.Values.secretName | default "designs-notify" | quote }}
+            secretName: {{ $root.Values.secretName | default "designs-watch" | quote }}
       containers:
-        - name: {{ $root.Values.name | default "designs-notify" | quote }}
+        - name: {{ $root.Values.name | default "designs-watch" | quote }}
           image: "{{ $root.Values.image.registry }}{{ $root.Values.image.repository }}:{{ $root.Values.image.tag }}"
           imagePullPolicy: {{ $root.Values.image.pullPolicy }}
           ports:
@@ -64,10 +64,10 @@ spec:
             - name: KEYSTORE_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: {{ $root.Values.secretName | default "designs-notify" | quote }}
+                  name: {{ $root.Values.secretName | default "designs-watch" | quote }}
                   key: KEYSTORE_SECRET
             - name: JAEGER_ATTRIBUTES
-              value: 'service.name={{ $root.Values.name | default "designs-notify" }},service.version={{ $root.Values.image.tag }},service.namespace={{ $root.Release.Namespace }},environment={{ $root.Values.environment | default "dev" }},release={{ $root.Release.Name }}'
+              value: 'service.name={{ $root.Values.name | default "designs-watch" }},service.version={{ $root.Values.image.tag }},service.namespace={{ $root.Release.Namespace }},environment={{ $root.Values.environment | default "dev" }},release={{ $root.Release.Name }}'
             - name: JAEGER_ENDPOINT
               value: {{ $root.Values.jaegerEndpoint | default "http://jaeger-collector.monitoring:14250" | quote }}
             {{- if $root.Values.enableDebug }}

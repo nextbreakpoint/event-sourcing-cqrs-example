@@ -73,7 +73,7 @@ services=(
   designs-query
   designs-command
   designs-aggregate
-  designs-notify
+  designs-watch
   designs-render
   accounts
   authentication

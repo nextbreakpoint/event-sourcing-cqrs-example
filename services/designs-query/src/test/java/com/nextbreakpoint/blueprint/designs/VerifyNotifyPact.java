@@ -28,9 +28,9 @@ import java.util.UUID;
 
 @Tag("docker")
 @Tag("pact-verify")
-@DisplayName("Verify contract between designs-query and designs-notify")
+@DisplayName("Verify contract between designs-query and designs-watch")
 @Provider("designs-query")
-@Consumer("designs-notify")
+@Consumer("designs-watch")
 @PactBroker
 public class VerifyNotifyPact {
     public VerifyNotifyPact() {

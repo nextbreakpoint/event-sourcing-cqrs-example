@@ -16,7 +16,7 @@ import java.util.Optional;
 public class TestScenario {
     private static final int HTTP_PORT = 30123;
     private static final int DEBUG_PORT = 33123;
-    private final String serviceName = "designs-notify";
+    private final String serviceName = "designs-watch";
     private final String version = TestUtils.getVariable("BUILD_VERSION", System.getProperty("build.version", "0"));
     private final String nexusHost = TestUtils.getVariable("NEXUS_HOST", System.getProperty("nexus.host", "localhost"));
     private final String nexusPort = TestUtils.getVariable("NEXUS_PORT", System.getProperty("nexus.port", "8081"));

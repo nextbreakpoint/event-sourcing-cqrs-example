@@ -1,4 +1,4 @@
-module com.nextbreakpoint.blueprint.designs.notify {
+module com.nextbreakpoint.blueprint.designs.watch {
     requires com.nextbreakpoint.blueprint.common.core;
     requires com.nextbreakpoint.blueprint.common.vertx;
     requires com.nextbreakpoint.blueprint.common.events;

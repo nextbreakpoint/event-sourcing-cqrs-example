@@ -75,7 +75,7 @@ data:
             chunked_transfer_encoding off;
             proxy_buffering off;
             proxy_cache off;
-            set $upstream_location designs-notify.services.svc.cluster.local:8080;
+            set $upstream_location designs-watch.services.svc.cluster.local:8080;
             proxy_pass https://$upstream_location$request_uri;
             limit_except GET {
                 allow all;

@@ -8,10 +8,10 @@ RUN mvn clean verify -s settings.xml -t toolchains.xml $maven_args -DexcludedGro
 #COPY --from=build /src/target/libs/* /libs/
 #RUN gu install native-image
 #WORKDIR /
-#RUN native-image --verbose -J-Xmx4G -cp $(find /libs -name "*.jar" -print | sed "s/.jar/.jar:/g" | tr -d '\n' | sed "s/:$//g") -H:+StaticExecutableWithDynamicLibC -H:Name=designs-notify
+#RUN native-image --verbose -J-Xmx4G -cp $(find /libs -name "*.jar" -print | sed "s/.jar/.jar:/g" | tr -d '\n' | sed "s/:$//g") -H:+StaticExecutableWithDynamicLibC -H:Name=designs-watch
 
 #FROM gcr.io/distroless/base
-#COPY --from=native-image designs-notify /designs-notify
+#COPY --from=native-image designs-watch /designs-watch
 FROM openjdk:11-jdk
 COPY --from=build /src/target/libs/* /libs/
 COPY --from=build /src/target/service.jar /libs/

@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.nextbreakpoint</groupId>
         <artifactId>com.nextbreakpoint.blueprint</artifactId>
-        <version>1.0.0-wip-d1826f26-1680605162</version>
+        <version>1.0.0-wip-06e84f28-1680618780</version>
     </parent>
     <packaging>pom</packaging>
     <dependencies>
@@ -258,7 +258,7 @@
                 <module>designs-query</module>
                 <module>designs-command</module>
                 <module>designs-aggregate</module>
-                <module>designs-notify</module>
+                <module>designs-watch</module>
                 <module>designs-render</module>
             </modules>
         </profile>

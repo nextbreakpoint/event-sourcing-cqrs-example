@@ -160,11 +160,11 @@ services:
       - ./services/designs-aggregate/config/integration.json:/etc/config.json
       - ./secrets/keystore_auth.jceks:/secrets/keystore_auth.jceks
       - ./secrets/keystore_server.jks:/secrets/keystore_server.jks
-  designs-notify:
+  designs-watch:
     restart: unless-stopped
-    image: integration/designs-notify:${VERSION}
+    image: integration/designs-watch:${VERSION}
     environment:
-      JAEGER_ATTRIBUTES: service.name=designs-notify,service.version=${VERSION},service.namespace=designs,environment=dev
+      JAEGER_ATTRIBUTES: service.name=designs-watch,service.version=${VERSION},service.namespace=designs,environment=dev
       JAEGER_ENDPOINT: http://host.docker.internal:14250
       KEYSTORE_SECRET: secret
       CONSUL_HOST: host.docker.internal
@@ -185,7 +185,7 @@ services:
     networks:
       - bridge
     volumes:
-      - ./services/designs-notify/config/integration.json:/etc/config.json
+      - ./services/designs-watch/config/integration.json:/etc/config.json
       - ./secrets/keystore_auth.jceks:/secrets/keystore_auth.jceks
       - ./secrets/keystore_server.jks:/secrets/keystore_server.jks
   designs-render1:

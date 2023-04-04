@@ -148,7 +148,7 @@ Tail services:
     docker logs -f --tail=-1 $(docker ps | grep designs-query | cut -d ' ' -f 1)
     docker logs -f --tail=-1 $(docker ps | grep designs-command | cut -d ' ' -f 1)
     docker logs -f --tail=-1 $(docker ps | grep designs-aggregate | cut -d ' ' -f 1)
-    docker logs -f --tail=-1 $(docker ps | grep designs-notify | cut -d ' ' -f 1)
+    docker logs -f --tail=-1 $(docker ps | grep designs-watch | cut -d ' ' -f 1)
     docker logs -f --tail=-1 $(docker ps | grep designs-render1 | cut -d ' ' -f 1)
     docker logs -f --tail=-1 $(docker ps | grep designs-render2 | cut -d ' ' -f 1)
     docker logs -f --tail=-1 $(docker ps | grep designs-render3 | cut -d ' ' -f 1)
@@ -356,7 +356,7 @@ Scale services:
 
     kubectl -n services scale deployment designs-query --replicas=2
     kubectl -n services scale deployment designs-aggregate --replicas=2
-    kubectl -n services scale deployment designs-notify --replicas=1
+    kubectl -n services scale deployment designs-watch --replicas=1
     kubectl -n services scale deployment designs-render --replicas=4
     kubectl -n services scale deployment frontend --replicas=2
 
@@ -427,7 +427,7 @@ Tail services:
     kubectl -n services logs -f --tail=-1 -l component=designs-query
     kubectl -n services logs -f --tail=-1 -l component=designs-command
     kubectl -n services logs -f --tail=-1 -l component=designs-aggregate
-    kubectl -n services logs -f --tail=-1 -l component=designs-notify
+    kubectl -n services logs -f --tail=-1 -l component=designs-watch
     kubectl -n services logs -f --tail=-1 -l component=designs-render
     kubectl -n services logs -f --tail=-1 -l component=frontend
 

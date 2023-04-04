@@ -44,7 +44,6 @@ public class TestScenario {
           .withEnv("LOGGING_LEVEL", "DEBUG")
           .withEnv("JAEGER_SERVICE_NAME", serviceName)
           .withEnv("KEYSTORE_SECRET", "secret")
-          .withEnv("CONSUL_HOST", "consul")
           .withEnv("KAFKA_HOST", "kafka")
           .withEnv("KAFKA_PORT", "9092")
           .withEnv("RENDER_TOPIC_PREFIX", TestConstants.RENDER_TOPIC_PREFIX)

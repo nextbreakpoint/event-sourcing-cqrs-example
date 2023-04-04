@@ -27,8 +27,8 @@ public class TestScenario {
 
     private Network network = Network.builder().driver("bridge").build();
 
-    private GenericContainer consul = ContainerUtils.createConsulContainer(network, "../../scripts/consul.json")
-            .waitingFor(Wait.forLogMessage(".* agent: Synced service: service=designs-sse.*", 1).withStartupTimeout(Duration.ofSeconds(60)));
+//    private GenericContainer consul = ContainerUtils.createConsulContainer(network, "../../scripts/consul.json")
+//            .waitingFor(Wait.forLogMessage(".* agent: Synced service: service=designs-sse.*", 1).withStartupTimeout(Duration.ofSeconds(60)));
 
     private GenericContainer zookeeper = ContainerUtils.createZookeeperContainer(network)
             .waitingFor(Wait.forLogMessage(".* binding to port /0.0.0.0:2181.*", 1).withStartupTimeout(Duration.ofSeconds(60)));
@@ -42,7 +42,6 @@ public class TestScenario {
             .withEnv("LOGGING_LEVEL", "DEBUG")
             .withEnv("JAEGER_SERVICE_NAME", serviceName)
             .withEnv("KEYSTORE_SECRET", "secret")
-            .withEnv("CONSUL_HOST", "consul")
             .withEnv("KAFKA_HOST", "kafka")
             .withEnv("KAFKA_PORT", "9092")
             .withEnv("EVENTS_TOPIC", TestConstants.EVENTS_TOPIC_NAME)
@@ -53,7 +52,7 @@ public class TestScenario {
             .withNetwork(network)
             .withNetworkAliases(serviceName)
             .withLogConsumer(frame -> outputStream.writeBytes(Optional.ofNullable(frame.getBytes()).orElse(new byte[0])))
-            .dependsOn(consul, zookeeper, kafka)
+            .dependsOn(zookeeper, kafka)
             .waitingFor(Wait.forLogMessage(".* Service listening on port " + HTTP_PORT + ".*", 1).withStartupTimeout(Duration.ofSeconds(20)));
 
     public void before() {
@@ -62,7 +61,6 @@ public class TestScenario {
         }
 
         if (useContainers) {
-            consul.start();
             zookeeper.start();
             kafka.start();
             service.start();
@@ -80,7 +78,6 @@ public class TestScenario {
             service.stop();
             kafka.stop();
             zookeeper.stop();
-            consul.stop();
         }
     }
 

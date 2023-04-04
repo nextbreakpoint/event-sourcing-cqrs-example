@@ -16,7 +16,7 @@ paths:
     get:
       tags:
         - designs
-      summary: Retrieve sse events url for a single design
+      summary: Receive sse events related to a single design
       operationId: watchDesign
       parameters:
         - name: revision
@@ -41,51 +41,8 @@ paths:
     get:
       tags:
         - designs
-      summary: Retrieve sse events url for the designs collection
-      operationId: watchDesigns
-      parameters:
-        - name: revision
-          in: query
-          description: initial revision
-          required: true
-          schema:
-            type: string
-      responses:
-        200:
-          description: Started watching
-          content:
-            {}
-  /sse/designs/{designId}:
-    get:
-      tags:
-        - designs
-      summary: Receive sse events related to a single design
-      operationId: sseDesign
-      parameters:
-        - name: revision
-          in: query
-          description: initial revision
-          required: true
-          schema:
-            type: string
-        - name: designId
-          in: path
-          description: uuid of design to watch
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        200:
-          description: Started watching
-          content:
-            {}
-  /sse/designs:
-    get:
-      tags:
-        - designs
       summary: Receive sse events related the designs collection
-      operationId: sseDesigns
+      operationId: watchDesigns
       parameters:
         - name: revision
           in: query

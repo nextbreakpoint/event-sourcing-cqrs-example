@@ -27,8 +27,5 @@ data:
 
       "kafka_bootstrap_servers": {{ $root.Values.kafkaServers | default "kafka.platform:9094" | quote }},
       "kafka_group_id": {{ $root.Values.kafkaGroupId | default "designs-notify" | quote }},
-      "events_topic": {{ $root.Values.eventsTopic | default "events" | quote }},
-
-      "consul_host": {{ $root.Values.consulHost | default "consul.platform" | quote }},
-      "consul_port": {{ $root.Values.consulPort | default "8500" | quote }}
+      "events_topic": {{ $root.Values.eventsTopic | default "events" | quote }}
     }

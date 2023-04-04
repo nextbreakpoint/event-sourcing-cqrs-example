@@ -14,7 +14,6 @@ import io.vertx.rxjava.core.http.HttpClient;
 import io.vertx.rxjava.ext.healthchecks.HealthCheckHandler;
 import io.vertx.rxjava.ext.healthchecks.HealthChecks;
 import io.vertx.rxjava.ext.web.Router;
-import io.vertx.rxjava.ext.web.handler.CorsHandler;
 import io.vertx.rxjava.ext.web.handler.LoggerHandler;
 import io.vertx.rxjava.ext.web.handler.TimeoutHandler;
 import io.vertx.rxjava.micrometer.PrometheusScrapingHandler;
@@ -22,10 +21,7 @@ import lombok.extern.log4j.Log4j2;
 import rx.Completable;
 
 import java.net.MalformedURLException;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
-
-import static com.nextbreakpoint.blueprint.common.core.Headers.*;
 
 @Log4j2
 public class Verticle extends AbstractVerticle {
@@ -55,8 +51,6 @@ public class Verticle extends AbstractVerticle {
 
             final int port = Integer.parseInt(config.getString("host_port"));
 
-            final String originPattern = config.getString("origin_pattern");
-
             final String jksStorePath = config.getString("server_keystore_path");
 
             final String jksStoreSecret = config.getString("server_keystore_secret");
@@ -83,8 +77,6 @@ public class Verticle extends AbstractVerticle {
 
             final String designsQueryUrl = config.getString("server_designs_query_url");
 
-            final String designsWatchUrl = config.getString("server_designs_watch_url");
-
             final HealthCheckHandler healthCheckHandler = HealthCheckHandler.createWithHealthChecks(HealthChecks.create(vertx));
 
             final Router mainRouter = Router.router(vertx);
@@ -102,8 +94,6 @@ public class Verticle extends AbstractVerticle {
                     .withTrustStorePath(clientTrustStorePath)
                     .withTrustStoreSecret(clientTrustStoreSecret)
                     .build();
-
-            configureWatchRoute(mainRouter, clientConfig, originPattern, designsWatchUrl);
 
             configureAuthRoute(mainRouter, clientConfig, authUrl);
 
@@ -218,25 +208,5 @@ public class Verticle extends AbstractVerticle {
                 .handler(new ProxyHandler(designsCommandClient));
 
         mainRouter.mountSubRouter("/v1/designs", designsRouter);
-    }
-
-    private void configureWatchRoute(Router mainRouter, HttpClientConfig clientConfig, String originPattern, String designsWatchUrl) throws MalformedURLException {
-        final Router designsRouter = Router.router(vertx);
-
-        final HttpClient designsWatchClient = HttpClientFactory.create(vertx, designsWatchUrl, clientConfig);
-
-        final CorsHandler corsHandler = CorsHandlerFactory.createWithAll(originPattern, List.of(COOKIE, AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN, LOCATION), List.of(COOKIE, CONTENT_TYPE, X_XSRF_TOKEN, LOCATION));
-
-        designsRouter.route("/*").handler(corsHandler);
-
-        designsRouter.get("/*")
-                .method(HttpMethod.OPTIONS)
-                .handler(new ProxyHandler(designsWatchClient));
-
-        designsRouter.get("/*")
-                .method(HttpMethod.GET)
-                .handler(new ProxyHandler(designsWatchClient));
-
-        mainRouter.mountSubRouter("/v1/watch/designs", designsRouter);
     }
 }

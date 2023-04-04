@@ -13,7 +13,6 @@ import com.nextbreakpoint.blueprint.common.vertx.*;
 import com.nextbreakpoint.blueprint.designs.controllers.DesignDocumentDeleteCompletedController;
 import com.nextbreakpoint.blueprint.designs.controllers.DesignDocumentUpdateCompletedController;
 import com.nextbreakpoint.blueprint.designs.handlers.NotificationHandler;
-import com.nextbreakpoint.blueprint.designs.handlers.WatchHandler;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServerOptions;
@@ -32,9 +31,6 @@ import io.vertx.rxjava.ext.web.handler.BodyHandler;
 import io.vertx.rxjava.ext.web.handler.CorsHandler;
 import io.vertx.rxjava.ext.web.handler.LoggerHandler;
 import io.vertx.rxjava.micrometer.PrometheusScrapingHandler;
-import io.vertx.rxjava.servicediscovery.ServiceDiscovery;
-import io.vertx.rxjava.servicediscovery.spi.ServiceImporter;
-import io.vertx.servicediscovery.consul.ConsulServiceImporter;
 import lombok.extern.log4j.Log4j2;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import rx.Completable;
@@ -57,8 +53,6 @@ import static com.nextbreakpoint.blueprint.common.core.Headers.*;
 @Log4j2
 public class Verticle extends AbstractVerticle {
     private KafkaPolling kafkaPolling;
-
-    private boolean discoveryStarted;
 
     public static void main(String[] args) {
         try {
@@ -112,10 +106,6 @@ public class Verticle extends AbstractVerticle {
 
             final String jwtKeystoreSecret = config.getString("jwt_keystore_secret");
 
-            final String consulHost = config.getString("consul_host");
-
-            final Integer consulPort = Integer.parseInt(config.getString("consul_port"));
-
             final String bootstrapServers = config.getString("kafka_bootstrap_servers", "localhost:9092");
 
             final String keyDeserializer = config.getString("kafka_key_serializer", "org.apache.kafka.common.serialization.StringDeserializer");
@@ -161,13 +151,9 @@ public class Verticle extends AbstractVerticle {
 
             final Router mainRouter = Router.router(vertx);
 
-            final ServiceDiscovery serviceDiscovery = ServiceDiscovery.create(vertx);
-
             final CorsHandler corsHandler = CorsHandlerFactory.createWithAll(originPattern, List.of(COOKIE, AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN));
 
             final Handler<RoutingContext> onAccessDenied = routingContext -> routingContext.response().setStatusCode(403).setStatusMessage("Access denied").end();
-
-            final Handler<RoutingContext> watchHandler = new AccessHandler(jwtProvider, new WatchHandler(serviceDiscovery), onAccessDenied, List.of(ANONYMOUS, ADMIN, GUEST));
 
             final Handler<RoutingContext> sseHandler = new AccessHandler(jwtProvider, NotificationHandler.create(vertx), onAccessDenied, List.of(ANONYMOUS, ADMIN, GUEST));
 
@@ -187,8 +173,6 @@ public class Verticle extends AbstractVerticle {
             final HealthCheckHandler healthCheckHandler = HealthCheckHandler.createWithHealthChecks(HealthChecks.create(vertx));
 
             healthCheckHandler.register("kafka-topic-events", 2000, future -> checkTopic(healthKafkaConsumer, eventsTopic, future));
-            healthCheckHandler.register("service-discovery-importer", 2000, future -> checkDiscoveryImporter(serviceDiscovery, future));
-            healthCheckHandler.register("service-discovery-records", 2000, future -> checkDiscoveryRecords(serviceDiscovery, future));
 
             final URL resource = RouterBuilder.class.getClassLoader().getResource("api-v1.yaml");
 
@@ -200,27 +184,14 @@ public class Verticle extends AbstractVerticle {
 
             IOUtils.copy(resource.openStream(), new FileOutputStream(tempFile), StandardCharsets.UTF_8);
 
-            final JsonObject scanConfig = new JsonObject()
-                    .put("host", consulHost)
-                    .put("port", consulPort)
-                    .put("scan-period", 5000);
-
-            startDiscovery(serviceDiscovery, scanConfig);
-
             RouterBuilder.create(vertx.getDelegate(), "file://" + tempFile.getAbsolutePath())
                     .onSuccess(routerBuilder -> {
                         routerBuilder.operation("watchDesign")
-                                .handler(context -> watchHandler.handle(RoutingContext.newInstance(context)));
+                                .handler(context -> sseHandler.handle(RoutingContext.newInstance(context)));
 
                         routerBuilder.operation("watchDesigns")
-                                .handler(context -> watchHandler.handle(RoutingContext.newInstance(context)));
-//
-                        routerBuilder.operation("sseDesign")
                                 .handler(context -> sseHandler.handle(RoutingContext.newInstance(context)));
 
-                        routerBuilder.operation("sseDesigns")
-                                .handler(context -> sseHandler.handle(RoutingContext.newInstance(context)));
-//
                         final Router apiRouter = Router.newInstance(routerBuilder.createRouter());
 
                         mainRouter.route().handler(LoggerHandler.create());
@@ -263,33 +234,6 @@ public class Verticle extends AbstractVerticle {
             log.error("Failed to start server", e);
             promise.fail(e);
         }
-    }
-
-    private void startDiscovery(ServiceDiscovery serviceDiscovery, JsonObject config) {
-        serviceDiscovery.registerServiceImporter(new ServiceImporter(new ConsulServiceImporter()), config, result -> {
-            discoveryStarted = result.succeeded();
-
-            if (result.succeeded()) {
-                log.info("Service importer registered", result.cause());
-            } else {
-                log.error("Can't register service importer", result.cause());
-            }
-        });
-    }
-
-    private void checkDiscoveryImporter(ServiceDiscovery serviceDiscovery, Promise<Status> promise) {
-        if (discoveryStarted) {
-            promise.complete();
-        } else {
-            promise.fail("Service importer not started");
-        }
-    }
-
-    private void checkDiscoveryRecords(ServiceDiscovery serviceDiscovery, Promise<Status> promise) {
-        serviceDiscovery
-                .rxGetRecords(record -> record.getName().equals("designs-sse"))
-                .timeout(1, TimeUnit.SECONDS)
-                .subscribe(records -> promise.complete(records.isEmpty() ? Status.KO() : Status.OK()), err -> promise.complete(Status.KO()));
     }
 
     private void checkTopic(KafkaConsumer<String, String> kafkaConsumer, String eventsTopic, Promise<Status> promise) {

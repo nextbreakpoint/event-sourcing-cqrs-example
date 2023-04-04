@@ -11,8 +11,6 @@ module com.nextbreakpoint.blueprint.designs.notify {
     requires io.vertx.web.openapi;
     requires io.vertx.healthcheck;
     requires io.vertx.metrics.micrometer;
-    requires io.vertx.servicediscovery;
-    requires io.vertx.servicediscovery.bridge.consul;
     requires io.vertx.tracing.opentelemetry;
     requires io.opentelemetry.semconv;
     requires io.opentelemetry.context;

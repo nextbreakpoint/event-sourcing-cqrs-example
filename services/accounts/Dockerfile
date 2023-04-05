@@ -1,10 +1,10 @@
-FROM maven:3-openjdk-11 AS build
+FROM maven:3-eclipse-temurin-17 AS build
 ARG maven_args
 ADD . /src
 WORKDIR /src
 RUN mvn clean verify -s settings.xml -t toolchains.xml $maven_args -DexcludedGroups=docker
 
-#FROM oracle/graalvm-ce:20.3.0-java11 as native-image
+#FROM graalvm/graalvm-ce:22.3.1-java17 as native-image
 #COPY --from=build /src/target/libs/* /libs/
 #RUN gu install native-image
 #WORKDIR /
@@ -12,7 +12,7 @@ RUN mvn clean verify -s settings.xml -t toolchains.xml $maven_args -DexcludedGro
 
 #FROM gcr.io/distroless/base
 #COPY --from=native-image accounts /accounts
-FROM openjdk:11-jdk
+FROM eclipse-temurin:17-jdk
 COPY --from=build /src/target/libs/* /libs/
 COPY --from=build /src/target/service.jar /libs/
 COPY entrypoint.sh /entrypoint.sh

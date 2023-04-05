@@ -10,7 +10,7 @@
     <parent>
         <groupId>com.nextbreakpoint</groupId>
         <artifactId>com.nextbreakpoint.blueprint.service</artifactId>
-        <version>1.0.0-wip-697c2adf-1680688527</version>
+        <version>1.0.0-wip-1536221c-1680711240</version>
     </parent>
     <repositories>
         <repository>
@@ -88,6 +88,10 @@
                 <configuration>
                     <rulesUri>file://${project.basedir}/../../maven-version-rules.xml</rulesUri>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
             </plugin>
         </plugins>
     </build>

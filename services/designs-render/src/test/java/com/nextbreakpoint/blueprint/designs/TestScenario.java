@@ -52,7 +52,6 @@ public class TestScenario {
           .withEnv("MINIO_PORT", "9000")
           .withEnv("AWS_ACCESS_KEY_ID", "admin")
           .withEnv("AWS_SECRET_ACCESS_KEY", "password")
-          .withFileSystemBind("../../secrets/keystore_server.jks", "/secrets/keystore_server.jks", BindMode.READ_ONLY)
           .withFileSystemBind("../../secrets/keystore_auth.jceks", "/secrets/keystore_auth.jceks", BindMode.READ_ONLY)
           .withFileSystemBind("config/integration.json", "/etc/config.json", BindMode.READ_ONLY)
           .withExposedPorts(HTTP_PORT, DEBUG_PORT)

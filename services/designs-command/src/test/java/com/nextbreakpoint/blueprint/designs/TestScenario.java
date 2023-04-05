@@ -51,7 +51,6 @@ public class TestScenario {
           .withEnv("KAFKA_PORT", "9092")
           .withEnv("COMMANDS_TOPIC", TestConstants.COMMANDS_TOPIC_NAME)
           .withEnv("EVENTS_TOPIC", TestConstants.EVENTS_TOPIC_NAME)
-          .withFileSystemBind("../../secrets/keystore_server.jks", "/secrets/keystore_server.jks", BindMode.READ_ONLY)
           .withFileSystemBind("../../secrets/keystore_auth.jceks", "/secrets/keystore_auth.jceks", BindMode.READ_ONLY)
           .withFileSystemBind("config/integration.json", "/etc/config.json", BindMode.READ_ONLY)
           .withExposedPorts(HTTP_PORT, DEBUG_PORT)

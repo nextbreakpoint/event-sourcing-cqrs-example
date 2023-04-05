@@ -40,7 +40,6 @@ public class TestScenario {
           .withEnv("DATABASE_NAME", TestConstants.DATABASE_NAME)
           .withEnv("DATABASE_USERNAME", "verticle")
           .withEnv("DATABASE_PASSWORD", "password")
-          .withFileSystemBind("../../secrets/keystore_server.jks", "/secrets/keystore_server.jks", BindMode.READ_ONLY)
           .withFileSystemBind("../../secrets/keystore_auth.jceks", "/secrets/keystore_auth.jceks", BindMode.READ_ONLY)
           .withFileSystemBind("config/integration.json", "/etc/config.json", BindMode.READ_ONLY)
           .withExposedPorts(HTTP_PORT, DEBUG_PORT)

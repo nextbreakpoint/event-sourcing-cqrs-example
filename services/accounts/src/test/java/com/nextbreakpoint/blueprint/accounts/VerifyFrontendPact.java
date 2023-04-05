@@ -43,7 +43,7 @@ public class VerifyFrontendPact {
 
   @BeforeEach
   public void before(PactVerificationContext context) {
-    context.setTarget(testCases.getHttpsTestTarget());
+    context.setTarget(testCases.getHttpTestTarget());
   }
 
   @TestTemplate

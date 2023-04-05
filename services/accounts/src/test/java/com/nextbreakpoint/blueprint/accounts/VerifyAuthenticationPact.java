@@ -43,7 +43,7 @@ public class VerifyAuthenticationPact {
 
   @BeforeEach
   public void before(PactVerificationContext context) {
-    context.setTarget(testCases.getHttpsTestTarget());
+    context.setTarget(testCases.getHttpTestTarget());
   }
 
   @TestTemplate

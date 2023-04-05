@@ -1,6 +1,6 @@
 package com.nextbreakpoint.blueprint.accounts;
 
-import au.com.dius.pact.provider.junit5.HttpsTestTarget;
+import au.com.dius.pact.provider.junit5.HttpTestTarget;
 import io.vertx.rxjava.core.RxHelper;
 import io.vertx.rxjava.core.Vertx;
 import org.jetbrains.annotations.NotNull;
@@ -48,7 +48,7 @@ public class TestCases {
     @NotNull
     public URL makeBaseURL(String path) throws MalformedURLException {
         final String normPath = path.startsWith("/") ? path.substring(1) : path;
-        return new URL("https://" + scenario.getServiceHost() + ":" + scenario.getServicePort() + "/" + normPath);
+        return new URL("http://" + scenario.getServiceHost() + ":" + scenario.getServicePort() + "/" + normPath);
     }
 
     @NotNull
@@ -67,8 +67,8 @@ public class TestCases {
     }
 
     @NotNull
-    public HttpsTestTarget getHttpsTestTarget() {
-        return new HttpsTestTarget(scenario.getServiceHost(), scenario.getServicePort(), "/", true);
+    public HttpTestTarget getHttpTestTarget() {
+        return new HttpTestTarget(scenario.getServiceHost(), scenario.getServicePort(), "/");
     }
 
     @NotNull

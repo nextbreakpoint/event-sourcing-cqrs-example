@@ -10,7 +10,7 @@
     <parent>
         <groupId>com.nextbreakpoint</groupId>
         <artifactId>com.nextbreakpoint.blueprint.service</artifactId>
-        <version>1.0.0-wip-06e84f28-1680618780</version>
+        <version>1.0.0-wip-697c2adf-1680688527</version>
     </parent>
     <repositories>
         <repository>
@@ -101,7 +101,7 @@
                         </goals>
                         <configuration>
                             <environmentVariables>
-                                <ACCOUNTS_URL>https://localhost:30110</ACCOUNTS_URL>
+                                <ACCOUNTS_URL>http://localhost:30110</ACCOUNTS_URL>
                                 <GITHUB_API_URL>https://api.github.com</GITHUB_API_URL>
                                 <GITHUB_OAUTH_URL>https://github.com</GITHUB_OAUTH_URL>
                                 <GITHUB_CLIENT_ID>${env.GITHUB_CLIENT_ID}</GITHUB_CLIENT_ID>

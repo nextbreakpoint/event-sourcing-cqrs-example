@@ -68,7 +68,7 @@ public class TestCases {
 
     @NotNull
     public String getServiceUrl() {
-        return "https://" + scenario.getServiceHost() + ":" + scenario.getServicePort();
+        return "http://" + scenario.getServiceHost() + ":" + scenario.getServicePort();
     }
 
     @NotNull

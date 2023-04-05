@@ -26,7 +26,6 @@ services:
       - bridge
     volumes:
       - ./services/accounts/config/integration.json:/etc/config.json
-      - ./secrets/keystore_server.jks:/secrets/keystore_server.jks
       - ./secrets/keystore_auth.jceks:/secrets/keystore_auth.jceks
   authentication:
     restart: unless-stopped
@@ -35,7 +34,7 @@ services:
       JAEGER_ATTRIBUTES: service.name=authentication,service.version=${VERSION},service.namespace=designs,environment=dev
       JAEGER_ENDPOINT: http://host.docker.internal:14250
       KEYSTORE_SECRET: secret
-      ACCOUNTS_URL: https://accounts:30110
+      ACCOUNTS_URL: http://accounts:30110
       GITHUB_API_URL: https://api.github.com
       GITHUB_OAUTH_URL: https://github.com
       GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
@@ -57,7 +56,6 @@ services:
     volumes:
       - ./services/authentication/config/integration.json:/etc/config.json
       - ./secrets/keystore_auth.jceks:/secrets/keystore_auth.jceks
-      - ./secrets/keystore_server.jks:/secrets/keystore_server.jks
       - ./secrets/keystore_client.jks:/secrets/keystore_client.jks
       - ./secrets/truststore_client.jks:/secrets/truststore_client.jks
   designs-query:
@@ -94,7 +92,6 @@ services:
     volumes:
       - ./services/designs-query/config/integration.json:/etc/config.json
       - ./secrets/keystore_auth.jceks:/secrets/keystore_auth.jceks
-      - ./secrets/keystore_server.jks:/secrets/keystore_server.jks
   designs-command:
     restart: unless-stopped
     image: integration/designs-command:${VERSION}
@@ -126,7 +123,6 @@ services:
     volumes:
       - ./services/designs-command/config/integration.json:/etc/config.json
       - ./secrets/keystore_auth.jceks:/secrets/keystore_auth.jceks
-      - ./secrets/keystore_server.jks:/secrets/keystore_server.jks
   designs-aggregate:
     restart: unless-stopped
     image: integration/designs-aggregate:${VERSION}
@@ -159,7 +155,6 @@ services:
     volumes:
       - ./services/designs-aggregate/config/integration.json:/etc/config.json
       - ./secrets/keystore_auth.jceks:/secrets/keystore_auth.jceks
-      - ./secrets/keystore_server.jks:/secrets/keystore_server.jks
   designs-watch:
     restart: unless-stopped
     image: integration/designs-watch:${VERSION}
@@ -187,7 +182,6 @@ services:
     volumes:
       - ./services/designs-watch/config/integration.json:/etc/config.json
       - ./secrets/keystore_auth.jceks:/secrets/keystore_auth.jceks
-      - ./secrets/keystore_server.jks:/secrets/keystore_server.jks
   designs-render1:
     restart: unless-stopped
     image: integration/designs-render:${VERSION}
@@ -220,7 +214,6 @@ services:
     volumes:
       - ./services/designs-render/config/integration.json:/etc/config.json
       - ./secrets/keystore_auth.jceks:/secrets/keystore_auth.jceks
-      - ./secrets/keystore_server.jks:/secrets/keystore_server.jks
   designs-render2:
     restart: unless-stopped
     image: integration/designs-render:${VERSION}
@@ -253,7 +246,6 @@ services:
     volumes:
       - ./services/designs-render/config/integration.json:/etc/config.json
       - ./secrets/keystore_auth.jceks:/secrets/keystore_auth.jceks
-      - ./secrets/keystore_server.jks:/secrets/keystore_server.jks
   designs-render3:
     restart: unless-stopped
     image: integration/designs-render:${VERSION}
@@ -286,7 +278,6 @@ services:
     volumes:
       - ./services/designs-render/config/integration.json:/etc/config.json
       - ./secrets/keystore_auth.jceks:/secrets/keystore_auth.jceks
-      - ./secrets/keystore_server.jks:/secrets/keystore_server.jks
   designs-render4:
     restart: unless-stopped
     image: integration/designs-render:${VERSION}
@@ -319,7 +310,6 @@ services:
     volumes:
       - ./services/designs-render/config/integration.json:/etc/config.json
       - ./secrets/keystore_auth.jceks:/secrets/keystore_auth.jceks
-      - ./secrets/keystore_server.jks:/secrets/keystore_server.jks
   frontend:
     restart: unless-stopped
     image: integration/frontend:${VERSION}

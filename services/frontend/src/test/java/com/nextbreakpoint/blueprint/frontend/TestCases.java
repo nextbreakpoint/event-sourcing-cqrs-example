@@ -51,7 +51,7 @@ public class TestCases {
     @NotNull
     public URL makeBaseURL(String path) throws MalformedURLException {
         final String normPath = path.startsWith("/") ? path.substring(1) : path;
-        return new URL("https://" + scenario.getServiceHost() + ":" + scenario.getServicePort() + "/" + normPath);
+        return new URL("http://" + scenario.getServiceHost() + ":" + scenario.getServicePort() + "/" + normPath);
     }
 
     @NotNull

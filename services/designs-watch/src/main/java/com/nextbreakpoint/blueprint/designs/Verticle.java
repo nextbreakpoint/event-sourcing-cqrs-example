@@ -12,7 +12,7 @@ import com.nextbreakpoint.blueprint.common.events.DesignDocumentUpdateCompleted;
 import com.nextbreakpoint.blueprint.common.vertx.*;
 import com.nextbreakpoint.blueprint.designs.controllers.DesignDocumentDeleteCompletedController;
 import com.nextbreakpoint.blueprint.designs.controllers.DesignDocumentUpdateCompletedController;
-import com.nextbreakpoint.blueprint.designs.handlers.NotificationHandler;
+import com.nextbreakpoint.blueprint.designs.handlers.WatchHandler;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServerOptions;
@@ -155,7 +155,7 @@ public class Verticle extends AbstractVerticle {
 
             final Handler<RoutingContext> onAccessDenied = routingContext -> routingContext.response().setStatusCode(403).setStatusMessage("Access denied").end();
 
-            final Handler<RoutingContext> sseHandler = new AccessHandler(jwtProvider, NotificationHandler.create(vertx), onAccessDenied, List.of(ANONYMOUS, ADMIN, GUEST));
+            final Handler<RoutingContext> watchHandler = new AccessHandler(jwtProvider, WatchHandler.create(vertx), onAccessDenied, List.of(ANONYMOUS, ADMIN, GUEST));
 
             final Map<String, RxSingleHandler<InputMessage, ?>> messageHandlers = new HashMap<>();
 
@@ -186,11 +186,8 @@ public class Verticle extends AbstractVerticle {
 
             RouterBuilder.create(vertx.getDelegate(), "file://" + tempFile.getAbsolutePath())
                     .onSuccess(routerBuilder -> {
-                        routerBuilder.operation("watchDesign")
-                                .handler(context -> sseHandler.handle(RoutingContext.newInstance(context)));
-
                         routerBuilder.operation("watchDesigns")
-                                .handler(context -> sseHandler.handle(RoutingContext.newInstance(context)));
+                                .handler(context -> watchHandler.handle(RoutingContext.newInstance(context)));
 
                         final Router apiRouter = Router.newInstance(routerBuilder.createRouter());
 

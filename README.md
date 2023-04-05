@@ -356,7 +356,7 @@ Scale services:
 
     kubectl -n services scale deployment designs-query --replicas=2
     kubectl -n services scale deployment designs-aggregate --replicas=2
-    kubectl -n services scale deployment designs-watch --replicas=1
+    kubectl -n services scale deployment designs-watch --replicas=2
     kubectl -n services scale deployment designs-render --replicas=4
     kubectl -n services scale deployment frontend --replicas=2
 

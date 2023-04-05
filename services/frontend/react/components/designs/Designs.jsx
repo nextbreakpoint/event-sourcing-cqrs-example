@@ -43,7 +43,7 @@ let Designs = class Designs extends React.Component {
 
         try {
             if (typeof(EventSource) !== "undefined") {
-                var source = new EventSource(component.props.config.api_url + "/v1/watch/designs?revision=" + revision, { withCredentials: true })
+                var source = new EventSource(component.props.config.api_url + "/v1/designs/watch?revision=" + revision, { withCredentials: true })
 
                 source.onerror = function(error) {
                    console.log(error)

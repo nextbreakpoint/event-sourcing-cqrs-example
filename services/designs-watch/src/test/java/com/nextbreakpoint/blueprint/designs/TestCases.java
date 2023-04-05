@@ -110,7 +110,7 @@ public class TestCases {
                     System.out.println(notification);
                     notifications.add(notification);
                 })
-                .connect("/v1/watch/designs?revision=0000000000000000-0000000000000000", null, result -> {
+                .connect("/v1/designs/watch?revision=0000000000000000-0000000000000000", null, result -> {
                     final SSENotification notification = new SSENotification("CONNECT", result.succeeded() ? "SUCCESS" : "FAILURE");
                     System.out.println(notification);
                     notifications.add(notification);
@@ -168,7 +168,7 @@ public class TestCases {
                     System.out.println(notification);
                     notifications.add(notification);
                 })
-                .connect("/v1/watch/designs/" + designId + "?revision=0000000000000000-0000000000000000", null, result -> {
+                .connect("/v1/designs/watch?designId=" + designId + "&revision=0000000000000000-0000000000000000", null, result -> {
                     final SSENotification notification = new SSENotification("CONNECT", result.succeeded() ? "SUCCESS" : "FAILURE");
                     System.out.println(notification);
                     notifications.add(notification);

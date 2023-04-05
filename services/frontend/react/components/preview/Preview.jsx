@@ -41,7 +41,7 @@ let Preview = class Preview extends React.Component {
 
         try {
             if (typeof(EventSource) !== "undefined") {
-                var source = new EventSource(component.props.config.api_url + "/v1/watch/designs/" + this.props.uuid + "?revision=" + revision, { withCredentials: true })
+                var source = new EventSource(component.props.config.api_url + "/v1/designs/watch?designId=" + this.props.uuid + "&revision=" + revision, { withCredentials: true })
 
                 source.onerror = function(error) {
                    console.log(error)

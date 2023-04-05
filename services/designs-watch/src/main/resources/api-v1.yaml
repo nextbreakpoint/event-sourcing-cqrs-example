@@ -12,36 +12,11 @@ tags:
   - name: designs
     description: Everything about receiving notifications about designs
 paths:
-  /watch/designs/{designId}:
+  /designs/watch:
     get:
       tags:
         - designs
-      summary: Receive sse events related to a single design
-      operationId: watchDesign
-      parameters:
-        - name: revision
-          in: query
-          description: initial revision
-          required: true
-          schema:
-            type: string
-        - name: designId
-          in: path
-          description: uuid of design to watch
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        200:
-          description: Started watching
-          content:
-            {}
-  /watch/designs:
-    get:
-      tags:
-        - designs
-      summary: Receive sse events related the designs collection
+      summary: Receive events about designs
       operationId: watchDesigns
       parameters:
         - name: revision
@@ -50,6 +25,13 @@ paths:
           required: true
           schema:
             type: string
+        - name: designId
+          in: query
+          description: uuid of the design to watch
+          required: false
+          schema:
+            type: string
+            format: uuid
       responses:
         200:
           description: Started watching

@@ -14,21 +14,21 @@ import lombok.extern.log4j.Log4j2;
 import java.util.*;
 
 @Log4j2
-public class NotificationHandler implements Handler<RoutingContext> {
+public class WatchHandler implements Handler<RoutingContext> {
     private static final String REVISION_NULL = "0000000000000000-0000000000000000";
 
     private Map<String, Set<Watcher>> watcherMap = new HashMap<>();
 
     private final Vertx vertx;
 
-    protected NotificationHandler(Vertx vertx) {
+    protected WatchHandler(Vertx vertx) {
         this.vertx = vertx;
 
         vertx.eventBus().consumer("notifications", this::handleMessage);
     }
 
-    public static NotificationHandler create(Vertx vertx) {
-        return new NotificationHandler(vertx);
+    public static WatchHandler create(Vertx vertx) {
+        return new WatchHandler(vertx);
     }
 
     public void handle(RoutingContext routingContext) {
@@ -146,12 +146,7 @@ public class NotificationHandler implements Handler<RoutingContext> {
     }
 
     private String getWatchKey(RoutingContext routingContext) {
-        final String uuid = routingContext.pathParam("designId");
-        if (uuid == null) {
-            return "*";
-        } else {
-            return uuid;
-        }
+        return routingContext.queryParam("designId").stream().findFirst().orElse("*");
     }
 
     private String getRevision(RoutingContext routingContext) {

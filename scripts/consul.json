@@ -18,11 +18,11 @@
     }
   },
   "services": [{
-    "name": "designs-sse",
+    "name": "server",
     "tags": [
       "http-endpoint"
     ],
-    "port": 30123,
+    "port": 8080,
     "address": "localhost"
   }],
   "ui_config": {

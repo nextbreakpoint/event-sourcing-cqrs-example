@@ -27,7 +27,7 @@ data:
       "client_web_url": {{ $root.Values.clientWebUrl | default "https://localhost:8080" | quote }},
       "client_auth_url": {{ $root.Values.clientAuthUrl | default "https://localhost:8080" | quote }},
 
-      "server_accounts_url": {{ $root.Values.accountsApiUrl | default "https://accounts:8080" | quote }},
+      "server_accounts_url": {{ $root.Values.accountsApiUrl | default "http://accounts:8080" | quote }},
 
       "github_url": {{ $root.Values.githubApiUrl | default "https://api.github.com" | quote }},
       "github_client_id": "${GITHUB_CLIENT_ID}",

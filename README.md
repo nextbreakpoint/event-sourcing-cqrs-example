@@ -194,7 +194,7 @@ Remove Docker volumes:
 
 Setup Minikube:
 
-    minikube start --vm-driver=hyperkit --cpus 8 --memory 32768m --disk-size 64g --kubernetes-version=v1.23.3
+    minikube start --vm-driver=hyperkit --cpus 8 --memory 49152m --disk-size 64g --kubernetes-version=v1.23.3
 
 Create alias (unless you already have kubectl installed):
 

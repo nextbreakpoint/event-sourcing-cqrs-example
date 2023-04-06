@@ -98,18 +98,6 @@ spec:
               subPath: config.json
             - name: secret-vol
               readOnly: true
-              mountPath: /etc/keystore_client.jks
-              subPath: keystore_client.jks
-            - name: secret-vol
-              readOnly: true
-              mountPath: /etc/truststore_client.jks
-              subPath: truststore_client.jks
-            - name: secret-vol
-              readOnly: true
-              mountPath: /etc/keystore_server.jks
-              subPath: keystore_server.jks
-            - name: secret-vol
-              readOnly: true
               mountPath: /etc/keystore_auth.jceks
               subPath: keystore_auth.jceks
           {{- if $root.Values.resources }}
@@ -120,7 +108,7 @@ spec:
             httpGet:
               path: /health
               port: http
-              scheme: HTTPS
+              scheme: HTTP
             failureThreshold: 2
             initialDelaySeconds: 5
             timeoutSeconds: 2
@@ -129,7 +117,7 @@ spec:
             httpGet:
               path: /health
               port: http
-              scheme: HTTPS
+              scheme: HTTP
             failureThreshold: 2
             initialDelaySeconds: 5
             timeoutSeconds: 2
@@ -138,7 +126,7 @@ spec:
             httpGet:
               path: /health
               port: http
-              scheme: HTTPS
+              scheme: HTTP
             failureThreshold: 12
             timeoutSeconds: 2
             periodSeconds: 5

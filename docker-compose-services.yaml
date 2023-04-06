@@ -56,8 +56,6 @@ services:
     volumes:
       - ./services/authentication/config/integration.json:/etc/config.json
       - ./secrets/keystore_auth.jceks:/secrets/keystore_auth.jceks
-      - ./secrets/keystore_client.jks:/secrets/keystore_client.jks
-      - ./secrets/truststore_client.jks:/secrets/truststore_client.jks
   designs-query:
     restart: unless-stopped
     image: integration/designs-query:${VERSION}
@@ -326,9 +324,6 @@ services:
       - bridge
     volumes:
       - ./services/frontend/config/integration.json:/etc/config.json
-      - ./secrets/server_key.pem:/secrets/server_key.pem
-      - ./secrets/server_cert.pem:/secrets/server_cert.pem
-      - ./secrets/ca_cert.pem:/secrets/ca_cert.pem
 networks:
   bridge:
     driver: bridge

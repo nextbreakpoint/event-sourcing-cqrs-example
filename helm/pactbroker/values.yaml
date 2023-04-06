@@ -4,7 +4,7 @@
 
 image:
   repository: pactfoundation/pact-broker
-  tag: 2.79.0.1
+  tag: 2.107.0.1
   pullPolicy: IfNotPresent
   pullSecrets:
 

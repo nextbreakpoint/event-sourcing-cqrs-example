@@ -16,5 +16,5 @@ data:
     {
       "client_web_url": {{ $root.Values.clientWebUrl | default "https://localhost:8080" | quote }},
       "client_api_url": {{ $root.Values.clientApiUrl | default "https://localhost:8080" | quote }},
-      "server_api_url": {{ $root.Values.serverApiUrl | default "https://frontend:8080" | quote }}
+      "server_api_url": {{ $root.Values.serverApiUrl | default "https://nginx.platform.svc.cluster.local:443" | quote }}
     }

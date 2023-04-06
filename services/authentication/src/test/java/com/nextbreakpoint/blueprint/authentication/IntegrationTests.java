@@ -1,17 +1,17 @@
 package com.nextbreakpoint.blueprint.authentication;
 
-import com.jayway.restassured.RestAssured;
 import com.xebialabs.restito.server.StubServer;
+import io.restassured.RestAssured;
 import org.glassfish.grizzly.http.util.HttpStatus;
 import org.junit.jupiter.api.*;
 
 import java.net.MalformedURLException;
 
-import static com.jayway.restassured.RestAssured.given;
 import static com.xebialabs.restito.builder.stub.StubHttp.whenHttp;
 import static com.xebialabs.restito.builder.verify.VerifyHttp.verifyHttp;
 import static com.xebialabs.restito.semantics.Action.*;
 import static com.xebialabs.restito.semantics.Condition.*;
+import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.startsWith;
 

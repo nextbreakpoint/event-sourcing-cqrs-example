@@ -1,9 +1,9 @@
 package com.nextbreakpoint.blueprint.authentication;
 
-import com.jayway.restassured.config.LogConfig;
-import com.jayway.restassured.config.RedirectConfig;
-import com.jayway.restassured.config.RestAssuredConfig;
-import com.jayway.restassured.config.SSLConfig;
+import io.restassured.config.LogConfig;
+import io.restassured.config.RedirectConfig;
+import io.restassured.config.RestAssuredConfig;
+import io.restassured.config.SSLConfig;
 import org.jetbrains.annotations.NotNull;
 
 public class TestUtils {

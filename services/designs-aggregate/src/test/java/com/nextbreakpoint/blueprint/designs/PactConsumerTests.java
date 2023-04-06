@@ -6,8 +6,8 @@ import au.com.dius.pact.consumer.junit5.PactConsumerTestExt;
 import au.com.dius.pact.consumer.junit5.PactTestFor;
 import au.com.dius.pact.consumer.junit5.ProviderType;
 import au.com.dius.pact.core.model.PactSpecVersion;
+import au.com.dius.pact.core.model.V4Pact;
 import au.com.dius.pact.core.model.annotations.Pact;
-import au.com.dius.pact.core.model.messaging.MessagePact;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.events.DesignInsertRequested;
 import com.nextbreakpoint.blueprint.common.events.mappers.DesignInsertRequestedOutputMapper;
@@ -42,7 +42,7 @@ public class PactConsumerTests {
     }
 
     @Pact(consumer = "designs-aggregate", provider = "designs-command")
-    public MessagePact designInsertRequested(MessagePactBuilder builder) {
+    public V4Pact designInsertRequested(MessagePactBuilder builder) {
         final UUID uuid = new UUID(0L, 1L);
 
         PactDslJsonBody event1 = new PactDslJsonBody()
@@ -69,7 +69,7 @@ public class PactConsumerTests {
     }
 
     @Pact(consumer = "designs-aggregate", provider = "designs-command")
-    public MessagePact designUpdateRequested(MessagePactBuilder builder) {
+    public V4Pact designUpdateRequested(MessagePactBuilder builder) {
         final UUID uuid = new UUID(0L, 2L);
 
         PactDslJsonBody event1 = new PactDslJsonBody()
@@ -115,7 +115,7 @@ public class PactConsumerTests {
     }
 
     @Pact(consumer = "designs-aggregate", provider = "designs-command")
-    public MessagePact designDeleteRequested(MessagePactBuilder builder) {
+    public V4Pact designDeleteRequested(MessagePactBuilder builder) {
         final UUID uuid = new UUID(0L, 3L);
 
         PactDslJsonBody event1 = new PactDslJsonBody()
@@ -159,7 +159,7 @@ public class PactConsumerTests {
     }
 
     @Pact(consumer = "designs-aggregate", provider = "designs-render")
-    public MessagePact tileRenderCompleted(MessagePactBuilder builder) {
+    public V4Pact tileRenderCompleted(MessagePactBuilder builder) {
         final UUID uuid = new UUID(0L, 4L);
 
         PactDslJsonBody event1 = new PactDslJsonBody()
@@ -277,55 +277,55 @@ public class PactConsumerTests {
     }
 
     @Test
-    @PactTestFor(providerName = "designs-command", port = "1111", pactMethod = "designInsertRequested", providerType = ProviderType.ASYNCH, pactVersion = PactSpecVersion.V3)
+    @PactTestFor(providerName = "designs-command", pactMethod = "designInsertRequested", providerType = ProviderType.ASYNCH, pactVersion = PactSpecVersion.V4)
     @DisplayName("Should update the design after receiving a DesignInsertRequested event")
-    public void shouldUpdateTheDesignWhenReceivingADesignInsertRequestedMessage(MessagePact pact) {
-        assertThat(pact.getMessages()).hasSize(1);
+    public void shouldUpdateTheDesignWhenReceivingADesignInsertRequestedMessage(V4Pact pact) {
+        assertThat(pact.getInteractions()).hasSize(1);
 
-        final OutputMessage designInsertRequestedMessage = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getMessages().get(0)));
+        final OutputMessage designInsertRequestedMessage = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(0).asAsynchronousMessage()));
 
         testCases.shouldUpdateTheDesignWhenReceivingADesignInsertRequestedMessage(designInsertRequestedMessage);
     }
 
     @Test
-    @PactTestFor(providerName = "designs-command", port = "1112", pactMethod = "designUpdateRequested", providerType = ProviderType.ASYNCH, pactVersion = PactSpecVersion.V3)
+    @PactTestFor(providerName = "designs-command", pactMethod = "designUpdateRequested", providerType = ProviderType.ASYNCH, pactVersion = PactSpecVersion.V4)
     @DisplayName("Should update the design after receiving a DesignUpdateRequested event")
-    public void shouldUpdateTheDesignWhenReceivingADesignUpdateRequestedMessage(MessagePact pact) {
-        assertThat(pact.getMessages()).hasSize(2);
+    public void shouldUpdateTheDesignWhenReceivingADesignUpdateRequestedMessage(V4Pact pact) {
+        assertThat(pact.getInteractions()).hasSize(2);
 
-        final OutputMessage designInsertRequestedMessage = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getMessages().get(0)));
-        final OutputMessage designUpdateRequestedMessage = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getMessages().get(1)));
+        final OutputMessage designInsertRequestedMessage = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(0).asAsynchronousMessage()));
+        final OutputMessage designUpdateRequestedMessage = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(1).asAsynchronousMessage()));
 
         testCases.shouldUpdateTheDesignWhenReceivingADesignUpdateRequestedMessage(designInsertRequestedMessage, designUpdateRequestedMessage);
     }
 
     @Test
-    @PactTestFor(providerName = "designs-command", port = "1113", pactMethod = "designDeleteRequested", providerType = ProviderType.ASYNCH, pactVersion = PactSpecVersion.V3)
+    @PactTestFor(providerName = "designs-command", pactMethod = "designDeleteRequested", providerType = ProviderType.ASYNCH, pactVersion = PactSpecVersion.V4)
     @DisplayName("Should update the design after receiving a DesignDeleteRequested event")
-    public void shouldUpdateTheDesignWhenReceivingADesignDeleteRequestedMessage(MessagePact pact) {
-        assertThat(pact.getMessages()).hasSize(2);
+    public void shouldUpdateTheDesignWhenReceivingADesignDeleteRequestedMessage(V4Pact pact) {
+        assertThat(pact.getInteractions()).hasSize(2);
 
-        final OutputMessage designInsertRequestedMessage = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getMessages().get(0)));
-        final OutputMessage designDeleteRequestedMessage = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getMessages().get(1)));
+        final OutputMessage designInsertRequestedMessage = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(0).asAsynchronousMessage()));
+        final OutputMessage designDeleteRequestedMessage = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(1).asAsynchronousMessage()));
 
         testCases.shouldUpdateTheDesignWhenReceivingADesignDeleteRequestedMessage(designInsertRequestedMessage, designDeleteRequestedMessage);
     }
 
     @Test
-    @PactTestFor(providerName = "designs-render", port = "1114", pactMethod = "tileRenderCompleted", providerType = ProviderType.ASYNCH, pactVersion = PactSpecVersion.V3)
+    @PactTestFor(providerName = "designs-render", pactMethod = "tileRenderCompleted", providerType = ProviderType.ASYNCH, pactVersion = PactSpecVersion.V4)
     @DisplayName("Should update the design after receiving a TileRenderCompleted event")
-    public void shouldUpdateTheDesignWhenReceivingATileRenderCompletedMessage(MessagePact pact) {
-        assertThat(pact.getMessages()).hasSize(5);
+    public void shouldUpdateTheDesignWhenReceivingATileRenderCompletedMessage(V4Pact pact) {
+        assertThat(pact.getInteractions()).hasSize(5);
 
         final DesignInsertRequested designInsertRequested = new DesignInsertRequested(new UUID(0L, 4L), TestConstants.COMMAND_1, TestConstants.USER_ID, TestConstants.JSON_1);
 
         final OutputMessage designInsertRequestedMessage = new DesignInsertRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designInsertRequested);
 
-        final OutputMessage tileRenderCompletedMessage1 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getMessages().get(0)));
-        final OutputMessage tileRenderCompletedMessage2 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getMessages().get(1)));
-        final OutputMessage tileRenderCompletedMessage3 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getMessages().get(2)));
-        final OutputMessage tileRenderCompletedMessage4 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getMessages().get(3)));
-        final OutputMessage tileRenderCompletedMessage5 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getMessages().get(4)));
+        final OutputMessage tileRenderCompletedMessage1 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(0).asAsynchronousMessage()));
+        final OutputMessage tileRenderCompletedMessage2 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(1).asAsynchronousMessage()));
+        final OutputMessage tileRenderCompletedMessage3 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(2).asAsynchronousMessage()));
+        final OutputMessage tileRenderCompletedMessage4 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(3).asAsynchronousMessage()));
+        final OutputMessage tileRenderCompletedMessage5 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(4).asAsynchronousMessage()));
 
         final List<OutputMessage> tileRenderCompletedMessages = List.of(tileRenderCompletedMessage1, tileRenderCompletedMessage2, tileRenderCompletedMessage3, tileRenderCompletedMessage4, tileRenderCompletedMessage5);
 

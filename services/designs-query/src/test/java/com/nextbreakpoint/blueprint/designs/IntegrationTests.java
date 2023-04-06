@@ -1,7 +1,5 @@
 package com.nextbreakpoint.blueprint.designs;
 
-import com.jayway.restassured.RestAssured;
-import com.jayway.restassured.http.ContentType;
 import com.nextbreakpoint.blueprint.common.core.Authority;
 import com.nextbreakpoint.blueprint.common.core.Checksum;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
@@ -13,6 +11,8 @@ import com.nextbreakpoint.blueprint.common.events.mappers.DesignDocumentUpdateRe
 import com.nextbreakpoint.blueprint.designs.model.Design;
 import com.nextbreakpoint.blueprint.designs.model.DesignDocument;
 import com.nextbreakpoint.blueprint.designs.model.DesignDocuments;
+import io.restassured.RestAssured;
+import io.restassured.http.ContentType;
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.*;
 
@@ -30,8 +30,8 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import static com.jayway.restassured.RestAssured.given;
 import static com.nextbreakpoint.blueprint.common.core.Headers.AUTHORIZATION;
+import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Tag("docker")

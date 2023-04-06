@@ -1,9 +1,9 @@
 package com.nextbreakpoint.blueprint.accounts;
 
-import com.jayway.restassured.RestAssured;
-import com.jayway.restassured.http.ContentType;
-import com.jayway.restassured.path.json.JsonPath;
 import com.nextbreakpoint.blueprint.common.core.Authority;
+import io.restassured.RestAssured;
+import io.restassured.http.ContentType;
+import io.restassured.path.json.JsonPath;
 import org.junit.jupiter.api.*;
 
 import java.net.MalformedURLException;
@@ -13,8 +13,8 @@ import java.sql.SQLException;
 import java.util.Map;
 import java.util.UUID;
 
-import static com.jayway.restassured.RestAssured.given;
 import static com.nextbreakpoint.blueprint.common.core.Headers.AUTHORIZATION;
+import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.CoreMatchers.notNullValue;
 

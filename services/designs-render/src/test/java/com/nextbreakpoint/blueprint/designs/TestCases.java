@@ -1,6 +1,6 @@
 package com.nextbreakpoint.blueprint.designs;
 
-import au.com.dius.pact.provider.junit5.HttpsTestTarget;
+import au.com.dius.pact.provider.junit5.HttpTestTarget;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.core.Json;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
@@ -115,8 +115,8 @@ public class TestCases {
     }
 
     @NotNull
-    public HttpsTestTarget getHttpsTestTarget() {
-        return new HttpsTestTarget(scenario.getServiceHost(), scenario.getServicePort(), "/", true);
+    public HttpTestTarget getHttpTestTarget() {
+        return new HttpTestTarget(scenario.getServiceHost(), scenario.getServicePort(), "/");
     }
 
     @NotNull

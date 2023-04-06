@@ -1,9 +1,9 @@
 package com.nextbreakpoint.blueprint.frontend;
 
-import com.jayway.restassured.RestAssured;
-import com.jayway.restassured.http.ContentType;
 import com.nextbreakpoint.blueprint.common.core.Authority;
 import com.xebialabs.restito.server.StubServer;
+import io.restassured.RestAssured;
+import io.restassured.http.ContentType;
 import io.vertx.core.json.JsonObject;
 import io.vertx.rxjava.core.http.Cookie;
 import org.glassfish.grizzly.http.util.HttpStatus;
@@ -14,11 +14,11 @@ import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.UUID;
 
-import static com.jayway.restassured.RestAssured.given;
 import static com.xebialabs.restito.builder.stub.StubHttp.whenHttp;
 import static com.xebialabs.restito.semantics.Action.*;
 import static com.xebialabs.restito.semantics.Condition.get;
 import static com.xebialabs.restito.semantics.Condition.withHeader;
+import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.equalTo;
 
 @Disabled

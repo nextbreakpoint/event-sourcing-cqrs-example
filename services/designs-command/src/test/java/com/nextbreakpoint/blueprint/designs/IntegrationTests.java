@@ -1,14 +1,14 @@
 package com.nextbreakpoint.blueprint.designs;
 
-import com.jayway.restassured.RestAssured;
-import com.jayway.restassured.http.ContentType;
+import io.restassured.RestAssured;
+import io.restassured.http.ContentType;
 import org.junit.jupiter.api.*;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.UUID;
 
-import static com.jayway.restassured.RestAssured.given;
+import static io.restassured.RestAssured.given;
 
 @Tag("docker")
 @Tag("integration")

@@ -6,8 +6,8 @@ import au.com.dius.pact.consumer.junit5.PactConsumerTestExt;
 import au.com.dius.pact.consumer.junit5.PactTestFor;
 import au.com.dius.pact.consumer.junit5.ProviderType;
 import au.com.dius.pact.core.model.PactSpecVersion;
+import au.com.dius.pact.core.model.V4Pact;
 import au.com.dius.pact.core.model.annotations.Pact;
-import au.com.dius.pact.core.model.messaging.MessagePact;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -40,7 +40,7 @@ public class PactConsumerTests {
     }
 
     @Pact(consumer = "designs-render")
-    public MessagePact tileRenderRequested(MessagePactBuilder builder) {
+    public V4Pact tileRenderRequested(MessagePactBuilder builder) {
         final UUID uuid1 = new UUID(0L, 5L);
         final UUID uuid2 = new UUID(0L, 6L);
         final UUID uuid3 = new UUID(0L, 7L);
@@ -162,16 +162,16 @@ public class PactConsumerTests {
     }
 
     @Test
-    @PactTestFor(providerName = "designs-aggregate", port = "1111", pactMethod = "tileRenderRequested", providerType = ProviderType.ASYNCH, pactVersion = PactSpecVersion.V3)
+    @PactTestFor(providerName = "designs-aggregate", pactMethod = "tileRenderRequested", providerType = ProviderType.ASYNCH, pactVersion = PactSpecVersion.V4)
     @DisplayName("Should start rendering an image after receiving a TileRenderRequested event")
-    public void shouldStartRenderingAnImageWhenReceivingATileRenderRequestedMessage(MessagePact pact) {
-        assertThat(pact.getMessages()).hasSize(5);
+    public void shouldStartRenderingAnImageWhenReceivingATileRenderRequestedMessage(V4Pact pact) {
+        assertThat(pact.getInteractions()).hasSize(5);
 
-        final OutputMessage tileRenderRequestedMessage1 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getMessages().get(0)));
-        final OutputMessage tileRenderRequestedMessage2 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getMessages().get(1)));
-        final OutputMessage tileRenderRequestedMessage3 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getMessages().get(2)));
-        final OutputMessage tileRenderRequestedMessage4 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getMessages().get(3)));
-        final OutputMessage tileRenderRequestedMessage5 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getMessages().get(4)));
+        final OutputMessage tileRenderRequestedMessage1 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(0).asAsynchronousMessage()));
+        final OutputMessage tileRenderRequestedMessage2 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(1).asAsynchronousMessage()));
+        final OutputMessage tileRenderRequestedMessage3 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(2).asAsynchronousMessage()));
+        final OutputMessage tileRenderRequestedMessage4 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(3).asAsynchronousMessage()));
+        final OutputMessage tileRenderRequestedMessage5 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(4).asAsynchronousMessage()));
 
         final List<OutputMessage> messages = List.of(tileRenderRequestedMessage1, tileRenderRequestedMessage2, tileRenderRequestedMessage3, tileRenderRequestedMessage4, tileRenderRequestedMessage5);
 

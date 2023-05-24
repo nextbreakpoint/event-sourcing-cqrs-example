@@ -37,16 +37,25 @@ public class PactConsumerTests {
 
     @Pact(consumer = "designs-watch")
     public V4Pact designDocumentUpdateCompleted(MessagePactBuilder builder) {
-        UUID uuid1 = new UUID(0L, 1L);
-        UUID uuid2 = new UUID(0L, 2L);
+        final UUID uuid1 = new UUID(0L, 1L);
+        final UUID uuid2 = new UUID(0L, 2L);
+
+        final UUID commandId1 = new UUID(1L, 1L);
+        final UUID commandId2 = new UUID(1L, 2L);
+
+        final String revision1 = "0000000000000000-0000000000000001";
+        final String revision2 = "0000000000000000-0000000000000002";
+
+        final UUID eventId1 = new UUID(2L, 1L);
+        final UUID eventId2 = new UUID(2L, 2L);
 
         PactDslJsonBody event1 = new PactDslJsonBody()
                 .uuid("designId", uuid1)
-                .stringMatcher("commandId", TestConstants.UUID6_REGEXP)
-                .stringMatcher("revision", TestConstants.REVISION_REGEXP);
+                .stringMatcher("commandId", TestConstants.UUID6_REGEXP, commandId1.toString())
+                .stringMatcher("revision", TestConstants.REVISION_REGEXP, revision1);
 
         PactDslJsonBody payload1 = new PactDslJsonBody()
-                .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
+                .stringMatcher("uuid", TestConstants.UUID6_REGEXP, eventId1.toString())
                 .object("data", event1)
                 .stringValue("type", TestConstants.DESIGN_DOCUMENT_UPDATE_COMPLETED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
@@ -57,11 +66,11 @@ public class PactConsumerTests {
 
         PactDslJsonBody event2 = new PactDslJsonBody()
                 .uuid("designId", uuid2)
-                .stringMatcher("commandId", TestConstants.UUID6_REGEXP)
-                .stringMatcher("revision", TestConstants.REVISION_REGEXP);
+                .stringMatcher("commandId", TestConstants.UUID6_REGEXP, commandId2.toString())
+                .stringMatcher("revision", TestConstants.REVISION_REGEXP, revision2);
 
         PactDslJsonBody payload2 = new PactDslJsonBody()
-                .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
+                .stringMatcher("uuid", TestConstants.UUID6_REGEXP, eventId2.toString())
                 .object("data", event2)
                 .stringValue("type", TestConstants.DESIGN_DOCUMENT_UPDATE_COMPLETED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
@@ -80,16 +89,25 @@ public class PactConsumerTests {
 
     @Pact(consumer = "designs-watch")
     public V4Pact designDocumentDeleteCompleted(MessagePactBuilder builder) {
-        UUID uuid1 = new UUID(0L, 1L);
-        UUID uuid2 = new UUID(0L, 2L);
+        final UUID uuid1 = new UUID(0L, 1L);
+        final UUID uuid2 = new UUID(0L, 2L);
+
+        final UUID commandId1 = new UUID(1L, 1L);
+        final UUID commandId2 = new UUID(1L, 2L);
+
+        final String revision1 = "0000000000000000-0000000000000001";
+        final String revision2 = "0000000000000000-0000000000000002";
+
+        final UUID eventId1 = new UUID(2L, 1L);
+        final UUID eventId2 = new UUID(2L, 2L);
 
         PactDslJsonBody event1 = new PactDslJsonBody()
                 .uuid("designId", uuid1)
-                .stringMatcher("commandId", TestConstants.UUID6_REGEXP)
-                .stringMatcher("revision", TestConstants.REVISION_REGEXP);
+                .stringMatcher("commandId", TestConstants.UUID6_REGEXP, commandId1.toString())
+                .stringMatcher("revision", TestConstants.REVISION_REGEXP, revision1);
 
         PactDslJsonBody payload1 = new PactDslJsonBody()
-                .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
+                .stringMatcher("uuid", TestConstants.UUID6_REGEXP, eventId1.toString())
                 .object("data", event1)
                 .stringValue("type", TestConstants.DESIGN_DOCUMENT_DELETE_COMPLETED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
@@ -100,11 +118,11 @@ public class PactConsumerTests {
 
         PactDslJsonBody event2 = new PactDslJsonBody()
                 .uuid("designId", uuid2)
-                .stringMatcher("commandId", TestConstants.UUID6_REGEXP)
-                .stringMatcher("revision", TestConstants.REVISION_REGEXP);
+                .stringMatcher("commandId", TestConstants.UUID6_REGEXP, commandId2.toString())
+                .stringMatcher("revision", TestConstants.REVISION_REGEXP, revision2);
 
         PactDslJsonBody payload2 = new PactDslJsonBody()
-                .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
+                .stringMatcher("uuid", TestConstants.UUID6_REGEXP, eventId2.toString())
                 .object("data", event2)
                 .stringValue("type", TestConstants.DESIGN_DOCUMENT_DELETE_COMPLETED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);

@@ -45,14 +45,18 @@ public class PactConsumerTests {
     public V4Pact designInsertRequested(MessagePactBuilder builder) {
         final UUID uuid = new UUID(0L, 1L);
 
+        final UUID commandId = new UUID(1L, 1L);
+
+        final UUID eventId = new UUID(2L, 1L);
+
         PactDslJsonBody event1 = new PactDslJsonBody()
                 .uuid("designId", uuid)
                 .uuid("userId", TestConstants.USER_ID)
-                .stringMatcher("commandId", TestConstants.UUID6_REGEXP)
+                .stringMatcher("commandId", TestConstants.UUID6_REGEXP, commandId.toString())
                 .stringValue("data", TestConstants.JSON_1);
 
         PactDslJsonBody payload1 = new PactDslJsonBody()
-                .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
+                .stringMatcher("uuid", TestConstants.UUID6_REGEXP, eventId.toString())
                 .object("data", event1)
                 .stringValue("type", TestConstants.DESIGN_INSERT_REQUESTED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
@@ -72,14 +76,20 @@ public class PactConsumerTests {
     public V4Pact designUpdateRequested(MessagePactBuilder builder) {
         final UUID uuid = new UUID(0L, 2L);
 
+        final UUID commandId1 = new UUID(1L, 1L);
+        final UUID commandId2 = new UUID(1L, 2L);
+
+        final UUID eventId1 = new UUID(2L, 1L);
+        final UUID eventId2 = new UUID(2L, 2L);
+
         PactDslJsonBody event1 = new PactDslJsonBody()
                 .uuid("designId", uuid)
                 .uuid("userId", TestConstants.USER_ID)
-                .stringMatcher("commandId", TestConstants.UUID6_REGEXP)
+                .stringMatcher("commandId", TestConstants.UUID6_REGEXP, commandId1.toString())
                 .stringValue("data", TestConstants.JSON_1);
 
         PactDslJsonBody payload1 = new PactDslJsonBody()
-                .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
+                .stringMatcher("uuid", TestConstants.UUID6_REGEXP, eventId1.toString())
                 .object("data", event1)
                 .stringValue("type", TestConstants.DESIGN_INSERT_REQUESTED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
@@ -91,12 +101,12 @@ public class PactConsumerTests {
         PactDslJsonBody event2 = new PactDslJsonBody()
                 .uuid("designId", uuid)
                 .uuid("userId", TestConstants.USER_ID)
-                .stringMatcher("commandId", TestConstants.UUID6_REGEXP)
+                .stringMatcher("commandId", TestConstants.UUID6_REGEXP, commandId2.toString())
                 .stringValue("data", TestConstants.JSON_2)
                 .booleanType("published");
 
         PactDslJsonBody payload2 = new PactDslJsonBody()
-                .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
+                .stringMatcher("uuid", TestConstants.UUID6_REGEXP, eventId2.toString())
                 .object("data", event2)
                 .stringValue("type", TestConstants.DESIGN_UPDATE_REQUESTED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
@@ -118,14 +128,20 @@ public class PactConsumerTests {
     public V4Pact designDeleteRequested(MessagePactBuilder builder) {
         final UUID uuid = new UUID(0L, 3L);
 
+        final UUID commandId1 = new UUID(1L, 1L);
+        final UUID commandId2 = new UUID(1L, 2L);
+
+        final UUID eventId1 = new UUID(2L, 1L);
+        final UUID eventId2 = new UUID(2L, 2L);
+
         PactDslJsonBody event1 = new PactDslJsonBody()
                 .uuid("designId", uuid)
                 .uuid("userId", TestConstants.USER_ID)
-                .stringMatcher("commandId", TestConstants.UUID6_REGEXP)
+                .stringMatcher("commandId", TestConstants.UUID6_REGEXP, commandId1.toString())
                 .stringValue("data", TestConstants.JSON_1);
 
         PactDslJsonBody payload1 = new PactDslJsonBody()
-                .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
+                .stringMatcher("uuid", TestConstants.UUID6_REGEXP, eventId1.toString())
                 .object("data", event1)
                 .stringValue("type", TestConstants.DESIGN_INSERT_REQUESTED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
@@ -137,10 +153,10 @@ public class PactConsumerTests {
         PactDslJsonBody event2 = new PactDslJsonBody()
                 .uuid("designId", uuid)
                 .uuid("userId", TestConstants.USER_ID)
-                .stringMatcher("commandId", TestConstants.UUID6_REGEXP);
+                .stringMatcher("commandId", TestConstants.UUID6_REGEXP, commandId2.toString());
 
         PactDslJsonBody payload2 = new PactDslJsonBody()
-                .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
+                .stringMatcher("uuid", TestConstants.UUID6_REGEXP, eventId2.toString())
                 .object("data", event2)
                 .stringValue("type", TestConstants.DESIGN_DELETE_REQUESTED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
@@ -162,10 +178,19 @@ public class PactConsumerTests {
     public V4Pact tileRenderCompleted(MessagePactBuilder builder) {
         final UUID uuid = new UUID(0L, 4L);
 
+        final String revision1 = "0000000000000000-0000000000000001";
+        final String revision2 = "0000000000000000-0000000000000002";
+
+        final UUID eventId1 = new UUID(2L, 1L);
+        final UUID eventId2 = new UUID(2L, 2L);
+        final UUID eventId3 = new UUID(2L, 3L);
+        final UUID eventId4 = new UUID(2L, 4L);
+        final UUID eventId5 = new UUID(2L, 5L);
+
         PactDslJsonBody event1 = new PactDslJsonBody()
                 .uuid("designId", uuid)
                 .uuid("commandId", TestConstants.COMMAND_1)
-                .stringMatcher("revision", TestConstants.REVISION_REGEXP)
+                .stringMatcher("revision", TestConstants.REVISION_REGEXP, revision1)
                 .stringValue("checksum", TestConstants.CHECKSUM_1)
                 .numberValue("level", 0)
                 .numberValue("row", 0)
@@ -173,7 +198,7 @@ public class PactConsumerTests {
                 .stringValue("status", "FAILED");
 
         PactDslJsonBody payload1 = new PactDslJsonBody()
-                .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
+                .stringMatcher("uuid", TestConstants.UUID6_REGEXP, eventId1.toString())
                 .object("data", event1)
                 .stringValue("type", TestConstants.TILE_RENDER_COMPLETED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
@@ -185,7 +210,7 @@ public class PactConsumerTests {
         PactDslJsonBody event2 = new PactDslJsonBody()
                 .uuid("designId", uuid)
                 .uuid("commandId", TestConstants.COMMAND_1)
-                .stringMatcher("revision", TestConstants.REVISION_REGEXP)
+                .stringMatcher("revision", TestConstants.REVISION_REGEXP, revision1)
                 .stringValue("checksum", TestConstants.CHECKSUM_1)
                 .numberValue("level", 1)
                 .numberValue("row", 0)
@@ -193,7 +218,7 @@ public class PactConsumerTests {
                 .stringValue("status", "COMPLETED");
 
         PactDslJsonBody payload2 = new PactDslJsonBody()
-                .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
+                .stringMatcher("uuid", TestConstants.UUID6_REGEXP, eventId2.toString())
                 .object("data", event2)
                 .stringValue("type", TestConstants.TILE_RENDER_COMPLETED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
@@ -205,7 +230,7 @@ public class PactConsumerTests {
         PactDslJsonBody event3 = new PactDslJsonBody()
                 .uuid("designId", uuid)
                 .uuid("commandId", TestConstants.COMMAND_1)
-                .stringMatcher("revision", TestConstants.REVISION_REGEXP)
+                .stringMatcher("revision", TestConstants.REVISION_REGEXP, revision1)
                 .stringValue("checksum", TestConstants.CHECKSUM_1)
                 .numberValue("level", 1)
                 .numberValue("row", 1)
@@ -213,7 +238,7 @@ public class PactConsumerTests {
                 .stringValue("status", "COMPLETED");
 
         PactDslJsonBody payload3 = new PactDslJsonBody()
-                .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
+                .stringMatcher("uuid", TestConstants.UUID6_REGEXP, eventId3.toString())
                 .object("data", event3)
                 .stringValue("type", TestConstants.TILE_RENDER_COMPLETED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
@@ -225,7 +250,7 @@ public class PactConsumerTests {
         PactDslJsonBody event4 = new PactDslJsonBody()
                 .uuid("designId", uuid)
                 .uuid("commandId", TestConstants.COMMAND_1)
-                .stringMatcher("revision", TestConstants.REVISION_REGEXP)
+                .stringMatcher("revision", TestConstants.REVISION_REGEXP, revision1)
                 .stringValue("checksum", TestConstants.CHECKSUM_1)
                 .numberValue("level", 2)
                 .numberValue("row", 2)
@@ -233,7 +258,7 @@ public class PactConsumerTests {
                 .stringValue("status", "COMPLETED");
 
         PactDslJsonBody payload4 = new PactDslJsonBody()
-                .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
+                .stringMatcher("uuid", TestConstants.UUID6_REGEXP, eventId4.toString())
                 .object("data", event4)
                 .stringValue("type", TestConstants.TILE_RENDER_COMPLETED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
@@ -245,7 +270,7 @@ public class PactConsumerTests {
         PactDslJsonBody event5 = new PactDslJsonBody()
                 .uuid("designId", uuid)
                 .uuid("commandId", TestConstants.COMMAND_2)
-                .stringMatcher("revision", TestConstants.REVISION_REGEXP)
+                .stringMatcher("revision", TestConstants.REVISION_REGEXP, revision2)
                 .stringValue("checksum", TestConstants.CHECKSUM_2)
                 .numberValue("level", 2)
                 .numberValue("row", 3)
@@ -253,7 +278,7 @@ public class PactConsumerTests {
                 .stringValue("status", "COMPLETED");
 
         PactDslJsonBody payload5 = new PactDslJsonBody()
-                .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
+                .stringMatcher("uuid", TestConstants.UUID6_REGEXP, eventId5.toString())
                 .object("data", event5)
                 .stringValue("type", TestConstants.TILE_RENDER_COMPLETED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);

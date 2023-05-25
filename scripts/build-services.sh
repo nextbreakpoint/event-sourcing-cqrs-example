@@ -3,7 +3,7 @@
 set -e
 
 export REPOSITORY="integration"
-export VERSION="1.0.0-$(git rev-parse --abbrev-ref HEAD)-$(git rev-parse --short HEAD)-$(date +%s)"
+export VERSION="1.0.3-$(git rev-parse --abbrev-ref HEAD)-$(git rev-parse --short HEAD)-$(date +%s)"
 
 export TEST_DOCKER_HOST=host.docker.internal
 

@@ -50,8 +50,8 @@ public class PactConsumerTests {
                 .uponReceiving("request to fetch account")
                 .method("GET")
                 .path("/v1/accounts/" + TestConstants.ACCOUNT_UUID)
-                .matchHeader("Accept", "application/json")
-                .matchHeader("Authorization", "Bearer .+")
+                .matchHeader("Authorization", "Bearer .+", "Bearer abcdef")
+                .matchHeader("Accept", "application/json", "application/json")
                 .willRespondWith()
                 .headers(headers)
                 .status(200)
@@ -65,6 +65,9 @@ public class PactConsumerTests {
 
     @Pact(consumer = "frontend")
     public V4Pact retrieveDesigns(PactBuilder builder) {
+        final String json = new JsonObject(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT)).toString();
+        final String checksum = "0001";
+        final String revision = "0000000000000000-0000000000000001";
         final Map<String, String> headers = new HashMap<>();
         headers.put("Content-Type", "application/json");
         return builder.usingLegacyDsl()
@@ -72,8 +75,8 @@ public class PactConsumerTests {
                 .uponReceiving("request to retrieve designs")
                 .method("GET")
                 .path("/v1/designs")
-                .matchHeader("Accept", "application/json")
-                .matchHeader("Authorization", "Bearer .+")
+                .matchHeader("Authorization", "Bearer .+", "Bearer abcdef")
+                .matchHeader("Accept", "application/json", "application/json")
                 .willRespondWith()
                 .headers(headers)
                 .status(200)
@@ -82,9 +85,9 @@ public class PactConsumerTests {
                                 .array("designs")
                                     .object()
                                         .stringValue("uuid", TestConstants.DESIGN_UUID_2.toString())
-                                        .stringMatcher("checksum", ".+")
-                                        .stringMatcher("revision", ".+")
-                                        .stringMatcher("json", ".+")
+                                        .stringMatcher("checksum", ".+", checksum)
+                                        .stringMatcher("revision", ".+", revision)
+                                        .stringMatcher("json", ".+", json)
                                         .datetime("created", "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
                                         .datetime("updated", "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
                                         .booleanValue("published", false)
@@ -109,9 +112,9 @@ public class PactConsumerTests {
                                         .closeObject()
                                     .object()
                                         .stringValue("uuid", TestConstants.DESIGN_UUID_1.toString())
-                                        .stringMatcher("checksum", ".+")
-                                        .stringMatcher("revision", ".+")
-                                        .stringMatcher("json", ".+")
+                                        .stringMatcher("checksum", ".+", checksum)
+                                        .stringMatcher("revision", ".+", revision)
+                                        .stringMatcher("json", ".+", json)
                                         .datetime("created", "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
                                         .datetime("updated", "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
                                         .booleanValue("published", false)
@@ -232,6 +235,9 @@ public class PactConsumerTests {
 
     @Pact(consumer = "frontend")
     public V4Pact retrieveDesignWhenUsingCQRS(PactBuilder builder) {
+        final String json = new JsonObject(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT)).toString();
+        final String checksum = "0001";
+        final String revision = "0000000000000000-0000000000000001";
         final Map<String, String> headers = new HashMap<>();
         headers.put("Content-Type", "application/json");
         return builder.usingLegacyDsl()
@@ -239,18 +245,17 @@ public class PactConsumerTests {
                 .uponReceiving("request to fetch design")
                 .method("GET")
                 .path("/v1/designs/" + TestConstants.DESIGN_UUID_1)
-                .matchHeader("Accept", "application/json")
-                .matchHeader("Authorization", "Bearer .+")
+                .matchHeader("Authorization", "Bearer .+", "Bearer abcdef")
+                .matchHeader("Accept", "application/json", "application/json")
                 .willRespondWith()
                 .headers(headers)
                 .status(200)
                 .body(
                         new PactDslJsonBody()
                                 .stringValue("uuid", TestConstants.DESIGN_UUID_1.toString())
-                                .stringMatcher("json", ".+")
-                                .stringMatcher("checksum", ".+")
-                                .stringMatcher("revision", ".+")
-                                .stringMatcher("json", ".+")
+                                .stringMatcher("checksum", ".+", checksum)
+                                .stringMatcher("revision", ".+", revision)
+                                .stringMatcher("json", ".+", json)
                                 .datetime("created", "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
                                 .datetime("updated", "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
                                 .booleanValue("published", false)
@@ -285,17 +290,17 @@ public class PactConsumerTests {
                 .uponReceiving("request to insert design")
                 .method("POST")
                 .path("/v1/designs")
-                .matchHeader("Accept", "application/json")
-                .matchHeader("Content-Type", "application/json")
-                .matchHeader("Authorization", "Bearer .+")
+                .matchHeader("Authorization", "Bearer .+", "Bearer abcdef")
+                .matchHeader("Accept", "application/json", "application/json")
+                .matchHeader("Content-Type", "application/json", "application/json")
                 .body(new JsonObject(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT)).toString())
                 .willRespondWith()
                 .headers(headers)
                 .status(202)
                 .body(
                         new PactDslJsonBody()
-                                .stringMatcher("uuid", ".+")
-                                .stringMatcher("status", ".+")
+                                .stringMatcher("uuid", ".+", TestConstants.DESIGN_UUID_1.toString())
+                                .stringMatcher("status", ".+", "CREATED")
                 )
                 .toPact(V4Pact.class);
     }
@@ -309,9 +314,9 @@ public class PactConsumerTests {
                 .uponReceiving("request to update design")
                 .method("PUT")
                 .path("/v1/designs/" + TestConstants.DESIGN_UUID_1)
-                .matchHeader("Accept", "application/json")
-                .matchHeader("Content-Type", "application/json")
-                .matchHeader("Authorization", "Bearer .+")
+                .matchHeader("Authorization", "Bearer .+", "Bearer abcdef")
+                .matchHeader("Accept", "application/json", "application/json")
+                .matchHeader("Content-Type", "application/json", "application/json")
                 .body(new JsonObject(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT)).toString())
                 .willRespondWith()
                 .headers(headers)
@@ -319,7 +324,7 @@ public class PactConsumerTests {
                 .body(
                         new PactDslJsonBody()
                                 .stringValue("uuid", TestConstants.DESIGN_UUID_1.toString())
-                                .stringMatcher("status", ".+")
+                                .stringMatcher("status", ".+", "UPDATED")
                 )
                 .toPact(V4Pact.class);
     }
@@ -333,15 +338,15 @@ public class PactConsumerTests {
                 .uponReceiving("request to delete design")
                 .method("DELETE")
                 .path("/v1/designs/" + TestConstants.DESIGN_UUID_1)
-                .matchHeader("Accept", "application/json")
-                .matchHeader("Authorization", "Bearer .+")
+                .matchHeader("Authorization", "Bearer .+", "Bearer abcdef")
+                .matchHeader("Accept", "application/json", "application/json")
                 .willRespondWith()
                 .headers(headers)
                 .status(202)
                 .body(
                         new PactDslJsonBody()
                                 .stringValue("uuid", TestConstants.DESIGN_UUID_1.toString())
-                                .stringMatcher("status", ".+")
+                                .stringMatcher("status", ".+", "DELETED")
                 )
                 .toPact(V4Pact.class);
     }

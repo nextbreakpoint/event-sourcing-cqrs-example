@@ -19,6 +19,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import static com.nextbreakpoint.blueprint.authentication.TestConstants.ACCOUNT_UUID;
 import static com.xebialabs.restito.builder.stub.StubHttp.whenHttp;
@@ -74,8 +75,8 @@ public class PactConsumerTests {
             .method("GET")
             .path("/v1/accounts")
             .matchQuery("email", "test[@]localhost")
-            .matchHeader("Accept", "application/json")
-            .matchHeader("Authorization", "Bearer .+")
+            .matchHeader("Accept", "application/json", "application/json")
+            .matchHeader("Authorization", "Bearer .+", "Bearer abcdef")
             .willRespondWith()
             .headers(headers)
             .status(200)
@@ -86,8 +87,8 @@ public class PactConsumerTests {
             .uponReceiving("request to fetch account")
             .method("GET")
             .path("/v1/accounts/" + ACCOUNT_UUID)
-            .matchHeader("Accept", "application/json")
-            .matchHeader("Authorization", "Bearer .+")
+            .matchHeader("Accept", "application/json", "application/json")
+            .matchHeader("Authorization", "Bearer .+", "Bearer abcdef")
             .willRespondWith()
             .headers(headers)
             .status(200)
@@ -109,8 +110,8 @@ public class PactConsumerTests {
             .method("GET")
             .path("/v1/accounts")
             .matchQuery("email", "test[@]localhost")
-            .matchHeader("Accept", "application/json")
-            .matchHeader("Authorization", "Bearer .+")
+            .matchHeader("Accept", "application/json", "application/json")
+            .matchHeader("Authorization", "Bearer .+", "Bearer abcdef")
             .willRespondWith()
             .headers(headers)
             .status(200)
@@ -121,8 +122,8 @@ public class PactConsumerTests {
             .method("POST")
             .path("/v1/accounts")
             .matchHeader("Content-Type", "application/json")
-            .matchHeader("Accept", "application/json")
-            .matchHeader("Authorization", "Bearer .+")
+            .matchHeader("Accept", "application/json", "application/json")
+            .matchHeader("Authorization", "Bearer .+", "Bearer abcdef")
             .body(
                     new PactDslJsonBody()
                             .stringValue("email", "test@localhost")
@@ -134,7 +135,7 @@ public class PactConsumerTests {
             .status(201)
             .body(
                     new PactDslJsonBody()
-                            .stringMatcher("uuid", ".+")
+                            .stringMatcher("uuid", ".+", ACCOUNT_UUID.toString())
                             .stringValue("role", "guest")
             )
             .toPact(V4Pact.class);

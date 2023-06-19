@@ -109,7 +109,7 @@ Start services:
 
 Open application:
 
-    open https://localhost:8080/browse/designs.html
+    open https://localhost:31443/browse/designs.html
 
 Login with your GitHub account associated with the admin email for getting admin access
 

@@ -10,10 +10,10 @@ var configPath = process.env.CONFIG_PATH
 
 var secretsPath = process.env.SECRETS_PATH
 
-//const agent = new https.Agent({
-//    rejectUnauthorized: false,
+const agent = new https.Agent({
+//    rejectUnauthorized: false
 //    ca: fs.readFileSync(secretsPath + '/ca_cert.pem')
-//})
+})
 
 const appConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'))
 
@@ -50,8 +50,8 @@ router.get('/designs.html', function(req, res, next) {
     authorization = extractToken(req)
 
     let config = {
-        timeout: 10000
-//        httpsAgent: agent
+        timeout: 10000,
+        httpsAgent: agent
     }
 
     if (authorization) {
@@ -128,8 +128,8 @@ router.get('/designs/(:uuid).html', function(req, res, next) {
     authorization = extractToken(req)
 
     let config = {
-        timeout: 10000
-//        httpsAgent: agent
+        timeout: 10000,
+        httpsAgent: agent
     }
 
     if (authorization) {
@@ -199,8 +199,8 @@ router.get('/designs/(:uuid)/(:zoom)/(:x)/(:y)/(:size).png', function(req, res, 
 
     let config = {
         timeout: 10000,
-        responseType:'stream'
-//        httpsAgent: agent
+        responseType:'stream',
+        httpsAgent: agent
     }
 
     if (authorization) {

@@ -1,4 +1,4 @@
 {
-  "web_url": "https://localhost:8080",
-  "api_url": "https://localhost:4000"
+  "web_url": "https://localhost:31443",
+  "api_url": "https://localhost:31443"
 }

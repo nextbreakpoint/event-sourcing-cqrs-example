@@ -176,19 +176,22 @@ Stop platform:
 
     docker compose -f docker-compose-platform.yaml -p platform down
 
-Stop Nexus and Pact Broker:
+Remove platform volumes:
+
+    docker compose -f docker-compose-platform.yaml -p platform down --volumes
+
+Stop pipeline:
 
     docker compose -f docker-compose-pipeline.yaml -p pipeline down
+
+Remove pipeline volumes:
+
+    docker compose -f docker-compose-pipeline.yaml -p pipeline down --volumes
 
 Remove Docker images:
 
     docker image rm -f $(docker image ls 'integration/*' -q)
     docker image rm $(docker image ls -f dangling=true -q)
-
-Remove Docker volumes:
-
-    docker volume rm $(docker volume ls | grep pipeline_ | cut -w -f 2)
-    docker volume rm $(docker volume ls | grep platform_ | cut -w -f 2)
 
 ## Prepare Minikube
 

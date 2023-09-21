@@ -38,6 +38,8 @@ public class PactConsumerTests {
 
   private static final StubServer githubStub = new StubServer(Integer.parseInt("39002")).run();
 
+  private final int clientPort = 31443;
+
   @BeforeAll
   public static void before() {
     testCases.before();
@@ -163,7 +165,7 @@ public class PactConsumerTests {
             .and().param("state", "/v1/auth/signin/some/content")
             .when().get(testCases.makeBaseURL("/v1/auth/callback"))
             .then().assertThat().statusCode(303)
-            .and().header("Location", startsWith("https://localhost:8080/some/content"));
+            .and().header("Location", startsWith("https://localhost:" + clientPort + "/some/content"));
 
     verifyHttp(githubStub).once(post(TestConstants.OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
             .then().once(get(TestConstants.OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
@@ -188,7 +190,7 @@ public class PactConsumerTests {
             .and().param("state", "/v1/auth/signin/some/content")
             .when().get(testCases.makeBaseURL("/v1/auth/callback"))
             .then().assertThat().statusCode(303)
-            .and().header("Location", startsWith("https://localhost:8080/some/content"));
+            .and().header("Location", startsWith("https://localhost:" + clientPort + "/some/content"));
 
     verifyHttp(githubStub).once(post(TestConstants.OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
             .then().once(get(TestConstants.OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))

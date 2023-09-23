@@ -15,7 +15,11 @@ metadata:
 spec:
   type: ClusterIP
   ports:
-    - port: 8081
+    - port: 8080
+      targetPort: http
+      protocol: TCP
+      name: http
+    - port: 8443
       targetPort: https
       protocol: TCP
       name: https

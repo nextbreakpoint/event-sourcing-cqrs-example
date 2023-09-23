@@ -64,6 +64,9 @@ router.get('/designs.html', function(req, res, next) {
     let size = req.query.size ? new Number(req.query.size) : 20
 
     loadAccount(config, req, (account) => {
+        if (account !== {}) {
+            console.log(account)
+        }
         axios.get(appConfig.server_api_url + '/v1/designs?from=' + from + "&size=" + size, config)
             .then(function (response) {
                 req.resume()
@@ -71,7 +74,6 @@ router.get('/designs.html', function(req, res, next) {
                     if (req.app.get('env') === 'development') {
                         console.log("designs = " + JSON.stringify(response.data))
                     }
-                    console.log(account)
                     let designs = response.data.designs.map((design) => ({
                         uuid: design.uuid,
                         checksum: design.checksum,

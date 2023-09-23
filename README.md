@@ -197,7 +197,7 @@ Remove Docker images:
 
 Setup Minikube:
 
-    minikube start --vm-driver=hyperkit --cpus 8 --memory 49152m --disk-size 64g --kubernetes-version=v1.23.3
+    minikube start --vm-driver=hyperkit --cpus 8 --memory 49152m --disk-size 64g --kubernetes-version=v1.27.6
 
 Create alias (unless you already have kubectl installed):
 
@@ -242,7 +242,7 @@ Expose Nexus and Pact Broker:
 Export variables:
 
     export PACTBROKER_HOST=$(minikube ip)
-    export PACTBROKER_PORT=9092
+    export PACTBROKER_PORT=9292
     export NEXUS_HOST=$(minikube ip)
     export NEXUS_PORT=8081
     export NEXUS_USERNAME=admin
@@ -252,15 +252,33 @@ Create Maven repository:
 
     ./scripts/create-repository.sh --nexus-host=${NEXUS_HOST} --nexus-port=${NEXUS_PORT} --nexus-username=${NEXUS_USERNAME} --nexus-password=${NEXUS_PASSWORD}
 
-Configure Docker:
+Select Docker engine running on Minikube:
 
     eval $(minikube docker-env)
 
-Build services:
+Build Docker images on Minikube (but skip tests):
 
-    ./scripts/build-services.sh --pactbroker-host=${PACTBROKER_HOST} --pactbroker-port=${PACTBROKER_PORT} --nexus-host=${NEXUS_HOST} --nexus-port=${NEXUS_PORT} --nexus-username=${NEXUS_USERNAME} --nexus-password=${NEXUS_PASSWORD} --docker-host=$(minikube ip) --skip-tests
+    ./scripts/build-services.sh --nexus-host=${NEXUS_HOST} --nexus-port=${NEXUS_PORT} --nexus-username=${NEXUS_USERNAME} --nexus-password=${NEXUS_PASSWORD} --skip-tests
 
-Please note that integration tests or pact tests on Minikube are not currently supported.
+Please note that integration tests or pact tests can't be executed using the Docker engine running on Minikube. 
+
+In case we want to run the tests using Pack Broker and Nexus server deployed on Minikube, we must use the local Docker engine, and then load the images into Minikube.
+
+Reset Docker environment variables to use local Docker engine:
+
+    eval $(env | grep DOCKER_ | cut -f 1 -d "=" - | awk '{print "unset "$1}')
+
+Build images and run tests using local Docker engine:
+
+    ./scripts/build-services.sh --pactbroker-host=${PACTBROKER_HOST} --pactbroker-port=${PACTBROKER_PORT} --nexus-host=${NEXUS_HOST} --nexus-port=${NEXUS_PORT} --nexus-username=${NEXUS_USERNAME} --nexus-password=${NEXUS_PASSWORD}
+
+Load Docker images into Minikube:
+
+    ./scripts/minikube-load-images.sh --version=$(./scripts/get-version.sh)
+
+Open Pact Broker deployed on Minikube:
+
+    open http://$(minikube ip):9292
 
 ## Run on Minikube
 
@@ -291,7 +309,7 @@ Deploy Jaeger operator:
 
     helm repo add jaegertracing https://jaegertracing.github.io/helm-charts
     helm repo update
-    helm upgrade --install jaeger-operator jaegertracing/jaeger-operator --namespace monitoring --set rbac.create=true --version 2.29.0
+    helm upgrade --install jaeger-operator jaegertracing/jaeger-operator --namespace monitoring --set rbac.create=true --version 2.47.0
 
 Deploy Fluent Bit:
 
@@ -470,25 +488,3 @@ Stop Minikube:
 Delete Minikube (all data saved in hostpath volumes will be lost):
 
     minikube delete
-
-## Run on Kubernetes
-
-Export GitHub secrets:
-
-    export GITHUB_ACCOUNT_EMAIL=your-account-id
-    export GITHUB_CLIENT_ID=your-client-id
-    export GITHUB_CLIENT_SECRET=your-client-secret
-
-Deploy secrets:
-
-    ./scripts/kube-create-services-secrets.sh
-
-Export version:
-
-    export VERSION=$(./scripts/get-version.sh)
-
-Export logging level:
-
-    export LOGGING_LEVEL=INFO
-
-Deploy services:

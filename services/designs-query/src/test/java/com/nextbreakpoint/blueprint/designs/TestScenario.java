@@ -40,7 +40,7 @@ public class TestScenario {
           .waitingFor(Wait.forLogMessage(".* started \\(kafka.server.KafkaServer\\).*", 1).withStartupTimeout(Duration.ofSeconds(90)));
 
   private GenericContainer minio = ContainerUtils.createMinioContainer(network)
-          .waitingFor(Wait.forLogMessage("Documentation: https://docs.min.io.*", 1).withStartupTimeout(Duration.ofSeconds(30)));
+          .waitingFor(Wait.forLogMessage("Documentation: https://.*", 1).withStartupTimeout(Duration.ofSeconds(30)));
 
   private GenericContainer<?> service = new GenericContainer<>(DockerImageName.parse("integration/" + serviceName + ":" + version))
           .withEnv("DEBUG_OPTS", "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:" + DEBUG_PORT)

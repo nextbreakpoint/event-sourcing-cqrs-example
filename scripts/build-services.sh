@@ -194,11 +194,11 @@ fi
 mvn versions:set versions:commit -q -e -DnewVersion=$VERSION -Dcommon=true -Dservices=true -Dplatform=true
 
 if [ "$PACKAGE" == "true" ]; then
-  mvn package -q -e -s settings.xml ${MAVEN_ARGS} -Dcommon=true -Dservices=true -Dplatform=true -Dnexus=true -DskipTests=true
+  mvn package -s settings.xml ${MAVEN_ARGS} -Dcommon=true -Dservices=true -Dplatform=true -Dnexus=true -DskipTests=true
 fi
 
 if [ "$DEPLOY" == "true" ]; then
-  mvn deploy -q -e -s settings.xml ${MAVEN_ARGS} -Dcommon=true -Dservices=true -Dnexus=true
+  mvn deploy -s settings.xml ${MAVEN_ARGS} -Dcommon=true -Dservices=true -Dnexus=true
 fi
 
 if [ "$IMAGES" == "true" ]; then
@@ -217,7 +217,7 @@ if [ "$INTEGRATION_TESTS" == "true" ]; then
 
 for service in ${services[@]}; do
   pushd services/$service
-   JAEGER_SERVICE_NAME=$service mvn clean verify -q -e -Dgroups=integration -Ddocker.host=${TEST_DOCKER_HOST}
+   JAEGER_SERVICE_NAME=$service mvn clean verify -s settings.xml ${MAVEN_ARGS} -Dgroups=integration -Ddocker.host=${TEST_DOCKER_HOST}
   popd
 done
 
@@ -229,7 +229,7 @@ if [ "$PACT_TESTS" == "true" ]; then
 
 for service in ${services[@]}; do
   pushd services/$service
-   JAEGER_SERVICE_NAME=$service mvn clean verify -q -e -Dgroups=pact -Ddocker.host=${TEST_DOCKER_HOST}
+   JAEGER_SERVICE_NAME=$service mvn clean verify -s settings.xml ${MAVEN_ARGS} -Dgroups=pact -Ddocker.host=${TEST_DOCKER_HOST}
   popd
 done
 
@@ -239,7 +239,7 @@ if [ "$PACT_VERIFY" == "true" ]; then
 
 for service in ${services[@]}; do
   pushd services/$service
-   JAEGER_SERVICE_NAME=$service mvn clean verify -q -e -Dgroups=pact-verify -Ddocker.host=${TEST_DOCKER_HOST}
+   JAEGER_SERVICE_NAME=$service mvn clean verify -s settings.xml ${MAVEN_ARGS} -Dgroups=pact-verify -Ddocker.host=${TEST_DOCKER_HOST}
   popd
 done
 

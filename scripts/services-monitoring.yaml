@@ -11,7 +11,7 @@ spec:
   podMetricsEndpoints:
     - path: /metrics
       port: http
-      scheme: https
+      scheme: http
       tlsConfig:
         insecureSkipVerify: true
   namespaceSelector:
@@ -34,7 +34,7 @@ spec:
   podMetricsEndpoints:
     - path: /metrics
       port: http
-      scheme: https
+      scheme: http
       tlsConfig:
         insecureSkipVerify: true
   namespaceSelector:
@@ -57,7 +57,7 @@ spec:
   podMetricsEndpoints:
     - path: /metrics
       port: http
-      scheme: https
+      scheme: http
       tlsConfig:
         insecureSkipVerify: true
   namespaceSelector:
@@ -80,7 +80,7 @@ spec:
   podMetricsEndpoints:
     - path: /metrics
       port: http
-      scheme: https
+      scheme: http
       tlsConfig:
         insecureSkipVerify: true
   namespaceSelector:
@@ -103,7 +103,7 @@ spec:
   podMetricsEndpoints:
     - path: /metrics
       port: http
-      scheme: https
+      scheme: http
       tlsConfig:
         insecureSkipVerify: true
   namespaceSelector:
@@ -126,7 +126,7 @@ spec:
   podMetricsEndpoints:
     - path: /metrics
       port: http
-      scheme: https
+      scheme: http
       tlsConfig:
         insecureSkipVerify: true
   namespaceSelector:
@@ -149,7 +149,7 @@ spec:
   podMetricsEndpoints:
     - path: /metrics
       port: http
-      scheme: https
+      scheme: http
       tlsConfig:
         insecureSkipVerify: true
   namespaceSelector:

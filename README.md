@@ -13,7 +13,7 @@ Generate secrets:
 
     ./scripts/secrets.sh
 
-Add trusted certificates (for Mac only):
+Add self-signed CA certificate to trusted certificates (for Mac only):
 
     security -v add-trusted-cert -r trustRoot -k ~/Library/Keychains/login.keychain secrets/ca_cert.pem
 
@@ -27,15 +27,15 @@ Start Nexus and Pact Broker:
 
     docker compose -f docker-compose-pipeline.yaml -p pipeline up -d
 
-It might take quite a while before Nexus is ready:
+Wait until Nexus is ready (please be patient):
 
     ./scripts/wait-for.sh --timeout=60 --command="docker logs --tail=100 $(docker ps | grep nexus | cut -d ' ' -f 1) | grep 'Started Sonatype Nexus'"
 
-Export Nexus password (wait until Nexus has started):
+Export Nexus password:
 
     export NEXUS_PASSWORD=$(docker exec $(docker container ls -f name=pipeline-nexus-1 -q) cat /opt/sonatype/sonatype-work/nexus3/admin.password)
 
-Create Maven repository (required only once):
+Create Maven repository:
 
     ./scripts/create-repository.sh --nexus-host=localhost --nexus-port=8082 --nexus-username=admin --nexus-password=${NEXUS_PASSWORD}
 
@@ -51,11 +51,15 @@ Build services without tests:
 
     ./scripts/build-services.sh --nexus-host=localhost --nexus-port=8082 --nexus-username=admin --nexus-password=${NEXUS_PASSWORD} --skip-tests
 
-Build services and run tests but skip Pact tests:
+Build services and run tests, but skip Pact tests:
 
     ./scripts/build-services.sh --nexus-host=localhost --nexus-port=8082 --nexus-username=admin --nexus-password=${NEXUS_PASSWORD} --skip-pact-tests --skip-pact-verify
 
-Run tests without building:
+Build services and run tests, but skip integration tests:
+
+    ./scripts/build-services.sh --nexus-host=localhost --nexus-port=8082 --nexus-username=admin --nexus-password=${NEXUS_PASSWORD} --skip-integration-tests
+
+Run tests without building Docker images:
 
     ./scripts/build-services.sh --nexus-host=localhost --nexus-port=8082 --nexus-username=admin --nexus-password=${NEXUS_PASSWORD} --skip-images --skip-deploy --version=$(./scripts/get-version.sh)
 
@@ -89,7 +93,7 @@ Create Minio bucket:
 
     docker run -i --network platform_bridge -e MINIO_ROOT_USER=admin -e MINIO_ROOT_PASSWORD=password --entrypoint sh minio/mc:latest < scripts/minio-create-bucket.sh
 
-Export GitHub secrets (very important):
+Create GitHub application and export GitHub secrets (very important):
 
     export GITHUB_ACCOUNT_EMAIL=your-account-id
     export GITHUB_CLIENT_ID=your-client-id
@@ -231,7 +235,7 @@ Deploy Nexus and Pact Broker:
 
     ./scripts/helm-install-pipeline.sh
 
-It might take quite a while before Nexus is ready:
+Wait until Nexus is ready:
 
     ./scripts/wait-for.sh --timeout=60 --command="kubectl -n pipeline logs --tail=100 -l component=nexus | grep 'Started Sonatype Nexus'"
 
@@ -256,13 +260,13 @@ Select Docker engine running on Minikube:
 
     eval $(minikube docker-env)
 
-Build Docker images on Minikube (but skip tests):
+Build Docker images (and skip tests):
 
     ./scripts/build-services.sh --nexus-host=${NEXUS_HOST} --nexus-port=${NEXUS_PORT} --nexus-username=${NEXUS_USERNAME} --nexus-password=${NEXUS_PASSWORD} --skip-tests
 
 Please note that integration tests or pact tests can't be executed using the Docker engine running on Minikube. 
 
-In case we want to run the tests using Pack Broker and Nexus server deployed on Minikube, we must use the local Docker engine, and then load the images into Minikube.
+In case we want to run the tests using Pack Broker and Nexus server deployed on Minikube, we must use the local Docker engine, and then load the Docker images into Minikube.
 
 Reset Docker environment variables to use local Docker engine:
 
@@ -272,13 +276,13 @@ Build images and run tests using local Docker engine:
 
     ./scripts/build-services.sh --pactbroker-host=${PACTBROKER_HOST} --pactbroker-port=${PACTBROKER_PORT} --nexus-host=${NEXUS_HOST} --nexus-port=${NEXUS_PORT} --nexus-username=${NEXUS_USERNAME} --nexus-password=${NEXUS_PASSWORD}
 
+See results of Pact tests:
+
+    open http://$(minikube ip):9292
+
 Load Docker images into Minikube:
 
     ./scripts/minikube-load-images.sh --version=$(./scripts/get-version.sh)
-
-Open Pact Broker deployed on Minikube:
-
-    open http://$(minikube ip):9292
 
 ## Run on Minikube
 

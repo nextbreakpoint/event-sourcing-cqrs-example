@@ -6,7 +6,7 @@
             <vendor>temurin</vendor>
         </provides>
         <configuration>
-            <jdkHome>/opt/java/openjdk</jdkHome>
+            <jdkHome>/opt/java/temurin-17</jdkHome>
         </configuration>
     </toolchain>
 </toolchains>

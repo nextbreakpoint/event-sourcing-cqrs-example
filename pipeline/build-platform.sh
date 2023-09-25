@@ -16,14 +16,14 @@ export NEXUS_USERNAME=admin
 export NEXUS_PASSWORD=$(./pipeline/get-nexus-password.sh)
 
 services=(
-  designs-query
-  designs-command
-  designs-aggregate
-  designs-watch
-  designs-render
+#  designs-query
+#  designs-command
+#  designs-aggregate
+#  designs-watch
+#  designs-render
   accounts
   authentication
-  frontend
+#  frontend
 )
 
 MAVEN_ARGS="-q -e -Dnexus.host=${NEXUS_HOST} -Dnexus.port=${NEXUS_PORT} -Dpactbroker.host=${PACTBROKER_HOST} -Dpactbroker.port=${PACTBROKER_PORT}"

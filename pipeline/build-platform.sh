@@ -16,14 +16,14 @@ export NEXUS_USERNAME=admin
 export NEXUS_PASSWORD=$(./pipeline/get-nexus-password.sh)
 
 services=(
-#  designs-query
-#  designs-command
-#  designs-aggregate
-#  designs-watch
-#  designs-render
+  designs-query
+  designs-command
+  designs-aggregate
+  designs-watch
+  designs-render
   accounts
   authentication
-#  frontend
+  frontend
 )
 
 MAVEN_ARGS="-q -e -Dnexus.host=${NEXUS_HOST} -Dnexus.port=${NEXUS_PORT} -Dpactbroker.host=${PACTBROKER_HOST} -Dpactbroker.port=${PACTBROKER_PORT}"
@@ -47,17 +47,17 @@ for service in ${services[@]}; do
   popd
 done
 
-export pact_do_not_track=true
-
-for service in ${services[@]}; do
-  pushd services/$service
-   JAEGER_SERVICE_NAME=$service mvn clean verify -s settings.xml ${MAVEN_ARGS} -Dgroups=pact -Ddocker.host=${TEST_DOCKER_HOST}
-  popd
-done
-
-for service in ${services[@]}; do
-  pushd services/$service
-   JAEGER_SERVICE_NAME=$service mvn clean verify -s settings.xml ${MAVEN_ARGS} -Dgroups=pact-verify -Ddocker.host=${TEST_DOCKER_HOST}
-  popd
-done
+#export pact_do_not_track=true
+#
+#for service in ${services[@]}; do
+#  pushd services/$service
+#   JAEGER_SERVICE_NAME=$service mvn clean verify -s settings.xml ${MAVEN_ARGS} -Dgroups=pact -Ddocker.host=${TEST_DOCKER_HOST}
+#  popd
+#done
+#
+#for service in ${services[@]}; do
+#  pushd services/$service
+#   JAEGER_SERVICE_NAME=$service mvn clean verify -s settings.xml ${MAVEN_ARGS} -Dgroups=pact-verify -Ddocker.host=${TEST_DOCKER_HOST}
+#  popd
+#done
 

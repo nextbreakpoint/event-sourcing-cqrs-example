@@ -141,8 +141,12 @@ services:
     restart: unless-stopped
     image: nginx:1.20.2-alpine
     ports:
-      - target: 443
-        published: 8080
+      - target: 31080
+        published: 31080
+        protocol: tcp
+        mode: host
+      - target: 31443
+        published: 31443
         protocol: tcp
         mode: host
     networks:

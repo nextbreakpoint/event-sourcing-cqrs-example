@@ -7,7 +7,7 @@
     <parent>
         <artifactId>com.nextbreakpoint.blueprint.common</artifactId>
         <groupId>com.nextbreakpoint</groupId>
-        <version>1.0.0-wip2-9a2a502f-1650377124</version>
+        <version>1.0.3-wip-61f3c1dd-1695660736</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
     <dependencies>
@@ -49,7 +49,7 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>com.jayway.restassured</groupId>
+            <groupId>io.rest-assured</groupId>
             <artifactId>rest-assured</artifactId>
             <scope>provided</scope>
         </dependency>

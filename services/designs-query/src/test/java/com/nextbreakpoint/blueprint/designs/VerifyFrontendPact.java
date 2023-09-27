@@ -11,13 +11,12 @@ import com.nextbreakpoint.blueprint.common.core.Checksum;
 import com.nextbreakpoint.blueprint.common.core.Headers;
 import com.nextbreakpoint.blueprint.designs.model.Design;
 import io.vertx.core.json.JsonObject;
-import org.apache.http.HttpRequest;
+import org.apache.hc.core5.http.HttpRequest;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.TemporalUnit;
 import java.util.List;
 import java.util.UUID;
 
@@ -53,7 +52,7 @@ public class VerifyFrontendPact {
 
   @BeforeEach
   public void before(PactVerificationContext context) {
-    context.setTarget(testCases.getHttpsTestTarget());
+    context.setTarget(testCases.getHttpTestTarget());
   }
 
   @TestTemplate

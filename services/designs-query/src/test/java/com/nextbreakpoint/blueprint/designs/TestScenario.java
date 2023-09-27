@@ -40,7 +40,7 @@ public class TestScenario {
           .waitingFor(Wait.forLogMessage(".* started \\(kafka.server.KafkaServer\\).*", 1).withStartupTimeout(Duration.ofSeconds(90)));
 
   private GenericContainer minio = ContainerUtils.createMinioContainer(network)
-          .waitingFor(Wait.forLogMessage("Documentation: https://docs.min.io.*", 1).withStartupTimeout(Duration.ofSeconds(30)));
+          .waitingFor(Wait.forLogMessage("Documentation: https://.*", 1).withStartupTimeout(Duration.ofSeconds(30)));
 
   private GenericContainer<?> service = new GenericContainer<>(DockerImageName.parse("integration/" + serviceName + ":" + version))
           .withEnv("DEBUG_OPTS", "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:" + DEBUG_PORT)
@@ -57,7 +57,6 @@ public class TestScenario {
           .withEnv("KAFKA_HOST", "kafka")
           .withEnv("KAFKA_PORT", "9092")
           .withEnv("EVENTS_TOPIC", TestConstants.EVENTS_TOPIC_NAME)
-          .withFileSystemBind("../../secrets/keystore_server.jks", "/secrets/keystore_server.jks", BindMode.READ_ONLY)
           .withFileSystemBind("../../secrets/keystore_auth.jceks", "/secrets/keystore_auth.jceks", BindMode.READ_ONLY)
           .withFileSystemBind("config/integration.json", "/etc/config.json", BindMode.READ_ONLY)
           .withExposedPorts(HTTP_PORT, DEBUG_PORT)
@@ -65,7 +64,7 @@ public class TestScenario {
           .withNetworkAliases(serviceName)
           .withLogConsumer(frame -> outputStream.writeBytes(Optional.ofNullable(frame.getBytes()).orElse(new byte[0])))
           .dependsOn(elasticsearch, zookeeper, kafka, minio)
-          .waitingFor(Wait.forLogMessage(".* Service listening on port " + HTTP_PORT + ".*", 1).withStartupTimeout(Duration.ofSeconds(20)));
+          .waitingFor(Wait.forLogMessage(".*\"Service listening on port " + HTTP_PORT + "\".*", 1).withStartupTimeout(Duration.ofSeconds(20)));
 
   public void before() {
     if (buildImages) {

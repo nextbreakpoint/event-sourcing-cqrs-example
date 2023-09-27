@@ -43,7 +43,7 @@ metadata:
 subjects:
   - kind: ServiceAccount
     name: jaeger-operator
-    namespace: observability
+    namespace: monitoring
 roleRef:
   kind: Role
   name: jaeger-operator

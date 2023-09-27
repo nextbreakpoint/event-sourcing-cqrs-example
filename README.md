@@ -13,25 +13,29 @@ Generate secrets:
 
     ./scripts/secrets.sh
 
-Add trusted certificates (for Mac only):
+Add self-signed CA certificate to trusted certificates (for Mac only):
 
     security -v add-trusted-cert -r trustRoot -k ~/Library/Keychains/login.keychain secrets/ca_cert.pem
 
 ## Build on Docker
 
+Build Docker images:
+
+    ./scripts/build-images.sh
+
 Start Nexus and Pact Broker:
 
     docker compose -f docker-compose-pipeline.yaml -p pipeline up -d
 
-It might take quite a while before Nexus is ready:
+Wait until Nexus is ready (please be patient):
 
     ./scripts/wait-for.sh --timeout=60 --command="docker logs --tail=100 $(docker ps | grep nexus | cut -d ' ' -f 1) | grep 'Started Sonatype Nexus'"
 
-Export Nexus password (wait until Nexus has started):
+Export Nexus password:
 
     export NEXUS_PASSWORD=$(docker exec $(docker container ls -f name=pipeline-nexus-1 -q) cat /opt/sonatype/sonatype-work/nexus3/admin.password)
 
-Create Maven repository (required only once):
+Create Maven repository:
 
     ./scripts/create-repository.sh --nexus-host=localhost --nexus-port=8082 --nexus-username=admin --nexus-password=${NEXUS_PASSWORD}
 
@@ -47,19 +51,23 @@ Build services without tests:
 
     ./scripts/build-services.sh --nexus-host=localhost --nexus-port=8082 --nexus-username=admin --nexus-password=${NEXUS_PASSWORD} --skip-tests
 
-Build services and run tests but skip Pact tests:
+Build services and run tests, but skip Pact tests:
 
     ./scripts/build-services.sh --nexus-host=localhost --nexus-port=8082 --nexus-username=admin --nexus-password=${NEXUS_PASSWORD} --skip-pact-tests --skip-pact-verify
 
-Run tests without building:
+Build services and run tests, but skip integration tests:
+
+    ./scripts/build-services.sh --nexus-host=localhost --nexus-port=8082 --nexus-username=admin --nexus-password=${NEXUS_PASSWORD} --skip-integration-tests
+
+Run tests without building Docker images:
 
     ./scripts/build-services.sh --nexus-host=localhost --nexus-port=8082 --nexus-username=admin --nexus-password=${NEXUS_PASSWORD} --skip-images --skip-deploy --version=$(./scripts/get-version.sh)
 
-Only run Pact tests:
+Run Pact tests only:
 
     ./scripts/build-services.sh --nexus-host=localhost --nexus-port=8082 --nexus-username=admin --nexus-password=${NEXUS_PASSWORD} --skip-images --skip-deploy --version=$(./scripts/get-version.sh) --skip-integration-tests
 
-Only run Pact verify:
+Run Pact verify only:
 
     ./scripts/build-services.sh --nexus-host=localhost --nexus-port=8082 --nexus-username=admin --nexus-password=${NEXUS_PASSWORD} --skip-images --skip-deploy --version=$(./scripts/get-version.sh) --skip-integration-tests --skip-pact-tests
 
@@ -68,10 +76,6 @@ Update dependencies (only if you know what you are doing):
     ./scripts/update-dependencies.sh
 
 ## Run on Docker
-
-Build Docker images:
-
-    ./scripts/build-images.sh
 
 Start platform:
 
@@ -89,7 +93,7 @@ Create Minio bucket:
 
     docker run -i --network platform_bridge -e MINIO_ROOT_USER=admin -e MINIO_ROOT_PASSWORD=password --entrypoint sh minio/mc:latest < scripts/minio-create-bucket.sh
 
-Export GitHub secrets (very important):
+Create GitHub application and export GitHub secrets (very important):
 
     export GITHUB_ACCOUNT_EMAIL=your-account-id
     export GITHUB_CLIENT_ID=your-client-id
@@ -109,7 +113,7 @@ Start services:
 
 Open application:
 
-    open https://localhost:8080/browse/designs.html
+    open https://localhost:31443/browse/designs.html
 
 Login with your GitHub account associated with the admin email for getting admin access
 
@@ -148,12 +152,11 @@ Tail services:
     docker logs -f --tail=-1 $(docker ps | grep designs-query | cut -d ' ' -f 1)
     docker logs -f --tail=-1 $(docker ps | grep designs-command | cut -d ' ' -f 1)
     docker logs -f --tail=-1 $(docker ps | grep designs-aggregate | cut -d ' ' -f 1)
-    docker logs -f --tail=-1 $(docker ps | grep designs-notify | cut -d ' ' -f 1)
+    docker logs -f --tail=-1 $(docker ps | grep designs-watch | cut -d ' ' -f 1)
     docker logs -f --tail=-1 $(docker ps | grep designs-render1 | cut -d ' ' -f 1)
     docker logs -f --tail=-1 $(docker ps | grep designs-render2 | cut -d ' ' -f 1)
     docker logs -f --tail=-1 $(docker ps | grep designs-render3 | cut -d ' ' -f 1)
     docker logs -f --tail=-1 $(docker ps | grep designs-render4 | cut -d ' ' -f 1)
-    docker logs -f --tail=-1 $(docker ps | grep gateway | cut -d ' ' -f 1)
     docker logs -f --tail=-1 $(docker ps | grep frontend | cut -d ' ' -f 1)
 
 Tail platform:
@@ -177,25 +180,28 @@ Stop platform:
 
     docker compose -f docker-compose-platform.yaml -p platform down
 
-Stop Nexus and Pact Broker:
+Remove platform volumes:
+
+    docker compose -f docker-compose-platform.yaml -p platform down --volumes
+
+Stop pipeline:
 
     docker compose -f docker-compose-pipeline.yaml -p pipeline down
+
+Remove pipeline volumes:
+
+    docker compose -f docker-compose-pipeline.yaml -p pipeline down --volumes
 
 Remove Docker images:
 
     docker image rm -f $(docker image ls 'integration/*' -q)
     docker image rm $(docker image ls -f dangling=true -q)
 
-Remove Docker volumes:
-
-    docker volume rm $(docker volume ls | grep pipeline_ | cut -w -f 2)
-    docker volume rm $(docker volume ls | grep platform_ | cut -w -f 2)
-
 ## Prepare Minikube
 
 Setup Minikube:
 
-    minikube start --vm-driver=hyperkit --cpus 8 --memory 32768m --disk-size 64g --kubernetes-version=v1.23.3
+    minikube start --vm-driver=hyperkit --cpus 8 --memory 49152m --disk-size 64g --kubernetes-version=v1.27.6
 
 Create alias (unless you already have kubectl installed):
 
@@ -229,7 +235,7 @@ Deploy Nexus and Pact Broker:
 
     ./scripts/helm-install-pipeline.sh
 
-It might take quite a while before Nexus is ready:
+Wait until Nexus is ready:
 
     ./scripts/wait-for.sh --timeout=60 --command="kubectl -n pipeline logs --tail=100 -l component=nexus | grep 'Started Sonatype Nexus'"
 
@@ -240,7 +246,7 @@ Expose Nexus and Pact Broker:
 Export variables:
 
     export PACTBROKER_HOST=$(minikube ip)
-    export PACTBROKER_PORT=9092
+    export PACTBROKER_PORT=9292
     export NEXUS_HOST=$(minikube ip)
     export NEXUS_PORT=8081
     export NEXUS_USERNAME=admin
@@ -250,15 +256,33 @@ Create Maven repository:
 
     ./scripts/create-repository.sh --nexus-host=${NEXUS_HOST} --nexus-port=${NEXUS_PORT} --nexus-username=${NEXUS_USERNAME} --nexus-password=${NEXUS_PASSWORD}
 
-Configure Docker:
+Select Docker engine running on Minikube:
 
     eval $(minikube docker-env)
 
-Build services:
+Build Docker images (and skip tests):
 
-    ./scripts/build-services.sh --pactbroker-host=${PACTBROKER_HOST} --pactbroker-port=${PACTBROKER_PORT} --nexus-host=${NEXUS_HOST} --nexus-port=${NEXUS_PORT} --nexus-username=${NEXUS_USERNAME} --nexus-password=${NEXUS_PASSWORD} --docker-host=$(minikube ip) --skip-tests
+    ./scripts/build-services.sh --nexus-host=${NEXUS_HOST} --nexus-port=${NEXUS_PORT} --nexus-username=${NEXUS_USERNAME} --nexus-password=${NEXUS_PASSWORD} --skip-tests
 
-Please note that integration tests or pact tests on Minikube are not currently supported.
+Please note that integration tests or pact tests can't be executed using the Docker engine running on Minikube. 
+
+In case we want to run the tests using Pack Broker and Nexus server deployed on Minikube, we must use the local Docker engine, and then load the Docker images into Minikube.
+
+Reset Docker environment variables to use local Docker engine:
+
+    eval $(env | grep DOCKER_ | cut -f 1 -d "=" - | awk '{print "unset "$1}')
+
+Build images and run tests using local Docker engine:
+
+    ./scripts/build-services.sh --pactbroker-host=${PACTBROKER_HOST} --pactbroker-port=${PACTBROKER_PORT} --nexus-host=${NEXUS_HOST} --nexus-port=${NEXUS_PORT} --nexus-username=${NEXUS_USERNAME} --nexus-password=${NEXUS_PASSWORD}
+
+See results of Pact tests:
+
+    open http://$(minikube ip):9292
+
+Load Docker images into Minikube:
+
+    ./scripts/minikube-load-images.sh --version=$(./scripts/get-version.sh)
 
 ## Run on Minikube
 
@@ -270,7 +294,8 @@ Export GitHub secrets:
 
 Deploy secrets:
 
-    ./scripts/kube-create-secrets.sh
+    ./scripts/kube-create-nginx-secrets.sh
+    ./scripts/kube-create-services-secrets.sh
 
 Deploy Certificate Manager:
 
@@ -288,7 +313,7 @@ Deploy Jaeger operator:
 
     helm repo add jaegertracing https://jaegertracing.github.io/helm-charts
     helm repo update
-    helm upgrade --install jaeger-operator jaegertracing/jaeger-operator --namespace monitoring --set rbac.create=true --version 2.29.0
+    helm upgrade --install jaeger-operator jaegertracing/jaeger-operator --namespace monitoring --set rbac.create=true --version 2.47.0
 
 Deploy Fluent Bit:
 
@@ -345,10 +370,6 @@ Deploy services:
 
     ./scripts/helm-install-services.sh
 
-Expose services:
-
-    ./scripts/kube-expose-services.sh
-
 Create monitoring resources:
 
     kubectl apply -f scripts/jaeger.yaml
@@ -360,9 +381,8 @@ Scale services:
 
     kubectl -n services scale deployment designs-query --replicas=2
     kubectl -n services scale deployment designs-aggregate --replicas=2
-    kubectl -n services scale deployment designs-notify --replicas=1
+    kubectl -n services scale deployment designs-watch --replicas=2
     kubectl -n services scale deployment designs-render --replicas=4
-    kubectl -n services scale deployment gateway --replicas=2
     kubectl -n services scale deployment frontend --replicas=2
 
 Scale platform:
@@ -432,9 +452,8 @@ Tail services:
     kubectl -n services logs -f --tail=-1 -l component=designs-query
     kubectl -n services logs -f --tail=-1 -l component=designs-command
     kubectl -n services logs -f --tail=-1 -l component=designs-aggregate
-    kubectl -n services logs -f --tail=-1 -l component=designs-notify
+    kubectl -n services logs -f --tail=-1 -l component=designs-watch
     kubectl -n services logs -f --tail=-1 -l component=designs-render
-    kubectl -n services logs -f --tail=-1 -l component=gateway
     kubectl -n services logs -f --tail=-1 -l component=frontend
 
 Tail platform:

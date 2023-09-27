@@ -7,8 +7,8 @@ import au.com.dius.pact.consumer.junit5.PactConsumerTestExt;
 import au.com.dius.pact.consumer.junit5.PactTestFor;
 import au.com.dius.pact.consumer.junit5.ProviderType;
 import au.com.dius.pact.core.model.PactSpecVersion;
+import au.com.dius.pact.core.model.V4Pact;
 import au.com.dius.pact.core.model.annotations.Pact;
-import au.com.dius.pact.core.model.messaging.MessagePact;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -41,9 +41,22 @@ public class PactConsumerTests {
     }
 
     @Pact(consumer = "designs-query", provider = "designs-aggregate")
-    public MessagePact designDocumentUpdateRequested(MessagePactBuilder builder) {
+    public V4Pact designDocumentUpdateRequested(MessagePactBuilder builder) {
         final UUID uuid1 = new UUID(0L, 1L);
         final UUID uuid2 = new UUID(0L, 2L);
+
+        final UUID commandId1 = new UUID(1L, 1L);
+        final UUID commandId2 = new UUID(1L, 2L);
+
+        final String revision1 = "0000000000000000-0000000000000001";
+        final String revision2 = "0000000000000000-0000000000000002";
+        final String revision3 = "0000000000000000-0000000000000003";
+        final String revision4 = "0000000000000000-0000000000000004";
+
+        final UUID eventId1 = new UUID(2L, 1L);
+        final UUID eventId2 = new UUID(2L, 2L);
+        final UUID eventId3 = new UUID(2L, 3L);
+        final UUID eventId4 = new UUID(2L, 4L);
 
         PactDslJsonArray tiles1 = new PactDslJsonArray()
                 .object()
@@ -91,8 +104,8 @@ public class PactConsumerTests {
         PactDslJsonBody event1 = new PactDslJsonBody()
                 .uuid("designId", uuid1)
                 .uuid("userId", TestConstants.USER_ID)
-                .stringMatcher("commandId", TestConstants.UUID6_REGEXP)
-                .stringMatcher("revision", TestConstants.REVISION_REGEXP)
+                .stringMatcher("commandId", TestConstants.UUID6_REGEXP, commandId1.toString())
+                .stringMatcher("revision", TestConstants.REVISION_REGEXP, revision1)
                 .stringValue("data", TestConstants.JSON_1)
                 .stringValue("checksum", TestConstants.CHECKSUM_1)
                 .stringValue("status", "CREATED")
@@ -103,7 +116,7 @@ public class PactConsumerTests {
                 .object("tiles", tiles1);
 
         PactDslJsonBody payload1 = new PactDslJsonBody()
-                .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
+                .stringMatcher("uuid", TestConstants.UUID6_REGEXP, eventId1.toString())
                 .object("data", event1)
                 .stringValue("type", TestConstants.DESIGN_DOCUMENT_UPDATE_REQUESTED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
@@ -158,8 +171,8 @@ public class PactConsumerTests {
         PactDslJsonBody event2 = new PactDslJsonBody()
                 .uuid("designId", uuid1)
                 .uuid("userId", TestConstants.USER_ID)
-                .stringMatcher("commandId", TestConstants.UUID6_REGEXP)
-                .stringMatcher("revision", TestConstants.REVISION_REGEXP)
+                .stringMatcher("commandId", TestConstants.UUID6_REGEXP, commandId1.toString())
+                .stringMatcher("revision", TestConstants.REVISION_REGEXP, revision2)
                 .stringValue("data", TestConstants.JSON_1)
                 .stringValue("checksum", TestConstants.CHECKSUM_1)
                 .stringValue("status", "UPDATED")
@@ -170,7 +183,7 @@ public class PactConsumerTests {
                 .object("tiles", tiles2);
 
         PactDslJsonBody payload2 = new PactDslJsonBody()
-                .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
+                .stringMatcher("uuid", TestConstants.UUID6_REGEXP, eventId2.toString())
                 .object("data", event2)
                 .stringValue("type", TestConstants.DESIGN_DOCUMENT_UPDATE_REQUESTED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
@@ -225,8 +238,8 @@ public class PactConsumerTests {
         PactDslJsonBody event3 = new PactDslJsonBody()
                 .uuid("designId", uuid1)
                 .uuid("userId", TestConstants.USER_ID)
-                .stringMatcher("commandId", TestConstants.UUID6_REGEXP)
-                .stringMatcher("revision", TestConstants.REVISION_REGEXP)
+                .stringMatcher("commandId", TestConstants.UUID6_REGEXP, commandId1.toString())
+                .stringMatcher("revision", TestConstants.REVISION_REGEXP, revision3)
                 .stringValue("data", TestConstants.JSON_1)
                 .stringValue("checksum", TestConstants.CHECKSUM_1)
                 .stringValue("status", "UPDATED")
@@ -237,7 +250,7 @@ public class PactConsumerTests {
                 .object("tiles", tiles3);
 
         PactDslJsonBody payload3 = new PactDslJsonBody()
-                .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
+                .stringMatcher("uuid", TestConstants.UUID6_REGEXP, eventId3.toString())
                 .object("data", event3)
                 .stringValue("type", TestConstants.DESIGN_DOCUMENT_UPDATE_REQUESTED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
@@ -292,8 +305,8 @@ public class PactConsumerTests {
         PactDslJsonBody event4 = new PactDslJsonBody()
                 .uuid("designId", uuid2)
                 .uuid("userId", TestConstants.USER_ID)
-                .stringMatcher("commandId", TestConstants.UUID6_REGEXP)
-                .stringMatcher("revision", TestConstants.REVISION_REGEXP)
+                .stringMatcher("commandId", TestConstants.UUID6_REGEXP, commandId2.toString())
+                .stringMatcher("revision", TestConstants.REVISION_REGEXP, revision4)
                 .stringValue("data", TestConstants.JSON_2)
                 .stringValue("checksum", TestConstants.CHECKSUM_2)
                 .stringValue("status", "UPDATED")
@@ -304,7 +317,7 @@ public class PactConsumerTests {
                 .object("tiles", tiles4);
 
         PactDslJsonBody payload4 = new PactDslJsonBody()
-                .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
+                .stringMatcher("uuid", TestConstants.UUID6_REGEXP, eventId4.toString())
                 .object("data", event4)
                 .stringValue("type", TestConstants.DESIGN_DOCUMENT_UPDATE_REQUESTED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
@@ -327,8 +340,17 @@ public class PactConsumerTests {
     }
 
     @Pact(consumer = "designs-query", provider = "designs-aggregate")
-    public MessagePact designDocumentDeleteRequested(MessagePactBuilder builder) {
+    public V4Pact designDocumentDeleteRequested(MessagePactBuilder builder) {
         final UUID uuid = new UUID(0L, 3L);
+
+        final UUID commandId1 = new UUID(1L, 1L);
+        final UUID commandId2 = new UUID(1L, 2L);
+
+        final String revision1 = "0000000000000000-0000000000000001";
+        final String revision2 = "0000000000000000-0000000000000002";
+
+        final UUID eventId1 = new UUID(2L, 1L);
+        final UUID eventId2 = new UUID(2L, 2L);
 
         PactDslJsonArray tiles = new PactDslJsonArray()
                 .object()
@@ -376,8 +398,8 @@ public class PactConsumerTests {
         PactDslJsonBody event1 = new PactDslJsonBody()
                 .uuid("designId", uuid)
                 .uuid("userId", TestConstants.USER_ID)
-                .stringMatcher("commandId", TestConstants.UUID6_REGEXP)
-                .stringMatcher("revision", TestConstants.REVISION_REGEXP)
+                .stringMatcher("commandId", TestConstants.UUID6_REGEXP, commandId1.toString())
+                .stringMatcher("revision", TestConstants.REVISION_REGEXP, revision1)
                 .stringValue("data", TestConstants.JSON_2)
                 .stringValue("checksum", TestConstants.CHECKSUM_2)
                 .stringValue("status", "CREATED")
@@ -388,7 +410,7 @@ public class PactConsumerTests {
                 .object("tiles", tiles);
 
         PactDslJsonBody payload1 = new PactDslJsonBody()
-                .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
+                .stringMatcher("uuid", TestConstants.UUID6_REGEXP, eventId1.toString())
                 .object("data", event1)
                 .stringValue("type", TestConstants.DESIGN_DOCUMENT_UPDATE_REQUESTED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
@@ -399,11 +421,11 @@ public class PactConsumerTests {
 
         PactDslJsonBody event2 = new PactDslJsonBody()
                 .uuid("designId", uuid)
-                .stringMatcher("commandId", TestConstants.UUID6_REGEXP)
-                .stringMatcher("revision", TestConstants.REVISION_REGEXP);
+                .stringMatcher("commandId", TestConstants.UUID6_REGEXP, commandId2.toString())
+                .stringMatcher("revision", TestConstants.REVISION_REGEXP, revision2);
 
         PactDslJsonBody payload2 = new PactDslJsonBody()
-                .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
+                .stringMatcher("uuid", TestConstants.UUID6_REGEXP, eventId2.toString())
                 .object("data", event2)
                 .stringValue("type", TestConstants.DESIGN_DOCUMENT_DELETE_REQUESTED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
@@ -422,15 +444,15 @@ public class PactConsumerTests {
     }
 
     @Test
-    @PactTestFor(providerName = "designs-query", port = "1111", pactMethod = "designDocumentUpdateRequested", providerType = ProviderType.ASYNCH, pactVersion = PactSpecVersion.V3)
+    @PactTestFor(providerName = "designs-query", pactMethod = "designDocumentUpdateRequested", providerType = ProviderType.ASYNCH, pactVersion = PactSpecVersion.V4)
     @DisplayName("Should update the design after receiving a DesignDocumentUpdateRequested event")
-    public void shouldUpdateTheDesignWhenReceivingADesignDocumentUpdateRequestedMessage(MessagePact pact) {
-        assertThat(pact.getMessages()).hasSize(4);
+    public void shouldUpdateTheDesignWhenReceivingADesignDocumentUpdateRequestedMessage(V4Pact pact) {
+        assertThat(pact.getInteractions()).hasSize(4);
 
-        final OutputMessage designDocumentUpdateRequestedMessage1 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getMessages().get(0)));
-        final OutputMessage designDocumentUpdateRequestedMessage2 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getMessages().get(1)));
-        final OutputMessage designDocumentUpdateRequestedMessage3 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getMessages().get(2)));
-        final OutputMessage designDocumentUpdateRequestedMessage4 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getMessages().get(3)));
+        final OutputMessage designDocumentUpdateRequestedMessage1 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(0).asAsynchronousMessage()));
+        final OutputMessage designDocumentUpdateRequestedMessage2 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(1).asAsynchronousMessage()));
+        final OutputMessage designDocumentUpdateRequestedMessage3 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(2).asAsynchronousMessage()));
+        final OutputMessage designDocumentUpdateRequestedMessage4 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(3).asAsynchronousMessage()));
 
         final List<OutputMessage> outputMessages = List.of(designDocumentUpdateRequestedMessage1, designDocumentUpdateRequestedMessage2, designDocumentUpdateRequestedMessage3, designDocumentUpdateRequestedMessage4);
 
@@ -438,14 +460,14 @@ public class PactConsumerTests {
     }
 
     @Test
-    @PactTestFor(providerName = "designs-query", port = "1112", pactMethod = "designDocumentDeleteRequested", providerType = ProviderType.ASYNCH, pactVersion = PactSpecVersion.V3)
+    @PactTestFor(providerName = "designs-query", pactMethod = "designDocumentDeleteRequested", providerType = ProviderType.ASYNCH, pactVersion = PactSpecVersion.V4)
     @DisplayName("Should delete the design after receiving a DesignDocumentDeleteRequested event")
-    public void shouldDeleteTheDesignWhenReceivingADesignDocumentDeleteRequestedMessage(MessagePact pact) {
-        assertThat(pact.getMessages()).hasSize(2);
+    public void shouldDeleteTheDesignWhenReceivingADesignDocumentDeleteRequestedMessage(V4Pact pact) {
+        assertThat(pact.getInteractions()).hasSize(2);
 
-        final OutputMessage designDocumentUpdateRequestedMessage = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getMessages().get(0)));
-        final OutputMessage designDocumentDeleteRequestedMessage = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getMessages().get(1)));
+        final OutputMessage designDocumentUpdateRequestedMessage1 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(0).asAsynchronousMessage()));
+        final OutputMessage designDocumentUpdateRequestedMessage2 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(1).asAsynchronousMessage()));
 
-        testCases.shouldDeleteTheDesignWhenReceivingADesignDocumentDeleteRequestedMessage(designDocumentUpdateRequestedMessage, designDocumentDeleteRequestedMessage);
+        testCases.shouldDeleteTheDesignWhenReceivingADesignDocumentDeleteRequestedMessage(designDocumentUpdateRequestedMessage1, designDocumentUpdateRequestedMessage2);
     }
 }

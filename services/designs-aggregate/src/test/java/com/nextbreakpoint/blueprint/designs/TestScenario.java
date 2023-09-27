@@ -51,7 +51,6 @@ public class TestScenario {
           .withEnv("RENDER_TOPIC_PREFIX", TestConstants.RENDER_TOPIC_PREFIX)
           .withEnv("EVENTS_TOPIC", TestConstants.EVENTS_TOPIC_NAME)
           .withEnv("BUFFER_TOPIC", TestConstants.BUFFER_TOPIC_NAME)
-          .withFileSystemBind("../../secrets/keystore_server.jks", "/secrets/keystore_server.jks", BindMode.READ_ONLY)
           .withFileSystemBind("../../secrets/keystore_auth.jceks", "/secrets/keystore_auth.jceks", BindMode.READ_ONLY)
           .withFileSystemBind("config/integration.json", "/etc/config.json", BindMode.READ_ONLY)
           .withExposedPorts(HTTP_PORT, DEBUG_PORT)
@@ -59,7 +58,7 @@ public class TestScenario {
           .withNetworkAliases(serviceName)
           .withLogConsumer(frame -> outputStream.writeBytes(Optional.ofNullable(frame.getBytes()).orElse(new byte[0])))
           .dependsOn(zookeeper, kafka, cassandra)
-          .waitingFor(Wait.forLogMessage(".* Service listening on port " + HTTP_PORT + ".*", 1).withStartupTimeout(Duration.ofSeconds(20)));
+          .waitingFor(Wait.forLogMessage(".*\"Service listening on port " + HTTP_PORT + "\".*", 1).withStartupTimeout(Duration.ofSeconds(20)));
 
   public void before() {
     if (buildImages) {

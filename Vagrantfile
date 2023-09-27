@@ -4,17 +4,17 @@ Vagrant.configure(2) do |config|
   end
 
   if Vagrant.has_plugin?("vagrant-disksize")
-    config.disksize.size = '17GB'
+    config.disksize.size = '14GB'
   end
 
   config.vm.define "blueprint" do |s|
     s.ssh.forward_agent = true
-    s.vm.box = "ubuntu/bionic64"
+    s.vm.box = "ubuntu/focal64"
     s.vm.hostname = "blueprint"
-#     s.vm.network "private_network",
-#       ip: "192.168.2.20",
-#       netmask: "255.255.255.0",
-#       auto_config: true
+    s.vm.network "private_network",
+      ip: "192.168.10.30",
+      netmask: "255.255.255.0",
+      auto_config: true
     s.vm.provision :shell,
       path: "pipeline/setup.sh",
       privileged: false
@@ -23,8 +23,6 @@ Vagrant.configure(2) do |config|
       v.cpus = 2
       v.memory = 7168
       v.gui = false
-      v.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
-      #v.customize ["modifyvm", :id, "--natdnsproxy1", "on"]
     end
   end
 

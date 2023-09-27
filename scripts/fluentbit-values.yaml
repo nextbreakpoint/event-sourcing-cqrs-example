@@ -29,7 +29,7 @@ config:
     [FILTER]
         Name kubernetes
         Match kube.platform.*
-        Kube_Tag_Prefix  kube.platform.var.log.containers.
+        Kube_Tag_Prefix kube.platform.var.log.containers.
         Merge_Log On
         Keep_Log Off
         K8S-Logging.Parser On
@@ -38,7 +38,7 @@ config:
     [FILTER]
         Name kubernetes
         Match kube.services.*
-        Kube_Tag_Prefix  kube.services.var.log.containers.
+        Kube_Tag_Prefix kube.services.var.log.containers.
         Merge_Log On
         Keep_Log Off
         K8S-Logging.Parser On

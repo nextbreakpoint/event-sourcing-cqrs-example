@@ -11,7 +11,7 @@ import au.com.dius.pact.provider.junitsupport.loader.PactBroker;
 import com.nextbreakpoint.blueprint.common.core.Authority;
 import com.nextbreakpoint.blueprint.common.core.Headers;
 import com.nextbreakpoint.blueprint.common.vertx.Authentication;
-import org.apache.http.HttpRequest;
+import org.apache.hc.core5.http.HttpRequest;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -40,7 +40,7 @@ public class VerifyFrontendPact {
 
     @BeforeEach
     public void before(PactVerificationContext context) {
-        context.setTarget(testCases.getHttpsTestTarget());
+        context.setTarget(testCases.getHttpTestTarget());
     }
 
     @TestTemplate

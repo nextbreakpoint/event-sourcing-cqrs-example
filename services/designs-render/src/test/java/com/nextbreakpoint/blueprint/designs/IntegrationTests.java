@@ -1,10 +1,9 @@
 package com.nextbreakpoint.blueprint.designs;
 
-import com.jayway.restassured.RestAssured;
-import com.jayway.restassured.http.ContentType;
 import com.nextbreakpoint.blueprint.common.core.*;
 import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
 import com.nextbreakpoint.blueprint.common.events.mappers.TileRenderRequestedOutputMapper;
+import io.restassured.RestAssured;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.*;
 
@@ -14,8 +13,8 @@ import java.net.MalformedURLException;
 import java.util.List;
 import java.util.UUID;
 
-import static com.jayway.restassured.RestAssured.given;
 import static com.nextbreakpoint.blueprint.common.core.Headers.AUTHORIZATION;
+import static io.restassured.RestAssured.given;
 
 @Tag("docker")
 @Tag("integration")
@@ -81,8 +80,8 @@ public class IntegrationTests {
 
         given().config(TestUtils.getRestAssuredConfig())
                 .with().header(AUTHORIZATION, authorization)
-                .and().contentType(ContentType.JSON)
-                .and().accept(ContentType.JSON)
+                .and().contentType(ContentType.APPLICATION_JSON)
+                .and().accept(ContentType.APPLICATION_JSON)
                 .and().body(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT))
                 .when().post(testCases.makeBaseURL("/v1/designs/validate"))
                 .then().assertThat().statusCode(200)
@@ -97,8 +96,8 @@ public class IntegrationTests {
 
         given().config(TestUtils.getRestAssuredConfig())
                 .with().header(AUTHORIZATION, authorization)
-                .and().contentType(ContentType.JSON)
-                .and().accept(ContentType.JSON)
+                .and().contentType(ContentType.APPLICATION_JSON)
+                .and().accept(ContentType.APPLICATION_JSON)
                 .and().body(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT_WITH_ERRORS))
                 .when().post(testCases.makeBaseURL("/v1/designs/validate"))
                 .then().assertThat().statusCode(200)
@@ -140,7 +139,7 @@ public class IntegrationTests {
                 .when().post(testCases.makeBaseURL("/v1/designs/download"))
                 .then().assertThat().statusCode(200)
                 .and().assertThat().contentType("application/zip")
-                .and().assertThat().content(Matchers.notNullValue());
+                .and().assertThat().body(Matchers.notNullValue());
     }
 
     private String getContent(String resource) throws IOException {

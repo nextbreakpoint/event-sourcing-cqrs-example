@@ -43,39 +43,27 @@ let Designs = class Designs extends React.Component {
 
         try {
             if (typeof(EventSource) !== "undefined") {
-                axios.get(component.props.config.api_url + "/v1/watch/designs?revision=" + revision, config)
-                    .then(function (response) {
-                        if (response.status == 200) {
-                            var source = new EventSource(response.headers.location, { withCredentials: true })
+                var source = new EventSource(component.props.config.api_url + "/v1/designs/watch?revision=" + revision, { withCredentials: true })
 
-                            source.onerror = function(error) {
-                               console.log(error)
-                            }
+                source.onerror = function(error) {
+                   console.log(error)
+                }
 
-                            source.onopen = function() {
-                              component.loadDesigns(revision)
-                            }
+                source.onopen = function() {
+                  component.loadDesigns(revision)
+                }
 
-                            source.addEventListener("update",  function(event) {
-                               console.log(event.data)
-                               console.log("Reloading designs...")
-                               component.loadDesigns(revision)
-                            }, false)
-                        } else {
-                            console.log("Can't redirect to SSE server")
-                            component.loadDesigns(revision)
-                        }
-                    })
-                    .catch(function (error) {
-                        console.log("Can't retrieve url of SSE server")
-                        component.loadDesigns(revision)
-                    })
+                source.addEventListener("update",  function(event) {
+                   console.log(event.data)
+                   console.log("Reloading designs...")
+                   component.loadDesigns(revision)
+                }, false)
             } else {
-                console.log("EventSource not available")
+                console.log("Can't watch resource. EventSource not supported by the browser")
                 component.loadDesigns(revision)
             }
         } catch (e) {
-           console.log("Can't subscribe: " + e)
+           console.log("Can't watch resource: " + e)
            component.loadDesigns(revision)
         }
     }

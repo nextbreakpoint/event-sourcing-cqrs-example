@@ -6,8 +6,8 @@ import au.com.dius.pact.consumer.junit5.PactConsumerTestExt;
 import au.com.dius.pact.consumer.junit5.PactTestFor;
 import au.com.dius.pact.consumer.junit5.ProviderType;
 import au.com.dius.pact.core.model.PactSpecVersion;
+import au.com.dius.pact.core.model.V4Pact;
 import au.com.dius.pact.core.model.annotations.Pact;
-import au.com.dius.pact.core.model.messaging.MessagePact;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -40,17 +40,27 @@ public class PactConsumerTests {
     }
 
     @Pact(consumer = "designs-render")
-    public MessagePact tileRenderRequested(MessagePactBuilder builder) {
+    public V4Pact tileRenderRequested(MessagePactBuilder builder) {
         final UUID uuid1 = new UUID(0L, 5L);
         final UUID uuid2 = new UUID(0L, 6L);
         final UUID uuid3 = new UUID(0L, 7L);
         final UUID uuid4 = new UUID(0L, 8L);
         final UUID uuid5 = new UUID(0L, 9L);
 
+        final UUID commandId = new UUID(1L, 1L);
+
+        final String revision = "0000000000000000-0000000000000001";
+
+        final UUID eventId1 = new UUID(2L, 1L);
+        final UUID eventId2 = new UUID(2L, 2L);
+        final UUID eventId3 = new UUID(2L, 3L);
+        final UUID eventId4 = new UUID(2L, 4L);
+        final UUID eventId5 = new UUID(2L, 5L);
+
         PactDslJsonBody event1 = new PactDslJsonBody()
                 .uuid("designId", uuid1)
-                .stringMatcher("commandId", TestConstants.UUID6_REGEXP)
-                .stringMatcher("revision", TestConstants.REVISION_REGEXP)
+                .stringMatcher("commandId", TestConstants.UUID6_REGEXP, commandId.toString())
+                .stringMatcher("revision", TestConstants.REVISION_REGEXP, revision)
                 .stringValue("data", TestConstants.JSON_1)
                 .stringValue("checksum", TestConstants.CHECKSUM_1)
                 .numberValue("level", 0)
@@ -58,7 +68,7 @@ public class PactConsumerTests {
                 .numberValue("col", 0);
 
         PactDslJsonBody payload1 = new PactDslJsonBody()
-                .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
+                .stringMatcher("uuid", TestConstants.UUID6_REGEXP, eventId1.toString())
                 .object("data", event1)
                 .stringValue("type", TestConstants.TILE_RENDER_REQUESTED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
@@ -69,8 +79,8 @@ public class PactConsumerTests {
 
         PactDslJsonBody event2 = new PactDslJsonBody()
                 .uuid("designId", uuid2)
-                .stringMatcher("commandId", TestConstants.UUID6_REGEXP)
-                .stringMatcher("revision", TestConstants.REVISION_REGEXP)
+                .stringMatcher("commandId", TestConstants.UUID6_REGEXP, commandId.toString())
+                .stringMatcher("revision", TestConstants.REVISION_REGEXP, revision)
                 .stringValue("data", TestConstants.JSON_2)
                 .stringValue("checksum", TestConstants.CHECKSUM_2)
                 .numberValue("level", 4)
@@ -78,7 +88,7 @@ public class PactConsumerTests {
                 .numberValue("col", 2);
 
         PactDslJsonBody payload2 = new PactDslJsonBody()
-                .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
+                .stringMatcher("uuid", TestConstants.UUID6_REGEXP, eventId2.toString())
                 .object("data", event2)
                 .stringValue("type", TestConstants.TILE_RENDER_REQUESTED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
@@ -89,8 +99,8 @@ public class PactConsumerTests {
 
         PactDslJsonBody event3 = new PactDslJsonBody()
                 .uuid("designId", uuid3)
-                .stringMatcher("commandId", TestConstants.UUID6_REGEXP)
-                .stringMatcher("revision", TestConstants.REVISION_REGEXP)
+                .stringMatcher("commandId", TestConstants.UUID6_REGEXP, commandId.toString())
+                .stringMatcher("revision", TestConstants.REVISION_REGEXP, revision)
                 .stringValue("data", TestConstants.JSON_2)
                 .stringValue("checksum", TestConstants.CHECKSUM_2)
                 .numberValue("level", 5)
@@ -98,7 +108,7 @@ public class PactConsumerTests {
                 .numberValue("col", 2);
 
         PactDslJsonBody payload3 = new PactDslJsonBody()
-                .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
+                .stringMatcher("uuid", TestConstants.UUID6_REGEXP, eventId3.toString())
                 .object("data", event3)
                 .stringValue("type", TestConstants.TILE_RENDER_REQUESTED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
@@ -109,8 +119,8 @@ public class PactConsumerTests {
 
         PactDslJsonBody event4 = new PactDslJsonBody()
                 .uuid("designId", uuid4)
-                .stringMatcher("commandId", TestConstants.UUID6_REGEXP)
-                .stringMatcher("revision", TestConstants.REVISION_REGEXP)
+                .stringMatcher("commandId", TestConstants.UUID6_REGEXP, commandId.toString())
+                .stringMatcher("revision", TestConstants.REVISION_REGEXP, revision)
                 .stringValue("data", TestConstants.JSON_2)
                 .stringValue("checksum", TestConstants.CHECKSUM_2)
                 .numberValue("level", 6)
@@ -118,7 +128,7 @@ public class PactConsumerTests {
                 .numberValue("col", 2);
 
         PactDslJsonBody payload4 = new PactDslJsonBody()
-                .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
+                .stringMatcher("uuid", TestConstants.UUID6_REGEXP, eventId4.toString())
                 .object("data", event4)
                 .stringValue("type", TestConstants.TILE_RENDER_REQUESTED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
@@ -129,8 +139,8 @@ public class PactConsumerTests {
 
         PactDslJsonBody event5 = new PactDslJsonBody()
                 .uuid("designId", uuid5)
-                .stringMatcher("commandId", TestConstants.UUID6_REGEXP)
-                .stringMatcher("revision", TestConstants.REVISION_REGEXP)
+                .stringMatcher("commandId", TestConstants.UUID6_REGEXP, commandId.toString())
+                .stringMatcher("revision", TestConstants.REVISION_REGEXP, revision)
                 .stringValue("data", TestConstants.JSON_2)
                 .stringValue("checksum", TestConstants.CHECKSUM_2)
                 .numberValue("level", 7)
@@ -138,7 +148,7 @@ public class PactConsumerTests {
                 .numberValue("col", 2);
 
         PactDslJsonBody payload5 = new PactDslJsonBody()
-                .stringMatcher("uuid", TestConstants.UUID6_REGEXP)
+                .stringMatcher("uuid", TestConstants.UUID6_REGEXP, eventId5.toString())
                 .object("data", event5)
                 .stringValue("type", TestConstants.TILE_RENDER_REQUESTED)
                 .stringValue("source", TestConstants.MESSAGE_SOURCE);
@@ -162,16 +172,16 @@ public class PactConsumerTests {
     }
 
     @Test
-    @PactTestFor(providerName = "designs-aggregate", port = "1111", pactMethod = "tileRenderRequested", providerType = ProviderType.ASYNCH, pactVersion = PactSpecVersion.V3)
+    @PactTestFor(providerName = "designs-aggregate", pactMethod = "tileRenderRequested", providerType = ProviderType.ASYNCH, pactVersion = PactSpecVersion.V4)
     @DisplayName("Should start rendering an image after receiving a TileRenderRequested event")
-    public void shouldStartRenderingAnImageWhenReceivingATileRenderRequestedMessage(MessagePact pact) {
-        assertThat(pact.getMessages()).hasSize(5);
+    public void shouldStartRenderingAnImageWhenReceivingATileRenderRequestedMessage(V4Pact pact) {
+        assertThat(pact.getInteractions()).hasSize(5);
 
-        final OutputMessage tileRenderRequestedMessage1 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getMessages().get(0)));
-        final OutputMessage tileRenderRequestedMessage2 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getMessages().get(1)));
-        final OutputMessage tileRenderRequestedMessage3 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getMessages().get(2)));
-        final OutputMessage tileRenderRequestedMessage4 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getMessages().get(3)));
-        final OutputMessage tileRenderRequestedMessage5 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getMessages().get(4)));
+        final OutputMessage tileRenderRequestedMessage1 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(0).asAsynchronousMessage()));
+        final OutputMessage tileRenderRequestedMessage2 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(1).asAsynchronousMessage()));
+        final OutputMessage tileRenderRequestedMessage3 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(2).asAsynchronousMessage()));
+        final OutputMessage tileRenderRequestedMessage4 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(3).asAsynchronousMessage()));
+        final OutputMessage tileRenderRequestedMessage5 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(4).asAsynchronousMessage()));
 
         final List<OutputMessage> messages = List.of(tileRenderRequestedMessage1, tileRenderRequestedMessage2, tileRenderRequestedMessage3, tileRenderRequestedMessage4, tileRenderRequestedMessage5);
 

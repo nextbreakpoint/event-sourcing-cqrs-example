@@ -3,7 +3,7 @@
 set -e
 
 export REPOSITORY="integration"
-export VERSION="1.0.0-$(git rev-parse --abbrev-ref HEAD)-$(git rev-parse --short HEAD)-$(date +%s)"
+export VERSION="1.0.3-$(git rev-parse --abbrev-ref HEAD)-$(git rev-parse --short HEAD)-$(date +%s)"
 
 export TEST_DOCKER_HOST=host.docker.internal
 
@@ -15,8 +15,6 @@ export NEXUS_PORT="8082"
 export NEXUS_USERNAME=admin
 export NEXUS_PASSWORD=password
 
-POSITIONAL_ARGS=()
-
 CLEAN="true"
 PACKAGE="true"
 DEPLOY="true"
@@ -24,6 +22,8 @@ IMAGES="true"
 PACT_TESTS="true"
 PACT_VERIFY="true"
 INTEGRATION_TESTS="true"
+
+POSITIONAL_ARGS=()
 
 for i in "$@"; do
   case $i in
@@ -165,11 +165,10 @@ services=(
   designs-query
   designs-command
   designs-aggregate
-  designs-notify
+  designs-watch
   designs-render
   accounts
   authentication
-  gateway
   frontend
 )
 
@@ -195,11 +194,11 @@ fi
 mvn versions:set versions:commit -q -e -DnewVersion=$VERSION -Dcommon=true -Dservices=true -Dplatform=true
 
 if [ "$PACKAGE" == "true" ]; then
-  mvn package -q -e -s settings.xml ${MAVEN_ARGS} -Dcommon=true -Dservices=true -Dplatform=true -Dnexus=true -DskipTests=true
+  mvn package -s settings.xml ${MAVEN_ARGS} -Dcommon=true -Dservices=true -Dplatform=true -Dnexus=true -DskipTests=true
 fi
 
 if [ "$DEPLOY" == "true" ]; then
-  mvn deploy -q -e -s settings.xml ${MAVEN_ARGS} -Dcommon=true -Dservices=true -Dnexus=true
+  mvn deploy -s settings.xml ${MAVEN_ARGS} -Dcommon=true -Dservices=true -Dnexus=true
 fi
 
 if [ "$IMAGES" == "true" ]; then
@@ -218,7 +217,7 @@ if [ "$INTEGRATION_TESTS" == "true" ]; then
 
 for service in ${services[@]}; do
   pushd services/$service
-   JAEGER_SERVICE_NAME=$service mvn clean verify -q -e -Dgroups=integration -Ddocker.host=${TEST_DOCKER_HOST}
+   JAEGER_SERVICE_NAME=$service mvn clean verify -s settings.xml ${MAVEN_ARGS} -Dgroups=integration -Ddocker.host=${TEST_DOCKER_HOST}
   popd
 done
 
@@ -230,7 +229,7 @@ if [ "$PACT_TESTS" == "true" ]; then
 
 for service in ${services[@]}; do
   pushd services/$service
-   JAEGER_SERVICE_NAME=$service mvn clean verify -q -e -Dgroups=pact -Ddocker.host=${TEST_DOCKER_HOST}
+   JAEGER_SERVICE_NAME=$service mvn clean verify -s settings.xml ${MAVEN_ARGS} -Dgroups=pact -Ddocker.host=${TEST_DOCKER_HOST}
   popd
 done
 
@@ -240,7 +239,7 @@ if [ "$PACT_VERIFY" == "true" ]; then
 
 for service in ${services[@]}; do
   pushd services/$service
-   JAEGER_SERVICE_NAME=$service mvn clean verify -q -e -Dgroups=pact-verify -Ddocker.host=${TEST_DOCKER_HOST}
+   JAEGER_SERVICE_NAME=$service mvn clean verify -s settings.xml ${MAVEN_ARGS} -Dgroups=pact-verify -Ddocker.host=${TEST_DOCKER_HOST}
   popd
 done
 

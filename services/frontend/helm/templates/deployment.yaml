@@ -41,9 +41,6 @@ spec:
         - name: config-vol
           configMap:
             name: '{{ $root.Values.configName | default "frontend" }}.{{ $root.Release.Revision | default "1" }}'
-        - name: secret-vol
-          secret:
-            secretName: {{ $root.Values.secretName | default "frontend" | quote }}
       containers:
         - name: {{ $root.Values.name | default "frontend" | quote }}
           image: "{{ $root.Values.image.registry }}{{ $root.Values.image.repository }}:{{ $root.Values.image.tag }}"
@@ -70,18 +67,6 @@ spec:
               readOnly: true
               mountPath: /etc/config.json
               subPath: config.json
-            - name: secret-vol
-              readOnly: true
-              mountPath: /etc/ca_cert.pem
-              subPath: ca_cert.pem
-            - name: secret-vol
-              readOnly: true
-              mountPath: /etc/server_cert.pem
-              subPath: server_cert.pem
-            - name: secret-vol
-              readOnly: true
-              mountPath: /etc/server_key.pem
-              subPath: server_key.pem
           {{- if $root.Values.resources }}
           resources:
             {{ $root.Values.resources | toYaml | indent 12 | trim }}
@@ -90,25 +75,25 @@ spec:
             httpGet:
               path: /browse/designs.html
               port: http
-              scheme: HTTPS
+              scheme: HTTP
             failureThreshold: 2
             initialDelaySeconds: 5
-            timeoutSeconds: 2
-            periodSeconds: 5
+            timeoutSeconds: 10
+            periodSeconds: 30
           readinessProbe:
             httpGet:
               path: /browse/designs.html
               port: http
-              scheme: HTTPS
+              scheme: HTTP
             failureThreshold: 2
             initialDelaySeconds: 5
-            timeoutSeconds: 2
-            periodSeconds: 5
+            timeoutSeconds: 10
+            periodSeconds: 30
           startupProbe:
             httpGet:
               path: /browse/designs.html
               port: http
-              scheme: HTTPS
+              scheme: HTTP
             failureThreshold: 12
-            timeoutSeconds: 2
-            periodSeconds: 5
+            timeoutSeconds: 10
+            periodSeconds: 30

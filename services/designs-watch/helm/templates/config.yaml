@@ -1,0 +1,28 @@
+{{- $fullname := include "service.fullname" . -}}
+{{- $name := include "service.name" . -}}
+{{- $chart := include "service.chart" . -}}
+{{- $root := . }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: '{{ $root.Values.configName | default "designs-watch" }}.{{ $root.Release.Revision | default "1" }}'
+  namespace: {{ $root.Release.Namespace | quote }}
+  labels:
+    chart: {{ $chart }}
+    release: {{ $root.Release.Name }}
+    heritage: {{ $root.Release.Service }}
+data:
+  config.json: |
+    {
+      "host_port": "8080",
+
+      "jwt_keystore_path": "/etc/keystore_auth.jceks",
+      "jwt_keystore_type": "jceks",
+      "jwt_keystore_secret": "${KEYSTORE_SECRET}",
+
+      "origin_pattern": "https://{{ $root.Values.clientDomain | default "localhost" }}(:[0-9]+)?",
+
+      "kafka_bootstrap_servers": {{ $root.Values.kafkaServers | default "kafka.platform:9094" | quote }},
+      "kafka_group_id": {{ $root.Values.kafkaGroupId | default "designs-watch" | quote }},
+      "events_topic": {{ $root.Values.eventsTopic | default "events" | quote }}
+    }

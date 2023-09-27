@@ -16,9 +16,6 @@ data:
     {
       "host_port": "8080",
 
-      "server_keystore_path": "/etc/keystore_server.jks",
-      "server_keystore_secret": "${KEYSTORE_SECRET}",
-
       "jwt_keystore_path": "/etc/keystore_auth.jceks",
       "jwt_keystore_type": "jceks",
       "jwt_keystore_secret": "${KEYSTORE_SECRET}",

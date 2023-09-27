@@ -6,15 +6,16 @@
 
 var app = require('../app');
 var debug = require('debug')('express:server');
-var https = require('https');
+//var https = require('https');
+var http = require('http');
 var fs = require('fs');
 
-var secretsPath = process.env.SECRETS_PATH;
+//var secretsPath = process.env.SECRETS_PATH;
 
-var privateKey  = fs.readFileSync(secretsPath + '/server_key.pem', 'utf8');
-var certificate = fs.readFileSync(secretsPath + '/server_cert.pem', 'utf8');
+//var privateKey  = fs.readFileSync(secretsPath + '/server_key.pem', 'utf8');
+//var certificate = fs.readFileSync(secretsPath + '/server_cert.pem', 'utf8');
 
-var sslOptions = {key: privateKey, cert: certificate};
+//var sslOptions = {key: privateKey, cert: certificate};
 
 
 /**
@@ -28,7 +29,8 @@ app.set('port', port);
  * Create HTTP server.
  */
 
-var server = https.createServer(sslOptions, app);
+//var server = https.createServer(sslOptions, app);
+var server = http.createServer(app);
 
 /**
  * Listen on provided port, on all network interfaces.

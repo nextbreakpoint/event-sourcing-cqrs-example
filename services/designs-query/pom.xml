@@ -10,7 +10,7 @@
     <parent>
         <groupId>com.nextbreakpoint</groupId>
         <artifactId>com.nextbreakpoint.blueprint.service</artifactId>
-        <version>1.0.0-wip2-9a2a502f-1650377124</version>
+        <version>1.0.3-wip-61f3c1dd-1695660736</version>
     </parent>
     <repositories>
         <repository>
@@ -127,6 +127,10 @@
                     <rulesUri>file://${project.basedir}/../../maven-version-rules.xml</rulesUri>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+            </plugin>
         </plugins>
     </build>
     <dependencies>
@@ -157,7 +161,15 @@
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpcore</artifactId>
-            <version>${httpcore.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>au.com.dius.pact.consumer</groupId>
+            <artifactId>junit5</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>au.com.dius.pact</groupId>

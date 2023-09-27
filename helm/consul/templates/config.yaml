@@ -33,7 +33,7 @@ data:
         }
       },
       "services": [{
-        "name": "designs-sse",
+        "name": "server",
         "tags": [
           "http-endpoint"
         ],

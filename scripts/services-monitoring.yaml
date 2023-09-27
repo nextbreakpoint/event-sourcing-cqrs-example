@@ -1,29 +1,6 @@
 apiVersion: monitoring.coreos.com/v1
 kind: PodMonitor
 metadata:
-  name: gateway
-  namespace: services
-  labels:
-    component: gateway
-spec:
-  podTargetLabels:
-    - component
-  podMetricsEndpoints:
-    - path: /metrics
-      port: http
-      scheme: https
-      tlsConfig:
-        insecureSkipVerify: true
-  namespaceSelector:
-    matchNames:
-      - services
-  selector:
-    matchLabels:
-      component: gateway
----
-apiVersion: monitoring.coreos.com/v1
-kind: PodMonitor
-metadata:
   name: accounts
   namespace: services
   labels:
@@ -34,7 +11,7 @@ spec:
   podMetricsEndpoints:
     - path: /metrics
       port: http
-      scheme: https
+      scheme: http
       tlsConfig:
         insecureSkipVerify: true
   namespaceSelector:
@@ -57,7 +34,7 @@ spec:
   podMetricsEndpoints:
     - path: /metrics
       port: http
-      scheme: https
+      scheme: http
       tlsConfig:
         insecureSkipVerify: true
   namespaceSelector:
@@ -80,7 +57,7 @@ spec:
   podMetricsEndpoints:
     - path: /metrics
       port: http
-      scheme: https
+      scheme: http
       tlsConfig:
         insecureSkipVerify: true
   namespaceSelector:
@@ -103,7 +80,7 @@ spec:
   podMetricsEndpoints:
     - path: /metrics
       port: http
-      scheme: https
+      scheme: http
       tlsConfig:
         insecureSkipVerify: true
   namespaceSelector:
@@ -126,7 +103,7 @@ spec:
   podMetricsEndpoints:
     - path: /metrics
       port: http
-      scheme: https
+      scheme: http
       tlsConfig:
         insecureSkipVerify: true
   namespaceSelector:
@@ -139,17 +116,17 @@ spec:
 apiVersion: monitoring.coreos.com/v1
 kind: PodMonitor
 metadata:
-  name: designs-notify
+  name: designs-watch
   namespace: services
   labels:
-    component: designs-notify
+    component: designs-watch
 spec:
   podTargetLabels:
     - component
   podMetricsEndpoints:
     - path: /metrics
       port: http
-      scheme: https
+      scheme: http
       tlsConfig:
         insecureSkipVerify: true
   namespaceSelector:
@@ -157,7 +134,7 @@ spec:
       - services
   selector:
     matchLabels:
-      component: designs-notify
+      component: designs-watch
 ---
 apiVersion: monitoring.coreos.com/v1
 kind: PodMonitor
@@ -172,7 +149,7 @@ spec:
   podMetricsEndpoints:
     - path: /metrics
       port: http
-      scheme: https
+      scheme: http
       tlsConfig:
         insecureSkipVerify: true
   namespaceSelector:

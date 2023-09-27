@@ -47,17 +47,17 @@ for service in ${services[@]}; do
   popd
 done
 
-#export pact_do_not_track=true
-#
-#for service in ${services[@]}; do
-#  pushd services/$service
-#   JAEGER_SERVICE_NAME=$service mvn clean verify -s settings.xml ${MAVEN_ARGS} -Dgroups=pact -Ddocker.host=${TEST_DOCKER_HOST}
-#  popd
-#done
-#
-#for service in ${services[@]}; do
-#  pushd services/$service
-#   JAEGER_SERVICE_NAME=$service mvn clean verify -s settings.xml ${MAVEN_ARGS} -Dgroups=pact-verify -Ddocker.host=${TEST_DOCKER_HOST}
-#  popd
-#done
+export pact_do_not_track=true
+
+for service in ${services[@]}; do
+  pushd services/$service
+   JAEGER_SERVICE_NAME=$service mvn clean verify -s settings.xml ${MAVEN_ARGS} -Dgroups=pact -Ddocker.host=${TEST_DOCKER_HOST}
+  popd
+done
+
+for service in ${services[@]}; do
+  pushd services/$service
+   JAEGER_SERVICE_NAME=$service mvn clean verify -s settings.xml ${MAVEN_ARGS} -Dgroups=pact-verify -Ddocker.host=${TEST_DOCKER_HOST}
+  popd
+done
 

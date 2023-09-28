@@ -22,8 +22,7 @@ import {
     loadDesign,
     loadDesignSuccess,
     loadDesignFailure,
-    showErrorMessage,
-    hideErrorMessage
+    showErrorMessage
 } from '../../actions/preview'
 
 import axios from 'axios'
@@ -146,9 +145,6 @@ const mapStateToProps = state => ({
 const mapDispatchToProps = dispatch => ({
     handleShowErrorMessage: (error) => {
         dispatch(showErrorMessage(error))
-    },
-    handleHideErrorMessage: () => {
-        dispatch(hideErrorMessage())
     },
     handleLoadDesign: () => {
         dispatch(loadDesign())

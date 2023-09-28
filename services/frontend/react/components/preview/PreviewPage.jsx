@@ -38,12 +38,8 @@ import {
 } from '../../actions/account'
 
 import {
-    showUpdateDesign,
-    hideUpdateDesign,
     getDesign,
     getRevision,
-    getShowUpdateDesign,
-    loadDesignSuccess,
     getShowErrorMessage,
     getErrorMessage,
     showErrorMessage,
@@ -323,9 +319,11 @@ let PreviewPage = class PreviewPage extends React.Component {
                     </Grid>
                     <Grid container xs={12} justify="space-between" alignItems="center" className="container">
                         <Grid item xs={6}>
-                            <Map center={[0, 0]} zoom={2} attributionControl={false} dragging={false} zoomControl={false} scrollWheelZoom={false} touchZoom={false}>
-                                {this.renderMapLayer(url)}
-                            </Map>
+                            <div className="preview">
+                                <Map center={[0, 0]} zoom={1} attributionControl={false} dragging={false} zoomControl={false} doubleClickZoom={false} scrollWheelZoom={false} touchZoom={false} detectRetina={false}>
+                                    {this.renderMapLayer(url)}
+                                </Map>
+                            </div>
                         </Grid>
                         <Grid item xs={6}>
                             <div className="details">
@@ -444,29 +442,16 @@ const mapStateToProps = state => ({
     account: getAccount(state),
     design: getDesign(state),
     revision: getRevision(state),
-    show_update_design: getShowUpdateDesign(state),
     show_error_message: getShowErrorMessage(state),
     error_message: getErrorMessage(state)
 })
 
 const mapDispatchToProps = dispatch => ({
-    handleShowUpdateDialog: () => {
-        dispatch(showUpdateDesign())
-    },
-    handleHideUpdateDialog: () => {
-        dispatch(hideUpdateDesign())
-    },
     handleShowErrorMessage: (error) => {
         dispatch(showErrorMessage(error))
     },
     handleHideErrorMessage: () => {
         dispatch(hideErrorMessage())
-    },
-    handleDesignLoadedSuccess: (design, revision) => {
-        dispatch(loadDesignSuccess(design, revision))
-    },
-    handleDesignLoadedFailure: (error) => {
-        dispatch(loadDesignFailure(error))
     }
 })
 

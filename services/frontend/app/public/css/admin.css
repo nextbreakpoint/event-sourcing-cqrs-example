@@ -66,6 +66,11 @@ footer a, footer a:active, footer a:hover, footer a:visited {
     margin: 2%;
 }
 
+.preview {
+    padding: 2%;
+    text-align: center;
+}
+
 .script {
     padding-left: 2%;
     padding-right: 1%;

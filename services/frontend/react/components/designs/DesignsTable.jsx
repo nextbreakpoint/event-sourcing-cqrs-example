@@ -54,7 +54,6 @@ import {
     getPage,
     getRowsPerPage,
     loadDesignsSuccess,
-    loadDesignsFailure,
     getShowErrorMessage,
     getErrorMessage,
     showErrorMessage,
@@ -292,6 +291,10 @@ let EnhancedTable = class EnhancedTable extends React.Component {
     }
 
     this.props.handleChangeSorting(order, orderBy)
+
+    const designs = stableSort(this.props.designs, getSorting(order, orderBy))
+
+    this.props.handleLoadDesignsSuccess(designs, this.props.total, this.props.revision)
   }
 
   handleSelectAllClick = event => {
@@ -629,11 +632,8 @@ const mapDispatchToProps = dispatch => ({
     handleLoadDesigns: () => {
         dispatch(loadDesigns())
     },
-    handleLoadDesignsSuccess: (designs, revision) => {
-        dispatch(loadDesignsSuccess(designs, revision))
-    },
-    handleLoadDesignsFailure: (error) => {
-        dispatch(loadDesignsFailure(error))
+    handleLoadDesignsSuccess: (designs, total, revision) => {
+        dispatch(loadDesignsSuccess(designs, total, revision))
     },
     handleChangePagination: (page, rowsPerPage) => {
         dispatch(setDesignsPagination(page, rowsPerPage))

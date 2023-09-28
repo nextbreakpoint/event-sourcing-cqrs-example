@@ -102,6 +102,10 @@ for i in "$@"; do
       INTEGRATION_TESTS="false"
       shift
       ;;
+    --services=*)
+      BUILD_SERVICES="${i#*=}"
+      shift
+      ;;
     -*|--*)
       echo "Unknown option $i"
       exit 1
@@ -171,6 +175,18 @@ services=(
   authentication
   frontend
 )
+
+if [[ ! -z $BUILD_SERVICES ]]; then
+  services=(
+    $BUILD_SERVICES
+  )
+fi
+
+echo -n "Building services:"
+for service in ${services[@]}; do
+  echo -n " "$service
+done
+echo ""
 
 if [[ $NEXUS_HOST == "localhost" ]]; then
   DOCKER_NEXUS_HOST="host.docker.internal"

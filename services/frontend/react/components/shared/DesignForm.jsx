@@ -27,11 +27,9 @@ let DesignForm = class DesignForm extends React.Component {
         return (
             <Grid container justify="space-between" alignItems="stretch" alignContent="space-between">
                 <Grid item xs={7} className="script">
-                    <p>Script</p>
                     <ScriptEditor initialValue={this.state.script} readOnly={false} onContentChanged={this.handleScriptChanged}/>
                 </Grid>
                 <Grid item xs={5} className="metadata">
-                    <p>Metadata</p>
                     <MetadataEditor initialValue={this.state.metadata} readOnly={false} onContentChanged={this.handleMetadataChanged}/>
                 </Grid>
             </Grid>

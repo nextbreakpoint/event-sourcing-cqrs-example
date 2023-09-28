@@ -93,14 +93,14 @@ function getSorting(order, orderBy) {
 }
 
 const cells = [
-  { id: 'uuid', numeric: false, disablePadding: true, label: 'UUID', enableSort: true, className: '' },
+  { id: 'image', numeric: false, disablePadding: true, label: 'Preview', enableSort: false, className: 'list-image' },
+//   { id: 'uuid', numeric: false, disablePadding: true, label: 'UUID', enableSort: true, className: '' },
   { id: 'created', numeric: false, disablePadding: true, label: 'Created', enableSort: true, className: '' },
   { id: 'updated', numeric: false, disablePadding: true, label: 'Updated', enableSort: true, className: '' },
-  { id: 'checksum', numeric: false, disablePadding: true, label: 'Checksum', enableSort: true, className: '' },
+//   { id: 'checksum', numeric: false, disablePadding: true, label: 'Checksum', enableSort: true, className: '' },
   { id: 'draft', numeric: true, disablePadding: true, label: 'Draft', enableSort: true, className: '' },
   { id: 'published', numeric: false, disablePadding: true, label: 'Published', enableSort: true, className: '' },
   { id: 'percentage', numeric: true, disablePadding: true, label: 'Progress', enableSort: false, className: '' },
-  { id: 'image', numeric: false, disablePadding: true, label: '', enableSort: false, className: 'list-image' }
 ]
 
 let EnhancedTableHead = class EnhancedTableHead extends React.Component {
@@ -509,27 +509,6 @@ let EnhancedTable = class EnhancedTable extends React.Component {
                       <TableCell padding="checkbox">
                         {account.role == 'admin' && <Checkbox checked={isSelected} />}
                       </TableCell>
-                      <TableCell scope="row" padding="none">
-                        <a href={"/admin/designs/" + design.uuid + '.html'}><pre>{design.uuid}</pre></a>
-                      </TableCell>
-                      <TableCell scope="row" padding="none">
-                        <pre>{design.created}</pre>
-                      </TableCell>
-                      <TableCell scope="row" padding="none">
-                        <pre>{design.updated}</pre>
-                      </TableCell>
-                      <TableCell scope="row" padding="none">
-                        <pre>{design.checksum}</pre>
-                      </TableCell>
-                      <TableCell scope="row" padding="none">
-                        <pre>{design.draft ? 'yes' : 'no'}</pre>
-                      </TableCell>
-                      <TableCell scope="row" padding="none">
-                        <pre>{design.published ? 'yes' : 'no'}</pre>
-                      </TableCell>
-                      <TableCell scope="row" padding="none">
-                        <pre>{design.percentage}%</pre>
-                      </TableCell>
                       <TableCell scope="row" padding="none" className="list-image">
                         <ButtonBase
                                 focusRipple
@@ -546,6 +525,31 @@ let EnhancedTable = class EnhancedTable extends React.Component {
                                 <img className={classes.image} width="256" height="256" src={config.api_url + "/v1/designs/" + design.uuid + "/0/0/0/256.png?draft=true&t=" + design.checksum}/>
                             </a>
                         </ButtonBase>
+                      </TableCell>
+                      {
+                      /*<TableCell scope="row" padding="none">
+                        <a href={"/admin/designs/" + design.uuid + '.html'}><pre>{design.uuid}</pre></a>
+                      </TableCell>*/
+                      }
+                      <TableCell scope="row" padding="none">
+                        <pre>{design.created}</pre>
+                      </TableCell>
+                      <TableCell scope="row" padding="none">
+                        <pre>{design.updated}</pre>
+                      </TableCell>
+                      {
+                      /*<TableCell scope="row" padding="none">
+                        <pre>{design.checksum}</pre>
+                      </TableCell>*/
+                      }
+                      <TableCell scope="row" padding="none">
+                        <pre>{design.draft ? 'yes' : 'no'}</pre>
+                      </TableCell>
+                      <TableCell scope="row" padding="none">
+                        <pre>{design.published ? 'yes' : 'no'}</pre>
+                      </TableCell>
+                      <TableCell scope="row" padding="none">
+                        <pre>{design.percentage}%</pre>
                       </TableCell>
                     </TableRow>
                   )

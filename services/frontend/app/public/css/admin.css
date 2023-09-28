@@ -26,24 +26,10 @@ footer {
     padding: 5% 0;
 }
 
-.controls {
-    padding: 2%;
-    text-align: right;
-}
-
-.script {
-    padding-left: 2%;
-    padding-right: 1%;
-}
-
-.metadata {
-    padding-left: 1%;
-    padding-right: 2%;
-}
-
 .list-image {
+    padding-left: 24px !important;
     padding-right: 24px !important;
-    text-align: right !important;
+    text-align: center !important;
 }
 
 a, a:active, a:hover, a:visited {
@@ -61,35 +47,43 @@ footer a, footer a:active, footer a:hover, footer a:visited {
     text-decoration: none !important;
 }
 
+.controls {
+    padding: 2%;
+    text-align: right;
+}
+
+.details {
+    text-align: left;
+    overflow: scroll;
+    padding: 2%;
+}
+
+.details-item {
+    padding: 2%;
+    border: 2px solid rgb(176, 176, 176);
+    border-radius: 0.4em;
+    background-color: rgb(253, 253, 253);
+    margin: 2%;
+}
+
+.script {
+    padding-left: 2%;
+    padding-right: 1%;
+}
+
+.metadata {
+    padding-left: 1%;
+    padding-right: 2%;
+}
+
 .status {
     padding: 2%;
 }
 
 .leaflet-container {
-    width: 1024pt;
-    height: 1024pt;
+    width: 100%;
+    height: 512pt;
     position: relative;
-    display: inline-block;
+    display: block;
     background: transparent;
-}
-
-@media (max-width: 2000pt) {
-    .leaflet-container {
-        width: 768pt;
-        height: 768pt;
-    }
-}
-
-@media (max-width: 1500pt) {
-    .leaflet-container {
-        width: 512pt;
-        height: 512pt;
-    }
-}
-
-@media (max-width: 1100pt) {
-    .leaflet-container {
-        width: 256pt;
-        height: 256pt;
-    }
 }

@@ -19,6 +19,7 @@ module com.nextbreakpoint.blueprint.accounts {
     requires io.opentelemetry.sdk.common;
     requires io.opentelemetry.exporter.jaeger;
     requires io.opentelemetry.exporter.otlp.trace;
+    requires org.jctools.core;
     requires vertx.rx.java;
     requires rxjava;
     requires java.sql;

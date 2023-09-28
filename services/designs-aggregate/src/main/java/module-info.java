@@ -20,6 +20,7 @@ module com.nextbreakpoint.blueprint.designs.aggregate {
     requires io.opentelemetry.sdk.common;
     requires io.opentelemetry.exporter.jaeger;
     requires io.opentelemetry.exporter.otlp.trace;
+    requires org.jctools.core;
     requires vertx.rx.java;
     requires rxjava;
     requires kafka.clients;

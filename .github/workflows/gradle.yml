@@ -33,7 +33,7 @@ jobs:
       run: pipeline/create-secrets.sh
     - name: Build Images
       run: pipeline/build-images.sh
-    - name: Build Platform
-      run: pipeline/build-platform.sh
+    - name: Build Services
+      run: pipeline/build-services.sh
     - name: Stop Pipeline
       run: pipeline/pipeline-stop.sh

@@ -23,9 +23,7 @@ import {
     getPage,
     getRowsPerPage,
     loadDesignsSuccess,
-    loadDesignsFailure,
-    showErrorMessage,
-    hideErrorMessage
+    showErrorMessage
 } from '../../actions/designs'
 
 import axios from 'axios'
@@ -143,17 +141,11 @@ const mapDispatchToProps = dispatch => ({
     handleShowErrorMessage: (error) => {
         dispatch(showErrorMessage(error))
     },
-    handleHideErrorMessage: () => {
-        dispatch(hideErrorMessage())
-    },
     handleLoadDesigns: () => {
         dispatch(loadDesigns())
     },
-    handleLoadDesignsSuccess: (designs, revision) => {
-        dispatch(loadDesignsSuccess(designs, revision))
-    },
-    handleLoadDesignsFailure: (error) => {
-        dispatch(loadDesignsFailure(error))
+    handleLoadDesignsSuccess: (designs, total, revision) => {
+        dispatch(loadDesignsSuccess(designs, total, revision))
     }
 })
 

@@ -38,12 +38,8 @@ import {
 } from '../../actions/account'
 
 import {
-    showUpdateDesign,
-    hideUpdateDesign,
     getDesign,
     getRevision,
-    getShowUpdateDesign,
-    loadDesignSuccess,
     getShowErrorMessage,
     getErrorMessage,
     showErrorMessage,
@@ -323,20 +319,37 @@ let PreviewPage = class PreviewPage extends React.Component {
                     </Grid>
                     <Grid container xs={12} justify="space-between" alignItems="center" className="container">
                         <Grid item xs={6}>
-                            <div className="status">
-                                <Typography variant="body" color="inherit" className="status">{design.draft ? 'Draft' : ''}</Typography>
-                            </div>
-                            <Map center={[0, 0]} zoom={2} attributionControl={false} dragging={false} zoomControl={false} scrollWheelZoom={false} touchZoom={false}>
-                                {this.renderMapLayer(url)}
-                            </Map>
-                            <div className="status">
-                                <Typography variant="body" color="inherit" className="status">{design.checksum}</Typography>
-                            </div>
-                            <div className="status">
-                                <Typography variant="body" color="inherit" className="status">{design.updated}</Typography>
+                            <div className="preview">
+                                <Map center={[0, 0]} zoom={1} attributionControl={false} dragging={false} zoomControl={false} doubleClickZoom={false} scrollWheelZoom={false} touchZoom={false} detectRetina={false}>
+                                    {this.renderMapLayer(url)}
+                                </Map>
                             </div>
                         </Grid>
                         <Grid item xs={6}>
+                            <div className="details">
+                                <div class="details-item">
+                                    <Typography variant="body" color="inherit">UUID: {design.uuid}</Typography>
+                                </div>
+                                <div class="details-item">
+                                    <Typography variant="body" color="inherit">Checksum: {design.checksum}</Typography>
+                                </div>
+                                <div class="details-item">
+                                    <Typography variant="body" color="inherit">Created: {design.created}</Typography>
+                                </div>
+                                <div class="details-item">
+                                    <Typography variant="body" color="inherit">Updated: {design.updated}</Typography>
+                                </div>
+                                <div class="details-item">
+                                    <Typography variant="body" color="inherit">Draft: {design.draft ? 'Yes' : 'No'}</Typography>
+                                </div>
+                                <div class="details-item">
+                                    <Typography variant="body" color="inherit">Completed: {design.percentage}%</Typography>
+                                </div>
+                            </div>
+                        </Grid>
+                    </Grid>
+                    <Grid container xs={12} justify="space-between" alignItems="top-center" className="container">
+                        <Grid item xs={12}>
                             <DesignForm script={script} metadata={metadata} onScriptChanged={this.handleScriptChanged} onMetadataChanged={this.handleMetadataChanged}/>
                             <div className="controls">
                                 {this.props.account.role == 'admin' && (
@@ -359,7 +372,6 @@ let PreviewPage = class PreviewPage extends React.Component {
                                       Unpublish
                                     </Button>
                                 )}
-                                <Typography variant="body" color="inherit" className="status">Progress: {design.percentage}%</Typography>
                             </div>
                         </Grid>
                     </Grid>
@@ -430,29 +442,16 @@ const mapStateToProps = state => ({
     account: getAccount(state),
     design: getDesign(state),
     revision: getRevision(state),
-    show_update_design: getShowUpdateDesign(state),
     show_error_message: getShowErrorMessage(state),
     error_message: getErrorMessage(state)
 })
 
 const mapDispatchToProps = dispatch => ({
-    handleShowUpdateDialog: () => {
-        dispatch(showUpdateDesign())
-    },
-    handleHideUpdateDialog: () => {
-        dispatch(hideUpdateDesign())
-    },
     handleShowErrorMessage: (error) => {
         dispatch(showErrorMessage(error))
     },
     handleHideErrorMessage: () => {
         dispatch(hideErrorMessage())
-    },
-    handleDesignLoadedSuccess: (design, revision) => {
-        dispatch(loadDesignSuccess(design, revision))
-    },
-    handleDesignLoadedFailure: (error) => {
-        dispatch(loadDesignFailure(error))
     }
 })
 

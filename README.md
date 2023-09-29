@@ -51,6 +51,14 @@ Build services without tests:
 
     ./scripts/build-services.sh --nexus-host=localhost --nexus-port=8082 --nexus-username=admin --nexus-password=${NEXUS_PASSWORD} --skip-tests
 
+Build services without tests but keep version:
+
+    ./scripts/build-services.sh --nexus-host=localhost --nexus-port=8082 --nexus-username=admin --nexus-password=${NEXUS_PASSWORD} --skip-tests --skip-deploy --version=$(./scripts/get-version.sh)
+
+Build only two services without tests and keep version:
+
+    ./scripts/build-services.sh --nexus-host=localhost --nexus-port=8082 --nexus-username=admin --nexus-password=${NEXUS_PASSWORD} --skip-tests --skip-deploy --version=$(./scripts/get-version.sh) --services="frontend authentication"
+
 Build services and run tests, but skip Pact tests:
 
     ./scripts/build-services.sh --nexus-host=localhost --nexus-port=8082 --nexus-username=admin --nexus-password=${NEXUS_PASSWORD} --skip-pact-tests --skip-pact-verify

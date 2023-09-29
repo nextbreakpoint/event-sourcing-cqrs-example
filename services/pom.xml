@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.nextbreakpoint</groupId>
         <artifactId>com.nextbreakpoint.blueprint</artifactId>
-        <version>1.0.3-wip-61f3c1dd-1695660736</version>
+        <version>1.0.3-wip-18b9cb70-1695897986</version>
     </parent>
     <packaging>pom</packaging>
     <dependencies>
@@ -125,6 +125,10 @@
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-layout-template-json</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.jctools</groupId>
+            <artifactId>jctools-core</artifactId>
         </dependency>
         <dependency>
             <groupId>io.opentelemetry</groupId>

@@ -39,14 +39,13 @@ import {
     getSelected,
     getDesigns,
     getRevision,
-    getShowCreateDesign,
-    getShowDeleteDesigns,
     showDeleteDesigns,
     hideDeleteDesigns,
     showCreateDesign,
     hideCreateDesign,
     setDesignsSelection,
-    loadDesignsSuccess,
+    getShowCreateDesign,
+    getShowDeleteDesigns,
     getShowErrorMessage,
     getErrorMessage,
     showErrorMessage,
@@ -362,14 +361,8 @@ const mapDispatchToProps = dispatch => ({
     handleChangeSelected: (selected) => {
         dispatch(setDesignsSelection(selected))
     },
-    handleShowConfirmDelete: () => {
-        dispatch(showDeleteDesigns())
-    },
     handleHideConfirmDelete: () => {
         dispatch(hideDeleteDesigns())
-    },
-    handleShowCreateDialog: () => {
-        dispatch(showCreateDesign())
     },
     handleHideCreateDialog: () => {
         dispatch(hideCreateDesign())
@@ -379,12 +372,6 @@ const mapDispatchToProps = dispatch => ({
     },
     handleHideErrorMessage: () => {
         dispatch(hideErrorMessage())
-    },
-    handleLoadDesignsSuccess: (designs, revision) => {
-        dispatch(loadDesignsSuccess(designs, revision))
-    },
-    handleLoadDesignsFailure: (error) => {
-        dispatch(loadDesignsFailure(error))
     },
     resetUploadedDesign: (error) => {
         dispatch(resetUploadedDesign(error))

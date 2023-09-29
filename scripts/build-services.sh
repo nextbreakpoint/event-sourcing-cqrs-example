@@ -3,7 +3,7 @@
 set -e
 
 export REPOSITORY="integration"
-export VERSION="1.0.3-$(git rev-parse --abbrev-ref HEAD)-$(git rev-parse --short HEAD)-$(date +%s)"
+export VERSION="1.0.4-$(git rev-parse --abbrev-ref HEAD)-$(git rev-parse --short HEAD)-$(date +%s)"
 
 export TEST_DOCKER_HOST=host.docker.internal
 
@@ -102,6 +102,10 @@ for i in "$@"; do
       INTEGRATION_TESTS="false"
       shift
       ;;
+    --services=*)
+      BUILD_SERVICES="${i#*=}"
+      shift
+      ;;
     -*|--*)
       echo "Unknown option $i"
       exit 1
@@ -172,14 +176,26 @@ services=(
   frontend
 )
 
+if [[ ! -z $BUILD_SERVICES ]]; then
+  services=(
+    $BUILD_SERVICES
+  )
+fi
+
+echo -n "Building services:"
+for service in ${services[@]}; do
+  echo -n " "$service
+done
+echo ""
+
 if [[ $NEXUS_HOST == "localhost" ]]; then
-  DOCKER_NEXUS_HOST="host.docker.internal"
+  DOCKER_NEXUS_HOST=$TEST_DOCKER_HOST
 else
   DOCKER_NEXUS_HOST=$NEXUS_HOST
 fi
 
 if [[ $PACTBROKER_HOST == "localhost" ]]; then
-  DOCKER_PACTBROKER_HOST="host.docker.internal"
+  DOCKER_PACTBROKER_HOST=$TEST_DOCKER_HOST
 else
   DOCKER_PACTBROKER_HOST=$PACTBROKER_HOST
 fi

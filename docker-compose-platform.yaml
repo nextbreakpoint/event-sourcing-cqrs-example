@@ -1,6 +1,7 @@
 version: '3.8'
 services:
   mysql:
+    container_name: mysql
     restart: unless-stopped
     image: mysql:8.0.28
     environment:
@@ -16,6 +17,7 @@ services:
       - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
       - mysql-data:/var/lib/mysql
   cassandra:
+    container_name: cassandra
     restart: unless-stopped
     image: nextbreakpoint/cassandra:3.11.10-1
     environment:
@@ -40,6 +42,7 @@ services:
       - ./scripts/init.cql:/docker-entrypoint-initdb.d/init.cql:ro
       - cassandra-data:/var/lib/cassandra
   zookeeper:
+    container_name: zookeeper
     restart: unless-stopped
     image: nextbreakpoint/zookeeper:3.6.2-1
     environment:
@@ -62,6 +65,7 @@ services:
       - zookeeper-data:/data
       - zookeeper-datalog:/datalog
   kafka:
+    container_name: kafka
     restart: unless-stopped
     image: nextbreakpoint/kafka:6.1.0-1
     environment:
@@ -104,58 +108,57 @@ services:
       - bridge
     volumes:
       - kafka-data:/var/lib/kafka/data
-  consul:
-    restart: unless-stopped
-    image: consul:1.11.4
-    command:
-      - consul
-      - agent
-      - -data-dir=/consul/data
-      - -config-dir=/consul/config
-    ports:
-      - target: 8300
-        published: 8300
-        protocol: tcp
-        mode: host
-      - target: 8301
-        published: 8301
-        protocol: tcp
-        mode: host
-      - target: 8302
-        published: 8302
-        protocol: tcp
-        mode: host
-      - target: 8500
-        published: 8500
-        protocol: tcp
-        mode: host
-      - target: 8600
-        published: 8600
-        protocol: tcp
-        mode: host
-    networks:
-      - bridge
-    volumes:
-      - ./scripts/consul.json:/consul/config/config.json:ro
+#  consul:
+#    container_name: consul
+#    restart: unless-stopped
+#    image: consul:1.11.4
+#    command:
+#      - consul
+#      - agent
+#      - -data-dir=/consul/data
+#      - -config-dir=/consul/config
+#    ports:
+#      - target: 8300
+#        published: 8300
+#        protocol: tcp
+#        mode: host
+#      - target: 8301
+#        published: 8301
+#        protocol: tcp
+#        mode: host
+#      - target: 8302
+#        published: 8302
+#        protocol: tcp
+#        mode: host
+#      - target: 8500
+#        published: 8500
+#        protocol: tcp
+#        mode: host
+#      - target: 8600
+#        published: 8600
+#        protocol: tcp
+#        mode: host
+#    networks:
+#      - bridge
+#    volumes:
+#      - ./scripts/consul.json:/consul/config/config.json:ro
   nginx:
+    container_name: nginx
     restart: unless-stopped
     image: nginx:1.20.2-alpine
     ports:
-      - target: 31080
-        published: 31080
-        protocol: tcp
-        mode: host
-      - target: 31443
-        published: 31443
+      - target: 8000
+        published: 8000
         protocol: tcp
         mode: host
     networks:
       - bridge
     volumes:
       - ./scripts/nginx-localhost.conf:/etc/nginx/nginx.conf:ro
-      - ./secrets/nginx_server_key.pem:/etc/nginx/server_key.pem:ro
-      - ./secrets/nginx_server_cert.pem:/etc/nginx/server_cert.pem:ro
+#      - ./secrets/nginx_server_key.pem:/etc/nginx/server_key.pem:ro
+#      - ./secrets/nginx_server_cert.pem:/etc/nginx/server_cert.pem:ro
   elasticsearch:
+    container_name: elasticsearch
     restart: unless-stopped
     image: nextbreakpoint/elasticsearch:7.17.1-1
     environment:
@@ -186,20 +189,22 @@ services:
     volumes:
       - ./scripts/init.sh:/docker-entrypoint-initdb.d/init.sh:ro
       - elasticsearch-data:/usr/share/elasticsearch/data
-  kibana:
-    restart: unless-stopped
-    image: kibana:7.17.1
-    environment:
-      xpack.security.enabled: 'false'
-      elasticsearch.hosts: 'http://elasticsearch:9200'
-    ports:
-      - target: 5601
-        published: 5601
-        protocol: tcp
-        mode: host
-    networks:
-      - bridge
+#  kibana:
+#    container_name: kibana
+#    restart: unless-stopped
+#    image: kibana:7.17.1
+#    environment:
+#      xpack.security.enabled: 'false'
+#      elasticsearch.hosts: 'http://elasticsearch:9200'
+#    ports:
+#      - target: 5601
+#        published: 5601
+#        protocol: tcp
+#        mode: host
+#    networks:
+#      - bridge
   jaeger:
+    container_name: jaeger
     restart: unless-stopped
     image: jaegertracing/all-in-one:1.22
     environment:
@@ -242,6 +247,7 @@ services:
     networks:
       - bridge
   minio:
+    container_name: minio
     restart: unless-stopped
     image: minio/minio:RELEASE.2022-03-11T11-08-23Z.hotfix.29c773d72
     environment:

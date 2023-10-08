@@ -1,6 +1,7 @@
 version: '3.8'
 services:
   nexus:
+    container_name: nexus
     restart: unless-stopped
     image: sonatype/nexus3:3.37.3
     user: nexus
@@ -17,6 +18,7 @@ services:
     volumes:
       - nexus-data:/nexus-data
   pact-server:
+    container_name: pact-server
     restart: unless-stopped
     image: pactfoundation/pact-broker:2.110.0-pactbroker2.107.1-multi
     environment:
@@ -33,6 +35,7 @@ services:
     networks:
       - bridge
   postgres:
+    container_name: postgres
     restart: unless-stopped
     image: postgres:14-alpine
     environment:

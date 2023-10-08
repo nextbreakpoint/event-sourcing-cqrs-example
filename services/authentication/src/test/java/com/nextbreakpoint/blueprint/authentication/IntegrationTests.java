@@ -25,7 +25,9 @@ public class IntegrationTests {
 
   private static final StubServer githubStub = new StubServer(Integer.parseInt("39002")).run();
 
-  private final int clientPort = 31443;
+  private final int expectedPort = 8000;
+  private final String expectedHost = "localhost";
+  private final String expectedProtocol = "http";
 
   @BeforeAll
   public static void before() {
@@ -104,7 +106,7 @@ public class IntegrationTests {
             .and().param("state", "/v1/auth/signin/content/designs")
             .when().get(testCases.makeBaseURL("/v1/auth/callback"))
             .then().assertThat().statusCode(303)
-            .and().header("Location", startsWith("https://localhost:" + clientPort + "/content/designs"));
+            .and().header("Location", startsWith(expectedProtocol + "://" + expectedHost + ":" + expectedPort + "/content/designs"));
 
     verifyHttp(accountsStub)
             .once(post(TestConstants.ACCOUNTS_PATH), withPostBody(), withHeader("authorization"));
@@ -140,7 +142,7 @@ public class IntegrationTests {
             .and().param("state", "/v1/auth/signin/content/designs")
             .when().get(testCases.makeBaseURL("/v1/auth/callback"))
             .then().assertThat().statusCode(303)
-            .and().header("Location", startsWith("https://localhost:" + clientPort + "/content/designs"));
+            .and().header("Location", startsWith(expectedProtocol + "://" + expectedHost + ":" + expectedPort + "/content/designs"));
 
     verifyHttp(accountsStub)
             .once(get(TestConstants.ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"))
@@ -164,7 +166,7 @@ public class IntegrationTests {
             .and().param("state", "/v1/auth/signin/content/designs")
             .when().get(testCases.makeBaseURL("/v1/auth/callback"))
             .then().assertThat().statusCode(303)
-            .and().header("Location", startsWith("https://localhost:" + clientPort + "/error/500"));
+            .and().header("Location", startsWith(expectedProtocol + "://" + expectedHost + ":" + expectedPort + "/error/500"));
 
     verifyHttp(githubStub)
             .once(post(TestConstants.OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
@@ -187,7 +189,7 @@ public class IntegrationTests {
             .and().param("state", "/v1/auth/signin/content/designs")
             .when().get(testCases.makeBaseURL("/v1/auth/callback"))
             .then().assertThat().statusCode(303)
-            .and().header("Location", startsWith("https://localhost:" + clientPort + "/error/403"));
+            .and().header("Location", startsWith(expectedProtocol + "://" + expectedHost + ":" + expectedPort + "/error/403"));
 
     verifyHttp(accountsStub)
             .never(post(TestConstants.ACCOUNTS_PATH));
@@ -218,7 +220,7 @@ public class IntegrationTests {
             .and().param("state", "/v1/auth/signin/content/designs")
             .when().get(testCases.makeBaseURL("/v1/auth/callback"))
             .then().assertThat().statusCode(303)
-            .and().header("Location", startsWith("https://localhost:" + clientPort + "/error/403"));
+            .and().header("Location", startsWith(expectedProtocol + "://" + expectedHost + ":" + expectedPort + "/error/403"));
 
     verifyHttp(accountsStub)
             .once(get(TestConstants.ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"))
@@ -250,7 +252,7 @@ public class IntegrationTests {
             .and().param("state", "/v1/auth/signin/content/designs")
             .when().get(testCases.makeBaseURL("/v1/auth/callback"))
             .then().assertThat().statusCode(303)
-            .and().header("Location", startsWith("https://localhost:" + clientPort + "/error/500"));
+            .and().header("Location", startsWith(expectedProtocol + "://" + expectedHost + ":" + expectedPort + "/error/500"));
 
     verifyHttp(accountsStub)
             .once(get(TestConstants.ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"))
@@ -290,7 +292,7 @@ public class IntegrationTests {
             .and().param("state", "/v1/auth/signin/content/designs")
             .when().get(testCases.makeBaseURL("/v1/auth/callback"))
             .then().assertThat().statusCode(303)
-            .and().header("Location", startsWith("https://localhost:" + clientPort + "/error/403"));
+            .and().header("Location", startsWith(expectedProtocol + "://" + expectedHost + ":" + expectedPort + "/error/403"));
 
     verifyHttp(accountsStub)
             .once(post(TestConstants.ACCOUNTS_PATH), withPostBody(), withHeader("Authorization"));
@@ -329,7 +331,7 @@ public class IntegrationTests {
             .and().param("state", "/v1/auth/signin/content/designs")
             .when().get(testCases.makeBaseURL("/v1/auth/callback"))
             .then().assertThat().statusCode(303)
-            .and().header("Location", startsWith("https://localhost:" + clientPort + "/error/403"));
+            .and().header("Location", startsWith(expectedProtocol + "://" + expectedHost + ":" + expectedPort + "/error/403"));
 
     verifyHttp(accountsStub)
             .once(get(TestConstants.ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"))
@@ -365,7 +367,7 @@ public class IntegrationTests {
             .and().param("state", "/v1/auth/signin/content/designs")
             .when().get(testCases.makeBaseURL("/v1/auth/callback"))
             .then().assertThat().statusCode(303)
-            .and().header("Location", startsWith("https://localhost:" + clientPort + "/error/403"));
+            .and().header("Location", startsWith(expectedProtocol + "://" + expectedHost + ":" + expectedPort + "/error/403"));
 
     whenHttp(accountsStub)
             .match(get(TestConstants.ACCOUNTS_PATH + "/" + TestConstants.ACCOUNT_UUID))
@@ -376,7 +378,7 @@ public class IntegrationTests {
             .and().param("state", "/v1/auth/signin/content/designs")
             .when().get(testCases.makeBaseURL("/v1/auth/callback"))
             .then().assertThat().statusCode(303)
-            .and().header("Location", startsWith("https://localhost:" + clientPort + "/error/403"));
+            .and().header("Location", startsWith(expectedProtocol + "://" + expectedHost + ":" + expectedPort + "/error/403"));
 
     verifyHttp(accountsStub)
             .times(2, get(TestConstants.ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"))
@@ -412,7 +414,7 @@ public class IntegrationTests {
             .and().param("state", "/v1/auth/signin/content/designs")
             .when().get(testCases.makeBaseURL("/v1/auth/callback"))
             .then().assertThat().statusCode(303)
-            .and().header("Location", startsWith("https://localhost:" + clientPort + "/error/500"));
+            .and().header("Location", startsWith(expectedProtocol + "://" + expectedHost + ":" + expectedPort + "/error/500"));
 
     verifyHttp(accountsStub)
             .once(get(TestConstants.ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"))
@@ -440,7 +442,7 @@ public class IntegrationTests {
             .and().param("state", "/v1/auth/signin/content/designs")
             .when().get(testCases.makeBaseURL("/v1/auth/callback"))
             .then().assertThat().statusCode(303)
-            .and().header("Location", startsWith("https://localhost:" + clientPort + "/error/500"));
+            .and().header("Location", startsWith(expectedProtocol + "://" + expectedHost + ":" + expectedPort + "/error/500"));
 
     verifyHttp(accountsStub)
             .never(post(TestConstants.ACCOUNTS_PATH));
@@ -463,7 +465,7 @@ public class IntegrationTests {
             .and().param("state", "/v1/auth/signin/content/designs")
             .when().get(testCases.makeBaseURL("/v1/auth/callback"))
             .then().assertThat().statusCode(303)
-            .and().header("Location", startsWith("https://localhost:" + clientPort + "/error/403"));
+            .and().header("Location", startsWith(expectedProtocol + "://" + expectedHost + ":" + expectedPort + "/error/403"));
 
     verifyHttp(githubStub)
             .once(post(TestConstants.OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))

@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.nextbreakpoint</groupId>
     <artifactId>com.nextbreakpoint.blueprint</artifactId>
-    <version>1.0.3-wip-18b9cb70-1695897986</version>
+    <version>1.0.4-wip-edc3e0e1-1696948564</version>
     <packaging>pom</packaging>
     <licenses>
         <license>
@@ -38,6 +38,7 @@
         <opentelemetry.version>1.12.0</opentelemetry.version>
         <elasticsearch-java.version>8.10.2</elasticsearch-java.version>
         <jctools-core.version>3.3.0</jctools-core.version>
+        <kotlin-stdlib.version>1.9.10</kotlin-stdlib.version>
         <junit5jupiter.version>5.10.0</junit5jupiter.version>
         <junit5platform.version>1.10.0</junit5platform.version>
         <mockito.version>5.5.0</mockito.version>
@@ -503,6 +504,11 @@
                 <groupId>org.jctools</groupId>
                 <artifactId>jctools-core</artifactId>
                 <version>${jctools-core.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-stdlib</artifactId>
+                <version>${kotlin-stdlib.version}</version>
             </dependency>
             <dependency>
                 <groupId>software.amazon.awssdk</groupId>

@@ -5,7 +5,7 @@
   "jwt_keystore_type": "jceks",
   "jwt_keystore_secret": "${KEYSTORE_SECRET}",
 
-  "origin_pattern": "https://localhost(:[0-9]+)?",
+  "origin_pattern": "http://localhost(:[0-9]+)?",
 
   "kafka_bootstrap_servers": "${KAFKA_HOST}:${KAFKA_PORT}",
   "kafka_group_id": "designs-render",

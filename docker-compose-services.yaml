@@ -1,6 +1,7 @@
 version: '3.8'
 services:
   accounts:
+    container_name: accounts
     restart: unless-stopped
     image: integration/accounts:${VERSION}
     environment:
@@ -28,6 +29,7 @@ services:
       - ./services/accounts/config/integration.json:/etc/config.json
       - ./secrets/keystore_auth.jceks:/secrets/keystore_auth.jceks
   authentication:
+    container_name: authentication
     restart: unless-stopped
     image: integration/authentication:${VERSION}
     environment:
@@ -57,6 +59,7 @@ services:
       - ./services/authentication/config/integration.json:/etc/config.json
       - ./secrets/keystore_auth.jceks:/secrets/keystore_auth.jceks
   designs-query:
+    container_name: designs-query
     restart: unless-stopped
     image: integration/designs-query:${VERSION}
     environment:
@@ -91,6 +94,7 @@ services:
       - ./services/designs-query/config/integration.json:/etc/config.json
       - ./secrets/keystore_auth.jceks:/secrets/keystore_auth.jceks
   designs-command:
+    container_name: designs-command
     restart: unless-stopped
     image: integration/designs-command:${VERSION}
     environment:
@@ -122,6 +126,7 @@ services:
       - ./services/designs-command/config/integration.json:/etc/config.json
       - ./secrets/keystore_auth.jceks:/secrets/keystore_auth.jceks
   designs-aggregate:
+    container_name: designs-aggregate
     restart: unless-stopped
     image: integration/designs-aggregate:${VERSION}
     environment:
@@ -154,6 +159,7 @@ services:
       - ./services/designs-aggregate/config/integration.json:/etc/config.json
       - ./secrets/keystore_auth.jceks:/secrets/keystore_auth.jceks
   designs-watch:
+    container_name: designs-watch
     restart: unless-stopped
     image: integration/designs-watch:${VERSION}
     environment:
@@ -181,6 +187,7 @@ services:
       - ./services/designs-watch/config/integration.json:/etc/config.json
       - ./secrets/keystore_auth.jceks:/secrets/keystore_auth.jceks
   designs-render1:
+    container_name: designs-render1
     restart: unless-stopped
     image: integration/designs-render:${VERSION}
     environment:
@@ -213,6 +220,7 @@ services:
       - ./services/designs-render/config/integration.json:/etc/config.json
       - ./secrets/keystore_auth.jceks:/secrets/keystore_auth.jceks
   designs-render2:
+    container_name: designs-render2
     restart: unless-stopped
     image: integration/designs-render:${VERSION}
     environment:
@@ -245,6 +253,7 @@ services:
       - ./services/designs-render/config/integration.json:/etc/config.json
       - ./secrets/keystore_auth.jceks:/secrets/keystore_auth.jceks
   designs-render3:
+    container_name: designs-render3
     restart: unless-stopped
     image: integration/designs-render:${VERSION}
     environment:
@@ -277,6 +286,7 @@ services:
       - ./services/designs-render/config/integration.json:/etc/config.json
       - ./secrets/keystore_auth.jceks:/secrets/keystore_auth.jceks
   designs-render4:
+    container_name: designs-render4
     restart: unless-stopped
     image: integration/designs-render:${VERSION}
     environment:
@@ -309,6 +319,7 @@ services:
       - ./services/designs-render/config/integration.json:/etc/config.json
       - ./secrets/keystore_auth.jceks:/secrets/keystore_auth.jceks
   frontend:
+    container_name: frontend
     restart: unless-stopped
     image: integration/frontend:${VERSION}
     environment:

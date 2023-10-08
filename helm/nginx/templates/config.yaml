@@ -29,42 +29,42 @@ data:
             upstream designs_GET {
               server designs-query.services.svc.cluster.local:8080;
             }
+        
             upstream designs_HEAD {
               server designs-query.services.svc.cluster.local:8080;
             }
+        
             upstream designs_OPTIONS {
               server designs-command.services.svc.cluster.local:8080;
             }
+        
             upstream designs_DELETE {
               server designs-command.services.svc.cluster.local:8080;
             }
+        
             upstream designs_PATCH {
               server designs-command.services.svc.cluster.local:8080;
             }
+        
             upstream designs_POST {
               server designs-command.services.svc.cluster.local:8080;
             }
+        
             upstream designs_PUT {
               server designs-command.services.svc.cluster.local:8080;
             }
       
             server {
-                listen 443 ssl default_server;
+                listen 8000 default_server;
                 server_name _;
-                
-                ssl_certificate     /etc/nginx/server_cert.pem;
-                ssl_certificate_key /etc/nginx/server_key.pem;
-                ssl_protocols       TLSv1 TLSv1.1 TLSv1.2;
-                ssl_ciphers         HIGH:!aNULL:!MD5;
-                
+        
                 proxy_set_header Host $host;
                 proxy_set_header X-Real-IP $remote_addr;
                 proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
                 
-                proxy_connect_timeout 300;
-                proxy_send_timeout 300;
-                proxy_read_timeout 300;
-                send_timeout 300;
+                proxy_connect_timeout 60;
+                proxy_send_timeout 60;
+                proxy_read_timeout 60;
       
                 resolver kube-dns.kube-system.svc.cluster.local valid=30s;
       
@@ -80,36 +80,7 @@ data:
                         allow all;
                     }
                 }
-                
-                location /v1 {
-                    set $upstream_location nginx.platform.svc.cluster.local:8080;
-                    proxy_pass http://$upstream_location$request_uri;
-                }
-                
-                location / {
-                    set $upstream_location frontend.services.svc.cluster.local:8080;
-                    proxy_pass http://$upstream_location$request_uri;
-                    limit_except OPTIONS GET POST {
-                        allow all;
-                    }
-                }
-            }
-            
-            server {
-                listen 80;
-                server_name _;
-                
-                proxy_set_header Host $host;
-                proxy_set_header X-Real-IP $remote_addr;
-                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-                
-                proxy_connect_timeout 300;
-                proxy_send_timeout 300;
-                proxy_read_timeout 300;
-                send_timeout 300;
-                
-                resolver kube-dns.kube-system.svc.cluster.local valid=30s;
-                
+                    
                 location /v1/designs/validate {
                     set $upstream_location designs-render.services.svc.cluster.local:8080;
                     proxy_pass http://$upstream_location$request_uri;
@@ -117,7 +88,7 @@ data:
                         allow all;
                     }
                 }
-                
+                    
                 location /v1/designs/download {
                     set $upstream_location designs-render.services.svc.cluster.local:8080;
                     proxy_pass http://$upstream_location$request_uri;
@@ -125,7 +96,7 @@ data:
                         allow all;
                     }
                 }
-                
+                    
                 location /v1/designs/upload {
                     set $upstream_location designs-render.services.svc.cluster.local:8080;
                     proxy_pass http://$upstream_location$request_uri;
@@ -133,14 +104,14 @@ data:
                         allow all;
                     }
                 }
-                
+                    
                 location /v1/designs {
                     proxy_pass http://designs_$request_method$request_uri;
                     limit_except OPTIONS GET POST PUT PATCH DELETE {
                         allow all;
                     }
                 }
-                
+                    
                 location /v1/accounts {
                     set $upstream_location accounts.services.svc.cluster.local:8080;
                     proxy_pass http://$upstream_location$request_uri;
@@ -148,13 +119,18 @@ data:
                         allow all;
                     }
                 }
-                
+                    
                 location /v1/auth {
                     set $upstream_location authentication.services.svc.cluster.local:8080;
                     proxy_pass http://$upstream_location$request_uri;
                     limit_except OPTIONS GET {
                         allow all;
                     }
+                }
+                
+                location / {
+                    set $upstream_location frontend.services.svc.cluster.local:8080;
+                    proxy_pass http://$upstream_location$request_uri;
                 }
             }
         }

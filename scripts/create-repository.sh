@@ -4,6 +4,8 @@ set -e
 
 NEXUS_HOST=localhost
 NEXUS_PORT=8081
+NEXUS_USERNAME=""
+NEXUS_PASSWORD=""
 
 POSITIONAL_ARGS=()
 
@@ -36,13 +38,23 @@ for i in "$@"; do
   esac
 done
 
+if [[ -z $NEXUS_HOST ]]; then
+  echo "Missing or invalid value for argument: --nexus-host"
+  exit 1
+fi
+
+if [[ -z $NEXUS_PORT ]]; then
+  echo "Missing or invalid value for argument: --nexus-port"
+  exit 1
+fi
+
 if [[ -z $NEXUS_USERNAME ]]; then
-  echo "Missing required parameter --nexus-username"
+  echo "Missing or invalid value for argument: --nexus-username"
   exit 1
 fi
 
 if [[ -z $NEXUS_PASSWORD ]]; then
-  echo "Missing required parameter --nexus-password"
+  echo "Missing or invalid value for argument: --nexus-password"
   exit 1
 fi
 

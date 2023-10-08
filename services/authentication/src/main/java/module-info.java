@@ -21,6 +21,7 @@ module com.nextbreakpoint.blueprint.authentication {
     requires io.opentelemetry.exporter.jaeger;
     requires io.opentelemetry.exporter.otlp.trace;
     requires org.jctools.core;
+    requires kotlin.stdlib;
     requires vertx.rx.java;
     requires rxjava;
     requires static lombok;

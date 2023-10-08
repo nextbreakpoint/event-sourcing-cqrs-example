@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.nextbreakpoint</groupId>
         <artifactId>com.nextbreakpoint.blueprint</artifactId>
-        <version>1.0.3-wip-18b9cb70-1695897986</version>
+        <version>1.0.4-wip-edc3e0e1-1696948564</version>
     </parent>
     <packaging>pom</packaging>
     <dependencies>
@@ -157,6 +157,10 @@
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-stdlib</artifactId>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>

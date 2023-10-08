@@ -51,10 +51,7 @@ spec:
           imagePullPolicy: {{ $root.Values.image.pullPolicy }}
           ports:
             - name: http
-              containerPort: 80
-              protocol: TCP
-            - name: https
-              containerPort: 443
+              containerPort: 8000
               protocol: TCP
           env:
             - name: POD_NAME
@@ -70,14 +67,6 @@ spec:
               readOnly: true
               mountPath: /etc/nginx/nginx.conf
               subPath: nginx.conf
-            - name: secret-vol
-              readOnly: true
-              mountPath: /etc/nginx/server_cert.pem
-              subPath: server_cert.pem
-            - name: secret-vol
-              readOnly: true
-              mountPath: /etc/nginx/server_key.pem
-              subPath: server_key.pem
           {{- if $root.Values.resources }}
           resources:
             {{ $root.Values.resources | toYaml | indent 12 | trim }}

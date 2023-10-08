@@ -2,13 +2,10 @@
 
 set -e
 
-export PACTBROKER_HOST=localhost
-export PACTBROKER_PORT="9292"
-
-export NEXUS_HOST=localhost
-export NEXUS_PORT="8082"
-export NEXUS_USERNAME=admin
-export NEXUS_PASSWORD=password
+NEXUS_HOST=localhost
+NEXUS_PORT="8082"
+NEXUS_USERNAME=admin
+NEXUS_PASSWORD=password
 
 POSITIONAL_ARGS=()
 
@@ -16,14 +13,6 @@ TARGET=shared
 
 for i in "$@"; do
   case $i in
-    --pactbroker-host=*)
-      PACTBROKER_HOST="${i#*=}"
-      shift
-      ;;
-    --pactbroker-port=*)
-      PACTBROKER_PORT="${i#*=}"
-      shift
-      ;;
     --nexus-host=*)
       NEXUS_HOST="${i#*=}"
       shift
@@ -55,19 +44,27 @@ for i in "$@"; do
   esac
 done
 
+if [[ -z $NEXUS_HOST ]]; then
+  echo "Missing or invalid value for argument: --nexus-host"
+  exit 1
+fi
+
+if [[ -z $NEXUS_PORT ]]; then
+  echo "Missing or invalid value for argument: --nexus-port"
+  exit 1
+fi
+
 if [[ -z $NEXUS_USERNAME ]]; then
-  echo "Missing required parameter --nexus-username"
+  echo "Missing or invalid value for argument: --nexus-username"
   exit 1
 fi
 
 if [[ -z $NEXUS_PASSWORD ]]; then
-  echo "Missing required parameter --nexus-password"
+  echo "Missing or invalid value for argument: --nexus-password"
   exit 1
 fi
 
 echo "Nexus server is ${NEXUS_HOST}:${NEXUS_PORT}"
-
-echo "Pact server is ${PACTBROKER_HOST}:${PACTBROKER_PORT}"
 
 services=(
   designs-query
@@ -79,7 +76,12 @@ services=(
   authentication
 )
 
-export MAVEN_ARGS="-q -e -Dnexus.host=${NEXUS_HOST} -Dnexus.port=${NEXUS_PORT} -Dpactbroker.host=${PACTBROKER_HOST} -Dpactbroker.port=${PACTBROKER_PORT}"
+MAVEN_ARGS="-q -e -Dnexus.host=${NEXUS_HOST} -Dnexus.port=${NEXUS_PORT}"
+
+export NEXUS_USERNAME
+export NEXUS_PASSWORD
+
+echo "Starting services in background, hold tight..."
 
 for service in ${services[@]}; do
   pushd services/$service

@@ -20,7 +20,7 @@ data:
       "jwt_keystore_type": "jceks",
       "jwt_keystore_secret": "${KEYSTORE_SECRET}",
 
-      "origin_pattern": "https://{{ $root.Values.clientDomain | default "localhost" }}(:[0-9]+)?",
+      "origin_pattern": "{{ $root.Values.clientProtocol | default "http" }}://{{ $root.Values.clientDomain | default "localhost" }}(:[0-9]+)?",
 
       "jdbc_url": "jdbc:mysql://{{ $root.Values.databaseHost | default "mysql.platform" }}:{{ $root.Values.databasePort | default "3306" }}/{{ $root.Values.databaseName | default "accounts" }}?useSSL=false&allowPublicKeyRetrieval=true&nullNamePatternMatchesAll=true&generateSimpleParameterMetadata=true",
       "jdbc_driver": "com.mysql.cj.jdbc.Driver",

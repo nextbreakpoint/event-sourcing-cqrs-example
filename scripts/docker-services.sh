@@ -5,10 +5,6 @@ set -e
 VERSION=""
 LOGGING_LEVEL="INFO"
 
-GITHUB_ACCOUNT_EMAIL=""
-GITHUB_CLIENT_ID=""
-GITHUB_CLIENT_SECRET=""
-
 COMMAND=""
 
 POSITIONAL_ARGS=()
@@ -49,9 +45,6 @@ fi
 
 export LOGGING_LEVEL
 export VERSION
-export GITHUB_ACCOUNT_EMAIL
-export GITHUB_CLIENT_ID
-export GITHUB_CLIENT_SECRET
 
 case $COMMAND in
   start)
@@ -78,9 +71,17 @@ case $COMMAND in
     docker compose -f docker-compose-services.yaml -p services up -d --wait
     ;;
   stop)
+    export GITHUB_ACCOUNT_EMAIL=""
+    export GITHUB_CLIENT_ID=""
+    export GITHUB_CLIENT_SECRET=""
+
     docker compose -f docker-compose-services.yaml -p services down
     ;;
   destroy)
+    export GITHUB_ACCOUNT_EMAIL=""
+    export GITHUB_CLIENT_ID=""
+    export GITHUB_CLIENT_SECRET=""
+
     docker compose -f docker-compose-services.yaml -p services down --volumes
     ;;
   *)

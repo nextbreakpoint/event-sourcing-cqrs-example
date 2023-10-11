@@ -12,6 +12,6 @@ pipeline/create-repository.sh
 
 else
 
-docker logs $(docker container ls -f name=pipeline-nexus-1 -q)
+docker logs nexus
 
 fi

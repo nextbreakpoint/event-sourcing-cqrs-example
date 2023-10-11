@@ -4,6 +4,8 @@ metadata:
   name: jaeger
   namespace: monitoring
 spec:
+  ingress:
+    enabled: false
   strategy: production
   collector:
     maxReplicas: 5

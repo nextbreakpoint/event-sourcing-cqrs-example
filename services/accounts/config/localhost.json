@@ -5,7 +5,7 @@
   "jwt_keystore_type": "jceks",
   "jwt_keystore_secret": "${KEYSTORE_SECRET}",
 
-  "origin_pattern": "https://localhost(:[0-9]+)?",
+  "origin_pattern": "http://localhost(:[0-9]+)?",
 
   "jdbc_url": "jdbc:mysql://${DATABASE_HOST}:3306/${DATABASE_NAME}?useSSL=false&allowPublicKeyRetrieval=true&nullNamePatternMatchesAll=true&generateSimpleParameterMetadata=true",
   "jdbc_driver": "com.mysql.cj.jdbc.Driver",

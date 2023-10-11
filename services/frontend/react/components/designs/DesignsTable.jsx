@@ -446,14 +446,15 @@ let EnhancedTable = class EnhancedTable extends React.Component {
 
         console.log("page " + page)
 
-        function computePercentage(design) {
-            const levels = [0,1,2,3,4,5,6,7];
+        function computePercentage(design, levels) {
             let total = levels.map(i => design.tiles[i].total)
                 .reduce((previousValue, currentValue) => previousValue + currentValue, 0)
+
             let completed = levels.map(i => design.tiles[i].completed)
                 .reduce((previousValue, currentValue) => previousValue + currentValue, 0)
+
             let percentage = Math.round((completed * 100.0) / total)
-            console.log("uuid = " + design.uuid + ", percentage = " + percentage)
+
             return percentage
         }
 
@@ -461,7 +462,7 @@ let EnhancedTable = class EnhancedTable extends React.Component {
             .then(function (response) {
                 if (response.status == 200) {
                     console.log("Designs loaded")
-                    let designs = response.data.designs.map((design) => { return { uuid: design.uuid, checksum: design.checksum, revision: design.revision, levels: design.levels, created: design.created, updated: design.updated, draft: design.levels != 8, published: design.published, percentage: computePercentage(design) }})
+                    let designs = response.data.designs.map((design) => { return { uuid: design.uuid, checksum: design.checksum, revision: design.revision, levels: design.levels, created: design.created, updated: design.updated, draft: design.levels != 8, published: design.published, percentage: computePercentage(design, [0,1,2,3,4,5,6,7]), preview_percentage: computePercentage(design, [0,1,2]) }})
                     let total = response.data.total
                     component.props.handleLoadDesignsSuccess(designs, total, revision)
                 } else {
@@ -525,7 +526,7 @@ let EnhancedTable = class EnhancedTable extends React.Component {
                                 }}
                               >
                             <a href={"/admin/designs/" + design.uuid + ".html"}>
-                                <img className={classes.image} width="256" height="256" src={config.api_url + "/v1/designs/" + design.uuid + "/0/0/0/256.png?draft=true&t=" + design.checksum}/>
+                                <img className={classes.image} width="256" height="256" src={config.api_url + "/v1/designs/" + design.uuid + "/0/0/0/256.png?draft=true&t=" + design.checksum + "&r=" + design.preview_percentage}/>
                             </a>
                         </ButtonBase>
                       </TableCell>

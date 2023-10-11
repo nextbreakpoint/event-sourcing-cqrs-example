@@ -308,7 +308,7 @@ let PreviewPage = class PreviewPage extends React.Component {
         let script = this.state.design.script ? this.state.design.script : this.props.design.script
         let metadata = this.state.design.metadata ? this.state.design.metadata : this.props.design.metadata
 
-        const url = this.props.config.api_url + '/v1/designs/' + uuid + '/{z}/{x}/{y}/256.png?draft=true&t=' + design.checksum
+        const url = this.props.config.api_url + '/v1/designs/' + uuid + '/{z}/{x}/{y}/256.png?draft=true&t=' + design.checksum + '&r=' + design.preview_percentage
 
         return (
             <React.Fragment>
@@ -320,7 +320,7 @@ let PreviewPage = class PreviewPage extends React.Component {
                     <Grid container xs={12} justify="space-between" alignItems="center" className="container">
                         <Grid item xs={6}>
                             <div className="preview">
-                                <Map center={[0, 0]} zoom={1} attributionControl={false} dragging={false} zoomControl={false} doubleClickZoom={false} scrollWheelZoom={false} touchZoom={false} detectRetina={false}>
+                                <Map center={[0, 0]} zoom={2} attributionControl={false} dragging={false} zoomControl={false} doubleClickZoom={false} scrollWheelZoom={false} touchZoom={false} detectRetina={false}>
                                     {this.renderMapLayer(url)}
                                 </Map>
                             </div>
@@ -332,6 +332,9 @@ let PreviewPage = class PreviewPage extends React.Component {
                                 </div>
                                 <div class="details-item">
                                     <Typography variant="body" color="inherit">Checksum: {design.checksum}</Typography>
+                                </div>
+                                <div class="details-item">
+                                    <Typography variant="body" color="inherit">Revision: {design.revision}</Typography>
                                 </div>
                                 <div class="details-item">
                                     <Typography variant="body" color="inherit">Created: {design.created}</Typography>

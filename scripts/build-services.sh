@@ -2,26 +2,28 @@
 
 set -e
 
-export REPOSITORY="integration"
-export VERSION="1.0.4-$(git rev-parse --abbrev-ref HEAD)-$(git rev-parse --short HEAD)-$(date +%s)"
+REPOSITORY="integration"
+VERSION="1.0.4-$(git rev-parse --abbrev-ref HEAD)-$(git rev-parse --short HEAD)-$(date +%s)"
 
-export TEST_DOCKER_HOST=host.docker.internal
+TEST_DOCKER_HOST=host.docker.internal
 
-export PACTBROKER_HOST=localhost
-export PACTBROKER_PORT="9292"
+PACTBROKER_HOST=localhost
+PACTBROKER_PORT="9292"
 
-export NEXUS_HOST=localhost
-export NEXUS_PORT="8082"
-export NEXUS_USERNAME=admin
-export NEXUS_PASSWORD=password
+NEXUS_HOST=localhost
+NEXUS_PORT="8082"
+NEXUS_USERNAME=admin
+NEXUS_PASSWORD=password
 
 CLEAN="true"
 PACKAGE="true"
 DEPLOY="true"
 IMAGES="true"
+UNIT_TESTS="true"
 PACT_TESTS="true"
 PACT_VERIFY="true"
 INTEGRATION_TESTS="true"
+BUILD_SERVICES=""
 
 POSITIONAL_ARGS=()
 
@@ -85,6 +87,7 @@ for i in "$@"; do
       shift
       ;;
     --skip-tests)
+      UNIT_TESTS="false"
       PACT_TESTS="false"
       PACT_VERIFY="false"
       INTEGRATION_TESTS="false"
@@ -117,13 +120,48 @@ for i in "$@"; do
   esac
 done
 
+if [[ -z $VERSION ]]; then
+  echo "Missing or invalid value for argument: --version"
+  exit 1
+fi
+
+if [[ -z $REPOSITORY ]]; then
+  echo "Missing or invalid value for argument: --docker-repository"
+  exit 1
+fi
+
+if [[ -z $TEST_DOCKER_HOST ]]; then
+  echo "Missing or invalid value for argument: --docker-host"
+  exit 1
+fi
+
+if [[ -z $PACTBROKER_HOST ]]; then
+  echo "Missing or invalid value for argument: --pactbroker-host"
+  exit 1
+fi
+
+if [[ -z $PACTBROKER_PORT ]]; then
+  echo "Missing or invalid value for argument: --pactbroker-port"
+  exit 1
+fi
+
+if [[ -z $NEXUS_HOST ]]; then
+  echo "Missing or invalid value for argument: --nexus-host"
+  exit 1
+fi
+
+if [[ -z $NEXUS_PORT ]]; then
+  echo "Missing or invalid value for argument: --nexus-port"
+  exit 1
+fi
+
 if [[ -z $NEXUS_USERNAME ]]; then
-  echo "Missing required parameter --nexus-username"
+  echo "Missing or invalid value for argument: --nexus-username"
   exit 1
 fi
 
 if [[ -z $NEXUS_PASSWORD ]]; then
-  echo "Missing required parameter --nexus-password"
+  echo "Missing or invalid value for argument: --nexus-password"
   exit 1
 fi
 
@@ -203,6 +241,14 @@ fi
 MAVEN_ARGS="-q -e -Dnexus.host=${NEXUS_HOST} -Dnexus.port=${NEXUS_PORT} -Dpactbroker.host=${PACTBROKER_HOST} -Dpactbroker.port=${PACTBROKER_PORT}"
 DOCKER_MAVEN_ARGS="-q -e -Dnexus.host=${DOCKER_NEXUS_HOST} -Dnexus.port=${NEXUS_PORT} -Dpactbroker.host=${DOCKER_PACTBROKER_HOST} -Dpactbroker.port=${PACTBROKER_PORT}"
 
+if [ "$UNIT_TESTS" == "false" ]; then
+  MAVEN_ARGS="$MAVEN_ARGS -DskipTests"
+  DOCKER_MAVEN_ARGS="$DOCKER_MAVEN_ARGS -DskipTests"
+fi
+
+export NEXUS_USERNAME
+export NEXUS_PASSWORD
+
 if [ "$CLEAN" == "true" ]; then
   mvn clean -q -e -Dcommon=true -Dservices=true -Dplatform=true -Dnexus=true
 fi
@@ -227,7 +273,7 @@ done
 
 fi
 
-export MAVEN_OPTS="--add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.net=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED --add-opens=java.base/java.util.regex=ALL-UNNAMED --add-opens=java.base/java.security=ALL-UNNAMED --add-opens=java.base/sun.net.spi=ALL-UNNAMED"
+MAVEN_OPTS="--add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.net=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED --add-opens=java.base/java.util.regex=ALL-UNNAMED --add-opens=java.base/java.security=ALL-UNNAMED --add-opens=java.base/sun.net.spi=ALL-UNNAMED"
 
 if [ "$INTEGRATION_TESTS" == "true" ]; then
 

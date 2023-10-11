@@ -7,10 +7,10 @@
   "jwt_keystore_type": "jceks",
   "jwt_keystore_secret": "${KEYSTORE_SECRET}",
 
-  "origin_pattern": "https://localhost(:[0-9]+)?",
+  "origin_pattern": "http://localhost(:[0-9]+)?",
 
-  "client_web_url": "https://localhost:31443",
-  "client_auth_url": "https://localhost:31443",
+  "client_web_url": "http://localhost:8000",
+  "client_auth_url": "http://localhost:8000",
 
   "server_accounts_url": "${ACCOUNTS_URL}",
 

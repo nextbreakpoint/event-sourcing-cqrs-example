@@ -76,14 +76,15 @@ let Designs = class Designs extends React.Component {
 
         component.props.handleLoadDesigns()
 
-        function computePercentage(design) {
-            const levels = [0,1,2,3,4,5,6,7];
+        function computePercentage(design, levels) {
             let total = levels.map(i => design.tiles[i].total)
                 .reduce((previousValue, currentValue) => previousValue + currentValue, 0)
+
             let completed = levels.map(i => design.tiles[i].completed)
                 .reduce((previousValue, currentValue) => previousValue + currentValue, 0)
+
             let percentage = Math.floor((completed * 100.0) / total)
-            console.log("uuid = " + design.uuid + ", percentage = " + percentage)
+
             return percentage
         }
 
@@ -91,7 +92,7 @@ let Designs = class Designs extends React.Component {
             .then(function (response) {
                 if (response.status == 200) {
                     console.log("Designs loaded")
-                    let designs = response.data.designs.map((design) => { return { uuid: design.uuid, checksum: design.checksum, revision: design.revision, levels: design.levels, created: design.created, updated: design.updated, draft: design.levels != 8, published: design.published, percentage: computePercentage(design) }})
+                    let designs = response.data.designs.map((design) => { return { uuid: design.uuid, checksum: design.checksum, revision: design.revision, levels: design.levels, created: design.created, updated: design.updated, draft: design.levels != 8, published: design.published, percentage: computePercentage(design, [0,1,2,3,4,5,6,7]), preview_percentage: computePercentage(design, [0,1,2]) }})
                     let total = response.data.total
                     component.props.handleLoadDesignsSuccess(designs, total, revision)
                 } else {

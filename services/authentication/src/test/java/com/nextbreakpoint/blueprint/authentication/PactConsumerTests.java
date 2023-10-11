@@ -19,7 +19,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 import static com.nextbreakpoint.blueprint.authentication.TestConstants.ACCOUNT_UUID;
 import static com.xebialabs.restito.builder.stub.StubHttp.whenHttp;
@@ -38,7 +37,10 @@ public class PactConsumerTests {
 
   private static final StubServer githubStub = new StubServer(Integer.parseInt("39002")).run();
 
-  private final int clientPort = 31443;
+  private final int expectedPort = 8000;
+  private final String expectedHost = "localhost";
+  private final String expectedProtocol = "http";
+
 
   @BeforeAll
   public static void before() {
@@ -165,7 +167,7 @@ public class PactConsumerTests {
             .and().param("state", "/v1/auth/signin/some/content")
             .when().get(testCases.makeBaseURL("/v1/auth/callback"))
             .then().assertThat().statusCode(303)
-            .and().header("Location", startsWith("https://localhost:" + clientPort + "/some/content"));
+            .and().header("Location", startsWith(expectedProtocol + "://" + expectedHost + ":" + expectedPort + "/some/content"));
 
     verifyHttp(githubStub).once(post(TestConstants.OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
             .then().once(get(TestConstants.OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
@@ -190,7 +192,7 @@ public class PactConsumerTests {
             .and().param("state", "/v1/auth/signin/some/content")
             .when().get(testCases.makeBaseURL("/v1/auth/callback"))
             .then().assertThat().statusCode(303)
-            .and().header("Location", startsWith("https://localhost:" + clientPort + "/some/content"));
+            .and().header("Location", startsWith(expectedProtocol + "://" + expectedHost + ":" + expectedPort + "/some/content"));
 
     verifyHttp(githubStub).once(post(TestConstants.OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
             .then().once(get(TestConstants.OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))

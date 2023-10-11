@@ -2,6 +2,21 @@
 
 set +e
 
+if [[ -z $GITHUB_ACCOUNT_EMAIL ]]; then
+  echo "Missing variable: GITHUB_ACCOUNT_EMAIL"
+  exit 1
+fi
+
+if [[ -z $GITHUB_CLIENT_ID ]]; then
+  echo "Missing variable: GITHUB_CLIENT_ID"
+  exit 1
+fi
+
+if [[ -z $GITHUB_CLIENT_SECRET ]]; then
+  echo "Missing variable: GITHUB_CLIENT_SECRET"
+  exit 1
+fi
+
 kubectl -n services create secret generic keystore-auth.jceks --from-file=secrets/keystore_auth.jceks
 
 kubectl -n services create secret generic authentication --from-file keystore_auth.jceks=secrets/keystore_auth.jceks --from-literal KEYSTORE_SECRET=secret --from-literal GITHUB_ACCOUNT_EMAIL=$GITHUB_ACCOUNT_EMAIL --from-literal GITHUB_CLIENT_ID=$GITHUB_CLIENT_ID --from-literal GITHUB_CLIENT_SECRET=$GITHUB_CLIENT_SECRET

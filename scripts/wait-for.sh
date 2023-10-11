@@ -24,8 +24,13 @@ for i in "$@"; do
   esac
 done
 
-if [[ -z COMMAND ]]; then
-  echo "Missing required parameter --command"
+if [[ -z $TIMEOUT ]]; then
+  echo "Missing or invalid value for argument: --timeout"
+  exit 1
+fi
+
+if [[ -z $COMMAND ]]; then
+  echo "Missing or invalid value for argument: --command"
   exit 1
 fi
 

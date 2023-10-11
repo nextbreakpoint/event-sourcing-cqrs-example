@@ -2,8 +2,10 @@
 
 set -e
 
-export REPOSITORY="integration"
-export VERSION=""
+REPOSITORY="integration"
+VERSION=""
+
+BUILD_SERVICES=""
 
 POSITIONAL_ARGS=()
 
@@ -15,6 +17,10 @@ for i in "$@"; do
       ;;
     --docker-repository=*)
       REPOSITORY="${i#*=}"
+      shift
+      ;;
+    --services=*)
+      BUILD_SERVICES="${i#*=}"
       shift
       ;;
     -*|--*)
@@ -29,7 +35,12 @@ for i in "$@"; do
 done
 
 if [[ -z $VERSION ]]; then
-  echo "Missing required parameter --version"
+  echo "Missing or invalid value for argument: --version"
+  exit 1
+fi
+
+if [[ -z $REPOSITORY ]]; then
+  echo "Missing or invalid value for argument: --docker-repository"
   exit 1
 fi
 
@@ -43,6 +54,18 @@ services=(
   authentication
   frontend
 )
+
+if [[ ! -z $BUILD_SERVICES ]]; then
+  services=(
+    $BUILD_SERVICES
+  )
+fi
+
+echo -n "Loading services:"
+for service in ${services[@]}; do
+  echo -n " "$service
+done
+echo ""
 
 for service in ${services[@]}; do
   echo "load image: ${REPOSITORY}/$service:${VERSION}"

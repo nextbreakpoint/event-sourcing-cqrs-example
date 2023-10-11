@@ -75,14 +75,15 @@ let Preview = class Preview extends React.Component {
 
         component.props.handleLoadDesign()
 
-        function computePercentage(design) {
-            const levels = [0,1,2,3,4,5,6,7];
+        function computePercentage(design, levels) {
             let total = levels.map(i => design.tiles[i].total)
                 .reduce((previousValue, currentValue) => previousValue + currentValue, 0)
+
             let completed = levels.map(i => design.tiles[i].completed)
                 .reduce((previousValue, currentValue) => previousValue + currentValue, 0)
+
             let percentage = Math.floor((completed * 100.0) / total)
-            console.log("uuid = " + design.uuid + ", percentage = " + percentage)
+
             return percentage
         }
 
@@ -96,7 +97,8 @@ let Preview = class Preview extends React.Component {
                     design.metadata = data.metadata
                     design.script = data.script
                     design.draft = design.levels != 8
-                    design.percentage = computePercentage(design)
+                    design.percentage = computePercentage(design, [0,1,2,3,4,5,6,7])
+                    design.preview_percentage = computePercentage(design, [0,1,2])
                     console.log(design)
                     if (component.props.design == undefined || design.revision > component.props.revision || design.checksum != component.props.checksum) {
                         console.log("Design changed")

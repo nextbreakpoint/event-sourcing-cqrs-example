@@ -1,9 +1,19 @@
 package com.nextbreakpoint.blueprint.authentication;
 
+import com.nextbreakpoint.blueprint.authentication.handlers.CallbackHandler;
 import com.nextbreakpoint.blueprint.authentication.handlers.GitHubSignInHandler;
 import com.nextbreakpoint.blueprint.authentication.handlers.GitHubSignOutHandler;
 import com.nextbreakpoint.blueprint.common.core.IOUtils;
-import com.nextbreakpoint.blueprint.common.vertx.*;
+import com.nextbreakpoint.blueprint.common.vertx.CorsHandlerFactory;
+import com.nextbreakpoint.blueprint.common.vertx.Initializer;
+import com.nextbreakpoint.blueprint.common.vertx.JWTProviderConfig;
+import com.nextbreakpoint.blueprint.common.vertx.JWTProviderFactory;
+import com.nextbreakpoint.blueprint.common.vertx.OpenApiHandler;
+import com.nextbreakpoint.blueprint.common.vertx.ResponseHelper;
+import com.nextbreakpoint.blueprint.common.vertx.Server;
+import com.nextbreakpoint.blueprint.common.vertx.ServerConfig;
+import com.nextbreakpoint.blueprint.common.vertx.WebClientConfig;
+import com.nextbreakpoint.blueprint.common.vertx.WebClientFactory;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServerOptions;
@@ -24,7 +34,6 @@ import io.vertx.rxjava.ext.web.client.WebClient;
 import io.vertx.rxjava.ext.web.handler.BodyHandler;
 import io.vertx.rxjava.ext.web.handler.CorsHandler;
 import io.vertx.rxjava.ext.web.handler.LoggerHandler;
-import io.vertx.rxjava.ext.web.handler.OAuth2AuthHandler;
 import io.vertx.rxjava.micrometer.PrometheusScrapingHandler;
 import lombok.extern.log4j.Log4j2;
 import rx.Completable;
@@ -40,7 +49,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static com.nextbreakpoint.blueprint.common.core.Headers.*;
+import static com.nextbreakpoint.blueprint.common.core.Headers.ACCEPT;
+import static com.nextbreakpoint.blueprint.common.core.Headers.AUTHORIZATION;
+import static com.nextbreakpoint.blueprint.common.core.Headers.CONTENT_TYPE;
+import static com.nextbreakpoint.blueprint.common.core.Headers.COOKIE;
 
 @Log4j2
 public class Verticle extends AbstractVerticle {
@@ -130,12 +142,6 @@ public class Verticle extends AbstractVerticle {
 
             final CorsHandler corsHandler = CorsHandlerFactory.createWithGetOnly(originPattern, List.of(COOKIE, AUTHORIZATION, CONTENT_TYPE, ACCEPT));
 
-            mainRouter.route("/*").handler(corsHandler);
-
-            mainRouter.options("/*").handler(ResponseHelper::sendNoContent);
-
-            mainRouter.route("/metrics").handler(PrometheusScrapingHandler.create());
-
             final WebClientConfig webClientConfig = WebClientConfig.builder()
                     .withVerifyHost(verifyHost)
                     .withKeyStorePath(clientKeyStorePath)
@@ -151,12 +157,11 @@ public class Verticle extends AbstractVerticle {
                     .setTokenPath(oauthTokenPath)
                     .setAuthorizationPath(oauthAuthorisePath);
 
-            final OAuth2Auth oauth2Provider = OAuth2Auth.create(vertx, oauth2Options);
+            final OAuth2Auth authenticationProvider = OAuth2Auth.create(vertx, oauth2Options);
 
-            final OAuth2AuthHandler oauthHandler = OAuth2AuthHandler.newInstance(io.vertx.ext.web.handler.OAuth2AuthHandler
-                    .create(vertx.getDelegate(), oauth2Provider.getDelegate(), authUrl + CALLBACK_PATH)
-                    .withScope(oauthAuthority)
-                    .setupCallback(mainRouter.getDelegate().route(CALLBACK_PATH)));
+            mainRouter.route("/*").handler(corsHandler);
+
+            mainRouter.options("/*").handler(ResponseHelper::sendNoContent);
 
             final JWTProviderConfig jwtProviderConfig = JWTProviderConfig.builder()
                     .withKeyStoreType(jwtKeystoreType)
@@ -170,9 +175,11 @@ public class Verticle extends AbstractVerticle {
 
             final WebClient githubClient = WebClientFactory.create(vertx, githubUrl);
 
-            final Handler<RoutingContext> signinHandler = createSignInHandler(cookieDomain, webUrl, adminUsers, accountsClient, githubClient, jwtProvider, oauthHandler);
+            final Handler<RoutingContext> signinHandler = createSignInHandler(cookieDomain, webUrl, authUrl, adminUsers, accountsClient, githubClient, jwtProvider, authenticationProvider, oauthAuthority, CALLBACK_PATH);
 
             final Handler<RoutingContext> signoutHandler = createSignOutHandler(cookieDomain, webUrl);
+
+            final Handler<RoutingContext> callbackHandler = createCallbackHandler(authUrl, authenticationProvider, CALLBACK_PATH);
 
             final Handler<RoutingContext> apiV1DocsHandler = new OpenApiHandler(vertx.getDelegate(), executor, "api-v1.yaml");
 
@@ -196,6 +203,9 @@ public class Verticle extends AbstractVerticle {
                         routerBuilder.operation("signOut")
                                 .handler(context -> signoutHandler.handle(RoutingContext.newInstance(context)));
 
+                        routerBuilder.operation("callback")
+                                .handler(context -> callbackHandler.handle(RoutingContext.newInstance(context)));
+
                         final Router apiRouter = Router.newInstance(routerBuilder.createRouter());
 
                         mainRouter.mountSubRouter("/v1", apiRouter);
@@ -203,8 +213,6 @@ public class Verticle extends AbstractVerticle {
                         mainRouter.get("/v1/apidocs").handler(apiV1DocsHandler);
 
                         mainRouter.get("/health*").handler(healthCheckHandler);
-
-                        mainRouter.options("/*").handler(ResponseHelper::sendNoContent);
 
                         mainRouter.route("/metrics").handler(PrometheusScrapingHandler.create());
 
@@ -238,11 +246,15 @@ public class Verticle extends AbstractVerticle {
         ResponseHelper.redirectToError(routingContext, statusCode -> webUrl + "/error/" + statusCode);
     }
 
-    protected Handler<RoutingContext> createSignInHandler(String cookieDomain, String webUrl, Set<String> adminUsers, WebClient accountsClient, WebClient githubClient, JWTAuth jwtProvider, OAuth2AuthHandler oauthHandler) {
-        return new GitHubSignInHandler(cookieDomain, webUrl, adminUsers, accountsClient, githubClient, jwtProvider, oauthHandler);
+    protected Handler<RoutingContext> createSignInHandler(String cookieDomain, String webUrl, String authUrl, Set<String> adminUsers, WebClient accountsClient, WebClient githubClient, JWTAuth jwtProvider, OAuth2Auth authHandler, String oauthAuthority, String callbackPath) {
+        return new GitHubSignInHandler(cookieDomain, webUrl, authUrl, adminUsers, accountsClient, githubClient, jwtProvider, authHandler, oauthAuthority, callbackPath);
     }
 
     protected Handler<RoutingContext> createSignOutHandler(String cookieDomain, String webUrl) {
         return new GitHubSignOutHandler(cookieDomain, webUrl);
+    }
+
+    protected Handler<RoutingContext> createCallbackHandler(String authUrl, OAuth2Auth authHandler, String callbackPath) {
+        return new CallbackHandler(authUrl, authHandler, callbackPath);
     }
 }

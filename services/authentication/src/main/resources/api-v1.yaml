@@ -50,7 +50,7 @@ paths:
         303:
           description: Redirect to landing page
           content: {}
-  /auth/callback/*:
+  /auth/callback:
     get:
       tags:
         - authentication

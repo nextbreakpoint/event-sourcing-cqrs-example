@@ -6,19 +6,17 @@ import com.nextbreakpoint.blueprint.common.vertx.Failure;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.auth.oauth2.OAuth2AuthorizationURL;
 import io.vertx.rxjava.core.buffer.Buffer;
 import io.vertx.rxjava.core.http.Cookie;
 import io.vertx.rxjava.ext.auth.jwt.JWTAuth;
+import io.vertx.rxjava.ext.auth.oauth2.OAuth2Auth;
 import io.vertx.rxjava.ext.web.RoutingContext;
 import io.vertx.rxjava.ext.web.client.HttpResponse;
 import io.vertx.rxjava.ext.web.client.WebClient;
-import io.vertx.rxjava.ext.web.handler.OAuth2AuthHandler;
 import lombok.extern.log4j.Log4j2;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 import static com.nextbreakpoint.blueprint.common.core.ContentType.APPLICATION_JSON;
 import static com.nextbreakpoint.blueprint.common.core.Headers.*;
@@ -26,23 +24,29 @@ import static com.nextbreakpoint.blueprint.common.vertx.Authentication.NULL_USER
 
 @Log4j2
 public class GitHubSignInHandler implements Handler<RoutingContext> {
-    private final OAuth2AuthHandler oauthHandler;
+    private final OAuth2Auth oauthHandler;
+    private String oauthAuthority;
+    private String callbackPath;
     private final WebClient accountsClient;
     private final WebClient githubClient;
     private final JWTAuth jwtProvider;
 
     private final Set<String> adminUsers;
     private final String cookieDomain;
+    private final String authUrl;
     private final String webUrl;
 
-    public GitHubSignInHandler(String cookieDomain, String webUrl, Set<String> adminUsers, WebClient accountsClient, WebClient githubClient, JWTAuth jwtProvider, OAuth2AuthHandler oauthHandler) {
+    public GitHubSignInHandler(String cookieDomain, String webUrl, String authUrl, Set<String> adminUsers, WebClient accountsClient, WebClient githubClient, JWTAuth jwtProvider, OAuth2Auth oauthHandler, String oauthAuthority, String callbackPath) {
         this.cookieDomain = Objects.requireNonNull(cookieDomain);
         this.webUrl = Objects.requireNonNull(webUrl);
+        this.authUrl = Objects.requireNonNull(authUrl);
         this.adminUsers = Objects.requireNonNull(adminUsers);
         this.accountsClient = Objects.requireNonNull(accountsClient);
         this.githubClient = Objects.requireNonNull(githubClient);
         this.jwtProvider = Objects.requireNonNull(jwtProvider);
         this.oauthHandler = Objects.requireNonNull(oauthHandler);
+        this.oauthAuthority = Objects.requireNonNull(oauthAuthority);
+        this.callbackPath = Objects.requireNonNull(callbackPath);
     }
 
     @Override
@@ -51,7 +55,16 @@ public class GitHubSignInHandler implements Handler<RoutingContext> {
             if (routingContext.user() != null) {
                 processSignin(routingContext);
             } else {
-                oauthHandler.handle(routingContext);
+                String authorizationURL = oauthHandler.authorizeURL(new OAuth2AuthorizationURL(new JsonObject()
+                        .put("redirect_uri", authUrl + callbackPath)
+                        .put("scope", oauthAuthority)
+                        .put("state", routingContext.request().uri())
+                ));
+
+                routingContext.response()
+                        .putHeader("Location", authorizationURL)
+                        .setStatusCode(302)
+                        .end();
             }
         } catch (Exception e) {
             routingContext.fail(Failure.requestFailed(e));
@@ -212,9 +225,9 @@ public class GitHubSignInHandler implements Handler<RoutingContext> {
 
     protected JsonObject makeAccount(String userEmail, JsonObject userInfo) {
         return new JsonObject()
-            .put("email", userEmail)
-            .put("name", userInfo.getString("name"))
-            .put("role", getAuthority(userEmail));
+                .put("email", userEmail)
+                .put("name", userInfo.getString("name"))
+                .put("role", getAuthority(userEmail));
     }
 
     protected String getAuthority(String userEmail) {

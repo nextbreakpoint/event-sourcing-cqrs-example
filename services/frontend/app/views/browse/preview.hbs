@@ -2,7 +2,7 @@
     <header><p><b>The Beauty of Chaos</b> | <a href="../designs.html">Fractals</a> | {{uuid}}</p></header>
     <div id="fractal" class="preview"></div>
     <footer>
-        <p>Powered by <a href="https://nextbreakpoint.com">NextBreakpoint</a>{{#if admin}} | <a href="../../admin/designs/{{uuid}}.html">Edit</a>{{/if}}{{#if login}} | <a href="{{config.api_url}}/v1/auth/signin/admin/designs/{{uuid}}.html">Login</a>{{/if}}</p>
+        <p>Powered by <a href="https://nextbreakpoint.com">NextBreakpoint</a>{{#if admin}} | <a href="../../admin/designs/{{uuid}}.html">Edit</a>{{/if}}{{#if login}} | <a href="{{config.api_url}}/v1/auth/signin/browse/designs/{{uuid}}.html">Login</a>{{/if}}{{#if logout}} | <a href="{{config.api_url}}/v1/auth/signout/browse/designs/{{uuid}}.html">Logout</a>{{/if}}</p>
     </footer>
     <input type="hidden" id="uuid" value="{{uuid}}"/>
     <script>

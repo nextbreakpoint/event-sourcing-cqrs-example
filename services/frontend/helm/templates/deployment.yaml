@@ -73,7 +73,7 @@ spec:
           {{- end}}
           livenessProbe:
             httpGet:
-              path: /browse/designs.html
+              path: /health
               port: http
               scheme: HTTP
             failureThreshold: 2
@@ -82,7 +82,7 @@ spec:
             periodSeconds: 30
           readinessProbe:
             httpGet:
-              path: /browse/designs.html
+              path: /health
               port: http
               scheme: HTTP
             failureThreshold: 2
@@ -91,7 +91,7 @@ spec:
             periodSeconds: 30
           startupProbe:
             httpGet:
-              path: /browse/designs.html
+              path: /health
               port: http
               scheme: HTTP
             failureThreshold: 12

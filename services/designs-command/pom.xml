@@ -45,7 +45,7 @@
                     <executable>java</executable>
                     <environmentVariables>
                         <JAEGER_ATTRIBUTES>service.name=designs-command,service.version=${project.version},service.namespace=designs,environment=dev</JAEGER_ATTRIBUTES>
-                        <JAEGER_ENDPOINT>http://host.docker.internal:14250</JAEGER_ENDPOINT>
+                        <JAEGER_ENDPOINT>http://localhost:14250</JAEGER_ENDPOINT>
                         <KEYSTORE_SECRET>secret</KEYSTORE_SECRET>
                         <DATABASE_HOST>localhost</DATABASE_HOST>
                         <DATABASE_USERNAME>verticle</DATABASE_USERNAME>

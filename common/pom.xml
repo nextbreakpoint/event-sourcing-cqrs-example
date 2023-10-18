@@ -23,12 +23,10 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
-                <version>${maven-jar-plugin.version}</version>
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>versions-maven-plugin</artifactId>
-                <version>${versions-maven-plugin.version}</version>
                 <configuration>
                     <rulesUri>file://${project.basedir}/../maven-version-rules.xml</rulesUri>
                 </configuration>

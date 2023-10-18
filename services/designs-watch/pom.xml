@@ -25,7 +25,6 @@
             <plugin>
                 <groupId>au.com.dius.pact.provider</groupId>
                 <artifactId>maven</artifactId>
-                <version>${pact-provider-maven.version}</version>
                 <executions>
                     <execution>
                         <id>publish</id>
@@ -45,7 +44,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
-                <version>${maven-jar-plugin.version}</version>
                 <configuration>
                     <archive>
                         <index>true</index>
@@ -59,7 +57,6 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
-                <version>${exec-maven-plugin.version}</version>
                 <configuration>
                     <toolchain>jdk</toolchain>
                     <executable>java</executable>
@@ -104,7 +101,6 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>versions-maven-plugin</artifactId>
-                <version>${versions-maven-plugin.version}</version>
                 <configuration>
                     <rulesUri>file://${project.basedir}/../../maven-version-rules.xml</rulesUri>
                 </configuration>

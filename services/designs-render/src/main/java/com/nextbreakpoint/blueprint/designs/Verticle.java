@@ -75,7 +75,7 @@ public class Verticle extends AbstractVerticle {
             vertx.rxDeployVerticle(new Verticle(), new DeploymentOptions().setConfig(config))
                     .delay(30, TimeUnit.SECONDS)
                     .retry(3)
-                    .subscribe(o -> log.info("Verticle deployed"), err -> log.error("Can't deploy verticle"));
+                    .subscribe(o -> log.info("Verticle deployed"), err -> log.error("Can't deploy verticle", err));
         } catch (Exception e) {
             log.error("Can't start service", e);
         }

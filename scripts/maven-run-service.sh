@@ -7,6 +7,8 @@ NEXUS_PORT="8082"
 NEXUS_USERNAME=admin
 NEXUS_PASSWORD=password
 
+SERVICE=""
+
 POSITIONAL_ARGS=()
 
 TARGET=shared
@@ -31,6 +33,10 @@ for i in "$@"; do
       ;;
     --isolated)
       TARGET="isolated"
+      shift
+      ;;
+    --service=*)
+      SERVICE="${i#*=}"
       shift
       ;;
     -*|--*)
@@ -64,27 +70,20 @@ if [[ -z $NEXUS_PASSWORD ]]; then
   exit 1
 fi
 
-echo "Nexus server is ${NEXUS_HOST}:${NEXUS_PORT}"
+if [[ -z $SERVICE ]]; then
+  echo "Missing or invalid value for argument: --service"
+  exit 1
+fi
 
-services=(
-  designs-query
-  designs-command
-  designs-aggregate
-  designs-watch
-  designs-render
-  accounts
-  authentication
-)
+echo "Nexus server is ${NEXUS_HOST}:${NEXUS_PORT}"
 
 MAVEN_ARGS="-q -e -Dnexus.host=${NEXUS_HOST} -Dnexus.port=${NEXUS_PORT}"
 
 export NEXUS_USERNAME
 export NEXUS_PASSWORD
 
-echo "Starting services in background, hold tight..."
+echo "Starting service $SERVICE, hold tight..."
 
-for service in ${services[@]}; do
-  pushd services/$service
-    mvn compile org.codehaus.mojo:exec-maven-plugin:exec@${TARGET} -s settings.xml ${MAVEN_ARGS} -Dcommon=true -Dservice=true -Dplatform=true -Dnexus=true &
-  popd
-done
+pushd services/$SERVICE
+  mvn compile org.codehaus.mojo:exec-maven-plugin:exec@${TARGET} -s settings.xml ${MAVEN_ARGS} -Dcommon=true -Dservice=true -Dplatform=true -Dnexus=true
+popd

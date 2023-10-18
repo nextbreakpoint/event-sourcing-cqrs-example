@@ -5,9 +5,13 @@ import com.nextbreakpoint.blueprint.common.vertx.Failure;
 import io.vertx.core.Handler;
 import io.vertx.rxjava.core.http.Cookie;
 import io.vertx.rxjava.ext.web.RoutingContext;
+import lombok.extern.log4j.Log4j2;
+import org.yaml.snakeyaml.composer.ComposerException;
+import rx.Single;
 
 import java.util.Objects;
 
+@Log4j2
 public class GitHubSignOutHandler implements Handler<RoutingContext> {
     private final String cookieDomain;
     private final String webUrl;
@@ -19,22 +23,42 @@ public class GitHubSignOutHandler implements Handler<RoutingContext> {
 
     @Override
     public void handle(RoutingContext routingContext) {
-        try {
-            sendRedirectResponse(routingContext, getRedirectTo(routingContext), Authentication.createCookie("", cookieDomain));
-        } catch (Exception e) {
-            routingContext.fail(Failure.requestFailed(e));
-        }
+        Single.just(newScope(routingContext))
+                .flatMap(scope -> getCookie(scope).map(cookie -> scope.toBuilder().withCookie(cookie).build()))
+                .flatMap(this::sendRedirectResponse)
+                .subscribe(scope -> {}, throwable -> handleException(routingContext, throwable));
     }
 
-    protected String getRedirectTo(RoutingContext routingContext) {
-        return webUrl + routingContext.request().path().substring("/auth/signout".length());
+    private GitHubSignOutScope newScope(RoutingContext routingContext) {
+        return GitHubSignOutScope.builder()
+                .withRoutingContext(routingContext)
+                .withUser(routingContext.user())
+                .withRedirectTo(getRedirectTo(routingContext))
+                .build();
     }
 
-    protected void sendRedirectResponse(RoutingContext routingContext, String redirectTo, Cookie cookie) {
-        routingContext.response()
-                .putHeader("Set-Cookie", cookie.encode())
-                .putHeader("Location", redirectTo)
+    private Single<Cookie> getCookie(GitHubSignOutScope scope) {
+        return Single.fromCallable(() -> Authentication.createCookie("", cookieDomain));
+    }
+
+    private Single<Void> sendRedirectResponse(GitHubSignOutScope scope) {
+        return scope.getRoutingContext().response()
+                .putHeader("Set-Cookie", scope.getCookie().encode())
+                .putHeader("Location", scope.getRedirectTo())
                 .setStatusCode(303)
-                .end();
+                .rxSend();
+    }
+
+    private String getRedirectTo(RoutingContext routingContext) {
+        return webUrl + routingContext.request().path().substring("/v1/auth/signout".length());
+    }
+
+    private void handleException(RoutingContext routingContext, Throwable throwable) {
+        if (throwable instanceof Failure) {
+            routingContext.fail(throwable);
+        } else if (throwable instanceof ComposerException) {
+            log.error("Cannot process request", throwable);
+            routingContext.fail(Failure.requestFailed(throwable));
+        }
     }
 }

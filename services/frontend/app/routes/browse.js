@@ -88,6 +88,7 @@ router.get('/designs.html', function(req, res, next) {
                         title: 'Designs',
                         url: appConfig.client_web_url,
                         login: account.role == null,
+                        logout: account.role != null,
                         admin: account.role === 'admin',
                         grid: grid.make(designs, from, size),
                         next: (response.data.total > from + size) ? from + size : from,
@@ -102,6 +103,7 @@ router.get('/designs.html', function(req, res, next) {
                         title: 'Designs',
                         url: appConfig.client_web_url,
                         login: account.role == null,
+                        logout: account.role != null,
                         admin: account.role === 'admin',
                         grid: [],
                         next: from,
@@ -119,6 +121,7 @@ router.get('/designs.html', function(req, res, next) {
                     title: 'Designs',
                     url: appConfig.client_web_url,
                     login: account.role == null,
+                    logout: account.role != null,
                     admin: account.role === 'admin',
                     grid: []
                 })
@@ -164,6 +167,7 @@ router.get('/designs/(:uuid).html', function(req, res, next) {
                         url: appConfig.client_web_url,
                         uuid: req.params.uuid,
                         login: account.role == null,
+                        logout: account.role != null,
                         admin: account.role === 'admin',
                         design: design
                     })
@@ -176,6 +180,7 @@ router.get('/designs/(:uuid).html', function(req, res, next) {
                         url: appConfig.client_web_url,
                         uuid: req.params.uuid,
                         login: account.role == null,
+                        logout: account.role != null,
                         admin: account.role === 'admin'
                     })
                 }
@@ -190,6 +195,7 @@ router.get('/designs/(:uuid).html', function(req, res, next) {
                     url: appConfig.client_web_url,
                     uuid: req.params.uuid,
                     login: account.role == null,
+                    logout: account.role != null,
                     admin: account.role === 'admin'
                 })
             })

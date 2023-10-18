@@ -40,7 +40,7 @@ paths:
         500:
           description: Failed to authenticate user
           content: {}
-  /auth/signout:
+  /auth/signout/*:
     get:
       tags:
         - authentication
@@ -50,7 +50,7 @@ paths:
         303:
           description: Redirect to landing page
           content: {}
-  /auth/callback/*:
+  /auth/callback:
     get:
       tags:
         - authentication

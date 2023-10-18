@@ -250,10 +250,14 @@ Load Docker images required for running services:
 Create a GitHub OAuth application like:
 
     Homepage URL: 
-    https://minikube
+    https://<minikube-ip>
 
     Authorization Callback URL:
-    https://minikube/v1/auth/callback
+    https://<minikube-ip>/v1/auth/callback
+
+where minikube-ip is the address of Minikube:
+
+    minikube ip
 
 then export the application secrets:
 

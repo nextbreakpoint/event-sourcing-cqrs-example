@@ -4,6 +4,8 @@ import com.nextbreakpoint.blueprint.common.core.Json;
 import com.nextbreakpoint.blueprint.common.core.MessageEmitter;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.core.Payload;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tag;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Tracer;
@@ -28,7 +30,11 @@ import java.util.stream.Collectors;
 
 @Log4j2
 public class KafkaMessageEmitter implements MessageEmitter {
+    public static final String VERTX_KAFKA_EMITTER_ERROR_COUNT = "vertx_kafka_emitter_error_count";
+    public static final String VERTX_KAFKA_EMITTER_RECORD_TYPE_COUNT = "vertx_kafka_emitter_record_type_count";
+
     private final KafkaProducer<String, String> producer;
+    private MeterRegistry registry;
     private final String topicName;
     private final int retries;
 
@@ -36,8 +42,9 @@ public class KafkaMessageEmitter implements MessageEmitter {
 
     private final TextMapSetter<Map<String, String>> setter = Map::put;
 
-    public KafkaMessageEmitter(KafkaProducer<String, String> producer, String topicName, int retries) {
+    public KafkaMessageEmitter(KafkaProducer<String, String> producer, MeterRegistry registry, String topicName, int retries) {
         this.producer = Objects.requireNonNull(producer);
+        this.registry = Objects.requireNonNull(registry);
         this.topicName = Objects.requireNonNull(topicName);
         this.retries = retries;
 
@@ -52,7 +59,7 @@ public class KafkaMessageEmitter implements MessageEmitter {
     @Override
     public Single<Void> send(OutputMessage message, String topicName) {
         return Single.just(message)
-                .doOnEach(notification -> log.trace("Sending message to topic " + topicName + ": " + notification.getValue()))
+                .doOnEach(notification -> log.trace("Sending message to topic {}: {}", topicName, notification.getValue()))
                 .map(outputMessage -> writeRecord(outputMessage, topicName))
                 .doOnError(err -> log.error("Error occurred while writing record. Retrying...", err))
                 .retry(retries)
@@ -76,11 +83,25 @@ public class KafkaMessageEmitter implements MessageEmitter {
                 span.setAttribute("message.key", record.key());
                 span.setAttribute("message.topic", topicName);
 
+                final List<Tag> recordTags = List.of(
+                        Tag.of("topic", topicName),
+                        Tag.of("source", payload.getSource()),
+                        Tag.of("type", payload.getType())
+                );
+
+                registry.counter(VERTX_KAFKA_EMITTER_RECORD_TYPE_COUNT, recordTags).increment();
+
                 return producer.send(record).get(2000, TimeUnit.SECONDS);
             } finally {
                 messageSpan.end();
             }
         } catch (Exception e) {
+            final List<Tag> tags = List.of(
+                    Tag.of("topic", topicName)
+            );
+
+            registry.counter(VERTX_KAFKA_EMITTER_ERROR_COUNT, tags).increment();
+
             throw new RuntimeException(e);
         }
     }

@@ -15,7 +15,7 @@ public class TileRenderer {
             final JsonObject json = new JsonObject(event.getData());
             final Bundle bundle = convertToBundle(json);
             final byte[] image = renderImage(bundle, params);
-            log.debug("Image size " + image.length);
+            log.debug("Image size {}", image.length);
             promise.complete(Result.of(image, null));
         } catch (Exception e) {
             log.error("Can't render image", e);

@@ -19,6 +19,8 @@ import com.nextbreakpoint.blueprint.common.events.DesignDocumentDeleteRequested;
 import com.nextbreakpoint.blueprint.common.events.DesignDocumentUpdateRequested;
 import com.nextbreakpoint.blueprint.common.vertx.*;
 import com.nextbreakpoint.blueprint.designs.persistence.ElasticsearchStore;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.binder.kafka.KafkaClientMetrics;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServerOptions;
@@ -26,6 +28,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.healthchecks.Status;
 import io.vertx.ext.web.handler.LoggerFormat;
 import io.vertx.ext.web.openapi.RouterBuilder;
+import io.vertx.micrometer.backends.BackendRegistries;
 import io.vertx.rxjava.core.AbstractVerticle;
 import io.vertx.rxjava.core.Promise;
 import io.vertx.rxjava.core.Vertx;
@@ -70,7 +73,7 @@ import static com.nextbreakpoint.blueprint.common.core.Headers.*;
 
 @Log4j2
 public class Verticle extends AbstractVerticle {
-    private KafkaPolling kafkaPolling;
+    private KafkaMessagePolling kafkaPolling;
 
     public static void main(String[] args) {
         try {
@@ -166,6 +169,8 @@ public class Verticle extends AbstractVerticle {
 
             final String enableAutoCommit = config.getString("kafka_enable_auto_commit", "false");
 
+            final MeterRegistry registry = BackendRegistries.getDefaultNow();
+
             final AwsCredentialsProvider credentialsProvider = AwsCredentialsProviderChain.of(DefaultCredentialsProvider.create());
 
             final JWTProviderConfig jwtProviderConfig = JWTProviderConfig.builder()
@@ -243,7 +248,11 @@ public class Verticle extends AbstractVerticle {
 
             eventsKafkaConsumer.subscribe(List.of(eventsTopic));
 
-            kafkaPolling = new KafkaPolling<>(eventsKafkaConsumer, messageHandlers, KafkaRecordsConsumer.Simple.create(messageHandlers));
+            new KafkaClientMetrics(kafkaProducer).bindTo(registry);
+            new KafkaClientMetrics(healthKafkaConsumer).bindTo(registry);
+            new KafkaClientMetrics(eventsKafkaConsumer).bindTo(registry);
+
+            kafkaPolling = new KafkaMessagePolling<>(eventsKafkaConsumer, messageHandlers, KafkaMessageConsumer.Simple.create(messageHandlers, registry), registry);
 
             kafkaPolling.startPolling("kafka-polling-topic-" + eventsTopic);
 
@@ -307,7 +316,7 @@ public class Verticle extends AbstractVerticle {
                         vertx.createHttpServer(options)
                                 .requestHandler(mainRouter)
                                 .rxListen(port)
-                                .doOnSuccess(result -> log.info("Service listening on port " + port))
+                                .doOnSuccess(result -> log.info("Service listening on port {}", port))
                                 .doOnError(err -> log.error("Can't create server", err))
                                 .subscribe(result -> promise.complete(), promise::fail);
                     })

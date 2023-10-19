@@ -39,7 +39,7 @@ public class Authentication {
     }
 
     public static String generateToken(JWTAuth jwtProvider, String userUuid, List<String> authorities) {
-        log.debug("Generate new JWT token for user " + userUuid);
+        log.debug("Generate new JWT token for user {}", userUuid);
         return jwtProvider.generateToken(makeUserObject(userUuid), makeJWTOptions(authorities));
     }
 

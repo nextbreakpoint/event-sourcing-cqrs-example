@@ -344,19 +344,23 @@ Create monitoring resources:
 
 Scale services:
 
-    kubectl -n services scale deployment designs-query --replicas=2
-    kubectl -n services scale deployment designs-aggregate --replicas=2
-    kubectl -n services scale deployment designs-watch --replicas=2
     kubectl -n services scale deployment designs-render --replicas=4
+    kubectl -n services scale deployment designs-query --replicas=2
+    kubectl -n services scale deployment designs-watch --replicas=2
+    kubectl -n services scale deployment designs-aggregate --replicas=2
     kubectl -n services scale deployment frontend --replicas=2
+
+Alternatively configure autoscaling:
+
+    kubectl -n services apply -f scripts/services-autoscaling.yaml
 
 Scale platform:
 
     kubectl -n platform scale deployment nginx --replicas=2
 
-Configure autoscaling:
+Alternatively configure autoscaling:
 
-    kubectl -n services apply -f scripts/services-autoscaling.yaml
+    kubectl -n platform apply -f scripts/platform-autoscaling.yaml
 
 Open application:
 

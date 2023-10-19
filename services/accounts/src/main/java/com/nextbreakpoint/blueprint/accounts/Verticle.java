@@ -193,7 +193,7 @@ public class Verticle extends AbstractVerticle {
                         vertx.createHttpServer(options)
                                 .requestHandler(mainRouter)
                                 .rxListen(port)
-                                .doOnSuccess(result -> log.info("Service listening on port " + port))
+                                .doOnSuccess(result -> log.info("Service listening on port {}", port))
                                 .doOnError(err -> log.error("Can't create server", err))
                                 .subscribe(result -> promise.complete(), promise::fail);
                     })

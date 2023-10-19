@@ -132,7 +132,7 @@ public class GitHubSignInHandler implements Handler<RoutingContext> {
 
     protected Single<JsonObject> createAccount(GitHubSignInScope scope, JsonObject userInfo) {
         JsonObject account = makeAccount(scope.getUserEmail(), userInfo);
-        log.info("User account: " + account.encode());
+        log.info("User account: {}", account.encode());
         return accountsClient.post("/v1/accounts")
                 .putHeader(AUTHORIZATION, Authentication.makeAuthorization(scope.getJwtAccessToken()))
                 .putHeader(CONTENT_TYPE, APPLICATION_JSON)
@@ -158,7 +158,7 @@ public class GitHubSignInHandler implements Handler<RoutingContext> {
         final String uuid = account.getString("uuid");
         final String role = account.getString("role");
         if (uuid != null && role != null) {
-            log.info("User role: " + role);
+            log.info("User role: {}", role);
             final String token = Authentication.generateToken(jwtProvider, uuid, List.of(role));
             return Single.just(Authentication.createCookie(token, cookieDomain));
         } else {

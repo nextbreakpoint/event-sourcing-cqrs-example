@@ -10,6 +10,6 @@ import java.util.function.BiConsumer;
 public class MessagesConsumed implements BiConsumer<List<InputMessage>, Void> {
     @Override
     public void accept(List<InputMessage> messages, Void ignore) {
-        log.debug("Consumed " + messages.size() + " " + (messages.size() > 1 ? "messages" : "message"));
+        log.debug("Consumed {} message{}", messages.size(), messages.size() > 1 ? "s" : "");
     }
 }

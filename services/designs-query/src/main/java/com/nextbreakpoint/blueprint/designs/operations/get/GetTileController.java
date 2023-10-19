@@ -32,7 +32,7 @@ public class GetTileController implements Controller<GetTileRequest, GetTileResp
     private Single<GetTileResponse> getImage(GetTileRequest request, Design document) {
         return s3Driver.getObject(getBucketKey(request, document.getChecksum()))
                 .map(bytes -> new Image(bytes, document.getChecksum()))
-                .doOnError(error -> log.warn("Failed to load image: " + error.getMessage()))
+                .doOnError(error -> log.warn("Failed to load image: {}", error.getMessage()))
                 .onErrorReturn(error -> null)
                 .map(GetTileResponse::new);
     }

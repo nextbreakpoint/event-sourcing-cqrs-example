@@ -4,6 +4,8 @@ import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.core.Payload;
 import com.nextbreakpoint.blueprint.common.core.RxSingleHandler;
 import com.nextbreakpoint.blueprint.common.core.Token;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tag;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Tracer;
@@ -22,14 +24,20 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-public interface KafkaRecordsConsumer {
+public interface KafkaMessageConsumer {
+    String VERTX_KAFKA_CONSUMER_ERROR_COUNT = "vertx_kafka_consumer_error_count";
+    String VERTX_KAFKA_CONSUMER_RECORD_TYPE_COUNT = "vertx_kafka_consumer_record_type_count";
+    String VERTX_KAFKA_CONSUMER_RECORD_LAG_SECONDS = "vertx_kafka_consumer_record_lag_seconds";
+
     void consumeRecords(TopicPartition topicPartition, List<KafkaRecordsQueue.QueuedRecord> records);
 
     @Log4j2
-    class Simple implements KafkaRecordsConsumer {
+    class Simple implements KafkaMessageConsumer {
         private final Map<String, RxSingleHandler<InputMessage, ?>> messageHandlers;
 
         private final Tracer tracer;
+
+        private MeterRegistry registry;
 
         private final TextMapGetter<Map<String, String>> getter = new TextMapGetter<>() {
             @Override
@@ -43,12 +51,13 @@ public interface KafkaRecordsConsumer {
             }
         };
 
-        public static KafkaRecordsConsumer create(Map<String, RxSingleHandler<InputMessage, ?>> messageHandlers) {
-            return new Simple(messageHandlers);
+        public static KafkaMessageConsumer create(Map<String, RxSingleHandler<InputMessage, ?>> messageHandlers, MeterRegistry registry) {
+            return new Simple(messageHandlers, registry);
         }
 
-        private Simple(Map<String, RxSingleHandler<InputMessage, ?>> messageHandlers) {
+        private Simple(Map<String, RxSingleHandler<InputMessage, ?>> messageHandlers, MeterRegistry registry) {
             this.messageHandlers = Objects.requireNonNull(messageHandlers);
+            this.registry = Objects.requireNonNull(registry);
 
             tracer = GlobalOpenTelemetry.getTracer("com.nextbreakpoint.blueprint");
         }
@@ -91,7 +100,17 @@ public interface KafkaRecordsConsumer {
                         return;
                     }
 
-                    log.trace("Received message from topic " + topicPartition.topic() + ": " + message);
+                    log.trace("Received message from topic {}: {}", topicPartition.topic(), message);
+
+                    final List<Tag> tags = List.of(
+                            Tag.of("topic", topicPartition.topic()),
+                            Tag.of("type", payload.getType())
+                    );
+
+                    registry.counter(VERTX_KAFKA_CONSUMER_RECORD_TYPE_COUNT, tags).increment();
+
+                    registry.summary(VERTX_KAFKA_CONSUMER_RECORD_LAG_SECONDS, tags)
+                            .record((System.currentTimeMillis() - message.getTimestamp()) / 1000.0);
 
                     handler.handleSingle(message)
                             .subscribeOn(Schedulers.immediate())
@@ -101,9 +120,15 @@ public interface KafkaRecordsConsumer {
                     messageSpan.end();
                 }
             } catch (Exception e) {
-                log.error("Failed to process record: " + record.getRecord().key());
+                final List<Tag> tags = List.of(
+                        Tag.of("topic", topicPartition.topic())
+                );
 
-                throw new KafkaPolling.RecordProcessingException(record.getRecord());
+                registry.counter(VERTX_KAFKA_CONSUMER_ERROR_COUNT, tags).increment();
+
+                log.error("Failed to process record: {}", record.getRecord().key());
+
+                throw new KafkaMessagePolling.RecordProcessingException(record.getRecord());
             }
         }
 
@@ -113,10 +138,12 @@ public interface KafkaRecordsConsumer {
     }
 
     @Log4j2
-    class Buffered implements KafkaRecordsConsumer {
+    class Buffered implements KafkaMessageConsumer {
         private final Map<String, RxSingleHandler<List<InputMessage>, ?>> messageHandlers;
 
         private final Tracer tracer;
+
+        private final MeterRegistry registry;
 
         private final TextMapGetter<Map<String, String>> getter = new TextMapGetter<>() {
             @Override
@@ -130,12 +157,13 @@ public interface KafkaRecordsConsumer {
             }
         };
 
-        public static KafkaRecordsConsumer create(Map<String, RxSingleHandler<List<InputMessage>, ?>> messageHandlers) {
-            return new Buffered(messageHandlers);
+        public static KafkaMessageConsumer create(Map<String, RxSingleHandler<List<InputMessage>, ?>> messageHandlers, MeterRegistry registry) {
+            return new Buffered(messageHandlers, registry);
         }
 
-        public Buffered(Map<String, RxSingleHandler<List<InputMessage>, ?>> messageHandlers) {
+        public Buffered(Map<String, RxSingleHandler<List<InputMessage>, ?>> messageHandlers, MeterRegistry registry) {
             this.messageHandlers = Objects.requireNonNull(messageHandlers);
+            this.registry = Objects.requireNonNull(registry);
 
             tracer = GlobalOpenTelemetry.getTracer("com.nextbreakpoint.blueprint");
         }
@@ -143,16 +171,20 @@ public interface KafkaRecordsConsumer {
         @Override
         public void consumeRecords(TopicPartition topicPartition, List<KafkaRecordsQueue.QueuedRecord> records) {
             try {
-                records.stream().map(this::convertRecord)
+                records.stream().map(record -> convertRecord(topicPartition, record))
                         .collect(Collectors.groupingBy(InputMessage::getKey))
                         .values()
                         .forEach(groupedMessages -> {
                             Map<String, List<InputMessage>> messagesByType = groupedMessages.stream()
-                                    .peek(message -> log.trace("Received message from topic " + topicPartition.topic() + ": " + message))
+                                    .peek(message -> log.trace("Received message from topic {}: {}", topicPartition.topic(), message))
                                     .collect(Collectors.groupingBy(message -> message.getValue().getType()));
 
                             messagesByType.keySet().forEach(type -> {
                                 final List<InputMessage> messages = messagesByType.get(type);
+
+                                if (messages.isEmpty()) {
+                                    return;
+                                }
 
                                 final Span messageSpan = tracer.spanBuilder("Received messages " + type).startSpan();
 
@@ -168,6 +200,16 @@ public interface KafkaRecordsConsumer {
                                         return;
                                     }
 
+                                    final List<Tag> tags = List.of(
+                                            Tag.of("topic", topicPartition.topic()),
+                                            Tag.of("type", type)
+                                    );
+
+                                    registry.counter(VERTX_KAFKA_CONSUMER_RECORD_TYPE_COUNT, tags).increment(messages.size());
+
+                                    registry.summary(VERTX_KAFKA_CONSUMER_RECORD_LAG_SECONDS, tags)
+                                            .record((System.currentTimeMillis() - messages.get(0).getTimestamp()) / 1000.0);
+
                                     handler.handleSingle(messages)
                                             .subscribeOn(Schedulers.immediate())
                                             .toCompletable()
@@ -178,11 +220,11 @@ public interface KafkaRecordsConsumer {
                             });
                          });
             } catch (Exception e) {
-                throw new KafkaPolling.RecordProcessingException(records.get(0).getRecord());
+                throw new KafkaMessagePolling.RecordProcessingException(records.get(0).getRecord());
             }
         }
 
-        private InputMessage convertRecord(KafkaRecordsQueue.QueuedRecord record) {
+        private InputMessage convertRecord(TopicPartition topicPartition, KafkaRecordsQueue.QueuedRecord record) {
             try {
                 final Payload payload = record.getPayload();
 
@@ -190,9 +232,15 @@ public interface KafkaRecordsConsumer {
 
                 return new InputMessage(record.getRecord().key(), token, payload, record.getRecord().timestamp());
             } catch (Exception e) {
-                log.error("Failed to process record: " + record.getRecord().key());
+                final List<Tag> tags = List.of(
+                        Tag.of("topic", topicPartition.topic())
+                );
 
-                throw new KafkaPolling.RecordProcessingException(record.getRecord());
+                registry.counter(VERTX_KAFKA_CONSUMER_ERROR_COUNT, tags).increment();
+
+                log.error("Failed to convert record: {}", record.getRecord().key());
+
+                throw new KafkaMessagePolling.RecordProcessingException(record.getRecord());
             }
         }
     }

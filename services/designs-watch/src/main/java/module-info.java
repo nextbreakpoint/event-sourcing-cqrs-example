@@ -20,6 +20,7 @@ module com.nextbreakpoint.blueprint.designs.watch {
     requires io.opentelemetry.sdk.common;
     requires io.opentelemetry.exporter.jaeger;
     requires io.opentelemetry.exporter.otlp.trace;
+    requires micrometer.core;
     requires org.jctools.core;
     requires org.yaml.snakeyaml;
     requires kotlin.stdlib;

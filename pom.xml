@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.nextbreakpoint</groupId>
     <artifactId>com.nextbreakpoint.blueprint</artifactId>
-    <version>1.0.4-wip-5fda6682-1697063702</version>
+    <version>1.0.4-wip-c1b33a2b-1697716349</version>
     <packaging>pom</packaging>
     <licenses>
         <license>
@@ -463,6 +463,11 @@
             <dependency>
                 <groupId>com.datastax.oss</groupId>
                 <artifactId>java-driver-core</artifactId>
+                <version>${cassandra-driver-core.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.datastax.oss</groupId>
+                <artifactId>java-driver-metrics-micrometer</artifactId>
                 <version>${cassandra-driver-core.version}</version>
             </dependency>
             <dependency>

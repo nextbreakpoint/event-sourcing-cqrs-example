@@ -91,7 +91,7 @@ public class Initializer {
         RxJavaHooks.setOnComputationScheduler(s -> RxHelper.scheduler(vertx));
         RxJavaHooks.setOnIOScheduler(s -> RxHelper.blockingScheduler(vertx));
 
-        MeterRegistry registry = BackendRegistries.getDefaultNow();
+        final MeterRegistry registry = BackendRegistries.getDefaultNow();
 
         new ClassLoaderMetrics().bindTo(registry);
         new JvmMemoryMetrics().bindTo(registry);

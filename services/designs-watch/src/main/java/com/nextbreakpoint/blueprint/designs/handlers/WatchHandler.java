@@ -64,7 +64,7 @@ public class WatchHandler implements Handler<RoutingContext> {
 
         watcherMap.put(watchKey, watchers);
 
-        log.info("Session created (session = " + sessionId + ", eventId = " + eventId + ")");
+        log.info("Session created (session = {}, eventId = {})", sessionId, eventId);
 
         routingContext.response().setChunked(true);
 
@@ -94,23 +94,23 @@ public class WatchHandler implements Handler<RoutingContext> {
                 updateData.put("session", watcher.getSessionId());
                 updateData.put("revision", watcher.getRevision());
 
-                log.info("Send update notification (session = " + watcher.getSessionId() + ", revision = " + watcher.getRevision() + ")");
+                log.info("Send update notification (session = {}, revision = {})", watcher.getSessionId(), watcher.getRevision());
 
                 routingContext.response().write(makeEvent("update", watcher.getEventId(), updateData.encode()));
             } catch (Exception e) {
-                log.warn("Cannot write message (session = " + sessionId + ")", e);
+                log.warn("Cannot write message (session = {})", sessionId, e);
             }
         });
 
         routingContext.response().closeHandler(nothing -> {
             try {
-                log.info("Session closed (session = " + sessionId + ")");
+                log.info("Session closed (session = {})", sessionId);
 
                 destroyWatcher(watcher);
 
                 consumer.unregister();
             } catch (Exception e) {
-                log.warn("Cannot close session (session = " + sessionId + ")", e);
+                log.warn("Cannot close session (session = {})", sessionId, e);
             }
         });
     }
@@ -130,7 +130,7 @@ public class WatchHandler implements Handler<RoutingContext> {
     }
 
     private void notifyWatcher(Watcher watcher, String revision) {
-        log.info("Notify watcher for session " + watcher.sessionId);
+        log.info("Notify watcher for session {}", watcher.sessionId);
 
         final JsonObject message = makeMessageData(revision);
 
@@ -167,14 +167,14 @@ public class WatchHandler implements Handler<RoutingContext> {
         final String watchKey = notification.getKey();
         final String revision = notification.getRevision();
 
-        log.info("Processing event " + watchKey + " (revision = " + revision +  ")");
+        log.info("Processing event {} (revision = {})", watchKey, revision);
 
         final Set<Watcher> watchers = watcherMap.get(watchKey);
 
         if (watchers != null && watchers.size() > 0) {
             watchers.forEach(watcher -> notifyWatcher(watcher, revision));
         } else {
-            log.info("No watchers found for resource " + watchKey);
+            log.info("No watchers found for resource {}", watchKey);
         }
 
         final Set<Watcher> otherWatchers = watcherMap.get("*");

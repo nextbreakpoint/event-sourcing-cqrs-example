@@ -15,6 +15,7 @@ import com.nextbreakpoint.blueprint.designs.operations.delete.*;
 import com.nextbreakpoint.blueprint.designs.operations.insert.*;
 import com.nextbreakpoint.blueprint.designs.operations.update.*;
 import io.vertx.core.Handler;
+import io.vertx.micrometer.backends.BackendRegistries;
 import io.vertx.rxjava.ext.web.RoutingContext;
 import org.apache.kafka.clients.producer.KafkaProducer;
 
@@ -27,7 +28,7 @@ public class Factory {
                 .withController(new InsertDesignController(
                         new InsertDesignCommandMapper(),
                         new DesignInsertCommandOutputMapper(messageSource),
-                        new KafkaMessageEmitter(producer, topic, 3)
+                        new KafkaMessageEmitter(producer, BackendRegistries.getDefaultNow(), topic, 3)
                 ))
                 .withOutputMapper(new InsertDesignResponseMapper())
                 .onSuccess(new JsonConsumer(202))
@@ -41,7 +42,7 @@ public class Factory {
                 .withController(new UpdateDesignController(
                         new UpdateDesignCommandMapper(),
                         new DesignUpdateCommandOutputMapper(messageSource),
-                        new KafkaMessageEmitter(producer, topic, 3)
+                        new KafkaMessageEmitter(producer, BackendRegistries.getDefaultNow(), topic, 3)
                 ))
                 .withOutputMapper(new UpdateDesignResponseMapper())
                 .onSuccess(new JsonConsumer(202))
@@ -55,7 +56,7 @@ public class Factory {
                 .withController(new DeleteDesignController(
                         new DeleteDesignCommandMapper(),
                         new DesignDeleteCommandOutputMapper(messageSource),
-                        new KafkaMessageEmitter(producer, topic, 3)
+                        new KafkaMessageEmitter(producer, BackendRegistries.getDefaultNow(), topic, 3)
                 ))
                 .withOutputMapper(new DeleteDesignResponseMapper())
                 .onSuccess(new JsonConsumer(202))
@@ -71,7 +72,7 @@ public class Factory {
                         store,
                         new DesignInsertCommandInputMapper(),
                         new DesignInsertRequestedOutputMapper(messageSource),
-                        new KafkaMessageEmitter(producer, topic, 3)
+                        new KafkaMessageEmitter(producer, BackendRegistries.getDefaultNow(), topic, 3)
                 ))
                 .onSuccess(new MessageConsumed())
                 .onFailure(new MessageFailed())
@@ -86,7 +87,7 @@ public class Factory {
                         store,
                         new DesignUpdateCommandInputMapper(),
                         new DesignUpdateRequestedOutputMapper(messageSource),
-                        new KafkaMessageEmitter(producer, topic, 3)
+                        new KafkaMessageEmitter(producer, BackendRegistries.getDefaultNow(), topic, 3)
                 ))
                 .onSuccess(new MessageConsumed())
                 .onFailure(new MessageFailed())
@@ -101,7 +102,7 @@ public class Factory {
                         store,
                         new DesignDeleteCommandInputMapper(),
                         new DesignDeleteRequestedOutputMapper(messageSource),
-                        new KafkaMessageEmitter(producer, topic, 3)
+                        new KafkaMessageEmitter(producer, BackendRegistries.getDefaultNow(), topic, 3)
                 ))
                 .onSuccess(new MessageConsumed())
                 .onFailure(new MessageFailed())

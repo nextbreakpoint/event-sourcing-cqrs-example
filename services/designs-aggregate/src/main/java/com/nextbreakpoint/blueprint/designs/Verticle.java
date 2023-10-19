@@ -14,6 +14,8 @@ import com.nextbreakpoint.blueprint.common.drivers.*;
 import com.nextbreakpoint.blueprint.common.events.*;
 import com.nextbreakpoint.blueprint.common.vertx.*;
 import com.nextbreakpoint.blueprint.designs.persistence.CassandraStore;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.binder.kafka.KafkaClientMetrics;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServerOptions;
@@ -22,6 +24,7 @@ import io.vertx.core.json.jackson.DatabindCodec;
 import io.vertx.ext.healthchecks.Status;
 import io.vertx.ext.web.handler.LoggerFormat;
 import io.vertx.ext.web.openapi.RouterBuilder;
+import io.vertx.micrometer.backends.BackendRegistries;
 import io.vertx.rxjava.core.AbstractVerticle;
 import io.vertx.rxjava.core.Promise;
 import io.vertx.rxjava.core.Vertx;
@@ -57,12 +60,12 @@ import static com.nextbreakpoint.blueprint.designs.Factory.*;
 
 @Log4j2
 public class Verticle extends AbstractVerticle {
-    private KafkaPolling eventsKafkaPolling;
-    private KafkaPolling bufferKafkaPolling;
-    private KafkaPolling renderKafkaPolling0;
-    private KafkaPolling renderKafkaPolling1;
-    private KafkaPolling renderKafkaPolling2;
-    private KafkaPolling renderKafkaPolling3;
+    private KafkaMessagePolling eventsKafkaPolling;
+    private KafkaMessagePolling bufferKafkaPolling;
+    private KafkaMessagePolling renderKafkaPolling0;
+    private KafkaMessagePolling renderKafkaPolling1;
+    private KafkaMessagePolling renderKafkaPolling2;
+    private KafkaMessagePolling renderKafkaPolling3;
 
     public static void main(String[] args) {
         try {
@@ -173,6 +176,8 @@ public class Verticle extends AbstractVerticle {
 
             final String enableAutoCommit = config.getString("kafka_enable_auto_commit", "false");
 
+            final MeterRegistry registry = BackendRegistries.getDefaultNow();
+
             final KafkaProducerConfig producerConfig = KafkaProducerConfig.builder()
                     .withBootstrapServers(bootstrapServers)
                     .withKeySerializer(keySerializer)
@@ -216,7 +221,7 @@ public class Verticle extends AbstractVerticle {
                     .withPort(cassandraPort)
                     .build();
 
-            final Supplier<CqlSession> supplier = () -> CassandraClientFactory.create(cassandraConfig);
+            final Supplier<CqlSession> supplier = () -> CassandraClientFactory.create(cassandraConfig, registry);
 
             final Store store = new CassandraStore(supplier);
 
@@ -251,14 +256,23 @@ public class Verticle extends AbstractVerticle {
 
             renderMessageHandlers.put(TileRenderCompleted.TYPE, createTileRenderCompletedHandler(store, bufferTopic, renderTopicPrefix, kafkaProducer, messageSource));
 
-            eventsKafkaPolling = new KafkaPolling<>(eventsKafkaConsumer, eventsMessageHandlers, KafkaRecordsConsumer.Simple.create(eventsMessageHandlers), KafkaRecordsQueue.Simple.create(), -1, 20);
+            new KafkaClientMetrics(kafkaProducer).bindTo(registry);
+            new KafkaClientMetrics(healthKafkaConsumer).bindTo(registry);
+            new KafkaClientMetrics(eventsKafkaConsumer).bindTo(registry);
+            new KafkaClientMetrics(bufferKafkaConsumer).bindTo(registry);
+            new KafkaClientMetrics(renderKafkaConsumer0).bindTo(registry);
+            new KafkaClientMetrics(renderKafkaConsumer1).bindTo(registry);
+            new KafkaClientMetrics(renderKafkaConsumer2).bindTo(registry);
+            new KafkaClientMetrics(renderKafkaConsumer3).bindTo(registry);
 
-            bufferKafkaPolling = new KafkaPolling<>(bufferKafkaConsumer, bufferMessageHandlers, KafkaRecordsConsumer.Buffered.create(bufferMessageHandlers), KafkaRecordsQueue.Simple.create(), 2500, 100);
+            eventsKafkaPolling = new KafkaMessagePolling<>(eventsKafkaConsumer, eventsMessageHandlers, KafkaMessageConsumer.Simple.create(eventsMessageHandlers, registry), registry, KafkaRecordsQueue.Simple.create(), -1, 20);
 
-            renderKafkaPolling0 = new KafkaPolling<>(renderKafkaConsumer0, renderMessageHandlers, KafkaRecordsConsumer.Simple.create(renderMessageHandlers), KafkaRecordsQueue.Compacted.create(), -1, 10);
-            renderKafkaPolling1 = new KafkaPolling<>(renderKafkaConsumer1, renderMessageHandlers, KafkaRecordsConsumer.Simple.create(renderMessageHandlers), KafkaRecordsQueue.Compacted.create(), -1, 10);
-            renderKafkaPolling2 = new KafkaPolling<>(renderKafkaConsumer2, renderMessageHandlers, KafkaRecordsConsumer.Simple.create(renderMessageHandlers), KafkaRecordsQueue.Compacted.create(), -1, 10);
-            renderKafkaPolling3 = new KafkaPolling<>(renderKafkaConsumer3, renderMessageHandlers, KafkaRecordsConsumer.Simple.create(renderMessageHandlers), KafkaRecordsQueue.Compacted.create(), -1, 10);
+            bufferKafkaPolling = new KafkaMessagePolling<>(bufferKafkaConsumer, bufferMessageHandlers, KafkaMessageConsumer.Buffered.create(bufferMessageHandlers, registry), registry, KafkaRecordsQueue.Simple.create(), 2500, 100);
+
+            renderKafkaPolling0 = new KafkaMessagePolling<>(renderKafkaConsumer0, renderMessageHandlers, KafkaMessageConsumer.Simple.create(renderMessageHandlers, registry), registry, KafkaRecordsQueue.Compacted.create(), -1, 10);
+            renderKafkaPolling1 = new KafkaMessagePolling<>(renderKafkaConsumer1, renderMessageHandlers, KafkaMessageConsumer.Simple.create(renderMessageHandlers, registry), registry, KafkaRecordsQueue.Compacted.create(), -1, 10);
+            renderKafkaPolling2 = new KafkaMessagePolling<>(renderKafkaConsumer2, renderMessageHandlers, KafkaMessageConsumer.Simple.create(renderMessageHandlers, registry), registry, KafkaRecordsQueue.Compacted.create(), -1, 10);
+            renderKafkaPolling3 = new KafkaMessagePolling<>(renderKafkaConsumer3, renderMessageHandlers, KafkaMessageConsumer.Simple.create(renderMessageHandlers, registry), registry, KafkaRecordsQueue.Compacted.create(), -1, 10);
 
             eventsKafkaPolling.startPolling("kafka-polling-topic-" + eventsTopic);
 
@@ -328,7 +342,7 @@ public class Verticle extends AbstractVerticle {
                         vertx.createHttpServer(options)
                                 .requestHandler(mainRouter)
                                 .rxListen(port)
-                                .doOnSuccess(result -> log.info("Service listening on port " + port))
+                                .doOnSuccess(result -> log.info("Service listening on port {}", port))
                                 .doOnError(err -> log.error("Can't create server", err))
                                 .subscribe(result -> promise.complete(), promise::fail);
                     })

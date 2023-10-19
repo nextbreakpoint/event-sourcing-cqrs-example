@@ -17,7 +17,7 @@ public class DesignInsertRequestedInputMapper implements Mapper<InputMessage, De
         try {
             return Json.decodeValue(message.getValue().getData(), DesignInsertRequested.class);
         } catch (DecodeException e) {
-            log.warn("Cannot decode message body: " + message.getValue(), e);
+            log.warn("Cannot decode message body: {}", message.getValue(), e);
             throw new IllegalArgumentException("Message body cannot be decoded");
         }
     }

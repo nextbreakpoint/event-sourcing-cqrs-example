@@ -43,7 +43,7 @@ public class Render {
             Tile nextTile = generateTiles(tile);
 
             while (nextTile != null && bitmap.hasTile(nextTile.getLevel(), nextTile.getRow(), nextTile.getCol())) {
-                log.debug("Skipping tile " + nextTile);
+                log.debug("Skipping tile {}", nextTile);
                 nextTile = generateTiles(nextTile);
             }
 

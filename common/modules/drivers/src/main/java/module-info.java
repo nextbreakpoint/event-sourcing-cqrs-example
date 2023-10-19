@@ -9,6 +9,7 @@ module com.nextbreakpoint.blueprint.common.drivers {
     requires static io.opentelemetry.exporter.jaeger;
     requires static io.opentelemetry.exporter.otlp.trace;
     requires static kafka.clients;
+    requires static micrometer.core;
     requires static com.datastax.oss.driver.core;
     requires static lombok;
     requires static rxjava;

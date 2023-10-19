@@ -83,7 +83,7 @@ public class TileRenderCompletedController implements Controller<InputMessage, V
     private boolean isLateEvent(TileRenderCompleted event, Design design) {
         final boolean value = !event.getCommandId().equals(design.getCommandId());
         if (value) {
-            log.debug("Discard late event " + event);
+            log.debug("Discard late event {}", event);
         }
         return value;
     }

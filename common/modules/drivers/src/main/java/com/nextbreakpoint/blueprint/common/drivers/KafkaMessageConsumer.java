@@ -1,7 +1,6 @@
 package com.nextbreakpoint.blueprint.common.drivers;
 
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
-import com.nextbreakpoint.blueprint.common.core.Payload;
 import com.nextbreakpoint.blueprint.common.core.RxSingleHandler;
 import com.nextbreakpoint.blueprint.common.core.Token;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -27,7 +26,7 @@ import java.util.stream.StreamSupport;
 public interface KafkaMessageConsumer {
     String VERTX_KAFKA_CONSUMER_ERROR_COUNT = "vertx_kafka_consumer_error_count";
     String VERTX_KAFKA_CONSUMER_RECORD_TYPE_COUNT = "vertx_kafka_consumer_record_type_count";
-    String VERTX_KAFKA_CONSUMER_RECORD_TIMESTAMP_SECONDS = "vertx_kafka_consumer_record_timestamp_seconds";
+    String VERTX_KAFKA_CONSUMER_RECORD_LATENCY_SECONDS = "vertx_kafka_consumer_record_latency_seconds";
 
     void consumeRecords(TopicPartition topicPartition, List<KafkaRecordsQueue.QueuedRecord> records);
 
@@ -107,8 +106,8 @@ public interface KafkaMessageConsumer {
 
                     registry.counter(VERTX_KAFKA_CONSUMER_RECORD_TYPE_COUNT, tags).increment();
 
-                    registry.summary(VERTX_KAFKA_CONSUMER_RECORD_TIMESTAMP_SECONDS, tags)
-                            .record(message.getTimestamp() / 1000.0);
+                    registry.summary(VERTX_KAFKA_CONSUMER_RECORD_LATENCY_SECONDS, tags)
+                            .record((System.currentTimeMillis() - message.getTimestamp()) / 1000.0);
 
                     handler.handleSingle(message)
                             .subscribeOn(Schedulers.immediate())
@@ -230,8 +229,8 @@ public interface KafkaMessageConsumer {
 
                     registry.counter(VERTX_KAFKA_CONSUMER_RECORD_TYPE_COUNT, tags).increment(messages.size());
 
-                    registry.summary(VERTX_KAFKA_CONSUMER_RECORD_TIMESTAMP_SECONDS, tags)
-                            .record(messages.get(0).getTimestamp() / 1000.0);
+                    registry.summary(VERTX_KAFKA_CONSUMER_RECORD_LATENCY_SECONDS, tags)
+                            .record((System.currentTimeMillis() - messages.get(0).getTimestamp()) / 1000.0);
 
                     handler.handleSingle(messages)
                             .subscribeOn(Schedulers.immediate())

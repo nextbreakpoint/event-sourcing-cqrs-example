@@ -2382,7 +2382,32 @@ data:
                 },
                 "unit": "cps"
               },
-              "overrides": []
+              "overrides": [
+                {
+                  "__systemRef": "hideSeriesFrom",
+                  "matcher": {
+                    "id": "byNames",
+                    "options": {
+                      "mode": "exclude",
+                      "names": [
+                        "{container=\"designs-render\", topic=\"render-completed-3\", type=\"tile-render-completed-v1\"}"
+                      ],
+                      "prefix": "All except:",
+                      "readOnly": true
+                    }
+                  },
+                  "properties": [
+                    {
+                      "id": "custom.hideFrom",
+                      "value": {
+                        "legend": false,
+                        "tooltip": false,
+                        "viz": true
+                      }
+                    }
+                  ]
+                }
+              ]
             },
             "gridPos": {
               "h": 8,
@@ -2477,7 +2502,32 @@ data:
                 },
                 "unit": "cps"
               },
-              "overrides": []
+              "overrides": [
+                {
+                  "__systemRef": "hideSeriesFrom",
+                  "matcher": {
+                    "id": "byNames",
+                    "options": {
+                      "mode": "exclude",
+                      "names": [
+                        "{container=\"designs-aggregate\", topic=\"buffer\", type=\"tile-render-completed-v1\"}"
+                      ],
+                      "prefix": "All except:",
+                      "readOnly": true
+                    }
+                  },
+                  "properties": [
+                    {
+                      "id": "custom.hideFrom",
+                      "value": {
+                        "legend": false,
+                        "tooltip": false,
+                        "viz": true
+                      }
+                    }
+                  ]
+                }
+              ]
             },
             "gridPos": {
               "h": 8,
@@ -2572,7 +2622,32 @@ data:
                 },
                 "unit": "s"
               },
-              "overrides": []
+              "overrides": [
+                {
+                  "__systemRef": "hideSeriesFrom",
+                  "matcher": {
+                    "id": "byNames",
+                    "options": {
+                      "mode": "exclude",
+                      "names": [
+                        "{container=\"designs-render\", topic=\"render-requested-3\", type=\"tile-render-requested-v1\"}"
+                      ],
+                      "prefix": "All except:",
+                      "readOnly": true
+                    }
+                  },
+                  "properties": [
+                    {
+                      "id": "custom.hideFrom",
+                      "value": {
+                        "legend": false,
+                        "tooltip": false,
+                        "viz": true
+                      }
+                    }
+                  ]
+                }
+              ]
             },
             "gridPos": {
               "h": 8,
@@ -2635,36 +2710,6 @@ data:
               "hide": 0,
               "includeAll": true,
               "multi": true,
-              "name": "instance",
-              "options": [],
-              "query": {
-                "query": "jvm_memory_max_bytes",
-                "refId": "PrometheusVariableQueryEditor-VariableQuery"
-              },
-              "refresh": 1,
-              "regex": "/.*instance=\"(?<instance>[^\"]+):\\d+\".*/",
-              "skipUrlSync": false,
-              "sort": 1,
-              "type": "query"
-            },
-            {
-              "current": {
-                "selected": false,
-                "text": [
-                  "All"
-                ],
-                "value": [
-                  "$__all"
-                ]
-              },
-              "datasource": {
-                "type": "prometheus",
-                "uid": "prometheus"
-              },
-              "definition": "jvm_memory_max_bytes",
-              "hide": 0,
-              "includeAll": true,
-              "multi": true,
               "name": "container",
               "options": [],
               "query": {
@@ -2687,6 +2732,6 @@ data:
         "timezone": "",
         "title": "Platform Dashboard",
         "uid": "pgZwEXP7k",
-        "version": 5,
+        "version": 6,
         "weekStart": ""
       }

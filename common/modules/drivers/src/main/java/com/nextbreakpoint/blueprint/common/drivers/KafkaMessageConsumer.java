@@ -24,9 +24,9 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 public interface KafkaMessageConsumer {
-    String VERTX_KAFKA_CONSUMER_ERROR_COUNT = "vertx_kafka_consumer_error_count";
-    String VERTX_KAFKA_CONSUMER_RECORD_TYPE_COUNT = "vertx_kafka_consumer_record_type_count";
-    String VERTX_KAFKA_CONSUMER_RECORD_LATENCY_SECONDS = "vertx_kafka_consumer_record_latency_seconds";
+    String KAFKA_CONSUMER_ERROR_COUNT = "kafka_consumer_error_count";
+    String KAFKA_CONSUMER_RECORD_TYPE_COUNT = "kafka_consumer_record_type_count";
+    String KAFKA_CONSUMER_RECORD_LATENCY_SECONDS = "kafka_consumer_record_latency_seconds";
 
     void consumeRecords(TopicPartition topicPartition, List<KafkaRecordsQueue.QueuedRecord> records);
 
@@ -104,9 +104,9 @@ public interface KafkaMessageConsumer {
                             Tag.of("type", message.getValue().getType())
                     );
 
-                    registry.counter(VERTX_KAFKA_CONSUMER_RECORD_TYPE_COUNT, tags).increment();
+                    registry.counter(KAFKA_CONSUMER_RECORD_TYPE_COUNT, tags).increment();
 
-                    registry.summary(VERTX_KAFKA_CONSUMER_RECORD_LATENCY_SECONDS, tags)
+                    registry.summary(KAFKA_CONSUMER_RECORD_LATENCY_SECONDS, tags)
                             .record((System.currentTimeMillis() - message.getTimestamp()) / 1000.0);
 
                     handler.handleSingle(message)
@@ -121,7 +121,7 @@ public interface KafkaMessageConsumer {
                         Tag.of("topic", topicPartition.topic())
                 );
 
-                registry.counter(VERTX_KAFKA_CONSUMER_ERROR_COUNT, tags).increment();
+                registry.counter(KAFKA_CONSUMER_ERROR_COUNT, tags).increment();
 
                 log.error("Failed to consume 1 record: {}", record.getRecord().key());
 
@@ -177,7 +177,7 @@ public interface KafkaMessageConsumer {
                         Tag.of("topic", topicPartition.topic())
                 );
 
-                registry.counter(VERTX_KAFKA_CONSUMER_ERROR_COUNT, tags).increment();
+                registry.counter(KAFKA_CONSUMER_ERROR_COUNT, tags).increment();
 
                 log.error("Failed to consume {} records", records.size());
 
@@ -227,9 +227,9 @@ public interface KafkaMessageConsumer {
                             Tag.of("type", type)
                     );
 
-                    registry.counter(VERTX_KAFKA_CONSUMER_RECORD_TYPE_COUNT, tags).increment(messages.size());
+                    registry.counter(KAFKA_CONSUMER_RECORD_TYPE_COUNT, tags).increment(messages.size());
 
-                    registry.summary(VERTX_KAFKA_CONSUMER_RECORD_LATENCY_SECONDS, tags)
+                    registry.summary(KAFKA_CONSUMER_RECORD_LATENCY_SECONDS, tags)
                             .record((System.currentTimeMillis() - messages.get(0).getTimestamp()) / 1000.0);
 
                     handler.handleSingle(messages)

@@ -17,14 +17,14 @@ import java.util.stream.Collectors;
 
 @Log4j2
 public class KafkaMessagePolling<T> {
-    public static final String VERTX_KAFKA_POLLING_ERROR_COUNT = "vertx_kafka_polling_error_count";
-    public static final String VERTX_KAFKA_POLLING_QUEUE_SIZE = "vertx_kafka_polling_queue_size";
-    public static final String VERTX_KAFKA_POLLING_PROCESS_RECORDS_TIME = "vertx_kafka_polling_process_records_time";
-    public static final String VERTX_KAFKA_POLLING_CONSUME_RECORDS_TIME = "vertx_kafka_polling_consume_records_time";
-    public static final String VERTX_KAFKA_POLLING_SUSPEND_PARTITION = "vertx_kafka_polling_suspend_partition_count";
-    public static final String VERTX_KAFKA_POLLING_RESUME_PARTITION = "vertx_kafka_polling_resume_partition_count";
-    public static final String VERTX_KAFKA_POLLING_QUEUE_ADD_RECORD_COUNT = "vertx_kafka_polling_queue_add_record_count";
-    public static final String VERTX_KAFKA_POLLING_QUEUE_DELETE_RECORD_COUNT = "vertx_kafka_polling_queue_delete_record_count";
+    public static final String KAFKA_POLLING_ERROR_COUNT = "kafka_polling_error_count";
+    public static final String KAFKA_POLLING_QUEUE_SIZE = "kafka_polling_queue_size";
+    public static final String KAFKA_POLLING_PROCESS_RECORDS_TIME = "kafka_polling_process_records_time";
+    public static final String KAFKA_POLLING_CONSUME_RECORDS_TIME = "kafka_polling_consume_records_time";
+    public static final String KAFKA_POLLING_SUSPEND_PARTITION = "kafka_polling_suspend_partition_count";
+    public static final String KAFKA_POLLING_RESUME_PARTITION = "kafka_polling_resume_partition_count";
+    public static final String KAFKA_POLLING_QUEUE_ADD_RECORD_COUNT = "kafka_polling_queue_add_record_count";
+    public static final String KAFKA_POLLING_QUEUE_DELETE_RECORD_COUNT = "kafka_polling_queue_delete_record_count";
 
     private final Map<TopicPartition, Long> suspendedPartitions = new HashMap<>();
 
@@ -74,12 +74,12 @@ public class KafkaMessagePolling<T> {
                     if (queue.size() < maxRecords) {
                         enqueueRecords();
 
-                        registry.timer(VERTX_KAFKA_POLLING_PROCESS_RECORDS_TIME, tags)
+                        registry.timer(KAFKA_POLLING_PROCESS_RECORDS_TIME, tags)
                                 .record(this::processRecords);
 
                         Thread.yield();
                     } else {
-                        registry.timer(VERTX_KAFKA_POLLING_PROCESS_RECORDS_TIME, tags)
+                        registry.timer(KAFKA_POLLING_PROCESS_RECORDS_TIME, tags)
                                 .record(this::processRecords);
 
                         try {
@@ -96,7 +96,7 @@ public class KafkaMessagePolling<T> {
                             Tag.of("error", "process_records")
                     );
 
-                    registry.counter(VERTX_KAFKA_POLLING_ERROR_COUNT, tags).increment();
+                    registry.counter(KAFKA_POLLING_ERROR_COUNT, tags).increment();
 
                     log.error("Error occurred while consuming messages", e);
 
@@ -141,7 +141,7 @@ public class KafkaMessagePolling<T> {
                 if (record.value() == null) {
                     log.trace("Skipping tombstone record {} in partition ({})", record.key(), topicPartition);
 
-                    registry.counter(VERTX_KAFKA_POLLING_QUEUE_DELETE_RECORD_COUNT, tags).increment();
+                    registry.counter(KAFKA_POLLING_QUEUE_DELETE_RECORD_COUNT, tags).increment();
 
                     queue.deleteRecord(new KafkaRecordsQueue.QueuedRecord(record, null));
 
@@ -160,7 +160,7 @@ public class KafkaMessagePolling<T> {
                     timestamp = System.currentTimeMillis();
                 }
 
-                registry.counter(VERTX_KAFKA_POLLING_QUEUE_ADD_RECORD_COUNT, tags).increment();
+                registry.counter(KAFKA_POLLING_QUEUE_ADD_RECORD_COUNT, tags).increment();
 
                 queue.addRecord(new KafkaRecordsQueue.QueuedRecord(record, payload));
             } catch (Exception e) {
@@ -169,7 +169,7 @@ public class KafkaMessagePolling<T> {
                         Tag.of("error", "enqueue_records")
                 );
 
-                registry.counter(VERTX_KAFKA_POLLING_ERROR_COUNT, tags).increment();
+                registry.counter(KAFKA_POLLING_ERROR_COUNT, tags).increment();
 
                 log.error("Failed to process record: " + record.key());
 
@@ -179,7 +179,7 @@ public class KafkaMessagePolling<T> {
     }
 
     private void processRecords() {
-        registry.summary(VERTX_KAFKA_POLLING_QUEUE_SIZE, tags).record(queue.size());
+        registry.summary(KAFKA_POLLING_QUEUE_SIZE, tags).record(queue.size());
 
         if (queue.size() > 0 && System.currentTimeMillis() - timestamp > latency) {
             log.trace("Received {} message{}", queue.size(), queue.size() > 0 ? "s" : "");
@@ -193,7 +193,7 @@ public class KafkaMessagePolling<T> {
                             Tag.of("error", "consume_records")
                     );
 
-                    registry.counter(VERTX_KAFKA_POLLING_ERROR_COUNT, tags).increment();
+                    registry.counter(KAFKA_POLLING_ERROR_COUNT, tags).increment();
 
                     suspendPartition(topicPartition, e.getRecord().offset());
                 }
@@ -207,7 +207,7 @@ public class KafkaMessagePolling<T> {
 
     private void consumeRecords(TopicPartition topicPartition, List<KafkaRecordsQueue.QueuedRecord> records) {
         try {
-            registry.timer(VERTX_KAFKA_POLLING_CONSUME_RECORDS_TIME, tags)
+            registry.timer(KAFKA_POLLING_CONSUME_RECORDS_TIME, tags)
                     .record(() -> recordsConsumer.consumeRecords(topicPartition, records));
         } catch (RecordProcessingException e) {
             if (queue instanceof KafkaRecordsQueue.Compacted) {
@@ -243,14 +243,14 @@ public class KafkaMessagePolling<T> {
         kafkaConsumer.pause(List.of(topicPartition));
         kafkaConsumer.seek(topicPartition, offset);
         suspendedPartitions.put(topicPartition, System.currentTimeMillis());
-        registry.counter(VERTX_KAFKA_POLLING_SUSPEND_PARTITION, tags).increment();
+        registry.counter(KAFKA_POLLING_SUSPEND_PARTITION, tags).increment();
     }
 
     private void resumePartitions(List<TopicPartition> topicPartitions) {
         if (topicPartitions.size() > 0) {
             kafkaConsumer.resume(topicPartitions);
             topicPartitions.forEach(suspendedPartitions::remove);
-            registry.counter(VERTX_KAFKA_POLLING_RESUME_PARTITION, tags).increment(suspendedPartitions.size());
+            registry.counter(KAFKA_POLLING_RESUME_PARTITION, tags).increment(suspendedPartitions.size());
         }
     }
 

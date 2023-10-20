@@ -30,8 +30,8 @@ import java.util.stream.Collectors;
 
 @Log4j2
 public class KafkaMessageEmitter implements MessageEmitter {
-    public static final String VERTX_KAFKA_EMITTER_ERROR_COUNT = "vertx_kafka_emitter_error_count";
-    public static final String VERTX_KAFKA_EMITTER_RECORD_TYPE_COUNT = "vertx_kafka_emitter_record_type_count";
+    public static final String KAFKA_EMITTER_ERROR_COUNT = "kafka_emitter_error_count";
+    public static final String KAFKA_EMITTER_RECORD_TYPE_COUNT = "kafka_emitter_record_type_count";
 
     private final KafkaProducer<String, String> producer;
     private MeterRegistry registry;
@@ -89,7 +89,7 @@ public class KafkaMessageEmitter implements MessageEmitter {
                         Tag.of("type", payload.getType())
                 );
 
-                registry.counter(VERTX_KAFKA_EMITTER_RECORD_TYPE_COUNT, recordTags).increment();
+                registry.counter(KAFKA_EMITTER_RECORD_TYPE_COUNT, recordTags).increment();
 
                 return producer.send(record).get(2000, TimeUnit.SECONDS);
             } finally {
@@ -100,7 +100,7 @@ public class KafkaMessageEmitter implements MessageEmitter {
                     Tag.of("topic", topicName)
             );
 
-            registry.counter(VERTX_KAFKA_EMITTER_ERROR_COUNT, tags).increment();
+            registry.counter(KAFKA_EMITTER_ERROR_COUNT, tags).increment();
 
             throw new RuntimeException(e);
         }

@@ -24,6 +24,7 @@ import com.nextbreakpoint.blueprint.designs.persistence.dto.ListDesignsResponse;
 import com.nextbreakpoint.blueprint.designs.persistence.dto.LoadDesignRequest;
 import com.nextbreakpoint.blueprint.designs.persistence.dto.LoadDesignResponse;
 import io.vertx.core.Handler;
+import io.vertx.micrometer.backends.BackendRegistries;
 import io.vertx.rxjava.ext.web.RoutingContext;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import software.amazon.awssdk.services.s3.S3AsyncClient;
@@ -71,7 +72,7 @@ public class Factory {
                         store,
                         new DesignDocumentUpdateRequestedInputMapper(),
                         new DesignDocumentUpdateCompletedOutputMapper(messageSource),
-                        new KafkaMessageEmitter(producer, topic, 3)
+                        new KafkaMessageEmitter(producer, BackendRegistries.getDefaultNow(), topic, 3)
                 ))
                 .onSuccess(new MessageConsumed())
                 .onFailure(new MessageFailed())
@@ -86,7 +87,7 @@ public class Factory {
                         store,
                         new DesignDocumentDeleteRequestedInputMapper(),
                         new DesignDocumentDeleteCompletedOutputMapper(messageSource),
-                        new KafkaMessageEmitter(producer, topic, 3)
+                        new KafkaMessageEmitter(producer, BackendRegistries.getDefaultNow(), topic, 3)
                 ))
                 .onSuccess(new MessageConsumed())
                 .onFailure(new MessageFailed())

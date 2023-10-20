@@ -9,6 +9,7 @@ import com.nextbreakpoint.blueprint.designs.aggregate.DesignAggregate;
 import com.nextbreakpoint.blueprint.designs.aggregate.DesignStateStrategy;
 import com.nextbreakpoint.blueprint.designs.common.Render;
 import com.nextbreakpoint.blueprint.designs.controllers.*;
+import io.vertx.micrometer.backends.BackendRegistries;
 import org.apache.kafka.clients.producer.KafkaProducer;
 
 import java.util.List;
@@ -25,8 +26,8 @@ public class Factory {
                     new DesignInsertRequestedInputMapper(),
                     new DesignAggregateUpdatedOutputMapper(messageSource),
                     new TileRenderRequestedOutputMapper(messageSource, Render::createRenderKey),
-                    new KafkaMessageEmitter(producer, eventsTopic, 3),
-                    new KafkaMessageEmitter(producer, renderTopic, 3)
+                    new KafkaMessageEmitter(producer, BackendRegistries.getDefaultNow(), eventsTopic, 3),
+                    new KafkaMessageEmitter(producer, BackendRegistries.getDefaultNow(), renderTopic, 3)
                 ))
                 .onSuccess(new MessageConsumed())
                 .onFailure(new MessageFailed())
@@ -42,8 +43,8 @@ public class Factory {
                     new DesignUpdateRequestedInputMapper(),
                     new DesignAggregateUpdatedOutputMapper(messageSource),
                     new TileRenderRequestedOutputMapper(messageSource, Render::createRenderKey),
-                    new KafkaMessageEmitter(producer, eventsTopic, 3),
-                    new KafkaMessageEmitter(producer, renderTopic, 3)
+                    new KafkaMessageEmitter(producer, BackendRegistries.getDefaultNow(), eventsTopic, 3),
+                    new KafkaMessageEmitter(producer, BackendRegistries.getDefaultNow(), renderTopic, 3)
                 ))
                 .onSuccess(new MessageConsumed())
                 .onFailure(new MessageFailed())
@@ -59,8 +60,8 @@ public class Factory {
                     new DesignDeleteRequestedInputMapper(),
                     new DesignAggregateUpdatedOutputMapper(messageSource),
                     new TileRenderRequestedOutputMapper(messageSource, Render::createRenderKey),
-                    new KafkaMessageEmitter(producer, eventsTopic, 3),
-                    new KafkaMessageEmitter(producer, renderTopic, 3)
+                    new KafkaMessageEmitter(producer, BackendRegistries.getDefaultNow(), eventsTopic, 3),
+                    new KafkaMessageEmitter(producer, BackendRegistries.getDefaultNow(), renderTopic, 3)
                 ))
                 .onSuccess(new MessageConsumed())
                 .onFailure(new MessageFailed())
@@ -75,7 +76,7 @@ public class Factory {
                     new DesignAggregateUpdatedInputMapper(),
                     new DesignDocumentUpdateRequestedOutputMapper(messageSource),
                     new DesignDocumentDeleteRequestedOutputMapper(messageSource),
-                    new KafkaMessageEmitter(producer, topic, 3)
+                    new KafkaMessageEmitter(producer, BackendRegistries.getDefaultNow(), topic, 3)
                 ))
                 .onSuccess(new MessageConsumed())
                 .onFailure(new MessageFailed())
@@ -90,7 +91,7 @@ public class Factory {
                     new DesignAggregate(store, new DesignStateStrategy()),
                     new TileRenderCompletedInputMapper(),
                     new TilesRenderedOutputMapper(messageSource),
-                    new KafkaMessageEmitter(producer, topic, 3)
+                    new KafkaMessageEmitter(producer, BackendRegistries.getDefaultNow(), topic, 3)
                 ))
                 .onSuccess(new MessagesConsumed())
                 .onFailure(new MessagesFailed())
@@ -106,8 +107,8 @@ public class Factory {
                         new TileRenderCompletedInputMapper(),
                         new TileRenderCompletedOutputMapper(messageSource),
                         new TileRenderRequestedOutputMapper(messageSource, Render::createRenderKey),
-                        new KafkaMessageEmitter(producer, bufferTopic, 3),
-                        new KafkaMessageEmitter(producer, renderTopic, 3)
+                        new KafkaMessageEmitter(producer, BackendRegistries.getDefaultNow(), bufferTopic, 3),
+                        new KafkaMessageEmitter(producer, BackendRegistries.getDefaultNow(), renderTopic, 3)
                 ))
                 .onSuccess(new MessageConsumed())
                 .onFailure(new MessageFailed())
@@ -122,7 +123,7 @@ public class Factory {
                         new DesignAggregate(store, new DesignStateStrategy()),
                         new TilesRenderedInputMapper(),
                         new DesignAggregateUpdatedOutputMapper(messageSource),
-                        new KafkaMessageEmitter(producer, eventsTopic, 3)
+                        new KafkaMessageEmitter(producer, BackendRegistries.getDefaultNow(), eventsTopic, 3)
                 ))
                 .onSuccess(new MessageConsumed())
                 .onFailure(new MessageFailed())

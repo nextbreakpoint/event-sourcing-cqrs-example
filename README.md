@@ -217,7 +217,7 @@ Minikube is the recommended environment for testing the deployment of the servic
 
 Setup Minikube:
 
-    minikube start --vm-driver=hyperkit --cpus 8 --memory 49152m --disk-size 64g --kubernetes-version=v1.27.6
+    minikube start --vm-driver=hyperkit --cpus 8 --memory 49152m --disk-size 128g --kubernetes-version=v1.27.6
 
 Create alias (unless you already have kubectl installed):
 
@@ -227,15 +227,21 @@ Create namespaces:
 
     ./scripts/kube-create-namespaces.sh
 
-Create volumes:
-
-    kubectl apply -f scripts/volumes.yaml
-
 Install addons:
 
     minikube addons enable metrics-server
     minikube addons enable dashboard
     minikube addons enable ingress
+
+Install Hostpath Provisioner:
+
+    kubectl create -f https://raw.githubusercontent.com/kubevirt/hostpath-provisioner-operator/main/deploy/namespace.yaml
+    kubectl create -f https://raw.githubusercontent.com/kubevirt/hostpath-provisioner-operator/main/deploy/webhook.yaml -n hostpath-provisioner
+    kubectl create -f https://raw.githubusercontent.com/kubevirt/hostpath-provisioner-operator/main/deploy/operator.yaml -n hostpath-provisioner
+
+Create volumes:
+
+    kubectl apply -f scripts/volumes.yaml
 
 Load Docker images required for running platform:
 
@@ -310,13 +316,25 @@ Expose platform:
 
     ./scripts/kube-expose-platform.sh
 
+Wait until Kafka is ready:
+
+    ./scripts/wait-for.sh --timeout=60 --command="kubectl -n platform logs --tail=5000 -l component=kafka | grep 'started (kafka.server.KafkaServer)'"
+
 Create Kafka topics:
 
     ./scripts/kube-create-topics.sh
 
+Wait until Cassandra is ready:
+
+    ./scripts/wait-for.sh --timeout=60 --command="kubectl -n platform logs --tail=100 -l component=cassandra | grep 'Starting listening for CQL'"
+
 Create Cassandra tables:
 
     kubectl -n platform exec $(kubectl -n platform get pod -l component=cassandra -o json | jq -r '.items[0].metadata.name') -- cqlsh -u cassandra -p cassandra < scripts/init.cql  
+
+Wait until Elasticsearch is ready:
+
+    ./scripts/wait-for.sh --timeout=60 --command="kubectl -n platform logs --tail=100 -l component=elasticsearch | grep '\"message\": \"started\"'"
 
 Create Elasticsearch index:
 
@@ -344,19 +362,23 @@ Create monitoring resources:
 
 Scale services:
 
-    kubectl -n services scale deployment designs-query --replicas=2
-    kubectl -n services scale deployment designs-aggregate --replicas=2
-    kubectl -n services scale deployment designs-watch --replicas=2
     kubectl -n services scale deployment designs-render --replicas=4
+    kubectl -n services scale deployment designs-query --replicas=2
+    kubectl -n services scale deployment designs-watch --replicas=2
+    kubectl -n services scale deployment designs-aggregate --replicas=2
     kubectl -n services scale deployment frontend --replicas=2
+
+Alternatively configure autoscaling:
+
+    kubectl -n services apply -f scripts/services-autoscaling.yaml
 
 Scale platform:
 
     kubectl -n platform scale deployment nginx --replicas=2
 
-Configure autoscaling:
+Alternatively configure autoscaling:
 
-    kubectl -n services apply -f scripts/services-autoscaling.yaml
+    kubectl -n platform apply -f scripts/platform-autoscaling.yaml
 
 Open application:
 

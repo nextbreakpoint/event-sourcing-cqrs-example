@@ -10,6 +10,6 @@ import java.util.function.BiConsumer;
 public class MessagesFailed implements BiConsumer<List<InputMessage>, Throwable> {
     @Override
     public void accept(List<InputMessage> messages, Throwable error) {
-        log.error("An error occurred while consuming " + messages.size() + " " + (messages.size() > 1 ? "messages" : "message"), error);
+        log.error("An error occurred while consuming {} message{}", messages.size(), messages.size() > 1 ? "s" : "", error);
     }
 }

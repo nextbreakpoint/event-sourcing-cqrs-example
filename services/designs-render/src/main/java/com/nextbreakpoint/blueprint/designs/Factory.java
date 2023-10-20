@@ -14,6 +14,7 @@ import com.nextbreakpoint.blueprint.designs.operations.download.*;
 import com.nextbreakpoint.blueprint.designs.operations.upload.*;
 import com.nextbreakpoint.blueprint.designs.operations.validate.*;
 import io.vertx.core.Handler;
+import io.vertx.micrometer.backends.BackendRegistries;
 import io.vertx.rxjava.core.WorkerExecutor;
 import io.vertx.rxjava.ext.web.RoutingContext;
 import org.apache.kafka.clients.producer.KafkaProducer;
@@ -59,7 +60,7 @@ public class Factory {
                 .withController(new TileRenderRequestedController(
                         new TileRenderRequestedInputMapper(),
                         new TileRenderCompletedOutputMapper(messageSource, Render::createRenderKey),
-                        new KafkaMessageEmitter(producer, topic, 3),
+                        new KafkaMessageEmitter(producer, BackendRegistries.getDefaultNow(), topic, 3),
                         executor,
                         new S3Driver(s3AsyncClient, bucket),
                         new TileRenderer()

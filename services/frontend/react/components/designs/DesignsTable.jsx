@@ -3,30 +3,27 @@ import PropTypes from 'prop-types'
 import classNames from 'classnames'
 import FormData from 'form-data'
 
-import { withStyles } from '@material-ui/core/styles'
-import { lighten } from '@material-ui/core/styles/colorManipulator'
+import Table from '@mui/material/Table'
+import TableBody from '@mui/material/TableBody'
+import TableCell from '@mui/material/TableCell'
+import TableHead from '@mui/material/TableHead'
+import TablePagination from '@mui/material/TablePagination'
+import TableRow from '@mui/material/TableRow'
+import TableSortLabel from '@mui/material/TableSortLabel'
+import Toolbar from '@mui/material/Toolbar'
+import Typography from '@mui/material/Typography'
+import Paper from '@mui/material/Paper'
+import Checkbox from '@mui/material/Checkbox'
+import IconButton from '@mui/material/IconButton'
+import ButtonBase from '@mui/material/ButtonBase'
+import Tooltip from '@mui/material/Tooltip'
+import Input from '@mui/material/Input'
 
-import Table from '@material-ui/core/Table'
-import TableBody from '@material-ui/core/TableBody'
-import TableCell from '@material-ui/core/TableCell'
-import TableHead from '@material-ui/core/TableHead'
-import TablePagination from '@material-ui/core/TablePagination'
-import TableRow from '@material-ui/core/TableRow'
-import TableSortLabel from '@material-ui/core/TableSortLabel'
-import Toolbar from '@material-ui/core/Toolbar'
-import Typography from '@material-ui/core/Typography'
-import Paper from '@material-ui/core/Paper'
-import Checkbox from '@material-ui/core/Checkbox'
-import IconButton from '@material-ui/core/IconButton'
-import ButtonBase from '@material-ui/core/ButtonBase'
-import Tooltip from '@material-ui/core/Tooltip'
-import Input from '@material-ui/core/Input'
-
-import AddIcon from '@material-ui/icons/Add'
-import EditIcon from '@material-ui/icons/Edit'
-import DeleteIcon from '@material-ui/icons/Delete'
-import UploadIcon from '@material-ui/icons/ArrowUpward'
-import DownloadIcon from '@material-ui/icons/ArrowDownward'
+import AddIcon from '@mui/icons-material/Add'
+import EditIcon from '@mui/icons-material/Edit'
+import DeleteIcon from '@mui/icons-material/Delete'
+import UploadIcon from '@mui/icons-material/ArrowUpward'
+import DownloadIcon from '@mui/icons-material/ArrowDownward'
 
 import { connect } from 'react-redux'
 
@@ -112,7 +109,7 @@ let EnhancedTableHead = class EnhancedTableHead extends React.Component {
 
     return (
       <TableHead>
-        <TableRow>
+        <TableRow className={classNames({["highlight"]: role == 'admin' && numSelected > 0 })}>
           <TableCell padding="checkbox">
             {role == 'admin' && <Checkbox
               indeterminate={numSelected > 0 && numSelected < rowCount}
@@ -172,56 +169,24 @@ EnhancedTableHead.propTypes = {
   role: PropTypes.string.isRequired
 }
 
-const toolbarStyles = theme => ({
-  root: {
-    paddingRight: theme.spacing.unit
-  },
-  highlight:
-    theme.palette.type === 'light'
-      ? {
-          color: theme.palette.secondary.main,
-          backgroundColor: lighten(theme.palette.secondary.light, 0.85)
-        }
-      : {
-          color: theme.palette.text.primary,
-          backgroundColor: theme.palette.secondary.dark
-        },
-  spacer: {
-    flex: '1 1 auto'
-  },
-  actions: {
-    color: theme.palette.text.secondary
-  },
-  title: {
-    flex: '0 0 auto'
-  },
-  uploadFile: {
-    display: 'none'
-  }
-})
-
 let EnhancedTableToolbar = props => {
-  const { role, numSelected, classes, onDownload, onUpload, onCreate, onDelete, onModify } = props
+  const { role, numSelected, onDownload, onUpload, onCreate, onDelete, onModify } = props
 
   return (
-    <Toolbar
-      className={classNames(classes.root, {
-        [classes.highlight]: role == 'admin' && numSelected > 0,
-      })}
-    >
-      <div className={classes.title}>
+    <Toolbar className={classNames("toolbar", {["highlight"]: role == 'admin' && numSelected > 0 })}>
+      <div className="title">
         {role == 'admin' && numSelected > 0 && (
           <Typography color="inherit" variant="subheading">
             {numSelected} selected
           </Typography>
         )}
       </div>
-      <div className={classes.spacer} />
+      <div className="spacer" />
       {role == 'admin' && (
-          <div className={classes.actions}>
+          <div className="actions">
             <Tooltip title="Upload">
               <label htmlFor="uploadFile">
-                  <Input className={classes.uploadFile} id="uploadFile" accept="application/zip" type="file" onChange={onUpload} />
+                  <Input className="upload-file" id="uploadFile" accept="application/zip" type="file" onChange={onUpload} />
                   <IconButton aria-label="Upload" component="span">
                     <UploadIcon />
                   </IconButton>
@@ -258,7 +223,6 @@ let EnhancedTableToolbar = props => {
 }
 
 EnhancedTableToolbar.propTypes = {
-  classes: PropTypes.object.isRequired,
   numSelected: PropTypes.number.isRequired,
   onUpload: PropTypes.func,
   onCreate: PropTypes.func,
@@ -267,19 +231,7 @@ EnhancedTableToolbar.propTypes = {
   role: PropTypes.string
 }
 
-EnhancedTableToolbar = withStyles(toolbarStyles)(EnhancedTableToolbar)
-
-const styles = theme => ({
-  root: {
-    width: '100%'
-  },
-  table: {
-    width: '100%'
-  },
-  image: {
-    borderRadius: '1em'
-  }
-})
+EnhancedTableToolbar = EnhancedTableToolbar
 
 let EnhancedTable = class EnhancedTable extends React.Component {
   handleRequestSort = (event, property) => {
@@ -481,13 +433,13 @@ let EnhancedTable = class EnhancedTable extends React.Component {
   isSelected = id => this.props.selected.indexOf(id) !== -1
 
   render() {
-    const { classes, config, designs, account, order, orderBy, selected, rowsPerPage, page, total } = this.props
+    const { config, designs, account, order, orderBy, selected, rowsPerPage, page, total } = this.props
     const emptyRows = 0 //rowsPerPage - Math.min(rowsPerPage, designs.length - page * rowsPerPage)
 
     return (
-      <Paper className={classes.root} square={true}>
+      <Paper className="designs" square={true}>
         <EnhancedTableToolbar role={account.role} numSelected={selected.length} onDownload={this.handleDownload} onUpload={this.handleUpload} onCreate={this.props.handleShowCreateDialog} onDelete={this.props.handleShowDeleteDialog} onModify={this.handleModify}/>
-          <Table className={classes.table} aria-labelledby="tableTitle">
+          <Table className="table" aria-labelledby="tableTitle">
             <EnhancedTableHead
               numSelected={selected.length}
               order={order}
@@ -517,7 +469,7 @@ let EnhancedTable = class EnhancedTable extends React.Component {
                         <ButtonBase
                                 focusRipple
                                 key={design.uuid}
-                                focusVisibleClassName={classes.focusVisible}
+                                focusVisibleClassName="focusVisible"
                                 style={{
                                   width: 256,
                                   height: 256,
@@ -526,7 +478,7 @@ let EnhancedTable = class EnhancedTable extends React.Component {
                                 }}
                               >
                             <a href={"/admin/designs/" + design.uuid + ".html"}>
-                                <img className={classes.image} width="256" height="256" src={config.api_url + "/v1/designs/" + design.uuid + "/0/0/0/256.png?draft=true&t=" + design.checksum + "&r=" + design.preview_percentage}/>
+                                <img className="image" width="256" height="256" src={config.api_url + "/v1/designs/" + design.uuid + "/0/0/0/256.png?draft=true&t=" + design.checksum + "&r=" + design.preview_percentage}/>
                             </a>
                         </ButtonBase>
                       </TableCell>
@@ -599,9 +551,7 @@ EnhancedTable.propTypes = {
     order: PropTypes.string,
     orderBy: PropTypes.string,
     page: PropTypes.number,
-    rowsPerPage: PropTypes.number,
-    classes: PropTypes.object.isRequired,
-    theme: PropTypes.object.isRequired
+    rowsPerPage: PropTypes.number
 }
 
 const mapStateToProps = state => ({
@@ -650,4 +600,4 @@ const mapDispatchToProps = dispatch => ({
     }
 })
 
-export default withStyles(styles, { withTheme: true })(connect(mapStateToProps, mapDispatchToProps)(EnhancedTable))
+export default connect(mapStateToProps, mapDispatchToProps)(EnhancedTable)

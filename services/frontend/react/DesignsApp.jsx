@@ -11,16 +11,22 @@ import Account from './components/shared/Account'
 import Designs from './components/designs/Designs'
 import DesignsPage from './components/designs/DesignsPage'
 
+import { ThemeProvider, createMuiTheme } from '@mui/material/styles';
+
+const theme = createMuiTheme();
+
 const store = createStore(reducers)
 
 ReactDOM.render(
     <Provider store={store}>
         <Config>
-            <Account>
-                <Designs>
-                    <DesignsPage/>
-                </Designs>
-            </Account>
+            <ThemeProvider theme={theme}>
+                <Account>
+                    <Designs>
+                        <DesignsPage/>
+                    </Designs>
+                </Account>
+            </ThemeProvider>
         </Config>
     </Provider>,
     document.querySelector('#app')

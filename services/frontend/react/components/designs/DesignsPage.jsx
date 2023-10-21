@@ -6,24 +6,21 @@ import Footer from '../shared/Footer'
 import DesignForm from '../shared/DesignForm'
 import DesignsTable from './DesignsTable'
 
-import { withStyles } from '@material-ui/core/styles'
+import Button from '@mui/material/Button'
+import Grid from '@mui/material/Grid'
+import Dialog from '@mui/material/Dialog'
+import DialogActions from '@mui/material/DialogActions'
+import DialogContent from '@mui/material/DialogContent'
+import DialogTitle from '@mui/material/DialogTitle'
+import Slide from '@mui/material/Slide'
+import Fade from '@mui/material/Fade'
+import Snackbar from '@mui/material/Snackbar'
+import IconButton from '@mui/material/IconButton'
 
-import CssBaseline from '@material-ui/core/CssBaseline'
-import Button from '@material-ui/core/Button'
-import Grid from '@material-ui/core/Grid'
-import Dialog from '@material-ui/core/Dialog'
-import DialogActions from '@material-ui/core/DialogActions'
-import DialogContent from '@material-ui/core/DialogContent'
-import DialogTitle from '@material-ui/core/DialogTitle'
-import Slide from '@material-ui/core/Slide'
-import Fade from '@material-ui/core/Fade'
-import Snackbar from '@material-ui/core/Snackbar'
-import IconButton from '@material-ui/core/IconButton'
-
-import AddIcon from '@material-ui/icons/Add'
-import EditIcon from '@material-ui/icons/Edit'
-import DeleteIcon from '@material-ui/icons/Delete'
-import CloseIcon from '@material-ui/icons/Close'
+import AddIcon from '@mui/icons-material/Add'
+import EditIcon from '@mui/icons-material/Edit'
+import DeleteIcon from '@mui/icons-material/Delete'
+import CloseIcon from '@mui/icons-material/Close'
 
 import { connect } from 'react-redux'
 
@@ -233,7 +230,6 @@ let DesignsPage = class DesignsPage extends React.Component {
 
         return (
             <React.Fragment>
-                <CssBaseline />
                 <Grid container justify="space-between" alignItems="center">
                     <Grid item xs={12}>
                         <Header landing={'/admin/designs.html'} titleText={"Fractals"} browseLink={"/browse/designs.html"} browseText={"The Beauty of Chaos"}/>
@@ -246,7 +242,7 @@ let DesignsPage = class DesignsPage extends React.Component {
                     </Grid>
                 </Grid>
                 {this.props.account.role == 'admin' && (
-                    <Dialog className={this.props.classes.dialog} open={this.props.show_create_design} onClose={this.props.handleHideCreateDialog} scroll={"paper"} TransitionComponent={SlideTransition}>
+                    <Dialog className="dialog" open={this.props.show_create_design} onClose={this.props.handleHideCreateDialog} scroll={"paper"} TransitionComponent={SlideTransition}>
                         <DialogTitle>Create New Design</DialogTitle>
                         <DialogContent>
 {/*                             <Grid container xs={12} justify="space-between" alignItems="center" className="container"> */}
@@ -272,7 +268,7 @@ let DesignsPage = class DesignsPage extends React.Component {
                     </Dialog>
                 )}
                 {this.props.account.role == 'admin' && (
-                    <Dialog className={this.props.classes.dialog} open={this.props.show_delete_designs} onClose={this.props.handleHideConfirmDelete} scroll={"paper"} TransitionComponent={FadeTransition}>
+                    <Dialog className="dialog" open={this.props.show_delete_designs} onClose={this.props.handleHideConfirmDelete} scroll={"paper"} TransitionComponent={FadeTransition}>
                         <DialogTitle>Delete Designs</DialogTitle>
                         <DialogContent>
                             {this.props.selected.length == 1 ? (<p>Do you want to delete {this.props.selected.length} item?</p>) : (<p>Do you want to delete {this.props.selected.length} items?</p>)}
@@ -315,18 +311,6 @@ let DesignsPage = class DesignsPage extends React.Component {
     }
 }
 
-const styles = theme => ({
-  fabcontainer: {
-    position: 'fixed',
-    zIndex: 1000,
-    bottom: theme.spacing.unit * 2,
-    textAlign: 'center'
-  },
-  fab: {
-    margin: theme.spacing.unit
-  }
-})
-
 DesignsPage.propTypes = {
     config: PropTypes.object.isRequired,
     account: PropTypes.object.isRequired,
@@ -338,9 +322,7 @@ DesignsPage.propTypes = {
     show_error_message: PropTypes.bool.isRequired,
     error_message: PropTypes.string.isRequired,
     uploaded_design_present: PropTypes.bool.isRequired,
-    uploaded_design: PropTypes.object.isRequired,
-    classes: PropTypes.object.isRequired,
-    theme: PropTypes.object.isRequired
+    uploaded_design: PropTypes.object.isRequired
 }
 
 const mapStateToProps = state => ({
@@ -378,4 +360,4 @@ const mapDispatchToProps = dispatch => ({
     }
 })
 
-export default withStyles(styles, { withTheme: true })(connect(mapStateToProps, mapDispatchToProps)(DesignsPage))
+export default connect(mapStateToProps, mapDispatchToProps)(DesignsPage)

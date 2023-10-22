@@ -1,5 +1,5 @@
 import React from 'react'
-import ReactDOM from 'react-dom'
+import { createRoot } from 'react-dom/client';
 
 import { Provider } from 'react-redux'
 import { createStore } from 'redux'
@@ -11,13 +11,15 @@ import Account from './components/shared/Account'
 import Designs from './components/designs/Designs'
 import DesignsPage from './components/designs/DesignsPage'
 
-import { ThemeProvider, createMuiTheme } from '@mui/material/styles';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
 
-const theme = createMuiTheme();
+const theme = createTheme();
 
 const store = createStore(reducers)
 
-ReactDOM.render(
+const root = createRoot(document.getElementById('app'));
+
+root.render(
     <Provider store={store}>
         <Config>
             <ThemeProvider theme={theme}>
@@ -28,6 +30,5 @@ ReactDOM.render(
                 </Account>
             </ThemeProvider>
         </Config>
-    </Provider>,
-    document.querySelector('#app')
+    </Provider>
 )

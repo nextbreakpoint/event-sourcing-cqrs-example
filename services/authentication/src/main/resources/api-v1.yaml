@@ -7,12 +7,47 @@ externalDocs:
   description: Find out more about Swagger
   url: http://swagger.io
 servers:
-  - url: http://localhost/v1
+  - url: http://localhost
 tags:
   - name: authentication
     description: Everything about authentication
 paths:
-  /auth/signin/*:
+  /apidocs:
+    get:
+      operationId: apidocs
+      responses:
+        200:
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+  /health:
+    get:
+      operationId: health
+      responses:
+        200:
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+  /metrics:
+    get:
+      operationId: metrics
+      responses:
+        200:
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+  /v1/auth/signin/*:
+    options:
+      operationId: signInOptions
+      responses:
+        204:
+          description: No Content
     get:
       tags:
         - authentication
@@ -21,26 +56,24 @@ paths:
       responses:
         302:
           description: Redirect to authentication page
-          content: {}
         303:
           description: User authenticated. Redirect to landing page
-          content: {}
         400:
           description: Invalid authorization
-          content: {}
         401:
           description: Missing authorization
-          content: {}
         403:
           description: User not authorized
-          content: {}
         405:
           description: Method not allowed
-          content: {}
         500:
           description: Failed to authenticate user
-          content: {}
-  /auth/signout/*:
+  /v1/auth/signout/*:
+    options:
+      operationId: signOutOptions
+      responses:
+        204:
+          description: No Content
     get:
       tags:
         - authentication
@@ -49,8 +82,12 @@ paths:
       responses:
         303:
           description: Redirect to landing page
-          content: {}
-  /auth/callback:
+  /v1/auth/callback:
+    options:
+      operationId: callbackOptions
+      responses:
+        204:
+          description: No Content
     get:
       tags:
         - authentication
@@ -59,10 +96,7 @@ paths:
       responses:
         400:
           description: Invalid request
-          content: {}
         401:
           description: Invalid token
-          content: {}
         403:
           description: Insufficient scope
-          content: {}

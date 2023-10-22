@@ -114,8 +114,6 @@ public class Verticle extends AbstractVerticle {
 
             final Store store = new MySQLStore(jdbcClient);
 
-            final Router mainRouter = Router.router(vertx);
-
             final CorsHandler corsHandler = CorsHandlerFactory.createWithAll(originPattern, List.of(COOKIE, AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN));
 
             final Handler<RoutingContext> onAccessDenied = routingContext -> routingContext.response().setStatusCode(403).setStatusMessage("Access denied").end();
@@ -148,6 +146,20 @@ public class Verticle extends AbstractVerticle {
 
             RouterBuilder.create(vertx.getDelegate(), "file://" + tempFile.getAbsolutePath())
                     .onSuccess(routerBuilder -> {
+                        routerBuilder.rootHandler(LoggerHandler.create(true, LoggerFormat.DEFAULT).getDelegate());
+                        routerBuilder.rootHandler(TimeoutHandler.create(10000).getDelegate());
+                        routerBuilder.rootHandler(corsHandler.getDelegate());
+                        routerBuilder.rootHandler(BodyHandler.create().getDelegate());
+
+                        routerBuilder.operation("apidocs")
+                                .handler(context -> apiV1DocsHandler.handle(RoutingContext.newInstance(context)));
+
+                        routerBuilder.operation("health")
+                                .handler(context -> healthCheckHandler.handle(RoutingContext.newInstance(context)));
+
+                        routerBuilder.operation("metrics")
+                                .handler(context -> PrometheusScrapingHandler.create().handle(RoutingContext.newInstance(context)));
+
                         routerBuilder.operation("listAccounts")
                                 .handler(context -> listAccountsHandler.handle(RoutingContext.newInstance(context)));
 
@@ -163,25 +175,18 @@ public class Verticle extends AbstractVerticle {
                         routerBuilder.operation("deleteAccount")
                                 .handler(context -> deleteAccountHandler.handle(RoutingContext.newInstance(context)));
 
-                        final Router apiRouter = Router.newInstance(routerBuilder.createRouter());
+                        routerBuilder.operation("selfAccountOptions")
+                                .handler(context -> ResponseHelper.sendNoContent(RoutingContext.newInstance(context)));
 
-                        mainRouter.route().handler(LoggerHandler.create(true, LoggerFormat.DEFAULT));
-                        mainRouter.route().handler(BodyHandler.create());
-                        mainRouter.route().handler(TimeoutHandler.create(30000));
+                        routerBuilder.operation("accountOptions")
+                                .handler(context -> ResponseHelper.sendNoContent(RoutingContext.newInstance(context)));
 
-                        mainRouter.route("/*").handler(corsHandler);
+                        routerBuilder.operation("accountsOptions")
+                                .handler(context -> ResponseHelper.sendNoContent(RoutingContext.newInstance(context)));
 
-                        mainRouter.mountSubRouter("/v1", apiRouter);
+                        final Router router = Router.newInstance(routerBuilder.createRouter());
 
-                        mainRouter.get("/v1/apidocs").handler(apiV1DocsHandler);
-
-                        mainRouter.get("/health*").handler(healthCheckHandler);
-
-                        mainRouter.options("/*").handler(ResponseHelper::sendNoContent);
-
-                        mainRouter.route("/metrics").handler(PrometheusScrapingHandler.create());
-
-                        mainRouter.route().failureHandler(ResponseHelper::sendFailure);
+                        router.route().failureHandler(ResponseHelper::sendFailure);
 
                         final ServerConfig serverConfig = ServerConfig.builder()
                                 .withJksStorePath(jksStorePath)
@@ -191,18 +196,22 @@ public class Verticle extends AbstractVerticle {
                         final HttpServerOptions options = Server.makeOptions(serverConfig);
 
                         vertx.createHttpServer(options)
-                                .requestHandler(mainRouter)
+                                .requestHandler(router)
                                 .rxListen(port)
-                                .doOnSuccess(result -> log.info("Service listening on port {}", port))
-                                .doOnError(err -> log.error("Can't create server", err))
-                                .subscribe(result -> promise.complete(), promise::fail);
+                                .subscribe(result -> {
+                                    log.info("Service listening on port {}", port);
+                                    promise.complete();
+                                }, err -> {
+                                    log.error("Can't create server", err);
+                                    promise.fail(err);
+                                });
                     })
                     .onFailure(err -> {
                         log.error("Can't create router", err);
                         promise.fail(err);
                     });
         } catch (Exception e) {
-            log.error("Failed to start server", e);
+            log.error("Failed to initialize service", e);
             promise.fail(e);
         }
     }

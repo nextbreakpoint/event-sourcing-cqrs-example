@@ -7,12 +7,47 @@ externalDocs:
   description: Find out more about Swagger
   url: http://swagger.io
 servers:
-  - url: http://localhost/v1
+  - url: http://localhost
 tags:
   - name: designs
     description: Everything about receiving notifications about designs
 paths:
-  /designs/watch:
+  /apidocs:
+    get:
+      operationId: apidocs
+      responses:
+        200:
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+  /health:
+    get:
+      operationId: health
+      responses:
+        200:
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+  /metrics:
+    get:
+      operationId: metrics
+      responses:
+        200:
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+  /v1/designs/watch:
+    options:
+      operationId: watchDesignsOptions
+      responses:
+        204:
+          description: No Content
     get:
       tags:
         - designs

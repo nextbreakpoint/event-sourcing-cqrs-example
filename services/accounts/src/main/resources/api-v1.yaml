@@ -7,12 +7,47 @@ externalDocs:
   description: Find out more about Swagger
   url: http://swagger.io
 servers:
-  - url: http://localhost/v1
+  - url: http://localhost
 tags:
   - name: accounts
     description: Everything about accounts
 paths:
-  /accounts/me:
+  /apidocs:
+    get:
+      operationId: apidocs
+      responses:
+        200:
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+  /health:
+    get:
+      operationId: health
+      responses:
+        200:
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+  /metrics:
+    get:
+      operationId: metrics
+      responses:
+        200:
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+  /v1/accounts/me:
+    options:
+      operationId: selfAccountOptions
+      responses:
+        204:
+          description: No Content
     get:
       tags:
         - accounts
@@ -27,18 +62,20 @@ paths:
                 $ref: '#/components/schemas/Account'
         401:
           description: Missing authentication
-          content: {}
         403:
           description: User not authorized
-          content: {}
         404:
           description: Account not found
-          content: {}
 #      security:
 #        - account_auth:
 #            - admin
 #            - guest
-  /accounts/{accountId}:
+  /v1/accounts/{accountId}:
+    options:
+      operationId: accountOptions
+      responses:
+        204:
+          description: No Content
     get:
       tags:
         - accounts
@@ -61,16 +98,12 @@ paths:
                 $ref: '#/components/schemas/Account'
         400:
           description: Invalid uuid supplied
-          content: {}
         401:
           description: Missing authentication
-          content: {}
         403:
           description: User not authorized
-          content: {}
         404:
           description: Account not found
-          content: {}
 #      security:
 #        - account_auth:
 #            - admin
@@ -97,17 +130,19 @@ paths:
                 $ref: '#/components/schemas/DeleteAccountResponse'
         400:
           description: Invalid uuid supplied
-          content: {}
         401:
           description: Missing authentication
-          content: {}
         403:
           description: User not authorized
-          content: {}
 #      security:
 #        - account_auth:
 #            - admin
-  /accounts:
+  /v1/accounts:
+    options:
+      operationId: accountsOptions
+      responses:
+        204:
+          description: No Content
     get:
       tags:
         - accounts
@@ -129,13 +164,10 @@ paths:
                 $ref: '#/components/schemas/Account'
         400:
           description: Invalid email supplied
-          content: {}
         401:
           description: Missing authentication
-          content: {}
         403:
           description: User not authorized
-          content: {}
 #      security:
 #        - account_auth:
 #            - admin
@@ -161,13 +193,10 @@ paths:
                 $ref: '#/components/schemas/InsertAccountResponse'
         401:
           description: Missing authentication
-          content: {}
         403:
           description: User not authorized
-          content: {}
         405:
           description: Invalid input
-          content: {}
 #      security:
 #        - account_auth:
 #            - admin

@@ -7,12 +7,47 @@ externalDocs:
   description: Find out more about Swagger
   url: http://swagger.io
 servers:
-  - url: http://localhost/v1
+  - url: http://localhost
 tags:
   - name: designs
     description: Everything about validating designs and parsing files
 paths:
-  /designs/validate:
+  /apidocs:
+    get:
+      operationId: apidocs
+      responses:
+        200:
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+  /health:
+    get:
+      operationId: health
+      responses:
+        200:
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+  /metrics:
+    get:
+      operationId: metrics
+      responses:
+        200:
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+  /v1/designs/validate:
+    options:
+      operationId: validateDesignOptions
+      responses:
+        204:
+          description: No Content
     post:
       tags:
         - designs
@@ -34,17 +69,19 @@ paths:
                 $ref: '#/components/schemas/ValidateDesignResponse'
         400:
           description: Invalid request
-          content: {}
         401:
           description: Missing authentication
-          content: {}
         403:
           description: User not authorized
-          content: {}
 #      security:
 #        - design_auth:
 #            - admin
-  /designs/download:
+  /v1/designs/download:
+    options:
+      operationId: downloadDesignOptions
+      responses:
+        204:
+          description: No Content
     post:
       tags:
         - designs
@@ -67,17 +104,19 @@ paths:
                 format: binary
         400:
           description: Invalid request
-          content: {}
         401:
           description: Missing authentication
-          content: {}
         403:
           description: User not authorized
-          content: {}
   #      security:
   #        - design_auth:
   #            - admin
-  /designs/upload:
+  /v1/designs/upload:
+    options:
+      operationId: uploadDesignOptions
+      responses:
+        204:
+          description: No Content
     post:
       tags:
         - designs
@@ -99,13 +138,10 @@ paths:
                 $ref: '#/components/schemas/UploadDesignResponse'
         400:
           description: Invalid request
-          content: {}
         401:
           description: Missing authentication
-          content: {}
         403:
           description: User not authorized
-          content: {}
 #      security:
 #        - design_auth:
 #            - admin

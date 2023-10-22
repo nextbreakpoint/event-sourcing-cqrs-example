@@ -275,11 +275,6 @@ public class Verticle extends AbstractVerticle {
 
             RouterBuilder.create(vertx.getDelegate(), "file://" + tempFile.getAbsolutePath())
                     .onSuccess(routerBuilder -> {
-                        routerBuilder.rootHandler(LoggerHandler.create(true, LoggerFormat.DEFAULT).getDelegate());
-                        routerBuilder.rootHandler(TimeoutHandler.create(10000).getDelegate());
-                        routerBuilder.rootHandler(corsHandler.getDelegate());
-                        routerBuilder.rootHandler(BodyHandler.create().getDelegate());
-
                         routerBuilder.operation("apidocs")
                                 .handler(context -> apiV1DocsHandler.handle(RoutingContext.newInstance(context)));
 
@@ -309,7 +304,14 @@ public class Verticle extends AbstractVerticle {
 
                         final Router router = Router.newInstance(routerBuilder.createRouter());
 
-                        router.route().failureHandler(ResponseHelper::sendFailure);
+                        final Router mainRouter = Router.router(vertx);
+
+                        mainRouter.route().handler(LoggerHandler.create(true, LoggerFormat.DEFAULT));
+                        mainRouter.route().handler(TimeoutHandler.create(10000));
+                        mainRouter.route().handler(corsHandler);
+                        mainRouter.route().handler(BodyHandler.create());
+                        mainRouter.route("/*").subRouter(router);
+                        mainRouter.route().failureHandler(ResponseHelper::sendFailure);
 
                         final ServerConfig serverConfig = ServerConfig.builder()
                                 .withJksStorePath(jksStorePath)
@@ -319,7 +321,7 @@ public class Verticle extends AbstractVerticle {
                         final HttpServerOptions options = Server.makeOptions(serverConfig);
 
                         vertx.createHttpServer(options)
-                                .requestHandler(router)
+                                .requestHandler(mainRouter)
                                 .rxListen(port)
                                 .subscribe(result -> {
                                     log.info("Service listening on port {}", port);

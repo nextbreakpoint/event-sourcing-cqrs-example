@@ -45,6 +45,14 @@ paths:
   /v1/designs/{designId}:
     options:
       operationId: designOptions
+      parameters:
+        - name: designId
+          in: path
+          description: uuid of design
+          required: true
+          schema:
+            type: string
+            format: uuid
       responses:
         204:
           description: No Content

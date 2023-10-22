@@ -35,7 +35,7 @@ import static org.hamcrest.CoreMatchers.startsWith;
 public class PactConsumerTests {
   private static final TestCases testCases = new TestCases();
 
-  private static final StubServer githubStub = new StubServer(Integer.parseInt("39002")).run();
+  private static final StubServer githubStub = new StubServer(Integer.parseInt("39002"));
 
   private final int expectedPort = 8000;
   private final String expectedHost = "localhost";

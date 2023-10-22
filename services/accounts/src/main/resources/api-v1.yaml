@@ -73,6 +73,14 @@ paths:
   /v1/accounts/{accountId}:
     options:
       operationId: accountOptions
+      parameters:
+        - name: accountId
+          in: path
+          description: uuid of account
+          required: true
+          schema:
+            type: string
+            format: uuid
       responses:
         204:
           description: No Content

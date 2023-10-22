@@ -58,7 +58,7 @@ public class GitHubSignOutHandler implements Handler<RoutingContext> {
             routingContext.fail(throwable);
         } else if (throwable instanceof ComposerException) {
             log.error("Cannot process request", throwable);
-            routingContext.fail(Failure.requestFailed(throwable));
+            routingContext.fail(Failure.requestFailed(throwable.getCause()));
         }
     }
 }

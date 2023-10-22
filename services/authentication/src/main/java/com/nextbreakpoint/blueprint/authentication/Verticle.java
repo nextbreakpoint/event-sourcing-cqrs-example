@@ -48,12 +48,14 @@ import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.nextbreakpoint.blueprint.common.core.Headers.ACCEPT;
 import static com.nextbreakpoint.blueprint.common.core.Headers.AUTHORIZATION;
 import static com.nextbreakpoint.blueprint.common.core.Headers.CONTENT_TYPE;
 import static com.nextbreakpoint.blueprint.common.core.Headers.COOKIE;
+import static com.nextbreakpoint.blueprint.common.vertx.ResponseHelper.redirectToError;
 
 @Log4j2
 public class Verticle extends AbstractVerticle {
@@ -189,11 +191,6 @@ public class Verticle extends AbstractVerticle {
 
             RouterBuilder.create(vertx.getDelegate(), "file://" + tempFile.getAbsolutePath())
                     .onSuccess(routerBuilder -> {
-                        routerBuilder.rootHandler(LoggerHandler.create(true, LoggerFormat.DEFAULT).getDelegate());
-                        routerBuilder.rootHandler(TimeoutHandler.create(10000).getDelegate());
-                        routerBuilder.rootHandler(corsHandler.getDelegate());
-                        routerBuilder.rootHandler(BodyHandler.create().getDelegate());
-
                         routerBuilder.operation("apidocs")
                                 .handler(context -> apiV1DocsHandler.handle(RoutingContext.newInstance(context)));
 
@@ -223,7 +220,16 @@ public class Verticle extends AbstractVerticle {
 
                         final Router router = Router.newInstance(routerBuilder.createRouter());
 
-                        router.route().failureHandler(ResponseHelper::sendFailure);
+                        final Router mainRouter = Router.router(vertx);
+
+                        final Function<Integer, String> getErrorRedirectURL = (code) -> webUrl + "/error/" + code;
+
+                        mainRouter.route().handler(LoggerHandler.create(true, LoggerFormat.DEFAULT));
+                        mainRouter.route().handler(TimeoutHandler.create(10000));
+                        mainRouter.route().handler(corsHandler);
+                        mainRouter.route().handler(BodyHandler.create());
+                        mainRouter.route("/*").subRouter(router);
+                        mainRouter.route().failureHandler(routingContext -> redirectToError(routingContext, getErrorRedirectURL));
 
                         final ServerConfig serverConfig = ServerConfig.builder()
                                 .withJksStorePath(jksStorePath)
@@ -233,7 +239,7 @@ public class Verticle extends AbstractVerticle {
                         final HttpServerOptions options = Server.makeOptions(serverConfig);
 
                         vertx.createHttpServer(options)
-                                .requestHandler(router)
+                                .requestHandler(mainRouter)
                                 .rxListen(port)
                                 .subscribe(result -> {
                                     log.info("Service listening on port {}", port);
@@ -254,7 +260,7 @@ public class Verticle extends AbstractVerticle {
     }
 
     private void redirectOnFailure(RoutingContext routingContext, String webUrl) {
-        ResponseHelper.redirectToError(routingContext, statusCode -> webUrl + "/error/" + statusCode);
+        redirectToError(routingContext, statusCode -> webUrl + "/error/" + statusCode);
     }
 
     protected Handler<RoutingContext> createSignInHandler(String cookieDomain, String webUrl, String authUrl, Set<String> adminUsers, WebClient accountsClient, WebClient githubClient, JWTAuth jwtProvider, OAuth2Auth authHandler, String oauthAuthority, String callbackPath) {

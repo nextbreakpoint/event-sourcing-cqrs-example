@@ -45,7 +45,7 @@ public class TestCases {
     private String consumerGroupId;
 
     public TestCases(String consumerGroupId) {
-        this.consumerGroupId = consumerGroupId;
+        this.consumerGroupId = consumerGroupId + "-" + scenario.getUniqueTestId();
     }
 
     public void before() {
@@ -60,16 +60,23 @@ public class TestCases {
 
         KafkaConsumer<String, String> eventsConsumer = KafkaClientFactory.createConsumer(createConsumerConfig(consumerGroupId));
 
-        commandsPolling = new KafkaTestPolling(commandsConsumer, TestConstants.COMMANDS_TOPIC_NAME);
-        eventsPolling = new KafkaTestPolling(eventsConsumer, TestConstants.EVENTS_TOPIC_NAME);
+        commandsPolling = new KafkaTestPolling(commandsConsumer, TestConstants.COMMANDS_TOPIC_NAME + "-" + scenario.getUniqueTestId());
+        eventsPolling = new KafkaTestPolling(eventsConsumer, TestConstants.EVENTS_TOPIC_NAME + "-" + scenario.getUniqueTestId());
 
         commandsPolling.startPolling();
         eventsPolling.startPolling();
 
-        testCassandra.deleteMessages();
+        deleteData();
     }
 
     public void after() {
+        if (commandsPolling != null) {
+            commandsPolling.stopPolling();
+        }
+        if (eventsPolling != null) {
+            eventsPolling.stopPolling();
+        }
+
         try {
             vertx.rxClose()
                     .doOnError(Throwable::printStackTrace)
@@ -85,6 +92,10 @@ public class TestCases {
     @NotNull
     public String getVersion() {
         return scenario.getVersion();
+    }
+
+    public void deleteData() {
+        testCassandra.deleteMessages();
     }
 
     @NotNull
@@ -143,7 +154,7 @@ public class TestCases {
         await().atMost(TEN_SECONDS)
                 .pollInterval(ONE_SECOND)
                 .untilAsserted(() -> {
-                    final List<InputMessage> messages = commandsPolling.findMessages(designId, TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_INSERT_COMMAND);
+                    final List<InputMessage> messages = commandsPolling.findMessages(TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_INSERT_COMMAND, designId);
                     assertThat(messages).hasSize(1);
                 });
 
@@ -158,7 +169,7 @@ public class TestCases {
         await().atMost(Duration.ofSeconds(20))
                 .pollInterval(ONE_SECOND)
                 .untilAsserted(() -> {
-                    final List<InputMessage> messages = eventsPolling.findMessages(designId, TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_INSERT_REQUESTED);
+                    final List<InputMessage> messages = eventsPolling.findMessages(TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_INSERT_REQUESTED, designId);
                     assertThat(messages).hasSize(1);
                     InputMessage decodedMessage = messages.get(0);
                     TestAssertions.assertExpectedDesignInsertRequestedMessage(decodedMessage, designId);
@@ -180,7 +191,7 @@ public class TestCases {
         await().atMost(TEN_SECONDS)
                 .pollInterval(ONE_SECOND)
                 .untilAsserted(() -> {
-                    final List<InputMessage> messages = commandsPolling.findMessages(designId, TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_UPDATE_COMMAND);
+                    final List<InputMessage> messages = commandsPolling.findMessages(TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_UPDATE_COMMAND, designId);
                     assertThat(messages).hasSize(1);
                 });
 
@@ -195,7 +206,7 @@ public class TestCases {
         await().atMost(Duration.ofSeconds(20))
                 .pollInterval(ONE_SECOND)
                 .untilAsserted(() -> {
-                    final List<InputMessage> messages = eventsPolling.findMessages(designId, TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_UPDATE_REQUESTED);
+                    final List<InputMessage> messages = eventsPolling.findMessages(TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_UPDATE_REQUESTED, designId);
                     assertThat(messages).hasSize(1);
                     InputMessage decodedMessage = messages.get(0);
                     TestAssertions.assertExpectedDesignUpdateRequestedMessage(decodedMessage, designId);
@@ -217,7 +228,7 @@ public class TestCases {
         await().atMost(TEN_SECONDS)
                 .pollInterval(ONE_SECOND)
                 .untilAsserted(() -> {
-                    final List<InputMessage> messages = commandsPolling.findMessages(designId, TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_DELETE_COMMAND);
+                    final List<InputMessage> messages = commandsPolling.findMessages(TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_DELETE_COMMAND, designId);
                     assertThat(messages).hasSize(1);
                 });
 
@@ -232,7 +243,7 @@ public class TestCases {
         await().atMost(Duration.ofSeconds(20))
                 .pollInterval(ONE_SECOND)
                 .untilAsserted(() -> {
-                    final List<InputMessage> messages = eventsPolling.findMessages(designId, TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_DELETE_REQUESTED);
+                    final List<InputMessage> messages = eventsPolling.findMessages(TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_DELETE_REQUESTED, designId);
                     assertThat(messages).hasSize(1);
                     InputMessage decodedMessage = messages.get(0);
                     TestAssertions.assertExpectedDesignDeleteRequestedMessage(decodedMessage, designId);

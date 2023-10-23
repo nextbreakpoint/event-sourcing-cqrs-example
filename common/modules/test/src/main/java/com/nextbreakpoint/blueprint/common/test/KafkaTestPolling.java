@@ -7,8 +7,6 @@ import com.nextbreakpoint.blueprint.common.core.Token;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
-import rx.Single;
-import rx.schedulers.Schedulers;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -25,6 +23,8 @@ public class KafkaTestPolling {
 
     private Set<String> topicNames;
 
+    private Thread pollingThread;
+
     public KafkaTestPolling(KafkaConsumer<String, String> kafkaConsumer, String topicName) {
         this(kafkaConsumer, Set.of(topicName));
     }
@@ -34,16 +34,21 @@ public class KafkaTestPolling {
         this.topicNames = topicNames;
     }
 
-    public List<InputMessage> findMessages(String partitionKey, String messageSource, String messageType) {
+    public List<InputMessage> findMessages(String messageSource, String messageType, String partitionKey) {
         return findMessages(messageSource, messageType, key -> key.equals(partitionKey));
     }
 
     public List<InputMessage> findMessages(String messageSource, String messageType, Predicate<String> keyPredicate) {
+        return findMessages(messageSource, messageType, keyPredicate, (message) -> true);
+    }
+
+    public List<InputMessage> findMessages(String messageSource, String messageType, Predicate<String> keyPredicate, Predicate<InputMessage> messagePredicate) {
         synchronized (messages) {
             return messages.stream()
-                    .filter(message -> keyPredicate.test(message.getKey()))
                     .filter(message -> message.getValue().getSource().equals(messageSource))
                     .filter(message -> message.getValue().getType().equals(messageType))
+                    .filter(message -> keyPredicate.test(message.getKey()))
+                    .filter(messagePredicate::test)
                     .collect(Collectors.toList());
         }
     }
@@ -55,33 +60,52 @@ public class KafkaTestPolling {
     }
 
     public void startPolling() {
-        Single.fromCallable(() -> {
+        if (pollingThread != null) {
+            return;
+        }
+
+        pollingThread = new Thread(() -> {
             kafkaConsumer.subscribe(topicNames);
 
             kafkaConsumer.seekToEnd(kafkaConsumer.assignment());
 
-            return null;
-        })
-        .subscribeOn(Schedulers.newThread())
-        .doAfterTerminate(this::pollMessages)
-        .subscribe();
+            while (!Thread.currentThread().isInterrupted()) {
+                try {
+                    ConsumerRecords<String, String> records = kafkaConsumer.poll(Duration.ofSeconds(10));
+
+                    System.out.println("Received " + records.count() + " messages");
+
+                    consumeMessages(records);
+
+                    kafkaConsumer.commitSync();
+                } catch (Exception e) {
+                    kafkaConsumer.pause(kafkaConsumer.assignment());
+
+                    try {
+                        Thread.sleep(2000);
+                    } catch (InterruptedException ex) {
+                        Thread.currentThread().interrupt();
+                    }
+
+                    kafkaConsumer.seekToBeginning(kafkaConsumer.assignment());
+
+                    kafkaConsumer.resume(kafkaConsumer.assignment());
+                }
+            }
+        }, kafkaConsumer.groupMetadata().groupId());
+
+        pollingThread.start();
     }
 
-    private void pollMessages() {
-        Single.fromCallable(() -> {
-            ConsumerRecords<String, String> records = kafkaConsumer.poll(Duration.ofSeconds(10));
+    public void stopPolling() {
+        if (pollingThread != null) {
+            try {
+                pollingThread.interrupt();
 
-            System.out.println("Received " + records.count() + " messages");
-
-            consumeMessages(records);
-
-            kafkaConsumer.commitSync();
-
-            return null;
-        })
-        .subscribeOn(Schedulers.newThread())
-        .doAfterTerminate(this::pollMessages)
-        .subscribe();
+                pollingThread.join();
+            } catch (InterruptedException e) {
+            }
+        }
     }
 
     private void consumeMessages(ConsumerRecords<String, String> consumerRecords) {

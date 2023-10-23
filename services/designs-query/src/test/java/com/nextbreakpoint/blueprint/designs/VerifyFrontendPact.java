@@ -29,7 +29,7 @@ import java.util.UUID;
 public class VerifyFrontendPact {
   private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ISO_INSTANT;
 
-  private static final TestCases testCases = new TestCases("PactTests");
+  private static final TestCases testCases = new TestCases("DesignsQueryVerifyFrontendPact");
 
   @BeforeAll
   public static void before() {
@@ -71,6 +71,9 @@ public class VerifyFrontendPact {
 
     final Instant now = Instant.now();
 
+    testCases.deleteDesigns();
+    testCases.deleteDraftDesigns();
+
     final Design design1 = new Design(TestConstants.DESIGN_UUID_1, TestConstants.USER_ID, UUID.randomUUID(), json1, Checksum.of(json1), TestConstants.REVISION_0, "CREATED", false, TestConstants.LEVELS, TestUtils.getTiles(TestConstants.LEVELS, 0.0f), FORMATTER.format(now.minusSeconds(10)), FORMATTER.format(now));
 
     final Design design2 = new Design(TestConstants.DESIGN_UUID_2, TestConstants.USER_ID, UUID.randomUUID(), json2, Checksum.of(json1), TestConstants.REVISION_1, "UPDATED", false, TestConstants.LEVELS, TestUtils.getTiles(TestConstants.LEVELS, 0.5f), FORMATTER.format(now.minusSeconds(5)), FORMATTER.format(now));
@@ -84,6 +87,9 @@ public class VerifyFrontendPact {
     final String json = new JsonObject(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT1)).toString();
 
     final Instant now = Instant.now();
+
+    testCases.deleteDesigns();
+    testCases.deleteDraftDesigns();
 
     final Design design = new Design(TestConstants.DESIGN_UUID_1, TestConstants.USER_ID, UUID.randomUUID(), json, Checksum.of(json), TestConstants.REVISION_0, "CREATED", false, TestConstants.LEVELS, TestUtils.getTiles(TestConstants.LEVELS, 0.0f), FORMATTER.format(now.minusSeconds(5)), FORMATTER.format(Instant.now()));
 

@@ -24,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DisplayName("Test designs-query pact")
 @ExtendWith(PactConsumerTestExt.class)
 public class PactConsumerTests {
-    private static TestCases testCases = new TestCases("PactTests");
+    private static TestCases testCases = new TestCases("DesignsQueryPactConsumerTests");
 
     @BeforeAll
     public static void before() {

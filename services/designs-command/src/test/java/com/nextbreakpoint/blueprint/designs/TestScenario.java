@@ -13,6 +13,7 @@ import org.testcontainers.utility.DockerImageName;
 import java.io.ByteArrayOutputStream;
 import java.time.Duration;
 import java.util.Collections;
+import java.util.UUID;
 
 public class TestScenario {
   private static final int HTTP_PORT = 30121;
@@ -23,8 +24,10 @@ public class TestScenario {
   private final String nexusPort = TestUtils.getVariable("NEXUS_PORT", System.getProperty("nexus.port", "8081"));
   private final boolean buildImages = TestUtils.getVariable("BUILD_IMAGES", System.getProperty("build.images", "false")).equals("true");
   private final boolean useContainers = TestUtils.getVariable("USE_CONTAINERS", System.getProperty("use.containers", "true")).equals("true");
+  private final boolean startPlatform = TestUtils.getVariable("START_PLATFORM", System.getProperty("start.platform", "false")).equals("true");
   private final String dockerHost = TestUtils.getVariable("DOCKER_HOST", System.getProperty("docker.host", "host.docker.internal"));
   private final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+  private final String uniqueTestId = UUID.randomUUID().toString();
 
   private Network network = Network.builder().driver("bridge").build();
 
@@ -43,20 +46,19 @@ public class TestScenario {
           .withEnv("LOGGING_LEVEL", "DEBUG")
           .withEnv("JAEGER_SERVICE_NAME", serviceName)
           .withEnv("KEYSTORE_SECRET", "secret")
-          .withEnv("DATABASE_HOST", "cassandra")
+          .withEnv("DATABASE_HOST", resolveHost("cassandra"))
           .withEnv("DATABASE_KEYSPACE", TestConstants.DATABASE_KEYSPACE)
           .withEnv("DATABASE_USERNAME", "verticle")
           .withEnv("DATABASE_PASSWORD", "password")
-          .withEnv("KAFKA_HOST", "kafka")
-          .withEnv("KAFKA_PORT", "9092")
-          .withEnv("COMMANDS_TOPIC", TestConstants.COMMANDS_TOPIC_NAME)
-          .withEnv("EVENTS_TOPIC", TestConstants.EVENTS_TOPIC_NAME)
+          .withEnv("KAFKA_HOST", resolveHost("kafka"))
+          .withEnv("KAFKA_PORT", startPlatform ? "9092" : "9094")
+          .withEnv("COMMANDS_TOPIC", TestConstants.COMMANDS_TOPIC_NAME + "-" + uniqueTestId)
+          .withEnv("EVENTS_TOPIC", TestConstants.EVENTS_TOPIC_NAME + "-" + uniqueTestId)
           .withFileSystemBind("../../secrets/keystore_auth.jceks", "/secrets/keystore_auth.jceks", BindMode.READ_ONLY)
           .withFileSystemBind("config/integration.json", "/etc/config.json", BindMode.READ_ONLY)
           .withExposedPorts(HTTP_PORT, DEBUG_PORT)
           .withNetwork(network)
           .withNetworkAliases(serviceName)
-          .dependsOn(zookeeper, kafka, cassandra)
           .waitingFor(Wait.forLogMessage(".*\"Service listening on port " + HTTP_PORT + "\".*", 1).withStartupTimeout(Duration.ofSeconds(20)));
 
   public void before() {
@@ -65,9 +67,14 @@ public class TestScenario {
     }
 
     if (useContainers) {
-      cassandra.start();
-      zookeeper.start();
-      kafka.start();
+      if (startPlatform) {
+        cassandra.start();
+        zookeeper.start();
+        kafka.start();
+
+        service = service.dependsOn(zookeeper, kafka, cassandra);
+      }
+
       service.start();
 
       System.out.println("Debug port: " + service.getMappedPort(DEBUG_PORT));
@@ -81,18 +88,25 @@ public class TestScenario {
       System.out.println(outputStream);
 
       service.stop();
-      kafka.stop();
-      zookeeper.stop();
-      cassandra.stop();
+
+      if (startPlatform) {
+        kafka.stop();
+        zookeeper.stop();
+        cassandra.stop();
+      }
     }
   }
 
+  private String resolveHost(String defaultHost) {
+    return (useContainers && startPlatform) ? defaultHost : dockerHost;
+  }
+
   private String getHost(GenericContainer container) {
-    return useContainers ? container.getHost() : "localhost";
+    return (useContainers && startPlatform) ? container.getHost() : "localhost";
   }
 
   private int getPort(GenericContainer container, int port) {
-    return useContainers ? container.getMappedPort(port) : port;
+    return (useContainers && startPlatform) ? container.getMappedPort(port) : port;
   }
 
   public String getVersion() {
@@ -100,11 +114,11 @@ public class TestScenario {
   }
 
   public String getServiceHost() {
-    return getHost(service);
+    return useContainers ? service.getHost() : getHost(service);
   }
 
   public Integer getServicePort() {
-    return getPort(service, HTTP_PORT);
+    return useContainers ? service.getMappedPort(HTTP_PORT) : HTTP_PORT;
   }
 
   public String getKafkaHost() {
@@ -125,5 +139,9 @@ public class TestScenario {
 
   public String makeAuthorization(String user, String role) {
     return VertxUtils.makeAuthorization(user, Collections.singletonList(role), "../../secrets/keystore_auth.jceks");
+  }
+
+  public String getUniqueTestId() {
+    return uniqueTestId;
   }
 }

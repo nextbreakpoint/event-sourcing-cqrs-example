@@ -10,7 +10,7 @@
     <parent>
         <groupId>com.nextbreakpoint</groupId>
         <artifactId>com.nextbreakpoint.blueprint.service</artifactId>
-        <version>1.0.4-wip-67805830-1698041884</version>
+        <version>1.0.4-wip-91014b45-1698092318</version>
     </parent>
     <repositories>
         <repository>
@@ -98,8 +98,8 @@
             <artifactId>vertx-jdbc-client</artifactId>
         </dependency>
         <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
         </dependency>
         <dependency>
             <groupId>au.com.dius.pact</groupId>

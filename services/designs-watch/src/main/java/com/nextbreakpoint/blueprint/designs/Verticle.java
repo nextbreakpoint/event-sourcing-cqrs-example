@@ -174,7 +174,7 @@ public class Verticle extends AbstractVerticle {
 
             kafkaPolling = new KafkaMessagePolling<>(eventsKafkaConsumer, messageHandlers, KafkaMessageConsumer.Simple.create(messageHandlers, registry), registry);
 
-            kafkaPolling.startPolling("kafka-polling-topic-" + eventsTopic);
+            kafkaPolling.startPolling();
 
             final Handler<RoutingContext> apiV1DocsHandler = new OpenApiHandler(vertx.getDelegate(), executor, "api-v1.yaml");
 

@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.nextbreakpoint</groupId>
         <artifactId>com.nextbreakpoint.blueprint</artifactId>
-        <version>1.0.4-wip-67805830-1698041884</version>
+        <version>1.0.4-wip-91014b45-1698092318</version>
     </parent>
     <packaging>pom</packaging>
     <dependencies>
@@ -225,18 +225,16 @@
                             <goal>verify</goal>
                         </goals>
                         <configuration>
-                            <forkCount>0</forkCount>
                             <includes>
                                 <include>**/IntegrationTests.java</include>
-                                <include>**/Verify*Pact.java</include>
                                 <include>**/PactConsumerTests.java</include>
+                                <include>**/Verify*Pact.java</include>
                             </includes>
-                            <systemProperties>
+                            <systemPropertyVariables>
                                 <pactbroker.host>${pactbroker.host}</pactbroker.host>
                                 <pactbroker.port>${pactbroker.port}</pactbroker.port>
                                 <build.version>${project.version}</build.version>
-                            </systemProperties>
-                            <useSystemClassLoader>false</useSystemClassLoader>
+                            </systemPropertyVariables>
                         </configuration>
                     </execution>
                 </executions>

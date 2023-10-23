@@ -226,7 +226,7 @@ public class Verticle extends AbstractVerticle {
 
             kafkaPolling = new KafkaMessagePolling<>(commandsKafkaConsumer, messageHandlers, KafkaMessageConsumer.Simple.create(messageHandlers, registry), registry);
 
-            kafkaPolling.startPolling("kafka-polling-topic-" + commandsTopic);
+            kafkaPolling.startPolling();
 
             final CorsHandler corsHandler = CorsHandlerFactory.createWithAll(originPattern, List.of(COOKIE, AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN), List.of(COOKIE, CONTENT_TYPE, X_XSRF_TOKEN));
 

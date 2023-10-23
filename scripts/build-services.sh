@@ -109,6 +109,14 @@ for i in "$@"; do
       BUILD_SERVICES="${i#*=}"
       shift
       ;;
+    --quiet)
+      QUIET="true"
+      shift
+      ;;
+    --use-platform)
+      USE_PLATFORM="true"
+      shift
+      ;;
     -*|--*)
       echo "Unknown option $i"
       exit 1
@@ -238,8 +246,12 @@ else
   DOCKER_PACTBROKER_HOST=$PACTBROKER_HOST
 fi
 
-MAVEN_ARGS="-q -e -Dnexus.host=${NEXUS_HOST} -Dnexus.port=${NEXUS_PORT} -Dpactbroker.host=${PACTBROKER_HOST} -Dpactbroker.port=${PACTBROKER_PORT}"
-DOCKER_MAVEN_ARGS="-q -e -Dnexus.host=${DOCKER_NEXUS_HOST} -Dnexus.port=${NEXUS_PORT} -Dpactbroker.host=${DOCKER_PACTBROKER_HOST} -Dpactbroker.port=${PACTBROKER_PORT}"
+if [[ $QUIET == "yes" ]]; then
+  VERBOSITY_ARGS="-q"
+fi
+
+MAVEN_ARGS="${VERBOSITY_ARGS} -e -Dnexus.host=${NEXUS_HOST} -Dnexus.port=${NEXUS_PORT} -Dpactbroker.host=${PACTBROKER_HOST} -Dpactbroker.port=${PACTBROKER_PORT}"
+DOCKER_MAVEN_ARGS="${VERBOSITY_ARGS} -e -Dnexus.host=${DOCKER_NEXUS_HOST} -Dnexus.port=${NEXUS_PORT} -Dpactbroker.host=${DOCKER_PACTBROKER_HOST} -Dpactbroker.port=${PACTBROKER_PORT}"
 
 if [ "$UNIT_TESTS" == "false" ]; then
   MAVEN_ARGS="$MAVEN_ARGS -DskipTests"
@@ -250,10 +262,10 @@ export NEXUS_USERNAME
 export NEXUS_PASSWORD
 
 if [ "$CLEAN" == "true" ]; then
-  mvn clean -q -e -Dcommon=true -Dservices=true -Dplatform=true -Dnexus=true
+  mvn clean ${MAVEN_ARGS} -e -Dcommon=true -Dservices=true -Dplatform=true -Dnexus=true
 fi
 
-mvn versions:set versions:commit -q -e -DnewVersion=$VERSION -Dcommon=true -Dservices=true -Dplatform=true
+mvn versions:set versions:commit ${MAVEN_ARGS} -e -DnewVersion=$VERSION -Dcommon=true -Dservices=true -Dplatform=true
 
 if [ "$PACKAGE" == "true" ]; then
   mvn package -s settings.xml ${MAVEN_ARGS} -Dcommon=true -Dservices=true -Dplatform=true -Dnexus=true -DskipTests=true
@@ -276,6 +288,14 @@ fi
 MAVEN_OPTS="--add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.net=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED --add-opens=java.base/java.util.regex=ALL-UNNAMED --add-opens=java.base/java.security=ALL-UNNAMED --add-opens=java.base/sun.net.spi=ALL-UNNAMED"
 
 if [ "$INTEGRATION_TESTS" == "true" ]; then
+
+export USE_CONTAINERS="true"
+
+if [ "$USE_PLATFORM" == "true" ]; then
+  export START_PLATFORM="false"
+else
+  export START_PLATFORM="true"
+fi
 
 for service in ${services[@]}; do
   pushd services/$service

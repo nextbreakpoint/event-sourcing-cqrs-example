@@ -60,7 +60,7 @@ public class TestCases {
     private String consumerGroupId;
 
     public TestCases(String consumerGroupId) {
-        this.consumerGroupId = consumerGroupId;
+        this.consumerGroupId = consumerGroupId + "-" + scenario.getUniqueTestId();
     }
 
     public void before() {
@@ -79,11 +79,11 @@ public class TestCases {
 
         KafkaConsumer<String, String> eventsConsumer = KafkaClientFactory.createConsumer(createConsumerConfig(consumerGroupId));
 
-        eventsPolling = new KafkaTestPolling(eventsConsumer, TestConstants.EVENTS_TOPIC_NAME);
+        eventsPolling = new KafkaTestPolling(eventsConsumer, TestConstants.EVENTS_TOPIC_NAME + "-" + scenario.getUniqueTestId());
 
         eventsPolling.startPolling();
 
-        eventEmitter = new KafkaTestEmitter(producer, TestConstants.EVENTS_TOPIC_NAME);
+        eventEmitter = new KafkaTestEmitter(producer, TestConstants.EVENTS_TOPIC_NAME + "-" + scenario.getUniqueTestId());
 
         final RestClient restClient = RestClient.builder(new HttpHost(scenario.getElasticsearchHost(), scenario.getElasticsearchPort())).build();
 
@@ -96,9 +96,15 @@ public class TestCases {
 
         testElasticsearch = new TestElasticsearch(new ElasticsearchAsyncClient(transport), TestConstants.DESIGNS_INDEX_NAME);
         testDraftElasticsearch = new TestElasticsearch(new ElasticsearchAsyncClient(transport), TestConstants.DESIGNS_INDEX_NAME + "_draft");
+
+        deleteData();
     }
 
     public void after() {
+        if (eventsPolling != null) {
+            eventsPolling.stopPolling();
+        }
+
         try {
             vertx.rxClose()
                     .doOnError(Throwable::printStackTrace)
@@ -121,6 +127,11 @@ public class TestCases {
     @NotNull
     public String getVersion() {
         return scenario.getVersion();
+    }
+
+    public void deleteData() {
+        deleteDesigns();
+        deleteDraftDesigns();
     }
 
     @NotNull
@@ -225,12 +236,12 @@ public class TestCases {
         await().atMost(TEN_SECONDS)
                 .pollInterval(ONE_SECOND)
                 .untilAsserted(() -> {
-                    final List<InputMessage> messages1 = eventsPolling.findMessages(designId1.toString(), TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_DOCUMENT_UPDATE_REQUESTED);
+                    final List<InputMessage> messages1 = eventsPolling.findMessages(TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_DOCUMENT_UPDATE_REQUESTED, designId1.toString());
                     assertThat(messages1).hasSize(3);
                     TestAssertions.assertExpectedDesignDocumentUpdateRequestedMessage(messages1.get(0), designId1, designDocumentUpdateRequested1.getData(), designDocumentUpdateRequested1.getChecksum(), designDocumentUpdateRequested1.getStatus());
                     TestAssertions.assertExpectedDesignDocumentUpdateRequestedMessage(messages1.get(1), designId1, designDocumentUpdateRequested2.getData(), designDocumentUpdateRequested2.getChecksum(), designDocumentUpdateRequested2.getStatus());
                     TestAssertions.assertExpectedDesignDocumentUpdateRequestedMessage(messages1.get(2), designId1, designDocumentUpdateRequested3.getData(), designDocumentUpdateRequested3.getChecksum(), designDocumentUpdateRequested3.getStatus());
-                    final List<InputMessage> messages2 = eventsPolling.findMessages(designId2.toString(), TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_DOCUMENT_UPDATE_REQUESTED);
+                    final List<InputMessage> messages2 = eventsPolling.findMessages(TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_DOCUMENT_UPDATE_REQUESTED, designId2.toString());
                     assertThat(messages2).hasSize(1);
                     TestAssertions.assertExpectedDesignDocumentUpdateRequestedMessage(messages2.get(0), designId2, designDocumentUpdateRequested4.getData(), designDocumentUpdateRequested4.getChecksum(), designDocumentUpdateRequested4.getStatus());
                 });
@@ -238,12 +249,12 @@ public class TestCases {
         await().atMost(TEN_SECONDS)
                 .pollInterval(ONE_SECOND)
                 .untilAsserted(() -> {
-                    final List<InputMessage> messages1 = eventsPolling.findMessages(designId1.toString(), TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_DOCUMENT_UPDATE_COMPLETED);
+                    final List<InputMessage> messages1 = eventsPolling.findMessages(TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_DOCUMENT_UPDATE_COMPLETED, designId1.toString());
                     assertThat(messages1).hasSize(3);
                     TestAssertions.assertExpectedDesignDocumentUpdateCompletedMessage(messages1.get(0), designId1);
                     TestAssertions.assertExpectedDesignDocumentUpdateCompletedMessage(messages1.get(1), designId1);
                     TestAssertions.assertExpectedDesignDocumentUpdateCompletedMessage(messages1.get(2), designId1);
-                    final List<InputMessage> messages2 = eventsPolling.findMessages(designId2.toString(), TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_DOCUMENT_UPDATE_COMPLETED);
+                    final List<InputMessage> messages2 = eventsPolling.findMessages(TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_DOCUMENT_UPDATE_COMPLETED, designId2.toString());
                     assertThat(messages2).hasSize(1);
                     TestAssertions.assertExpectedDesignDocumentUpdateCompletedMessage(messages2.get(0), designId2);
                 });
@@ -277,7 +288,7 @@ public class TestCases {
         await().atMost(TEN_SECONDS)
                 .pollInterval(ONE_SECOND)
                 .untilAsserted(() -> {
-                    final List<InputMessage> messages = eventsPolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_DOCUMENT_UPDATE_REQUESTED);
+                    final List<InputMessage> messages = eventsPolling.findMessages(TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_DOCUMENT_UPDATE_REQUESTED, designId.toString());
                     assertThat(messages).hasSize(1);
                     TestAssertions.assertExpectedDesignDocumentUpdateRequestedMessage(messages.get(0), designId, designDocumentUpdateRequested.getData(), designDocumentUpdateRequested.getChecksum(), designDocumentUpdateRequested.getStatus());
                 });
@@ -285,7 +296,7 @@ public class TestCases {
         await().atMost(TEN_SECONDS)
                 .pollInterval(ONE_SECOND)
                 .untilAsserted(() -> {
-                    final List<InputMessage> messages = eventsPolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_DOCUMENT_UPDATE_COMPLETED);
+                    final List<InputMessage> messages = eventsPolling.findMessages(TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_DOCUMENT_UPDATE_COMPLETED, designId.toString());
                     assertThat(messages).hasSize(1);
                     TestAssertions.assertExpectedDesignDocumentUpdateCompletedMessage(messages.get(0), designId);
                 });
@@ -305,7 +316,7 @@ public class TestCases {
         await().atMost(TEN_SECONDS)
                 .pollInterval(ONE_SECOND)
                 .untilAsserted(() -> {
-                    final List<InputMessage> messages = eventsPolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_DOCUMENT_DELETE_REQUESTED);
+                    final List<InputMessage> messages = eventsPolling.findMessages(TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_DOCUMENT_DELETE_REQUESTED, designId.toString());
                     assertThat(messages).hasSize(1);
                     TestAssertions.assertExpectedDesignDocumentDeleteRequestedMessage(messages.get(0), designId);
                 });
@@ -313,7 +324,7 @@ public class TestCases {
         await().atMost(TEN_SECONDS)
                 .pollInterval(ONE_SECOND)
                 .untilAsserted(() -> {
-                    final List<InputMessage> messages = eventsPolling.findMessages(designId.toString(), TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_DOCUMENT_DELETE_COMPLETED);
+                    final List<InputMessage> messages = eventsPolling.findMessages(TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_DOCUMENT_DELETE_COMPLETED, designId.toString());
                     assertThat(messages).hasSize(1);
                     TestAssertions.assertExpectedDesignDocumentDeleteCompletedMessage(messages.get(0), designId);
                 });

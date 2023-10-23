@@ -23,6 +23,8 @@ UNIT_TESTS="true"
 PACT_TESTS="true"
 PACT_VERIFY="true"
 INTEGRATION_TESTS="true"
+USE_PLATFORM="false"
+QUIET="false"
 BUILD_SERVICES=""
 
 POSITIONAL_ARGS=()
@@ -246,7 +248,7 @@ else
   DOCKER_PACTBROKER_HOST=$PACTBROKER_HOST
 fi
 
-if [[ $QUIET == "yes" ]]; then
+if [[ $QUIET == "true" ]]; then
   VERBOSITY_ARGS="-q"
 fi
 

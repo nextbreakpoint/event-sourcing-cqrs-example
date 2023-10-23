@@ -104,6 +104,7 @@ public class GitHubSignInHandler implements Handler<RoutingContext> {
     protected Single<String> fetchUserEmail(GitHubSignInScope scope) {
         return githubClient.get("/user/emails")
                 .putHeader(AUTHORIZATION, Authentication.makeAuthorization(scope.getOauthAccessToken()))
+                .putHeader(ACCEPT, APPLICATION_JSON)
                 .rxSend()
                 .flatMap(response -> getSuccessfulResponseOrError(response, "Cannot retrieve user's emails", 200))
                 .flatMap(response -> findPrimaryEmail(response.bodyAsJsonArray()))
@@ -113,6 +114,7 @@ public class GitHubSignInHandler implements Handler<RoutingContext> {
     protected Single<JsonObject> fetchUserInfo(GitHubSignInScope scope) {
         return githubClient.get("/user")
                 .putHeader(AUTHORIZATION, Authentication.makeAuthorization(scope.getOauthAccessToken()))
+                .putHeader(ACCEPT, APPLICATION_JSON)
                 .rxSend()
                 .flatMap(response -> getSuccessfulResponseOrError(response, "Cannot retrieve user's details", 200))
                 .map(HttpResponse::bodyAsJsonObject)
@@ -183,7 +185,7 @@ public class GitHubSignInHandler implements Handler<RoutingContext> {
             routingContext.fail(throwable);
         } else if (throwable instanceof ComposerException) {
             log.error("Cannot process request", throwable);
-            routingContext.fail(Failure.requestFailed(throwable));
+            routingContext.fail(Failure.requestFailed(throwable.getCause()));
         }
     }
 

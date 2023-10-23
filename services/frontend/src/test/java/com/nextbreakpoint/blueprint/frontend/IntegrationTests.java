@@ -26,7 +26,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 @Tag("integration")
 @DisplayName("Verify behaviour of frontend service")
 public class IntegrationTests {
-  private static final StubServer apiStub = new StubServer(Integer.parseInt("39001")).run();
+  private static final StubServer apiStub = new StubServer(Integer.parseInt("39001"));
 
   private static final TestCases testCases = new TestCases();
 

@@ -52,7 +52,7 @@ data:
                 resolver_timeout 10s;
         
                 location /v1/designs/watch {
-                    limit_except GET {
+                    limit_except GET OPTIONS {
                         allow all;
                     }
                     proxy_set_header Connection '';
@@ -65,7 +65,7 @@ data:
                 }
                     
                 location /v1/designs/validate {
-                    limit_except POST {
+                    limit_except OPTIONS POST {
                         allow all;
                     }
                     set $upstream_location designs-render.services.svc.cluster.local:8080;
@@ -73,7 +73,7 @@ data:
                 }
                     
                 location /v1/designs/download {
-                    limit_except POST {
+                    limit_except OPTIONS POST {
                         allow all;
                     }
                     set $upstream_location designs-render.services.svc.cluster.local:8080;
@@ -81,7 +81,7 @@ data:
                 }
                     
                 location /v1/designs/upload {
-                    limit_except POST {
+                    limit_except OPTIONS POST {
                         allow all;
                     }
                     set $upstream_location designs-render.services.svc.cluster.local:8080;

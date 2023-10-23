@@ -3,6 +3,7 @@ body {
     color: #080808;
     min-width: 800px;
     max-width: 2600px;
+    margin: 0;
 }
 
 header {
@@ -60,7 +61,7 @@ footer a, footer a:active, footer a:hover, footer a:visited {
 
 .details-item {
     padding: 2%;
-    border: 2px solid rgb(176, 176, 176);
+    border: 2px solid rgb(219, 219, 219);
     border-radius: 0.4em;
     background-color: rgb(253, 253, 253);
     margin: 2%;
@@ -85,10 +86,80 @@ footer a, footer a:active, footer a:hover, footer a:visited {
     padding: 2%;
 }
 
+.image {
+    border-radius: 1em;
+}
+
 .leaflet-container {
     width: 100%;
     height: 512pt;
     position: relative;
     display: block;
     background: transparent;
+}
+
+.editor {
+    border: 2px solid rgb(219, 219, 219);
+    padding: 2%;
+    height: 600px;
+    overflow: scroll;
+    border-radius: 0.4em;
+    background-color: rgb(253, 253, 253);
+    text-align: left;
+}
+
+.keyword {
+    color: blue;
+}
+
+.function {
+    color: brown;
+}
+
+.pathop {
+    color: orange;
+}
+
+.parent {
+    color: purple;
+}
+
+.brace {
+    color: black;
+}
+
+.operator {
+    color: green;
+}
+
+.grow {
+    flex-grow: 1;
+}
+
+.browse {
+    font-weight: bold;
+}
+
+.button {
+    padding: 0;
+}
+
+.spacer {
+     flex: 1 1 auto;
+}
+
+.actions {
+     color: red;
+}
+
+.title {
+   flex: 0 0 auto;
+}
+
+.upload-file input {
+    display: none;
+}
+
+.highlight {
+    background-color: rgba(25, 118, 210, 0.08);
 }

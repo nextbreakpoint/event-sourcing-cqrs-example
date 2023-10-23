@@ -34,6 +34,7 @@ import io.vertx.rxjava.ext.web.client.WebClient;
 import io.vertx.rxjava.ext.web.handler.BodyHandler;
 import io.vertx.rxjava.ext.web.handler.CorsHandler;
 import io.vertx.rxjava.ext.web.handler.LoggerHandler;
+import io.vertx.rxjava.ext.web.handler.TimeoutHandler;
 import io.vertx.rxjava.micrometer.PrometheusScrapingHandler;
 import lombok.extern.log4j.Log4j2;
 import rx.Completable;
@@ -47,12 +48,14 @@ import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.nextbreakpoint.blueprint.common.core.Headers.ACCEPT;
 import static com.nextbreakpoint.blueprint.common.core.Headers.AUTHORIZATION;
 import static com.nextbreakpoint.blueprint.common.core.Headers.CONTENT_TYPE;
 import static com.nextbreakpoint.blueprint.common.core.Headers.COOKIE;
+import static com.nextbreakpoint.blueprint.common.vertx.ResponseHelper.redirectToError;
 
 @Log4j2
 public class Verticle extends AbstractVerticle {
@@ -135,11 +138,6 @@ public class Verticle extends AbstractVerticle {
 
             final String jwtKeystoreSecret = config.getString("jwt_keystore_secret");
 
-            final Router mainRouter = Router.router(vertx);
-
-            mainRouter.route().handler(LoggerHandler.create(true, LoggerFormat.DEFAULT));
-            mainRouter.route().handler(BodyHandler.create());
-
             final CorsHandler corsHandler = CorsHandlerFactory.createWithGetOnly(originPattern, List.of(COOKIE, AUTHORIZATION, CONTENT_TYPE, ACCEPT));
 
             final WebClientConfig webClientConfig = WebClientConfig.builder()
@@ -158,10 +156,6 @@ public class Verticle extends AbstractVerticle {
                     .setAuthorizationPath(oauthAuthorisePath);
 
             final OAuth2Auth authenticationProvider = OAuth2Auth.create(vertx, oauth2Options);
-
-            mainRouter.route("/*").handler(corsHandler);
-
-            mainRouter.options("/*").handler(ResponseHelper::sendNoContent);
 
             final JWTProviderConfig jwtProviderConfig = JWTProviderConfig.builder()
                     .withKeyStoreType(jwtKeystoreType)
@@ -197,6 +191,15 @@ public class Verticle extends AbstractVerticle {
 
             RouterBuilder.create(vertx.getDelegate(), "file://" + tempFile.getAbsolutePath())
                     .onSuccess(routerBuilder -> {
+                        routerBuilder.operation("apidocs")
+                                .handler(context -> apiV1DocsHandler.handle(RoutingContext.newInstance(context)));
+
+                        routerBuilder.operation("health")
+                                .handler(context -> healthCheckHandler.handle(RoutingContext.newInstance(context)));
+
+                        routerBuilder.operation("metrics")
+                                .handler(context -> PrometheusScrapingHandler.create().handle(RoutingContext.newInstance(context)));
+
                         routerBuilder.operation("signIn")
                                 .handler(context -> signinHandler.handle(RoutingContext.newInstance(context)));
 
@@ -206,17 +209,27 @@ public class Verticle extends AbstractVerticle {
                         routerBuilder.operation("callback")
                                 .handler(context -> callbackHandler.handle(RoutingContext.newInstance(context)));
 
-                        final Router apiRouter = Router.newInstance(routerBuilder.createRouter());
+                        routerBuilder.operation("signInOptions")
+                                .handler(context -> ResponseHelper.sendNoContent(RoutingContext.newInstance(context)));
 
-                        mainRouter.mountSubRouter("/v1", apiRouter);
+                        routerBuilder.operation("signOutOptions")
+                                .handler(context -> ResponseHelper.sendNoContent(RoutingContext.newInstance(context)));
 
-                        mainRouter.get("/v1/apidocs").handler(apiV1DocsHandler);
+                        routerBuilder.operation("callbackOptions")
+                                .handler(context -> ResponseHelper.sendNoContent(RoutingContext.newInstance(context)));
 
-                        mainRouter.get("/health*").handler(healthCheckHandler);
+                        final Router router = Router.newInstance(routerBuilder.createRouter());
 
-                        mainRouter.route("/metrics").handler(PrometheusScrapingHandler.create());
+                        final Router mainRouter = Router.router(vertx);
 
-                        mainRouter.route().failureHandler(routingContext -> redirectOnFailure(routingContext, webUrl));
+                        final Function<Integer, String> getErrorRedirectURL = (code) -> webUrl + "/error/" + code;
+
+                        mainRouter.route().handler(LoggerHandler.create(true, LoggerFormat.DEFAULT));
+                        mainRouter.route().handler(TimeoutHandler.create(10000));
+                        mainRouter.route().handler(corsHandler);
+                        mainRouter.route().handler(BodyHandler.create());
+                        mainRouter.route("/*").subRouter(router);
+                        mainRouter.route().failureHandler(routingContext -> redirectToError(routingContext, getErrorRedirectURL));
 
                         final ServerConfig serverConfig = ServerConfig.builder()
                                 .withJksStorePath(jksStorePath)
@@ -228,22 +241,26 @@ public class Verticle extends AbstractVerticle {
                         vertx.createHttpServer(options)
                                 .requestHandler(mainRouter)
                                 .rxListen(port)
-                                .doOnSuccess(result -> log.info("Service listening on port {}", port))
-                                .doOnError(err -> log.error("Can't create server", err))
-                                .subscribe(result -> promise.complete(), promise::fail);
+                                .subscribe(result -> {
+                                    log.info("Service listening on port {}", port);
+                                    promise.complete();
+                                }, err -> {
+                                    log.error("Can't create server", err);
+                                    promise.fail(err);
+                                });
                     })
                     .onFailure(err -> {
                         log.error("Can't create router", err);
                         promise.fail(err);
                     });
         } catch (Exception e) {
-            log.error("Failed to start server", e);
+            log.error("Failed to initialize service", e);
             promise.fail(e);
         }
     }
 
     private void redirectOnFailure(RoutingContext routingContext, String webUrl) {
-        ResponseHelper.redirectToError(routingContext, statusCode -> webUrl + "/error/" + statusCode);
+        redirectToError(routingContext, statusCode -> webUrl + "/error/" + statusCode);
     }
 
     protected Handler<RoutingContext> createSignInHandler(String cookieDomain, String webUrl, String authUrl, Set<String> adminUsers, WebClient accountsClient, WebClient githubClient, JWTAuth jwtProvider, OAuth2Auth authHandler, String oauthAuthority, String callbackPath) {

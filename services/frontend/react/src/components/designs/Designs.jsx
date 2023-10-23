@@ -1,8 +1,6 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 
-import { withStyles } from '@material-ui/core/styles'
-
 import Message from '../shared/Message'
 
 import { connect } from 'react-redux'
@@ -121,12 +119,8 @@ Designs.propTypes = {
     status: PropTypes.object.isRequired,
     revision: PropTypes.string.isRequired,
     page: PropTypes.number,
-    rowsPerPage: PropTypes.number,
-    classes: PropTypes.object.isRequired,
-    theme: PropTypes.object.isRequired
+    rowsPerPage: PropTypes.number
 }
-
-const styles = theme => ({})
 
 const mapStateToProps = state => ({
     config: getConfig(state),
@@ -150,4 +144,4 @@ const mapDispatchToProps = dispatch => ({
     }
 })
 
-export default withStyles(styles, { withTheme: true })(connect(mapStateToProps, mapDispatchToProps)(Designs))
+export default connect(mapStateToProps, mapDispatchToProps)(Designs)

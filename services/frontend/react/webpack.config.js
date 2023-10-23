@@ -1,5 +1,5 @@
 module.exports = {
-    context: __dirname + "/",
+    context: __dirname + "/src/",
 
     entry: {
         designs: "./DesignsApp",
@@ -7,12 +7,20 @@ module.exports = {
     },
 
     output: {
-        path: __dirname + "/public/js",
+        path: __dirname + "/dist",
         filename: "[name].js"
     },
 
     resolve: {
-        extensions: ['.js', '.jsx', '.json', '.html']
+        extensions: [
+            '.js',
+            '.jsx',
+            '.json',
+            '.html'
+        ],
+        modules: [
+            __dirname + '/node_modules'
+        ]
     },
 
     module: {
@@ -33,6 +41,19 @@ module.exports = {
             ]
           }
         ]
+    },
+
+    devServer: {
+        static: [
+            {
+                directory: __dirname + '/test'
+            },
+            {
+                directory: __dirname + '/dist'
+            }
+        ],
+        compress: true,
+        port: 8888
     }
 };
 

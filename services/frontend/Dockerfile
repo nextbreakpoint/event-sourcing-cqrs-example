@@ -11,11 +11,10 @@ RUN ls -al
 FROM node:17-alpine3.12
 COPY /app /app
 WORKDIR /app
-RUN apk add --no-cache python2 make g++
 RUN cat package.json
 RUN rm -fR node_modules
 RUN npm -dd --fetch-timeout=600000 install
-COPY --from=build /react/public/js/* /app/public/js/
+COPY --from=build /react/dist/* /app/public/js/
 EXPOSE 8080
 ENTRYPOINT ["node"]
 CMD ["/app/bin/www"]

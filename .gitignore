@@ -20,6 +20,5 @@ secrets
 dependency-reduced-pom.xml
 **/node
 .gradle
-designs.js
-preview.js
+react/public/js
 **/file-uploads

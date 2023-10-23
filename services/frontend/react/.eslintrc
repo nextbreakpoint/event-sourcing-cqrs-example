@@ -5,7 +5,7 @@
     "react/jsx-curly-spacing": [2, "always"],
     "react/prefer-stateless-function": [0]
   },
-  settings: {
+  "settings": {
     "import/resolver": "webpack"
   }
 }

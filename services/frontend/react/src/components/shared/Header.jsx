@@ -1,17 +1,15 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 
-import { withStyles } from '@material-ui/core/styles'
-
-import AppBar from '@material-ui/core/AppBar';
-import Toolbar from '@material-ui/core/Toolbar';
-import Typography from '@material-ui/core/Typography';
-import Button from '@material-ui/core/Button';
-import Link from '@material-ui/core/Link';
-import IconButton from '@material-ui/core/IconButton';
-import Menu from '@material-ui/core/Menu';
-import MenuItem from '@material-ui/core/MenuItem';
-import MenuIcon from '@material-ui/icons/Menu';
+import AppBar from '@mui/material/AppBar';
+import Toolbar from '@mui/material/Toolbar';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
+import Link from '@mui/material/Link';
+import IconButton from '@mui/material/IconButton';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import MenuIcon from '@mui/icons-material/Menu';
 
 import { connect } from 'react-redux'
 
@@ -62,14 +60,14 @@ let Header = class Header extends React.Component {
     }
 
     render() {
-        const { classes, titleLink, titleText, titleText2, browseLink, browseText } = this.props
+        const { titleLink, titleText, titleText2, browseLink, browseText } = this.props
         const { anchorEl } = this.state
         const open = Boolean(anchorEl)
 
         return (
             <AppBar position="static">
-                <Toolbar>
-                  <Typography variant="title" color="inherit" className={classes.grow}>{browseLink != null && <span className={classes.browse}><Link href={browseLink}>{browseText}</Link></span>} | {titleLink != null && <span><Link href={titleLink}>{titleText}</Link>{titleText2 != null && <span> | {titleText2}</span>}</span>}{titleLink == null && <span>{titleText}{titleText2 != null && <span> | {titleText2}</span>}</span>}</Typography>
+                <Toolbar className="header">
+                  <Typography variant="title" color="inherit" className="grow">{browseLink != null && <span className="browse"><Link href={browseLink}>{browseText}</Link></span>} | {titleLink != null && <span><Link href={titleLink}>{titleText}</Link>{titleText2 != null && <span> | {titleText2}</span>}</span>}{titleLink == null && <span>{titleText}{titleText2 != null && <span> | {titleText2}</span>}</span>}</Typography>
                   {this.props.account.role == 'anonymous' && <Button color="inherit" onClick={this.handleLogin}>Login</Button>}
                   {this.props.account.role != 'anonymous' && <Button color="inherit" onClick={this.handleLogout}>Logout</Button>}
                 </Toolbar>
@@ -78,7 +76,7 @@ let Header = class Header extends React.Component {
     }
 }
 
-//                   <IconButton className={classes.menuButton} color="inherit" aria-label="Menu">
+//                   <IconButton className={"menu-button"} color="inherit" aria-label="Menu">
 //                     <MenuIcon onClick={this.handleMenu}/>
 //                   </IconButton>
 //                   <Menu
@@ -99,34 +97,13 @@ let Header = class Header extends React.Component {
 //                     <MenuItem onClick={this.handleNavigateAdminDesigns}>Admin</MenuItem>
 //                   </Menu>
 
-
-const styles = theme => ({
-  root: {
-    flexGrow: 1
-  },
-  grow: {
-    flexGrow: 1
-  },
-  browse: {
-    fontWeight: "bold"
-  },
-  button: {
-    padding: 0
-  },
-//   menuButton: {
-//     marginRight: 2 * theme.spacing.unit
-//   }
-})
-
 Header.propTypes = {
     landing: PropTypes.string.isRequired,
     titleLink: PropTypes.string.isRequired,
     titleText: PropTypes.string.isRequired,
     titleText2: PropTypes.string.isRequired,
     browseLink: PropTypes.string.isRequired,
-    browseText: PropTypes.string.isRequired,
-    classes: PropTypes.object.isRequired,
-    theme: PropTypes.object.isRequired
+    browseText: PropTypes.string.isRequired
 }
 
 const mapStateToProps = state => ({
@@ -140,4 +117,4 @@ const mapDispatchToProps = dispatch => ({
     }
 })
 
-export default withStyles(styles, { withTheme: true })(connect(mapStateToProps, mapDispatchToProps)(Header))
+export default connect(mapStateToProps, mapDispatchToProps)(Header)

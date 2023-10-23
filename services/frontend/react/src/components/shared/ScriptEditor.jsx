@@ -44,27 +44,27 @@ function findWithRegex(regex, contentBlock, callback) {
 }
 
 const KeywordSpan = (props) => {
-  return <span style={styles.keyword}>{props.children}</span>
+  return <span className="keyword">{props.children}</span>
 }
 
 const FunctionSpan = (props) => {
-  return <span style={styles.function}>{props.children}</span>
+  return <span className="function">{props.children}</span>
 }
 
 const PathopSpan = (props) => {
-  return <span style={styles.pathop}>{props.children}</span>
+  return <span className="pathop">{props.children}</span>
 }
 
 const ParentSpan = (props) => {
-  return <span style={styles.parent}>{props.children}</span>
+  return <span className="parent">{props.children}</span>
 }
 
 const BraceSpan = (props) => {
-  return <span style={styles.brace}>{props.children}</span>
+  return <span className="brace">{props.children}</span>
 }
 
 const OperatorSpan = (props) => {
-  return <span style={styles.operator}>{props.children}</span>
+  return <span className="operator">{props.children}</span>
 }
 
 const compositeDecorator = new CompositeDecorator([
@@ -118,40 +118,10 @@ let ScriptEditor = class ScriptEditor extends React.Component {
 
     render() {
         return (
-          <div style={styles.editor} onClick={this.focusEditor}>
+          <div className="editor" onClick={this.focusEditor}>
             <Editor ref={this.setEditor} readOnly={this.props.readOnly} editorState={this.state.editorState} onChange={this.onChange}/>
           </div>
         )
-  }
-}
-
-const styles = {
-  editor: {
-    border: '2px solid #b0b0b0',
-    padding: '2%',
-    height: '600px',
-    overflow: 'scroll',
-    borderRadius: '0.4em',
-    backgroundColor: '#fdfdfd',
-    textAlign: 'left'
-  },
-  keyword: {
-    color: 'blue'
-  },
-  function: {
-    color: 'brown'
-  },
-  pathop: {
-    color: 'orange'
-  },
-  parent: {
-    color: 'purple'
-  },
-  brace: {
-    color: 'black'
-  },
-  operator: {
-    color: 'green'
   }
 }
 

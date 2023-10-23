@@ -7,12 +7,55 @@ externalDocs:
   description: Find out more about Swagger
   url: http://swagger.io
 servers:
-  - url: http://localhost/v1
+  - url: http://localhost
 tags:
   - name: designs
     description: Everything about modifying designs
 paths:
-  /designs/{designId}:
+  /apidocs:
+    get:
+      operationId: apidocs
+      responses:
+        200:
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+  /health:
+    get:
+      operationId: health
+      responses:
+        200:
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+  /metrics:
+    get:
+      operationId: metrics
+      responses:
+        200:
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+  /v1/designs/{designId}:
+    options:
+      operationId: designOptions
+      parameters:
+        - name: designId
+          in: path
+          description: uuid of design
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        204:
+          description: No Content
     delete:
       tags:
         - designs
@@ -35,13 +78,10 @@ paths:
                 $ref: '#/components/schemas/DeleteDesignResponse'
         400:
           description: Invalid uuid supplied
-          content: {}
         401:
           description: Missing authentication
-          content: {}
         403:
           description: User not authorized
-          content: {}
 #      security:
 #        - design_auth:
 #            - admin
@@ -74,18 +114,20 @@ paths:
                 $ref: '#/components/schemas/UpdateDesignResponse'
         400:
           description: Invalid uuid supplied
-          content: {}
         401:
           description: Missing authentication
-          content: {}
         403:
           description: User not authorized
-          content: {}
       x-codegen-request-body-name: body
   #      security:
   #        - design_auth:
   #            - admin
-  /designs:
+  /v1/designs:
+    options:
+      operationId: designsOptions
+      responses:
+        204:
+          description: No Content
     post:
       tags:
         - designs
@@ -107,13 +149,10 @@ paths:
                 $ref: '#/components/schemas/InsertDesignResponse'
         401:
           description: Missing authentication
-          content: {}
         403:
           description: User not authorized
-          content: {}
         405:
           description: Invalid input
-          content: {}
       x-codegen-request-body-name: body
 #      security:
 #        - design_auth:

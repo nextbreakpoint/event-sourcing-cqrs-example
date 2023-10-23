@@ -155,7 +155,7 @@ router.get('/designs/(:uuid).html', function(req, res, next) {
                     design = {
                         uuid: design.uuid,
                         checksum: design.checksum,
-                        location: appConfig.client_web_url + '/browse/designs/' + design.uuid + ".html",
+                        location: '../browse/designs/' + design.uuid + ".html",
                         imageUrl: appConfig.client_web_url + '/browse/designs/' + design.uuid + "/0/0/0/512.png?t=" + design.checksum,
                         baseUrl: appConfig.client_web_url + '/browse/designs',
                         modified: design.modified

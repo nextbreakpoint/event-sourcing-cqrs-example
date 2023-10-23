@@ -5,27 +5,24 @@ import Header from '../shared/Header'
 import Footer from '../shared/Footer'
 import DesignForm from '../shared/DesignForm'
 
-import { Map, TileLayer } from 'react-leaflet'
+import { MapContainer, TileLayer, useMap } from 'react-leaflet'
 
-import { withStyles } from '@material-ui/core/styles'
+import Box from '@mui/material/Box'
+import Button from '@mui/material/Button'
+import Typography from '@mui/material/Typography'
+import Grid from '@mui/material/Grid'
+import Dialog from '@mui/material/Dialog'
+import DialogActions from '@mui/material/DialogActions'
+import DialogContent from '@mui/material/DialogContent'
+import DialogTitle from '@mui/material/DialogTitle'
+import Slide from '@mui/material/Slide'
+import Fade from '@mui/material/Fade'
+import Snackbar from '@mui/material/Snackbar'
+import IconButton from '@mui/material/IconButton'
+import Input from '@mui/material/Input'
 
-import CssBaseline from '@material-ui/core/CssBaseline'
-import Box from '@material-ui/core/Box'
-import Button from '@material-ui/core/Button'
-import Typography from '@material-ui/core/Typography'
-import Grid from '@material-ui/core/Grid'
-import Dialog from '@material-ui/core/Dialog'
-import DialogActions from '@material-ui/core/DialogActions'
-import DialogContent from '@material-ui/core/DialogContent'
-import DialogTitle from '@material-ui/core/DialogTitle'
-import Slide from '@material-ui/core/Slide'
-import Fade from '@material-ui/core/Fade'
-import Snackbar from '@material-ui/core/Snackbar'
-import IconButton from '@material-ui/core/IconButton'
-import Input from '@material-ui/core/Input'
-
-import EditIcon from '@material-ui/icons/Edit'
-import CloseIcon from '@material-ui/icons/Close'
+import EditIcon from '@mui/icons-material/Edit'
+import CloseIcon from '@mui/icons-material/Close'
 
 import { connect } from 'react-redux'
 
@@ -298,12 +295,8 @@ let PreviewPage = class PreviewPage extends React.Component {
         this.props.handleHideErrorMessage()
     }
 
-    renderMapLayer = (url) => {
-        return <TileLayer url={url} detectRetina={true} bounds={[[-180, -180],[180, 180]]} noWrap={true} minZoom={1} maxZoom={2} tileSize={256} updateWhenIdle={true} updateWhenZooming={false} updateInterval={500} keepBuffer={2}/>
-    }
-
     render() {
-        const { classes, uuid, design } = this.props
+        const { uuid, design } = this.props
 
         let script = this.state.design.script ? this.state.design.script : this.props.design.script
         let metadata = this.state.design.metadata ? this.state.design.metadata : this.props.design.metadata
@@ -312,7 +305,6 @@ let PreviewPage = class PreviewPage extends React.Component {
 
         return (
             <React.Fragment>
-                <CssBaseline />
                 <Grid container justify="space-between" alignItems="center">
                     <Grid item xs={12}>
                         <Header landing={'/admin/designs/' + uuid + '.html'} titleLink={"/admin/designs.html"} titleText={"Fractals"} titleText2={uuid} browseLink={"/browse/designs/" + uuid + ".html"} browseText={"The Beauty of Chaos"}/>
@@ -320,9 +312,9 @@ let PreviewPage = class PreviewPage extends React.Component {
                     <Grid container xs={12} justify="space-between" alignItems="center" className="container">
                         <Grid item xs={6}>
                             <div className="preview">
-                                <Map center={[0, 0]} zoom={2} attributionControl={false} dragging={false} zoomControl={false} doubleClickZoom={false} scrollWheelZoom={false} touchZoom={false} detectRetina={false}>
-                                    {this.renderMapLayer(url)}
-                                </Map>
+                                <MapContainer center={[0, 0]} zoom={2} attributionControl={false} dragging={false} zoomControl={false} doubleClickZoom={false} scrollWheelZoom={false} touchZoom={false}>
+                                    <TileLayer url={url} detectRetina={false} bounds={[[-180, -180],[180, 180]]} noWrap={true} minZoom={2} maxZoom={2} tileSize={256} updateWhenIdle={true} updateWhenZooming={false} updateInterval={500} keepBuffer={2}/>
+                                </MapContainer>
                             </div>
                         </Grid>
                         <Grid item xs={6}>
@@ -418,27 +410,8 @@ PreviewPage.propTypes = {
     show_update_design: PropTypes.bool.isRequired,
     show_error_message: PropTypes.bool.isRequired,
     error_message: PropTypes.string.isRequired,
-    classes: PropTypes.object.isRequired,
-    theme: PropTypes.object.isRequired,
     uuid: PropTypes.string.isRequired
 }
-
-const styles = {}
-
-const themeStyles = theme => ({
-  fabcontainer: {
-    marginLeft: '-25%',
-    width: '50%',
-    left: '50%',
-    position: 'fixed',
-    zIndex: 1000,
-    bottom: theme.spacing.unit * 2,
-    textAlign: 'center'
-  },
-  fab: {
-    margin: theme.spacing.unit
-  }
-})
 
 const mapStateToProps = state => ({
     config: getConfig(state),
@@ -458,4 +431,4 @@ const mapDispatchToProps = dispatch => ({
     }
 })
 
-export default withStyles(themeStyles, { withTheme: true })(connect(mapStateToProps, mapDispatchToProps)(PreviewPage))
+export default connect(mapStateToProps, mapDispatchToProps)(PreviewPage)

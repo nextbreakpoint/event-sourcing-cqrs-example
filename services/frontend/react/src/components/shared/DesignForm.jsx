@@ -1,8 +1,8 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 
-import Button from '@material-ui/core/Button'
-import Grid from '@material-ui/core/Grid'
+import Button from '@mui/material/Button'
+import Grid from '@mui/material/Grid'
 
 import ScriptEditor from './ScriptEditor'
 import MetadataEditor from './MetadataEditor'
@@ -36,8 +36,6 @@ let DesignForm = class DesignForm extends React.Component {
         )
     }
 }
-
-const styles = {}
 
 DesignForm.propTypes = {
   script: PropTypes.string.isRequired,

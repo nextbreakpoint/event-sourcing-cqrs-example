@@ -33,6 +33,8 @@ jobs:
       run: pipeline/create-secrets.sh
     - name: Build Images
       run: pipeline/build-images.sh
+    - name: Configure Docker
+      run: pipeline/configure-docker.sh
     - name: Start platform
       run: pipeline/platform-start.sh
     - name: Build Services

@@ -175,15 +175,19 @@ if [[ -z $NEXUS_PASSWORD ]]; then
   exit 1
 fi
 
-echo "Nexus server is ${NEXUS_HOST}:${NEXUS_PORT}"
+echo "Nexus server: ${NEXUS_HOST}:${NEXUS_PORT}"
 
-echo "Pact server is ${PACTBROKER_HOST}:${PACTBROKER_PORT}"
+echo "Pact server: ${PACTBROKER_HOST}:${PACTBROKER_PORT}"
 
-echo "Docker host is ${TEST_DOCKER_HOST}"
+echo "Docker host: ${TEST_DOCKER_HOST}"
 
-echo "Version is ${VERSION}"
+echo "Version: ${VERSION}"
 
-echo "Tag is ${REPOSITORY}:${VERSION}"
+echo "Tag: ${REPOSITORY}:${VERSION}"
+
+echo "Use platform: ${USE_PLATFORM}"
+
+echo "Quiet: ${QUIET}"
 
 if [[ $CLEAN == "false" ]]; then
   echo "Skipping clean"

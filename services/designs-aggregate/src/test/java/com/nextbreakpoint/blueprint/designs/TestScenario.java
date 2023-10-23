@@ -11,6 +11,7 @@ import org.testcontainers.utility.DockerImageName;
 
 import java.io.ByteArrayOutputStream;
 import java.time.Duration;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -50,7 +51,7 @@ public class TestScenario {
           .withEnv("DATABASE_USERNAME", "verticle")
           .withEnv("DATABASE_PASSWORD", "password")
           .withEnv("KAFKA_HOST", resolveHost("kafka"))
-          .withEnv("KAFKA_PORT", startPlatform ? "9092" : "9094")
+          .withEnv("KAFKA_PORT", resolveKafkaPort("9092"))
           .withEnv("RENDER_TOPIC_PREFIX", TestConstants.RENDER_TOPIC_PREFIX + "-" + uniqueTestId)
           .withEnv("EVENTS_TOPIC", TestConstants.EVENTS_TOPIC_NAME + "-" + uniqueTestId)
           .withEnv("BUFFER_TOPIC", TestConstants.BUFFER_TOPIC_NAME + "-" + uniqueTestId)
@@ -96,6 +97,16 @@ public class TestScenario {
         cassandra.stop();
       }
     }
+  }
+
+  private Map<String, String> kafkaPortMap = Map.of(
+          "host.docker.internal", "9094",
+          "localhost", "9093",
+          "172.17.0.1", "9095"
+  );
+
+  private String resolveKafkaPort(String port) {
+    return startPlatform ? port : kafkaPortMap.get(dockerHost);
   }
 
   private String resolveHost(String defaultHost) {

@@ -11,6 +11,7 @@ import org.testcontainers.utility.DockerImageName;
 
 import java.io.ByteArrayOutputStream;
 import java.time.Duration;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -46,7 +47,7 @@ public class TestScenario {
             .withEnv("JAEGER_SERVICE_NAME", serviceName)
             .withEnv("KEYSTORE_SECRET", "secret")
             .withEnv("KAFKA_HOST", resolveHost("kafka"))
-            .withEnv("KAFKA_PORT", startPlatform ? "9092" : "9094")
+            .withEnv("KAFKA_PORT", resolveKafkaPort("9092"))
             .withEnv("EVENTS_TOPIC", TestConstants.EVENTS_TOPIC_NAME + "-" + uniqueTestId)
             .withFileSystemBind("../../secrets/keystore_auth.jceks", "/secrets/keystore_auth.jceks", BindMode.READ_ONLY)
             .withFileSystemBind("config/integration.json", "/etc/config.json", BindMode.READ_ONLY)
@@ -88,6 +89,16 @@ public class TestScenario {
                 zookeeper.stop();
             }
         }
+    }
+
+    private Map<String, String> kafkaPortMap = Map.of(
+            "host.docker.internal", "9094",
+            "localhost", "9093",
+            "172.17.0.1", "9095"
+    );
+
+    private String resolveKafkaPort(String port) {
+        return startPlatform ? port : kafkaPortMap.get(dockerHost);
     }
 
     private String resolveHost(String defaultHost) {

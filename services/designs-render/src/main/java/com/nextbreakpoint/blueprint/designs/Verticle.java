@@ -243,10 +243,10 @@ public class Verticle extends AbstractVerticle {
             renderKafkaPolling2 = new KafkaMessagePolling<>(renderKafkaConsumer2, messageHandlers, KafkaMessageConsumer.Simple.create(messageHandlers, registry), registry, KafkaRecordsQueue.Compacted.create(), -1, 10);
             renderKafkaPolling3 = new KafkaMessagePolling<>(renderKafkaConsumer3, messageHandlers, KafkaMessageConsumer.Simple.create(messageHandlers, registry), registry, KafkaRecordsQueue.Compacted.create(), -1, 10);
 
-            renderKafkaPolling0.startPolling("kafka-polling-topic-" + renderTopicPrefix + "-requested-0");
-            renderKafkaPolling1.startPolling("kafka-polling-topic-" + renderTopicPrefix + "-requested-1");
-            renderKafkaPolling2.startPolling("kafka-polling-topic-" + renderTopicPrefix + "-requested-2");
-            renderKafkaPolling3.startPolling("kafka-polling-topic-" + renderTopicPrefix + "-requested-3");
+            renderKafkaPolling0.startPolling();
+            renderKafkaPolling1.startPolling();
+            renderKafkaPolling2.startPolling();
+            renderKafkaPolling3.startPolling();
 
             final CorsHandler corsHandler = CorsHandlerFactory.createWithAll(originPattern, List.of(COOKIE, AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN), List.of(COOKIE, CONTENT_TYPE, X_XSRF_TOKEN));
 

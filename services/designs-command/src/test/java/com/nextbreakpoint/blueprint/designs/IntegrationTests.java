@@ -14,7 +14,7 @@ import static io.restassured.RestAssured.given;
 @Tag("integration")
 @DisplayName("Verify behaviour of designs-command service")
 public class IntegrationTests {
-    private static TestCases testCases = new TestCases("IntegrationTests");
+    private static TestCases testCases = new TestCases("DesignsCommandIntegrationTests");
 
     @BeforeAll
     public static void before() {

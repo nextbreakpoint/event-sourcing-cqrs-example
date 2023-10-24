@@ -10,7 +10,7 @@
     <parent>
         <groupId>com.nextbreakpoint</groupId>
         <artifactId>com.nextbreakpoint.blueprint.service</artifactId>
-        <version>1.0.4-wip-79d93bbd-1698008968</version>
+        <version>1.0.4-wip-91014b45-1698092318</version>
     </parent>
     <repositories>
         <repository>
@@ -26,7 +26,7 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <argLine>--add-opens=com.nextbreakpoint.blueprint.common.core/com.nextbreakpoint.blueprint.common.core=ALL-UNNAMED --add-opens=com.nextbreakpoint.blueprint.designs.aggregate/com.nextbreakpoint.blueprint.designs.common=ALL-UNNAMED</argLine>
+                    <argLine>@{argLine} --add-opens=com.nextbreakpoint.blueprint.common.core/com.nextbreakpoint.blueprint.common.core=ALL-UNNAMED --add-opens=com.nextbreakpoint.blueprint.designs.aggregate/com.nextbreakpoint.blueprint.designs.common=ALL-UNNAMED</argLine>
                 </configuration>
             </plugin>
             <plugin>

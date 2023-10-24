@@ -43,12 +43,14 @@ public class TestCases {
 
         KafkaProducer<String, String> producer = KafkaClientFactory.createProducer(createProducerConfig("integration"));
 
-        eventEmitter = new KafkaTestEmitter(producer, TestConstants.EVENTS_TOPIC_NAME);
+        eventEmitter = new KafkaTestEmitter(producer, TestConstants.EVENTS_TOPIC_NAME + "-" + scenario.getUniqueTestId());
 
         eventSource = new EventSource(vertx, getServiceUrl(), getEventSourceConfig());
     }
 
     public void after() {
+        eventSource.close();
+
         try {
             vertx.rxClose()
                     .doOnError(Throwable::printStackTrace)

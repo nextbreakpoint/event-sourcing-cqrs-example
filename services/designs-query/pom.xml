@@ -10,7 +10,7 @@
     <parent>
         <groupId>com.nextbreakpoint</groupId>
         <artifactId>com.nextbreakpoint.blueprint.service</artifactId>
-        <version>1.0.4-wip-79d93bbd-1698008968</version>
+        <version>1.0.4-wip-91014b45-1698092318</version>
     </parent>
     <repositories>
         <repository>
@@ -167,6 +167,11 @@
             <artifactId>micrometer-registry-prometheus</artifactId>
         </dependency>
         <dependency>
+            <groupId>au.com.dius.pact</groupId>
+            <artifactId>consumer</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>au.com.dius.pact.consumer</groupId>
             <artifactId>junit5</artifactId>
             <scope>test</scope>
@@ -178,16 +183,6 @@
         </dependency>
         <dependency>
             <groupId>au.com.dius.pact.provider</groupId>
-            <artifactId>junit5</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>au.com.dius.pact</groupId>
-            <artifactId>consumer</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>au.com.dius.pact.consumer</groupId>
             <artifactId>junit5</artifactId>
             <scope>test</scope>
         </dependency>

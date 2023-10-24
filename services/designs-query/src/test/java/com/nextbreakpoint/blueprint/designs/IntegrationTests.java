@@ -40,7 +40,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class IntegrationTests {
   private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ISO_INSTANT;
 
-  private static final TestCases testCases = new TestCases("IntegrationTests");
+  private static final TestCases testCases = new TestCases("DesignsQueryIntegrationTests");
 
   private static final String JSON_1 = new JsonObject(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT1)).toString();
   private static final String JSON_2 = new JsonObject(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT2)).toString();
@@ -62,8 +62,7 @@ public class IntegrationTests {
     final Design design2 = new Design(TestConstants.DESIGN_UUID_2, TestConstants.USER_ID, UUID.randomUUID(), JSON_2, Checksum.of(JSON_2), TestConstants.REVISION_0, "UPDATED", false, TestConstants.LEVELS, TestUtils.getTiles(TestConstants.LEVELS, 0.2f), FORMATTER.format(Instant.now()), FORMATTER.format(Instant.now()));
     final Design design3 = new Design(TestConstants.DESIGN_UUID_3, TestConstants.USER_ID, UUID.randomUUID(), JSON_3, Checksum.of(JSON_3), TestConstants.REVISION_0, "UPDATED", false, TestConstants.LEVELS, TestUtils.getTiles(TestConstants.LEVELS, 0.5f), FORMATTER.format(Instant.now()), FORMATTER.format(Instant.now()));
 
-    testCases.deleteDesigns();
-    testCases.deleteDraftDesigns();
+    testCases.deleteData();
 
     List.of(design2, design3).forEach(testCases::insertDesign);
     List.of(design1, design2, design3).forEach(testCases::insertDraftDesign);

@@ -272,14 +272,14 @@ public class Verticle extends AbstractVerticle {
             renderKafkaPolling2 = new KafkaMessagePolling<>(renderKafkaConsumer2, renderMessageHandlers, KafkaMessageConsumer.Simple.create(renderMessageHandlers, registry), registry, KafkaRecordsQueue.Compacted.create(), -1, 10);
             renderKafkaPolling3 = new KafkaMessagePolling<>(renderKafkaConsumer3, renderMessageHandlers, KafkaMessageConsumer.Simple.create(renderMessageHandlers, registry), registry, KafkaRecordsQueue.Compacted.create(), -1, 10);
 
-            eventsKafkaPolling.startPolling("kafka-polling-topic-" + eventsTopic);
+            eventsKafkaPolling.startPolling();
 
-            bufferKafkaPolling.startPolling("kafka-polling-topic-" + bufferTopic);
+            bufferKafkaPolling.startPolling();
 
-            renderKafkaPolling0.startPolling("kafka-polling-topic-" + renderTopicPrefix + "-completed-0");
-            renderKafkaPolling1.startPolling("kafka-polling-topic-" + renderTopicPrefix + "-completed-1");
-            renderKafkaPolling2.startPolling("kafka-polling-topic-" + renderTopicPrefix + "-completed-2");
-            renderKafkaPolling3.startPolling("kafka-polling-topic-" + renderTopicPrefix + "-completed-3");
+            renderKafkaPolling0.startPolling();
+            renderKafkaPolling1.startPolling();
+            renderKafkaPolling2.startPolling();
+            renderKafkaPolling3.startPolling();
 
             final Handler<RoutingContext> apiV1DocsHandler = new OpenApiHandler(vertx.getDelegate(), executor, "api-v1.yaml");
 

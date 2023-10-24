@@ -23,6 +23,7 @@ public class TestScenario {
   private final String nexusPort = TestUtils.getVariable("NEXUS_PORT", System.getProperty("nexus.port", "8081"));
   private final boolean buildImages = TestUtils.getVariable("BUILD_IMAGES", System.getProperty("build.images", "false")).equals("true");
   private final boolean useContainers = TestUtils.getVariable("USE_CONTAINERS", System.getProperty("use.containers", "true")).equals("true");
+  private final boolean startPlatform = TestUtils.getVariable("START_PLATFORM", System.getProperty("start.platform", "false")).equals("true");
   private final String dockerHost = TestUtils.getVariable("DOCKER_HOST", System.getProperty("docker.host", "host.docker.internal"));
   private final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
@@ -70,11 +71,11 @@ public class TestScenario {
   }
 
   private String getHost(GenericContainer container) {
-    return useContainers ? container.getHost() : "localhost";
+    return (useContainers && startPlatform) ? container.getHost() : "localhost";
   }
 
   private int getPort(GenericContainer container, int port) {
-    return useContainers ? container.getMappedPort(port) : port;
+    return (useContainers && startPlatform) ? container.getMappedPort(port) : port;
   }
 
   public String getVersion() {
@@ -82,11 +83,11 @@ public class TestScenario {
   }
 
   public String getServiceHost() {
-    return getHost(service);
+    return useContainers ? service.getHost() : getHost(service);
   }
 
   public Integer getServicePort() {
-    return getPort(service, HTTP_PORT);
+    return useContainers ? service.getMappedPort(HTTP_PORT) : HTTP_PORT;
   }
 
   public String makeAuthorization(String user, String role) {

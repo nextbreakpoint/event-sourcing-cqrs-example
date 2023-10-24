@@ -24,6 +24,7 @@ public class TestScenario {
   private final String nexusPort = TestUtils.getVariable("NEXUS_PORT", System.getProperty("nexus.port", "8081"));
   private final boolean buildImages = TestUtils.getVariable("BUILD_IMAGES", System.getProperty("build.images", "false")).equals("true");
   private final boolean useContainers = TestUtils.getVariable("USE_CONTAINERS", System.getProperty("use.containers", "true")).equals("true");
+  private final boolean startPlatform = TestUtils.getVariable("START_PLATFORM", System.getProperty("start.platform", "false")).equals("true");
   private final String dockerHost = TestUtils.getVariable("DOCKER_HOST", System.getProperty("docker.host", "host.docker.internal"));
   private final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
@@ -36,7 +37,7 @@ public class TestScenario {
           .withEnv("DEBUG_OPTS", "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:" + DEBUG_PORT)
           .withEnv("JAEGER_SERVICE_NAME", serviceName)
           .withEnv("KEYSTORE_SECRET", "secret")
-          .withEnv("DATABASE_HOST", "mysql")
+          .withEnv("DATABASE_HOST", resolveHost("mysql"))
           .withEnv("DATABASE_NAME", TestConstants.DATABASE_NAME)
           .withEnv("DATABASE_USERNAME", "verticle")
           .withEnv("DATABASE_PASSWORD", "password")
@@ -46,7 +47,6 @@ public class TestScenario {
           .withNetwork(network)
           .withNetworkAliases(serviceName)
           .withLogConsumer(frame -> outputStream.writeBytes(Optional.ofNullable(frame.getBytes()).orElse(new byte[0])))
-          .dependsOn(mysql)
           .waitingFor(Wait.forLogMessage(".*\"Service listening on port " + HTTP_PORT + "\".*", 1).withStartupTimeout(Duration.ofSeconds(20)));
 
   public void before() {
@@ -55,7 +55,12 @@ public class TestScenario {
     }
 
     if (useContainers) {
-      mysql.start();
+      if (startPlatform) {
+        mysql.start();
+
+        service = service.dependsOn(mysql);
+      }
+
       service.start();
 
       System.out.println("Debug port: " + service.getMappedPort(DEBUG_PORT));
@@ -69,16 +74,23 @@ public class TestScenario {
       System.out.println(outputStream);
 
       service.stop();
-      mysql.stop();
+
+      if (startPlatform) {
+        mysql.stop();
+      }
     }
   }
 
+  private String resolveHost(String defaultHost) {
+    return (useContainers && startPlatform) ? defaultHost : dockerHost;
+  }
+
   private String getHost(GenericContainer container) {
-    return useContainers ? container.getHost() : "localhost";
+    return (useContainers && startPlatform) ? container.getHost() : "localhost";
   }
 
   private int getPort(GenericContainer container, int port) {
-    return useContainers ? container.getMappedPort(port) : port;
+    return (useContainers && startPlatform) ? container.getMappedPort(port) : port;
   }
 
   public String getVersion() {
@@ -86,11 +98,11 @@ public class TestScenario {
   }
 
   public String getServiceHost() {
-    return getHost(service);
+    return useContainers ? service.getHost() : getHost(service);
   }
 
   public Integer getServicePort() {
-    return getPort(service, HTTP_PORT);
+    return useContainers ? service.getMappedPort(HTTP_PORT) : HTTP_PORT;
   }
 
   public String getMySQLHost() {

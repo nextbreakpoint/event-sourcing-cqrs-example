@@ -8,3 +8,4 @@ sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubun
 sudo add-apt-repository "deb [arch=amd64] https://packages.adoptium.net/artifactory/deb focal main"
 sudo apt-get update -y && sudo apt-get install -y ca-certificates curl gnupg lsb-release temurin-17-jdk maven docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 sudo usermod -aG docker $USER && newgrp docker
+

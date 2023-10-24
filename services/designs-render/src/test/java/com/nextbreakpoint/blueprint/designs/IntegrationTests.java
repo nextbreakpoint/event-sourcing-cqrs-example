@@ -20,7 +20,7 @@ import static io.restassured.RestAssured.given;
 @Tag("integration")
 @DisplayName("Verify behaviour of designs-render service")
 public class IntegrationTests {
-    private static TestCases testCases = new TestCases("IntegrationTests");
+    private static TestCases testCases = new TestCases("DesignsRenderIntegrationTests");
 
     @BeforeAll
     public static void before() {

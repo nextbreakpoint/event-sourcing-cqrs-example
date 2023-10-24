@@ -63,7 +63,7 @@ public class KafkaMessagePolling<T> {
         this.tags = List.of(Tag.of("group_id", kafkaConsumer.groupMetadata().groupId()));
     }
 
-    public void startPolling(String name) {
+    public void startPolling() {
         if (pollingThread != null) {
             return;
         }
@@ -107,7 +107,7 @@ public class KafkaMessagePolling<T> {
                     }
                 }
             }
-        }, name);
+        }, kafkaConsumer.groupMetadata().groupId());
 
         pollingThread.start();
     }

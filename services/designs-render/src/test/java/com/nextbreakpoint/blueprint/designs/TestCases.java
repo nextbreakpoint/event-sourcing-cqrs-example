@@ -43,7 +43,7 @@ public class TestCases {
     private String consumerGroupId;
 
     public TestCases(String consumerGroupId) {
-        this.consumerGroupId = consumerGroupId;
+        this.consumerGroupId = consumerGroupId + "-" + scenario.getUniqueTestId();
     }
 
     public void before() {
@@ -57,30 +57,30 @@ public class TestCases {
         KafkaConsumer<String, String> renderConsumer = KafkaClientFactory.createConsumer(createConsumerConfig(consumerGroupId));
 
         final Set<String> renderTopics = Set.of(
-                TestConstants.RENDER_TOPIC_PREFIX + "-completed-0",
-                TestConstants.RENDER_TOPIC_PREFIX + "-completed-1",
-                TestConstants.RENDER_TOPIC_PREFIX + "-completed-2",
-                TestConstants.RENDER_TOPIC_PREFIX + "-completed-3",
-                TestConstants.RENDER_TOPIC_PREFIX + "-requested-0",
-                TestConstants.RENDER_TOPIC_PREFIX + "-requested-1",
-                TestConstants.RENDER_TOPIC_PREFIX + "-requested-2",
-                TestConstants.RENDER_TOPIC_PREFIX + "-requested-3"
+                TestConstants.RENDER_TOPIC_PREFIX + "-" + scenario.getUniqueTestId() + "-completed-0",
+                TestConstants.RENDER_TOPIC_PREFIX + "-" + scenario.getUniqueTestId() + "-completed-1",
+                TestConstants.RENDER_TOPIC_PREFIX + "-" + scenario.getUniqueTestId() + "-completed-2",
+                TestConstants.RENDER_TOPIC_PREFIX + "-" + scenario.getUniqueTestId() + "-completed-3",
+                TestConstants.RENDER_TOPIC_PREFIX + "-" + scenario.getUniqueTestId() + "-requested-0",
+                TestConstants.RENDER_TOPIC_PREFIX + "-" + scenario.getUniqueTestId() + "-requested-1",
+                TestConstants.RENDER_TOPIC_PREFIX + "-" + scenario.getUniqueTestId() + "-requested-2",
+                TestConstants.RENDER_TOPIC_PREFIX + "-" + scenario.getUniqueTestId() + "-requested-3"
         );
 
         renderPolling = new KafkaTestPolling(renderConsumer, renderTopics);
 
         renderPolling.startPolling();
 
-        renderEmitter = new KafkaTestEmitter(producer, TestConstants.RENDER_TOPIC_PREFIX);
+        renderEmitter = new KafkaTestEmitter(producer, TestConstants.RENDER_TOPIC_PREFIX + "-" + scenario.getUniqueTestId());
 
-        final S3Client s3Client = TestS3.createS3Client(URI.create("http://" + scenario.getMinioHost() + ":" + scenario.getMinioPort()));
-
-        TestS3.deleteContent(s3Client, TestConstants.BUCKET, object -> true);
-        TestS3.deleteBucket(s3Client, TestConstants.BUCKET);
-        TestS3.createBucket(s3Client, TestConstants.BUCKET);
+        deleteData();
     }
 
     public void after() {
+        if (renderPolling != null) {
+            renderPolling.stopPolling();
+        }
+
         try {
             vertx.rxClose()
                     .doOnError(Throwable::printStackTrace)
@@ -96,6 +96,14 @@ public class TestCases {
     @NotNull
     public String getVersion() {
         return scenario.getVersion();
+    }
+
+    public void deleteData() {
+        final S3Client s3Client = TestS3.createS3Client(URI.create("http://" + scenario.getMinioHost() + ":" + scenario.getMinioPort()));
+
+        TestS3.deleteContent(s3Client, TestConstants.BUCKET, object -> true);
+        TestS3.deleteBucket(s3Client, TestConstants.BUCKET);
+        TestS3.createBucket(s3Client, TestConstants.BUCKET);
     }
 
     @NotNull
@@ -181,15 +189,15 @@ public class TestCases {
         await().atMost(Duration.ofSeconds(30))
                 .pollInterval(ONE_SECOND)
                 .untilAsserted(() -> {
-                    final List<InputMessage> messages1 = renderPolling.findMessages(TestUtils.createRenderKey(tileRenderRequested1), TestConstants.MESSAGE_SOURCE, TestConstants.TILE_RENDER_COMPLETED);
+                    final List<InputMessage> messages1 = renderPolling.findMessages(TestConstants.MESSAGE_SOURCE, TestConstants.TILE_RENDER_COMPLETED, TestUtils.createRenderKey(tileRenderRequested1));
                     assertThat(messages1).hasSize(1);
-                    final List<InputMessage> messages2 = renderPolling.findMessages(TestUtils.createRenderKey(tileRenderRequested2), TestConstants.MESSAGE_SOURCE, TestConstants.TILE_RENDER_COMPLETED);
+                    final List<InputMessage> messages2 = renderPolling.findMessages(TestConstants.MESSAGE_SOURCE, TestConstants.TILE_RENDER_COMPLETED, TestUtils.createRenderKey(tileRenderRequested2));
                     assertThat(messages2).hasSize(1);
-                    final List<InputMessage> messages3 = renderPolling.findMessages(TestUtils.createRenderKey(tileRenderRequested3), TestConstants.MESSAGE_SOURCE, TestConstants.TILE_RENDER_COMPLETED);
+                    final List<InputMessage> messages3 = renderPolling.findMessages(TestConstants.MESSAGE_SOURCE, TestConstants.TILE_RENDER_COMPLETED, TestUtils.createRenderKey(tileRenderRequested3));
                     assertThat(messages3).hasSize(1);
-                    final List<InputMessage> messages4 = renderPolling.findMessages(TestUtils.createRenderKey(tileRenderRequested4), TestConstants.MESSAGE_SOURCE, TestConstants.TILE_RENDER_COMPLETED);
+                    final List<InputMessage> messages4 = renderPolling.findMessages(TestConstants.MESSAGE_SOURCE, TestConstants.TILE_RENDER_COMPLETED, TestUtils.createRenderKey(tileRenderRequested4));
                     assertThat(messages4).hasSize(1);
-                    final List<InputMessage> messages5 = renderPolling.findMessages(TestUtils.createRenderKey(tileRenderRequested5), TestConstants.MESSAGE_SOURCE, TestConstants.TILE_RENDER_COMPLETED);
+                    final List<InputMessage> messages5 = renderPolling.findMessages(TestConstants.MESSAGE_SOURCE, TestConstants.TILE_RENDER_COMPLETED, TestUtils.createRenderKey(tileRenderRequested5));
                     assertThat(messages5).hasSize(1);
                     InputMessage message1 = messages1.get(0);
                     TestAssertions.assertExpectedTileRenderCompletedMessage(message1, tileRenderRequested1);

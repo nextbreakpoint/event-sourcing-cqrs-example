@@ -22,7 +22,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @Consumer("frontend")
 @PactBroker
 public class VerifyFrontendPact {
-    private static TestCases testCases = new TestCases("PactTests");
+    private static TestCases testCases = new TestCases("DesignsCommandVerifyFrontendPact");
 
     @BeforeAll
     public static void before() {

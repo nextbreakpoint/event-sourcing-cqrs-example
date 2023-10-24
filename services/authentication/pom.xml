@@ -82,9 +82,9 @@
                         <configuration>
                             <environmentVariables>
                                 <LOGGING_LEVEL>DEBUG</LOGGING_LEVEL>
-                                <ACCOUNTS_URL>http://localhost:39001</ACCOUNTS_URL>
-                                <GITHUB_API_URL>http://localhost:39002</GITHUB_API_URL>
-                                <GITHUB_OAUTH_URL>http://localhost:39002</GITHUB_OAUTH_URL>
+                                <ACCOUNTS_URL>http://localhost:49001</ACCOUNTS_URL>
+                                <GITHUB_API_URL>http://localhost:49002</GITHUB_API_URL>
+                                <GITHUB_OAUTH_URL>http://localhost:49002</GITHUB_OAUTH_URL>
                                 <GITHUB_CLIENT_ID>111</GITHUB_CLIENT_ID>
                                 <GITHUB_CLIENT_SECRET>222</GITHUB_CLIENT_SECRET>
                                 <GITHUB_ACCOUNT_EMAIL>admin@localhost</GITHUB_ACCOUNT_EMAIL>

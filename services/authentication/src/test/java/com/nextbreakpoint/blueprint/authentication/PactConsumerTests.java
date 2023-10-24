@@ -35,7 +35,7 @@ import static org.hamcrest.CoreMatchers.startsWith;
 public class PactConsumerTests {
   private static final TestCases testCases = new TestCases();
 
-  private static final StubServer githubStub = new StubServer(Integer.parseInt("39002"));
+  private static final StubServer githubStub = new StubServer(Integer.parseInt("49002"));
 
   private final int expectedPort = 8000;
   private final String expectedHost = "localhost";
@@ -147,7 +147,7 @@ public class PactConsumerTests {
 
   @Test
   @PactTestFor(providerName = "accounts", pactMethod = "accountDoesNotExist", pactVersion = PactSpecVersion.V4)
-  @MockServerConfig(providerName = "accounts", port = "39001")
+  @MockServerConfig(providerName = "accounts", port = "49001")
   @DisplayName("should create an account and redirect to designs when authenticated user doesn't have an account")
   public void shouldCreateAnAccountAndRedirectToDesignsWhenAuthenticatedUserDoNotHaveAnAccount(MockServer mockServer) throws IOException {
     whenHttp(githubStub)
@@ -176,7 +176,7 @@ public class PactConsumerTests {
 
   @Test
   @PactTestFor(providerName = "accounts", pactMethod = "accountExists", pactVersion = PactSpecVersion.V4)
-  @MockServerConfig(providerName = "accounts", port = "39001")
+  @MockServerConfig(providerName = "accounts", port = "49001")
   @DisplayName("should not create an account and redirect to designs when authenticated user already has an account")
   public void shouldNotCreateAnAccountAndRedirectToDesignsWhenAuthenticatedUserAlreadyHasAnAccount(MockServer mockServer) throws IOException {
     whenHttp(githubStub)

@@ -107,7 +107,7 @@ public class TestScenario {
     }
   }
 
-  private Map<String, String> kafkaPortMap = Map.of(
+  private static Map<String, String> kafkaPortMap = Map.of(
       "host.docker.internal", "9094",
       "localhost", "9093",
       "172.17.0.1", "9095"

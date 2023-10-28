@@ -20,8 +20,8 @@ public class TestUtils {
         return RestAssuredConfig.newConfig().redirect(redirectConfig).sslConfig(sslConfig).logConfig(logConfig);
     }
 
-    public static Map<String, Object> createPostData(String manifest, String metadata, String script) {
-        final Map<String, Object> data = new HashMap<>();
+    public static Map<String, String> createPostData(String manifest, String metadata, String script) {
+        final Map<String, String> data = new HashMap<>();
         data.put("manifest", manifest);
         data.put("metadata", metadata);
         data.put("script", script);

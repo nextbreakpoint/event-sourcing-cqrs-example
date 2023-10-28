@@ -1,13 +1,22 @@
 package com.nextbreakpoint.blueprint.designs;
 
 import au.com.dius.pact.core.model.V4Interaction;
-import com.nextbreakpoint.blueprint.common.core.*;
+import com.nextbreakpoint.blueprint.common.core.InputMessage;
+import com.nextbreakpoint.blueprint.common.core.Json;
+import com.nextbreakpoint.blueprint.common.core.KafkaRecord;
+import com.nextbreakpoint.blueprint.common.core.OutputMessage;
+import com.nextbreakpoint.blueprint.common.core.Tile;
+import com.nextbreakpoint.blueprint.common.core.TilesBitmap;
+import com.nextbreakpoint.blueprint.common.events.DesignAggregateUpdated;
+import com.nextbreakpoint.blueprint.common.events.DesignDocumentDeleteRequested;
+import com.nextbreakpoint.blueprint.common.events.DesignDocumentUpdateRequested;
 import com.nextbreakpoint.blueprint.common.events.TileRenderCompleted;
 import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
 import com.nextbreakpoint.blueprint.common.test.PayloadUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -33,11 +42,31 @@ public class TestUtils {
     }
 
     @NotNull
-    public static List<TileRenderRequested> extractTileRenderRequestedEvents(List<InputMessage> messages, String checksum) {
+    public static List<TileRenderRequested> extractTileRenderRequestedEvents(List<InputMessage> messages, Predicate<TileRenderRequested> predicate) {
         return messages.stream()
-                .map(message -> Json.decodeValue(message.getValue().getData(), TileRenderRequested.class))
-                .filter(event -> event.getChecksum().equals(checksum))
+                .map(TestUtils::extractTileRenderRequestedEvent)
+                .filter(predicate)
                 .collect(Collectors.toList());
+    }
+
+    @NotNull
+    public static TileRenderRequested extractTileRenderRequestedEvent(InputMessage message) {
+        return Json.decodeValue(message.getValue().getData(), TileRenderRequested.class);
+    }
+
+    @NotNull
+    public static DesignAggregateUpdated extractDesignAggregateUpdatedEvent(InputMessage message) {
+        return Json.decodeValue(message.getValue().getData(), DesignAggregateUpdated.class);
+    }
+
+    @NotNull
+    public static DesignDocumentUpdateRequested extractDesignDocumentUpdateRequestedEvent(InputMessage inputMessage) {
+        return Json.decodeValue(inputMessage.getValue().getData(), DesignDocumentUpdateRequested.class);
+    }
+
+    @NotNull
+    public static DesignDocumentDeleteRequested extractDesignDocumentDeleteRequestedEvent(InputMessage inputMessage) {
+        return Json.decodeValue(inputMessage.getValue().getData(), DesignDocumentDeleteRequested.class);
     }
 
     @NotNull

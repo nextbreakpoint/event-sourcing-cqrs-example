@@ -39,7 +39,7 @@ Wait until Nexus is ready (please be patient):
 
 Export Nexus password:
 
-    export NEXUS_PASSWORD=$(docker exec nexus cat /opt/sonatype/sonatype-work/nexus3/admin.password)
+    export NEXUS_PASSWORD=$(./scripts/get-nexus-password.sh)
 
 Create Maven repository:
 
@@ -47,47 +47,51 @@ Create Maven repository:
 
 Build services:
 
-    ./scripts/build-services.sh --nexus-host=localhost --nexus-port=8082 --nexus-username=admin --nexus-password=${NEXUS_PASSWORD}
+    ./scripts/build-services.sh --nexus-host=localhost --nexus-port=8082 --nexus-username=admin --nexus-password=${NEXUS_PASSWORD} --quiet
 
 See results of Pact tests:
 
     open http://localhost:9292
 
+Build services with a verbose output:
+
+    ./scripts/build-services.sh --nexus-host=localhost --nexus-port=8082 --nexus-username=admin --nexus-password=${NEXUS_PASSWORD}
+
 Build services without tests:
 
-    ./scripts/build-services.sh --nexus-host=localhost --nexus-port=8082 --nexus-username=admin --nexus-password=${NEXUS_PASSWORD} --skip-tests
+    ./scripts/build-services.sh --nexus-host=localhost --nexus-port=8082 --nexus-username=admin --nexus-password=${NEXUS_PASSWORD} --quiet --skip-tests
 
 Build services without tests and set version:
 
-    ./scripts/build-services.sh --nexus-host=localhost --nexus-port=8082 --nexus-username=admin --nexus-password=${NEXUS_PASSWORD} --skip-tests --version=1.0.0
+    ./scripts/build-services.sh --nexus-host=localhost --nexus-port=8082 --nexus-username=admin --nexus-password=${NEXUS_PASSWORD} --quiet --skip-tests --version=1.0.0
 
 Build services without tests but keep version:
 
-    ./scripts/build-services.sh --nexus-host=localhost --nexus-port=8082 --nexus-username=admin --nexus-password=${NEXUS_PASSWORD} --skip-tests --keep-version
+    ./scripts/build-services.sh --nexus-host=localhost --nexus-port=8082 --nexus-username=admin --nexus-password=${NEXUS_PASSWORD} --quiet --skip-tests --keep-version
 
 Build only two services without tests and keep version:
 
-    ./scripts/build-services.sh --nexus-host=localhost --nexus-port=8082 --nexus-username=admin --nexus-password=${NEXUS_PASSWORD} --skip-tests --keep-version --services="frontend authentication"
+    ./scripts/build-services.sh --nexus-host=localhost --nexus-port=8082 --nexus-username=admin --nexus-password=${NEXUS_PASSWORD} --quiet --skip-tests --keep-version --services="frontend authentication"
 
 Build services and run tests, but skip Pact tests:
 
-    ./scripts/build-services.sh --nexus-host=localhost --nexus-port=8082 --nexus-username=admin --nexus-password=${NEXUS_PASSWORD} --skip-pact-tests --skip-pact-verify
+    ./scripts/build-services.sh --nexus-host=localhost --nexus-port=8082 --nexus-username=admin --nexus-password=${NEXUS_PASSWORD} --quiet --skip-pact-tests --skip-pact-verify
 
 Build services and run tests, but skip integration tests:
 
-    ./scripts/build-services.sh --nexus-host=localhost --nexus-port=8082 --nexus-username=admin --nexus-password=${NEXUS_PASSWORD} --skip-integration-tests
+    ./scripts/build-services.sh --nexus-host=localhost --nexus-port=8082 --nexus-username=admin --nexus-password=${NEXUS_PASSWORD} --quiet --skip-integration-tests
 
 Run tests without building Docker images:
 
-    ./scripts/build-services.sh --nexus-host=localhost --nexus-port=8082 --nexus-username=admin --nexus-password=${NEXUS_PASSWORD} --skip-images --keep-version
+    ./scripts/build-services.sh --nexus-host=localhost --nexus-port=8082 --nexus-username=admin --nexus-password=${NEXUS_PASSWORD} --quiet --skip-images --keep-version
 
 Run Pact tests only:
 
-    ./scripts/build-services.sh --nexus-host=localhost --nexus-port=8082 --nexus-username=admin --nexus-password=${NEXUS_PASSWORD} --skip-images --keep-version --skip-integration-tests
+    ./scripts/build-services.sh --nexus-host=localhost --nexus-port=8082 --nexus-username=admin --nexus-password=${NEXUS_PASSWORD} --quiet --skip-images --keep-version --skip-integration-tests
 
 Run Pact verify only:
 
-    ./scripts/build-services.sh --nexus-host=localhost --nexus-port=8082 --nexus-username=admin --nexus-password=${NEXUS_PASSWORD} --skip-images --keep-version --skip-integration-tests --skip-pact-tests
+    ./scripts/build-services.sh --nexus-host=localhost --nexus-port=8082 --nexus-username=admin --nexus-password=${NEXUS_PASSWORD} --quiet --skip-images --keep-version --skip-integration-tests --skip-pact-tests
 
 Update dependencies (only if you know what you are doing):
 
@@ -539,7 +543,7 @@ Reset Docker environment variables to use local Docker engine:
 
 Build images and run tests:
 
-    ./scripts/build-services.sh --pactbroker-host=${PACTBROKER_HOST} --pactbroker-port=${PACTBROKER_PORT} --nexus-host=${NEXUS_HOST} --nexus-port=${NEXUS_PORT} --nexus-username=${NEXUS_USERNAME} --nexus-password=${NEXUS_PASSWORD}
+    ./scripts/build-services.sh --pactbroker-host=${PACTBROKER_HOST} --pactbroker-port=${PACTBROKER_PORT} --nexus-host=${NEXUS_HOST} --nexus-port=${NEXUS_PORT} --nexus-username=${NEXUS_USERNAME} --nexus-password=${NEXUS_PASSWORD} --quiet 
 
 See results of Pact tests:
 

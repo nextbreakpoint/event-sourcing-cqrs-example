@@ -50,4 +50,9 @@ public class TestUtils {
         data.put("script", script);
         return data;
     }
+
+    @NotNull
+    public static TileRenderRequested extractTileRenderRequestedEvent(OutputMessage message) {
+        return Json.decodeValue(message.getValue().getData(), TileRenderRequested.class);
+    }
 }

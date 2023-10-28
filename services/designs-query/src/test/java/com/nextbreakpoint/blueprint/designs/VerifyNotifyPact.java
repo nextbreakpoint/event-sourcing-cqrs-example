@@ -26,6 +26,16 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.UUID;
 
+import static com.nextbreakpoint.blueprint.designs.TestConstants.COMMAND_ID_1;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.COMMAND_ID_2;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.COMMAND_ID_3;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.COMMAND_ID_4;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_ID_1;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_ID_2;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.MESSAGE_SOURCE;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.REVISION_0;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.REVISION_1;
+
 @Tag("docker")
 @Tag("pact-verify")
 @DisplayName("Verify contract between designs-query and designs-watch")
@@ -60,36 +70,36 @@ public class VerifyNotifyPact {
 
     @PactVerifyProvider("design document update completed for design 00000000-0000-0000-0000-000000000001")
     public String produceDesignDocumentUpdateCompleted1() {
-        return produceDesignDocumentUpdateCompleted(new UUID(0L, 1L));
+        return produceDesignDocumentUpdateCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0);
     }
 
     @PactVerifyProvider("design document update completed for design 00000000-0000-0000-0000-000000000002")
     public String produceDesignDocumentUpdateCompleted2() {
-        return produceDesignDocumentUpdateCompleted(new UUID(0L, 2L));
+        return produceDesignDocumentUpdateCompleted(DESIGN_ID_2, COMMAND_ID_2, REVISION_1);
     }
 
     @PactVerifyProvider("design document delete completed for design 00000000-0000-0000-0000-000000000001")
     public String produceDesignDocumentDeleteCompleted1() {
-        return produceDesignDocumentDeleteCompleted(new UUID(0L, 1L));
+        return produceDesignDocumentDeleteCompleted(DESIGN_ID_1, COMMAND_ID_3, REVISION_0);
     }
 
     @PactVerifyProvider("design document delete completed for design 00000000-0000-0000-0000-000000000002")
     public String produceDesignDocumentDeleteCompleted2() {
-        return produceDesignDocumentDeleteCompleted(new UUID(0L, 2L));
+        return produceDesignDocumentDeleteCompleted(DESIGN_ID_2, COMMAND_ID_4, REVISION_1);
     }
 
-    private String produceDesignDocumentUpdateCompleted(UUID uuid) {
-        final DesignDocumentUpdateCompleted designDocumentUpdateCompleted = new DesignDocumentUpdateCompleted(uuid, UUID.randomUUID(), TestConstants.REVISION_0);
+    private String produceDesignDocumentUpdateCompleted(UUID designId, UUID commandId, String revision) {
+        final DesignDocumentUpdateCompleted designDocumentUpdateCompleted = new DesignDocumentUpdateCompleted(designId, commandId, revision);
 
-        final OutputMessage designDocumentUpdateCompletedMessage = new DesignDocumentUpdateCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designDocumentUpdateCompleted);
+        final OutputMessage designDocumentUpdateCompletedMessage = new DesignDocumentUpdateCompletedOutputMapper(MESSAGE_SOURCE).transform(designDocumentUpdateCompleted);
 
         return Json.encodeValue(new KafkaRecord(designDocumentUpdateCompletedMessage.getKey(), PayloadUtils.payloadToMap(designDocumentUpdateCompletedMessage.getValue())));
     }
 
-    private String produceDesignDocumentDeleteCompleted(UUID uuid) {
-        final DesignDocumentDeleteCompleted designDocumentDeleteCompleted = new DesignDocumentDeleteCompleted(uuid, UUID.randomUUID(), TestConstants.REVISION_0);
+    private String produceDesignDocumentDeleteCompleted(UUID designId, UUID commandId, String revision) {
+        final DesignDocumentDeleteCompleted designDocumentDeleteCompleted = new DesignDocumentDeleteCompleted(designId, commandId, revision);
 
-        final OutputMessage designDocumentDeleteCompletedMessage = new DesignDocumentDeleteCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designDocumentDeleteCompleted);
+        final OutputMessage designDocumentDeleteCompletedMessage = new DesignDocumentDeleteCompletedOutputMapper(MESSAGE_SOURCE).transform(designDocumentDeleteCompleted);
 
         return Json.encodeValue(new KafkaRecord(designDocumentDeleteCompletedMessage.getKey(), PayloadUtils.payloadToMap(designDocumentDeleteCompletedMessage.getValue())));
     }

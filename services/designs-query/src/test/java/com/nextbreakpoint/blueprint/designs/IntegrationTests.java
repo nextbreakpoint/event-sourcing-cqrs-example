@@ -14,7 +14,14 @@ import com.nextbreakpoint.blueprint.designs.model.DesignDocuments;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.vertx.core.json.JsonObject;
-import org.junit.jupiter.api.*;
+import org.assertj.core.api.SoftAssertions;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -25,12 +32,36 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static com.nextbreakpoint.blueprint.common.core.Headers.AUTHORIZATION;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.COMMAND_ID_1;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.COMMAND_ID_2;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.COMMAND_ID_3;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.COMMAND_ID_4;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_ID_0;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_ID_1;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_ID_2;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_ID_3;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_ID_4;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_ID_5;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.LEVELS_DRAFT;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.LEVELS_READY;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.MANIFEST;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.MESSAGE_SOURCE;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.METADATA;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.REVISION_0;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.REVISION_1;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.REVISION_2;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.SCRIPT1;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.SCRIPT2;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.SCRIPT3;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.USER_ID_1;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.USER_ID_2;
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -42,9 +73,15 @@ public class IntegrationTests {
 
   private static final TestCases testCases = new TestCases("DesignsQueryIntegrationTests");
 
-  private static final String JSON_1 = new JsonObject(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT1)).toString();
-  private static final String JSON_2 = new JsonObject(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT2)).toString();
-  private static final String JSON_3 = new JsonObject(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT3)).toString();
+  private static final String DATA_1 = new JsonObject(TestUtils.createPostData(MANIFEST, METADATA, SCRIPT1)).toString();
+  private static final String DATA_2 = new JsonObject(TestUtils.createPostData(MANIFEST, METADATA, SCRIPT2)).toString();
+  private static final String DATA_3 = new JsonObject(TestUtils.createPostData(MANIFEST, METADATA, SCRIPT3)).toString();
+
+  private final LocalDateTime createTime = LocalDateTime.ofInstant(Instant.now().truncatedTo(ChronoUnit.MILLIS), ZoneId.of("UTC")).minusDays(1);
+  private final LocalDateTime updateTime = LocalDateTime.ofInstant(Instant.now().truncatedTo(ChronoUnit.MILLIS), ZoneId.of("UTC"));
+
+  private final DesignDocumentUpdateRequestedOutputMapper designDocumentUpdateRequestedMapper = new DesignDocumentUpdateRequestedOutputMapper(MESSAGE_SOURCE);
+  private final DesignDocumentDeleteRequestedOutputMapper designDocumentDeleteRequestedMapper = new DesignDocumentDeleteRequestedOutputMapper(MESSAGE_SOURCE);
 
   @BeforeAll
   public static void before() {
@@ -58,14 +95,15 @@ public class IntegrationTests {
 
   @BeforeEach
   public void setup() {
-    final Design design1 = new Design(TestConstants.DESIGN_UUID_1, TestConstants.USER_ID, UUID.randomUUID(), JSON_1, Checksum.of(JSON_1), TestConstants.REVISION_0, "CREATED", false, TestConstants.LEVELS, TestUtils.getTiles(TestConstants.LEVELS, 0.0f), FORMATTER.format(Instant.now()), FORMATTER.format(Instant.now()));
-    final Design design2 = new Design(TestConstants.DESIGN_UUID_2, TestConstants.USER_ID, UUID.randomUUID(), JSON_2, Checksum.of(JSON_2), TestConstants.REVISION_0, "UPDATED", false, TestConstants.LEVELS, TestUtils.getTiles(TestConstants.LEVELS, 0.2f), FORMATTER.format(Instant.now()), FORMATTER.format(Instant.now()));
-    final Design design3 = new Design(TestConstants.DESIGN_UUID_3, TestConstants.USER_ID, UUID.randomUUID(), JSON_3, Checksum.of(JSON_3), TestConstants.REVISION_0, "UPDATED", false, TestConstants.LEVELS, TestUtils.getTiles(TestConstants.LEVELS, 0.5f), FORMATTER.format(Instant.now()), FORMATTER.format(Instant.now()));
-
     testCases.deleteData();
+    testCases.getSteps().reset();
 
-    List.of(design2, design3).forEach(testCases::insertDesign);
+    final Design design1 = new Design(DESIGN_ID_1, USER_ID_1, UUID.randomUUID(), DATA_1, Checksum.of(DATA_1), REVISION_0, "CREATED", false, LEVELS_DRAFT, TestUtils.getTiles(LEVELS_DRAFT, 0.5f), FORMATTER.format(Instant.now()), FORMATTER.format(Instant.now()));
+    final Design design2 = new Design(DESIGN_ID_2, USER_ID_1, UUID.randomUUID(), DATA_2, Checksum.of(DATA_2), REVISION_0, "UPDATED", false, LEVELS_DRAFT, TestUtils.getTiles(LEVELS_DRAFT, 1.0f), FORMATTER.format(Instant.now()), FORMATTER.format(Instant.now()));
+    final Design design3 = new Design(DESIGN_ID_3, USER_ID_1, UUID.randomUUID(), DATA_3, Checksum.of(DATA_3), REVISION_0, "UPDATED", true, LEVELS_READY, TestUtils.getTiles(LEVELS_READY, 1.0f), FORMATTER.format(Instant.now()), FORMATTER.format(Instant.now()));
+
     List.of(design1, design2, design3).forEach(testCases::insertDraftDesign);
+    List.of(design3).forEach(testCases::insertDesign);
   }
 
   @AfterEach
@@ -76,48 +114,115 @@ public class IntegrationTests {
   @Test
   @DisplayName("Should update the design after receiving a DesignDocumentUpdateRequested event")
   public void shouldUpdateTheDesignWhenReceivingADesignDocumentUpdateRequested() {
-    final UUID designId1 = UUID.randomUUID();
-    final UUID designId2 = UUID.randomUUID();
+    final List<Tiles> tiles1 = TestUtils.getTiles(LEVELS_DRAFT, 0f);
+    final List<Tiles> tiles2 = TestUtils.getTiles(LEVELS_DRAFT, 50f);
+    final List<Tiles> tiles3 = TestUtils.getTiles(LEVELS_READY, 100f);
 
-    final List<Tiles> tiles1 = TestUtils.getTiles(TestConstants.LEVELS, 0f);
-    final List<Tiles> tiles2 = TestUtils.getTiles(TestConstants.LEVELS, 50f);
-    final List<Tiles> tiles3 = TestUtils.getTiles(TestConstants.LEVELS, 100f);
-    final List<Tiles> tiles4 = TestUtils.getTiles(TestConstants.LEVELS, 100f);
+    var designDocumentUpdateRequested1 = DesignDocumentUpdateRequested.builder()
+            .withDesignId(DESIGN_ID_4)
+            .withCommandId(COMMAND_ID_1)
+            .withUserId(USER_ID_1)
+            .withData(DATA_1)
+            .withChecksum(Checksum.of(DATA_1))
+            .withRevision(REVISION_0)
+            .withLevels(LEVELS_DRAFT)
+            .withTiles(tiles1)
+            .withStatus("CREATED")
+            .withPublished(false)
+            .withCreated(createTime)
+            .withUpdated(updateTime)
+            .build();
 
-    final DesignDocumentUpdateRequested designDocumentUpdateRequested1 = new DesignDocumentUpdateRequested(designId1, UUID.randomUUID(), TestConstants.USER_ID, TestConstants.REVISION_0, TestConstants.CHECKSUM_1, TestConstants.JSON_1, "CREATED", false, TestConstants.LEVELS, tiles1, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")), LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
-    final DesignDocumentUpdateRequested designDocumentUpdateRequested2 = new DesignDocumentUpdateRequested(designId1, UUID.randomUUID(), TestConstants.USER_ID, TestConstants.REVISION_1, TestConstants.CHECKSUM_1, TestConstants.JSON_1, "UPDATED", false, TestConstants.LEVELS, tiles2, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")), LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
-    final DesignDocumentUpdateRequested designDocumentUpdateRequested3 = new DesignDocumentUpdateRequested(designId1, UUID.randomUUID(), TestConstants.USER_ID, TestConstants.REVISION_2, TestConstants.CHECKSUM_1, TestConstants.JSON_1, "UPDATED", false, TestConstants.LEVELS, tiles3, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")), LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
-    final DesignDocumentUpdateRequested designDocumentUpdateRequested4 = new DesignDocumentUpdateRequested(designId2, UUID.randomUUID(), TestConstants.USER_ID, TestConstants.REVISION_0, TestConstants.CHECKSUM_2, TestConstants.JSON_2, "UPDATED", false, TestConstants.LEVELS, tiles4, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")), LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
+    var designDocumentUpdateRequested2 = DesignDocumentUpdateRequested.builder()
+            .withDesignId(DESIGN_ID_4)
+            .withCommandId(COMMAND_ID_2)
+            .withUserId(USER_ID_1)
+            .withData(DATA_2)
+            .withChecksum(Checksum.of(DATA_2))
+            .withRevision(REVISION_1)
+            .withLevels(LEVELS_DRAFT)
+            .withTiles(tiles2)
+            .withStatus("UPDATED")
+            .withPublished(false)
+            .withCreated(createTime)
+            .withUpdated(updateTime)
+            .build();
 
-    final DesignDocumentUpdateRequestedOutputMapper outputMapper = new DesignDocumentUpdateRequestedOutputMapper(TestConstants.MESSAGE_SOURCE);
+    var designDocumentUpdateRequested3 = DesignDocumentUpdateRequested.builder()
+            .withDesignId(DESIGN_ID_4)
+            .withCommandId(COMMAND_ID_3)
+            .withUserId(USER_ID_1)
+            .withData(DATA_2)
+            .withChecksum(Checksum.of(DATA_2))
+            .withRevision(REVISION_2)
+            .withLevels(LEVELS_READY)
+            .withTiles(tiles3)
+            .withStatus("UPDATED")
+            .withPublished(false)
+            .withCreated(createTime)
+            .withUpdated(updateTime)
+            .build();
 
-    final OutputMessage designDocumentUpdateRequestedMessage1 = outputMapper.transform(designDocumentUpdateRequested1);
-    final OutputMessage designDocumentUpdateRequestedMessage2 = outputMapper.transform(designDocumentUpdateRequested2);
-    final OutputMessage designDocumentUpdateRequestedMessage3 = outputMapper.transform(designDocumentUpdateRequested3);
-    final OutputMessage designDocumentUpdateRequestedMessage4 = outputMapper.transform(designDocumentUpdateRequested4);
+    var designDocumentUpdateRequested4 = DesignDocumentUpdateRequested.builder()
+            .withDesignId(DESIGN_ID_4)
+            .withCommandId(COMMAND_ID_4)
+            .withUserId(USER_ID_1)
+            .withData(DATA_2)
+            .withChecksum(Checksum.of(DATA_2))
+            .withRevision(REVISION_2)
+            .withLevels(LEVELS_READY)
+            .withTiles(tiles3)
+            .withStatus("UPDATED")
+            .withPublished(true)
+            .withCreated(createTime)
+            .withUpdated(updateTime)
+            .build();
 
-    final List<OutputMessage> outputMessages = List.of(designDocumentUpdateRequestedMessage1, designDocumentUpdateRequestedMessage2, designDocumentUpdateRequestedMessage3, designDocumentUpdateRequestedMessage4);
+    final OutputMessage designDocumentUpdateRequestedMessage1 = designDocumentUpdateRequestedMapper.transform(designDocumentUpdateRequested1);
+    final OutputMessage designDocumentUpdateRequestedMessage2 = designDocumentUpdateRequestedMapper.transform(designDocumentUpdateRequested2);
+    final OutputMessage designDocumentUpdateRequestedMessage3 = designDocumentUpdateRequestedMapper.transform(designDocumentUpdateRequested3);
+    final OutputMessage designDocumentUpdateRequestedMessage4 = designDocumentUpdateRequestedMapper.transform(designDocumentUpdateRequested4);
 
-    testCases.shouldUpdateTheDesignWhenReceivingADesignDocumentUpdateRequestedMessage(outputMessages);
+    final List<OutputMessage> designDocumentUpdateRequestedMessages = List.of(
+            designDocumentUpdateRequestedMessage1,
+            designDocumentUpdateRequestedMessage2,
+            designDocumentUpdateRequestedMessage3,
+            designDocumentUpdateRequestedMessage4
+    );
+
+    testCases.shouldUpdateTheDesignWhenReceivingADesignDocumentUpdateRequested(designDocumentUpdateRequestedMessages);
   }
 
   @Test
   @DisplayName("Should delete the design after receiving a DesignDocumentDeleteRequested event")
   public void shouldDeleteTheDesignWhenReceivingADesignDocumentDeleteRequested() {
-    final UUID designId = UUID.randomUUID();
+    final List<Tiles> tiles = TestUtils.getTiles(LEVELS_READY, 100.0f);
 
-    final List<Tiles> tiles = TestUtils.getTiles(TestConstants.LEVELS, 100.0f);
+    var designDocumentUpdateRequested = DesignDocumentUpdateRequested.builder()
+            .withDesignId(DESIGN_ID_5)
+            .withCommandId(COMMAND_ID_1)
+            .withUserId(USER_ID_2)
+            .withData(DATA_1)
+            .withChecksum(Checksum.of(DATA_1))
+            .withRevision(REVISION_0)
+            .withLevels(LEVELS_READY)
+            .withTiles(tiles)
+            .withStatus("UPDATED")
+            .withPublished(true)
+            .withCreated(createTime)
+            .withUpdated(updateTime)
+            .build();
 
-    final DesignDocumentUpdateRequested designDocumentUpdateRequested = new DesignDocumentUpdateRequested(designId, UUID.randomUUID(), TestConstants.USER_ID, TestConstants.REVISION_0, TestConstants.CHECKSUM_2, TestConstants.JSON_2, "CREATED", false, TestConstants.LEVELS, tiles, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")), LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
-    final DesignDocumentDeleteRequested designDocumentDeleteRequested = new DesignDocumentDeleteRequested(designId, UUID.randomUUID(), TestConstants.REVISION_0);
+    var designDocumentDeleteRequested = DesignDocumentDeleteRequested.builder()
+            .withDesignId(DESIGN_ID_5)
+            .withCommandId(COMMAND_ID_2)
+            .withRevision(REVISION_0)
+            .build();
 
-    final DesignDocumentUpdateRequestedOutputMapper outputMapper1 = new DesignDocumentUpdateRequestedOutputMapper(TestConstants.MESSAGE_SOURCE);
-    final DesignDocumentDeleteRequestedOutputMapper outputMapper2 = new DesignDocumentDeleteRequestedOutputMapper(TestConstants.MESSAGE_SOURCE);
+    final OutputMessage designDocumentUpdateRequestedMessage = designDocumentUpdateRequestedMapper.transform(designDocumentUpdateRequested);
+    final OutputMessage designDocumentDeleteRequestedMessage = designDocumentDeleteRequestedMapper.transform(designDocumentDeleteRequested);
 
-    final OutputMessage designDocumentUpdateRequestedMessage = outputMapper1.transform(designDocumentUpdateRequested);
-    final OutputMessage designDocumentDeleteRequestedMessage = outputMapper2.transform(designDocumentDeleteRequested);
-
-    testCases.shouldDeleteTheDesignWhenReceivingADesignDocumentDeleteRequestedMessage(designDocumentUpdateRequestedMessage, designDocumentDeleteRequestedMessage);
+    testCases.shouldDeleteTheDesignWhenReceivingADesignDocumentDeleteRequested(designDocumentUpdateRequestedMessage, designDocumentDeleteRequestedMessage);
   }
 
   @Test
@@ -162,7 +267,7 @@ public class IntegrationTests {
     given().config(TestUtils.getRestAssuredConfig())
             .with().header(AUTHORIZATION, otherAuthorization)
             .and().accept(ContentType.JSON)
-            .when().get(testCases.makeBaseURL("/v1/designs/" + TestConstants.DESIGN_UUID_1 + "?draft=true"))
+            .when().get(testCases.makeBaseURL("/v1/designs/" + DESIGN_ID_1 + "?draft=true"))
             .then().assertThat().statusCode(403);
   }
 
@@ -174,7 +279,7 @@ public class IntegrationTests {
     given().config(TestUtils.getRestAssuredConfig())
             .with().header(AUTHORIZATION, otherAuthorization)
             .and().accept("image/png")
-            .when().get(testCases.makeBaseURL("/v1/designs/" + TestConstants.DESIGN_UUID_2 + "/0/0/0/256.png?draft=true"))
+            .when().get(testCases.makeBaseURL("/v1/designs/" + DESIGN_ID_2 + "/0/0/0/256.png?draft=true"))
             .then().assertThat().statusCode(403);
   }
 
@@ -183,7 +288,7 @@ public class IntegrationTests {
   public void shouldAllowGetOnDesignsWhenUserIsAnonymous() throws MalformedURLException {
     final String authorization = testCases.makeAuthorization("test", Authority.ANONYMOUS);
 
-    DesignDocuments results = listDesigns(authorization);
+    DesignDocuments results = listDraftDesigns(authorization);
 
     List<DesignDocument> sortedResults = results.getDesigns().stream()
             .sorted(Comparator.comparing(DesignDocument::getUuid))
@@ -191,27 +296,29 @@ public class IntegrationTests {
 
     assertThat(sortedResults).hasSize(3);
 
-    assertThat(sortedResults.get(0).getUuid()).isEqualTo(TestConstants.DESIGN_UUID_1);
-    assertThat(sortedResults.get(1).getUuid()).isEqualTo(TestConstants.DESIGN_UUID_2);
-    assertThat(sortedResults.get(2).getUuid()).isEqualTo(TestConstants.DESIGN_UUID_3);
-    assertThat(sortedResults.get(0).getChecksum()).isEqualTo(Checksum.of(JSON_1));
-    assertThat(sortedResults.get(1).getChecksum()).isEqualTo(Checksum.of(JSON_2));
-    assertThat(sortedResults.get(2).getChecksum()).isEqualTo(Checksum.of(JSON_3));
-    assertThat(sortedResults.get(0).getRevision()).isNotNull();
-    assertThat(sortedResults.get(1).getRevision()).isNotNull();
-    assertThat(sortedResults.get(2).getRevision()).isNotNull();
-    assertThat(sortedResults.get(0).getCreated()).isNotNull();
-    assertThat(sortedResults.get(1).getCreated()).isNotNull();
-    assertThat(sortedResults.get(2).getCreated()).isNotNull();
-    assertThat(sortedResults.get(0).getUpdated()).isNotNull();
-    assertThat(sortedResults.get(1).getUpdated()).isNotNull();
-    assertThat(sortedResults.get(2).getUpdated()).isNotNull();
-    assertThat(sortedResults.get(0).getLevels()).isEqualTo(TestConstants.LEVELS);
-    assertThat(sortedResults.get(1).getLevels()).isEqualTo(TestConstants.LEVELS);
-    assertThat(sortedResults.get(2).getLevels()).isEqualTo(TestConstants.LEVELS);
-    assertThat(sortedResults.get(0).getTiles()).isNotNull();
-    assertThat(sortedResults.get(1).getTiles()).isNotNull();
-    assertThat(sortedResults.get(2).getTiles()).isNotNull();
+    SoftAssertions softly = new SoftAssertions();
+    softly.assertThat(sortedResults.get(0).getUuid()).isEqualTo(DESIGN_ID_1);
+    softly.assertThat(sortedResults.get(1).getUuid()).isEqualTo(DESIGN_ID_2);
+    softly.assertThat(sortedResults.get(2).getUuid()).isEqualTo(DESIGN_ID_3);
+    softly.assertThat(sortedResults.get(0).getChecksum()).isEqualTo(Checksum.of(DATA_1));
+    softly.assertThat(sortedResults.get(1).getChecksum()).isEqualTo(Checksum.of(DATA_2));
+    softly.assertThat(sortedResults.get(2).getChecksum()).isEqualTo(Checksum.of(DATA_3));
+    softly.assertThat(sortedResults.get(0).getRevision()).isNotNull();
+    softly.assertThat(sortedResults.get(1).getRevision()).isNotNull();
+    softly.assertThat(sortedResults.get(2).getRevision()).isNotNull();
+    softly.assertThat(sortedResults.get(0).getCreated()).isNotNull();
+    softly.assertThat(sortedResults.get(1).getCreated()).isNotNull();
+    softly.assertThat(sortedResults.get(2).getCreated()).isNotNull();
+    softly.assertThat(sortedResults.get(0).getUpdated()).isNotNull();
+    softly.assertThat(sortedResults.get(1).getUpdated()).isNotNull();
+    softly.assertThat(sortedResults.get(2).getUpdated()).isNotNull();
+    softly.assertThat(sortedResults.get(0).getLevels()).isEqualTo(LEVELS_DRAFT);
+    softly.assertThat(sortedResults.get(1).getLevels()).isEqualTo(LEVELS_DRAFT);
+    softly.assertThat(sortedResults.get(2).getLevels()).isEqualTo(LEVELS_READY);
+    softly.assertThat(sortedResults.get(0).getTiles()).isNotNull();
+    softly.assertThat(sortedResults.get(1).getTiles()).isNotNull();
+    softly.assertThat(sortedResults.get(2).getTiles()).isNotNull();
+    softly.assertAll();
   }
 
   @Test
@@ -219,17 +326,20 @@ public class IntegrationTests {
   public void shouldAllowGetOnDesignsSlashIdWhenUserIsAnonymous() throws MalformedURLException {
     final String authorization = testCases.makeAuthorization("test", Authority.ANONYMOUS);
 
-    DesignDocument result = loadDesign(authorization, TestConstants.DESIGN_UUID_1);
+    DesignDocument result = loadDraftDesign(authorization, DESIGN_ID_1);
 
-    String json1 = new JsonObject(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT1)).toString();
-    assertThat(result.getUuid()).isEqualTo(TestConstants.DESIGN_UUID_1);
-    assertThat(result.getJson()).isEqualTo(json1);
-    assertThat(result.getCreated()).isNotNull();
-    assertThat(result.getUpdated()).isNotNull();
-    assertThat(result.getChecksum()).isNotNull();
-    assertThat(result.getRevision()).isNotNull();
-    assertThat(result.getLevels()).isEqualTo(TestConstants.LEVELS);
-    assertThat(result.getTiles()).isNotNull();
+    String json1 = new JsonObject(TestUtils.createPostData(MANIFEST, METADATA, SCRIPT1)).toString();
+
+    SoftAssertions softly = new SoftAssertions();
+    softly.assertThat(result.getUuid()).isEqualTo(DESIGN_ID_1);
+    softly.assertThat(result.getJson()).isEqualTo(json1);
+    softly.assertThat(result.getCreated()).isNotNull();
+    softly.assertThat(result.getUpdated()).isNotNull();
+    softly.assertThat(result.getChecksum()).isNotNull();
+    softly.assertThat(result.getRevision()).isNotNull();
+    softly.assertThat(result.getLevels()).isEqualTo(LEVELS_DRAFT);
+    softly.assertThat(result.getTiles()).isNotNull();
+    softly.assertAll();
   }
 
   @Test
@@ -237,11 +347,14 @@ public class IntegrationTests {
   public void shouldAllowGetOnDesignsSlashIdSlashLocationSlashSizeWhenUserIsAnonymous() throws IOException {
     final String authorization = testCases.makeAuthorization("test", Authority.ANONYMOUS);
 
-    byte[] result = getTile(authorization, TestConstants.DESIGN_UUID_1);
+    byte[] result = getDraftTile(authorization, DESIGN_ID_1);
 
     final BufferedImage image = ImageIO.read(new ByteArrayInputStream(result));
-    assertThat(image.getWidth()).isEqualTo(256);
-    assertThat(image.getHeight()).isEqualTo(256);
+
+    SoftAssertions softly = new SoftAssertions();
+    softly.assertThat(image.getWidth()).isEqualTo(256);
+    softly.assertThat(image.getHeight()).isEqualTo(256);
+    softly.assertAll();
   }
 
   @Test
@@ -249,7 +362,7 @@ public class IntegrationTests {
   public void shouldAllowGetOnDesignsWhenUserIsAdmin() throws MalformedURLException {
     final String authorization = testCases.makeAuthorization("test", Authority.ADMIN);
 
-    DesignDocuments results = listDesigns(authorization);
+    DesignDocuments results = listDraftDesigns(authorization);
 
     List<DesignDocument> sortedResults = results.getDesigns().stream()
             .sorted(Comparator.comparing(DesignDocument::getUuid))
@@ -257,27 +370,29 @@ public class IntegrationTests {
 
     assertThat(sortedResults).hasSize(3);
 
-    assertThat(sortedResults.get(0).getUuid()).isEqualTo(TestConstants.DESIGN_UUID_1);
-    assertThat(sortedResults.get(1).getUuid()).isEqualTo(TestConstants.DESIGN_UUID_2);
-    assertThat(sortedResults.get(2).getUuid()).isEqualTo(TestConstants.DESIGN_UUID_3);
-    assertThat(sortedResults.get(0).getChecksum()).isEqualTo(Checksum.of(JSON_1));
-    assertThat(sortedResults.get(1).getChecksum()).isEqualTo(Checksum.of(JSON_2));
-    assertThat(sortedResults.get(2).getChecksum()).isEqualTo(Checksum.of(JSON_3));
-    assertThat(sortedResults.get(0).getRevision()).isNotNull();
-    assertThat(sortedResults.get(1).getRevision()).isNotNull();
-    assertThat(sortedResults.get(2).getRevision()).isNotNull();
-    assertThat(sortedResults.get(0).getCreated()).isNotNull();
-    assertThat(sortedResults.get(1).getCreated()).isNotNull();
-    assertThat(sortedResults.get(2).getCreated()).isNotNull();
-    assertThat(sortedResults.get(0).getUpdated()).isNotNull();
-    assertThat(sortedResults.get(1).getUpdated()).isNotNull();
-    assertThat(sortedResults.get(2).getUpdated()).isNotNull();
-    assertThat(sortedResults.get(0).getLevels()).isEqualTo(TestConstants.LEVELS);
-    assertThat(sortedResults.get(1).getLevels()).isEqualTo(TestConstants.LEVELS);
-    assertThat(sortedResults.get(2).getLevels()).isEqualTo(TestConstants.LEVELS);
-    assertThat(sortedResults.get(0).getTiles()).isNotNull();
-    assertThat(sortedResults.get(1).getTiles()).isNotNull();
-    assertThat(sortedResults.get(2).getTiles()).isNotNull();
+    SoftAssertions softly = new SoftAssertions();
+    softly.assertThat(sortedResults.get(0).getUuid()).isEqualTo(DESIGN_ID_1);
+    softly.assertThat(sortedResults.get(1).getUuid()).isEqualTo(DESIGN_ID_2);
+    softly.assertThat(sortedResults.get(2).getUuid()).isEqualTo(DESIGN_ID_3);
+    softly.assertThat(sortedResults.get(0).getChecksum()).isEqualTo(Checksum.of(DATA_1));
+    softly.assertThat(sortedResults.get(1).getChecksum()).isEqualTo(Checksum.of(DATA_2));
+    softly.assertThat(sortedResults.get(2).getChecksum()).isEqualTo(Checksum.of(DATA_3));
+    softly.assertThat(sortedResults.get(0).getRevision()).isNotNull();
+    softly.assertThat(sortedResults.get(1).getRevision()).isNotNull();
+    softly.assertThat(sortedResults.get(2).getRevision()).isNotNull();
+    softly.assertThat(sortedResults.get(0).getCreated()).isNotNull();
+    softly.assertThat(sortedResults.get(1).getCreated()).isNotNull();
+    softly.assertThat(sortedResults.get(2).getCreated()).isNotNull();
+    softly.assertThat(sortedResults.get(0).getUpdated()).isNotNull();
+    softly.assertThat(sortedResults.get(1).getUpdated()).isNotNull();
+    softly.assertThat(sortedResults.get(2).getUpdated()).isNotNull();
+    softly.assertThat(sortedResults.get(0).getLevels()).isEqualTo(LEVELS_DRAFT);
+    softly.assertThat(sortedResults.get(1).getLevels()).isEqualTo(LEVELS_DRAFT);
+    softly.assertThat(sortedResults.get(2).getLevels()).isEqualTo(LEVELS_READY);
+    softly.assertThat(sortedResults.get(0).getTiles()).isNotNull();
+    softly.assertThat(sortedResults.get(1).getTiles()).isNotNull();
+    softly.assertThat(sortedResults.get(2).getTiles()).isNotNull();
+    softly.assertAll();
   }
 
   @Test
@@ -285,17 +400,20 @@ public class IntegrationTests {
   public void shouldAllowGetOnDesignsSlashIdWhenUserIsAdmin() throws MalformedURLException {
     final String authorization = testCases.makeAuthorization("test", Authority.ADMIN);
 
-    DesignDocument result = loadDesign(authorization, TestConstants.DESIGN_UUID_1);
+    DesignDocument result = loadDraftDesign(authorization, DESIGN_ID_1);
 
-    String json1 = new JsonObject(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT1)).toString();
-    assertThat(result.getUuid()).isEqualTo(TestConstants.DESIGN_UUID_1);
-    assertThat(result.getJson()).isEqualTo(json1);
-    assertThat(result.getCreated()).isNotNull();
-    assertThat(result.getUpdated()).isNotNull();
-    assertThat(result.getChecksum()).isNotNull();
-    assertThat(result.getRevision()).isNotNull();
-    assertThat(result.getLevels()).isEqualTo(TestConstants.LEVELS);
-    assertThat(result.getTiles()).isNotNull();
+    String json1 = new JsonObject(TestUtils.createPostData(MANIFEST, METADATA, SCRIPT1)).toString();
+
+    SoftAssertions softly = new SoftAssertions();
+    softly.assertThat(result.getUuid()).isEqualTo(DESIGN_ID_1);
+    softly.assertThat(result.getJson()).isEqualTo(json1);
+    softly.assertThat(result.getCreated()).isNotNull();
+    softly.assertThat(result.getUpdated()).isNotNull();
+    softly.assertThat(result.getChecksum()).isNotNull();
+    softly.assertThat(result.getRevision()).isNotNull();
+    softly.assertThat(result.getLevels()).isEqualTo(LEVELS_DRAFT);
+    softly.assertThat(result.getTiles()).isNotNull();
+    softly.assertAll();
   }
 
   @Test
@@ -303,11 +421,14 @@ public class IntegrationTests {
   public void shouldAllowGetOnDesignsSlashIdSlashLocationSlashSizeWhenUserIsAdmin() throws IOException {
     final String authorization = testCases.makeAuthorization("test", Authority.ADMIN);
 
-    byte[] result = getTile(authorization, TestConstants.DESIGN_UUID_2);
+    byte[] result = getDraftTile(authorization, DESIGN_ID_2);
 
     final BufferedImage image = ImageIO.read(new ByteArrayInputStream(result));
-    assertThat(image.getWidth()).isEqualTo(256);
-    assertThat(image.getHeight()).isEqualTo(256);
+
+    SoftAssertions softly = new SoftAssertions();
+    softly.assertThat(image.getWidth()).isEqualTo(256);
+    softly.assertThat(image.getHeight()).isEqualTo(256);
+    softly.assertAll();
   }
 
   @Test
@@ -323,27 +444,29 @@ public class IntegrationTests {
 
     assertThat(sortedResults1).hasSize(3);
 
-    assertThat(sortedResults1.get(0).getUuid()).isEqualTo(TestConstants.DESIGN_UUID_1);
-    assertThat(sortedResults1.get(1).getUuid()).isEqualTo(TestConstants.DESIGN_UUID_2);
-    assertThat(sortedResults1.get(2).getUuid()).isEqualTo(TestConstants.DESIGN_UUID_3);
-    assertThat(sortedResults1.get(0).getChecksum()).isEqualTo(Checksum.of(JSON_1));
-    assertThat(sortedResults1.get(1).getChecksum()).isEqualTo(Checksum.of(JSON_2));
-    assertThat(sortedResults1.get(2).getChecksum()).isEqualTo(Checksum.of(JSON_3));
-    assertThat(sortedResults1.get(0).getRevision()).isNotNull();
-    assertThat(sortedResults1.get(1).getRevision()).isNotNull();
-    assertThat(sortedResults1.get(2).getRevision()).isNotNull();
-    assertThat(sortedResults1.get(0).getCreated()).isNotNull();
-    assertThat(sortedResults1.get(1).getCreated()).isNotNull();
-    assertThat(sortedResults1.get(2).getCreated()).isNotNull();
-    assertThat(sortedResults1.get(0).getUpdated()).isNotNull();
-    assertThat(sortedResults1.get(1).getUpdated()).isNotNull();
-    assertThat(sortedResults1.get(2).getUpdated()).isNotNull();
-    assertThat(sortedResults1.get(0).getLevels()).isEqualTo(TestConstants.LEVELS);
-    assertThat(sortedResults1.get(1).getLevels()).isEqualTo(TestConstants.LEVELS);
-    assertThat(sortedResults1.get(2).getLevels()).isEqualTo(TestConstants.LEVELS);
-    assertThat(sortedResults1.get(0).getTiles()).isNotNull();
-    assertThat(sortedResults1.get(1).getTiles()).isNotNull();
-    assertThat(sortedResults1.get(2).getTiles()).isNotNull();
+    SoftAssertions softly = new SoftAssertions();
+    softly.assertThat(sortedResults1.get(0).getUuid()).isEqualTo(DESIGN_ID_1);
+    softly.assertThat(sortedResults1.get(1).getUuid()).isEqualTo(DESIGN_ID_2);
+    softly.assertThat(sortedResults1.get(2).getUuid()).isEqualTo(DESIGN_ID_3);
+    softly.assertThat(sortedResults1.get(0).getChecksum()).isEqualTo(Checksum.of(DATA_1));
+    softly.assertThat(sortedResults1.get(1).getChecksum()).isEqualTo(Checksum.of(DATA_2));
+    softly.assertThat(sortedResults1.get(2).getChecksum()).isEqualTo(Checksum.of(DATA_3));
+    softly.assertThat(sortedResults1.get(0).getRevision()).isNotNull();
+    softly.assertThat(sortedResults1.get(1).getRevision()).isNotNull();
+    softly.assertThat(sortedResults1.get(2).getRevision()).isNotNull();
+    softly.assertThat(sortedResults1.get(0).getCreated()).isNotNull();
+    softly.assertThat(sortedResults1.get(1).getCreated()).isNotNull();
+    softly.assertThat(sortedResults1.get(2).getCreated()).isNotNull();
+    softly.assertThat(sortedResults1.get(0).getUpdated()).isNotNull();
+    softly.assertThat(sortedResults1.get(1).getUpdated()).isNotNull();
+    softly.assertThat(sortedResults1.get(2).getUpdated()).isNotNull();
+    softly.assertThat(sortedResults1.get(0).getLevels()).isEqualTo(LEVELS_DRAFT);
+    softly.assertThat(sortedResults1.get(1).getLevels()).isEqualTo(LEVELS_DRAFT);
+    softly.assertThat(sortedResults1.get(2).getLevels()).isEqualTo(LEVELS_READY);
+    softly.assertThat(sortedResults1.get(0).getTiles()).isNotNull();
+    softly.assertThat(sortedResults1.get(1).getTiles()).isNotNull();
+    softly.assertThat(sortedResults1.get(2).getTiles()).isNotNull();
+    softly.assertAll();
 
     DesignDocuments results2 = listDesigns(authorization, false);
 
@@ -351,22 +474,17 @@ public class IntegrationTests {
             .sorted(Comparator.comparing(DesignDocument::getUuid))
             .collect(Collectors.toList());
 
-    assertThat(sortedResults2).hasSize(2);
+    assertThat(sortedResults2).hasSize(1);
 
-    assertThat(sortedResults2.get(0).getUuid()).isEqualTo(TestConstants.DESIGN_UUID_2);
-    assertThat(sortedResults2.get(1).getUuid()).isEqualTo(TestConstants.DESIGN_UUID_3);
-    assertThat(sortedResults2.get(0).getChecksum()).isEqualTo(Checksum.of(JSON_2));
-    assertThat(sortedResults2.get(1).getChecksum()).isEqualTo(Checksum.of(JSON_3));
-    assertThat(sortedResults2.get(0).getRevision()).isNotNull();
-    assertThat(sortedResults2.get(1).getRevision()).isNotNull();
-    assertThat(sortedResults2.get(0).getCreated()).isNotNull();
-    assertThat(sortedResults2.get(1).getCreated()).isNotNull();
-    assertThat(sortedResults2.get(0).getUpdated()).isNotNull();
-    assertThat(sortedResults2.get(1).getUpdated()).isNotNull();
-    assertThat(sortedResults2.get(0).getLevels()).isEqualTo(TestConstants.LEVELS);
-    assertThat(sortedResults2.get(1).getLevels()).isEqualTo(TestConstants.LEVELS);
-    assertThat(sortedResults2.get(0).getTiles()).isNotNull();
-    assertThat(sortedResults2.get(1).getTiles()).isNotNull();
+    SoftAssertions softly2 = new SoftAssertions();
+    softly2.assertThat(sortedResults2.get(0).getUuid()).isEqualTo(DESIGN_ID_3);
+    softly2.assertThat(sortedResults2.get(0).getChecksum()).isEqualTo(Checksum.of(DATA_3));
+    softly2.assertThat(sortedResults2.get(0).getRevision()).isNotNull();
+    softly2.assertThat(sortedResults2.get(0).getCreated()).isNotNull();
+    softly2.assertThat(sortedResults2.get(0).getUpdated()).isNotNull();
+    softly2.assertThat(sortedResults2.get(0).getLevels()).isEqualTo(LEVELS_READY);
+    softly2.assertThat(sortedResults2.get(0).getTiles()).isNotNull();
+    softly2.assertAll();
   }
 
   @Test
@@ -374,29 +492,35 @@ public class IntegrationTests {
   public void shouldAllowGetOnDesignsSlashIdWhenUserIsGuest() throws MalformedURLException {
     final String authorization = testCases.makeAuthorization("test", Authority.GUEST);
 
-    DesignDocument result1 = loadDesign(authorization, TestConstants.DESIGN_UUID_1, true);
+    DesignDocument result1 = loadDesign(authorization, DESIGN_ID_1, true);
 
-    String json1 = new JsonObject(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT1)).toString();
-    assertThat(result1.getUuid()).isEqualTo(TestConstants.DESIGN_UUID_1);
-    assertThat(result1.getJson()).isEqualTo(json1);
-    assertThat(result1.getCreated()).isNotNull();
-    assertThat(result1.getUpdated()).isNotNull();
-    assertThat(result1.getChecksum()).isNotNull();
-    assertThat(result1.getRevision()).isNotNull();
-    assertThat(result1.getLevels()).isEqualTo(TestConstants.LEVELS);
-    assertThat(result1.getTiles()).isNotNull();
+    String json1 = new JsonObject(TestUtils.createPostData(MANIFEST, METADATA, SCRIPT1)).toString();
 
-    DesignDocument result2 = loadDesign(authorization, TestConstants.DESIGN_UUID_2, false);
+    SoftAssertions softly = new SoftAssertions();
+    softly.assertThat(result1.getUuid()).isEqualTo(DESIGN_ID_1);
+    softly.assertThat(result1.getJson()).isEqualTo(json1);
+    softly.assertThat(result1.getCreated()).isNotNull();
+    softly.assertThat(result1.getUpdated()).isNotNull();
+    softly.assertThat(result1.getChecksum()).isNotNull();
+    softly.assertThat(result1.getRevision()).isNotNull();
+    softly.assertThat(result1.getLevels()).isEqualTo(LEVELS_DRAFT);
+    softly.assertThat(result1.getTiles()).isNotNull();
+    softly.assertAll();
 
-    String json2 = new JsonObject(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT2)).toString();
-    assertThat(result2.getUuid()).isEqualTo(TestConstants.DESIGN_UUID_2);
-    assertThat(result2.getJson()).isEqualTo(json2);
-    assertThat(result2.getCreated()).isNotNull();
-    assertThat(result2.getUpdated()).isNotNull();
-    assertThat(result2.getChecksum()).isNotNull();
-    assertThat(result2.getRevision()).isNotNull();
-    assertThat(result2.getLevels()).isEqualTo(TestConstants.LEVELS);
-    assertThat(result2.getTiles()).isNotNull();
+    DesignDocument result2 = loadDesign(authorization, DESIGN_ID_3, false);
+
+    String json2 = new JsonObject(TestUtils.createPostData(MANIFEST, METADATA, SCRIPT3)).toString();
+
+    SoftAssertions softly2 = new SoftAssertions();
+    softly2.assertThat(result2.getUuid()).isEqualTo(DESIGN_ID_3);
+    softly2.assertThat(result2.getJson()).isEqualTo(json2);
+    softly2.assertThat(result2.getCreated()).isNotNull();
+    softly2.assertThat(result2.getUpdated()).isNotNull();
+    softly2.assertThat(result2.getChecksum()).isNotNull();
+    softly2.assertThat(result2.getRevision()).isNotNull();
+    softly2.assertThat(result2.getLevels()).isEqualTo(LEVELS_READY);
+    softly2.assertThat(result2.getTiles()).isNotNull();
+    softly2.assertAll();
   }
 
   @Test
@@ -404,17 +528,23 @@ public class IntegrationTests {
   public void shouldAllowGetOnDesignsSlashIdSlashLocationSlashSizeWhenUserIsGuest() throws IOException {
     final String authorization = testCases.makeAuthorization("test", Authority.GUEST);
 
-    byte[] result1 = getTile(authorization, TestConstants.DESIGN_UUID_2, true);
+    byte[] result1 = getTile(authorization, DESIGN_ID_3, true);
 
     final BufferedImage image1 = ImageIO.read(new ByteArrayInputStream(result1));
-    assertThat(image1.getWidth()).isEqualTo(256);
-    assertThat(image1.getHeight()).isEqualTo(256);
 
-    byte[] result2 = getTile(authorization, TestConstants.DESIGN_UUID_2, false);
+    SoftAssertions softly = new SoftAssertions();
+    softly.assertThat(image1.getWidth()).isEqualTo(256);
+    softly.assertThat(image1.getHeight()).isEqualTo(256);
+    softly.assertAll();
+
+    byte[] result2 = getTile(authorization, DESIGN_ID_3, false);
 
     final BufferedImage image2 = ImageIO.read(new ByteArrayInputStream(result2));
-    assertThat(image2.getWidth()).isEqualTo(256);
-    assertThat(image2.getHeight()).isEqualTo(256);
+
+    SoftAssertions softly2 = new SoftAssertions();
+    softly2.assertThat(image2.getWidth()).isEqualTo(256);
+    softly2.assertThat(image2.getHeight()).isEqualTo(256);
+    softly2.assertAll();
   }
 
   @Test
@@ -425,13 +555,13 @@ public class IntegrationTests {
     given().config(TestUtils.getRestAssuredConfig())
             .with().header(AUTHORIZATION, authorization)
             .and().accept(ContentType.JSON)
-            .when().get(testCases.makeBaseURL("/v1/designs/" + TestConstants.DESIGN_UUID_0 + "?draft=true"))
+            .when().get(testCases.makeBaseURL("/v1/designs/" + DESIGN_ID_0 + "?draft=true"))
             .then().assertThat().statusCode(404);
 
     given().config(TestUtils.getRestAssuredConfig())
             .with().header(AUTHORIZATION, authorization)
             .and().accept(ContentType.JSON)
-            .when().get(testCases.makeBaseURL("/v1/designs/" + TestConstants.DESIGN_UUID_1 + "?draft=false"))
+            .when().get(testCases.makeBaseURL("/v1/designs/" + DESIGN_ID_1 + "?draft=false"))
             .then().assertThat().statusCode(404);
   }
 
@@ -443,25 +573,25 @@ public class IntegrationTests {
     given().config(TestUtils.getRestAssuredConfig())
             .with().header(AUTHORIZATION, authorization)
             .and().accept("image/png")
-            .when().get(testCases.makeBaseURL("/v1/designs/" + TestConstants.DESIGN_UUID_0 + "/0/0/0/256.png?draft=true"))
+            .when().get(testCases.makeBaseURL("/v1/designs/" + DESIGN_ID_0 + "/0/0/0/256.png?draft=true"))
             .then().assertThat().statusCode(404);
 
     given().config(TestUtils.getRestAssuredConfig())
             .with().header(AUTHORIZATION, authorization)
             .and().accept("image/png")
-            .when().get(testCases.makeBaseURL("/v1/designs/" + TestConstants.DESIGN_UUID_1 + "/0/0/0/256.png?draft=false"))
+            .when().get(testCases.makeBaseURL("/v1/designs/" + DESIGN_ID_1 + "/0/0/0/256.png?draft=false"))
             .then().assertThat().statusCode(404);
   }
 
-  private static DesignDocuments listDesigns(String authorization) throws MalformedURLException {
+  private static DesignDocuments listDraftDesigns(String authorization) throws MalformedURLException {
     return listDesigns(authorization, true);
   }
 
-  private static DesignDocument loadDesign(String authorization, UUID uuid) throws MalformedURLException {
+  private static DesignDocument loadDraftDesign(String authorization, UUID uuid) throws MalformedURLException {
     return loadDesign(authorization, uuid, true);
   }
 
-  private static byte[] getTile(String authorization, UUID uuid) throws MalformedURLException {
+  private static byte[] getDraftTile(String authorization, UUID uuid) throws MalformedURLException {
     return getTile(authorization, uuid, true);
   }
 

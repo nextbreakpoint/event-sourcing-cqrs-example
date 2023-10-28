@@ -1,6 +1,13 @@
 package com.nextbreakpoint.blueprint.designs;
 
-import com.nextbreakpoint.blueprint.designs.persistence.dto.*;
+import com.nextbreakpoint.blueprint.designs.persistence.dto.DeleteDesignRequest;
+import com.nextbreakpoint.blueprint.designs.persistence.dto.DeleteDesignResponse;
+import com.nextbreakpoint.blueprint.designs.persistence.dto.InsertDesignRequest;
+import com.nextbreakpoint.blueprint.designs.persistence.dto.InsertDesignResponse;
+import com.nextbreakpoint.blueprint.designs.persistence.dto.ListDesignsRequest;
+import com.nextbreakpoint.blueprint.designs.persistence.dto.ListDesignsResponse;
+import com.nextbreakpoint.blueprint.designs.persistence.dto.LoadDesignRequest;
+import com.nextbreakpoint.blueprint.designs.persistence.dto.LoadDesignResponse;
 import rx.Single;
 
 public interface Store {

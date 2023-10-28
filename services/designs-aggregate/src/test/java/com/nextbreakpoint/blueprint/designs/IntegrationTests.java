@@ -1,6 +1,8 @@
 package com.nextbreakpoint.blueprint.designs;
 
+import com.nextbreakpoint.blueprint.common.core.Checksum;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
+import com.nextbreakpoint.blueprint.common.core.TilesBitmap;
 import com.nextbreakpoint.blueprint.common.events.DesignDeleteRequested;
 import com.nextbreakpoint.blueprint.common.events.DesignInsertRequested;
 import com.nextbreakpoint.blueprint.common.events.DesignUpdateRequested;
@@ -9,16 +11,37 @@ import com.nextbreakpoint.blueprint.common.events.mappers.DesignDeleteRequestedO
 import com.nextbreakpoint.blueprint.common.events.mappers.DesignInsertRequestedOutputMapper;
 import com.nextbreakpoint.blueprint.common.events.mappers.DesignUpdateRequestedOutputMapper;
 import com.nextbreakpoint.blueprint.common.events.mappers.TileRenderCompletedOutputMapper;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
-import java.util.UUID;
+
+import static com.nextbreakpoint.blueprint.designs.TestConstants.COMMAND_ID_1;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.COMMAND_ID_2;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.COMMAND_ID_3;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DATA_1;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DATA_2;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_ID_1;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_ID_2;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.MESSAGE_SOURCE;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.REVISION_1;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.USER_ID_1;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.USER_ID_2;
 
 @Tag("docker")
 @Tag("integration")
 @DisplayName("Verify behaviour of designs-aggregate service")
 public class IntegrationTests {
     private static TestCases testCases = new TestCases("IntegrationTests");
+
+    private final DesignInsertRequestedOutputMapper designInsertRequestedMapper = new DesignInsertRequestedOutputMapper(MESSAGE_SOURCE);
+    private final DesignUpdateRequestedOutputMapper designUpdateRequestedMapper = new DesignUpdateRequestedOutputMapper(MESSAGE_SOURCE);
+    private final DesignDeleteRequestedOutputMapper designDeleteRequestedMapper = new DesignDeleteRequestedOutputMapper(MESSAGE_SOURCE);
+    private final TileRenderCompletedOutputMapper tileRenderCompletedMapper = new TileRenderCompletedOutputMapper(MESSAGE_SOURCE);
 
     @BeforeAll
     public static void before() {
@@ -30,76 +53,172 @@ public class IntegrationTests {
         testCases.after();
     }
 
-    @Test
-    @DisplayName("Should update the design after receiving a DesignInsertRequested event")
-    public void shouldUpdateTheDesignWhenReceivingADesignInsertRequestedMessage() {
-        final UUID designId = UUID.randomUUID();
-
-        final DesignInsertRequested designInsertRequested = new DesignInsertRequested(designId, UUID.randomUUID(), TestConstants.USER_ID, TestConstants.JSON_1);
-
-        final OutputMessage designInsertRequestedMessage = new DesignInsertRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designInsertRequested);
-
-        testCases.shouldUpdateTheDesignWhenReceivingADesignInsertRequestedMessage(designInsertRequestedMessage);
+    @BeforeEach
+    public void beforeEach() {
+        testCases.deleteData();
+        testCases.getSteps().reset();
     }
 
     @Test
-    @DisplayName("Should update the design after receiving a DesignUpdateRequested event")
-    public void shouldUpdateTheDesignWhenReceivingADesignUpdateRequestedMessage() {
-        final UUID designId = UUID.randomUUID();
+    @DisplayName("Should update the design after receiving a DesignInsertRequested message")
+    public void shouldUpdateTheDesignAfterReceivingADesignInsertRequestedMessage() {
+        var designInsertRequested = DesignInsertRequested.builder()
+                .withUserId(USER_ID_1)
+                .withDesignId(DESIGN_ID_1)
+                .withCommandId(COMMAND_ID_1)
+                .withData(DATA_1)
+                .build();
 
-        final DesignInsertRequested designInsertRequested = new DesignInsertRequested(designId, UUID.randomUUID(), TestConstants.USER_ID, TestConstants.JSON_1);
+        final OutputMessage designInsertRequestedMessage = designInsertRequestedMapper.transform(designInsertRequested);
 
-        final OutputMessage designInsertRequestedMessage = new DesignInsertRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designInsertRequested);
-
-        final DesignUpdateRequested designUpdateRequested = new DesignUpdateRequested(designId, UUID.randomUUID(), TestConstants.USER_ID, TestConstants.JSON_2, false);
-
-        final OutputMessage designUpdateRequestedMessage = new DesignUpdateRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designUpdateRequested);
-
-        testCases.shouldUpdateTheDesignWhenReceivingADesignUpdateRequestedMessage(designInsertRequestedMessage, designUpdateRequestedMessage);
+        testCases.shouldUpdateTheDesignAfterReceivingADesignInsertRequestedMessage(designInsertRequestedMessage);
     }
 
     @Test
-    @DisplayName("Should update the design after receiving a DesignDeleteRequested event")
-    public void shouldUpdateTheDesignWhenReceivingADesignDeleteRequestedMessage() {
-        final UUID designId = UUID.randomUUID();
+    @DisplayName("Should update the design after receiving a DesignUpdateRequested message")
+    public void shouldUpdateTheDesignAfterReceivingADesignUpdateRequestedMessage() {
+        var designInsertRequested = DesignInsertRequested.builder()
+                .withUserId(USER_ID_1)
+                .withDesignId(DESIGN_ID_1)
+                .withCommandId(COMMAND_ID_1)
+                .withData(DATA_1)
+                .build();
 
-        final DesignInsertRequested designInsertRequested = new DesignInsertRequested(designId, UUID.randomUUID(), TestConstants.USER_ID, TestConstants.JSON_1);
+        var designUpdateRequested1 = DesignUpdateRequested.builder()
+                .withUserId(USER_ID_1)
+                .withDesignId(DESIGN_ID_1)
+                .withCommandId(COMMAND_ID_2)
+                .withData(DATA_2)
+                .withPublished(false)
+                .build();
 
-        final OutputMessage designInsertRequestedMessage = new DesignInsertRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designInsertRequested);
+        var designUpdateRequested2 = DesignUpdateRequested.builder()
+                .withUserId(USER_ID_1)
+                .withDesignId(DESIGN_ID_1)
+                .withCommandId(COMMAND_ID_3)
+                .withData(DATA_2)
+                .withPublished(true)
+                .build();
 
-        final DesignDeleteRequested designDeleteRequested = new DesignDeleteRequested(designId, UUID.randomUUID(), TestConstants.USER_ID);
+        final OutputMessage designInsertRequestedMessage = designInsertRequestedMapper.transform(designInsertRequested);
+        final OutputMessage designUpdateRequestedMessage1 = designUpdateRequestedMapper.transform(designUpdateRequested1);
+        final OutputMessage designUpdateRequestedMessage2 = designUpdateRequestedMapper.transform(designUpdateRequested2);
 
-        final OutputMessage designDeleteRequestedMessage = new DesignDeleteRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designDeleteRequested);
-
-        testCases.shouldUpdateTheDesignWhenReceivingADesignDeleteRequestedMessage(designInsertRequestedMessage, designDeleteRequestedMessage);
+        testCases.shouldUpdateTheDesignAfterReceivingADesignUpdateRequestedMessage(designInsertRequestedMessage, designUpdateRequestedMessage1, designUpdateRequestedMessage2);
     }
 
     @Test
-    @DisplayName("Should update the design after receiving a TileRenderCompleted event")
-    public void shouldUpdateTheDesignWhenReceivingATileRenderCompletedMessage() {
-        final UUID designId = UUID.randomUUID();
+    @DisplayName("Should update the design after receiving a DesignDeleteRequested message")
+    public void shouldUpdateTheDesignAfterReceivingADesignDeleteRequestedMessage() {
+        var designInsertRequested = DesignInsertRequested.builder()
+                .withUserId(USER_ID_1)
+                .withDesignId(DESIGN_ID_1)
+                .withCommandId(COMMAND_ID_1)
+                .withData(DATA_1)
+                .build();
 
-        final UUID commandId1 = UUID.randomUUID();
-        final UUID commandId2 = UUID.randomUUID();
+        var designDeleteRequested = DesignDeleteRequested.builder()
+                .withUserId(USER_ID_1)
+                .withDesignId(DESIGN_ID_1)
+                .withCommandId(COMMAND_ID_3)
+                .build();
 
-        final DesignInsertRequested designInsertRequested = new DesignInsertRequested(designId, commandId1, TestConstants.USER_ID, TestConstants.JSON_1);
+        final OutputMessage designInsertRequestedMessage = designInsertRequestedMapper.transform(designInsertRequested);
+        final OutputMessage designDeleteRequestedMessage = designDeleteRequestedMapper.transform(designDeleteRequested);
 
-        final OutputMessage designInsertRequestedMessage = new DesignInsertRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designInsertRequested);
+        testCases.shouldUpdateTheDesignAfterReceivingADesignDeleteRequestedMessage(designInsertRequestedMessage, designDeleteRequestedMessage);
+    }
 
-        final TileRenderCompleted tileRenderCompleted1 = new TileRenderCompleted(designId, commandId1, TestConstants.REVISION_0, TestConstants.CHECKSUM_1, 0, 0, 0, "FAILED");
-        final TileRenderCompleted tileRenderCompleted2 = new TileRenderCompleted(designId, commandId1, TestConstants.REVISION_1, TestConstants.CHECKSUM_1, 1, 0, 0, "COMPLETED");
-        final TileRenderCompleted tileRenderCompleted3 = new TileRenderCompleted(designId, commandId1, TestConstants.REVISION_2, TestConstants.CHECKSUM_1, 1, 1, 0, "COMPLETED");
-        final TileRenderCompleted tileRenderCompleted4 = new TileRenderCompleted(designId, commandId1, TestConstants.REVISION_3, TestConstants.CHECKSUM_1, 2, 2, 1, "COMPLETED");
-        final TileRenderCompleted tileRenderCompleted5 = new TileRenderCompleted(designId, commandId2, TestConstants.REVISION_4, TestConstants.CHECKSUM_2, 2, 3, 1, "COMPLETED");
+    @Test
+    @DisplayName("Should update the design after receiving a TileRenderCompleted message")
+    public void shouldUpdateTheDesignAfterReceivingATileRenderCompletedMessage() {
+        var designInsertRequested = DesignInsertRequested.builder()
+                .withUserId(USER_ID_2)
+                .withDesignId(DESIGN_ID_2)
+                .withCommandId(COMMAND_ID_1)
+                .withData(DATA_2)
+                .build();
 
-        final OutputMessage tileRenderCompletedMessage1 = new TileRenderCompletedOutputMapper(TestConstants.MESSAGE_SOURCE, TestUtils::createRenderKey).transform(tileRenderCompleted1);
-        final OutputMessage tileRenderCompletedMessage2 = new TileRenderCompletedOutputMapper(TestConstants.MESSAGE_SOURCE, TestUtils::createRenderKey).transform(tileRenderCompleted2);
-        final OutputMessage tileRenderCompletedMessage3 = new TileRenderCompletedOutputMapper(TestConstants.MESSAGE_SOURCE, TestUtils::createRenderKey).transform(tileRenderCompleted3);
-        final OutputMessage tileRenderCompletedMessage4 = new TileRenderCompletedOutputMapper(TestConstants.MESSAGE_SOURCE, TestUtils::createRenderKey).transform(tileRenderCompleted4);
-        final OutputMessage tileRenderCompletedMessage5 = new TileRenderCompletedOutputMapper(TestConstants.MESSAGE_SOURCE, TestUtils::createRenderKey).transform(tileRenderCompleted5);
+        // the tile render completed events should have same command id of design insert requested event
 
-        final List<OutputMessage> tileRenderCompletedMessages = List.of(tileRenderCompletedMessage1, tileRenderCompletedMessage2, tileRenderCompletedMessage3, tileRenderCompletedMessage4, tileRenderCompletedMessage5);
+        var tileRenderCompleted1 = TileRenderCompleted.builder()
+                .withDesignId(DESIGN_ID_2)
+                .withCommandId(COMMAND_ID_1)
+                .withChecksum(Checksum.of(DATA_2))
+                .withRevision(REVISION_1)
+                .withStatus("FAILED")
+                .withLevel(0)
+                .withRow(0)
+                .withCol(0)
+                .build();
 
-        testCases.shouldUpdateTheDesignWhenReceivingATileRenderCompletedMessage(designInsertRequestedMessage, tileRenderCompletedMessages);
+        var tileRenderCompleted2 = TileRenderCompleted.builder()
+                .withDesignId(DESIGN_ID_2)
+                .withCommandId(COMMAND_ID_1)
+                .withChecksum(Checksum.of(DATA_2))
+                .withRevision(REVISION_1)
+                .withStatus("COMPLETED")
+                .withLevel(1)
+                .withRow(0)
+                .withCol(0)
+                .build();
+
+        var tileRenderCompleted3 = TileRenderCompleted.builder()
+                .withDesignId(DESIGN_ID_2)
+                .withCommandId(COMMAND_ID_1)
+                .withChecksum(Checksum.of(DATA_2))
+                .withRevision(REVISION_1)
+                .withStatus("COMPLETED")
+                .withLevel(1)
+                .withRow(1)
+                .withCol(0)
+                .build();
+
+        var tileRenderCompleted4 = TileRenderCompleted.builder()
+                .withDesignId(DESIGN_ID_2)
+                .withCommandId(COMMAND_ID_1)
+                .withChecksum(Checksum.of(DATA_2))
+                .withRevision(REVISION_1)
+                .withStatus("COMPLETED")
+                .withLevel(2)
+                .withRow(2)
+                .withCol(1)
+                .build();
+
+        // the tile render completed events with different command id should be discarded
+
+        var tileRenderCompleted5 = TileRenderCompleted.builder()
+                .withDesignId(DESIGN_ID_2)
+                .withCommandId(COMMAND_ID_2)
+                .withChecksum(Checksum.of(DATA_2))
+                .withRevision(REVISION_1)
+                .withStatus("COMPLETED")
+                .withLevel(2)
+                .withRow(2)
+                .withCol(2)
+                .build();
+
+        final OutputMessage designInsertRequestedMessage = designInsertRequestedMapper.transform(designInsertRequested);
+        final OutputMessage tileRenderCompletedMessage1 = tileRenderCompletedMapper.transform(tileRenderCompleted1);
+        final OutputMessage tileRenderCompletedMessage2 = tileRenderCompletedMapper.transform(tileRenderCompleted2);
+        final OutputMessage tileRenderCompletedMessage3 = tileRenderCompletedMapper.transform(tileRenderCompleted3);
+        final OutputMessage tileRenderCompletedMessage4 = tileRenderCompletedMapper.transform(tileRenderCompleted4);
+        final OutputMessage tileRenderCompletedMessage5 = tileRenderCompletedMapper.transform(tileRenderCompleted5);
+
+        final TilesBitmap bitmap = TilesBitmap.empty();
+        bitmap.putTile(0, 0, 0);
+        bitmap.putTile(1, 0, 0);
+        bitmap.putTile(1, 1, 0);
+        bitmap.putTile(2, 2, 1);
+
+        var tileRenderCompletedMessages = List.of(
+                tileRenderCompletedMessage1,
+                tileRenderCompletedMessage2,
+                tileRenderCompletedMessage3,
+                tileRenderCompletedMessage4,
+                tileRenderCompletedMessage5
+        );
+
+        testCases.shouldUpdateTheDesignAfterReceivingATileRenderCompletedMessage(designInsertRequestedMessage, tileRenderCompletedMessages, bitmap);
     }
 }

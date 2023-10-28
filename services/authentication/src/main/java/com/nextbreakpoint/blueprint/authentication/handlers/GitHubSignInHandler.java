@@ -19,10 +19,15 @@ import lombok.extern.log4j.Log4j2;
 import org.yaml.snakeyaml.composer.ComposerException;
 import rx.Single;
 
-import java.util.*;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 
 import static com.nextbreakpoint.blueprint.common.core.ContentType.APPLICATION_JSON;
-import static com.nextbreakpoint.blueprint.common.core.Headers.*;
+import static com.nextbreakpoint.blueprint.common.core.Headers.ACCEPT;
+import static com.nextbreakpoint.blueprint.common.core.Headers.AUTHORIZATION;
+import static com.nextbreakpoint.blueprint.common.core.Headers.CONTENT_TYPE;
 import static com.nextbreakpoint.blueprint.common.vertx.Authentication.NULL_USER_UUID;
 
 @Log4j2

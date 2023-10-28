@@ -10,7 +10,9 @@ import lombok.extern.log4j.Log4j2;
 
 import java.util.Objects;
 
-import static io.vertx.core.http.HttpHeaders.*;
+import static io.vertx.core.http.HttpHeaders.CACHE_CONTROL;
+import static io.vertx.core.http.HttpHeaders.EXPIRES;
+import static io.vertx.core.http.HttpHeaders.LOCATION;
 
 @Log4j2
 public class CallbackHandler implements Handler<RoutingContext> {

@@ -2,13 +2,13 @@ package com.nextbreakpoint.blueprint.designs;
 
 import au.com.dius.pact.provider.junit5.HttpTestTarget;
 import com.datastax.oss.driver.api.core.cql.Row;
-import com.nextbreakpoint.blueprint.common.core.Authority;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.drivers.CassandraClientConfig;
 import com.nextbreakpoint.blueprint.common.drivers.CassandraClientFactory;
 import com.nextbreakpoint.blueprint.common.drivers.KafkaClientFactory;
 import com.nextbreakpoint.blueprint.common.drivers.KafkaConsumerConfig;
 import com.nextbreakpoint.blueprint.common.test.KafkaTestPolling;
+import com.nextbreakpoint.blueprint.common.test.TestContext;
 import io.restassured.http.ContentType;
 import io.vertx.rxjava.core.RxHelper;
 import io.vertx.rxjava.core.Vertx;
@@ -19,21 +19,21 @@ import rx.schedulers.Schedulers;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Predicate;
 
 import static com.nextbreakpoint.blueprint.common.core.Headers.AUTHORIZATION;
 import static io.restassured.RestAssured.given;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
-import static org.awaitility.Durations.ONE_SECOND;
-import static org.awaitility.Durations.TEN_SECONDS;
 import static org.hamcrest.Matchers.notNullValue;
 
 public class TestCases {
     private final TestScenario scenario = new TestScenario();
+
+    private final TestContext context = new TestContext();
+
+    private final TestSteps steps = new TestSteps(context, new TestActionsImpl());
 
     private final Vertx vertx = new Vertx(io.vertx.core.Vertx.vertx());
 
@@ -67,6 +67,8 @@ public class TestCases {
         eventsPolling.startPolling();
 
         deleteData();
+
+        context.clear();
     }
 
     public void after() {
@@ -92,6 +94,11 @@ public class TestCases {
     @NotNull
     public String getVersion() {
         return scenario.getVersion();
+    }
+
+    @NotNull
+    public TestSteps getSteps() {
+        return steps;
     }
 
     public void deleteData() {
@@ -120,7 +127,7 @@ public class TestCases {
     }
 
     @NotNull
-    public CassandraClientConfig createCassandraConfig() {
+    private CassandraClientConfig createCassandraConfig() {
         return CassandraClientConfig.builder()
                 .withClusterName("datacenter1")
                 .withKeyspace(TestConstants.DATABASE_KEYSPACE)
@@ -132,7 +139,7 @@ public class TestCases {
     }
 
     @NotNull
-    public KafkaConsumerConfig createConsumerConfig(String groupId) {
+    private KafkaConsumerConfig createConsumerConfig(String groupId) {
         return KafkaConsumerConfig.builder()
                 .withBootstrapServers(scenario.getKafkaHost() + ":" + scenario.getKafkaPort())
                 .withKeyDeserializer("org.apache.kafka.common.serialization.StringDeserializer")
@@ -143,116 +150,7 @@ public class TestCases {
                 .build();
     }
 
-    public String shouldPublishDesignInsertRequestedEventWhenReceivingAInsertDesignRequest() throws MalformedURLException {
-        final String authorization = scenario.makeAuthorization(TestConstants.USER_ID.toString(), Authority.ADMIN);
-
-        commandsPolling.clearMessages();
-        eventsPolling.clearMessages();
-
-        final String designId = submitInsertDesignRequest(authorization, TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT));
-
-        await().atMost(TEN_SECONDS)
-                .pollInterval(ONE_SECOND)
-                .untilAsserted(() -> {
-                    final List<InputMessage> messages = commandsPolling.findMessages(TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_INSERT_COMMAND, designId);
-                    assertThat(messages).hasSize(1);
-                });
-
-        await().atMost(TEN_SECONDS)
-                .pollInterval(ONE_SECOND)
-                .untilAsserted(() -> {
-                    final List<Row> rows = testCassandra.fetchMessages(UUID.fromString(designId));
-                    assertThat(rows).hasSize(1);
-                    TestAssertions.assertExpectedDesignInsertCommand(rows.get(0), designId);
-                });
-
-        await().atMost(Duration.ofSeconds(20))
-                .pollInterval(ONE_SECOND)
-                .untilAsserted(() -> {
-                    final List<InputMessage> messages = eventsPolling.findMessages(TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_INSERT_REQUESTED, designId);
-                    assertThat(messages).hasSize(1);
-                    InputMessage decodedMessage = messages.get(0);
-                    TestAssertions.assertExpectedDesignInsertRequestedMessage(decodedMessage, designId);
-                });
-
-        return designId;
-    }
-
-    public String shouldPublishDesignUpdateRequestedEventWhenReceivingAUpdateDesignRequest() throws MalformedURLException {
-        final String authorization = scenario.makeAuthorization(TestConstants.USER_ID.toString(), Authority.ADMIN);
-
-        commandsPolling.clearMessages();
-        eventsPolling.clearMessages();
-
-        final String designId = UUID.randomUUID().toString();
-
-        submitUpdateDesignRequest(authorization, TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT), designId);
-
-        await().atMost(TEN_SECONDS)
-                .pollInterval(ONE_SECOND)
-                .untilAsserted(() -> {
-                    final List<InputMessage> messages = commandsPolling.findMessages(TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_UPDATE_COMMAND, designId);
-                    assertThat(messages).hasSize(1);
-                });
-
-        await().atMost(TEN_SECONDS)
-                .pollInterval(ONE_SECOND)
-                .untilAsserted(() -> {
-                    final List<Row> rows = testCassandra.fetchMessages(UUID.fromString(designId));
-                    assertThat(rows).hasSize(1);
-                    TestAssertions.assertExpectedDesignUpdateCommand(rows.get(0), designId);
-                });
-
-        await().atMost(Duration.ofSeconds(20))
-                .pollInterval(ONE_SECOND)
-                .untilAsserted(() -> {
-                    final List<InputMessage> messages = eventsPolling.findMessages(TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_UPDATE_REQUESTED, designId);
-                    assertThat(messages).hasSize(1);
-                    InputMessage decodedMessage = messages.get(0);
-                    TestAssertions.assertExpectedDesignUpdateRequestedMessage(decodedMessage, designId);
-                });
-
-        return designId;
-    }
-
-    public String shouldPublishDesignDeleteRequestedEventWhenReceivingADeleteDesignRequest() throws MalformedURLException {
-        final String authorization = scenario.makeAuthorization(TestConstants.USER_ID.toString(), Authority.ADMIN);
-
-        commandsPolling.clearMessages();
-        eventsPolling.clearMessages();
-
-        final String designId = UUID.randomUUID().toString();
-
-        submitDeleteDesignRequest(authorization, designId);
-
-        await().atMost(TEN_SECONDS)
-                .pollInterval(ONE_SECOND)
-                .untilAsserted(() -> {
-                    final List<InputMessage> messages = commandsPolling.findMessages(TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_DELETE_COMMAND, designId);
-                    assertThat(messages).hasSize(1);
-                });
-
-        await().atMost(TEN_SECONDS)
-                .pollInterval(ONE_SECOND)
-                .untilAsserted(() -> {
-                    final List<Row> rows = testCassandra.fetchMessages(UUID.fromString(designId));
-                    assertThat(rows).hasSize(1);
-                    TestAssertions.assertExpectedDesignDeleteCommand(rows.get(0), designId);
-                });
-
-        await().atMost(Duration.ofSeconds(20))
-                .pollInterval(ONE_SECOND)
-                .untilAsserted(() -> {
-                    final List<InputMessage> messages = eventsPolling.findMessages(TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_DELETE_REQUESTED, designId);
-                    assertThat(messages).hasSize(1);
-                    InputMessage decodedMessage = messages.get(0);
-                    TestAssertions.assertExpectedDesignDeleteRequestedMessage(decodedMessage, designId);
-                });
-
-        return designId;
-    }
-
-    private String submitInsertDesignRequest(String authorization, Map<String, Object> design) throws MalformedURLException {
+    private String submitInsertDesignRequest(String authorization, Map<String, String> design) throws MalformedURLException {
         return given().config(TestUtils.getRestAssuredConfig())
                 .and().header(AUTHORIZATION, authorization)
                 .and().contentType(ContentType.JSON)
@@ -265,7 +163,7 @@ public class TestCases {
                 .and().extract().response().body().jsonPath().getString("uuid");
     }
 
-    private void submitUpdateDesignRequest(String authorization, Map<String, Object> design, String uuid) throws MalformedURLException {
+    private void submitUpdateDesignRequest(String authorization, Map<String, String> design, String uuid) throws MalformedURLException {
         given().config(TestUtils.getRestAssuredConfig())
                 .and().header(AUTHORIZATION, authorization)
                 .and().contentType(ContentType.JSON)
@@ -283,5 +181,50 @@ public class TestCases {
                 .when().delete(makeBaseURL("/v1/designs/" + uuid))
                 .then().assertThat().statusCode(202)
                 .and().contentType(ContentType.JSON);
+    }
+
+    private class TestActionsImpl implements TestActions {
+        @Override
+        public void clearMessages(Source source) {
+            polling(source).clearMessages();
+        }
+
+        @Override
+        public List<InputMessage> findMessages(Source source, String messageSource, String messageType, Predicate<String> keyPredicate, Predicate<InputMessage> messagePredicate) {
+            return polling(source).findMessages(messageSource, messageType, keyPredicate, messagePredicate);
+        }
+
+        @Override
+        public List<Row> fetchMessages(UUID designId, UUID messageId) {
+//            return testCassandra.fetchMessages(designId, messageUuid);
+            return testCassandra.fetchMessages(designId);
+        }
+
+        @Override
+        public String makeAuthorization(UUID userId, String authority) {
+            return scenario.makeAuthorization(userId.toString(), authority);
+        }
+
+        @Override
+        public UUID submitInsertDesignRequest(String authorization, Map<String, String> design) throws MalformedURLException {
+            return UUID.fromString(TestCases.this.submitInsertDesignRequest(authorization, design));
+        }
+
+        @Override
+        public void submitUpdateDesignRequest(String authorization, Map<String, String> design, UUID designId) throws MalformedURLException {
+            TestCases.this.submitUpdateDesignRequest(authorization, design, designId.toString());
+        }
+
+        @Override
+        public void submitDeleteDesignRequest(String authorization, UUID designId) throws MalformedURLException {
+            TestCases.this.submitDeleteDesignRequest(authorization, designId.toString());
+        }
+
+        private KafkaTestPolling polling(Source source) {
+            return switch (source) {
+                case EVENTS -> eventsPolling;
+                case COMMANDS -> commandsPolling;
+            };
+        }
     }
 }

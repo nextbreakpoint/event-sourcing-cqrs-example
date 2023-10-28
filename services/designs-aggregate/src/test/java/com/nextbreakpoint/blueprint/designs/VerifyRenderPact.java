@@ -24,6 +24,18 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.UUID;
 
+import static com.nextbreakpoint.blueprint.designs.TestConstants.CHECKSUM_1;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.CHECKSUM_2;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.COMMAND_ID_1;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.COMMAND_ID_2;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DATA_1;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DATA_2;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_ID_1;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_ID_2;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.MESSAGE_SOURCE;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.REVISION_0;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.REVISION_1;
+
 @Tag("docker")
 @Tag("pact-verify")
 @DisplayName("Verify contract between designs-aggregate and designs-render")
@@ -56,35 +68,35 @@ public class VerifyRenderPact {
     public void kafkaTopicExists() {
     }
 
-    @PactVerifyProvider("tile render requested for tile 0/00000000.png of design 00000000-0000-0000-0000-000000000005 with checksum 1")
+    @PactVerifyProvider("tile render requested for tile 0/00000000.png of design 00000000-0000-0000-0000-000000000001 with checksum 1")
     public String produceTileRenderRequested1() {
-        return produceTileRenderRequested(new UUID(0L, 5L), 0, 0, 0, TestConstants.COMMAND_1, TestConstants.JSON_1, TestConstants.CHECKSUM_1);
+        return produceTileRenderRequested(DESIGN_ID_1, 0, 0, 0, COMMAND_ID_1, DATA_1, CHECKSUM_1, REVISION_0);
     }
 
-    @PactVerifyProvider("tile render requested for tile 4/00010002.png of design 00000000-0000-0000-0000-000000000006 with checksum 2")
+    @PactVerifyProvider("tile render requested for tile 4/00010002.png of design 00000000-0000-0000-0000-000000000002 with checksum 2")
     public String produceTileRenderRequested2() {
-        return produceTileRenderRequested(new UUID(0L, 6L), 4, 1, 2, TestConstants.COMMAND_2, TestConstants.JSON_2, TestConstants.CHECKSUM_2);
+        return produceTileRenderRequested(DESIGN_ID_2, 4, 1, 2, COMMAND_ID_2, DATA_2, CHECKSUM_2, REVISION_1);
     }
 
-    @PactVerifyProvider("tile render requested for tile 5/00010002.png of design 00000000-0000-0000-0000-000000000007 with checksum 2")
+    @PactVerifyProvider("tile render requested for tile 5/00010002.png of design 00000000-0000-0000-0000-000000000002 with checksum 2")
     public String produceTileRenderRequested3() {
-        return produceTileRenderRequested(new UUID(0L, 7L), 5, 1, 2, TestConstants.COMMAND_2, TestConstants.JSON_2, TestConstants.CHECKSUM_2);
+        return produceTileRenderRequested(DESIGN_ID_2, 5, 1, 2, COMMAND_ID_2, DATA_2, CHECKSUM_2, REVISION_1);
     }
 
-    @PactVerifyProvider("tile render requested for tile 6/00010002.png of design 00000000-0000-0000-0000-000000000008 with checksum 2")
+    @PactVerifyProvider("tile render requested for tile 6/00010002.png of design 00000000-0000-0000-0000-000000000002 with checksum 2")
     public String produceTileRenderRequested4() {
-        return produceTileRenderRequested(new UUID(0L, 8L), 6, 1, 2, TestConstants.COMMAND_2, TestConstants.JSON_2, TestConstants.CHECKSUM_2);
+        return produceTileRenderRequested(DESIGN_ID_2, 6, 1, 2, COMMAND_ID_2, DATA_2, CHECKSUM_2, REVISION_1);
     }
 
-    @PactVerifyProvider("tile render requested for tile 7/00010002.png of design 00000000-0000-0000-0000-000000000009 with checksum 2")
+    @PactVerifyProvider("tile render requested for tile 7/00010002.png of design 00000000-0000-0000-0000-000000000002 with checksum 2")
     public String produceTileRenderRequested5() {
-        return produceTileRenderRequested(new UUID(0L, 9L), 7, 1, 2, TestConstants.COMMAND_2, TestConstants.JSON_2, TestConstants.CHECKSUM_2);
+        return produceTileRenderRequested(DESIGN_ID_2, 7, 1, 2, COMMAND_ID_2, DATA_2, CHECKSUM_2, REVISION_1);
     }
 
-    private String produceTileRenderRequested(UUID uuid, int level, int row, int col, UUID commandId, String data, String checksum) {
-        final TileRenderRequested tileRenderRequested = new TileRenderRequested(uuid, commandId, TestConstants.REVISION_0, checksum, data, level,  row, col);
+    private String produceTileRenderRequested(UUID designId, int level, int row, int col, UUID commandId, String data, String checksum, String revision) {
+        final TileRenderRequested tileRenderRequested = new TileRenderRequested(designId, commandId, revision, checksum, data, level,  row, col);
 
-        final OutputMessage tileRenderRequestedMessage = new TileRenderRequestedOutputMapper(TestConstants.MESSAGE_SOURCE, event -> TestUtils.createRenderKey(tileRenderRequested)).transform(tileRenderRequested);
+        final OutputMessage tileRenderRequestedMessage = new TileRenderRequestedOutputMapper(MESSAGE_SOURCE, event -> TestUtils.createRenderKey(tileRenderRequested)).transform(tileRenderRequested);
 
         return Json.encodeValue(new KafkaRecord(tileRenderRequestedMessage.getKey(), PayloadUtils.payloadToMap(tileRenderRequestedMessage.getValue())));
     }

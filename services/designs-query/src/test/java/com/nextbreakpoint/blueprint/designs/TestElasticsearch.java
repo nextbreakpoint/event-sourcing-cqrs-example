@@ -1,6 +1,6 @@
 package com.nextbreakpoint.blueprint.designs;
 
-import co.elastic.clients.elasticsearch.ElasticsearchAsyncClient;
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.Refresh;
 import co.elastic.clients.elasticsearch._types.query_dsl.MatchAllQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
@@ -14,28 +14,27 @@ import rx.Observable;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 public class TestElasticsearch {
-    private ElasticsearchAsyncClient client;
+    private ElasticsearchClient client;
     private String indexName;
 
-    public TestElasticsearch(ElasticsearchAsyncClient client, String indexName) {
+    public TestElasticsearch(ElasticsearchClient client, String indexName) {
         this.client = client;
         this.indexName = indexName;
     }
 
     public List<Design> findDesigns(UUID designId) {
         try {
-            final SearchResponse<Design> response = client.search(builder -> createLoadDesignRequest(builder, designId), Design.class)
-                    .get(5000, TimeUnit.SECONDS);
+            final SearchResponse<Design> response = client.search(builder -> createLoadDesignRequest(builder, designId), Design.class);
 
-            return Observable.from(response.hits().hits())
+            final List<Design> designs = Observable.from(response.hits().hits())
                     .map(Hit::source)
                     .toList()
                     .toBlocking()
                     .firstOrDefault(List.of());
 
+            return designs;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -43,8 +42,7 @@ public class TestElasticsearch {
 
     public void deleteDesigns() {
         try {
-            client.deleteByQuery(this::createDeleteDesignsRequest)
-                    .get(5000, TimeUnit.SECONDS);
+            client.deleteByQuery(this::createDeleteDesignsRequest);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -52,8 +50,7 @@ public class TestElasticsearch {
 
     public void insertDesign(Design design) {
         try {
-            client.<Design, Design>update(builder -> createInsertDesignRequest(builder, design), Design.class)
-                    .get(5000, TimeUnit.SECONDS);
+            client.<Design, Design>update(builder -> createInsertDesignRequest(builder, design), Design.class);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

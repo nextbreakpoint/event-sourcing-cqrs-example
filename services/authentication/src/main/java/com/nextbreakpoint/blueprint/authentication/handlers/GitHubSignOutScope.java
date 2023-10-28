@@ -1,7 +1,5 @@
 package com.nextbreakpoint.blueprint.authentication.handlers;
 
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
 import io.vertx.rxjava.core.http.Cookie;
 import io.vertx.rxjava.ext.auth.User;
 import io.vertx.rxjava.ext.web.RoutingContext;

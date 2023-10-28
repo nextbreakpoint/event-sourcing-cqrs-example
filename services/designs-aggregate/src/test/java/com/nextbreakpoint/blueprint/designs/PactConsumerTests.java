@@ -9,15 +9,41 @@ import au.com.dius.pact.core.model.PactSpecVersion;
 import au.com.dius.pact.core.model.V4Pact;
 import au.com.dius.pact.core.model.annotations.Pact;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
+import com.nextbreakpoint.blueprint.common.core.TilesBitmap;
 import com.nextbreakpoint.blueprint.common.events.DesignInsertRequested;
 import com.nextbreakpoint.blueprint.common.events.mappers.DesignInsertRequestedOutputMapper;
-import org.junit.jupiter.api.*;
+import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
+import static com.nextbreakpoint.blueprint.designs.TestConstants.CHECKSUM_2;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.COMMAND_ID_1;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.COMMAND_ID_2;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.COMMAND_ID_3;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.COMMAND_ID_4;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.COMMAND_ID_5;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DATA_1;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DATA_2;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_DELETE_REQUESTED;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_ID_1;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_ID_2;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_INSERT_REQUESTED;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_UPDATE_REQUESTED;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.MESSAGE_SOURCE;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.REVISION_REGEXP;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.TILE_RENDER_COMPLETED;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.USER_ID_1;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.USER_ID_2;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.UUID6_REGEXP;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Tag("docker")
@@ -41,319 +67,208 @@ public class PactConsumerTests {
         testCases.after();
     }
 
+    @BeforeEach
+    public void beforeEach() {
+        testCases.deleteData();
+        testCases.getSteps().reset();
+    }
+
     @Pact(consumer = "designs-aggregate", provider = "designs-command")
-    public V4Pact designInsertRequested(MessagePactBuilder builder) {
-        final UUID uuid = new UUID(0L, 1L);
-
-        final UUID commandId = new UUID(1L, 1L);
-
-        final UUID eventId = new UUID(2L, 1L);
-
-        PactDslJsonBody event1 = new PactDslJsonBody()
-                .uuid("designId", uuid)
-                .uuid("userId", TestConstants.USER_ID)
-                .stringMatcher("commandId", TestConstants.UUID6_REGEXP, commandId.toString())
-                .stringValue("data", TestConstants.JSON_1);
-
-        PactDslJsonBody payload1 = new PactDslJsonBody()
-                .stringMatcher("uuid", TestConstants.UUID6_REGEXP, eventId.toString())
-                .object("data", event1)
-                .stringValue("type", TestConstants.DESIGN_INSERT_REQUESTED)
-                .stringValue("source", TestConstants.MESSAGE_SOURCE);
-
-        PactDslJsonBody message1 = new PactDslJsonBody()
-                .stringValue("key", uuid.toString())
-                .object("value", payload1);
-
+    public V4Pact shouldUpdateTheDesignAfterReceivingADesignInsertRequestedMessage(MessagePactBuilder builder) {
         return builder
                 .given("kafka topic exists")
-                .expectsToReceive("design insert requested for design 00000000-0000-0000-0000-000000000001")
-                .withContent(message1)
+                .expectsToReceive("design insert requested for design " + DESIGN_ID_1 + " with command " + COMMAND_ID_1)
+                .withContent(getDesignInsertRequestedMessage(USER_ID_1, DESIGN_ID_1, COMMAND_ID_1, new UUID(2L, 1L), DATA_1))
                 .toPact();
     }
 
     @Pact(consumer = "designs-aggregate", provider = "designs-command")
-    public V4Pact designUpdateRequested(MessagePactBuilder builder) {
-        final UUID uuid = new UUID(0L, 2L);
-
-        final UUID commandId1 = new UUID(1L, 1L);
-        final UUID commandId2 = new UUID(1L, 2L);
-
-        final UUID eventId1 = new UUID(2L, 1L);
-        final UUID eventId2 = new UUID(2L, 2L);
-
-        PactDslJsonBody event1 = new PactDslJsonBody()
-                .uuid("designId", uuid)
-                .uuid("userId", TestConstants.USER_ID)
-                .stringMatcher("commandId", TestConstants.UUID6_REGEXP, commandId1.toString())
-                .stringValue("data", TestConstants.JSON_1);
-
-        PactDslJsonBody payload1 = new PactDslJsonBody()
-                .stringMatcher("uuid", TestConstants.UUID6_REGEXP, eventId1.toString())
-                .object("data", event1)
-                .stringValue("type", TestConstants.DESIGN_INSERT_REQUESTED)
-                .stringValue("source", TestConstants.MESSAGE_SOURCE);
-
-        PactDslJsonBody message1 = new PactDslJsonBody()
-                .stringValue("key", uuid.toString())
-                .object("value", payload1);
-
-        PactDslJsonBody event2 = new PactDslJsonBody()
-                .uuid("designId", uuid)
-                .uuid("userId", TestConstants.USER_ID)
-                .stringMatcher("commandId", TestConstants.UUID6_REGEXP, commandId2.toString())
-                .stringValue("data", TestConstants.JSON_2)
-                .booleanType("published");
-
-        PactDslJsonBody payload2 = new PactDslJsonBody()
-                .stringMatcher("uuid", TestConstants.UUID6_REGEXP, eventId2.toString())
-                .object("data", event2)
-                .stringValue("type", TestConstants.DESIGN_UPDATE_REQUESTED)
-                .stringValue("source", TestConstants.MESSAGE_SOURCE);
-
-        PactDslJsonBody message2 = new PactDslJsonBody()
-                .stringValue("key", uuid.toString())
-                .object("value", payload2);
-
+    public V4Pact shouldUpdateTheDesignAfterReceivingADesignUpdateRequestedMessage(MessagePactBuilder builder) {
         return builder
                 .given("kafka topic exists")
-                .expectsToReceive("design insert requested for design 00000000-0000-0000-0000-000000000002")
-                .withContent(message1)
-                .expectsToReceive("design update requested for design 00000000-0000-0000-0000-000000000002")
-                .withContent(message2)
+                .expectsToReceive("design insert requested for design " + DESIGN_ID_1 + " with command " + COMMAND_ID_1)
+                .withContent(getDesignInsertRequestedMessage(USER_ID_1, DESIGN_ID_1, COMMAND_ID_1, new UUID(2L, 1L), DATA_1))
+                .expectsToReceive("design update requested for design " + DESIGN_ID_1 + " with command " + COMMAND_ID_2)
+                .withContent(getDesignUpdateRequestedMessage(USER_ID_1, DESIGN_ID_1, COMMAND_ID_2, new UUID(2L, 2L), DATA_2, false))
+                .expectsToReceive("design update requested for design " + DESIGN_ID_1 + " with command " + COMMAND_ID_3 + " and published true")
+                .withContent(getDesignUpdateRequestedMessage(USER_ID_1, DESIGN_ID_1, COMMAND_ID_3, new UUID(2L, 3L), DATA_2, true))
                 .toPact();
     }
 
     @Pact(consumer = "designs-aggregate", provider = "designs-command")
-    public V4Pact designDeleteRequested(MessagePactBuilder builder) {
-        final UUID uuid = new UUID(0L, 3L);
-
-        final UUID commandId1 = new UUID(1L, 1L);
-        final UUID commandId2 = new UUID(1L, 2L);
-
-        final UUID eventId1 = new UUID(2L, 1L);
-        final UUID eventId2 = new UUID(2L, 2L);
-
-        PactDslJsonBody event1 = new PactDslJsonBody()
-                .uuid("designId", uuid)
-                .uuid("userId", TestConstants.USER_ID)
-                .stringMatcher("commandId", TestConstants.UUID6_REGEXP, commandId1.toString())
-                .stringValue("data", TestConstants.JSON_1);
-
-        PactDslJsonBody payload1 = new PactDslJsonBody()
-                .stringMatcher("uuid", TestConstants.UUID6_REGEXP, eventId1.toString())
-                .object("data", event1)
-                .stringValue("type", TestConstants.DESIGN_INSERT_REQUESTED)
-                .stringValue("source", TestConstants.MESSAGE_SOURCE);
-
-        PactDslJsonBody message1 = new PactDslJsonBody()
-                .stringValue("key", uuid.toString())
-                .object("value", payload1);
-
-        PactDslJsonBody event2 = new PactDslJsonBody()
-                .uuid("designId", uuid)
-                .uuid("userId", TestConstants.USER_ID)
-                .stringMatcher("commandId", TestConstants.UUID6_REGEXP, commandId2.toString());
-
-        PactDslJsonBody payload2 = new PactDslJsonBody()
-                .stringMatcher("uuid", TestConstants.UUID6_REGEXP, eventId2.toString())
-                .object("data", event2)
-                .stringValue("type", TestConstants.DESIGN_DELETE_REQUESTED)
-                .stringValue("source", TestConstants.MESSAGE_SOURCE);
-
-        PactDslJsonBody message2 = new PactDslJsonBody()
-                .stringValue("key", uuid.toString())
-                .object("value", payload2);
-
+    public V4Pact shouldUpdateTheDesignAfterReceivingADesignDeleteRequestedMessage(MessagePactBuilder builder) {
         return builder
                 .given("kafka topic exists")
-                .expectsToReceive("design insert requested for design 00000000-0000-0000-0000-000000000003")
-                .withContent(message1)
-                .expectsToReceive("design delete requested for design 00000000-0000-0000-0000-000000000003")
-                .withContent(message2)
+                .expectsToReceive("design insert requested for design " + DESIGN_ID_1 + " with command " + COMMAND_ID_1)
+                .withContent(getDesignInsertRequestedMessage(USER_ID_1, DESIGN_ID_1, COMMAND_ID_1, new UUID(2L, 1L), DATA_1))
+                .expectsToReceive("design delete requested for design " + DESIGN_ID_1 + " with command " + COMMAND_ID_2)
+                .withContent(getDesignDeleteRequestedMessage(USER_ID_1, DESIGN_ID_1, COMMAND_ID_2, new UUID(2L, 2L)))
                 .toPact();
     }
 
     @Pact(consumer = "designs-aggregate", provider = "designs-render")
-    public V4Pact tileRenderCompleted(MessagePactBuilder builder) {
-        final UUID uuid = new UUID(0L, 4L);
-
-        final String revision1 = "0000000000000000-0000000000000001";
-        final String revision2 = "0000000000000000-0000000000000002";
-
-        final UUID eventId1 = new UUID(2L, 1L);
-        final UUID eventId2 = new UUID(2L, 2L);
-        final UUID eventId3 = new UUID(2L, 3L);
-        final UUID eventId4 = new UUID(2L, 4L);
-        final UUID eventId5 = new UUID(2L, 5L);
-
-        PactDslJsonBody event1 = new PactDslJsonBody()
-                .uuid("designId", uuid)
-                .uuid("commandId", TestConstants.COMMAND_1)
-                .stringMatcher("revision", TestConstants.REVISION_REGEXP, revision1)
-                .stringValue("checksum", TestConstants.CHECKSUM_1)
-                .numberValue("level", 0)
-                .numberValue("row", 0)
-                .numberValue("col", 0)
-                .stringValue("status", "FAILED");
-
-        PactDslJsonBody payload1 = new PactDslJsonBody()
-                .stringMatcher("uuid", TestConstants.UUID6_REGEXP, eventId1.toString())
-                .object("data", event1)
-                .stringValue("type", TestConstants.TILE_RENDER_COMPLETED)
-                .stringValue("source", TestConstants.MESSAGE_SOURCE);
-
-        PactDslJsonBody message1 = new PactDslJsonBody()
-                .stringValue("key", String.format("%s/%s/%d/%04d%04d.png", uuid, TestConstants.COMMAND_1, 0, 0, 0))
-                .object("value", payload1);
-
-        PactDslJsonBody event2 = new PactDslJsonBody()
-                .uuid("designId", uuid)
-                .uuid("commandId", TestConstants.COMMAND_1)
-                .stringMatcher("revision", TestConstants.REVISION_REGEXP, revision1)
-                .stringValue("checksum", TestConstants.CHECKSUM_1)
-                .numberValue("level", 1)
-                .numberValue("row", 0)
-                .numberValue("col", 0)
-                .stringValue("status", "COMPLETED");
-
-        PactDslJsonBody payload2 = new PactDslJsonBody()
-                .stringMatcher("uuid", TestConstants.UUID6_REGEXP, eventId2.toString())
-                .object("data", event2)
-                .stringValue("type", TestConstants.TILE_RENDER_COMPLETED)
-                .stringValue("source", TestConstants.MESSAGE_SOURCE);
-
-        PactDslJsonBody message2 = new PactDslJsonBody()
-                .stringValue("key", String.format("%s/%s/%d/%04d%04d.png", uuid, TestConstants.COMMAND_1, 1, 0, 0))
-                .object("value", payload2);
-
-        PactDslJsonBody event3 = new PactDslJsonBody()
-                .uuid("designId", uuid)
-                .uuid("commandId", TestConstants.COMMAND_1)
-                .stringMatcher("revision", TestConstants.REVISION_REGEXP, revision1)
-                .stringValue("checksum", TestConstants.CHECKSUM_1)
-                .numberValue("level", 1)
-                .numberValue("row", 1)
-                .numberValue("col", 0)
-                .stringValue("status", "COMPLETED");
-
-        PactDslJsonBody payload3 = new PactDslJsonBody()
-                .stringMatcher("uuid", TestConstants.UUID6_REGEXP, eventId3.toString())
-                .object("data", event3)
-                .stringValue("type", TestConstants.TILE_RENDER_COMPLETED)
-                .stringValue("source", TestConstants.MESSAGE_SOURCE);
-
-        PactDslJsonBody message3 = new PactDslJsonBody()
-                .stringValue("key", String.format("%s/%s/%d/%04d%04d.png", uuid, TestConstants.COMMAND_1, 1, 1, 0))
-                .object("value", payload3);
-
-        PactDslJsonBody event4 = new PactDslJsonBody()
-                .uuid("designId", uuid)
-                .uuid("commandId", TestConstants.COMMAND_1)
-                .stringMatcher("revision", TestConstants.REVISION_REGEXP, revision1)
-                .stringValue("checksum", TestConstants.CHECKSUM_1)
-                .numberValue("level", 2)
-                .numberValue("row", 2)
-                .numberValue("col", 1)
-                .stringValue("status", "COMPLETED");
-
-        PactDslJsonBody payload4 = new PactDslJsonBody()
-                .stringMatcher("uuid", TestConstants.UUID6_REGEXP, eventId4.toString())
-                .object("data", event4)
-                .stringValue("type", TestConstants.TILE_RENDER_COMPLETED)
-                .stringValue("source", TestConstants.MESSAGE_SOURCE);
-
-        PactDslJsonBody message4 = new PactDslJsonBody()
-                .stringValue("key", String.format("%s/%s/%d/%04d%04d.png", uuid, TestConstants.COMMAND_1, 2, 2, 1))
-                .object("value", payload4);
-
-        PactDslJsonBody event5 = new PactDslJsonBody()
-                .uuid("designId", uuid)
-                .uuid("commandId", TestConstants.COMMAND_2)
-                .stringMatcher("revision", TestConstants.REVISION_REGEXP, revision2)
-                .stringValue("checksum", TestConstants.CHECKSUM_2)
-                .numberValue("level", 2)
-                .numberValue("row", 3)
-                .numberValue("col", 1)
-                .stringValue("status", "COMPLETED");
-
-        PactDslJsonBody payload5 = new PactDslJsonBody()
-                .stringMatcher("uuid", TestConstants.UUID6_REGEXP, eventId5.toString())
-                .object("data", event5)
-                .stringValue("type", TestConstants.TILE_RENDER_COMPLETED)
-                .stringValue("source", TestConstants.MESSAGE_SOURCE);
-
-        PactDslJsonBody message5 = new PactDslJsonBody()
-                .stringValue("key", String.format("%s/%s/%d/%04d%04d.png", uuid, TestConstants.COMMAND_2, 2, 3, 1))
-                .object("value", payload5);
-
-        return builder.given("kafka topic exists")
-                .expectsToReceive("tile render completed with status FAILED for tile 0/00000000.png of design 00000000-0000-0000-0000-000000000004 with checksum 1")
-                .withContent(message1)
-                .expectsToReceive("tile render completed with status COMPLETED for tile 1/00010000.png of design 00000000-0000-0000-0000-000000000004 with checksum 1")
-                .withContent(message2)
-                .expectsToReceive("tile render completed with status COMPLETED for tile 1/00010001.png of design 00000000-0000-0000-0000-000000000004 with checksum 1")
-                .withContent(message3)
-                .expectsToReceive("tile render completed with status COMPLETED for tile 2/00020001.png of design 00000000-0000-0000-0000-000000000004 with checksum 1")
-                .withContent(message4)
-                .expectsToReceive("tile render completed with status COMPLETED for tile 2/00030001.png of design 00000000-0000-0000-0000-000000000004 with checksum 2")
-                .withContent(message5)
+    public V4Pact shouldUpdateTheDesignAfterReceivingATileRenderCompletedMessage(MessagePactBuilder builder) {
+        return builder
+                .given("kafka topic exists")
+                // the tile render completed events should have same command id of design insert requested event
+                .expectsToReceive("tile render completed with status FAILED for tile 0/00000000.png of design " + DESIGN_ID_2 + " and command " + COMMAND_ID_4)
+                .withContent(getTileRenderCompletedMessage(DESIGN_ID_2, COMMAND_ID_4, new UUID(2L, 1L), 0, 0, 0, "FAILED", "0000000000000000-0000000000000001", CHECKSUM_2))
+                .expectsToReceive("tile render completed with status COMPLETED for tile 1/00010000.png of design " + DESIGN_ID_2 + " and command " + COMMAND_ID_4)
+                .withContent(getTileRenderCompletedMessage(DESIGN_ID_2, COMMAND_ID_4, new UUID(2L, 2L), 1, 0, 0, "COMPLETED", "0000000000000000-0000000000000001", CHECKSUM_2))
+                .expectsToReceive("tile render completed with status COMPLETED for tile 1/00010001.png of design " + DESIGN_ID_2 + " and command " + COMMAND_ID_4)
+                .withContent(getTileRenderCompletedMessage(DESIGN_ID_2, COMMAND_ID_4, new UUID(2L, 3L), 1, 1, 0, "COMPLETED", "0000000000000000-0000000000000001", CHECKSUM_2))
+                .expectsToReceive("tile render completed with status COMPLETED for tile 2/00020001.png of design " + DESIGN_ID_2 + " and command " + COMMAND_ID_4)
+                .withContent(getTileRenderCompletedMessage(DESIGN_ID_2, COMMAND_ID_4, new UUID(2L, 4L), 2, 2, 1, "COMPLETED", "0000000000000000-0000000000000001", CHECKSUM_2))
+                // the tile render completed events with different command id should be discarded
+                .expectsToReceive("tile render completed with status COMPLETED for tile 2/00020002.png of design " + DESIGN_ID_2 + " and command " + COMMAND_ID_5)
+                .withContent(getTileRenderCompletedMessage(DESIGN_ID_2, COMMAND_ID_5, new UUID(2L, 5L), 2, 2, 2, "COMPLETED", "0000000000000000-0000000000000001", CHECKSUM_2))
                 .toPact();
     }
 
+    @NotNull
+    private static PactDslJsonBody getDesignInsertRequestedMessage(UUID userId, UUID designId, UUID commandId, UUID eventId, String data) {
+        PactDslJsonBody event = new PactDslJsonBody()
+                .uuid("designId", designId)
+                .uuid("userId", userId)
+                .stringMatcher("commandId", UUID6_REGEXP, commandId.toString())
+                .stringValue("data", data);
+
+        PactDslJsonBody payload = new PactDslJsonBody()
+                .stringMatcher("uuid", UUID6_REGEXP, eventId.toString())
+                .stringValue("type", DESIGN_INSERT_REQUESTED)
+                .stringValue("source", MESSAGE_SOURCE)
+                .object("data", event);
+
+        return new PactDslJsonBody()
+                .stringValue("key", designId.toString())
+                .object("value", payload);
+    }
+
+    @NotNull
+    private static PactDslJsonBody getDesignUpdateRequestedMessage(UUID userId, UUID designId, UUID commandId, UUID eventId, String data, boolean published) {
+        PactDslJsonBody event = new PactDslJsonBody()
+                .uuid("designId", designId)
+                .uuid("userId", userId)
+                .stringMatcher("commandId", UUID6_REGEXP, commandId.toString())
+                .stringValue("data", data)
+                .booleanValue("published", published);
+
+        PactDslJsonBody payload = new PactDslJsonBody()
+                .stringMatcher("uuid", UUID6_REGEXP, eventId.toString())
+                .stringValue("type", DESIGN_UPDATE_REQUESTED)
+                .stringValue("source", MESSAGE_SOURCE)
+                .object("data", event);
+
+        return new PactDslJsonBody()
+                .stringValue("key", designId.toString())
+                .object("value", payload);
+    }
+
+    @NotNull
+    private static PactDslJsonBody getDesignDeleteRequestedMessage(UUID userId, UUID designId, UUID commandId, UUID eventId) {
+        PactDslJsonBody event = new PactDslJsonBody()
+                .uuid("designId", designId)
+                .uuid("userId", userId)
+                .stringMatcher("commandId", UUID6_REGEXP, commandId.toString());
+
+        PactDslJsonBody payload = new PactDslJsonBody()
+                .stringMatcher("uuid", UUID6_REGEXP, eventId.toString())
+                .stringValue("type", DESIGN_DELETE_REQUESTED)
+                .stringValue("source", MESSAGE_SOURCE)
+                .object("data", event);
+
+        return new PactDslJsonBody()
+                .stringValue("key", designId.toString())
+                .object("value", payload);
+    }
+
+    @NotNull
+    private static PactDslJsonBody getTileRenderCompletedMessage(UUID designId, UUID commandId, UUID eventId, int level, int row, int col, String status, String revision, String checksum) {
+        PactDslJsonBody event5 = new PactDslJsonBody()
+                .uuid("designId", designId)
+                .uuid("commandId", commandId)
+                .stringMatcher("revision", REVISION_REGEXP, revision)
+                .stringValue("checksum", checksum)
+                .numberValue("level", level)
+                .numberValue("row", row)
+                .numberValue("col", col)
+                .stringMatcher("status", "COMPLETED|FAILED", status);
+
+        PactDslJsonBody payload5 = new PactDslJsonBody()
+                .stringMatcher("uuid", UUID6_REGEXP, eventId.toString())
+                .stringValue("type", TILE_RENDER_COMPLETED)
+                .stringValue("source", MESSAGE_SOURCE)
+                .object("data", event5);
+
+        return new PactDslJsonBody()
+                .stringValue("key", String.format("%s/%s/%d/%04d%04d.png", designId, commandId, level, row, col))
+                .object("value", payload5);
+    }
+
     @Test
-    @PactTestFor(providerName = "designs-command", pactMethod = "designInsertRequested", providerType = ProviderType.ASYNCH, pactVersion = PactSpecVersion.V4)
-    @DisplayName("Should update the design after receiving a DesignInsertRequested event")
-    public void shouldUpdateTheDesignWhenReceivingADesignInsertRequestedMessage(V4Pact pact) {
+    @PactTestFor(providerName = "designs-command", pactMethod = "shouldUpdateTheDesignAfterReceivingADesignInsertRequestedMessage", providerType = ProviderType.ASYNCH, pactVersion = PactSpecVersion.V4)
+    @DisplayName("Should update the design after receiving a DesignInsertRequested message")
+    public void shouldUpdateTheDesignAfterReceivingADesignInsertRequestedMessage(V4Pact pact) {
         assertThat(pact.getInteractions()).hasSize(1);
 
         final OutputMessage designInsertRequestedMessage = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(0).asAsynchronousMessage()));
 
-        testCases.shouldUpdateTheDesignWhenReceivingADesignInsertRequestedMessage(designInsertRequestedMessage);
+        testCases.shouldUpdateTheDesignAfterReceivingADesignInsertRequestedMessage(designInsertRequestedMessage);
     }
 
     @Test
-    @PactTestFor(providerName = "designs-command", pactMethod = "designUpdateRequested", providerType = ProviderType.ASYNCH, pactVersion = PactSpecVersion.V4)
-    @DisplayName("Should update the design after receiving a DesignUpdateRequested event")
-    public void shouldUpdateTheDesignWhenReceivingADesignUpdateRequestedMessage(V4Pact pact) {
-        assertThat(pact.getInteractions()).hasSize(2);
+    @PactTestFor(providerName = "designs-command", pactMethod = "shouldUpdateTheDesignAfterReceivingADesignUpdateRequestedMessage", providerType = ProviderType.ASYNCH, pactVersion = PactSpecVersion.V4)
+    @DisplayName("Should update the design after receiving a DesignUpdateRequested message")
+    public void shouldUpdateTheDesignAfterReceivingADesignUpdateRequestedMessage(V4Pact pact) {
+        assertThat(pact.getInteractions()).hasSize(3);
 
         final OutputMessage designInsertRequestedMessage = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(0).asAsynchronousMessage()));
-        final OutputMessage designUpdateRequestedMessage = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(1).asAsynchronousMessage()));
+        final OutputMessage designUpdateRequestedMessage1 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(1).asAsynchronousMessage()));
+        final OutputMessage designUpdateRequestedMessage2 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(2).asAsynchronousMessage()));
 
-        testCases.shouldUpdateTheDesignWhenReceivingADesignUpdateRequestedMessage(designInsertRequestedMessage, designUpdateRequestedMessage);
+        testCases.shouldUpdateTheDesignAfterReceivingADesignUpdateRequestedMessage(designInsertRequestedMessage, designUpdateRequestedMessage1, designUpdateRequestedMessage2);
     }
 
     @Test
-    @PactTestFor(providerName = "designs-command", pactMethod = "designDeleteRequested", providerType = ProviderType.ASYNCH, pactVersion = PactSpecVersion.V4)
-    @DisplayName("Should update the design after receiving a DesignDeleteRequested event")
-    public void shouldUpdateTheDesignWhenReceivingADesignDeleteRequestedMessage(V4Pact pact) {
+    @PactTestFor(providerName = "designs-command", pactMethod = "shouldUpdateTheDesignAfterReceivingADesignDeleteRequestedMessage", providerType = ProviderType.ASYNCH, pactVersion = PactSpecVersion.V4)
+    @DisplayName("Should update the design after receiving a DesignDeleteRequested message")
+    public void shouldUpdateTheDesignAfterReceivingADesignDeleteRequestedMessage(V4Pact pact) {
         assertThat(pact.getInteractions()).hasSize(2);
 
         final OutputMessage designInsertRequestedMessage = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(0).asAsynchronousMessage()));
         final OutputMessage designDeleteRequestedMessage = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(1).asAsynchronousMessage()));
 
-        testCases.shouldUpdateTheDesignWhenReceivingADesignDeleteRequestedMessage(designInsertRequestedMessage, designDeleteRequestedMessage);
+        testCases.shouldUpdateTheDesignAfterReceivingADesignDeleteRequestedMessage(designInsertRequestedMessage, designDeleteRequestedMessage);
     }
 
     @Test
-    @PactTestFor(providerName = "designs-render", pactMethod = "tileRenderCompleted", providerType = ProviderType.ASYNCH, pactVersion = PactSpecVersion.V4)
-    @DisplayName("Should update the design after receiving a TileRenderCompleted event")
-    public void shouldUpdateTheDesignWhenReceivingATileRenderCompletedMessage(V4Pact pact) {
+    @PactTestFor(providerName = "designs-render", pactMethod = "shouldUpdateTheDesignAfterReceivingATileRenderCompletedMessage", providerType = ProviderType.ASYNCH, pactVersion = PactSpecVersion.V4)
+    @DisplayName("Should update the design after receiving a TileRenderCompleted message")
+    public void shouldUpdateTheDesignAfterReceivingATileRenderCompletedMessage(V4Pact pact) {
         assertThat(pact.getInteractions()).hasSize(5);
 
-        final DesignInsertRequested designInsertRequested = new DesignInsertRequested(new UUID(0L, 4L), TestConstants.COMMAND_1, TestConstants.USER_ID, TestConstants.JSON_1);
-
-        final OutputMessage designInsertRequestedMessage = new DesignInsertRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designInsertRequested);
-
+        final DesignInsertRequestedOutputMapper outputMapper = new DesignInsertRequestedOutputMapper(MESSAGE_SOURCE);
+        final OutputMessage designInsertRequestedMessage = outputMapper.transform(new DesignInsertRequested(DESIGN_ID_2, COMMAND_ID_4, USER_ID_2, DATA_2));
         final OutputMessage tileRenderCompletedMessage1 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(0).asAsynchronousMessage()));
         final OutputMessage tileRenderCompletedMessage2 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(1).asAsynchronousMessage()));
         final OutputMessage tileRenderCompletedMessage3 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(2).asAsynchronousMessage()));
         final OutputMessage tileRenderCompletedMessage4 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(3).asAsynchronousMessage()));
         final OutputMessage tileRenderCompletedMessage5 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(4).asAsynchronousMessage()));
 
-        final List<OutputMessage> tileRenderCompletedMessages = List.of(tileRenderCompletedMessage1, tileRenderCompletedMessage2, tileRenderCompletedMessage3, tileRenderCompletedMessage4, tileRenderCompletedMessage5);
+        final TilesBitmap bitmap = TilesBitmap.empty();
+        bitmap.putTile(0, 0, 0);
+        bitmap.putTile(1, 0, 0);
+        bitmap.putTile(1, 1, 0);
+        bitmap.putTile(2, 2, 1);
 
-        testCases.shouldUpdateTheDesignWhenReceivingATileRenderCompletedMessage(designInsertRequestedMessage, tileRenderCompletedMessages);
+        var tileRenderCompletedMessages = List.of(
+                tileRenderCompletedMessage1,
+                tileRenderCompletedMessage2,
+                tileRenderCompletedMessage3,
+                tileRenderCompletedMessage4,
+                tileRenderCompletedMessage5
+        );
+
+        testCases.shouldUpdateTheDesignAfterReceivingATileRenderCompletedMessage(designInsertRequestedMessage, tileRenderCompletedMessages, bitmap);
     }
 }

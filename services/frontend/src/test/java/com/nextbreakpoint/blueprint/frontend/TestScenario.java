@@ -48,6 +48,8 @@ public class TestScenario {
 
     if (useContainers) {
       service.start();
+    } else {
+      System.out.println("Don't start containers");
     }
   }
 

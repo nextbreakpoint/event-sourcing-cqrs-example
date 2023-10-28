@@ -18,8 +18,8 @@ public class TestCassandra {
     }
 
     @NotNull
-    public List<Row> fetchMessages(UUID designId) {
-        return Single.fromCallable(() -> session.execute(session.prepare("SELECT * FROM MESSAGE WHERE MESSAGE_KEY = ?").bind(designId.toString()).setConsistencyLevel(ConsistencyLevel.QUORUM)).all())
+    public List<Row> fetchMessages(UUID designId, UUID messageUuid) {
+        return Single.fromCallable(() -> session.execute(session.prepare("SELECT * FROM MESSAGE WHERE MESSAGE_KEY = ? AND MESSAGE_UUID = ?").bind(designId.toString(), messageUuid).setConsistencyLevel(ConsistencyLevel.QUORUM)).all())
                 .subscribeOn(Schedulers.immediate())
                 .toBlocking()
                 .value();

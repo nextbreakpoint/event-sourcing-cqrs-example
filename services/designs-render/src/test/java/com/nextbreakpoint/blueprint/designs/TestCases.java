@@ -2,14 +2,13 @@ package com.nextbreakpoint.blueprint.designs;
 
 import au.com.dius.pact.provider.junit5.HttpTestTarget;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
-import com.nextbreakpoint.blueprint.common.core.Json;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.drivers.KafkaClientFactory;
 import com.nextbreakpoint.blueprint.common.drivers.KafkaConsumerConfig;
 import com.nextbreakpoint.blueprint.common.drivers.KafkaProducerConfig;
-import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
 import com.nextbreakpoint.blueprint.common.test.KafkaTestEmitter;
 import com.nextbreakpoint.blueprint.common.test.KafkaTestPolling;
+import com.nextbreakpoint.blueprint.common.test.TestContext;
 import io.vertx.rxjava.core.RxHelper;
 import io.vertx.rxjava.core.Vertx;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -24,16 +23,21 @@ import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
-import java.time.Duration;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
-import static org.awaitility.Durations.ONE_SECOND;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_ID_1;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_ID_2;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.TILE_RENDER_COMPLETED;
 
 public class TestCases {
     private final TestScenario scenario = new TestScenario();
+
+    private final TestContext context = new TestContext();
+
+    private final TestSteps steps = new TestSteps(context, new TestActionsImpl());
 
     private final Vertx vertx = new Vertx(io.vertx.core.Vertx.vertx());
 
@@ -74,6 +78,8 @@ public class TestCases {
         renderEmitter = new KafkaTestEmitter(producer, TestConstants.RENDER_TOPIC_PREFIX + "-" + scenario.getUniqueTestId());
 
         deleteData();
+
+        context.clear();
     }
 
     public void after() {
@@ -96,6 +102,11 @@ public class TestCases {
     @NotNull
     public String getVersion() {
         return scenario.getVersion();
+    }
+
+    @NotNull
+    public TestSteps getSteps() {
+        return steps;
     }
 
     public void deleteData() {
@@ -128,7 +139,7 @@ public class TestCases {
     }
 
     @NotNull
-    public KafkaConsumerConfig createConsumerConfig(String groupId) {
+    private KafkaConsumerConfig createConsumerConfig(String groupId) {
         return KafkaConsumerConfig.builder()
                 .withBootstrapServers(scenario.getKafkaHost() + ":" + scenario.getKafkaPort())
                 .withKeyDeserializer("org.apache.kafka.common.serialization.StringDeserializer")
@@ -140,7 +151,7 @@ public class TestCases {
     }
 
     @NotNull
-    public KafkaProducerConfig createProducerConfig(String clientId) {
+    private KafkaProducerConfig createProducerConfig(String clientId) {
         return KafkaProducerConfig.builder()
                 .withBootstrapServers(scenario.getKafkaHost() + ":" + scenario.getKafkaPort())
                 .withKeySerializer("org.apache.kafka.common.serialization.StringSerializer")
@@ -151,81 +162,77 @@ public class TestCases {
     }
 
     public void shouldStartRenderingAnImageWhenReceivingATileRenderRequestedMessage(List<OutputMessage> tileRenderRequestedMessages) {
-        renderPolling.clearMessages();
+        getSteps()
+                .given().theTileRenderRequestedMessage(tileRenderRequestedMessages.get(0))
+                .when().discardReceivedMessages(TestActions.Source.RENDER)
+                .and().publishTheMessage(TestActions.Source.RENDER, topic -> topic +  "-requested-0")
+                .then().aMessageShouldBePublished(TestActions.Source.RENDER, TILE_RENDER_COMPLETED, key -> key.startsWith(DESIGN_ID_1.toString()))
+                .and().theTileRenderCompletedMessageShouldHaveExpectedValues()
+                .and().theTileRenderCompletedEventShouldHaveExpectedValues()
+                .and().theImageShouldHasBeenCreated()
+                .given().theTileRenderRequestedMessage(tileRenderRequestedMessages.get(1))
+                .when().discardReceivedMessages(TestActions.Source.RENDER)
+                .and().publishTheMessage(TestActions.Source.RENDER, topic -> topic +  "-requested-0")
+                .then().aMessageShouldBePublished(TestActions.Source.RENDER, TILE_RENDER_COMPLETED, key -> key.startsWith(DESIGN_ID_2.toString()))
+                .and().theTileRenderCompletedMessageShouldHaveExpectedValues()
+                .and().theTileRenderCompletedEventShouldHaveExpectedValues()
+                .and().theImageShouldHasBeenCreated()
+                .given().theTileRenderRequestedMessage(tileRenderRequestedMessages.get(2))
+                .when().discardReceivedMessages(TestActions.Source.RENDER)
+                .and().publishTheMessage(TestActions.Source.RENDER, topic -> topic +  "-requested-1")
+                .then().aMessageShouldBePublished(TestActions.Source.RENDER, TILE_RENDER_COMPLETED, key -> key.startsWith(DESIGN_ID_2.toString()))
+                .and().theTileRenderCompletedMessageShouldHaveExpectedValues()
+                .and().theTileRenderCompletedEventShouldHaveExpectedValues()
+                .and().theImageShouldHasBeenCreated()
+                .given().theTileRenderRequestedMessage(tileRenderRequestedMessages.get(3))
+                .when().discardReceivedMessages(TestActions.Source.RENDER)
+                .and().publishTheMessage(TestActions.Source.RENDER, topic -> topic +  "-requested-2")
+                .then().aMessageShouldBePublished(TestActions.Source.RENDER, TILE_RENDER_COMPLETED, key -> key.startsWith(DESIGN_ID_2.toString()))
+                .and().theTileRenderCompletedMessageShouldHaveExpectedValues()
+                .and().theTileRenderCompletedEventShouldHaveExpectedValues()
+                .and().theImageShouldHasBeenCreated()
+                .given().theTileRenderRequestedMessage(tileRenderRequestedMessages.get(4))
+                .when().discardReceivedMessages(TestActions.Source.RENDER)
+                .and().publishTheMessage(TestActions.Source.RENDER, topic -> topic +  "-requested-3")
+                .then().aMessageShouldBePublished(TestActions.Source.RENDER, TILE_RENDER_COMPLETED, key -> key.startsWith(DESIGN_ID_2.toString()))
+                .and().theTileRenderCompletedMessageShouldHaveExpectedValues()
+                .and().theTileRenderCompletedEventShouldHaveExpectedValues()
+                .and().theImageShouldHasBeenCreated();
+    }
 
-        final OutputMessage tileRenderRequestedMessage1 = tileRenderRequestedMessages.get(0);
-        final OutputMessage tileRenderRequestedMessage2 = tileRenderRequestedMessages.get(1);
-        final OutputMessage tileRenderRequestedMessage3 = tileRenderRequestedMessages.get(2);
-        final OutputMessage tileRenderRequestedMessage4 = tileRenderRequestedMessages.get(3);
-        final OutputMessage tileRenderRequestedMessage5 = tileRenderRequestedMessages.get(4);
+    private class TestActionsImpl implements TestActions {
+        @Override
+        public void clearMessages(Source source) {
+            polling(source).clearMessages();
+        }
 
-        final TileRenderRequested tileRenderRequested1 = Json.decodeValue(tileRenderRequestedMessage1.getValue().getData(), TileRenderRequested.class);
-        final TileRenderRequested tileRenderRequested2 = Json.decodeValue(tileRenderRequestedMessage2.getValue().getData(), TileRenderRequested.class);
-        final TileRenderRequested tileRenderRequested3 = Json.decodeValue(tileRenderRequestedMessage2.getValue().getData(), TileRenderRequested.class);
-        final TileRenderRequested tileRenderRequested4 = Json.decodeValue(tileRenderRequestedMessage2.getValue().getData(), TileRenderRequested.class);
-        final TileRenderRequested tileRenderRequested5 = Json.decodeValue(tileRenderRequestedMessage2.getValue().getData(), TileRenderRequested.class);
+        @Override
+        public void emitMessage(Source source, OutputMessage message, Function<String, String> router) {
+            emitter(source).send(message, router.apply(emitter(source).getTopicName()));
+        }
 
-        renderEmitter.send(tileRenderRequestedMessage1, renderEmitter.getTopicName() + "-requested-0");
-        renderEmitter.send(tileRenderRequestedMessage2, renderEmitter.getTopicName() + "-requested-1");
-        renderEmitter.send(tileRenderRequestedMessage3, renderEmitter.getTopicName() + "-requested-1");
-        renderEmitter.send(tileRenderRequestedMessage4, renderEmitter.getTopicName() + "-requested-2");
-        renderEmitter.send(tileRenderRequestedMessage5, renderEmitter.getTopicName() + "-requested-3");
+        @Override
+        public List<InputMessage> findMessages(Source source, String messageSource, String messageType, Predicate<String> keyPredicate, Predicate<InputMessage> messagePredicate) {
+            return polling(source).findMessages(messageSource, messageType, keyPredicate, messagePredicate);
+        }
 
-        await().atMost(Duration.ofSeconds(30))
-                .pollInterval(ONE_SECOND)
-                .untilAsserted(() -> {
-                    final List<InputMessage> messages1 = renderPolling.findMessages(TestConstants.MESSAGE_SOURCE, TestConstants.TILE_RENDER_REQUESTED, key -> key.startsWith(tileRenderRequested1.getDesignId().toString()));
-                    assertThat(messages1).hasSize(1);
-                    final List<InputMessage> messages2 = renderPolling.findMessages(TestConstants.MESSAGE_SOURCE, TestConstants.TILE_RENDER_REQUESTED, key -> key.startsWith(tileRenderRequested2.getDesignId().toString()));
-                    assertThat(messages2).hasSize(1);
-                    final List<InputMessage> messages3 = renderPolling.findMessages(TestConstants.MESSAGE_SOURCE, TestConstants.TILE_RENDER_REQUESTED, key -> key.startsWith(tileRenderRequested3.getDesignId().toString()));
-                    assertThat(messages3).hasSize(1);
-                    final List<InputMessage> messages4 = renderPolling.findMessages(TestConstants.MESSAGE_SOURCE, TestConstants.TILE_RENDER_REQUESTED, key -> key.startsWith(tileRenderRequested4.getDesignId().toString()));
-                    assertThat(messages4).hasSize(1);
-                    final List<InputMessage> messages5 = renderPolling.findMessages(TestConstants.MESSAGE_SOURCE, TestConstants.TILE_RENDER_REQUESTED, key -> key.startsWith(tileRenderRequested5.getDesignId().toString()));
-                    assertThat(messages5).hasSize(1);
-                });
+        @Override
+        public byte[] getImage(String bucketKey) {
+            final S3Client s3Client = TestS3.createS3Client(URI.create("http://" + scenario.getMinioHost() + ":" + scenario.getMinioPort()));
+            ResponseBytes<GetObjectResponse> response = TestS3.getObject(s3Client, TestConstants.BUCKET, bucketKey);
+            return response.asByteArray();
+        }
 
-        await().atMost(Duration.ofSeconds(30))
-                .pollInterval(ONE_SECOND)
-                .untilAsserted(() -> {
-                    final List<InputMessage> messages1 = renderPolling.findMessages(TestConstants.MESSAGE_SOURCE, TestConstants.TILE_RENDER_COMPLETED, TestUtils.createRenderKey(tileRenderRequested1));
-                    assertThat(messages1).hasSize(1);
-                    final List<InputMessage> messages2 = renderPolling.findMessages(TestConstants.MESSAGE_SOURCE, TestConstants.TILE_RENDER_COMPLETED, TestUtils.createRenderKey(tileRenderRequested2));
-                    assertThat(messages2).hasSize(1);
-                    final List<InputMessage> messages3 = renderPolling.findMessages(TestConstants.MESSAGE_SOURCE, TestConstants.TILE_RENDER_COMPLETED, TestUtils.createRenderKey(tileRenderRequested3));
-                    assertThat(messages3).hasSize(1);
-                    final List<InputMessage> messages4 = renderPolling.findMessages(TestConstants.MESSAGE_SOURCE, TestConstants.TILE_RENDER_COMPLETED, TestUtils.createRenderKey(tileRenderRequested4));
-                    assertThat(messages4).hasSize(1);
-                    final List<InputMessage> messages5 = renderPolling.findMessages(TestConstants.MESSAGE_SOURCE, TestConstants.TILE_RENDER_COMPLETED, TestUtils.createRenderKey(tileRenderRequested5));
-                    assertThat(messages5).hasSize(1);
-                    InputMessage message1 = messages1.get(0);
-                    TestAssertions.assertExpectedTileRenderCompletedMessage(message1, tileRenderRequested1);
-                    InputMessage message2 = messages2.get(0);
-                    TestAssertions.assertExpectedTileRenderCompletedMessage(message2, tileRenderRequested2);
-                    InputMessage message3 = messages3.get(0);
-                    TestAssertions.assertExpectedTileRenderCompletedMessage(message3, tileRenderRequested3);
-                    InputMessage message4 = messages4.get(0);
-                    TestAssertions.assertExpectedTileRenderCompletedMessage(message4, tileRenderRequested4);
-                    InputMessage message5 = messages5.get(0);
-                    TestAssertions.assertExpectedTileRenderCompletedMessage(message5, tileRenderRequested5);
-                });
+        private KafkaTestPolling polling(Source source) {
+            return switch (source) {
+                case RENDER -> renderPolling;
+            };
+        }
 
-        final S3Client s3Client = TestS3.createS3Client(URI.create("http://" + scenario.getMinioHost() + ":" + scenario.getMinioPort()));
-
-        ResponseBytes<GetObjectResponse> response1 = TestS3.getObject(s3Client, TestConstants.BUCKET, TestUtils.createBucketKey(tileRenderRequested1));
-        assertThat(response1.asByteArray()).isNotEmpty();
-
-        ResponseBytes<GetObjectResponse> response2 = TestS3.getObject(s3Client, TestConstants.BUCKET, TestUtils.createBucketKey(tileRenderRequested2));
-        assertThat(response2.asByteArray()).isNotEmpty();
-
-        ResponseBytes<GetObjectResponse> response3 = TestS3.getObject(s3Client, TestConstants.BUCKET, TestUtils.createBucketKey(tileRenderRequested3));
-        assertThat(response3.asByteArray()).isNotEmpty();
-
-        ResponseBytes<GetObjectResponse> response4 = TestS3.getObject(s3Client, TestConstants.BUCKET, TestUtils.createBucketKey(tileRenderRequested4));
-        assertThat(response4.asByteArray()).isNotEmpty();
-
-        ResponseBytes<GetObjectResponse> response5 = TestS3.getObject(s3Client, TestConstants.BUCKET, TestUtils.createBucketKey(tileRenderRequested5));
-        assertThat(response5.asByteArray()).isNotEmpty();
+        private KafkaTestEmitter emitter(Source source) {
+            return switch (source) {
+                case RENDER -> renderEmitter;
+            };
+        }
     }
 }

@@ -11,7 +11,11 @@ import io.vertx.rxjava.core.eventbus.MessageConsumer;
 import io.vertx.rxjava.ext.web.RoutingContext;
 import lombok.extern.log4j.Log4j2;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 @Log4j2
 public class WatchHandler implements Handler<RoutingContext> {

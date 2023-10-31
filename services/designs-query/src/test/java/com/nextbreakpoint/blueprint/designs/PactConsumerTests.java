@@ -79,13 +79,13 @@ public class PactConsumerTests {
         return builder
                 .given("kafka topic exists")
                 .expectsToReceive("design document update requested for design " + DESIGN_ID_4 + " with 0% tiles completed and not published")
-                .withContent(getDesignDocumentUpdateRequestedMessage(DESIGN_ID_4, COMMAND_ID_1, new UUID(2L, 1L), REVISION_0, USER_ID_1, DATA_1, "CREATED", LEVELS_DRAFT, getCompletedTiles(0), false))
+                .withContent(getDesignDocumentUpdateRequestedMessage(DESIGN_ID_4, COMMAND_ID_1, new UUID(2L, 1L), REVISION_0, USER_ID_1, DATA_1, "CREATED", LEVELS_DRAFT, getCompletedTiles(LEVELS_DRAFT, 0), false))
                 .expectsToReceive("design document update requested for design " + DESIGN_ID_4 + " with 50% tiles completed and not published")
-                .withContent(getDesignDocumentUpdateRequestedMessage(DESIGN_ID_4, COMMAND_ID_2, new UUID(2L, 2L), REVISION_1, USER_ID_1, DATA_2, "UPDATED", LEVELS_DRAFT, getCompletedTiles(50), false))
+                .withContent(getDesignDocumentUpdateRequestedMessage(DESIGN_ID_4, COMMAND_ID_2, new UUID(2L, 2L), REVISION_1, USER_ID_1, DATA_2, "UPDATED", LEVELS_DRAFT, getCompletedTiles(LEVELS_DRAFT, 50), false))
                 .expectsToReceive("design document update requested for design " + DESIGN_ID_4 + " with 100% tiles completed and not published")
-                .withContent(getDesignDocumentUpdateRequestedMessage(DESIGN_ID_4, COMMAND_ID_3, new UUID(2L, 3L), REVISION_2, USER_ID_1, DATA_2, "UPDATED", LEVELS_READY, getCompletedTiles(100), false))
+                .withContent(getDesignDocumentUpdateRequestedMessage(DESIGN_ID_4, COMMAND_ID_3, new UUID(2L, 3L), REVISION_2, USER_ID_1, DATA_2, "UPDATED", LEVELS_DRAFT, getCompletedTiles(LEVELS_DRAFT, 100), false))
                 .expectsToReceive("design document update requested for design " + DESIGN_ID_4 + " with 100% tiles completed and published")
-                .withContent(getDesignDocumentUpdateRequestedMessage(DESIGN_ID_4, COMMAND_ID_4, new UUID(2L, 4L), REVISION_3, USER_ID_1, DATA_2, "UPDATED", LEVELS_READY, getCompletedTiles(100), true))
+                .withContent(getDesignDocumentUpdateRequestedMessage(DESIGN_ID_4, COMMAND_ID_4, new UUID(2L, 4L), REVISION_3, USER_ID_1, DATA_2, "UPDATED", LEVELS_READY, getCompletedTiles(LEVELS_READY, 100), true))
                 .toPact();
     }
 
@@ -94,7 +94,7 @@ public class PactConsumerTests {
         return builder
                 .given("kafka topic exists")
                 .expectsToReceive("design document update requested for design " + DESIGN_ID_5 + " and 100% tiles completed and published")
-                .withContent(getDesignDocumentUpdateRequestedMessage(DESIGN_ID_5, COMMAND_ID_1, new UUID(2L, 1L), REVISION_0, USER_ID_2, DATA_1, "UPDATED", LEVELS_READY, getCompletedTiles(100), true))
+                .withContent(getDesignDocumentUpdateRequestedMessage(DESIGN_ID_5, COMMAND_ID_1, new UUID(2L, 1L), REVISION_0, USER_ID_2, DATA_1, "UPDATED", LEVELS_READY, getCompletedTiles(LEVELS_READY, 100), true))
                 .expectsToReceive("design document delete requested for design " + DESIGN_ID_5)
                 .withContent(getDesignDocumentDeleteRequestedMessage(DESIGN_ID_5, COMMAND_ID_2, new UUID(2L, 2L), REVISION_0))
                 .toPact();
@@ -146,47 +146,47 @@ public class PactConsumerTests {
     }
 
     @NotNull
-    private static PactDslJsonArray getCompletedTiles(int percentage) {
+    private static PactDslJsonArray getCompletedTiles(int levels, int percentage) {
         return new PactDslJsonArray()
                 .object()
                     .numberValue("level", 0)
                     .numberValue("total", 1)
-                    .numberValue("completed", computeCompleted(1, percentage))
+                    .numberValue("completed", levels > 0 ? computeCompleted(1, percentage) : 0)
                     .closeObject()
                 .object()
                     .numberValue("level", 1)
                     .numberValue("total", 4)
-                    .numberValue("completed", computeCompleted(4, percentage))
+                    .numberValue("completed", levels > 1 ? computeCompleted(4, percentage) : 0)
                     .closeObject()
                 .object()
                     .numberValue("level", 2)
                     .numberValue("total", 16)
-                    .numberValue("completed", computeCompleted(16, percentage))
+                    .numberValue("completed", levels > 2 ? computeCompleted(16, percentage) : 0)
                     .closeObject()
                 .object()
                     .numberValue("level", 3)
                     .numberValue("total", 64)
-                    .numberValue("completed", computeCompleted(64, percentage))
+                    .numberValue("completed", levels > 3 ? computeCompleted(64, percentage) : 0)
                     .closeObject()
                 .object()
                     .numberValue("level", 4)
                     .numberValue("total", 256)
-                    .numberValue("completed", computeCompleted(256, percentage))
+                    .numberValue("completed", levels > 4 ? computeCompleted(256, percentage) : 0)
                     .closeObject()
                 .object()
                     .numberValue("level", 5)
                     .numberValue("total", 1024)
-                    .numberValue("completed", computeCompleted(1024, percentage))
+                    .numberValue("completed", levels > 5 ? computeCompleted(1024, percentage) : 0)
                     .closeObject()
                 .object()
                     .numberValue("level", 6)
                     .numberValue("total", 4096)
-                    .numberValue("completed", computeCompleted(4096, percentage))
+                    .numberValue("completed", levels > 6 ? computeCompleted(4096, percentage) : 0)
                     .closeObject()
                 .object()
                     .numberValue("level", 7)
                     .numberValue("total", 16384)
-                    .numberValue("completed", computeCompleted(16384, percentage))
+                    .numberValue("completed", levels > 7 ? computeCompleted(16384, percentage) : 0)
                     .closeObject()
                 .asArray();
     }

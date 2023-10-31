@@ -1,12 +1,4 @@
 Vagrant.configure(2) do |config|
-  unless Vagrant.has_plugin?("vagrant-disksize")
-    raise Vagrant::Errors::VagrantError.new, "vagrant-disksize plugin is missing. Please install it using 'vagrant plugin install vagrant-disksize' and rerun 'vagrant up'"
-  end
-
-  if Vagrant.has_plugin?("vagrant-disksize")
-    config.disksize.size = '14GB'
-  end
-
   config.vm.define "blueprint" do |s|
     s.ssh.forward_agent = true
     s.vm.box = "ubuntu/focal64"
@@ -25,5 +17,4 @@ Vagrant.configure(2) do |config|
       v.gui = false
     end
   end
-
 end

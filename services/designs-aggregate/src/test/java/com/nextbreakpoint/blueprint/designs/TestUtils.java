@@ -87,7 +87,7 @@ public class TestUtils {
 
     private static void makeLevel(TilesBitmap bitmap, int level, float completePercentage) {
         final int total = (int) Math.rint(Math.pow(2, level * 2));
-        final int limit = (int) Math.rint(completePercentage * total);
+        final int limit = (int) Math.ceil(completePercentage * total);
 
         TestUtils.generateTiles(level)
                 .stream()

@@ -108,7 +108,7 @@ public class VerifyQueryPact {
 
     @PactVerifyProvider("design document update requested for design 00000000-0000-0000-0000-000000000005 and 100% tiles completed and published")
     public String produceDesignDocumentUpdateRequested5() {
-        return produceDesignDocumentUpdateRequested(DESIGN_ID_5, COMMAND_ID_1, DATA_1, CHECKSUM_1, "CREATED", 1.0f, REVISION_0, USER_ID_2, true, LEVELS_READY);
+        return produceDesignDocumentUpdateRequested(DESIGN_ID_5, COMMAND_ID_1, DATA_1, CHECKSUM_1, "UPDATED", 1.0f, REVISION_0, USER_ID_2, true, LEVELS_READY);
     }
 
     @PactVerifyProvider("design document delete requested for design 00000000-0000-0000-0000-000000000005")

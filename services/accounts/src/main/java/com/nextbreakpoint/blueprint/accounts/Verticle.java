@@ -2,7 +2,17 @@ package com.nextbreakpoint.blueprint.accounts;
 
 import com.nextbreakpoint.blueprint.accounts.persistence.MySQLStore;
 import com.nextbreakpoint.blueprint.common.core.IOUtils;
-import com.nextbreakpoint.blueprint.common.vertx.*;
+import com.nextbreakpoint.blueprint.common.vertx.AccessHandler;
+import com.nextbreakpoint.blueprint.common.vertx.CorsHandlerFactory;
+import com.nextbreakpoint.blueprint.common.vertx.Initializer;
+import com.nextbreakpoint.blueprint.common.vertx.JDBCClientConfig;
+import com.nextbreakpoint.blueprint.common.vertx.JDBCClientFactory;
+import com.nextbreakpoint.blueprint.common.vertx.JWTProviderConfig;
+import com.nextbreakpoint.blueprint.common.vertx.JWTProviderFactory;
+import com.nextbreakpoint.blueprint.common.vertx.OpenApiHandler;
+import com.nextbreakpoint.blueprint.common.vertx.ResponseHelper;
+import com.nextbreakpoint.blueprint.common.vertx.Server;
+import com.nextbreakpoint.blueprint.common.vertx.ServerConfig;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServerOptions;
@@ -36,8 +46,14 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import static com.nextbreakpoint.blueprint.common.core.Authority.*;
-import static com.nextbreakpoint.blueprint.common.core.Headers.*;
+import static com.nextbreakpoint.blueprint.common.core.Authority.ADMIN;
+import static com.nextbreakpoint.blueprint.common.core.Authority.GUEST;
+import static com.nextbreakpoint.blueprint.common.core.Authority.PLATFORM;
+import static com.nextbreakpoint.blueprint.common.core.Headers.ACCEPT;
+import static com.nextbreakpoint.blueprint.common.core.Headers.AUTHORIZATION;
+import static com.nextbreakpoint.blueprint.common.core.Headers.CONTENT_TYPE;
+import static com.nextbreakpoint.blueprint.common.core.Headers.COOKIE;
+import static com.nextbreakpoint.blueprint.common.core.Headers.X_XSRF_TOKEN;
 
 @Log4j2
 public class Verticle extends AbstractVerticle {

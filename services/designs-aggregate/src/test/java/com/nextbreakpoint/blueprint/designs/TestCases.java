@@ -2,15 +2,16 @@ package com.nextbreakpoint.blueprint.designs;
 
 import com.datastax.oss.driver.api.core.cql.Row;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
-import com.nextbreakpoint.blueprint.common.core.Json;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.core.TilesBitmap;
-import com.nextbreakpoint.blueprint.common.drivers.*;
-import com.nextbreakpoint.blueprint.common.events.DesignInsertRequested;
-import com.nextbreakpoint.blueprint.common.events.TileRenderCompleted;
-import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
+import com.nextbreakpoint.blueprint.common.drivers.CassandraClientConfig;
+import com.nextbreakpoint.blueprint.common.drivers.CassandraClientFactory;
+import com.nextbreakpoint.blueprint.common.drivers.KafkaClientFactory;
+import com.nextbreakpoint.blueprint.common.drivers.KafkaConsumerConfig;
+import com.nextbreakpoint.blueprint.common.drivers.KafkaProducerConfig;
 import com.nextbreakpoint.blueprint.common.test.KafkaTestEmitter;
 import com.nextbreakpoint.blueprint.common.test.KafkaTestPolling;
+import com.nextbreakpoint.blueprint.common.test.TestContext;
 import io.vertx.rxjava.core.RxHelper;
 import io.vertx.rxjava.core.Vertx;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -19,18 +20,28 @@ import org.jetbrains.annotations.NotNull;
 import rx.plugins.RxJavaHooks;
 import rx.schedulers.Schedulers;
 
-import java.time.Duration;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
-import static org.awaitility.Durations.ONE_SECOND;
-import static org.awaitility.Durations.TEN_SECONDS;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_AGGREGATE_UPDATED;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_DOCUMENT_DELETED_REQUESTED;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_DOCUMENT_UPDATE_REQUESTED;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_ID_1;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_ID_2;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_ID_3;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.LEVELS_DRAFT;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.LEVELS_READY;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.TILE_RENDER_REQUESTED;
 
 public class TestCases {
     private final TestScenario scenario = new TestScenario();
+
+    private final TestContext context = new TestContext();
+
+    private final TestSteps steps = new TestSteps(context, new TestActionsImpl());
 
     private final Vertx vertx = new Vertx(io.vertx.core.Vertx.vertx());
 
@@ -82,6 +93,8 @@ public class TestCases {
         renderEmitter = new KafkaTestEmitter(producer, TestConstants.RENDER_TOPIC_PREFIX + "-" + scenario.getUniqueTestId());
 
         deleteData();
+
+        context.clear();
     }
 
     public void after() {
@@ -109,13 +122,18 @@ public class TestCases {
         return scenario.getVersion();
     }
 
+    @NotNull
+    public TestSteps getSteps() {
+        return steps;
+    }
+
     public void deleteData() {
         testCassandra.deleteMessages();
         testCassandra.deleteDesigns();
     }
 
     @NotNull
-    public CassandraClientConfig createCassandraConfig() {
+    private CassandraClientConfig createCassandraConfig() {
         return CassandraClientConfig.builder()
                 .withClusterName("datacenter1")
                 .withKeyspace(TestConstants.DATABASE_KEYSPACE)
@@ -127,7 +145,7 @@ public class TestCases {
     }
 
     @NotNull
-    public KafkaConsumerConfig createConsumerConfig(String groupId) {
+    private KafkaConsumerConfig createConsumerConfig(String groupId) {
         return KafkaConsumerConfig.builder()
                 .withBootstrapServers(scenario.getKafkaHost() + ":" + scenario.getKafkaPort())
                 .withKeyDeserializer("org.apache.kafka.common.serialization.StringDeserializer")
@@ -139,7 +157,7 @@ public class TestCases {
     }
 
     @NotNull
-    public KafkaProducerConfig createProducerConfig(String clientId) {
+    private KafkaProducerConfig createProducerConfig(String clientId) {
         return KafkaProducerConfig.builder()
                 .withBootstrapServers(scenario.getKafkaHost() + ":" + scenario.getKafkaPort())
                 .withKeySerializer("org.apache.kafka.common.serialization.StringSerializer")
@@ -149,310 +167,143 @@ public class TestCases {
                 .build();
     }
 
-    public void shouldUpdateTheDesignWhenReceivingADesignInsertRequestedMessage(OutputMessage designInsertRequestedMessage) {
-        final DesignInsertRequested designInsertRequested = Json.decodeValue(designInsertRequestedMessage.getValue().getData(), DesignInsertRequested.class);
-
-        final TilesBitmap bitmap = TilesBitmap.empty();
-
-        final UUID designId = designInsertRequested.getDesignId();
-
-        System.out.println("designId = " + designId);
-
-        eventsPolling.clearMessages();
-        renderPolling.clearMessages();
-
-        eventEmitter.send(designInsertRequestedMessage);
-
-        await().atMost(TEN_SECONDS)
-                .pollInterval(ONE_SECOND)
-                .untilAsserted(() -> {
-                    final List<InputMessage> messages = eventsPolling.findMessages(TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_INSERT_REQUESTED, designId.toString());
-                    assertThat(messages).hasSize(1);
-                });
-
-        await().atMost(TEN_SECONDS)
-                .pollInterval(ONE_SECOND)
-                .untilAsserted(() -> {
-                    final List<Row> rows = testCassandra.fetchMessages(designId);
-                    assertThat(rows).hasSize(1);
-                    TestAssertions.assertExpectedMessage(rows.get(0), designInsertRequestedMessage);
-                });
-
-        await().atMost(TEN_SECONDS)
-                .pollInterval(ONE_SECOND)
-                .untilAsserted(() -> {
-                    final List<Row> rows = testCassandra.fetchDesigns(designId);
-                    assertThat(rows).hasSize(1);
-                    TestAssertions.assertExpectedDesign(rows.get(0), TestConstants.JSON_1, "CREATED", bitmap.getBitmap().array());
-                });
-
-        await().atMost(TEN_SECONDS)
-                .pollInterval(ONE_SECOND)
-                .untilAsserted(() -> {
-                    final List<InputMessage> messages = eventsPolling.findMessages(TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_AGGREGATE_UPDATED, designId.toString());
-                    assertThat(messages).hasSize(1);
-                    TestAssertions.assertExpectedDesignAggregateUpdatedMessage(messages.get(0), designId, TestConstants.JSON_1, TestConstants.CHECKSUM_1, "CREATED");
-                });
-
-        await().atMost(TEN_SECONDS)
-                .pollInterval(ONE_SECOND)
-                .untilAsserted(() -> {
-                    final List<InputMessage> messages = renderPolling.findMessages(TestConstants.MESSAGE_SOURCE, TestConstants.TILE_RENDER_REQUESTED, key -> key.startsWith(designId.toString()));
-                    assertThat(messages).hasSize(TestUtils.totalTilesByLevels(TestConstants.LEVELS));
-                    List<TileRenderRequested> events = TestUtils.extractTileRenderRequestedEvents(messages, TestConstants.CHECKSUM_1);
-                    assertThat(events).hasSize(messages.size());
-                    events.forEach(event -> TestAssertions.assertExpectedTileRenderRequestedEvent(event, designId, TestConstants.JSON_1, TestConstants.CHECKSUM_1));
-                });
+    public void shouldUpdateTheDesignAfterReceivingADesignInsertRequestedMessage(OutputMessage designInsertRequestedMessage) {
+        getSteps()
+                .given().theDesignInsertRequestedMessage(designInsertRequestedMessage)
+                .when().discardReceivedMessages(TestActions.Source.RENDER)
+                .and().discardReceivedMessages(TestActions.Source.EVENTS)
+                .and().publishTheMessage(TestActions.Source.EVENTS)
+                .then().theMessageShouldBeSaved()
+                .and().theDesignShouldBeSaved("CREATED", LEVELS_DRAFT)
+                .and().aMessageShouldBePublished(TestActions.Source.EVENTS, DESIGN_AGGREGATE_UPDATED)
+                .and().theAggregateUpdatedMessageHasExpectedValues("CREATED", LEVELS_DRAFT)
+                .and().manyMessagesShouldBePublished(TestActions.Source.RENDER, TILE_RENDER_REQUESTED, key -> key.startsWith(DESIGN_ID_1.toString()), TestUtils.totalTilesByLevels(LEVELS_DRAFT))
+                .and().theTileRenderRequestedMessagesHaveExpectedValues(LEVELS_DRAFT)
+                .and().aMessageShouldBePublished(TestActions.Source.EVENTS, DESIGN_DOCUMENT_UPDATE_REQUESTED)
+                .and().theDesignDocumentUpdateRequestedMessageHasExpectedValues("CREATED", LEVELS_DRAFT);
     }
 
-    public void shouldUpdateTheDesignWhenReceivingADesignUpdateRequestedMessage(OutputMessage designInsertRequestedMessage, OutputMessage designUpdateRequestedMessage) {
-        final DesignInsertRequested designInsertRequested = Json.decodeValue(designInsertRequestedMessage.getValue().getData(), DesignInsertRequested.class);
-
-        final TilesBitmap bitmap = TilesBitmap.empty();
-
-        final UUID designId = designInsertRequested.getDesignId();
-
-        System.out.println("designId = " + designId);
-
-        eventsPolling.clearMessages();
-        renderPolling.clearMessages();
-
-        eventEmitter.send(designInsertRequestedMessage);
-
-        await().atMost(Duration.ofSeconds(60))
-                .pollInterval(ONE_SECOND)
-                .untilAsserted(() -> {
-                    final List<InputMessage> messages = renderPolling.findMessages(TestConstants.MESSAGE_SOURCE, TestConstants.TILE_RENDER_REQUESTED, key -> key.startsWith(designId.toString()));
-                    assertThat(messages).hasSize(TestUtils.totalTilesByLevels(TestConstants.LEVELS));
-                    List<TileRenderRequested> events = TestUtils.extractTileRenderRequestedEvents(messages, TestConstants.CHECKSUM_1);
-                    assertThat(events).hasSize(messages.size());
-                    events.forEach(event -> TestAssertions.assertExpectedTileRenderRequestedEvent(event, designId, TestConstants.JSON_1, TestConstants.CHECKSUM_1));
-                });
-
-        eventsPolling.clearMessages();
-        renderPolling.clearMessages();
-
-        eventEmitter.send(designUpdateRequestedMessage);
-
-        await().atMost(TEN_SECONDS)
-                .pollInterval(ONE_SECOND)
-                .untilAsserted(() -> {
-                    final List<InputMessage> messages = eventsPolling.findMessages(TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_UPDATE_REQUESTED, designId.toString());
-                    assertThat(messages).hasSize(1);
-                });
-
-        await().atMost(TEN_SECONDS)
-                .pollInterval(ONE_SECOND)
-                .untilAsserted(() -> {
-                    final List<Row> rows = testCassandra.fetchMessages(designId);
-                    assertThat(rows).hasSize(2);
-                    TestAssertions.assertExpectedMessage(rows.get(0), designInsertRequestedMessage);
-                    TestAssertions.assertExpectedMessage(rows.get(1), designUpdateRequestedMessage);
-                });
-
-        await().atMost(TEN_SECONDS)
-                .pollInterval(ONE_SECOND)
-                .untilAsserted(() -> {
-                    final List<Row> rows = testCassandra.fetchDesigns(designId);
-                    assertThat(rows).hasSize(1);
-                    TestAssertions.assertExpectedDesign(rows.get(0), TestConstants.JSON_2, "UPDATED", bitmap.getBitmap().array());
-                });
-
-        await().atMost(TEN_SECONDS)
-                .pollInterval(ONE_SECOND)
-                .untilAsserted(() -> {
-                    final List<InputMessage> messages = eventsPolling.findMessages(TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_AGGREGATE_UPDATED, designId.toString());
-                    assertThat(messages).hasSize(1);
-                    TestAssertions.assertExpectedDesignAggregateUpdatedMessage(messages.get(0), designId, TestConstants.JSON_2, TestConstants.CHECKSUM_2, "UPDATED");
-                });
-
-        await().atMost(TEN_SECONDS)
-                .pollInterval(ONE_SECOND)
-                .untilAsserted(() -> {
-                    final List<InputMessage> messages = renderPolling.findMessages(TestConstants.MESSAGE_SOURCE, TestConstants.TILE_RENDER_REQUESTED, key -> key.startsWith(designId.toString()));
-                    assertThat(messages).hasSize(TestUtils.totalTilesByLevels(TestConstants.LEVELS));
-                    List<TileRenderRequested> events = TestUtils.extractTileRenderRequestedEvents(messages, TestConstants.CHECKSUM_2);
-                    assertThat(events).hasSize(messages.size());
-                    events.forEach(event -> TestAssertions.assertExpectedTileRenderRequestedEvent(event, designId, TestConstants.JSON_2, TestConstants.CHECKSUM_2));
-                });
+    public void shouldUpdateTheDesignAfterReceivingADesignUpdateRequestedMessage(OutputMessage designInsertRequestedMessage, OutputMessage designUpdateRequestedMessage1, OutputMessage designUpdateRequestedMessage2) {
+        getSteps()
+                .given().theDesignInsertRequestedMessage(designInsertRequestedMessage)
+                .when().discardReceivedMessages(TestActions.Source.RENDER)
+                .and().discardReceivedMessages(TestActions.Source.EVENTS)
+                .and().publishTheMessage(TestActions.Source.EVENTS)
+                .then().aMessageShouldBePublished(TestActions.Source.EVENTS, DESIGN_AGGREGATE_UPDATED)
+                .and().manyMessagesShouldBePublished(TestActions.Source.RENDER, TILE_RENDER_REQUESTED, key -> key.startsWith(DESIGN_ID_2.toString()), TestUtils.totalTilesByLevels(LEVELS_DRAFT))
+                .and().aMessageShouldBePublished(TestActions.Source.EVENTS, DESIGN_DOCUMENT_UPDATE_REQUESTED)
+                .given().theDesignUpdateRequestedMessage(designUpdateRequestedMessage1)
+                .when().discardReceivedMessages(TestActions.Source.RENDER)
+                .and().discardReceivedMessages(TestActions.Source.EVENTS)
+                .and().publishTheMessage(TestActions.Source.EVENTS)
+                .then().theMessageShouldBeSaved()
+                .and().theDesignShouldBeSaved("UPDATED", LEVELS_DRAFT)
+                .and().aMessageShouldBePublished(TestActions.Source.EVENTS, DESIGN_AGGREGATE_UPDATED)
+                .and().theAggregateUpdatedMessageHasExpectedValues("UPDATED", LEVELS_DRAFT)
+                .and().manyMessagesShouldBePublished(TestActions.Source.RENDER, TILE_RENDER_REQUESTED, key -> key.startsWith(DESIGN_ID_2.toString()), TestUtils.totalTilesByLevels(LEVELS_DRAFT))
+                .and().theTileRenderRequestedMessagesHaveExpectedValues(LEVELS_DRAFT)
+                .and().aMessageShouldBePublished(TestActions.Source.EVENTS, DESIGN_DOCUMENT_UPDATE_REQUESTED)
+                .and().theDesignDocumentUpdateRequestedMessageHasExpectedValues("UPDATED", LEVELS_DRAFT)
+                .given().theDesignUpdateRequestedMessage(designUpdateRequestedMessage2)
+                .when().discardReceivedMessages(TestActions.Source.RENDER)
+                .and().discardReceivedMessages(TestActions.Source.EVENTS)
+                .and().publishTheMessage(TestActions.Source.EVENTS)
+                .then().theMessageShouldBeSaved()
+                .and().theDesignShouldBeSaved("UPDATED", LEVELS_READY)
+                .and().aMessageShouldBePublished(TestActions.Source.EVENTS, DESIGN_AGGREGATE_UPDATED)
+                .and().theAggregateUpdatedMessageHasExpectedValues("UPDATED", LEVELS_READY)
+                .and().manyMessagesShouldBePublished(TestActions.Source.RENDER, TILE_RENDER_REQUESTED, key -> key.startsWith(DESIGN_ID_2.toString()), TestUtils.totalTilesByLevels(LEVELS_DRAFT))
+                .and().theTileRenderRequestedMessagesHaveExpectedValues(LEVELS_DRAFT)
+                .and().aMessageShouldBePublished(TestActions.Source.EVENTS, DESIGN_DOCUMENT_UPDATE_REQUESTED)
+                .and().theDesignDocumentUpdateRequestedMessageHasExpectedValues("UPDATED", LEVELS_READY);
     }
 
-    public void shouldUpdateTheDesignWhenReceivingADesignDeleteRequestedMessage(OutputMessage designInsertRequestedMessage, OutputMessage designDeleteRequestedMessage) {
-        final DesignInsertRequested designInsertRequested = Json.decodeValue(designInsertRequestedMessage.getValue().getData(), DesignInsertRequested.class);
-
-        final TilesBitmap bitmap = TilesBitmap.empty();
-
-        final UUID designId = designInsertRequested.getDesignId();
-
-        System.out.println("designId = " + designId);
-
-        eventsPolling.clearMessages();
-        renderPolling.clearMessages();
-
-        eventEmitter.send(designInsertRequestedMessage);
-
-        await().atMost(Duration.ofSeconds(60))
-                .pollInterval(ONE_SECOND)
-                .untilAsserted(() -> {
-                    final List<InputMessage> messages = renderPolling.findMessages(TestConstants.MESSAGE_SOURCE, TestConstants.TILE_RENDER_REQUESTED, key -> key.startsWith(designId.toString()));
-                    assertThat(messages).hasSize(TestUtils.totalTilesByLevels(TestConstants.LEVELS));
-                    List<TileRenderRequested> events = TestUtils.extractTileRenderRequestedEvents(messages, TestConstants.CHECKSUM_1);
-                    assertThat(events).hasSize(messages.size());
-                    events.forEach(event -> TestAssertions.assertExpectedTileRenderRequestedEvent(event, designId, TestConstants.JSON_1, TestConstants.CHECKSUM_1));
-                });
-
-        eventsPolling.clearMessages();
-        renderPolling.clearMessages();
-
-        eventEmitter.send(designDeleteRequestedMessage);
-
-        await().atMost(TEN_SECONDS)
-                .pollInterval(ONE_SECOND)
-                .untilAsserted(() -> {
-                    final List<InputMessage> messages = eventsPolling.findMessages(TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_DELETE_REQUESTED, designId.toString());
-                    assertThat(messages).hasSize(1);
-                });
-
-        await().atMost(TEN_SECONDS)
-                .pollInterval(ONE_SECOND)
-                .untilAsserted(() -> {
-                    final List<Row> rows = testCassandra.fetchMessages(designId);
-                    assertThat(rows).hasSize(2);
-                    TestAssertions.assertExpectedMessage(rows.get(0), designInsertRequestedMessage);
-                    TestAssertions.assertExpectedMessage(rows.get(1), designDeleteRequestedMessage);
-                });
-
-        await().atMost(TEN_SECONDS)
-                .pollInterval(ONE_SECOND)
-                .untilAsserted(() -> {
-                    final List<Row> rows = testCassandra.fetchDesigns(designId);
-                    assertThat(rows).hasSize(1);
-                    TestAssertions.assertExpectedDesign(rows.get(0), TestConstants.JSON_1, "DELETED", bitmap.getBitmap().array());
-                });
-
-        await().atMost(TEN_SECONDS)
-                .pollInterval(ONE_SECOND)
-                .untilAsserted(() -> {
-                    final List<InputMessage> messages = eventsPolling.findMessages(TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_AGGREGATE_UPDATED, designId.toString());
-                    assertThat(messages).hasSize(1);
-                    TestAssertions.assertExpectedDesignAggregateUpdatedMessage(messages.get(0), designId, TestConstants.JSON_1, TestConstants.CHECKSUM_1, "DELETED");
-                });
-
-        await().atMost(TEN_SECONDS)
-                .pollInterval(ONE_SECOND)
-                .untilAsserted(() -> {
-                    final List<InputMessage> messages = renderPolling.findMessages(TestConstants.MESSAGE_SOURCE, TestConstants.TILE_RENDER_REQUESTED, key -> key.startsWith(designId.toString()));
-                    assertThat(messages).hasSize(0);
-                });
-
-        await().atMost(TEN_SECONDS)
-                .pollInterval(ONE_SECOND)
-                .untilAsserted(() -> {
-                    final List<InputMessage> messages = eventsPolling.findMessages(TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_DOCUMENT_DELETED_REQUESTED, designId.toString());
-                    assertThat(messages).hasSize(1);
-                    messages.forEach(message -> TestAssertions.assertExpectedDesignDocumentDeleteRequestedMessage(message, designId));
-                });
+    public void shouldUpdateTheDesignAfterReceivingADesignDeleteRequestedMessage(OutputMessage designInsertRequestedMessage, OutputMessage designDeleteRequestedMessage) {
+        getSteps()
+                .given().theDesignInsertRequestedMessage(designInsertRequestedMessage)
+                .when().discardReceivedMessages(TestActions.Source.RENDER)
+                .and().discardReceivedMessages(TestActions.Source.EVENTS)
+                .and().publishTheMessage(TestActions.Source.EVENTS)
+                .then().aMessageShouldBePublished(TestActions.Source.EVENTS, DESIGN_AGGREGATE_UPDATED)
+                .and().manyMessagesShouldBePublished(TestActions.Source.RENDER, TILE_RENDER_REQUESTED, key -> key.startsWith(DESIGN_ID_3.toString()), TestUtils.totalTilesByLevels(LEVELS_DRAFT))
+                .and().aMessageShouldBePublished(TestActions.Source.EVENTS, DESIGN_DOCUMENT_UPDATE_REQUESTED)
+                .given().theDesignDeleteRequestedMessage(designDeleteRequestedMessage)
+                .when().discardReceivedMessages(TestActions.Source.RENDER)
+                .and().discardReceivedMessages(TestActions.Source.EVENTS)
+                .and().publishTheMessage(TestActions.Source.EVENTS)
+                .then().theMessageShouldBeSaved()
+                .and().theDesignShouldBeSaved("DELETED", LEVELS_DRAFT)
+                .and().aMessageShouldBePublished(TestActions.Source.EVENTS, DESIGN_AGGREGATE_UPDATED)
+                .and().theAggregateUpdatedMessageHasExpectedValues("DELETED", LEVELS_DRAFT)
+                .and().aMessageShouldBePublished(TestActions.Source.EVENTS, DESIGN_DOCUMENT_DELETED_REQUESTED)
+                .and().theDesignDocumentDeleteRequestedMessageHasExpectedValues();
     }
 
-    public void shouldUpdateTheDesignWhenReceivingATileRenderCompletedMessage(OutputMessage designInsertRequestedMessage, List<OutputMessage> tileRenderCompletedMessages) {
-        final DesignInsertRequested designInsertRequested = Json.decodeValue(designInsertRequestedMessage.getValue().getData(), DesignInsertRequested.class);
+    public void shouldUpdateTheDesignAfterReceivingATileRenderCompletedMessage(OutputMessage designInsertRequestedMessage, List<OutputMessage> tileRenderCompletedMessages, TilesBitmap bitmap) {
+        getSteps()
+                .given().theDesignInsertRequestedMessage(designInsertRequestedMessage)
+                .when().discardReceivedMessages(TestActions.Source.RENDER)
+                .and().discardReceivedMessages(TestActions.Source.EVENTS)
+                .and().publishTheMessage(TestActions.Source.EVENTS)
+                .then().aMessageShouldBePublished(TestActions.Source.EVENTS, DESIGN_AGGREGATE_UPDATED)
+                .and().manyMessagesShouldBePublished(TestActions.Source.RENDER, TILE_RENDER_REQUESTED, key -> key.startsWith(DESIGN_ID_2.toString()), TestUtils.totalTilesByLevels(LEVELS_DRAFT))
+                .and().aMessageShouldBePublished(TestActions.Source.EVENTS, DESIGN_DOCUMENT_UPDATE_REQUESTED)
+                .given().theTileRenderCompletedMessage(tileRenderCompletedMessages.get(0))
+                .when().discardReceivedMessages(TestActions.Source.RENDER)
+                .and().discardReceivedMessages(TestActions.Source.EVENTS)
+                .and().publishTheMessage(TestActions.Source.RENDER, topic -> topic + "-completed-0")
+                .given().theTileRenderCompletedMessage(tileRenderCompletedMessages.get(1))
+                .when().publishTheMessage(TestActions.Source.RENDER, topic -> topic + "-completed-1")
+                .given().theTileRenderCompletedMessage(tileRenderCompletedMessages.get(2))
+                .when().publishTheMessage(TestActions.Source.RENDER, topic -> topic + "-completed-1")
+                .given().theTileRenderCompletedMessage(tileRenderCompletedMessages.get(3))
+                .when().publishTheMessage(TestActions.Source.RENDER, topic -> topic + "-completed-2")
+                .given().theTileRenderCompletedMessage(tileRenderCompletedMessages.get(4))
+                .when().publishTheMessage(TestActions.Source.RENDER, topic -> topic + "-completed-2")
+                .and().selectDesignId(DESIGN_ID_2)
+                .then().theDesignShouldBeSaved("CREATED", bitmap, LEVELS_DRAFT)
+                .and().aMessageShouldBePublished(TestActions.Source.EVENTS, DESIGN_DOCUMENT_UPDATE_REQUESTED)
+                .and().theDesignDocumentUpdateRequestedMessageHasExpectedValues("CREATED", LEVELS_DRAFT);
+    }
 
-        final TilesBitmap bitmap = TilesBitmap.empty();
+    private class TestActionsImpl implements TestActions {
+        @Override
+        public void clearMessages(Source source) {
+            polling(source).clearMessages();
+        }
 
-        final UUID designId = designInsertRequested.getDesignId();
+        @Override
+        public void emitMessage(Source source, OutputMessage message, Function<String, String> router) {
+            emitter(source).send(message, router.apply(emitter(source).getTopicName()));
+        }
 
-        System.out.println("designId = " + designId);
+        @Override
+        public List<InputMessage> findMessages(Source source, String messageSource, String messageType, Predicate<String> keyPredicate, Predicate<InputMessage> messagePredicate) {
+            return polling(source).findMessages(messageSource, messageType, keyPredicate, messagePredicate);
+        }
 
-        eventsPolling.clearMessages();
-        renderPolling.clearMessages();
+        @Override
+        public List<Row> fetchMessages(UUID designId, UUID messageId) {
+            return testCassandra.fetchMessages(designId, messageId);
+        }
 
-        eventEmitter.send(designInsertRequestedMessage);
+        @Override
+        public List<Row> fetchDesigns(UUID designId) {
+            return testCassandra.fetchDesigns(designId);
+        }
 
-        await().atMost(TEN_SECONDS)
-                .pollInterval(ONE_SECOND)
-                .untilAsserted(() -> {
-                    final List<InputMessage> messages = eventsPolling.findMessages(TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_INSERT_REQUESTED, designId.toString());
-                    assertThat(messages).hasSize(1);
-                });
+        private KafkaTestPolling polling(Source source) {
+            return switch (source) {
+                case EVENTS -> eventsPolling;
+                case RENDER -> renderPolling;
+            };
+        }
 
-        await().atMost(TEN_SECONDS)
-                .pollInterval(ONE_SECOND)
-                .untilAsserted(() -> {
-                    final List<Row> rows = testCassandra.fetchMessages(designId);
-                    assertThat(rows).hasSize(1);
-                    TestAssertions.assertExpectedMessage(rows.get(0), designInsertRequestedMessage);
-                });
-
-        await().atMost(TEN_SECONDS)
-                .pollInterval(ONE_SECOND)
-                .untilAsserted(() -> {
-                    final List<Row> rows = testCassandra.fetchDesigns(designId);
-                    assertThat(rows).hasSize(1);
-                    TestAssertions.assertExpectedDesign(rows.get(0), TestConstants.JSON_1, "CREATED", bitmap.getBitmap().array());
-                });
-
-        await().atMost(TEN_SECONDS)
-                .pollInterval(ONE_SECOND)
-                .untilAsserted(() -> {
-                    final List<InputMessage> messages = eventsPolling.findMessages(TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_AGGREGATE_UPDATED, designId.toString());
-                    assertThat(messages).hasSize(1);
-                    TestAssertions.assertExpectedDesignAggregateUpdatedMessage(messages.get(0), designId, TestConstants.JSON_1, TestConstants.CHECKSUM_1, "CREATED");
-                });
-
-        await().atMost(TEN_SECONDS)
-                .pollInterval(ONE_SECOND)
-                .untilAsserted(() -> {
-                    final List<InputMessage> messages = eventsPolling.findMessages(TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_DOCUMENT_UPDATE_REQUESTED, designId.toString());
-                    assertThat(messages).hasSize(1);
-                    messages.forEach(message -> TestAssertions.assertExpectedDesignDocumentUpdateRequestedMessage(message, designId, TestConstants.JSON_1, TestConstants.CHECKSUM_1, "CREATED"));
-                });
-
-        await().atMost(TEN_SECONDS)
-                .pollInterval(ONE_SECOND)
-                .untilAsserted(() -> {
-                    final List<InputMessage> messages = renderPolling.findMessages(TestConstants.MESSAGE_SOURCE, TestConstants.TILE_RENDER_REQUESTED, key -> key.startsWith(designId.toString()));
-                    assertThat(messages).hasSize(TestUtils.totalTilesByLevels(TestConstants.LEVELS));
-                    List<TileRenderRequested> events = TestUtils.extractTileRenderRequestedEvents(messages, TestConstants.CHECKSUM_1);
-                    assertThat(events).hasSize(messages.size());
-                    events.forEach(event -> TestAssertions.assertExpectedTileRenderRequestedEvent(event, designId, TestConstants.JSON_1, TestConstants.CHECKSUM_1));
-                });
-
-        final OutputMessage tileRenderCompletedMessage1 = tileRenderCompletedMessages.get(0);
-        final OutputMessage tileRenderCompletedMessage2 = tileRenderCompletedMessages.get(1);
-        final OutputMessage tileRenderCompletedMessage3 = tileRenderCompletedMessages.get(2);
-        final OutputMessage tileRenderCompletedMessage4 = tileRenderCompletedMessages.get(3);
-        final OutputMessage tileRenderCompletedMessage5 = tileRenderCompletedMessages.get(4);
-
-        renderEmitter.send(tileRenderCompletedMessage1, renderEmitter.getTopicName() + "-completed-0");
-        renderEmitter.send(tileRenderCompletedMessage2, renderEmitter.getTopicName() + "-completed-1");
-        renderEmitter.send(tileRenderCompletedMessage3, renderEmitter.getTopicName() + "-completed-1");
-        renderEmitter.send(tileRenderCompletedMessage4, renderEmitter.getTopicName() + "-completed-2");
-        renderEmitter.send(tileRenderCompletedMessage5, renderEmitter.getTopicName() + "-completed-3");
-
-        final TileRenderCompleted tileRenderCompleted1 = Json.decodeValue(tileRenderCompletedMessage1.getValue().getData(), TileRenderCompleted.class);
-        final TileRenderCompleted tileRenderCompleted2 = Json.decodeValue(tileRenderCompletedMessage2.getValue().getData(), TileRenderCompleted.class);
-        final TileRenderCompleted tileRenderCompleted3 = Json.decodeValue(tileRenderCompletedMessage3.getValue().getData(), TileRenderCompleted.class);
-        final TileRenderCompleted tileRenderCompleted4 = Json.decodeValue(tileRenderCompletedMessage4.getValue().getData(), TileRenderCompleted.class);
-
-        await().atMost(TEN_SECONDS)
-                .pollInterval(ONE_SECOND)
-                .untilAsserted(() -> {
-                    final List<InputMessage> messages = eventsPolling.findMessages(TestConstants.MESSAGE_SOURCE, TestConstants.DESIGN_DOCUMENT_UPDATE_REQUESTED, designId.toString());
-                    assertThat(messages).hasSize(2);
-                    messages.forEach(message -> TestAssertions.assertExpectedDesignDocumentUpdateRequestedMessage(message, designId, TestConstants.JSON_1, TestConstants.CHECKSUM_1, "CREATED"));
-                });
-
-        bitmap.putTile(tileRenderCompleted1.getLevel(), tileRenderCompleted1.getRow(), tileRenderCompleted1.getCol());
-        bitmap.putTile(tileRenderCompleted2.getLevel(), tileRenderCompleted2.getRow(), tileRenderCompleted2.getCol());
-        bitmap.putTile(tileRenderCompleted3.getLevel(), tileRenderCompleted3.getRow(), tileRenderCompleted3.getCol());
-        bitmap.putTile(tileRenderCompleted4.getLevel(), tileRenderCompleted4.getRow(), tileRenderCompleted4.getCol());
-
-        await().atMost(TEN_SECONDS)
-                .pollInterval(ONE_SECOND)
-                .untilAsserted(() -> {
-                    final List<Row> rows = testCassandra.fetchDesigns(designId);
-                    assertThat(rows).hasSize(1);
-                    TestAssertions.assertExpectedDesign(rows.get(0), TestConstants.JSON_1, "CREATED", bitmap.getBitmap().array());
-                });
+        private KafkaTestEmitter emitter(Source source) {
+            return switch (source) {
+                case EVENTS -> eventEmitter;
+                case RENDER -> renderEmitter;
+            };
+        }
     }
 }

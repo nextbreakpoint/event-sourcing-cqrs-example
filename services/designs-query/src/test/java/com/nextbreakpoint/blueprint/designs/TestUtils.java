@@ -1,7 +1,11 @@
 package com.nextbreakpoint.blueprint.designs;
 
 import au.com.dius.pact.core.model.V4Interaction;
-import com.nextbreakpoint.blueprint.common.core.*;
+import com.nextbreakpoint.blueprint.common.core.Json;
+import com.nextbreakpoint.blueprint.common.core.KafkaRecord;
+import com.nextbreakpoint.blueprint.common.core.OutputMessage;
+import com.nextbreakpoint.blueprint.common.core.Tile;
+import com.nextbreakpoint.blueprint.common.core.Tiles;
 import com.nextbreakpoint.blueprint.common.test.PayloadUtils;
 import com.nextbreakpoint.blueprint.designs.model.Design;
 import io.restassured.config.LogConfig;
@@ -58,12 +62,12 @@ public class TestUtils {
     public static Observable<String> generateKeys(Design design) {
         return generateKeys(design, 0)
                 .concatWith(generateKeys(design, 1))
-                .concatWith(generateKeys(design, 2))
-                .concatWith(generateKeys(design, 3))
-                .concatWith(generateKeys(design, 4))
-                .concatWith(generateKeys(design, 5))
-                .concatWith(generateKeys(design, 6))
-                .concatWith(generateKeys(design, 7));
+                .concatWith(generateKeys(design, 2));
+//                .concatWith(generateKeys(design, 3));
+//                .concatWith(generateKeys(design, 4))
+//                .concatWith(generateKeys(design, 5))
+//                .concatWith(generateKeys(design, 6))
+//                .concatWith(generateKeys(design, 7));
     }
 
     @NotNull

@@ -1,7 +1,6 @@
 package com.nextbreakpoint.blueprint.designs;
 
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
-import com.nextbreakpoint.blueprint.common.core.Json;
 import com.nextbreakpoint.blueprint.common.events.TileRenderCompleted;
 import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
 
@@ -18,7 +17,9 @@ public class TestAssertions {
         assertThat(actualMessage.getValue().getSource()).isEqualTo(TestConstants.MESSAGE_SOURCE);
         assertThat(actualMessage.getValue().getUuid()).isNotNull();
         assertThat(actualMessage.getValue().getType()).isEqualTo(TestConstants.TILE_RENDER_COMPLETED);
-        TileRenderCompleted actualEvent = Json.decodeValue(actualMessage.getValue().getData(), TileRenderCompleted.class);
+    }
+
+    public static void assertExpectedTileRenderCompletedEvent(TileRenderCompleted actualEvent, TileRenderRequested tileRenderRequested) {
         assertThat(actualEvent.getRevision()).isNotNull();
         assertThat(actualEvent.getDesignId()).isEqualTo(tileRenderRequested.getDesignId());
         assertThat(actualEvent.getCommandId()).isEqualTo(tileRenderRequested.getCommandId());

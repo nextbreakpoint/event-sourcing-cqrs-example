@@ -12,12 +12,10 @@ public class TilesBitmap {
     private byte[] bitmap;
 
     private static List<Integer> COUNT_TABLE = IntStream.range(0, 256)
-            .mapToObj(TilesBitmap::countBits)
-            .collect(Collectors.toList());
+            .mapToObj(TilesBitmap::countBits).toList();
 
     private static List<Integer> OFFSET_TABLE = IntStream.range(0, 8)
-            .mapToObj(TilesBitmap::levelOffset)
-            .collect(Collectors.toList());
+            .mapToObj(TilesBitmap::levelOffset).toList();
 
     private static int countBits(int value) {
         return IntStream.range(0, 8)
@@ -60,12 +58,13 @@ public class TilesBitmap {
         return ByteBuffer.wrap(bitmap);
     }
 
-    public void reset() {
+    public TilesBitmap reset() {
         IntStream.range(0, bitmap.length)
                 .forEach(index -> bitmap[index] = (byte) 0);
+        return this;
     }
 
-    public void putTile(int level, int row, int col) {
+    public TilesBitmap putTile(int level, int row, int col) {
         int levelOffset = OFFSET_TABLE.get(level);
         if (level >= 2) {
             int stride = (int) Math.pow(2, level) / 4;
@@ -85,6 +84,7 @@ public class TilesBitmap {
             byte data = bitmap[levelOffset];
             bitmap[levelOffset] = (byte) (data | (1 << index));
         }
+        return this;
     }
 
     public boolean hasTile(int level, int row, int col) {

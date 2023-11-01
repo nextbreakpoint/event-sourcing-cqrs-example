@@ -28,6 +28,19 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.UUID;
 
+import static com.nextbreakpoint.blueprint.designs.TestConstants.COMMAND_ID_1;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.COMMAND_ID_2;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.COMMAND_ID_3;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DATA_1;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DATA_2;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DATA_3;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_ID_1;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_ID_2;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_ID_3;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.MESSAGE_SOURCE;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.USER_ID_1;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.USER_ID_2;
+
 @Tag("docker")
 @Tag("pact-verify")
 @DisplayName("Verify contract between designs-command and designs-aggregate")
@@ -60,51 +73,56 @@ public class VerifyAggregatePact {
     public void kafkaTopicExists() {
     }
 
-    @PactVerifyProvider("design insert requested for design 00000000-0000-0000-0000-000000000001")
+    @PactVerifyProvider("design insert requested for design 00000000-0000-0000-0000-000000000001 with command 00000000-0000-0001-0000-000000000001")
     public String produceDesignInsertRequested1() {
-        return produceDesignInsertRequested(new UUID(0L, 1L), TestConstants.JSON_1);
+        return produceDesignInsertRequested(USER_ID_1, DESIGN_ID_1, COMMAND_ID_1, DATA_1);
     }
 
-    @PactVerifyProvider("design insert requested for design 00000000-0000-0000-0000-000000000002")
+    @PactVerifyProvider("design insert requested for design 00000000-0000-0000-0000-000000000002 with command 00000000-0000-0001-0000-000000000001")
     public String produceDesignInsertRequested2() {
-        return produceDesignInsertRequested(new UUID(0L, 2L), TestConstants.JSON_1);
+        return produceDesignInsertRequested(USER_ID_1, DESIGN_ID_2, COMMAND_ID_1, DATA_1);
     }
 
-    @PactVerifyProvider("design insert requested for design 00000000-0000-0000-0000-000000000003")
+    @PactVerifyProvider("design insert requested for design 00000000-0000-0000-0000-000000000003 with command 00000000-0000-0001-0000-000000000001")
     public String produceDesignInsertRequested3() {
-        return produceDesignInsertRequested(new UUID(0L, 3L), TestConstants.JSON_1);
+        return produceDesignInsertRequested(USER_ID_1, DESIGN_ID_3, COMMAND_ID_1, DATA_3);
     }
 
-    @PactVerifyProvider("design update requested for design 00000000-0000-0000-0000-000000000002")
+    @PactVerifyProvider("design update requested for design 00000000-0000-0000-0000-000000000002 with command 00000000-0000-0001-0000-000000000002")
     public String produceDesignUpdateRequested1() {
-        return produceDesignUpdateRequested(new UUID(0L, 2L), TestConstants.JSON_2);
+        return produceDesignUpdateRequested(USER_ID_1, DESIGN_ID_2, COMMAND_ID_2, DATA_2, false);
     }
 
-    @PactVerifyProvider("design delete requested for design 00000000-0000-0000-0000-000000000003")
+    @PactVerifyProvider("design update requested for design 00000000-0000-0000-0000-000000000002 with command 00000000-0000-0001-0000-000000000003 and published true")
+    public String produceDesignUpdateRequested2() {
+        return produceDesignUpdateRequested(USER_ID_1, DESIGN_ID_2, COMMAND_ID_3, DATA_2, true);
+    }
+
+    @PactVerifyProvider("design delete requested for design 00000000-0000-0000-0000-000000000003 with command 00000000-0000-0001-0000-000000000002")
     public String produceDesignDeleteRequested1() {
-        return produceDesignDeleteRequested(new UUID(0L, 3L));
+        return produceDesignDeleteRequested(USER_ID_2, DESIGN_ID_3, COMMAND_ID_2);
     }
 
-    private String produceDesignInsertRequested(UUID designId, String data) {
-        final DesignInsertRequested designInsertRequested = new DesignInsertRequested(designId, UUID.randomUUID(), TestConstants.USER_ID, data);
+    private String produceDesignInsertRequested(UUID userId, UUID designId, UUID commandId, String data) {
+        final DesignInsertRequested designInsertRequested = new DesignInsertRequested(designId, commandId, userId, data);
 
-        final OutputMessage designInsertRequestedMessage = new DesignInsertRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designInsertRequested);
+        final OutputMessage designInsertRequestedMessage = new DesignInsertRequestedOutputMapper(MESSAGE_SOURCE).transform(designInsertRequested);
 
         return Json.encodeValue(new KafkaRecord(designInsertRequestedMessage.getKey(), PayloadUtils.payloadToMap(designInsertRequestedMessage.getValue())));
     }
 
-    private String produceDesignUpdateRequested(UUID designId, String data) {
-        final DesignUpdateRequested designUpdateRequested = new DesignUpdateRequested(designId, UUID.randomUUID(), TestConstants.USER_ID, data, false);
+    private String produceDesignUpdateRequested(UUID userId, UUID designId, UUID commandId, String data, boolean published) {
+        final DesignUpdateRequested designUpdateRequested = new DesignUpdateRequested(designId, commandId, userId, data, published);
 
-        final OutputMessage designUpdateRequestedMessage = new DesignUpdateRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designUpdateRequested);
+        final OutputMessage designUpdateRequestedMessage = new DesignUpdateRequestedOutputMapper(MESSAGE_SOURCE).transform(designUpdateRequested);
 
         return Json.encodeValue(new KafkaRecord(designUpdateRequestedMessage.getKey(), PayloadUtils.payloadToMap(designUpdateRequestedMessage.getValue())));
     }
 
-    private String produceDesignDeleteRequested(UUID designId) {
-        final DesignDeleteRequested designDeleteRequested = new DesignDeleteRequested(designId, UUID.randomUUID(), TestConstants.USER_ID);
+    private String produceDesignDeleteRequested(UUID userId, UUID designId, UUID commandId) {
+        final DesignDeleteRequested designDeleteRequested = new DesignDeleteRequested(designId, commandId, userId);
 
-        final OutputMessage designDeleteRequestedMessage = new DesignDeleteRequestedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(designDeleteRequested);
+        final OutputMessage designDeleteRequestedMessage = new DesignDeleteRequestedOutputMapper(MESSAGE_SOURCE).transform(designDeleteRequested);
 
         return Json.encodeValue(new KafkaRecord(designDeleteRequestedMessage.getKey(), PayloadUtils.payloadToMap(designDeleteRequestedMessage.getValue())));
     }

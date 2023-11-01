@@ -1,19 +1,42 @@
 package com.nextbreakpoint.blueprint.designs;
 
-import com.nextbreakpoint.blueprint.common.core.*;
+import com.nextbreakpoint.blueprint.common.core.Authority;
+import com.nextbreakpoint.blueprint.common.core.Checksum;
+import com.nextbreakpoint.blueprint.common.core.ContentType;
+import com.nextbreakpoint.blueprint.common.core.IOUtils;
+import com.nextbreakpoint.blueprint.common.core.OutputMessage;
+import com.nextbreakpoint.blueprint.common.core.ValidationStatus;
 import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
 import com.nextbreakpoint.blueprint.common.events.mappers.TileRenderRequestedOutputMapper;
 import io.restassured.RestAssured;
 import org.hamcrest.Matchers;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.util.List;
-import java.util.UUID;
 
 import static com.nextbreakpoint.blueprint.common.core.Headers.AUTHORIZATION;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.COMMAND_ID_1;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.COMMAND_ID_2;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DATA_1;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DATA_2;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_ID_1;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_ID_2;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.MANIFEST;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.MESSAGE_SOURCE;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.METADATA;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.REVISION_0;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.REVISION_1;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.SCRIPT;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.SCRIPT_WITH_ERRORS;
 import static io.restassured.RestAssured.given;
 
 @Tag("docker")
@@ -21,6 +44,8 @@ import static io.restassured.RestAssured.given;
 @DisplayName("Verify behaviour of designs-render service")
 public class IntegrationTests {
     private static TestCases testCases = new TestCases("DesignsRenderIntegrationTests");
+
+    private final TileRenderRequestedOutputMapper tileRenderRequestedMapper = new TileRenderRequestedOutputMapper(MESSAGE_SOURCE);
 
     @BeforeAll
     public static void before() {
@@ -32,45 +57,90 @@ public class IntegrationTests {
         testCases.after();
     }
 
+    @BeforeEach
+    public void beforeEach() {
+        testCases.deleteData();
+        testCases.getSteps().reset();
+    }
+
     @AfterEach
     public void reset() {
         RestAssured.reset();
     }
 
     @Test
-    @DisplayName("Should start rendering an image after receiving a TileRenderRequested event")
+    @DisplayName("Should start rendering an image after receiving a TileRenderRequested message")
     public void shouldStartRenderingAnImageWhenReceivingATileRenderRequestedMessage() {
-        final UUID designId1 = UUID.randomUUID();
-        final UUID designId2 = UUID.randomUUID();
-        final UUID designId3 = UUID.randomUUID();
-        final UUID designId4 = UUID.randomUUID();
-        final UUID designId5 = UUID.randomUUID();
+        var tileRenderRequested1 = TileRenderRequested.builder()
+                .withDesignId(DESIGN_ID_1)
+                .withCommandId(COMMAND_ID_1)
+                .withData(DATA_1)
+                .withChecksum(Checksum.of(DATA_1))
+                .withRevision(REVISION_0)
+                .withLevel(0)
+                .withRow(0)
+                .withCol(0)
+                .build();
 
-        final UUID commandId = UUID.randomUUID();
+        var tileRenderRequested2 = TileRenderRequested.builder()
+                .withDesignId(DESIGN_ID_2)
+                .withCommandId(COMMAND_ID_2)
+                .withData(DATA_2)
+                .withChecksum(Checksum.of(DATA_2))
+                .withRevision(REVISION_1)
+                .withLevel(4)
+                .withRow(1)
+                .withCol(2)
+                .build();
 
-        final TileRenderRequested tileRenderRequested1 = new TileRenderRequested(designId1, commandId, TestConstants.REVISION_0, Checksum.of(TestConstants.JSON_1), TestConstants.JSON_1, 0, 0, 0);
+        var tileRenderRequested3 = TileRenderRequested.builder()
+                .withDesignId(DESIGN_ID_2)
+                .withCommandId(COMMAND_ID_2)
+                .withData(DATA_2)
+                .withChecksum(Checksum.of(DATA_2))
+                .withRevision(REVISION_1)
+                .withLevel(5)
+                .withRow(1)
+                .withCol(2)
+                .build();
 
-        final OutputMessage tileRenderRequestedMessage1 = new TileRenderRequestedOutputMapper(TestConstants.MESSAGE_SOURCE, TestUtils::createRenderKey).transform(tileRenderRequested1);
+        var tileRenderRequested4 = TileRenderRequested.builder()
+                .withDesignId(DESIGN_ID_2)
+                .withCommandId(COMMAND_ID_2)
+                .withData(DATA_2)
+                .withChecksum(Checksum.of(DATA_2))
+                .withRevision(REVISION_1)
+                .withLevel(6)
+                .withRow(1)
+                .withCol(2)
+                .build();
 
-        final TileRenderRequested tileRenderRequested2 = new TileRenderRequested(designId2, commandId, TestConstants.REVISION_1, Checksum.of(TestConstants.JSON_2), TestConstants.JSON_2, 4, 1, 2);
+        var tileRenderRequested5 = TileRenderRequested.builder()
+                .withDesignId(DESIGN_ID_2)
+                .withCommandId(COMMAND_ID_2)
+                .withData(DATA_2)
+                .withChecksum(Checksum.of(DATA_2))
+                .withRevision(REVISION_1)
+                .withLevel(7)
+                .withRow(1)
+                .withCol(2)
+                .build();
 
-        final OutputMessage tileRenderRequestedMessage2 = new TileRenderRequestedOutputMapper(TestConstants.MESSAGE_SOURCE, TestUtils::createRenderKey).transform(tileRenderRequested2);
+        final OutputMessage tileRenderRequestedMessage1 = tileRenderRequestedMapper.transform(tileRenderRequested1);
+        final OutputMessage tileRenderRequestedMessage2 = tileRenderRequestedMapper.transform(tileRenderRequested2);
+        final OutputMessage tileRenderRequestedMessage3 = tileRenderRequestedMapper.transform(tileRenderRequested3);
+        final OutputMessage tileRenderRequestedMessage4 = tileRenderRequestedMapper.transform(tileRenderRequested4);
+        final OutputMessage tileRenderRequestedMessage5 = tileRenderRequestedMapper.transform(tileRenderRequested5);
 
-        final TileRenderRequested tileRenderRequested3 = new TileRenderRequested(designId3, commandId, TestConstants.REVISION_1, Checksum.of(TestConstants.JSON_2), TestConstants.JSON_2, 5, 1, 2);
+        final List<OutputMessage> tileRenderRequestedMessages = List.of(
+                tileRenderRequestedMessage1,
+                tileRenderRequestedMessage2,
+                tileRenderRequestedMessage3,
+                tileRenderRequestedMessage4,
+                tileRenderRequestedMessage5
+        );
 
-        final OutputMessage tileRenderRequestedMessage3 = new TileRenderRequestedOutputMapper(TestConstants.MESSAGE_SOURCE, TestUtils::createRenderKey).transform(tileRenderRequested3);
-
-        final TileRenderRequested tileRenderRequested4 = new TileRenderRequested(designId4, commandId, TestConstants.REVISION_1, Checksum.of(TestConstants.JSON_2), TestConstants.JSON_2, 6, 1, 2);
-
-        final OutputMessage tileRenderRequestedMessage4 = new TileRenderRequestedOutputMapper(TestConstants.MESSAGE_SOURCE, TestUtils::createRenderKey).transform(tileRenderRequested4);
-
-        final TileRenderRequested tileRenderRequested5 = new TileRenderRequested(designId5, commandId, TestConstants.REVISION_1, Checksum.of(TestConstants.JSON_2), TestConstants.JSON_2, 7, 1, 2);
-
-        final OutputMessage tileRenderRequestedMessage5 = new TileRenderRequestedOutputMapper(TestConstants.MESSAGE_SOURCE, TestUtils::createRenderKey).transform(tileRenderRequested5);
-
-        final List<OutputMessage> messages = List.of(tileRenderRequestedMessage1, tileRenderRequestedMessage2, tileRenderRequestedMessage3, tileRenderRequestedMessage4, tileRenderRequestedMessage5);
-
-        testCases.shouldStartRenderingAnImageWhenReceivingATileRenderRequestedMessage(messages);
+        testCases.shouldStartRenderingAnImageWhenReceivingATileRenderRequestedMessage(tileRenderRequestedMessages);
     }
 
     @Test
@@ -82,7 +152,7 @@ public class IntegrationTests {
                 .with().header(AUTHORIZATION, authorization)
                 .and().contentType(ContentType.APPLICATION_JSON)
                 .and().accept(ContentType.APPLICATION_JSON)
-                .and().body(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT))
+                .and().body(TestUtils.createPostData(MANIFEST, METADATA, SCRIPT))
                 .when().post(testCases.makeBaseURL("/v1/designs/validate"))
                 .then().assertThat().statusCode(200)
                 .and().assertThat().body("status", Matchers.equalTo(ValidationStatus.ACCEPTED.toString()))
@@ -98,7 +168,7 @@ public class IntegrationTests {
                 .with().header(AUTHORIZATION, authorization)
                 .and().contentType(ContentType.APPLICATION_JSON)
                 .and().accept(ContentType.APPLICATION_JSON)
-                .and().body(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT_WITH_ERRORS))
+                .and().body(TestUtils.createPostData(MANIFEST, METADATA, SCRIPT_WITH_ERRORS))
                 .when().post(testCases.makeBaseURL("/v1/designs/validate"))
                 .then().assertThat().statusCode(200)
                 .and().assertThat().body("status", Matchers.equalTo(ValidationStatus.REJECTED.toString()))
@@ -135,7 +205,7 @@ public class IntegrationTests {
                 .with().header(AUTHORIZATION, authorization)
                 .and().contentType("application/json")
                 .and().accept("application/zip")
-                .and().body(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT))
+                .and().body(TestUtils.createPostData(MANIFEST, METADATA, SCRIPT))
                 .when().post(testCases.makeBaseURL("/v1/designs/download"))
                 .then().assertThat().statusCode(200)
                 .and().assertThat().contentType("application/zip")

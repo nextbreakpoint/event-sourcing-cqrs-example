@@ -1,15 +1,30 @@
 package com.nextbreakpoint.blueprint.designs;
 
 import au.com.dius.pact.core.model.V4Interaction;
-import com.nextbreakpoint.blueprint.common.core.*;
+import com.nextbreakpoint.blueprint.common.core.InputMessage;
+import com.nextbreakpoint.blueprint.common.core.Json;
+import com.nextbreakpoint.blueprint.common.core.KafkaRecord;
+import com.nextbreakpoint.blueprint.common.core.OutputMessage;
+import com.nextbreakpoint.blueprint.common.core.Payload;
+import com.nextbreakpoint.blueprint.common.core.Tile;
+import com.nextbreakpoint.blueprint.common.core.TilesBitmap;
+import com.nextbreakpoint.blueprint.common.events.DesignAggregateUpdated;
+import com.nextbreakpoint.blueprint.common.events.DesignDocumentDeleteRequested;
+import com.nextbreakpoint.blueprint.common.events.DesignDocumentUpdateRequested;
 import com.nextbreakpoint.blueprint.common.events.TileRenderCompleted;
 import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
 import com.nextbreakpoint.blueprint.common.test.PayloadUtils;
 import org.jetbrains.annotations.NotNull;
 
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
+import java.util.UUID;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
+import static com.nextbreakpoint.blueprint.designs.TestConstants.MESSAGE_SOURCE;
 
 public class TestUtils {
     private TestUtils() {}
@@ -33,11 +48,31 @@ public class TestUtils {
     }
 
     @NotNull
-    public static List<TileRenderRequested> extractTileRenderRequestedEvents(List<InputMessage> messages, String checksum) {
+    public static List<TileRenderRequested> extractTileRenderRequestedEvents(List<InputMessage> messages, Predicate<TileRenderRequested> predicate) {
         return messages.stream()
-                .map(message -> Json.decodeValue(message.getValue().getData(), TileRenderRequested.class))
-                .filter(event -> event.getChecksum().equals(checksum))
+                .map(TestUtils::extractTileRenderRequestedEvent)
+                .filter(predicate)
                 .collect(Collectors.toList());
+    }
+
+    @NotNull
+    public static TileRenderRequested extractTileRenderRequestedEvent(InputMessage message) {
+        return Json.decodeValue(message.getValue().getData(), TileRenderRequested.class);
+    }
+
+    @NotNull
+    public static DesignAggregateUpdated extractDesignAggregateUpdatedEvent(InputMessage message) {
+        return Json.decodeValue(message.getValue().getData(), DesignAggregateUpdated.class);
+    }
+
+    @NotNull
+    public static DesignDocumentUpdateRequested extractDesignDocumentUpdateRequestedEvent(InputMessage inputMessage) {
+        return Json.decodeValue(inputMessage.getValue().getData(), DesignDocumentUpdateRequested.class);
+    }
+
+    @NotNull
+    public static DesignDocumentDeleteRequested extractDesignDocumentDeleteRequestedEvent(InputMessage inputMessage) {
+        return Json.decodeValue(inputMessage.getValue().getData(), DesignDocumentDeleteRequested.class);
     }
 
     @NotNull
@@ -58,7 +93,7 @@ public class TestUtils {
 
     private static void makeLevel(TilesBitmap bitmap, int level, float completePercentage) {
         final int total = (int) Math.rint(Math.pow(2, level * 2));
-        final int limit = (int) Math.rint(completePercentage * total);
+        final int limit = (int) Math.ceil(completePercentage * total);
 
         TestUtils.generateTiles(level)
                 .stream()
@@ -77,5 +112,22 @@ public class TestUtils {
                                 .map(col -> new com.nextbreakpoint.blueprint.common.core.Tile(level, row, col))
                 )
                 .collect(Collectors.toList());
+    }
+
+    @NotNull
+    public static InputMessage createInputMessage(String messageKey, String messageType, String messageToken, LocalDateTime messageTime, Object event) {
+        final Payload payload = Payload.builder()
+                .withUuid(UUID.randomUUID())
+                .withData(Json.encodeValue(event))
+                .withType(messageType)
+                .withSource(MESSAGE_SOURCE)
+                .build();
+
+        return InputMessage.builder()
+                .key(messageKey)
+                .value(payload)
+                .token(messageToken)
+                .timestamp(messageTime.toInstant(ZoneOffset.UTC).toEpochMilli())
+                .build();
     }
 }

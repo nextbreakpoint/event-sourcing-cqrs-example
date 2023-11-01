@@ -23,21 +23,19 @@ jobs:
         check-latest: true
     - name: List JDKs
       run: ls /usr/lib/jvm
+    - name: Create Directory
+      run: mkdir -p ~/.m2
     - name: Copy Toolchains
       run: cp toolchains.xml ~/.m2/toolchains.xml
+    - name: Create Secrets
+      run: pipeline/create-secrets.sh
     - name: Start Pipeline
       run: pipeline/pipeline-start.sh
     - name: Configure Nexus
       run: pipeline/configure-nexus.sh
-    - name: Create Secrets
-      run: pipeline/create-secrets.sh
     - name: Build Images
       run: pipeline/build-images.sh
-    - name: Start platform
-      run: pipeline/platform-start.sh
     - name: Build Services
       run: pipeline/build-services.sh
-    - name: Stop platform
-      run: pipeline/platform-stop.sh
     - name: Stop Pipeline
       run: pipeline/pipeline-stop.sh

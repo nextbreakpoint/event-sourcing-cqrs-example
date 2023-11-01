@@ -2,7 +2,11 @@ package com.nextbreakpoint.blueprint.designs.common;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nextbreakpoint.Try;
-import com.nextbreakpoint.nextfractal.core.common.*;
+import com.nextbreakpoint.nextfractal.core.common.Bundle;
+import com.nextbreakpoint.nextfractal.core.common.CoreFactory;
+import com.nextbreakpoint.nextfractal.core.common.FileManagerEntry;
+import com.nextbreakpoint.nextfractal.core.common.FileManifest;
+import com.nextbreakpoint.nextfractal.core.common.Plugins;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

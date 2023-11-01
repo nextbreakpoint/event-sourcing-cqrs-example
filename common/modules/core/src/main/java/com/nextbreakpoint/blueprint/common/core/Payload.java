@@ -3,6 +3,8 @@ package com.nextbreakpoint.blueprint.common.core;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import lombok.Builder;
+import lombok.Data;
 
 import java.util.Objects;
 import java.util.UUID;
@@ -13,6 +15,8 @@ import java.util.UUID;
         "data",
         "source"
 })
+@Data
+@Builder(setterPrefix = "with")
 public class Payload {
     private UUID uuid;
     private String type;

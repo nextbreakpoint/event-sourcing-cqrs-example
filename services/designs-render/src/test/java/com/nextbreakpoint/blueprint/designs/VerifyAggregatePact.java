@@ -25,6 +25,21 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.UUID;
 
+import static com.nextbreakpoint.blueprint.designs.TestConstants.CHECKSUM_1;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.CHECKSUM_2;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.COMMAND_ID_3;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.COMMAND_ID_4;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.COMMAND_ID_5;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_ID_1;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_ID_2;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.MESSAGE_SOURCE;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.REVISION_0;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.REVISION_1;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.REVISION_2;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.REVISION_3;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.REVISION_4;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.REVISION_5;
+
 @Tag("docker")
 @Tag("pact-verify")
 @Provider("designs-render")
@@ -57,35 +72,40 @@ public class VerifyAggregatePact {
     public void kafkaTopicExists() {
     }
 
-    @PactVerifyProvider("tile render completed with status FAILED for tile 0/00000000.png of design 00000000-0000-0000-0000-000000000004 with checksum 1")
+    @PactVerifyProvider("tile render completed with status COMPLETED for tile 0/00000000.png of design 00000000-0000-0000-0000-000000000001 and command 00000000-0000-0001-0000-000000000003")
+    public String produceTileRenderCompleted0() {
+        return produceTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_3, CHECKSUM_1, REVISION_0, 0, 0, 0, "COMPLETED");
+    }
+
+    @PactVerifyProvider("tile render completed with status FAILED for tile 0/00000000.png of design 00000000-0000-0000-0000-000000000002 and command 00000000-0000-0001-0000-000000000004")
     public String produceTileRenderCompleted1() {
-        return produceTileRenderCompleted(new UUID(0L, 4L), 0, 0, 0, TestConstants.COMMAND_1, TestConstants.CHECKSUM_1, "FAILED");
+        return produceTileRenderCompleted(DESIGN_ID_2, COMMAND_ID_4, CHECKSUM_2, REVISION_1, 0, 0, 0, "FAILED");
     }
 
-    @PactVerifyProvider("tile render completed with status COMPLETED for tile 1/00010000.png of design 00000000-0000-0000-0000-000000000004 with checksum 1")
+    @PactVerifyProvider("tile render completed with status COMPLETED for tile 1/00010000.png of design 00000000-0000-0000-0000-000000000002 and command 00000000-0000-0001-0000-000000000004")
     public String produceTileRenderCompleted2() {
-        return produceTileRenderCompleted(new UUID(0L, 4L), 1, 0, 0, TestConstants.COMMAND_1, TestConstants.CHECKSUM_1, "COMPLETED");
+        return produceTileRenderCompleted(DESIGN_ID_2, COMMAND_ID_4, CHECKSUM_2, REVISION_2, 1, 0, 0, "COMPLETED");
     }
 
-    @PactVerifyProvider("tile render completed with status COMPLETED for tile 1/00010001.png of design 00000000-0000-0000-0000-000000000004 with checksum 1")
+    @PactVerifyProvider("tile render completed with status COMPLETED for tile 1/00010001.png of design 00000000-0000-0000-0000-000000000002 and command 00000000-0000-0001-0000-000000000004")
     public String produceTileRenderCompleted3() {
-        return produceTileRenderCompleted(new UUID(0L, 4L), 1, 1, 0, TestConstants.COMMAND_1, TestConstants.CHECKSUM_1, "COMPLETED");
+        return produceTileRenderCompleted(DESIGN_ID_2, COMMAND_ID_4, CHECKSUM_2, REVISION_3, 1, 1, 0, "COMPLETED");
     }
 
-    @PactVerifyProvider("tile render completed with status COMPLETED for tile 2/00020001.png of design 00000000-0000-0000-0000-000000000004 with checksum 1")
+    @PactVerifyProvider("tile render completed with status COMPLETED for tile 2/00020001.png of design 00000000-0000-0000-0000-000000000002 and command 00000000-0000-0001-0000-000000000004")
     public String produceTileRenderCompleted4() {
-        return produceTileRenderCompleted(new UUID(0L, 4L), 2, 2, 1, TestConstants.COMMAND_1, TestConstants.CHECKSUM_1, "COMPLETED");
+        return produceTileRenderCompleted(DESIGN_ID_2, COMMAND_ID_4, CHECKSUM_2, REVISION_4, 2, 2, 1, "COMPLETED");
     }
 
-    @PactVerifyProvider("tile render completed with status COMPLETED for tile 2/00030001.png of design 00000000-0000-0000-0000-000000000004 with checksum 2")
+    @PactVerifyProvider("tile render completed with status COMPLETED for tile 2/00020002.png of design 00000000-0000-0000-0000-000000000002 and command 00000000-0000-0001-0000-000000000005")
     public String produceTileRenderCompleted5() {
-        return produceTileRenderCompleted(new UUID(0L, 4L), 2, 3, 1, TestConstants.COMMAND_2, TestConstants.CHECKSUM_2, "COMPLETED");
+        return produceTileRenderCompleted(DESIGN_ID_2, COMMAND_ID_5, CHECKSUM_2, REVISION_5, 2, 2, 2, "COMPLETED");
     }
 
-    private String produceTileRenderCompleted(UUID uuid, int level, int row, int col, UUID commandId, String checksum, String status) {
-        final TileRenderCompleted tileRenderCompleted = new TileRenderCompleted(uuid, commandId, TestConstants.REVISION_0, checksum, level, row, col, status);
+    private String produceTileRenderCompleted(UUID designId, UUID commandId, String checksum, String revision, int level, int row, int col, String status) {
+        final TileRenderCompleted tileRenderCompleted = new TileRenderCompleted(designId, commandId, revision, checksum, level, row, col, status);
 
-        final OutputMessage tileRenderCompletedMessage = new TileRenderCompletedOutputMapper(TestConstants.MESSAGE_SOURCE).transform(tileRenderCompleted);
+        final OutputMessage tileRenderCompletedMessage = new TileRenderCompletedOutputMapper(MESSAGE_SOURCE).transform(tileRenderCompleted);
 
         return Json.encodeValue(new KafkaRecord(Render.createRenderKey(tileRenderCompleted), PayloadUtils.payloadToMap(tileRenderCompletedMessage.getValue())));
     }

@@ -7,8 +7,8 @@ public interface TestConstants {
     String METADATA = "{\"translation\":{\"x\":0.0,\"y\":0.0,\"z\":1.0,\"w\":0.0},\"rotation\":{\"x\":0.0,\"y\":0.0,\"z\":0.0,\"w\":0.0},\"scale\":{\"x\":1.0,\"y\":1.0,\"z\":1.0,\"w\":1.0},\"point\":{\"x\":0.0,\"y\":0.0},\"julia\":false,\"options\":{\"showPreview\":false,\"showTraps\":false,\"showOrbit\":false,\"showPoint\":false,\"previewOrigin\":{\"x\":0.0,\"y\":0.0},\"previewSize\":{\"x\":0.25,\"y\":0.25}}}";
     String MANIFEST = "{\"pluginId\":\"Mandelbrot\"}";
 
-    UUID DESIGN_UUID_1 = new UUID(1L, 1L);
-    UUID DESIGN_UUID_2 = new UUID(1L, 2L);
+    UUID DESIGN_UUID_1 = new UUID(0L, 1L);
+    UUID DESIGN_UUID_2 = new UUID(0L, 2L);
 
     UUID ACCOUNT_UUID = new UUID(1L, 1L);
 }

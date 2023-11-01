@@ -74,12 +74,16 @@ public class TestScenario {
         kafka.start();
 
         service = service.dependsOn(zookeeper, kafka, cassandra);
+      } else {
+        System.out.println("Don't start platform");
       }
 
       service.start();
 
       System.out.println("Debug port: " + service.getMappedPort(DEBUG_PORT));
       System.out.println("Http port: " + service.getMappedPort(HTTP_PORT));
+    } else {
+      System.out.println("Don't start containers");
     }
   }
 

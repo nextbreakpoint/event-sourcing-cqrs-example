@@ -1,11 +1,12 @@
 package com.nextbreakpoint.blueprint.designs;
 
-import com.nextbreakpoint.blueprint.common.core.Json;
+import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.drivers.KafkaClientFactory;
 import com.nextbreakpoint.blueprint.common.drivers.KafkaProducerConfig;
 import com.nextbreakpoint.blueprint.common.test.EventSource;
 import com.nextbreakpoint.blueprint.common.test.KafkaTestEmitter;
+import com.nextbreakpoint.blueprint.common.test.TestContext;
 import com.nextbreakpoint.blueprint.common.vertx.HttpClientConfig;
 import io.vertx.rxjava.core.RxHelper;
 import io.vertx.rxjava.core.Vertx;
@@ -15,15 +16,19 @@ import rx.plugins.RxJavaHooks;
 import rx.schedulers.Schedulers;
 
 import java.net.MalformedURLException;
-import java.time.Duration;
-import java.util.*;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
-import static org.awaitility.Durations.ONE_SECOND;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 public class TestCases {
     private final TestScenario scenario = new TestScenario();
+
+    private final TestContext context = new TestContext();
+
+    private final TestSteps steps = new TestSteps(context, new TestActionsImpl());
 
     private final Vertx vertx = new Vertx(io.vertx.core.Vertx.vertx());
 
@@ -46,6 +51,8 @@ public class TestCases {
         eventEmitter = new KafkaTestEmitter(producer, TestConstants.EVENTS_TOPIC_NAME + "-" + scenario.getUniqueTestId());
 
         eventSource = new EventSource(vertx, getServiceUrl(), getEventSourceConfig());
+
+        context.clear();
     }
 
     public void after() {
@@ -69,12 +76,17 @@ public class TestCases {
     }
 
     @NotNull
+    public TestSteps getSteps() {
+        return steps;
+    }
+
+    @NotNull
     public String getServiceUrl() {
         return "http://" + scenario.getServiceHost() + ":" + scenario.getServicePort();
     }
 
     @NotNull
-    public KafkaProducerConfig createProducerConfig(String clientId) {
+    private KafkaProducerConfig createProducerConfig(String clientId) {
         return KafkaProducerConfig.builder()
                 .withBootstrapServers(scenario.getKafkaHost() + ":" + scenario.getKafkaPort())
                 .withKeySerializer("org.apache.kafka.common.serialization.StringSerializer")
@@ -85,131 +97,58 @@ public class TestCases {
     }
 
     @NotNull
-    public HttpClientConfig getEventSourceConfig() {
+    private HttpClientConfig getEventSourceConfig() {
         return HttpClientConfig.builder()
                 .withKeepAlive(Boolean.TRUE)
                 .withVerifyHost(Boolean.FALSE)
-                .withKeyStorePath("../../secrets/keystore_client.jks")
-                .withKeyStoreSecret("secret")
-                .withTrustStorePath("../../secrets/truststore_client.jks")
-                .withTrustStoreSecret("secret")
+//                .withKeyStorePath("../../secrets/keystore_client.jks")
+//                .withKeyStoreSecret("secret")
+//                .withTrustStorePath("../../secrets/truststore_client.jks")
+//                .withTrustStoreSecret("secret")
                 .build();
     }
 
-    public void shouldNotifyWatchersOfAllResourcesWhenReceivingAnEvent(List<OutputMessage> messages) {
-        try {
-            notifications.clear();
-
-            eventSource
-                .onClose(nothing -> System.out.println("closed"))
-                .onEvent("update", sseEvent -> {
-                    final SSENotification notification = new SSENotification("UPDATE", sseEvent);
-                    System.out.println(notification);
-                    notifications.add(notification);
-                })
-                .onEvent("open", sseEvent -> {
-                    final SSENotification notification = new SSENotification("OPEN", sseEvent);
-                    System.out.println(notification);
-                    notifications.add(notification);
-                })
-                .connect("/v1/designs/watch?revision=0000000000000000-0000000000000000", null, result -> {
-                    final SSENotification notification = new SSENotification("CONNECT", result.succeeded() ? "SUCCESS" : "FAILURE");
-                    System.out.println(notification);
-                    notifications.add(notification);
-                    if (result.succeeded()) {
-                        eventEmitter.sendAsync(messages.get(0));
-                        eventEmitter.sendAsync(messages.get(1));
-                    }
-                });
-
-            await().atMost(Duration.ofSeconds(30))
-                    .pollInterval(ONE_SECOND)
-                    .untilAsserted(() -> {
-                        assertThat(notifications).isNotEmpty();
-                        List<SSENotification> events = new ArrayList<>(notifications);
-//                        events.forEach(System.out::println);
-                        assertThat(notifications).hasSize(4);
-                        assertThat(events.get(0).type).isEqualTo("CONNECT");
-                        assertThat(events.get(1).type).isEqualTo("OPEN");
-                        assertThat(events.get(2).type).isEqualTo("UPDATE");
-                        assertThat(events.get(3).type).isEqualTo("UPDATE");
-                        String openData = events.get(1).body.split("\n")[1];
-                        Map<String, Object> openObject = Json.decodeValue(openData, HashMap.class);
-                        assertThat(openObject.get("revision")).isNotNull();
-                        assertThat(openObject.get("session")).isNotNull();
-                        String updateData = events.get(2).body.split("\n")[1];
-                        Map<String, Object> updateObject = Json.decodeValue(updateData, HashMap.class);
-                        assertThat(updateObject.get("revision")).isNotNull();
-                        assertThat(updateObject.get("session")).isNotNull();
-                        assertThat(updateObject.get("session")).isEqualTo(openObject.get("session"));
-                        assertThat(updateObject.get("uuid")).isNotNull();
-                        assertThat(updateObject.get("uuid")).isEqualTo("*");
-                    });
-        } catch (MalformedURLException e) {
-            throw new RuntimeException(e);
-        } finally {
-            eventSource.close();
-        }
+    public void shouldNotifyWatchersOfAllResourcesWhenReceivingADesignDocumentUpdateCompletedEvent(List<OutputMessage> designDocumentUpdateCompletedMessages) {
+        getSteps()
+                .given().theDesignDocumentUpdateCompletedMessage(designDocumentUpdateCompletedMessages.get(0))
+                .when().discardMessages()
+                .and().appendMessage()
+                .given().theDesignDocumentUpdateCompletedMessage(designDocumentUpdateCompletedMessages.get(1))
+                .when().appendMessage()
+                .then().shouldNotifyWatchersOfAllResources();
     }
 
-    public void shouldNotifyWatchersOfSingleResourceWhenReceivingAnEvent(List<OutputMessage> messages) {
-        try {
-            final String designId = messages.get(0).getKey();
-
-            notifications.clear();
-
-            eventSource
-                .onClose(nothing -> System.out.println("closed"))
-                .onEvent("update", sseEvent -> {
-                    final SSENotification notification = new SSENotification("UPDATE", sseEvent);
-                    System.out.println(notification);
-                    notifications.add(notification);
-                })
-                .onEvent("open", sseEvent -> {
-                    final SSENotification notification = new SSENotification("OPEN", sseEvent);
-                    System.out.println(notification);
-                    notifications.add(notification);
-                })
-                .connect("/v1/designs/watch?designId=" + designId + "&revision=0000000000000000-0000000000000000", null, result -> {
-                    final SSENotification notification = new SSENotification("CONNECT", result.succeeded() ? "SUCCESS" : "FAILURE");
-                    System.out.println(notification);
-                    notifications.add(notification);
-                    if (result.succeeded()) {
-                        eventEmitter.sendAsync(messages.get(0));
-                        eventEmitter.sendAsync(messages.get(1));
-                    }
-                });
-
-            await().atMost(Duration.ofSeconds(30))
-                    .pollInterval(ONE_SECOND)
-                    .untilAsserted(() -> {
-                        assertThat(notifications).isNotEmpty();
-                        List<SSENotification> events = new ArrayList<>(notifications);
-//                        events.forEach(System.out::println);
-                        assertThat(notifications).hasSize(3);
-                        assertThat(events.get(0).type).isEqualTo("CONNECT");
-                        assertThat(events.get(1).type).isEqualTo("OPEN");
-                        assertThat(events.get(2).type).isEqualTo("UPDATE");
-                        String openData = events.get(1).body.split("\n")[1];
-                        Map<String, Object> openObject = Json.decodeValue(openData, HashMap.class);
-                        assertThat(openObject.get("revision")).isNotNull();
-                        assertThat(openObject.get("session")).isNotNull();
-                        String updateData = events.get(2).body.split("\n")[1];
-                        Map<String, Object> updateObject = Json.decodeValue(updateData, HashMap.class);
-                        assertThat(updateObject.get("revision")).isNotNull();
-                        assertThat(updateObject.get("session")).isNotNull();
-                        assertThat(updateObject.get("session")).isEqualTo(openObject.get("session"));
-                        assertThat(updateObject.get("uuid")).isNotNull();
-                        assertThat(updateObject.get("uuid")).isEqualTo(designId);
-                    });
-        } catch (MalformedURLException e) {
-            throw new RuntimeException(e);
-        } finally {
-            eventSource.close();
-        }
+    public void shouldNotifyWatchersOfSingleResourceWhenReceivingAnDesignDocumentUpdateCompletedEvent(List<OutputMessage> designDocumentUpdateCompletedMessages, UUID designId) {
+        getSteps()
+                .given().theDesignDocumentUpdateCompletedMessage(designDocumentUpdateCompletedMessages.get(0))
+                .when().discardMessages()
+                .and().appendMessage()
+                .given().theDesignDocumentUpdateCompletedMessage(designDocumentUpdateCompletedMessages.get(1))
+                .when().appendMessage()
+                .then().shouldNotifyWatchersOfAResource(designId);
     }
 
-    private static class SSENotification {
+    public void shouldNotifyWatchersOfAllResourcesWhenReceivingADesignDocumentDeleteCompletedEvent(List<OutputMessage> designDocumentDeleteCompletedMessages) {
+        getSteps()
+                .given().theDesignDocumentDeleteCompletedMessage(designDocumentDeleteCompletedMessages.get(0))
+                .when().discardMessages()
+                .and().appendMessage()
+                .given().theDesignDocumentDeleteCompletedMessage(designDocumentDeleteCompletedMessages.get(1))
+                .when().appendMessage()
+                .then().shouldNotifyWatchersOfAllResources();
+    }
+
+    public void shouldNotifyWatchersOfSingleResourceWhenReceivingAnDesignDocumentDeleteCompletedEvent(List<OutputMessage> designDocumentDeleteCompletedMessages, UUID designId) {
+        getSteps()
+                .given().theDesignDocumentDeleteCompletedMessage(designDocumentDeleteCompletedMessages.get(0))
+                .when().discardMessages()
+                .and().appendMessage()
+                .given().theDesignDocumentDeleteCompletedMessage(designDocumentDeleteCompletedMessages.get(1))
+                .when().appendMessage()
+                .then().shouldNotifyWatchersOfAResource(designId);
+    }
+
+    public static class SSENotification {
         public final String type;
         public final String body;
 
@@ -221,6 +160,85 @@ public class TestCases {
         @Override
         public String toString() {
             return type + ": " + body;
+        }
+    }
+
+    private class TestActionsImpl implements TestActions {
+        @Override
+        public void emitMessage(Source source, OutputMessage message, Function<String, String> topicMapper) {
+            emitter(source).send(message, topicMapper.apply(emitter(source).getTopicName()));
+        }
+
+        @Override
+        public List<InputMessage> findMessages(Source source, String messageSource, String messageType, Predicate<String> keyPredicate, Predicate<InputMessage> messagePredicate) {
+            return null;
+        }
+
+        @Override
+        public void subscribe(List<SSENotification> notifications, Runnable callback) {
+            try {
+                eventSource
+                        .onClose(nothing -> System.out.println("closed"))
+                        .onEvent("update", sseEvent -> {
+                            final SSENotification notification = new SSENotification("UPDATE", sseEvent);
+                            System.out.println(notification);
+                            notifications.add(notification);
+                        })
+                        .onEvent("open", sseEvent -> {
+                            final SSENotification notification = new SSENotification("OPEN", sseEvent);
+                            System.out.println(notification);
+                            notifications.add(notification);
+                        })
+                        .connect("/v1/designs/watch?revision=0000000000000000-0000000000000000", null, result -> {
+                            final SSENotification notification = new SSENotification("CONNECT", result.succeeded() ? "SUCCESS" : "FAILURE");
+                            System.out.println(notification);
+                            notifications.add(notification);
+                            if (result.succeeded()) {
+                                callback.run();
+                            }
+                        });
+            } catch (MalformedURLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        @Override
+        public void subscribe(List<SSENotification> notifications, Runnable callback, UUID designId) {
+            try {
+                eventSource
+                        .onClose(nothing -> System.out.println("closed"))
+                        .onEvent("update", sseEvent -> {
+                            final SSENotification notification = new SSENotification("UPDATE", sseEvent);
+                            System.out.println(notification);
+                            notifications.add(notification);
+                        })
+                        .onEvent("open", sseEvent -> {
+                            final SSENotification notification = new SSENotification("OPEN", sseEvent);
+                            System.out.println(notification);
+                            notifications.add(notification);
+                        })
+                        .connect("/v1/designs/watch?designId=" + designId + "&revision=0000000000000000-0000000000000000", null, result -> {
+                            final SSENotification notification = new SSENotification("CONNECT", result.succeeded() ? "SUCCESS" : "FAILURE");
+                            System.out.println(notification);
+                            notifications.add(notification);
+                            if (result.succeeded()) {
+                                callback.run();
+                            }
+                        });
+            } catch (MalformedURLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        @Override
+        public void unsubscribe() {
+            eventSource.close();
+        }
+
+        private KafkaTestEmitter emitter(Source source) {
+            return switch (source) {
+                case EVENTS -> eventEmitter;
+            };
         }
     }
 }

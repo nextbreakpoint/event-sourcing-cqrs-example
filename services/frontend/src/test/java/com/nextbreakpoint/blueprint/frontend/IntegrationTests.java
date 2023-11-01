@@ -7,7 +7,13 @@ import io.restassured.http.ContentType;
 import io.vertx.core.json.JsonObject;
 import io.vertx.rxjava.core.http.Cookie;
 import org.glassfish.grizzly.http.util.HttpStatus;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 
 import java.net.MalformedURLException;
 import java.time.format.DateTimeFormatter;
@@ -15,7 +21,9 @@ import java.util.Date;
 import java.util.UUID;
 
 import static com.xebialabs.restito.builder.stub.StubHttp.whenHttp;
-import static com.xebialabs.restito.semantics.Action.*;
+import static com.xebialabs.restito.semantics.Action.contentType;
+import static com.xebialabs.restito.semantics.Action.status;
+import static com.xebialabs.restito.semantics.Action.stringContent;
 import static com.xebialabs.restito.semantics.Condition.get;
 import static com.xebialabs.restito.semantics.Condition.withHeader;
 import static io.restassured.RestAssured.given;

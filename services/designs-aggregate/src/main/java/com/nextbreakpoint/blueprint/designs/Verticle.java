@@ -9,10 +9,22 @@ import com.nextbreakpoint.blueprint.common.drivers.CassandraClientConfig;
 import com.nextbreakpoint.blueprint.common.drivers.CassandraClientFactory;
 import com.nextbreakpoint.blueprint.common.drivers.KafkaClientFactory;
 import com.nextbreakpoint.blueprint.common.drivers.KafkaConsumerConfig;
+import com.nextbreakpoint.blueprint.common.drivers.KafkaMessageConsumer;
+import com.nextbreakpoint.blueprint.common.drivers.KafkaMessagePolling;
 import com.nextbreakpoint.blueprint.common.drivers.KafkaProducerConfig;
-import com.nextbreakpoint.blueprint.common.drivers.*;
-import com.nextbreakpoint.blueprint.common.events.*;
-import com.nextbreakpoint.blueprint.common.vertx.*;
+import com.nextbreakpoint.blueprint.common.drivers.KafkaRecordsQueue;
+import com.nextbreakpoint.blueprint.common.events.DesignAggregateUpdated;
+import com.nextbreakpoint.blueprint.common.events.DesignDeleteRequested;
+import com.nextbreakpoint.blueprint.common.events.DesignInsertRequested;
+import com.nextbreakpoint.blueprint.common.events.DesignUpdateRequested;
+import com.nextbreakpoint.blueprint.common.events.TileRenderCompleted;
+import com.nextbreakpoint.blueprint.common.events.TilesRendered;
+import com.nextbreakpoint.blueprint.common.vertx.CorsHandlerFactory;
+import com.nextbreakpoint.blueprint.common.vertx.Initializer;
+import com.nextbreakpoint.blueprint.common.vertx.OpenApiHandler;
+import com.nextbreakpoint.blueprint.common.vertx.ResponseHelper;
+import com.nextbreakpoint.blueprint.common.vertx.Server;
+import com.nextbreakpoint.blueprint.common.vertx.ServerConfig;
 import com.nextbreakpoint.blueprint.designs.persistence.CassandraStore;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.binder.kafka.KafkaClientMetrics;
@@ -55,8 +67,17 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
-import static com.nextbreakpoint.blueprint.common.core.Headers.*;
-import static com.nextbreakpoint.blueprint.designs.Factory.*;
+import static com.nextbreakpoint.blueprint.common.core.Headers.ACCEPT;
+import static com.nextbreakpoint.blueprint.common.core.Headers.AUTHORIZATION;
+import static com.nextbreakpoint.blueprint.common.core.Headers.CONTENT_TYPE;
+import static com.nextbreakpoint.blueprint.common.core.Headers.X_XSRF_TOKEN;
+import static com.nextbreakpoint.blueprint.designs.Factory.createBufferedTileRenderCompletedHandler;
+import static com.nextbreakpoint.blueprint.designs.Factory.createDesignAggregateUpdatedHandler;
+import static com.nextbreakpoint.blueprint.designs.Factory.createDesignDeleteRequestedHandler;
+import static com.nextbreakpoint.blueprint.designs.Factory.createDesignInsertRequestedHandler;
+import static com.nextbreakpoint.blueprint.designs.Factory.createDesignUpdateRequestedHandler;
+import static com.nextbreakpoint.blueprint.designs.Factory.createTileRenderCompletedHandler;
+import static com.nextbreakpoint.blueprint.designs.Factory.createTilesRenderedHandler;
 
 @Log4j2
 public class Verticle extends AbstractVerticle {
@@ -246,7 +267,7 @@ public class Verticle extends AbstractVerticle {
             eventsMessageHandlers.put(DesignUpdateRequested.TYPE, createDesignUpdateRequestedHandler(store, eventsTopic, renderTopicPrefix, kafkaProducer, messageSource));
             eventsMessageHandlers.put(DesignDeleteRequested.TYPE, createDesignDeleteRequestedHandler(store, eventsTopic, renderTopicPrefix, kafkaProducer, messageSource));
 
-            eventsMessageHandlers.put(DesignAggregateUpdated.TYPE, createDesignAggregateTilesUpdateCompletedHandler(eventsTopic, kafkaProducer, messageSource));
+            eventsMessageHandlers.put(DesignAggregateUpdated.TYPE, createDesignAggregateUpdatedHandler(eventsTopic, kafkaProducer, messageSource));
 
             eventsMessageHandlers.put(TilesRendered.TYPE, createTilesRenderedHandler(store, eventsTopic, renderTopicPrefix, kafkaProducer, messageSource));
 

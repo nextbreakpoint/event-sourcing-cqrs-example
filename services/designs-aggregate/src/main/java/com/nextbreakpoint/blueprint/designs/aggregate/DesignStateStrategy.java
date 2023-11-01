@@ -51,6 +51,10 @@ public class DesignStateStrategy {
 
         switch (type) {
             case DesignInsertRequested.TYPE: {
+                if (state.design != null) {
+                    throw new IllegalStateException();
+                }
+
                 final DesignInsertRequested event = Json.decodeValue(value, DesignInsertRequested.class);
 
                 final String checksum = Checksum.of(event.getData());
@@ -75,7 +79,19 @@ public class DesignStateStrategy {
                 break;
             }
             case DesignUpdateRequested.TYPE: {
+                if (state.design == null) {
+                    throw new IllegalStateException();
+                }
+
+                if (state.design.getStatus().equals("DELETED")) {
+                    return;
+                }
+
                 final DesignUpdateRequested event = Json.decodeValue(value, DesignUpdateRequested.class);
+
+                if (!state.design.getDesignId().equals(event.getDesignId())) {
+                    throw new IllegalStateException();
+                }
 
                 final String checksum = Checksum.of(event.getData());
 
@@ -101,7 +117,19 @@ public class DesignStateStrategy {
                 break;
             }
             case DesignDeleteRequested.TYPE: {
+                if (state.design == null) {
+                    throw new IllegalStateException();
+                }
+
+                if (state.design.getStatus().equals("DELETED")) {
+                    return;
+                }
+
                 final DesignDeleteRequested event = Json.decodeValue(value, DesignDeleteRequested.class);
+
+                if (!state.design.getDesignId().equals(event.getDesignId())) {
+                    throw new IllegalStateException();
+                }
 
                 state.design = Design.builder()
                         .withDesignId(event.getDesignId())
@@ -121,7 +149,19 @@ public class DesignStateStrategy {
                 break;
             }
             case TilesRendered.TYPE: {
+                if (state.design == null) {
+                    throw new IllegalStateException();
+                }
+
+                if (state.design.getStatus().equals("DELETED")) {
+                    return;
+                }
+
                 final TilesRendered event = Json.decodeValue(value, TilesRendered.class);
+
+                if (!state.design.getDesignId().equals(event.getDesignId())) {
+                    throw new IllegalStateException();
+                }
 
                 if (state.design.getChecksum().equals(event.getChecksum())) {
                     event.getTiles().forEach(tile -> TilesBitmap.of(state.design.getBitmap()).putTile(tile.getLevel(), tile.getRow(), tile.getCol()));

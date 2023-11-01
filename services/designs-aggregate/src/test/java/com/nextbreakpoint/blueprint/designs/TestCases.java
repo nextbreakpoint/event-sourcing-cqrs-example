@@ -31,6 +31,7 @@ import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_DOCUMENT
 import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_DOCUMENT_UPDATE_REQUESTED;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_ID_1;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_ID_2;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_ID_3;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.LEVELS_DRAFT;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.LEVELS_READY;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.TILE_RENDER_REQUESTED;
@@ -189,7 +190,7 @@ public class TestCases {
                 .and().discardReceivedMessages(TestActions.Source.EVENTS)
                 .and().publishTheMessage(TestActions.Source.EVENTS)
                 .then().aMessageShouldBePublished(TestActions.Source.EVENTS, DESIGN_AGGREGATE_UPDATED)
-                .and().manyMessagesShouldBePublished(TestActions.Source.RENDER, TILE_RENDER_REQUESTED, key -> key.startsWith(DESIGN_ID_1.toString()), TestUtils.totalTilesByLevels(LEVELS_DRAFT))
+                .and().manyMessagesShouldBePublished(TestActions.Source.RENDER, TILE_RENDER_REQUESTED, key -> key.startsWith(DESIGN_ID_2.toString()), TestUtils.totalTilesByLevels(LEVELS_DRAFT))
                 .and().aMessageShouldBePublished(TestActions.Source.EVENTS, DESIGN_DOCUMENT_UPDATE_REQUESTED)
                 .given().theDesignUpdateRequestedMessage(designUpdateRequestedMessage1)
                 .when().discardReceivedMessages(TestActions.Source.RENDER)
@@ -199,7 +200,7 @@ public class TestCases {
                 .and().theDesignShouldBeSaved("UPDATED", LEVELS_DRAFT)
                 .and().aMessageShouldBePublished(TestActions.Source.EVENTS, DESIGN_AGGREGATE_UPDATED)
                 .and().theAggregateUpdatedMessageHasExpectedValues("UPDATED", LEVELS_DRAFT)
-                .and().manyMessagesShouldBePublished(TestActions.Source.RENDER, TILE_RENDER_REQUESTED, key -> key.startsWith(DESIGN_ID_1.toString()), TestUtils.totalTilesByLevels(LEVELS_DRAFT))
+                .and().manyMessagesShouldBePublished(TestActions.Source.RENDER, TILE_RENDER_REQUESTED, key -> key.startsWith(DESIGN_ID_2.toString()), TestUtils.totalTilesByLevels(LEVELS_DRAFT))
                 .and().theTileRenderRequestedMessagesHaveExpectedValues(LEVELS_DRAFT)
                 .and().aMessageShouldBePublished(TestActions.Source.EVENTS, DESIGN_DOCUMENT_UPDATE_REQUESTED)
                 .and().theDesignDocumentUpdateRequestedMessageHasExpectedValues("UPDATED", LEVELS_DRAFT)
@@ -211,7 +212,7 @@ public class TestCases {
                 .and().theDesignShouldBeSaved("UPDATED", LEVELS_READY)
                 .and().aMessageShouldBePublished(TestActions.Source.EVENTS, DESIGN_AGGREGATE_UPDATED)
                 .and().theAggregateUpdatedMessageHasExpectedValues("UPDATED", LEVELS_READY)
-                .and().manyMessagesShouldBePublished(TestActions.Source.RENDER, TILE_RENDER_REQUESTED, key -> key.startsWith(DESIGN_ID_1.toString()), TestUtils.totalTilesByLevels(LEVELS_DRAFT))
+                .and().manyMessagesShouldBePublished(TestActions.Source.RENDER, TILE_RENDER_REQUESTED, key -> key.startsWith(DESIGN_ID_2.toString()), TestUtils.totalTilesByLevels(LEVELS_DRAFT))
                 .and().theTileRenderRequestedMessagesHaveExpectedValues(LEVELS_DRAFT)
                 .and().aMessageShouldBePublished(TestActions.Source.EVENTS, DESIGN_DOCUMENT_UPDATE_REQUESTED)
                 .and().theDesignDocumentUpdateRequestedMessageHasExpectedValues("UPDATED", LEVELS_READY);
@@ -224,7 +225,7 @@ public class TestCases {
                 .and().discardReceivedMessages(TestActions.Source.EVENTS)
                 .and().publishTheMessage(TestActions.Source.EVENTS)
                 .then().aMessageShouldBePublished(TestActions.Source.EVENTS, DESIGN_AGGREGATE_UPDATED)
-                .and().manyMessagesShouldBePublished(TestActions.Source.RENDER, TILE_RENDER_REQUESTED, key -> key.startsWith(DESIGN_ID_1.toString()), TestUtils.totalTilesByLevels(LEVELS_DRAFT))
+                .and().manyMessagesShouldBePublished(TestActions.Source.RENDER, TILE_RENDER_REQUESTED, key -> key.startsWith(DESIGN_ID_3.toString()), TestUtils.totalTilesByLevels(LEVELS_DRAFT))
                 .and().aMessageShouldBePublished(TestActions.Source.EVENTS, DESIGN_DOCUMENT_UPDATE_REQUESTED)
                 .given().theDesignDeleteRequestedMessage(designDeleteRequestedMessage)
                 .when().discardReceivedMessages(TestActions.Source.RENDER)

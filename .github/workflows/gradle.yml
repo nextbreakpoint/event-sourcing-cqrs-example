@@ -25,12 +25,12 @@ jobs:
       run: ls /usr/lib/jvm
     - name: Copy Toolchains
       run: cp toolchains.xml ~/.m2/toolchains.xml
+    - name: Create Secrets
+      run: pipeline/create-secrets.sh
     - name: Start Pipeline
       run: pipeline/pipeline-start.sh
     - name: Configure Nexus
       run: pipeline/configure-nexus.sh
-    - name: Create Secrets
-      run: pipeline/create-secrets.sh
     - name: Build Images
       run: pipeline/build-images.sh
     - name: Build Services

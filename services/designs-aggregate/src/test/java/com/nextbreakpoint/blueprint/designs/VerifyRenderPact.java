@@ -10,6 +10,7 @@ import au.com.dius.pact.provider.junitsupport.Consumer;
 import au.com.dius.pact.provider.junitsupport.Provider;
 import au.com.dius.pact.provider.junitsupport.State;
 import au.com.dius.pact.provider.junitsupport.loader.PactBroker;
+import com.nextbreakpoint.blueprint.common.core.Checksum;
 import com.nextbreakpoint.blueprint.common.core.Json;
 import com.nextbreakpoint.blueprint.common.core.KafkaRecord;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
@@ -24,8 +25,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.UUID;
 
-import static com.nextbreakpoint.blueprint.designs.TestConstants.CHECKSUM_1;
-import static com.nextbreakpoint.blueprint.designs.TestConstants.CHECKSUM_2;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.COMMAND_ID_1;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.COMMAND_ID_2;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.DATA_1;
@@ -70,27 +69,27 @@ public class VerifyRenderPact {
 
     @PactVerifyProvider("tile render requested for tile 0/00000000.png of design 00000000-0000-0000-0000-000000000001 with checksum 1")
     public String produceTileRenderRequested1() {
-        return produceTileRenderRequested(DESIGN_ID_1, 0, 0, 0, COMMAND_ID_1, DATA_1, CHECKSUM_1, REVISION_0);
+        return produceTileRenderRequested(DESIGN_ID_1, 0, 0, 0, COMMAND_ID_1, DATA_1, Checksum.of(DATA_1), REVISION_0);
     }
 
     @PactVerifyProvider("tile render requested for tile 4/00010002.png of design 00000000-0000-0000-0000-000000000002 with checksum 2")
     public String produceTileRenderRequested2() {
-        return produceTileRenderRequested(DESIGN_ID_2, 4, 1, 2, COMMAND_ID_2, DATA_2, CHECKSUM_2, REVISION_1);
+        return produceTileRenderRequested(DESIGN_ID_2, 4, 1, 2, COMMAND_ID_2, DATA_2, Checksum.of(DATA_2), REVISION_1);
     }
 
     @PactVerifyProvider("tile render requested for tile 5/00010002.png of design 00000000-0000-0000-0000-000000000002 with checksum 2")
     public String produceTileRenderRequested3() {
-        return produceTileRenderRequested(DESIGN_ID_2, 5, 1, 2, COMMAND_ID_2, DATA_2, CHECKSUM_2, REVISION_1);
+        return produceTileRenderRequested(DESIGN_ID_2, 5, 1, 2, COMMAND_ID_2, DATA_2, Checksum.of(DATA_2), REVISION_1);
     }
 
     @PactVerifyProvider("tile render requested for tile 6/00010002.png of design 00000000-0000-0000-0000-000000000002 with checksum 2")
     public String produceTileRenderRequested4() {
-        return produceTileRenderRequested(DESIGN_ID_2, 6, 1, 2, COMMAND_ID_2, DATA_2, CHECKSUM_2, REVISION_1);
+        return produceTileRenderRequested(DESIGN_ID_2, 6, 1, 2, COMMAND_ID_2, DATA_2, Checksum.of(DATA_2), REVISION_1);
     }
 
     @PactVerifyProvider("tile render requested for tile 7/00010002.png of design 00000000-0000-0000-0000-000000000002 with checksum 2")
     public String produceTileRenderRequested5() {
-        return produceTileRenderRequested(DESIGN_ID_2, 7, 1, 2, COMMAND_ID_2, DATA_2, CHECKSUM_2, REVISION_1);
+        return produceTileRenderRequested(DESIGN_ID_2, 7, 1, 2, COMMAND_ID_2, DATA_2, Checksum.of(DATA_2), REVISION_1);
     }
 
     private String produceTileRenderRequested(UUID designId, int level, int row, int col, UUID commandId, String data, String checksum, String revision) {

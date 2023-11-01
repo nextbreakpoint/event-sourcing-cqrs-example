@@ -33,7 +33,10 @@ import static com.nextbreakpoint.blueprint.designs.TestConstants.COMMAND_ID_2;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.COMMAND_ID_3;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.DATA_1;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.DATA_2;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DATA_3;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_ID_1;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_ID_2;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_ID_3;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.MESSAGE_SOURCE;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.USER_ID_1;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.USER_ID_2;
@@ -75,19 +78,29 @@ public class VerifyAggregatePact {
         return produceDesignInsertRequested(USER_ID_1, DESIGN_ID_1, COMMAND_ID_1, DATA_1);
     }
 
-    @PactVerifyProvider("design update requested for design 00000000-0000-0000-0000-000000000001 with command 00000000-0000-0001-0000-000000000002")
+    @PactVerifyProvider("design insert requested for design 00000000-0000-0000-0000-000000000002 with command 00000000-0000-0001-0000-000000000001")
+    public String produceDesignInsertRequested2() {
+        return produceDesignInsertRequested(USER_ID_1, DESIGN_ID_2, COMMAND_ID_1, DATA_1);
+    }
+
+    @PactVerifyProvider("design insert requested for design 00000000-0000-0000-0000-000000000003 with command 00000000-0000-0001-0000-000000000001")
+    public String produceDesignInsertRequested3() {
+        return produceDesignInsertRequested(USER_ID_1, DESIGN_ID_3, COMMAND_ID_1, DATA_3);
+    }
+
+    @PactVerifyProvider("design update requested for design 00000000-0000-0000-0000-000000000002 with command 00000000-0000-0001-0000-000000000002")
     public String produceDesignUpdateRequested1() {
-        return produceDesignUpdateRequested(USER_ID_1, DESIGN_ID_1, COMMAND_ID_2, DATA_2, false);
+        return produceDesignUpdateRequested(USER_ID_1, DESIGN_ID_2, COMMAND_ID_2, DATA_2, false);
     }
 
-    @PactVerifyProvider("design update requested for design 00000000-0000-0000-0000-000000000001 with command 00000000-0000-0001-0000-000000000003 and published true")
+    @PactVerifyProvider("design update requested for design 00000000-0000-0000-0000-000000000002 with command 00000000-0000-0001-0000-000000000003 and published true")
     public String produceDesignUpdateRequested2() {
-        return produceDesignUpdateRequested(USER_ID_1, DESIGN_ID_1, COMMAND_ID_3, DATA_2, true);
+        return produceDesignUpdateRequested(USER_ID_1, DESIGN_ID_2, COMMAND_ID_3, DATA_2, true);
     }
 
-    @PactVerifyProvider("design delete requested for design 00000000-0000-0000-0000-000000000001 with command 00000000-0000-0001-0000-000000000002")
+    @PactVerifyProvider("design delete requested for design 00000000-0000-0000-0000-000000000003 with command 00000000-0000-0001-0000-000000000002")
     public String produceDesignDeleteRequested1() {
-        return produceDesignDeleteRequested(USER_ID_2, DESIGN_ID_1, COMMAND_ID_2);
+        return produceDesignDeleteRequested(USER_ID_2, DESIGN_ID_3, COMMAND_ID_2);
     }
 
     private String produceDesignInsertRequested(UUID userId, UUID designId, UUID commandId, String data) {

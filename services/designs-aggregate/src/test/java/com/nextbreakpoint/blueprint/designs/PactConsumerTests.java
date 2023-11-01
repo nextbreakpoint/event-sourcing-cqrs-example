@@ -8,6 +8,7 @@ import au.com.dius.pact.consumer.junit5.ProviderType;
 import au.com.dius.pact.core.model.PactSpecVersion;
 import au.com.dius.pact.core.model.V4Pact;
 import au.com.dius.pact.core.model.annotations.Pact;
+import com.nextbreakpoint.blueprint.common.core.Checksum;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.core.TilesBitmap;
 import com.nextbreakpoint.blueprint.common.events.DesignInsertRequested;
@@ -25,7 +26,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-import static com.nextbreakpoint.blueprint.designs.TestConstants.CHECKSUM_2;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.COMMAND_ID_1;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.COMMAND_ID_2;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.COMMAND_ID_3;
@@ -33,9 +33,11 @@ import static com.nextbreakpoint.blueprint.designs.TestConstants.COMMAND_ID_4;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.COMMAND_ID_5;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.DATA_1;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.DATA_2;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DATA_3;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_DELETE_REQUESTED;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_ID_1;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_ID_2;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_ID_3;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_INSERT_REQUESTED;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_UPDATE_REQUESTED;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.MESSAGE_SOURCE;
@@ -86,12 +88,12 @@ public class PactConsumerTests {
     public V4Pact shouldUpdateTheDesignAfterReceivingADesignUpdateRequestedMessage(MessagePactBuilder builder) {
         return builder
                 .given("kafka topic exists")
-                .expectsToReceive("design insert requested for design " + DESIGN_ID_1 + " with command " + COMMAND_ID_1)
-                .withContent(getDesignInsertRequestedMessage(USER_ID_1, DESIGN_ID_1, COMMAND_ID_1, new UUID(2L, 1L), DATA_1))
-                .expectsToReceive("design update requested for design " + DESIGN_ID_1 + " with command " + COMMAND_ID_2)
-                .withContent(getDesignUpdateRequestedMessage(USER_ID_1, DESIGN_ID_1, COMMAND_ID_2, new UUID(2L, 2L), DATA_2, false))
-                .expectsToReceive("design update requested for design " + DESIGN_ID_1 + " with command " + COMMAND_ID_3 + " and published true")
-                .withContent(getDesignUpdateRequestedMessage(USER_ID_1, DESIGN_ID_1, COMMAND_ID_3, new UUID(2L, 3L), DATA_2, true))
+                .expectsToReceive("design insert requested for design " + DESIGN_ID_2 + " with command " + COMMAND_ID_1)
+                .withContent(getDesignInsertRequestedMessage(USER_ID_1, DESIGN_ID_2, COMMAND_ID_1, new UUID(2L, 1L), DATA_1))
+                .expectsToReceive("design update requested for design " + DESIGN_ID_2 + " with command " + COMMAND_ID_2)
+                .withContent(getDesignUpdateRequestedMessage(USER_ID_1, DESIGN_ID_2, COMMAND_ID_2, new UUID(2L, 2L), DATA_2, false))
+                .expectsToReceive("design update requested for design " + DESIGN_ID_2 + " with command " + COMMAND_ID_3 + " and published true")
+                .withContent(getDesignUpdateRequestedMessage(USER_ID_1, DESIGN_ID_2, COMMAND_ID_3, new UUID(2L, 3L), DATA_2, true))
                 .toPact();
     }
 
@@ -99,10 +101,10 @@ public class PactConsumerTests {
     public V4Pact shouldUpdateTheDesignAfterReceivingADesignDeleteRequestedMessage(MessagePactBuilder builder) {
         return builder
                 .given("kafka topic exists")
-                .expectsToReceive("design insert requested for design " + DESIGN_ID_1 + " with command " + COMMAND_ID_1)
-                .withContent(getDesignInsertRequestedMessage(USER_ID_1, DESIGN_ID_1, COMMAND_ID_1, new UUID(2L, 1L), DATA_1))
-                .expectsToReceive("design delete requested for design " + DESIGN_ID_1 + " with command " + COMMAND_ID_2)
-                .withContent(getDesignDeleteRequestedMessage(USER_ID_1, DESIGN_ID_1, COMMAND_ID_2, new UUID(2L, 2L)))
+                .expectsToReceive("design insert requested for design " + DESIGN_ID_3 + " with command " + COMMAND_ID_1)
+                .withContent(getDesignInsertRequestedMessage(USER_ID_2, DESIGN_ID_3, COMMAND_ID_1, new UUID(2L, 1L), DATA_3))
+                .expectsToReceive("design delete requested for design " + DESIGN_ID_3 + " with command " + COMMAND_ID_2)
+                .withContent(getDesignDeleteRequestedMessage(USER_ID_2, DESIGN_ID_3, COMMAND_ID_2, new UUID(2L, 2L)))
                 .toPact();
     }
 
@@ -112,16 +114,16 @@ public class PactConsumerTests {
                 .given("kafka topic exists")
                 // the tile render completed events should have same command id of design insert requested event
                 .expectsToReceive("tile render completed with status FAILED for tile 0/00000000.png of design " + DESIGN_ID_2 + " and command " + COMMAND_ID_4)
-                .withContent(getTileRenderCompletedMessage(DESIGN_ID_2, COMMAND_ID_4, new UUID(2L, 1L), 0, 0, 0, "FAILED", "0000000000000000-0000000000000001", CHECKSUM_2))
+                .withContent(getTileRenderCompletedMessage(DESIGN_ID_2, COMMAND_ID_4, new UUID(2L, 1L), 0, 0, 0, "FAILED", "0000000000000000-0000000000000001", Checksum.of(DATA_2)))
                 .expectsToReceive("tile render completed with status COMPLETED for tile 1/00010000.png of design " + DESIGN_ID_2 + " and command " + COMMAND_ID_4)
-                .withContent(getTileRenderCompletedMessage(DESIGN_ID_2, COMMAND_ID_4, new UUID(2L, 2L), 1, 0, 0, "COMPLETED", "0000000000000000-0000000000000001", CHECKSUM_2))
+                .withContent(getTileRenderCompletedMessage(DESIGN_ID_2, COMMAND_ID_4, new UUID(2L, 2L), 1, 0, 0, "COMPLETED", "0000000000000000-0000000000000001", Checksum.of(DATA_2)))
                 .expectsToReceive("tile render completed with status COMPLETED for tile 1/00010001.png of design " + DESIGN_ID_2 + " and command " + COMMAND_ID_4)
-                .withContent(getTileRenderCompletedMessage(DESIGN_ID_2, COMMAND_ID_4, new UUID(2L, 3L), 1, 1, 0, "COMPLETED", "0000000000000000-0000000000000001", CHECKSUM_2))
+                .withContent(getTileRenderCompletedMessage(DESIGN_ID_2, COMMAND_ID_4, new UUID(2L, 3L), 1, 1, 0, "COMPLETED", "0000000000000000-0000000000000001", Checksum.of(DATA_2)))
                 .expectsToReceive("tile render completed with status COMPLETED for tile 2/00020001.png of design " + DESIGN_ID_2 + " and command " + COMMAND_ID_4)
-                .withContent(getTileRenderCompletedMessage(DESIGN_ID_2, COMMAND_ID_4, new UUID(2L, 4L), 2, 2, 1, "COMPLETED", "0000000000000000-0000000000000001", CHECKSUM_2))
+                .withContent(getTileRenderCompletedMessage(DESIGN_ID_2, COMMAND_ID_4, new UUID(2L, 4L), 2, 2, 1, "COMPLETED", "0000000000000000-0000000000000001", Checksum.of(DATA_2)))
                 // the tile render completed events with different command id should be discarded
                 .expectsToReceive("tile render completed with status COMPLETED for tile 2/00020002.png of design " + DESIGN_ID_2 + " and command " + COMMAND_ID_5)
-                .withContent(getTileRenderCompletedMessage(DESIGN_ID_2, COMMAND_ID_5, new UUID(2L, 5L), 2, 2, 2, "COMPLETED", "0000000000000000-0000000000000001", CHECKSUM_2))
+                .withContent(getTileRenderCompletedMessage(DESIGN_ID_2, COMMAND_ID_5, new UUID(2L, 5L), 2, 2, 2, "COMPLETED", "0000000000000000-0000000000000001", Checksum.of(DATA_2)))
                 .toPact();
     }
 

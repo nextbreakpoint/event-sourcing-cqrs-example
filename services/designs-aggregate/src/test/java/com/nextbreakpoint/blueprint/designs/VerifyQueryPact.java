@@ -10,6 +10,7 @@ import au.com.dius.pact.provider.junitsupport.Consumer;
 import au.com.dius.pact.provider.junitsupport.Provider;
 import au.com.dius.pact.provider.junitsupport.State;
 import au.com.dius.pact.provider.junitsupport.loader.PactBroker;
+import com.nextbreakpoint.blueprint.common.core.Checksum;
 import com.nextbreakpoint.blueprint.common.core.Json;
 import com.nextbreakpoint.blueprint.common.core.KafkaRecord;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
@@ -34,8 +35,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static com.nextbreakpoint.blueprint.designs.TestConstants.CHECKSUM_1;
-import static com.nextbreakpoint.blueprint.designs.TestConstants.CHECKSUM_2;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.COMMAND_ID_1;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.COMMAND_ID_2;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.COMMAND_ID_3;
@@ -88,27 +87,27 @@ public class VerifyQueryPact {
 
     @PactVerifyProvider("design document update requested for design 00000000-0000-0000-0000-000000000004 with 0% tiles completed and not published")
     public String produceDesignDocumentUpdateRequested1() {
-        return produceDesignDocumentUpdateRequested(DESIGN_ID_4, COMMAND_ID_1, DATA_1, CHECKSUM_1, "CREATED", 0.0f, REVISION_0, USER_ID_1, false, LEVELS_DRAFT);
+        return produceDesignDocumentUpdateRequested(DESIGN_ID_4, COMMAND_ID_1, DATA_1, Checksum.of(DATA_1), "CREATED", 0.0f, REVISION_0, USER_ID_1, false, LEVELS_DRAFT);
     }
 
     @PactVerifyProvider("design document update requested for design 00000000-0000-0000-0000-000000000004 with 50% tiles completed and not published")
     public String produceDesignDocumentUpdateRequested2() {
-        return produceDesignDocumentUpdateRequested(DESIGN_ID_4, COMMAND_ID_2, DATA_2, CHECKSUM_2, "UPDATED", 0.5f, REVISION_1, USER_ID_1, false, LEVELS_DRAFT);
+        return produceDesignDocumentUpdateRequested(DESIGN_ID_4, COMMAND_ID_2, DATA_2, Checksum.of(DATA_2), "UPDATED", 0.5f, REVISION_1, USER_ID_1, false, LEVELS_DRAFT);
     }
 
     @PactVerifyProvider("design document update requested for design 00000000-0000-0000-0000-000000000004 with 100% tiles completed and not published")
     public String produceDesignDocumentUpdateRequested3() {
-        return produceDesignDocumentUpdateRequested(DESIGN_ID_4, COMMAND_ID_3, DATA_2, CHECKSUM_2, "UPDATED", 1.0f, REVISION_2, USER_ID_1, false, LEVELS_DRAFT);
+        return produceDesignDocumentUpdateRequested(DESIGN_ID_4, COMMAND_ID_3, DATA_2, Checksum.of(DATA_2), "UPDATED", 1.0f, REVISION_2, USER_ID_1, false, LEVELS_DRAFT);
     }
 
     @PactVerifyProvider("design document update requested for design 00000000-0000-0000-0000-000000000004 with 100% tiles completed and published")
     public String produceDesignDocumentUpdateRequested4() {
-        return produceDesignDocumentUpdateRequested(DESIGN_ID_4, COMMAND_ID_4, DATA_2, CHECKSUM_2, "UPDATED", 1.0f, REVISION_3, USER_ID_1, true, LEVELS_READY);
+        return produceDesignDocumentUpdateRequested(DESIGN_ID_4, COMMAND_ID_4, DATA_2, Checksum.of(DATA_2), "UPDATED", 1.0f, REVISION_3, USER_ID_1, true, LEVELS_READY);
     }
 
     @PactVerifyProvider("design document update requested for design 00000000-0000-0000-0000-000000000005 and 100% tiles completed and published")
     public String produceDesignDocumentUpdateRequested5() {
-        return produceDesignDocumentUpdateRequested(DESIGN_ID_5, COMMAND_ID_1, DATA_1, CHECKSUM_1, "UPDATED", 1.0f, REVISION_0, USER_ID_2, true, LEVELS_READY);
+        return produceDesignDocumentUpdateRequested(DESIGN_ID_5, COMMAND_ID_1, DATA_1, Checksum.of(DATA_1), "UPDATED", 1.0f, REVISION_0, USER_ID_2, true, LEVELS_READY);
     }
 
     @PactVerifyProvider("design document delete requested for design 00000000-0000-0000-0000-000000000005")

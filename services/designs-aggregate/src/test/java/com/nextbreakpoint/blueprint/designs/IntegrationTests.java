@@ -25,8 +25,10 @@ import static com.nextbreakpoint.blueprint.designs.TestConstants.COMMAND_ID_2;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.COMMAND_ID_3;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.DATA_1;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.DATA_2;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DATA_3;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_ID_1;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_ID_2;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_ID_3;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.MESSAGE_SOURCE;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.REVISION_1;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.USER_ID_1;
@@ -79,14 +81,14 @@ public class IntegrationTests {
     public void shouldUpdateTheDesignAfterReceivingADesignUpdateRequestedMessage() {
         var designInsertRequested = DesignInsertRequested.builder()
                 .withUserId(USER_ID_1)
-                .withDesignId(DESIGN_ID_1)
+                .withDesignId(DESIGN_ID_2)
                 .withCommandId(COMMAND_ID_1)
                 .withData(DATA_1)
                 .build();
 
         var designUpdateRequested1 = DesignUpdateRequested.builder()
                 .withUserId(USER_ID_1)
-                .withDesignId(DESIGN_ID_1)
+                .withDesignId(DESIGN_ID_2)
                 .withCommandId(COMMAND_ID_2)
                 .withData(DATA_2)
                 .withPublished(false)
@@ -94,7 +96,7 @@ public class IntegrationTests {
 
         var designUpdateRequested2 = DesignUpdateRequested.builder()
                 .withUserId(USER_ID_1)
-                .withDesignId(DESIGN_ID_1)
+                .withDesignId(DESIGN_ID_2)
                 .withCommandId(COMMAND_ID_3)
                 .withData(DATA_2)
                 .withPublished(true)
@@ -111,16 +113,16 @@ public class IntegrationTests {
     @DisplayName("Should update the design after receiving a DesignDeleteRequested message")
     public void shouldUpdateTheDesignAfterReceivingADesignDeleteRequestedMessage() {
         var designInsertRequested = DesignInsertRequested.builder()
-                .withUserId(USER_ID_1)
-                .withDesignId(DESIGN_ID_1)
+                .withUserId(USER_ID_2)
+                .withDesignId(DESIGN_ID_3)
                 .withCommandId(COMMAND_ID_1)
-                .withData(DATA_1)
+                .withData(DATA_3)
                 .build();
 
         var designDeleteRequested = DesignDeleteRequested.builder()
-                .withUserId(USER_ID_1)
-                .withDesignId(DESIGN_ID_1)
-                .withCommandId(COMMAND_ID_3)
+                .withUserId(USER_ID_2)
+                .withDesignId(DESIGN_ID_3)
+                .withCommandId(COMMAND_ID_2)
                 .build();
 
         final OutputMessage designInsertRequestedMessage = designInsertRequestedMapper.transform(designInsertRequested);

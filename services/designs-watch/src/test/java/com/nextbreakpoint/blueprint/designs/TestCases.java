@@ -101,10 +101,10 @@ public class TestCases {
         return HttpClientConfig.builder()
                 .withKeepAlive(Boolean.TRUE)
                 .withVerifyHost(Boolean.FALSE)
-                .withKeyStorePath("../../secrets/keystore_client.jks")
-                .withKeyStoreSecret("secret")
-                .withTrustStorePath("../../secrets/truststore_client.jks")
-                .withTrustStoreSecret("secret")
+//                .withKeyStorePath("../../secrets/keystore_client.jks")
+//                .withKeyStoreSecret("secret")
+//                .withTrustStorePath("../../secrets/truststore_client.jks")
+//                .withTrustStoreSecret("secret")
                 .build();
     }
 

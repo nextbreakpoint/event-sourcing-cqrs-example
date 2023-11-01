@@ -23,6 +23,8 @@ jobs:
         check-latest: true
     - name: List JDKs
       run: ls /usr/lib/jvm
+    - name: Create Directory
+      run: mkdir -p ~/.m2
     - name: Copy Toolchains
       run: cp toolchains.xml ~/.m2/toolchains.xml
     - name: Create Secrets

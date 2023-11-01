@@ -15,24 +15,30 @@ public class HttpClientFactory {
     public static HttpClient create(Vertx vertx, String serviceUrl, HttpClientConfig httpClientConfig) throws MalformedURLException {
         final URL url = new URL(serviceUrl);
 
-        final JksOptions keyStoreOptions = new JksOptions()
-                .setPath(httpClientConfig.getKeyStorePath())
-                .setPassword(httpClientConfig.getKeyStoreSecret());
-
-        final JksOptions trustStoreOptions = new JksOptions()
-                .setPath(httpClientConfig.getTrustStorePath())
-                .setPassword(httpClientConfig.getTrustStoreSecret());
-
         final HttpClientOptions clientOptions = new WebClientOptions()
                 .setLogActivity(true)
                 .setFollowRedirects(true)
                 .setDefaultHost(url.getHost())
                 .setDefaultPort(url.getPort() == -1 ? url.getDefaultPort() : url.getPort())
                 .setSsl(url.getProtocol().equalsIgnoreCase("https"))
-                .setKeyStoreOptions(keyStoreOptions)
-                .setTrustStoreOptions(trustStoreOptions)
                 .setVerifyHost(httpClientConfig.getVerifyHost())
                 .setKeepAlive(httpClientConfig.getKeepAlive());
+
+        if (httpClientConfig.getKeyStorePath() != null) {
+            final JksOptions keyStoreOptions = new JksOptions()
+                    .setPath(httpClientConfig.getKeyStorePath())
+                    .setPassword(httpClientConfig.getKeyStoreSecret());
+
+            clientOptions.setKeyStoreOptions(keyStoreOptions);
+        }
+
+        if (httpClientConfig.getTrustStorePath() != null) {
+            final JksOptions trustStoreOptions = new JksOptions()
+                    .setPath(httpClientConfig.getTrustStorePath())
+                    .setPassword(httpClientConfig.getTrustStoreSecret());
+
+            clientOptions.setTrustStoreOptions(trustStoreOptions);
+        }
 
         return vertx.createHttpClient(clientOptions);
     }

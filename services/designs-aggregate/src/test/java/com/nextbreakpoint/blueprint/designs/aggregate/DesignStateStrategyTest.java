@@ -427,7 +427,7 @@ class DesignStateStrategyTest {
             .withUpdated(dateTime.minusHours(8))
             .build();
 
-    private final DesignStateStrategy strategy = new DesignStateStrategy();
+    private final DesignMergeStrategy strategy = new DesignMergeStrategy();
 
     @Test
     void shouldNotAlterStateWhenMessagesIsEmpty() {

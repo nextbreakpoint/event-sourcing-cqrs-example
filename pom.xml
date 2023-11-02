@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.nextbreakpoint</groupId>
     <artifactId>com.nextbreakpoint.blueprint</artifactId>
-    <version>1.0.4-wip-738317dd-1698877231</version>
+    <version>1.0.4-wip-c9d6a482-1698914219</version>
     <packaging>pom</packaging>
     <licenses>
         <license>
@@ -740,6 +740,24 @@
             <dependency>
                 <groupId>io.ktor</groupId>
                 <artifactId>ktor-server-netty</artifactId>
+                <version>${ktor.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.ktor</groupId>
+                <artifactId>ktor-server-netty-jvm</artifactId>
+                <version>${ktor.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.ktor</groupId>
+                <artifactId>ktor-server-call-logging</artifactId>
+                <version>${ktor.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.ktor</groupId>
+                <artifactId>ktor-server-call-logging-jvm</artifactId>
                 <version>${ktor.version}</version>
                 <scope>test</scope>
             </dependency>

@@ -115,10 +115,10 @@ public class TestUtils {
     }
 
     @NotNull
-    public static InputMessage createInputMessage(String messageKey, String messageType, String messageToken, LocalDateTime messageTime, Object event) {
+    public static InputMessage createInputMessage(String messageKey, String messageType, UUID messageId, Object messageData, String messageToken, LocalDateTime messageTime) {
         final Payload payload = Payload.builder()
-                .withUuid(UUID.randomUUID())
-                .withData(Json.encodeValue(event))
+                .withUuid(messageId)
+                .withData(Json.encodeValue(messageData))
                 .withType(messageType)
                 .withSource(MESSAGE_SOURCE)
                 .build();
@@ -128,6 +128,21 @@ public class TestUtils {
                 .value(payload)
                 .token(messageToken)
                 .timestamp(messageTime.toInstant(ZoneOffset.UTC).toEpochMilli())
+                .build();
+    }
+
+    @NotNull
+    public static OutputMessage createOutputMessage(String messageKey, String messageType, UUID messageId, Object messageData) {
+        final Payload payload = Payload.builder()
+                .withUuid(messageId)
+                .withData(Json.encodeValue(messageData))
+                .withType(messageType)
+                .withSource(MESSAGE_SOURCE)
+                .build();
+
+        return OutputMessage.builder()
+                .key(messageKey)
+                .value(payload)
                 .build();
     }
 }

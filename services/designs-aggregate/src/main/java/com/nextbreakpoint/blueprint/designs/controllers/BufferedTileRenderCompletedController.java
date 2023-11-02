@@ -40,7 +40,8 @@ public class BufferedTileRenderCompletedController implements Controller<List<In
 
     @Override
     public Single<Void> onNext(List<InputMessage> messages) {
-        return eventStore.findDesign(inputMapper.transform(messages.get(0)).getDesignId())
+        return Single.fromCallable(() -> inputMapper.transform(messages.get(0)))
+                .flatMap(event -> eventStore.findDesign(event.getDesignId()))
                 .flatMapObservable(result -> result.map(Observable::just).orElseGet(Observable::empty))
                 .flatMap(design -> sendEvents(design, messages))
                 .ignoreElements()
@@ -52,12 +53,20 @@ public class BufferedTileRenderCompletedController implements Controller<List<In
     private Observable<Void> sendEvents(Design design, List<InputMessage> messages) {
         return Observable.from(messages)
                 .map(inputMapper::transform)
+                .map(event -> checkDesignId(event, design))
                 .filter(event -> !isLateEvent(event, design))
                 .map(this::createTile)
                 .collect(ArrayList<Tile>::new, ArrayList::add)
                 .map(tiles -> createEvent(design, tiles))
                 .map(outputMapper::transform)
                 .flatMapSingle(emitter::send);
+    }
+
+    private TileRenderCompleted checkDesignId(TileRenderCompleted event, Design design) {
+        if (!event.getDesignId().equals(design.getDesignId())) {
+            throw new IllegalArgumentException();
+        }
+        return event;
     }
 
     private boolean isLateEvent(TileRenderCompleted event, Design design) {

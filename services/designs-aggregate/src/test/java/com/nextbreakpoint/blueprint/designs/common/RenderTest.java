@@ -1,15 +1,20 @@
 package com.nextbreakpoint.blueprint.designs.common;
 
+import com.nextbreakpoint.blueprint.common.core.Checksum;
 import com.nextbreakpoint.blueprint.common.core.Tile;
 import com.nextbreakpoint.blueprint.common.core.TilesBitmap;
+import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
+import com.nextbreakpoint.blueprint.designs.TestConstants;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Stream;
 
+import static com.nextbreakpoint.blueprint.designs.TestConstants.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class RenderTest {
@@ -36,6 +41,18 @@ public class RenderTest {
             tiles.add(result.get(0));
         }
         assertThat(tiles).hasSize(1364);
+    }
+
+    @ParameterizedTest
+    @MethodSource("generateValuesForGetTopicName")
+    void shouldGetTopicName(String prefix, int level, String expectedTopicName) {
+        assertThat(Render.getTopicName(prefix, level)).isEqualTo(expectedTopicName);
+    }
+
+    @ParameterizedTest
+    @MethodSource("generateTileRenderRequestedEvents")
+    void shouldCreateRenderKey(TileRenderRequested event, String expectedKey) {
+        assertThat(Render.createRenderKey(event)).isEqualTo(expectedKey);
     }
 
     private static Stream<Arguments> generateValuesForNextTile() {
@@ -110,6 +127,49 @@ public class RenderTest {
                 Arguments.of(makeTile(2, 3, 1)),
                 Arguments.of(makeTile(2, 3, 2)),
                 Arguments.of(makeTile(2, 3, 3))
+        );
+    }
+
+    private static Stream<Arguments> generateValuesForGetTopicName() {
+        return Stream.of(
+                Arguments.of("topix-a", 1, "topix-a-0"),
+                Arguments.of("topix-b", 2, "topix-b-0"),
+                Arguments.of("topix-c", 3, "topix-c-1"),
+                Arguments.of("topix-d", 4, "topix-d-1"),
+                Arguments.of("topix-e", 5, "topix-e-1"),
+                Arguments.of("topix-f", 6, "topix-f-2"),
+                Arguments.of("topix-g", 7, "topix-g-3")
+        );
+    }
+
+    private static Stream<Arguments> generateTileRenderRequestedEvents() {
+        return Stream.of(
+                Arguments.of(
+                        TileRenderRequested.builder()
+                                .withDesignId(DESIGN_ID_1)
+                                .withCommandId(COMMAND_ID_1)
+                                .withData(DATA_1)
+                                .withChecksum(Checksum.of(DATA_1))
+                                .withRevision(REVISION_0)
+                                .withLevel(0)
+                                .withRow(0)
+                                .withCol(0)
+                                .build(),
+                        "%s/%s/%d/%04d%04d.png".formatted(DESIGN_ID_1, COMMAND_ID_1, 0, 0, 0)
+                ),
+                Arguments.of(
+                        TileRenderRequested.builder()
+                                .withDesignId(DESIGN_ID_2)
+                                .withCommandId(COMMAND_ID_2)
+                                .withData(DATA_2)
+                                .withChecksum(Checksum.of(DATA_2))
+                                .withRevision(REVISION_1)
+                                .withLevel(3)
+                                .withRow(1)
+                                .withCol(2)
+                                .build(),
+                        "%s/%s/%d/%04d%04d.png".formatted(DESIGN_ID_2, COMMAND_ID_2, 3, 1, 2)
+                )
         );
     }
 

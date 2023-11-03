@@ -35,11 +35,7 @@ jobs:
       run: pipeline/configure-nexus.sh
     - name: Build Images
       run: pipeline/build-images.sh
-    - name: Start Platform
-      run: pipeline/platform-start.sh
     - name: Build Services
       run: pipeline/build-services.sh
-    - name: Stop Platform
-      run: pipeline/platform-stop.sh
     - name: Stop Pipeline
       run: pipeline/pipeline-stop.sh

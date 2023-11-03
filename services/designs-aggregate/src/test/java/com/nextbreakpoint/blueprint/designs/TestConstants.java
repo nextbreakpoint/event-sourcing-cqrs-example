@@ -1,7 +1,5 @@
 package com.nextbreakpoint.blueprint.designs;
 
-import com.nextbreakpoint.blueprint.common.core.Checksum;
-
 import java.util.UUID;
 
 public interface TestConstants {
@@ -12,7 +10,7 @@ public interface TestConstants {
     String TILE_RENDER_REQUESTED = "tile-render-requested-v1";
     String TILE_RENDER_COMPLETED = "tile-render-completed-v1";
     String DESIGN_DOCUMENT_UPDATE_REQUESTED = "design-document-update-requested-v1";
-    String DESIGN_DOCUMENT_DELETED_REQUESTED = "design-document-delete-requested-v1";
+    String DESIGN_DOCUMENT_DELETE_REQUESTED = "design-document-delete-requested-v1";
     String TILES_RENDERED = "tiles-rendered-v1";
 
     String MESSAGE_SOURCE = "service-designs";

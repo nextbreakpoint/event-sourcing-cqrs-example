@@ -45,10 +45,10 @@ import static com.nextbreakpoint.blueprint.designs.TestConstants.TILE_RENDER_COM
 import static com.nextbreakpoint.blueprint.designs.TestConstants.USER_ID_1;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.USER_ID_2;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.assertArg;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -67,30 +67,31 @@ class BufferedTileRenderCompletedControllerTest {
 
     @ParameterizedTest
     @MethodSource("someMessages")
-    void shouldHandleMessages(Design design, List<InputMessage> inputMessages, OutputMessage outputMessage) {
+    void shouldHandleMessages(Design design, List<InputMessage> inputMessages, OutputMessage expectedOutputMessage) {
         when(eventStore.findDesign(design.getDesignId())).thenReturn(Single.just(Optional.of(design)));
+        when(emitter.send(any())).thenReturn(Single.just(null));
 
-        controller.onNext(inputMessages)
-                .subscribe(ignored -> {}, Assertions::fail);
+        controller.onNext(inputMessages).toCompletable().doOnError(Assertions::fail).await();
 
         verify(eventStore).findDesign(design.getDesignId());
         verifyNoMoreInteractions(eventStore);
 
         verify(emitter).send(assertArg(message -> {
-            assertThat(message.getKey()).isEqualTo(outputMessage.getKey());
+            assertThat(message.getKey()).isEqualTo(expectedOutputMessage.getKey());
             assertThat(message.getValue().getUuid()).isNotNull();
-            assertThat(message.getValue().getType()).isEqualTo(outputMessage.getValue().getType());
-            assertThat(message.getValue().getData()).isEqualTo(outputMessage.getValue().getData());
-            assertThat(message.getValue().getSource()).isEqualTo(outputMessage.getValue().getSource());
+            assertThat(message.getValue().getType()).isEqualTo(expectedOutputMessage.getValue().getType());
+            assertThat(message.getValue().getData()).isEqualTo(expectedOutputMessage.getValue().getData());
+            assertThat(message.getValue().getSource()).isEqualTo(expectedOutputMessage.getValue().getSource());
         }));
+        verifyNoMoreInteractions(emitter);
     }
 
     @Test
     void shouldDoNothingWhenDesignDoesNoExist() {
         when(eventStore.findDesign(DESIGN_ID_1)).thenReturn(Single.just(Optional.empty()));
+        when(emitter.send(any())).thenReturn(Single.just(null));
 
-        controller.onNext(someInputMessages())
-                .subscribe(ignored -> {}, Assertions::fail);
+        controller.onNext(someInputMessages()).toCompletable().doOnError(Assertions::fail).await();
 
         verify(eventStore).findDesign(DESIGN_ID_1);
         verifyNoMoreInteractions(eventStore);
@@ -102,8 +103,7 @@ class BufferedTileRenderCompletedControllerTest {
         final RuntimeException exception = new RuntimeException();
         when(eventStore.findDesign(DESIGN_ID_1)).thenReturn(Single.error(exception));
 
-        controller.onNext(someInputMessages())
-                .subscribe(ignored -> Assertions.fail(), err -> assertThat(err).isEqualTo(exception));
+        assertThatThrownBy(() -> controller.onNext(someInputMessages()).toCompletable().await()).isEqualTo(exception);
 
         verify(eventStore).findDesign(DESIGN_ID_1);
         verifyNoMoreInteractions(eventStore);
@@ -118,8 +118,7 @@ class BufferedTileRenderCompletedControllerTest {
 
         final var controller = new BufferedTileRenderCompletedController(eventStore, mockedInputMapper, outputMapper, emitter);
 
-        controller.onNext(someInputMessages())
-                .subscribe(ignored -> Assertions.fail(), err -> assertThat(err).isEqualTo(exception));
+        assertThatThrownBy(() -> controller.onNext(someInputMessages()).toCompletable().await()).isEqualTo(exception);
 
         verify(mockedInputMapper).transform(any(InputMessage.class));
         verifyNoInteractions(eventStore, emitter);
@@ -137,13 +136,13 @@ class BufferedTileRenderCompletedControllerTest {
 
         final var controller = new BufferedTileRenderCompletedController(eventStore, inputMapper, mockedOutputMapper, emitter);
 
-        controller.onNext(someInputMessages())
-                .subscribe(ignored -> Assertions.fail(), err -> assertThat(err).isEqualTo(exception));
+        assertThatThrownBy(() -> controller.onNext(someInputMessages()).toCompletable().await()).isEqualTo(exception);
 
         verify(eventStore).findDesign(design.getDesignId());
         verifyNoMoreInteractions(eventStore);
 
         verify(mockedOutputMapper).transform(any(TilesRendered.class));
+        verifyNoInteractions(emitter);
     }
 
     @Test
@@ -158,8 +157,7 @@ class BufferedTileRenderCompletedControllerTest {
 
         final var controller = new BufferedTileRenderCompletedController(eventStore, inputMapper, outputMapper, mockedEmitter);
 
-        controller.onNext(someInputMessages())
-                .subscribe(ignored -> Assertions.fail(), err -> assertThat(err).isEqualTo(exception));
+        assertThatThrownBy(() -> controller.onNext(someInputMessages()).toCompletable().await()).isEqualTo(exception);
 
         verify(eventStore).findDesign(design.getDesignId());
         verifyNoMoreInteractions(eventStore);
@@ -173,8 +171,7 @@ class BufferedTileRenderCompletedControllerTest {
 
         when(eventStore.findDesign(design.getDesignId())).thenReturn(Single.just(Optional.of(design)));
 
-        controller.onNext(invalidInputMessages())
-                .subscribe(ignored -> Assertions.fail(), err -> assertThat(err).isInstanceOf(IllegalStateException.class));
+        assertThatThrownBy(() -> controller.onNext(invalidInputMessages()).toCompletable().await()).isInstanceOf(IllegalArgumentException.class);
 
         verify(eventStore).findDesign(design.getDesignId());
         verifyNoMoreInteractions(eventStore);
@@ -199,7 +196,7 @@ class BufferedTileRenderCompletedControllerTest {
                                 .withUpdated(dateTime.minusHours(1))
                                 .build(),
                         List.of(
-                                TileRenderCompletedFactory.of(DESIGN_ID_1, UUID.randomUUID(), REVISION_0, dateTime.minusMinutes(3), TileRenderCompleted.builder()
+                                TileRenderCompletedFactory.createInputMessage(DESIGN_ID_1, UUID.randomUUID(), REVISION_0, dateTime.minusMinutes(3), TileRenderCompleted.builder()
                                     .withDesignId(DESIGN_ID_1)
                                     .withCommandId(COMMAND_ID_1)
                                     .withChecksum(Checksum.of(DATA_1))
@@ -210,7 +207,7 @@ class BufferedTileRenderCompletedControllerTest {
                                     .withCol(0)
                                     .build())
                         ),
-                        TilesRenderedFactory.of(DESIGN_ID_1, UUID.randomUUID(), TilesRendered.builder()
+                        TilesRenderedFactory.createOutputMessage(DESIGN_ID_1, UUID.randomUUID(), TilesRendered.builder()
                                 .withDesignId(DESIGN_ID_1)
                                 .withCommandId(COMMAND_ID_1)
                                 .withChecksum(Checksum.of(DATA_1))
@@ -237,7 +234,7 @@ class BufferedTileRenderCompletedControllerTest {
                                 .withUpdated(dateTime.minusHours(3))
                                 .build(),
                         List.of(
-                                TileRenderCompletedFactory.of(DESIGN_ID_2, UUID.randomUUID(), REVISION_1, dateTime.minusMinutes(3), TileRenderCompleted.builder()
+                                TileRenderCompletedFactory.createInputMessage(DESIGN_ID_2, UUID.randomUUID(), REVISION_1, dateTime.minusMinutes(3), TileRenderCompleted.builder()
                                         .withDesignId(DESIGN_ID_2)
                                         .withCommandId(COMMAND_ID_2)
                                         .withChecksum(Checksum.of(DATA_2))
@@ -247,7 +244,7 @@ class BufferedTileRenderCompletedControllerTest {
                                         .withRow(0)
                                         .withCol(0)
                                         .build()),
-                                TileRenderCompletedFactory.of(DESIGN_ID_2, UUID.randomUUID(), REVISION_1, dateTime.minusMinutes(2), TileRenderCompleted.builder()
+                                TileRenderCompletedFactory.createInputMessage(DESIGN_ID_2, UUID.randomUUID(), REVISION_1, dateTime.minusMinutes(2), TileRenderCompleted.builder()
                                         .withDesignId(DESIGN_ID_2)
                                         .withCommandId(COMMAND_ID_2)
                                         .withChecksum(Checksum.of(DATA_2))
@@ -257,7 +254,7 @@ class BufferedTileRenderCompletedControllerTest {
                                         .withRow(1)
                                         .withCol(0)
                                         .build()),
-                                TileRenderCompletedFactory.of(DESIGN_ID_2, UUID.randomUUID(), REVISION_1, dateTime.minusMinutes(1), TileRenderCompleted.builder()
+                                TileRenderCompletedFactory.createInputMessage(DESIGN_ID_2, UUID.randomUUID(), REVISION_1, dateTime.minusMinutes(1), TileRenderCompleted.builder()
                                         .withDesignId(DESIGN_ID_2)
                                         .withCommandId(COMMAND_ID_2)
                                         .withChecksum(Checksum.of(DATA_2))
@@ -268,7 +265,7 @@ class BufferedTileRenderCompletedControllerTest {
                                         .withCol(1)
                                         .build())
                         ),
-                        TilesRenderedFactory.of(DESIGN_ID_2, UUID.randomUUID(), TilesRendered.builder()
+                        TilesRenderedFactory.createOutputMessage(DESIGN_ID_2, UUID.randomUUID(), TilesRendered.builder()
                                 .withDesignId(DESIGN_ID_2)
                                 .withCommandId(COMMAND_ID_2)
                                 .withChecksum(Checksum.of(DATA_2))
@@ -297,7 +294,7 @@ class BufferedTileRenderCompletedControllerTest {
                                 .withUpdated(dateTime.minusHours(3))
                                 .build(),
                         List.of(
-                                TileRenderCompletedFactory.of(DESIGN_ID_2, UUID.randomUUID(), REVISION_1, dateTime.minusMinutes(3), TileRenderCompleted.builder()
+                                TileRenderCompletedFactory.createInputMessage(DESIGN_ID_2, UUID.randomUUID(), REVISION_1, dateTime.minusMinutes(3), TileRenderCompleted.builder()
                                         .withDesignId(DESIGN_ID_2)
                                         .withCommandId(COMMAND_ID_2)
                                         .withChecksum(Checksum.of(DATA_2))
@@ -307,7 +304,7 @@ class BufferedTileRenderCompletedControllerTest {
                                         .withRow(0)
                                         .withCol(0)
                                         .build()),
-                                TileRenderCompletedFactory.of(DESIGN_ID_2, UUID.randomUUID(), REVISION_1, dateTime.minusMinutes(2), TileRenderCompleted.builder()
+                                TileRenderCompletedFactory.createInputMessage(DESIGN_ID_2, UUID.randomUUID(), REVISION_1, dateTime.minusMinutes(2), TileRenderCompleted.builder()
                                         .withDesignId(DESIGN_ID_2)
                                         .withCommandId(COMMAND_ID_2)
                                         .withChecksum(Checksum.of(DATA_2))
@@ -317,7 +314,7 @@ class BufferedTileRenderCompletedControllerTest {
                                         .withRow(1)
                                         .withCol(0)
                                         .build()),
-                                TileRenderCompletedFactory.of(DESIGN_ID_2, UUID.randomUUID(), REVISION_1, dateTime.minusMinutes(1), TileRenderCompleted.builder()
+                                TileRenderCompletedFactory.createInputMessage(DESIGN_ID_2, UUID.randomUUID(), REVISION_1, dateTime.minusMinutes(1), TileRenderCompleted.builder()
                                         .withDesignId(DESIGN_ID_2)
                                         .withCommandId(COMMAND_ID_1)
                                         .withChecksum(Checksum.of(DATA_2))
@@ -328,7 +325,7 @@ class BufferedTileRenderCompletedControllerTest {
                                         .withCol(1)
                                         .build())
                         ),
-                        TilesRenderedFactory.of(DESIGN_ID_2, UUID.randomUUID(), TilesRendered.builder()
+                        TilesRenderedFactory.createOutputMessage(DESIGN_ID_2, UUID.randomUUID(), TilesRendered.builder()
                                 .withDesignId(DESIGN_ID_2)
                                 .withCommandId(COMMAND_ID_2)
                                 .withChecksum(Checksum.of(DATA_2))
@@ -364,7 +361,7 @@ class BufferedTileRenderCompletedControllerTest {
     @NotNull
     private static List<InputMessage> someInputMessages() {
         return List.of(
-                TileRenderCompletedFactory.of(DESIGN_ID_1, UUID.randomUUID(), REVISION_0, dateTime.minusMinutes(3), TileRenderCompleted.builder()
+                TileRenderCompletedFactory.createInputMessage(DESIGN_ID_1, UUID.randomUUID(), REVISION_0, dateTime.minusMinutes(3), TileRenderCompleted.builder()
                         .withDesignId(DESIGN_ID_1)
                         .withCommandId(COMMAND_ID_1)
                         .withChecksum(Checksum.of(DATA_1))
@@ -374,7 +371,7 @@ class BufferedTileRenderCompletedControllerTest {
                         .withRow(0)
                         .withCol(0)
                         .build()),
-                TileRenderCompletedFactory.of(DESIGN_ID_1, UUID.randomUUID(), REVISION_0, dateTime.minusMinutes(2), TileRenderCompleted.builder()
+                TileRenderCompletedFactory.createInputMessage(DESIGN_ID_1, UUID.randomUUID(), REVISION_0, dateTime.minusMinutes(2), TileRenderCompleted.builder()
                         .withDesignId(DESIGN_ID_1)
                         .withCommandId(COMMAND_ID_1)
                         .withChecksum(Checksum.of(DATA_1))
@@ -390,7 +387,7 @@ class BufferedTileRenderCompletedControllerTest {
     @NotNull
     private static List<InputMessage> invalidInputMessages() {
         return List.of(
-                TileRenderCompletedFactory.of(DESIGN_ID_1, UUID.randomUUID(), REVISION_0, dateTime.minusMinutes(3), TileRenderCompleted.builder()
+                TileRenderCompletedFactory.createInputMessage(DESIGN_ID_1, UUID.randomUUID(), REVISION_0, dateTime.minusMinutes(3), TileRenderCompleted.builder()
                         .withDesignId(DESIGN_ID_1)
                         .withCommandId(COMMAND_ID_1)
                         .withChecksum(Checksum.of(DATA_1))
@@ -400,7 +397,7 @@ class BufferedTileRenderCompletedControllerTest {
                         .withRow(0)
                         .withCol(0)
                         .build()),
-                TileRenderCompletedFactory.of(DESIGN_ID_2, UUID.randomUUID(), REVISION_0, dateTime.minusMinutes(2), TileRenderCompleted.builder()
+                TileRenderCompletedFactory.createInputMessage(DESIGN_ID_2, UUID.randomUUID(), REVISION_0, dateTime.minusMinutes(2), TileRenderCompleted.builder()
                         .withDesignId(DESIGN_ID_2)
                         .withCommandId(COMMAND_ID_1)
                         .withChecksum(Checksum.of(DATA_1))
@@ -415,7 +412,7 @@ class BufferedTileRenderCompletedControllerTest {
 
     private static class TileRenderCompletedFactory {
         @NotNull
-        public static InputMessage of(UUID designId, UUID messageId, String messageToken, LocalDateTime messageTime, TileRenderCompleted tileRenderCompleted) {
+        public static InputMessage createInputMessage(UUID designId, UUID messageId, String messageToken, LocalDateTime messageTime, TileRenderCompleted tileRenderCompleted) {
             return TestUtils.createInputMessage(
                     designId.toString(), TILE_RENDER_COMPLETED, messageId, tileRenderCompleted, messageToken, messageTime
             );
@@ -424,7 +421,7 @@ class BufferedTileRenderCompletedControllerTest {
 
     private static class TilesRenderedFactory {
         @NotNull
-        public static OutputMessage of(UUID designId, UUID messageId, TilesRendered tilesRenderedEvent) {
+        public static OutputMessage createOutputMessage(UUID designId, UUID messageId, TilesRendered tilesRenderedEvent) {
             return TestUtils.createOutputMessage(
                     designId.toString(), TILES_RENDERED, messageId, tilesRenderedEvent
             );

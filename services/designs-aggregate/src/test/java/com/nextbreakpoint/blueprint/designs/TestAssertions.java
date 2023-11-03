@@ -14,7 +14,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_AGGREGATE_UPDATED;
-import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_DOCUMENT_DELETED_REQUESTED;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_DOCUMENT_DELETE_REQUESTED;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_DOCUMENT_UPDATE_REQUESTED;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.MESSAGE_SOURCE;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.TILE_RENDER_REQUESTED;
@@ -143,7 +143,7 @@ public class TestAssertions {
         softly.assertThat(actualMessage.getValue()).isNotNull();
         softly.assertThat(actualMessage.getValue().getSource()).isEqualTo(MESSAGE_SOURCE);
         softly.assertThat(actualMessage.getValue().getUuid()).isNotNull();
-        softly.assertThat(actualMessage.getValue().getType()).isEqualTo(DESIGN_DOCUMENT_DELETED_REQUESTED);
+        softly.assertThat(actualMessage.getValue().getType()).isEqualTo(DESIGN_DOCUMENT_DELETE_REQUESTED);
         softly.assertAll();
     }
 

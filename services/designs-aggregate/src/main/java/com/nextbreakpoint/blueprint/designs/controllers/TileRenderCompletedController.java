@@ -65,7 +65,7 @@ public class TileRenderCompletedController implements Controller<InputMessage, V
                 .flatMapObservable(result -> result.map(Observable::just).orElseGet(Observable::empty));
     }
 
-    private Observable<? extends Void> sendEvents(TileRenderCompleted event, Design design, String revision) {
+    private Observable<Void> sendEvents(TileRenderCompleted event, Design design, String revision) {
         return sendTileCompletedEvent(event).concatWith(sendRenderEvents(event, design, revision));
     }
 
@@ -98,11 +98,11 @@ public class TileRenderCompletedController implements Controller<InputMessage, V
     private Observable<TileRenderRequested> generateRenderEvents(TileRenderCompleted event, Design design, String revision) {
         final TilesBitmap bitmap = TilesBitmap.of(design.getBitmap());
 
-        return Observable.from(Render.generateTiles(creteTile(event), design.getLevels(), bitmap))
+        return Observable.from(Render.generateTiles(createTile(event), design.getLevels(), bitmap))
                 .map(tile -> createRenderEvent(design, tile, revision));
     }
 
-    private Tile creteTile(TileRenderCompleted event) {
+    private Tile createTile(TileRenderCompleted event) {
         return Tile.builder()
                 .withLevel(event.getLevel())
                 .withRow(event.getRow())

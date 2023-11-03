@@ -28,7 +28,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_AGGREGATE_UPDATED;
-import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_DOCUMENT_DELETED_REQUESTED;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_DOCUMENT_DELETE_REQUESTED;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_DOCUMENT_UPDATE_REQUESTED;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_ID_1;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_ID_2;
@@ -235,7 +235,7 @@ public class TestCases {
                 .then().theMessageShouldBeSaved()
                 .and().aMessageShouldBePublished(Source.EVENTS, DESIGN_AGGREGATE_UPDATED)
                 .and().theAggregateUpdatedMessageHasExpectedValues("DELETED", LEVELS_DRAFT)
-                .and().aMessageShouldBePublished(Source.EVENTS, DESIGN_DOCUMENT_DELETED_REQUESTED)
+                .and().aMessageShouldBePublished(Source.EVENTS, DESIGN_DOCUMENT_DELETE_REQUESTED)
                 .and().theDesignDocumentDeleteRequestedMessageHasExpectedValues()
                 .and().theDesignShouldBeSaved("DELETED", LEVELS_DRAFT);
     }

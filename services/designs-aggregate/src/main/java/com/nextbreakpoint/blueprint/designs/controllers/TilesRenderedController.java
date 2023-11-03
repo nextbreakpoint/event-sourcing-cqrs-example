@@ -8,7 +8,7 @@ import com.nextbreakpoint.blueprint.common.core.MessageMapper;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.events.DesignAggregateUpdated;
 import com.nextbreakpoint.blueprint.common.events.TilesRendered;
-import com.nextbreakpoint.blueprint.designs.aggregate.DesignAggregate;
+import com.nextbreakpoint.blueprint.designs.aggregate.DesignEventStore;
 import com.nextbreakpoint.blueprint.designs.model.Design;
 import rx.Observable;
 import rx.Single;
@@ -19,15 +19,15 @@ public class TilesRenderedController implements Controller<InputMessage, Void> {
     private final Mapper<InputMessage, TilesRendered> inputMapper;
     private final MessageMapper<DesignAggregateUpdated, OutputMessage> outputMapper;
     private final MessageEmitter emitter;
-    private final DesignAggregate aggregate;
+    private final DesignEventStore eventStore;
 
     public TilesRenderedController(
-            DesignAggregate aggregate,
+            DesignEventStore eventStore,
             Mapper<InputMessage, TilesRendered> inputMapper,
             MessageMapper<DesignAggregateUpdated, OutputMessage> outputMapper,
             MessageEmitter emitter
     ) {
-        this.aggregate = Objects.requireNonNull(aggregate);
+        this.eventStore = Objects.requireNonNull(eventStore);
         this.inputMapper = Objects.requireNonNull(inputMapper);
         this.outputMapper = Objects.requireNonNull(outputMapper);
         this.emitter = Objects.requireNonNull(emitter);
@@ -46,7 +46,7 @@ public class TilesRenderedController implements Controller<InputMessage, Void> {
     }
 
     private Single<InputMessage> onMessageReceived(InputMessage message) {
-        return aggregate.appendMessage(message).map(result -> message);
+        return eventStore.appendMessage(message).map(result -> message);
     }
 
     private Observable<Void> onUpdateRequested(TilesRendered event, String revision) {
@@ -54,9 +54,9 @@ public class TilesRenderedController implements Controller<InputMessage, Void> {
     }
 
     private Observable<Design> updateDesign(TilesRendered event, String revision) {
-        return aggregate.projectDesign(event.getDesignId(), revision)
+        return eventStore.projectDesign(event.getDesignId(), revision)
                 .flatMapObservable(result -> result.map(Observable::just).orElseGet(Observable::empty))
-                .flatMapSingle(aggregate::updateDesign)
+                .flatMapSingle(eventStore::updateDesign)
                 .flatMap(result -> result.map(Observable::just).orElseGet(Observable::empty));
     }
 

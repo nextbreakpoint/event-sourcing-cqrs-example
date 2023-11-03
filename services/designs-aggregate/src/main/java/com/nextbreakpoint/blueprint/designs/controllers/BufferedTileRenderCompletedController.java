@@ -9,7 +9,7 @@ import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.core.Tile;
 import com.nextbreakpoint.blueprint.common.events.TileRenderCompleted;
 import com.nextbreakpoint.blueprint.common.events.TilesRendered;
-import com.nextbreakpoint.blueprint.designs.aggregate.DesignAggregate;
+import com.nextbreakpoint.blueprint.designs.aggregate.DesignEventStore;
 import com.nextbreakpoint.blueprint.designs.model.Design;
 import lombok.extern.log4j.Log4j2;
 import rx.Observable;
@@ -24,15 +24,15 @@ public class BufferedTileRenderCompletedController implements Controller<List<In
     private final Mapper<InputMessage, TileRenderCompleted> inputMapper;
     private final MessageMapper<TilesRendered, OutputMessage> outputMapper;
     private final MessageEmitter emitter;
-    private final DesignAggregate aggregate;
+    private final DesignEventStore eventStore;
 
     public BufferedTileRenderCompletedController(
-            DesignAggregate aggregate,
+            DesignEventStore eventStore,
             Mapper<InputMessage, TileRenderCompleted> inputMapper,
             MessageMapper<TilesRendered, OutputMessage> outputMapper,
             MessageEmitter emitter
     ) {
-        this.aggregate = Objects.requireNonNull(aggregate);
+        this.eventStore = Objects.requireNonNull(eventStore);
         this.inputMapper = Objects.requireNonNull(inputMapper);
         this.outputMapper = Objects.requireNonNull(outputMapper);
         this.emitter = Objects.requireNonNull(emitter);
@@ -40,7 +40,8 @@ public class BufferedTileRenderCompletedController implements Controller<List<In
 
     @Override
     public Single<Void> onNext(List<InputMessage> messages) {
-        return aggregate.findDesign(inputMapper.transform(messages.get(0)).getDesignId())
+        return Single.fromCallable(() -> inputMapper.transform(messages.get(0)))
+                .flatMap(event -> eventStore.findDesign(event.getDesignId()))
                 .flatMapObservable(result -> result.map(Observable::just).orElseGet(Observable::empty))
                 .flatMap(design -> sendEvents(design, messages))
                 .ignoreElements()
@@ -52,12 +53,20 @@ public class BufferedTileRenderCompletedController implements Controller<List<In
     private Observable<Void> sendEvents(Design design, List<InputMessage> messages) {
         return Observable.from(messages)
                 .map(inputMapper::transform)
+                .map(event -> checkDesignId(event, design))
                 .filter(event -> !isLateEvent(event, design))
                 .map(this::createTile)
                 .collect(ArrayList<Tile>::new, ArrayList::add)
                 .map(tiles -> createEvent(design, tiles))
                 .map(outputMapper::transform)
                 .flatMapSingle(emitter::send);
+    }
+
+    private TileRenderCompleted checkDesignId(TileRenderCompleted event, Design design) {
+        if (!event.getDesignId().equals(design.getDesignId())) {
+            throw new IllegalArgumentException();
+        }
+        return event;
     }
 
     private boolean isLateEvent(TileRenderCompleted event, Design design) {

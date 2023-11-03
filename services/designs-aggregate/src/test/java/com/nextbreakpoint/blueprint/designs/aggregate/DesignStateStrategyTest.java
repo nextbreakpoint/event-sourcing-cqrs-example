@@ -184,67 +184,67 @@ class DesignStateStrategyTest {
             .build();
 
     private static final InputMessage designInsertRequestedMessage = TestUtils.createInputMessage(
-            designInsertRequested.getDesignId().toString(), DESIGN_INSERT_REQUESTED, REVISION_0, dateTime.minusHours(9), designInsertRequested
+            designInsertRequested.getDesignId().toString(), DESIGN_INSERT_REQUESTED, UUID.randomUUID(), designInsertRequested, REVISION_0, dateTime.minusHours(9)
     );
 
     private static final InputMessage duplicateDesignInsertRequestedMessage = TestUtils.createInputMessage(
-            designInsertRequested.getDesignId().toString(), DESIGN_INSERT_REQUESTED, REVISION_0, dateTime.minusHours(8), designInsertRequested
+            designInsertRequested.getDesignId().toString(), DESIGN_INSERT_REQUESTED, UUID.randomUUID(), designInsertRequested, REVISION_0, dateTime.minusHours(8)
     );
 
     private static final InputMessage invalidDesignInsertRequestedMessage = TestUtils.createInputMessage(
-            invalidDesignInsertRequested.getDesignId().toString(), DESIGN_INSERT_REQUESTED, REVISION_0, dateTime.minusHours(8), invalidDesignInsertRequested
+            invalidDesignInsertRequested.getDesignId().toString(), DESIGN_INSERT_REQUESTED, UUID.randomUUID(), invalidDesignInsertRequested, REVISION_0, dateTime.minusHours(8)
     );
 
     private static final InputMessage alternativeDesignInsertRequestedMessage = TestUtils.createInputMessage(
-            alternativeDesignInsertRequested.getDesignId().toString(), DESIGN_INSERT_REQUESTED, REVISION_0, dateTime.minusHours(8), alternativeDesignInsertRequested
+            alternativeDesignInsertRequested.getDesignId().toString(), DESIGN_INSERT_REQUESTED, UUID.randomUUID(), alternativeDesignInsertRequested, REVISION_0, dateTime.minusHours(8)
     );
 
     private static final InputMessage designUpdateRequestedMessage = TestUtils.createInputMessage(
-            designUpdateRequested.getDesignId().toString(), DESIGN_UPDATE_REQUESTED, REVISION_1, dateTime.minusHours(8), designUpdateRequested
+            designUpdateRequested.getDesignId().toString(), DESIGN_UPDATE_REQUESTED, UUID.randomUUID(), designUpdateRequested, REVISION_1, dateTime.minusHours(8)
     );
 
     private static final InputMessage anotherDesignUpdateRequestedMessage = TestUtils.createInputMessage(
-            anotherDesignUpdateRequested.getDesignId().toString(), DESIGN_UPDATE_REQUESTED, REVISION_2, dateTime.minusHours(7), anotherDesignUpdateRequested
+            anotherDesignUpdateRequested.getDesignId().toString(), DESIGN_UPDATE_REQUESTED, UUID.randomUUID(), anotherDesignUpdateRequested, REVISION_2, dateTime.minusHours(7)
     );
 
     private static final InputMessage invalidDesignUpdateRequestedMessage = TestUtils.createInputMessage(
-            invalidDesignUpdateRequested.getDesignId().toString(), DESIGN_UPDATE_REQUESTED, REVISION_2, dateTime.minusHours(7), invalidDesignUpdateRequested
+            invalidDesignUpdateRequested.getDesignId().toString(), DESIGN_UPDATE_REQUESTED, UUID.randomUUID(), invalidDesignUpdateRequested, REVISION_2, dateTime.minusHours(7)
     );
 
     private static final InputMessage designDeleteRequestedMessage = TestUtils.createInputMessage(
-            designDeleteRequested.getDesignId().toString(), DESIGN_DELETE_REQUESTED, REVISION_2, dateTime.minusHours(1), designDeleteRequested
+            designDeleteRequested.getDesignId().toString(), DESIGN_DELETE_REQUESTED, UUID.randomUUID(), designDeleteRequested, REVISION_2, dateTime.minusHours(1)
     );
 
     private static final InputMessage duplicateDesignDeleteRequestedMessage = TestUtils.createInputMessage(
-            designDeleteRequested.getDesignId().toString(), DESIGN_DELETE_REQUESTED, REVISION_2, dateTime.minusHours(0), designDeleteRequested
+            designDeleteRequested.getDesignId().toString(), DESIGN_DELETE_REQUESTED, UUID.randomUUID(), designDeleteRequested, REVISION_2, dateTime.minusHours(0)
     );
 
     private static final InputMessage invalidDesignDeleteRequestedMessage = TestUtils.createInputMessage(
-            invalidDesignDeleteRequested.getDesignId().toString(), DESIGN_DELETE_REQUESTED, REVISION_2, dateTime.minusHours(1), invalidDesignDeleteRequested
+            invalidDesignDeleteRequested.getDesignId().toString(), DESIGN_DELETE_REQUESTED, UUID.randomUUID(), invalidDesignDeleteRequested, REVISION_2, dateTime.minusHours(1)
     );
 
     private static final InputMessage tileRenderedMessage1 = TestUtils.createInputMessage(
-            tilesRendered1.getDesignId().toString(), TILES_RENDERED, REVISION_2, dateTime.minusHours(6), tilesRendered1
+            tilesRendered1.getDesignId().toString(), TILES_RENDERED, UUID.randomUUID(), tilesRendered1, REVISION_2, dateTime.minusHours(6)
     );
 
     private static final InputMessage tileRenderedMessage2 = TestUtils.createInputMessage(
-            tilesRendered2.getDesignId().toString(), TILES_RENDERED, REVISION_2, dateTime.minusHours(5), tilesRendered2
+            tilesRendered2.getDesignId().toString(), TILES_RENDERED, UUID.randomUUID(), tilesRendered2, REVISION_2, dateTime.minusHours(5)
     );
 
     private static final InputMessage tileRenderedMessage3 = TestUtils.createInputMessage(
-            tilesRendered3.getDesignId().toString(), TILES_RENDERED, REVISION_2, dateTime.minusHours(4), tilesRendered3
+            tilesRendered3.getDesignId().toString(), TILES_RENDERED, UUID.randomUUID(), tilesRendered3, REVISION_2, dateTime.minusHours(4)
     );
 
     private static final InputMessage tileRenderedMessage4 = TestUtils.createInputMessage(
-            tilesRendered4.getDesignId().toString(), TILES_RENDERED, REVISION_2, dateTime.minusHours(3), tilesRendered4
+            tilesRendered4.getDesignId().toString(), TILES_RENDERED, UUID.randomUUID(), tilesRendered4, REVISION_2, dateTime.minusHours(3)
     );
 
     private static final InputMessage invalidTileRenderedMessage = TestUtils.createInputMessage(
-            invalidTilesRendered.getDesignId().toString(), TILES_RENDERED, REVISION_2, dateTime.minusHours(3), invalidTilesRendered
+            invalidTilesRendered.getDesignId().toString(), TILES_RENDERED, UUID.randomUUID(), invalidTilesRendered, REVISION_2, dateTime.minusHours(3)
     );
 
     private static final InputMessage unknownMessage = TestUtils.createInputMessage(
-            designInsertRequested.getDesignId().toString(), "UNKNOWN", REVISION_2, dateTime.minusHours(0), ""
+            designInsertRequested.getDesignId().toString(), "UNKNOWN", UUID.randomUUID(), "", REVISION_2, dateTime.minusHours(0)
     );
 
     private static final Design state1 = Design.builder()
@@ -427,7 +427,7 @@ class DesignStateStrategyTest {
             .withUpdated(dateTime.minusHours(8))
             .build();
 
-    private final DesignStateStrategy strategy = new DesignStateStrategy();
+    private final DesignMergeStrategy strategy = new DesignMergeStrategy();
 
     @Test
     void shouldNotAlterStateWhenMessagesIsEmpty() {
@@ -482,7 +482,7 @@ class DesignStateStrategyTest {
                 .isInstanceOf(IllegalStateException.class);
     }
 
-    public static Stream<Arguments> someValidMessages() {
+    private static Stream<Arguments> someValidMessages() {
         return Stream.of(
                 Arguments.arguments(List.of(
                         designInsertRequestedMessage
@@ -570,7 +570,7 @@ class DesignStateStrategyTest {
         );
     }
 
-    public static Stream<Arguments> someInvalidMessages() {
+    private static Stream<Arguments> someInvalidMessages() {
         return Stream.of(
                 Arguments.arguments(List.of(
                         designInsertRequestedMessage,

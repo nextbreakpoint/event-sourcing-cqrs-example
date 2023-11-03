@@ -10,7 +10,7 @@ import com.nextbreakpoint.blueprint.common.core.Tile;
 import com.nextbreakpoint.blueprint.common.core.TilesBitmap;
 import com.nextbreakpoint.blueprint.common.events.TileRenderCompleted;
 import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
-import com.nextbreakpoint.blueprint.designs.aggregate.DesignAggregate;
+import com.nextbreakpoint.blueprint.designs.aggregate.DesignEventStore;
 import com.nextbreakpoint.blueprint.designs.common.Render;
 import com.nextbreakpoint.blueprint.designs.model.Design;
 import lombok.extern.log4j.Log4j2;
@@ -27,17 +27,17 @@ public class TileRenderCompletedController implements Controller<InputMessage, V
     private final MessageMapper<TileRenderRequested, OutputMessage> renderOutputMapper;
     private final MessageEmitter bufferEmitter;
     private final MessageEmitter renderEmitter;
-    private final DesignAggregate aggregate;
+    private final DesignEventStore eventStore;
 
     public TileRenderCompletedController(
-            DesignAggregate aggregate,
+            DesignEventStore eventStore,
             Mapper<InputMessage, TileRenderCompleted> inputMapper,
             MessageMapper<TileRenderCompleted, OutputMessage> bufferOutputMapper,
             MessageMapper<TileRenderRequested, OutputMessage> renderOutputMapper,
             MessageEmitter bufferEmitter,
             MessageEmitter renderEmitter
     ) {
-        this.aggregate = Objects.requireNonNull(aggregate);
+        this.eventStore = Objects.requireNonNull(eventStore);
         this.inputMapper = Objects.requireNonNull(inputMapper);
         this.bufferOutputMapper = Objects.requireNonNull(bufferOutputMapper);
         this.renderOutputMapper = Objects.requireNonNull(renderOutputMapper);
@@ -61,7 +61,7 @@ public class TileRenderCompletedController implements Controller<InputMessage, V
     }
 
     private Observable<Design> findDesign(UUID designId) {
-        return aggregate.findDesign(designId)
+        return eventStore.findDesign(designId)
                 .flatMapObservable(result -> result.map(Observable::just).orElseGet(Observable::empty));
     }
 

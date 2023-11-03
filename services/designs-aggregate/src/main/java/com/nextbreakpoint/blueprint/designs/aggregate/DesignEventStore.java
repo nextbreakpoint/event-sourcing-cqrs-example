@@ -10,14 +10,14 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
-public class DesignAggregate {
+public class DesignEventStore {
     private static final String REVISION_NULL = "0000000000000000-0000000000000000";
 
-    private final DesignStateStrategy strategy;
+    private final DesignMergeStrategy strategy;
 
     private final Store store;
 
-    public DesignAggregate(Store store, DesignStateStrategy strategy) {
+    public DesignEventStore(Store store, DesignMergeStrategy strategy) {
         this.store = Objects.requireNonNull(store);
         this.strategy = Objects.requireNonNull(strategy);
     }

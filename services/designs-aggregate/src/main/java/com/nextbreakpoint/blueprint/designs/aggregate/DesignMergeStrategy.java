@@ -20,7 +20,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 @Log4j2
-public class DesignStateStrategy {
+public class DesignMergeStrategy {
     public Optional<Design> applyEvents(Design state, List<InputMessage> messages) {
         log.trace("Apply events: {}", messages.size());
 

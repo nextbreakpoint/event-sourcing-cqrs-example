@@ -20,8 +20,8 @@ import com.nextbreakpoint.blueprint.common.vertx.MessageFailed;
 import com.nextbreakpoint.blueprint.common.vertx.MessagesConsumed;
 import com.nextbreakpoint.blueprint.common.vertx.MessagesFailed;
 import com.nextbreakpoint.blueprint.common.vertx.TemplateHandler;
-import com.nextbreakpoint.blueprint.designs.aggregate.DesignAggregate;
-import com.nextbreakpoint.blueprint.designs.aggregate.DesignStateStrategy;
+import com.nextbreakpoint.blueprint.designs.aggregate.DesignEventStore;
+import com.nextbreakpoint.blueprint.designs.aggregate.DesignMergeStrategy;
 import com.nextbreakpoint.blueprint.designs.common.Render;
 import com.nextbreakpoint.blueprint.designs.controllers.BufferedTileRenderCompletedController;
 import com.nextbreakpoint.blueprint.designs.controllers.DesignAggregateUpdatedController;
@@ -41,7 +41,7 @@ public class Factory {
                 .withInputMapper(input -> input)
                 .withOutputMapper(output -> output)
                 .withController(new DesignUpdateController.DesignInsertRequestedController(
-                    new DesignAggregate(store, new DesignStateStrategy()),
+                    new DesignEventStore(store, new DesignMergeStrategy()),
                     new DesignInsertRequestedInputMapper(),
                     new DesignAggregateUpdatedOutputMapper(messageSource),
                     new TileRenderRequestedOutputMapper(messageSource, Render::createRenderKey),
@@ -58,7 +58,7 @@ public class Factory {
                 .withInputMapper(input -> input)
                 .withOutputMapper(output -> output)
                 .withController(new DesignUpdateController.DesignUpdateRequestedController(
-                    new DesignAggregate(store, new DesignStateStrategy()),
+                    new DesignEventStore(store, new DesignMergeStrategy()),
                     new DesignUpdateRequestedInputMapper(),
                     new DesignAggregateUpdatedOutputMapper(messageSource),
                     new TileRenderRequestedOutputMapper(messageSource, Render::createRenderKey),
@@ -75,7 +75,7 @@ public class Factory {
                 .withInputMapper(input -> input)
                 .withOutputMapper(output -> output)
                 .withController(new DesignUpdateController.DesignDeleteRequestedController(
-                    new DesignAggregate(store, new DesignStateStrategy()),
+                    new DesignEventStore(store, new DesignMergeStrategy()),
                     new DesignDeleteRequestedInputMapper(),
                     new DesignAggregateUpdatedOutputMapper(messageSource),
                     new TileRenderRequestedOutputMapper(messageSource, Render::createRenderKey),
@@ -107,7 +107,7 @@ public class Factory {
                 .withInputMapper(input -> input)
                 .withOutputMapper(output -> output)
                 .withController(new BufferedTileRenderCompletedController(
-                    new DesignAggregate(store, new DesignStateStrategy()),
+                    new DesignEventStore(store, new DesignMergeStrategy()),
                     new TileRenderCompletedInputMapper(),
                     new TilesRenderedOutputMapper(messageSource),
                     new KafkaMessageEmitter(producer, BackendRegistries.getDefaultNow(), topic, 3)
@@ -122,7 +122,7 @@ public class Factory {
                 .withInputMapper(input -> input)
                 .withOutputMapper(output -> output)
                 .withController(new TileRenderCompletedController(
-                        new DesignAggregate(store, new DesignStateStrategy()),
+                        new DesignEventStore(store, new DesignMergeStrategy()),
                         new TileRenderCompletedInputMapper(),
                         new TileRenderCompletedOutputMapper(messageSource),
                         new TileRenderRequestedOutputMapper(messageSource, Render::createRenderKey),
@@ -139,7 +139,7 @@ public class Factory {
                 .withInputMapper(input -> input)
                 .withOutputMapper(output -> output)
                 .withController(new TilesRenderedController(
-                        new DesignAggregate(store, new DesignStateStrategy()),
+                        new DesignEventStore(store, new DesignMergeStrategy()),
                         new TilesRenderedInputMapper(),
                         new DesignAggregateUpdatedOutputMapper(messageSource),
                         new KafkaMessageEmitter(producer, BackendRegistries.getDefaultNow(), eventsTopic, 3)

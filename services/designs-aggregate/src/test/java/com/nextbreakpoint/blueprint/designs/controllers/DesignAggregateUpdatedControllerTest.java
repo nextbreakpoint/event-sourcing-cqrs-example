@@ -69,9 +69,9 @@ class DesignAggregateUpdatedControllerTest {
 
     private static final LocalDateTime dateTime = LocalDateTime.now(ZoneId.of("UTC")).truncatedTo(ChronoUnit.MILLIS);
 
-    public static final TilesBitmap bitmap0 = TilesBitmap.empty();
-    public static final TilesBitmap bitmap1 = TilesBitmap.empty().putTile(0, 0, 0);
-    public static final TilesBitmap bitmap2 = TilesBitmap.empty().putTile(0, 0, 0).putTile(1, 1, 0);
+    private static final TilesBitmap bitmap0 = TilesBitmap.empty();
+    private static final TilesBitmap bitmap1 = TilesBitmap.empty().putTile(0, 0, 0);
+    private static final TilesBitmap bitmap2 = TilesBitmap.empty().putTile(0, 0, 0).putTile(1, 1, 0);
 
     private final MessageEmitter emitter = mock();
 
@@ -79,7 +79,7 @@ class DesignAggregateUpdatedControllerTest {
 
     @ParameterizedTest
     @MethodSource("someMessages")
-    void shouldHandleMessage(InputMessage inputMessage, OutputMessage expectedOutputMessage) {
+    void shouldPublishAMessageToInformThatADocumentHasChanged(InputMessage inputMessage, OutputMessage expectedOutputMessage) {
         when(emitter.send(any())).thenReturn(Single.just(null));
 
         controller.onNext(inputMessage).toCompletable().doOnError(Assertions::fail).await();
@@ -102,9 +102,11 @@ class DesignAggregateUpdatedControllerTest {
 
         final var controller = new DesignAggregateUpdatedController(mockedInputMapper, updateOutputMapper, deleteOutputMapper, emitter);
 
-        assertThatThrownBy(() -> controller.onNext(someUpdateInputMessage()).toCompletable().await()).isEqualTo(exception);
+        assertThatThrownBy(() -> controller.onNext(anUpdateInputMessage()).toCompletable().await()).isEqualTo(exception);
 
         verify(mockedInputMapper).transform(any(InputMessage.class));
+        verifyNoMoreInteractions(mockedInputMapper);
+
         verifyNoInteractions(emitter);
     }
 
@@ -116,9 +118,11 @@ class DesignAggregateUpdatedControllerTest {
 
         final var controller = new DesignAggregateUpdatedController(inputMapper, mockedOutputMapper, deleteOutputMapper, emitter);
 
-        assertThatThrownBy(() -> controller.onNext(someUpdateInputMessage()).toCompletable().await()).isEqualTo(exception);
+        assertThatThrownBy(() -> controller.onNext(anUpdateInputMessage()).toCompletable().await()).isEqualTo(exception);
 
         verify(mockedOutputMapper).transform(any(DesignDocumentUpdateRequested.class));
+        verifyNoMoreInteractions(mockedOutputMapper);
+
         verifyNoInteractions(emitter);
     }
 
@@ -130,9 +134,11 @@ class DesignAggregateUpdatedControllerTest {
 
         final var controller = new DesignAggregateUpdatedController(inputMapper, updateOutputMapper, mockedOutputMapper, emitter);
 
-        assertThatThrownBy(() -> controller.onNext(someDeleteInputMessage()).toCompletable().await()).isEqualTo(exception);
+        assertThatThrownBy(() -> controller.onNext(aDeleteInputMessage()).toCompletable().await()).isEqualTo(exception);
 
         verify(mockedOutputMapper).transform(any(DesignDocumentDeleteRequested.class));
+        verifyNoMoreInteractions(mockedOutputMapper);
+
         verifyNoInteractions(emitter);
     }
 
@@ -144,129 +150,87 @@ class DesignAggregateUpdatedControllerTest {
 
         final var controller = new DesignAggregateUpdatedController(inputMapper, updateOutputMapper, deleteOutputMapper, mockedEmitter);
 
-        assertThatThrownBy(() -> controller.onNext(someUpdateInputMessage()).toCompletable().await()).isEqualTo(exception);
+        assertThatThrownBy(() -> controller.onNext(anUpdateInputMessage()).toCompletable().await()).isEqualTo(exception);
 
         verify(mockedEmitter).send(any(OutputMessage.class));
+        verifyNoMoreInteractions(emitter);
     }
 
     private static Stream<Arguments> someMessages() {
         return Stream.of(
                 Arguments.of(
-                        DesignAggregateUpdatedFactory.of(DESIGN_ID_1, UUID.randomUUID(), REVISION_0, dateTime.minusMinutes(3), DesignAggregateUpdated.builder()
-                                .withDesignId(DESIGN_ID_1)
-                                .withCommandId(COMMAND_ID_1)
-                                .withUserId(USER_ID_1)
-                                .withChecksum(Checksum.of(DATA_1))
-                                .withRevision(REVISION_0)
-                                .withStatus("CREATED")
-                                .withData(DATA_1)
-                                .withPublished(false)
-                                .withLevels(LEVELS_DRAFT)
-                                .withBitmap(bitmap0.getBitmap())
-                                .withCreated(dateTime.minusHours(2))
-                                .withUpdated(dateTime.minusHours(1))
-                                .build()),
-                        DesignDocumentUpdateRequestedFactory.createInputMessage(DESIGN_ID_1, UUID.randomUUID(), DesignDocumentUpdateRequested.builder()
-                                .withDesignId(DESIGN_ID_1)
-                                .withCommandId(COMMAND_ID_1)
-                                .withUserId(USER_ID_1)
-                                .withChecksum(Checksum.of(DATA_1))
-                                .withRevision(REVISION_0)
-                                .withStatus("CREATED")
-                                .withData(DATA_1)
-                                .withPublished(false)
-                                .withLevels(LEVELS_DRAFT)
-                                .withTiles(toTiles(bitmap0))
-                                .withCreated(dateTime.minusHours(2))
-                                .withUpdated(dateTime.minusHours(1))
-                                .build())
+                        DesignAggregateUpdatedFactory.of(DESIGN_ID_1, aMessageId(), REVISION_0, dateTime.minusMinutes(3), anAggregateUpdated(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1, REVISION_0, "CREATED", false, LEVELS_DRAFT, bitmap0)),
+                        DesignDocumentUpdateRequestedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), aDesignDocumentUpdateRequested(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1, REVISION_0, "CREATED", false, LEVELS_DRAFT, bitmap0))
                 ),
                 Arguments.of(
-                        DesignAggregateUpdatedFactory.of(DESIGN_ID_2, UUID.randomUUID(), REVISION_1, dateTime.minusMinutes(3), DesignAggregateUpdated.builder()
-                                .withDesignId(DESIGN_ID_2)
-                                .withCommandId(COMMAND_ID_2)
-                                .withUserId(USER_ID_2)
-                                .withChecksum(Checksum.of(DATA_2))
-                                .withRevision(REVISION_1)
-                                .withStatus("UPDATED")
-                                .withData(DATA_2)
-                                .withPublished(true)
-                                .withLevels(LEVELS_READY)
-                                .withBitmap(bitmap1.getBitmap())
-                                .withCreated(dateTime.minusHours(2))
-                                .withUpdated(dateTime.minusHours(1))
-                                .build()),
-                        DesignDocumentUpdateRequestedFactory.createInputMessage(DESIGN_ID_2, UUID.randomUUID(), DesignDocumentUpdateRequested.builder()
-                                .withDesignId(DESIGN_ID_2)
-                                .withCommandId(COMMAND_ID_2)
-                                .withUserId(USER_ID_2)
-                                .withChecksum(Checksum.of(DATA_2))
-                                .withRevision(REVISION_1)
-                                .withStatus("UPDATED")
-                                .withData(DATA_2)
-                                .withPublished(true)
-                                .withLevels(LEVELS_READY)
-                                .withTiles(toTiles(bitmap1))
-                                .withCreated(dateTime.minusHours(2))
-                                .withUpdated(dateTime.minusHours(1))
-                                .build())
+                        DesignAggregateUpdatedFactory.of(DESIGN_ID_2, aMessageId(), REVISION_1, dateTime.minusMinutes(3), anAggregateUpdated(DESIGN_ID_2, COMMAND_ID_2, USER_ID_2, DATA_2, REVISION_1, "UPDATED", true, LEVELS_READY, bitmap1)),
+                        DesignDocumentUpdateRequestedFactory.createInputMessage(DESIGN_ID_2, aMessageId(), aDesignDocumentUpdateRequested(DESIGN_ID_2, COMMAND_ID_2, USER_ID_2, DATA_2, REVISION_1, "UPDATED", true, LEVELS_READY, bitmap1))
                 ),
                 Arguments.of(
-                        DesignAggregateUpdatedFactory.of(DESIGN_ID_3, UUID.randomUUID(), REVISION_2, dateTime.minusMinutes(3), DesignAggregateUpdated.builder()
-                                .withDesignId(DESIGN_ID_3)
-                                .withCommandId(COMMAND_ID_3)
-                                .withUserId(USER_ID_1)
-                                .withChecksum(Checksum.of(DATA_3))
-                                .withRevision(REVISION_2)
-                                .withStatus("DELETED")
-                                .withData(DATA_3)
-                                .withPublished(false)
-                                .withLevels(LEVELS_DRAFT)
-                                .withBitmap(bitmap2.getBitmap())
-                                .withCreated(dateTime.minusHours(2))
-                                .withUpdated(dateTime.minusHours(1))
-                                .build()),
-                        DesignDocumentDeleteRequestedFactory.createOutputMessage(DESIGN_ID_3, UUID.randomUUID(), DesignDocumentDeleteRequested.builder()
-                                .withDesignId(DESIGN_ID_3)
-                                .withCommandId(COMMAND_ID_3)
-                                .withRevision(REVISION_2)
-                                .build())
+                        DesignAggregateUpdatedFactory.of(DESIGN_ID_3, aMessageId(), REVISION_2, dateTime.minusMinutes(3), anAggregateUpdated(DESIGN_ID_3, COMMAND_ID_3, USER_ID_1, DATA_3, REVISION_2, "DELETED", false, LEVELS_DRAFT, bitmap2)),
+                        DesignDocumentDeleteRequestedFactory.createOutputMessage(DESIGN_ID_3, aMessageId(), aDesignDocumentDeleteRequested(DESIGN_ID_3, COMMAND_ID_3, REVISION_2))
                 )
         );
     }
 
-    private InputMessage someUpdateInputMessage() {
-        return DesignAggregateUpdatedFactory.of(DESIGN_ID_1, UUID.randomUUID(), REVISION_0, dateTime.minusMinutes(3), DesignAggregateUpdated.builder()
-                .withDesignId(DESIGN_ID_1)
-                .withCommandId(COMMAND_ID_1)
-                .withUserId(USER_ID_1)
-                .withChecksum(Checksum.of(DATA_1))
-                .withRevision(REVISION_0)
-                .withStatus("CREATED")
-                .withData(DATA_1)
-                .withPublished(false)
-                .withLevels(LEVELS_DRAFT)
-                .withBitmap(bitmap0.getBitmap())
-                .withCreated(dateTime.minusHours(2))
-                .withUpdated(dateTime.minusHours(1))
-                .build());
+    @NotNull
+    private static UUID aMessageId() {
+        return UUID.randomUUID();
     }
 
-    private InputMessage someDeleteInputMessage() {
-        return DesignAggregateUpdatedFactory.of(DESIGN_ID_1, UUID.randomUUID(), REVISION_0, dateTime.minusMinutes(3), DesignAggregateUpdated.builder()
-                .withDesignId(DESIGN_ID_1)
-                .withCommandId(COMMAND_ID_1)
-                .withUserId(USER_ID_1)
-                .withChecksum(Checksum.of(DATA_1))
-                .withRevision(REVISION_0)
-                .withStatus("DELETED")
-                .withData(DATA_1)
-                .withPublished(false)
-                .withLevels(LEVELS_DRAFT)
-                .withBitmap(bitmap0.getBitmap())
+    @NotNull
+    private static DesignAggregateUpdated anAggregateUpdated(UUID designId, UUID commandId, UUID userId, String data, String revision, String CREATED, boolean published, int levels, TilesBitmap bitmap) {
+        return DesignAggregateUpdated.builder()
+                .withDesignId(designId)
+                .withCommandId(commandId)
+                .withUserId(userId)
+                .withChecksum(Checksum.of(data))
+                .withRevision(revision)
+                .withStatus(CREATED)
+                .withData(data)
+                .withPublished(published)
+                .withLevels(levels)
+                .withBitmap(bitmap.getBitmap())
                 .withCreated(dateTime.minusHours(2))
                 .withUpdated(dateTime.minusHours(1))
-                .build());
+                .build();
+    }
+
+    @NotNull
+    private static DesignDocumentUpdateRequested aDesignDocumentUpdateRequested(UUID designId, UUID commandId, UUID userId, String data, String revision, String CREATED, boolean published, int levels, TilesBitmap bitmap) {
+        return DesignDocumentUpdateRequested.builder()
+                .withDesignId(designId)
+                .withCommandId(commandId)
+                .withUserId(userId)
+                .withChecksum(Checksum.of(data))
+                .withRevision(revision)
+                .withStatus(CREATED)
+                .withData(data)
+                .withPublished(published)
+                .withLevels(levels)
+                .withTiles(toTiles(bitmap))
+                .withCreated(dateTime.minusHours(2))
+                .withUpdated(dateTime.minusHours(1))
+                .build();
+    }
+
+    @NotNull
+    private static DesignDocumentDeleteRequested aDesignDocumentDeleteRequested(UUID designId, UUID commandId, String revision) {
+        return DesignDocumentDeleteRequested.builder()
+                .withDesignId(designId)
+                .withCommandId(commandId)
+                .withRevision(revision)
+                .build();
+    }
+
+    @NotNull
+    private InputMessage anUpdateInputMessage() {
+        return DesignAggregateUpdatedFactory.of(DESIGN_ID_1, aMessageId(), REVISION_0, dateTime.minusMinutes(3), anAggregateUpdated(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1, REVISION_0, "CREATED", false, LEVELS_DRAFT, bitmap0));
+    }
+
+    @NotNull
+    private InputMessage aDeleteInputMessage() {
+        return DesignAggregateUpdatedFactory.of(DESIGN_ID_1, aMessageId(), REVISION_0, dateTime.minusMinutes(3), anAggregateUpdated(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1, REVISION_0, "DELETED", false, LEVELS_DRAFT, bitmap0));
     }
 
     @NotNull

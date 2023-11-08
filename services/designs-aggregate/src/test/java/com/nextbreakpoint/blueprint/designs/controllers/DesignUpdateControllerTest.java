@@ -56,7 +56,9 @@ import static com.nextbreakpoint.blueprint.designs.TestConstants.TILE_RENDER_REQ
 import static com.nextbreakpoint.blueprint.designs.TestConstants.USER_ID_1;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.USER_ID_2;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.assertArg;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -126,6 +128,230 @@ class DesignUpdateControllerTest {
                 assertThat(expectedData.contains(message.getValue().getData())).isTrue();
             }), eq("render-requested-0"));
             verifyNoMoreInteractions(renderEmitter);
+        }
+
+        @Test
+        void shouldReturnErrorWhenInputMapperFails() {
+            final RuntimeException exception = new RuntimeException();
+            final Mapper<InputMessage, DesignInsertRequested> mockedInputMapper = mock();
+            when(mockedInputMapper.transform(any(InputMessage.class))).thenThrow(exception);
+
+            final var inputMessage = DesignInsertRequestedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), REVISION_1, dateTime.minusMinutes(3), aDesignInsertRequested(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1));
+
+            when(eventStore.appendMessage(inputMessage)).thenReturn(Single.just(null));
+
+            final var insertController = new DesignUpdateController.DesignInsertRequestedController(eventStore, mockedInputMapper, updateOutputMapper, renderOutputMapper, updateEmitter, renderEmitter);
+
+            assertThatThrownBy(() -> insertController.onNext(inputMessage).toCompletable().await()).isEqualTo(exception);
+
+            verify(mockedInputMapper).transform(any(InputMessage.class));
+            verifyNoMoreInteractions(mockedInputMapper);
+
+            verify(eventStore).appendMessage(inputMessage);
+            verifyNoMoreInteractions(eventStore);
+
+            verifyNoInteractions(updateEmitter);
+            verifyNoInteractions(renderEmitter);
+        }
+
+        @Test
+        void shouldReturnErrorWhenUpdateOutputMapperFails() {
+            final RuntimeException exception = new RuntimeException();
+            final MessageMapper<DesignAggregateUpdated, OutputMessage> mockedOutputMapper = mock();
+            when(mockedOutputMapper.transform(any(DesignAggregateUpdated.class))).thenThrow(exception);
+
+            final var design = aDesign(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1, REVISION_1, "CREATED", LEVELS_DRAFT, TilesBitmap.empty(), dateTime.minusHours(2), dateTime.minusMinutes(3));
+            final var inputMessage = DesignInsertRequestedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), REVISION_1, dateTime.minusMinutes(3), aDesignInsertRequested(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1));
+
+            when(eventStore.appendMessage(inputMessage)).thenReturn(Single.just(null));
+            when(eventStore.projectDesign(design.getDesignId(), inputMessage.getToken())).thenReturn(Single.just(Optional.of(design)));
+            when(eventStore.updateDesign(design)).thenReturn(Single.just(Optional.of(design)));
+
+            final var insertController = new DesignUpdateController.DesignInsertRequestedController(eventStore, insertInputMapper, mockedOutputMapper, renderOutputMapper, updateEmitter, renderEmitter);
+
+            assertThatThrownBy(() -> insertController.onNext(inputMessage).toCompletable().await()).isEqualTo(exception);
+
+            verify(mockedOutputMapper).transform(any(DesignAggregateUpdated.class));
+            verifyNoMoreInteractions(mockedOutputMapper);
+
+            verify(eventStore).appendMessage(inputMessage);
+            verify(eventStore).projectDesign(design.getDesignId(), inputMessage.getToken());
+            verify(eventStore).updateDesign(design);
+            verifyNoMoreInteractions(eventStore);
+
+            verifyNoInteractions(updateEmitter);
+            verifyNoInteractions(renderEmitter);
+        }
+
+        @Test
+        void shouldReturnErrorWhenRenderOutputMapperFails() {
+            final RuntimeException exception = new RuntimeException();
+            final MessageMapper<TileRenderRequested, OutputMessage> mockedOutputMapper = mock();
+            when(mockedOutputMapper.transform(any(TileRenderRequested.class))).thenThrow(exception);
+
+            final var design = aDesign(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1, REVISION_1, "CREATED", LEVELS_DRAFT, TilesBitmap.empty(), dateTime.minusHours(2), dateTime.minusMinutes(3));
+            final var inputMessage = DesignInsertRequestedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), REVISION_1, dateTime.minusMinutes(3), aDesignInsertRequested(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1));
+            final var expectedOutputMessage = DesignAggregateUpdatedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aDesignAggregateUpdated(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, REVISION_1, DATA_1, LEVELS_DRAFT, TilesBitmap.empty(), false, "CREATED", dateTime.minusHours(2), dateTime.minusMinutes(3)));
+
+            when(eventStore.appendMessage(inputMessage)).thenReturn(Single.just(null));
+            when(eventStore.projectDesign(design.getDesignId(), inputMessage.getToken())).thenReturn(Single.just(Optional.of(design)));
+            when(eventStore.updateDesign(design)).thenReturn(Single.just(Optional.of(design)));
+            when(updateEmitter.send(any())).thenReturn(Single.just(null));
+            when(renderEmitter.getTopicName()).thenReturn("render");
+            when(renderEmitter.send(any(), any())).thenReturn(Single.just(null));
+
+            final var insertController = new DesignUpdateController.DesignInsertRequestedController(eventStore, insertInputMapper, updateOutputMapper, mockedOutputMapper, updateEmitter, renderEmitter);
+
+            assertThatThrownBy(() -> insertController.onNext(inputMessage).toCompletable().await()).isEqualTo(exception);
+
+            verify(mockedOutputMapper).transform(any(TileRenderRequested.class));
+            verifyNoMoreInteractions(mockedOutputMapper);
+
+            verify(eventStore).appendMessage(inputMessage);
+            verify(eventStore).projectDesign(design.getDesignId(), inputMessage.getToken());
+            verify(eventStore).updateDesign(design);
+            verifyNoMoreInteractions(eventStore);
+
+            verify(updateEmitter).send(assertArg(message -> {
+                assertThat(message.getKey()).isEqualTo(expectedOutputMessage.getKey());
+                assertThat(message.getValue().getUuid()).isNotNull();
+                assertThat(message.getValue().getType()).isEqualTo(expectedOutputMessage.getValue().getType());
+                assertThat(message.getValue().getData()).isEqualTo(expectedOutputMessage.getValue().getData());
+                assertThat(message.getValue().getSource()).isEqualTo(expectedOutputMessage.getValue().getSource());
+            }));
+            verifyNoMoreInteractions(updateEmitter);
+
+            verifyNoInteractions(renderEmitter);
+        }
+
+        @Test
+        void shouldReturnErrorWhenUpdateEmitterFails() {
+            final RuntimeException exception = new RuntimeException();
+            final MessageEmitter mockedEmitter = mock();
+            when(mockedEmitter.send(any(OutputMessage.class))).thenReturn(Single.error(exception));
+
+            final var design = aDesign(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1, REVISION_1, "CREATED", LEVELS_DRAFT, TilesBitmap.empty(), dateTime.minusHours(2), dateTime.minusMinutes(3));
+            final var inputMessage = DesignInsertRequestedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), REVISION_1, dateTime.minusMinutes(3), aDesignInsertRequested(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1));
+
+            when(eventStore.appendMessage(inputMessage)).thenReturn(Single.just(null));
+            when(eventStore.projectDesign(design.getDesignId(), inputMessage.getToken())).thenReturn(Single.just(Optional.of(design)));
+            when(eventStore.updateDesign(design)).thenReturn(Single.just(Optional.of(design)));
+            when(renderEmitter.getTopicName()).thenReturn("render");
+            when(renderEmitter.send(any(), any())).thenReturn(Single.just(null));
+
+            final var insertController = new DesignUpdateController.DesignInsertRequestedController(eventStore, insertInputMapper, updateOutputMapper, renderOutputMapper, mockedEmitter, renderEmitter);
+
+            assertThatThrownBy(() -> insertController.onNext(inputMessage).toCompletable().await()).isEqualTo(exception);
+
+            verify(eventStore).appendMessage(inputMessage);
+            verify(eventStore).projectDesign(design.getDesignId(), inputMessage.getToken());
+            verify(eventStore).updateDesign(design);
+            verifyNoMoreInteractions(eventStore);
+
+            verifyNoInteractions(renderEmitter);
+
+            verify(mockedEmitter).send(any(OutputMessage.class));
+            verifyNoMoreInteractions(mockedEmitter);
+        }
+
+        @Test
+        void shouldReturnErrorWhenRenderEmitterFails() {
+            final RuntimeException exception = new RuntimeException();
+            final MessageEmitter mockedEmitter = mock();
+            when(mockedEmitter.send(any(OutputMessage.class), anyString())).thenReturn(Single.error(exception));
+
+            final var design = aDesign(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1, REVISION_1, "CREATED", LEVELS_DRAFT, TilesBitmap.empty(), dateTime.minusHours(2), dateTime.minusMinutes(3));
+            final var inputMessage = DesignInsertRequestedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), REVISION_1, dateTime.minusMinutes(3), aDesignInsertRequested(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1));
+            final var expectedOutputMessage = DesignAggregateUpdatedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aDesignAggregateUpdated(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, REVISION_1, DATA_1, LEVELS_DRAFT, TilesBitmap.empty(), false, "CREATED", dateTime.minusHours(2), dateTime.minusMinutes(3)));
+
+            when(eventStore.appendMessage(inputMessage)).thenReturn(Single.just(null));
+            when(eventStore.projectDesign(design.getDesignId(), inputMessage.getToken())).thenReturn(Single.just(Optional.of(design)));
+            when(eventStore.updateDesign(design)).thenReturn(Single.just(Optional.of(design)));
+            when(updateEmitter.send(any())).thenReturn(Single.just(null));
+
+            final var insertController = new DesignUpdateController.DesignInsertRequestedController(eventStore, insertInputMapper, updateOutputMapper, renderOutputMapper, updateEmitter, mockedEmitter);
+
+            assertThatThrownBy(() -> insertController.onNext(inputMessage).toCompletable().await()).isEqualTo(exception);
+
+            verify(eventStore).appendMessage(inputMessage);
+            verify(eventStore).projectDesign(design.getDesignId(), inputMessage.getToken());
+            verify(eventStore).updateDesign(design);
+            verifyNoMoreInteractions(eventStore);
+
+            verify(updateEmitter).send(assertArg(message -> {
+                assertThat(message.getKey()).isEqualTo(expectedOutputMessage.getKey());
+                assertThat(message.getValue().getUuid()).isNotNull();
+                assertThat(message.getValue().getType()).isEqualTo(expectedOutputMessage.getValue().getType());
+                assertThat(message.getValue().getData()).isEqualTo(expectedOutputMessage.getValue().getData());
+                assertThat(message.getValue().getSource()).isEqualTo(expectedOutputMessage.getValue().getSource());
+            }));
+            verifyNoMoreInteractions(updateEmitter);
+
+            verify(mockedEmitter).getTopicName();
+            verify(mockedEmitter).send(any(OutputMessage.class), anyString());
+            verifyNoMoreInteractions(mockedEmitter);
+        }
+
+        @Test
+        void shouldReturnErrorWhenEventStoreCannotAppendMessage() {
+            final RuntimeException exception = new RuntimeException();
+            when(eventStore.appendMessage(any())).thenReturn(Single.error(exception));
+
+            final var inputMessage = DesignInsertRequestedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), REVISION_1, dateTime.minusMinutes(3), aDesignInsertRequested(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1));
+
+            final var insertController = new DesignUpdateController.DesignInsertRequestedController(eventStore, insertInputMapper, updateOutputMapper, renderOutputMapper, updateEmitter, renderEmitter);
+
+            assertThatThrownBy(() -> insertController.onNext(inputMessage).toCompletable().await()).isEqualTo(exception);
+
+            verify(eventStore).appendMessage(inputMessage);
+            verifyNoMoreInteractions(eventStore);
+
+            verifyNoInteractions(updateEmitter);
+            verifyNoInteractions(renderEmitter);
+        }
+
+        @Test
+        void shouldReturnErrorWhenEventStoreCannotProjectDesign() {
+            final var design = aDesign(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1, REVISION_1, "CREATED", LEVELS_DRAFT, TilesBitmap.empty(), dateTime.minusHours(2), dateTime.minusMinutes(3));
+            final var inputMessage = DesignInsertRequestedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), REVISION_1, dateTime.minusMinutes(3), aDesignInsertRequested(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1));
+
+            final RuntimeException exception = new RuntimeException();
+            when(eventStore.appendMessage(inputMessage)).thenReturn(Single.just(null));
+            when(eventStore.projectDesign(design.getDesignId(), inputMessage.getToken())).thenReturn(Single.error(exception));
+
+            final var insertController = new DesignUpdateController.DesignInsertRequestedController(eventStore, insertInputMapper, updateOutputMapper, renderOutputMapper, updateEmitter, renderEmitter);
+
+            assertThatThrownBy(() -> insertController.onNext(inputMessage).toCompletable().await()).isEqualTo(exception);
+
+            verify(eventStore).appendMessage(inputMessage);
+            verify(eventStore).projectDesign(design.getDesignId(), inputMessage.getToken());
+            verifyNoMoreInteractions(eventStore);
+
+            verifyNoInteractions(updateEmitter);
+            verifyNoInteractions(renderEmitter);
+        }
+
+        @Test
+        void shouldReturnErrorWhenEventStoreCannotUpdateDesign() {
+            final var design = aDesign(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1, REVISION_1, "CREATED", LEVELS_DRAFT, TilesBitmap.empty(), dateTime.minusHours(2), dateTime.minusMinutes(3));
+            final var inputMessage = DesignInsertRequestedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), REVISION_1, dateTime.minusMinutes(3), aDesignInsertRequested(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1));
+
+            final RuntimeException exception = new RuntimeException();
+            when(eventStore.appendMessage(inputMessage)).thenReturn(Single.just(null));
+            when(eventStore.projectDesign(design.getDesignId(), inputMessage.getToken())).thenReturn(Single.just(Optional.of(design)));
+            when(eventStore.updateDesign(design)).thenReturn(Single.error(exception));
+
+            final var insertController = new DesignUpdateController.DesignInsertRequestedController(eventStore, insertInputMapper, updateOutputMapper, renderOutputMapper, updateEmitter, renderEmitter);
+
+            assertThatThrownBy(() -> insertController.onNext(inputMessage).toCompletable().await()).isEqualTo(exception);
+
+            verify(eventStore).appendMessage(inputMessage);
+            verify(eventStore).projectDesign(design.getDesignId(), inputMessage.getToken());
+            verify(eventStore).updateDesign(design);
+            verifyNoMoreInteractions(eventStore);
+
+            verifyNoInteractions(updateEmitter);
+            verifyNoInteractions(renderEmitter);
         }
     }
 
@@ -216,6 +442,230 @@ class DesignUpdateControllerTest {
             }), eq("render-requested-0"));
             verifyNoMoreInteractions(renderEmitter);
         }
+
+        @Test
+        void shouldReturnErrorWhenInputMapperFails() {
+            final RuntimeException exception = new RuntimeException();
+            final Mapper<InputMessage, DesignUpdateRequested> mockedInputMapper = mock();
+            when(mockedInputMapper.transform(any(InputMessage.class))).thenThrow(exception);
+
+            final var inputMessage = DesignUpdateRequestedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), REVISION_2, dateTime.minusMinutes(3), aDesignUpdateRequested(DESIGN_ID_1, COMMAND_ID_2, USER_ID_1, DATA_2, false));
+
+            when(eventStore.appendMessage(inputMessage)).thenReturn(Single.just(null));
+
+            final var updateController = new DesignUpdateController.DesignUpdateRequestedController(eventStore, mockedInputMapper, updateOutputMapper, renderOutputMapper, updateEmitter, renderEmitter);
+
+            assertThatThrownBy(() -> updateController.onNext(inputMessage).toCompletable().await()).isEqualTo(exception);
+
+            verify(mockedInputMapper).transform(any(InputMessage.class));
+            verifyNoMoreInteractions(mockedInputMapper);
+
+            verify(eventStore).appendMessage(inputMessage);
+            verifyNoMoreInteractions(eventStore);
+
+            verifyNoInteractions(updateEmitter);
+            verifyNoInteractions(renderEmitter);
+        }
+
+        @Test
+        void shouldReturnErrorWhenUpdateOutputMapperFails() {
+            final RuntimeException exception = new RuntimeException();
+            final MessageMapper<DesignAggregateUpdated, OutputMessage> mockedOutputMapper = mock();
+            when(mockedOutputMapper.transform(any(DesignAggregateUpdated.class))).thenThrow(exception);
+
+            final var design = aDesign(DESIGN_ID_1, COMMAND_ID_2, USER_ID_1, DATA_2, REVISION_2, "UPDATED", LEVELS_DRAFT, TilesBitmap.empty(), dateTime.minusHours(2), dateTime.minusMinutes(3));
+            final var inputMessage = DesignUpdateRequestedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), REVISION_2, dateTime.minusMinutes(3), aDesignUpdateRequested(DESIGN_ID_1, COMMAND_ID_2, USER_ID_1, DATA_2, false));
+
+            when(eventStore.appendMessage(inputMessage)).thenReturn(Single.just(null));
+            when(eventStore.projectDesign(design.getDesignId(), inputMessage.getToken())).thenReturn(Single.just(Optional.of(design)));
+            when(eventStore.updateDesign(design)).thenReturn(Single.just(Optional.of(design)));
+
+            final var updateController = new DesignUpdateController.DesignUpdateRequestedController(eventStore, updateInputMapper, mockedOutputMapper, renderOutputMapper, updateEmitter, renderEmitter);
+
+            assertThatThrownBy(() -> updateController.onNext(inputMessage).toCompletable().await()).isEqualTo(exception);
+
+            verify(mockedOutputMapper).transform(any(DesignAggregateUpdated.class));
+            verifyNoMoreInteractions(mockedOutputMapper);
+
+            verify(eventStore).appendMessage(inputMessage);
+            verify(eventStore).projectDesign(design.getDesignId(), inputMessage.getToken());
+            verify(eventStore).updateDesign(design);
+            verifyNoMoreInteractions(eventStore);
+
+            verifyNoInteractions(updateEmitter);
+            verifyNoInteractions(renderEmitter);
+        }
+
+        @Test
+        void shouldReturnErrorWhenRenderOutputMapperFails() {
+            final RuntimeException exception = new RuntimeException();
+            final MessageMapper<TileRenderRequested, OutputMessage> mockedOutputMapper = mock();
+            when(mockedOutputMapper.transform(any(TileRenderRequested.class))).thenThrow(exception);
+
+            final var design = aDesign(DESIGN_ID_1, COMMAND_ID_2, USER_ID_1, DATA_2, REVISION_2, "UPDATED", LEVELS_DRAFT, TilesBitmap.empty(), dateTime.minusHours(2), dateTime.minusMinutes(3));
+            final var inputMessage = DesignUpdateRequestedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), REVISION_2, dateTime.minusMinutes(3), aDesignUpdateRequested(DESIGN_ID_1, COMMAND_ID_2, USER_ID_1, DATA_2, false));
+            final var expectedOutputMessage = DesignAggregateUpdatedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aDesignAggregateUpdated(DESIGN_ID_1, COMMAND_ID_2, USER_ID_1, REVISION_2, DATA_2, LEVELS_DRAFT, TilesBitmap.empty(), false, "UPDATED", dateTime.minusHours(2), dateTime.minusMinutes(3)));
+
+            when(eventStore.appendMessage(inputMessage)).thenReturn(Single.just(null));
+            when(eventStore.projectDesign(design.getDesignId(), inputMessage.getToken())).thenReturn(Single.just(Optional.of(design)));
+            when(eventStore.updateDesign(design)).thenReturn(Single.just(Optional.of(design)));
+            when(updateEmitter.send(any())).thenReturn(Single.just(null));
+            when(renderEmitter.getTopicName()).thenReturn("render");
+            when(renderEmitter.send(any(), any())).thenReturn(Single.just(null));
+
+            final var updateController = new DesignUpdateController.DesignUpdateRequestedController(eventStore, updateInputMapper, updateOutputMapper, mockedOutputMapper, updateEmitter, renderEmitter);
+
+            assertThatThrownBy(() -> updateController.onNext(inputMessage).toCompletable().await()).isEqualTo(exception);
+
+            verify(mockedOutputMapper).transform(any(TileRenderRequested.class));
+            verifyNoMoreInteractions(mockedOutputMapper);
+
+            verify(eventStore).appendMessage(inputMessage);
+            verify(eventStore).projectDesign(design.getDesignId(), inputMessage.getToken());
+            verify(eventStore).updateDesign(design);
+            verifyNoMoreInteractions(eventStore);
+
+            verify(updateEmitter).send(assertArg(message -> {
+                assertThat(message.getKey()).isEqualTo(expectedOutputMessage.getKey());
+                assertThat(message.getValue().getUuid()).isNotNull();
+                assertThat(message.getValue().getType()).isEqualTo(expectedOutputMessage.getValue().getType());
+                assertThat(message.getValue().getData()).isEqualTo(expectedOutputMessage.getValue().getData());
+                assertThat(message.getValue().getSource()).isEqualTo(expectedOutputMessage.getValue().getSource());
+            }));
+            verifyNoMoreInteractions(updateEmitter);
+
+            verifyNoInteractions(renderEmitter);
+        }
+
+        @Test
+        void shouldReturnErrorWhenUpdateEmitterFails() {
+            final RuntimeException exception = new RuntimeException();
+            final MessageEmitter mockedEmitter = mock();
+            when(mockedEmitter.send(any(OutputMessage.class))).thenReturn(Single.error(exception));
+
+            final var design = aDesign(DESIGN_ID_1, COMMAND_ID_2, USER_ID_1, DATA_2, REVISION_2, "UPDATED", LEVELS_DRAFT, TilesBitmap.empty(), dateTime.minusHours(2), dateTime.minusMinutes(3));
+            final var inputMessage = DesignUpdateRequestedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), REVISION_2, dateTime.minusMinutes(3), aDesignUpdateRequested(DESIGN_ID_1, COMMAND_ID_2, USER_ID_1, DATA_2, false));
+
+            when(eventStore.appendMessage(inputMessage)).thenReturn(Single.just(null));
+            when(eventStore.projectDesign(design.getDesignId(), inputMessage.getToken())).thenReturn(Single.just(Optional.of(design)));
+            when(eventStore.updateDesign(design)).thenReturn(Single.just(Optional.of(design)));
+            when(renderEmitter.getTopicName()).thenReturn("render");
+            when(renderEmitter.send(any(), any())).thenReturn(Single.just(null));
+
+            final var updateController = new DesignUpdateController.DesignUpdateRequestedController(eventStore, updateInputMapper, updateOutputMapper, renderOutputMapper, mockedEmitter, renderEmitter);
+
+            assertThatThrownBy(() -> updateController.onNext(inputMessage).toCompletable().await()).isEqualTo(exception);
+
+            verify(eventStore).appendMessage(inputMessage);
+            verify(eventStore).projectDesign(design.getDesignId(), inputMessage.getToken());
+            verify(eventStore).updateDesign(design);
+            verifyNoMoreInteractions(eventStore);
+
+            verifyNoInteractions(renderEmitter);
+
+            verify(mockedEmitter).send(any(OutputMessage.class));
+            verifyNoMoreInteractions(mockedEmitter);
+        }
+
+        @Test
+        void shouldReturnErrorWhenRenderEmitterFails() {
+            final RuntimeException exception = new RuntimeException();
+            final MessageEmitter mockedEmitter = mock();
+            when(mockedEmitter.send(any(OutputMessage.class), anyString())).thenReturn(Single.error(exception));
+
+            final var design = aDesign(DESIGN_ID_1, COMMAND_ID_2, USER_ID_1, DATA_2, REVISION_2, "UPDATED", LEVELS_DRAFT, TilesBitmap.empty(), dateTime.minusHours(2), dateTime.minusMinutes(3));
+            final var inputMessage = DesignUpdateRequestedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), REVISION_2, dateTime.minusMinutes(3), aDesignUpdateRequested(DESIGN_ID_1, COMMAND_ID_2, USER_ID_1, DATA_2, false));
+            final var expectedOutputMessage = DesignAggregateUpdatedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aDesignAggregateUpdated(DESIGN_ID_1, COMMAND_ID_2, USER_ID_1, REVISION_2, DATA_2, LEVELS_DRAFT, TilesBitmap.empty(), false, "UPDATED", dateTime.minusHours(2), dateTime.minusMinutes(3)));
+
+            when(eventStore.appendMessage(inputMessage)).thenReturn(Single.just(null));
+            when(eventStore.projectDesign(design.getDesignId(), inputMessage.getToken())).thenReturn(Single.just(Optional.of(design)));
+            when(eventStore.updateDesign(design)).thenReturn(Single.just(Optional.of(design)));
+            when(updateEmitter.send(any())).thenReturn(Single.just(null));
+
+            final var updateController = new DesignUpdateController.DesignUpdateRequestedController(eventStore, updateInputMapper, updateOutputMapper, renderOutputMapper, updateEmitter, mockedEmitter);
+
+            assertThatThrownBy(() -> updateController.onNext(inputMessage).toCompletable().await()).isEqualTo(exception);
+
+            verify(eventStore).appendMessage(inputMessage);
+            verify(eventStore).projectDesign(design.getDesignId(), inputMessage.getToken());
+            verify(eventStore).updateDesign(design);
+            verifyNoMoreInteractions(eventStore);
+
+            verify(updateEmitter).send(assertArg(message -> {
+                assertThat(message.getKey()).isEqualTo(expectedOutputMessage.getKey());
+                assertThat(message.getValue().getUuid()).isNotNull();
+                assertThat(message.getValue().getType()).isEqualTo(expectedOutputMessage.getValue().getType());
+                assertThat(message.getValue().getData()).isEqualTo(expectedOutputMessage.getValue().getData());
+                assertThat(message.getValue().getSource()).isEqualTo(expectedOutputMessage.getValue().getSource());
+            }));
+            verifyNoMoreInteractions(updateEmitter);
+
+            verify(mockedEmitter).getTopicName();
+            verify(mockedEmitter).send(any(OutputMessage.class), anyString());
+            verifyNoMoreInteractions(mockedEmitter);
+        }
+
+        @Test
+        void shouldReturnErrorWhenEventStoreCannotAppendMessage() {
+            final RuntimeException exception = new RuntimeException();
+            when(eventStore.appendMessage(any())).thenReturn(Single.error(exception));
+
+            final var inputMessage = DesignUpdateRequestedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), REVISION_2, dateTime.minusMinutes(3), aDesignUpdateRequested(DESIGN_ID_1, COMMAND_ID_2, USER_ID_1, DATA_2, false));
+
+            final var updateController = new DesignUpdateController.DesignUpdateRequestedController(eventStore, updateInputMapper, updateOutputMapper, renderOutputMapper, updateEmitter, renderEmitter);
+
+            assertThatThrownBy(() -> updateController.onNext(inputMessage).toCompletable().await()).isEqualTo(exception);
+
+            verify(eventStore).appendMessage(inputMessage);
+            verifyNoMoreInteractions(eventStore);
+
+            verifyNoInteractions(updateEmitter);
+            verifyNoInteractions(renderEmitter);
+        }
+
+        @Test
+        void shouldReturnErrorWhenEventStoreCannotProjectDesign() {
+            final var design = aDesign(DESIGN_ID_1, COMMAND_ID_2, USER_ID_1, DATA_2, REVISION_2, "UPDATED", LEVELS_DRAFT, TilesBitmap.empty(), dateTime.minusHours(2), dateTime.minusMinutes(3));
+            final var inputMessage = DesignUpdateRequestedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), REVISION_2, dateTime.minusMinutes(3), aDesignUpdateRequested(DESIGN_ID_1, COMMAND_ID_2, USER_ID_1, DATA_2, false));
+
+            final RuntimeException exception = new RuntimeException();
+            when(eventStore.appendMessage(inputMessage)).thenReturn(Single.just(null));
+            when(eventStore.projectDesign(design.getDesignId(), inputMessage.getToken())).thenReturn(Single.error(exception));
+
+            final var updateController = new DesignUpdateController.DesignUpdateRequestedController(eventStore, updateInputMapper, updateOutputMapper, renderOutputMapper, updateEmitter, renderEmitter);
+
+            assertThatThrownBy(() -> updateController.onNext(inputMessage).toCompletable().await()).isEqualTo(exception);
+
+            verify(eventStore).appendMessage(inputMessage);
+            verify(eventStore).projectDesign(design.getDesignId(), inputMessage.getToken());
+            verifyNoMoreInteractions(eventStore);
+
+            verifyNoInteractions(updateEmitter);
+            verifyNoInteractions(renderEmitter);
+        }
+
+        @Test
+        void shouldReturnErrorWhenEventStoreCannotUpdateDesign() {
+            final var design = aDesign(DESIGN_ID_1, COMMAND_ID_2, USER_ID_1, DATA_2, REVISION_2, "UPDATED", LEVELS_DRAFT, TilesBitmap.empty(), dateTime.minusHours(2), dateTime.minusMinutes(3));
+            final var inputMessage = DesignUpdateRequestedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), REVISION_2, dateTime.minusMinutes(3), aDesignUpdateRequested(DESIGN_ID_1, COMMAND_ID_2, USER_ID_1, DATA_2, false));
+
+            final RuntimeException exception = new RuntimeException();
+            when(eventStore.appendMessage(inputMessage)).thenReturn(Single.just(null));
+            when(eventStore.projectDesign(design.getDesignId(), inputMessage.getToken())).thenReturn(Single.just(Optional.of(design)));
+            when(eventStore.updateDesign(design)).thenReturn(Single.error(exception));
+
+            final var updateController = new DesignUpdateController.DesignUpdateRequestedController(eventStore, updateInputMapper, updateOutputMapper, renderOutputMapper, updateEmitter, renderEmitter);
+
+            assertThatThrownBy(() -> updateController.onNext(inputMessage).toCompletable().await()).isEqualTo(exception);
+
+            verify(eventStore).appendMessage(inputMessage);
+            verify(eventStore).projectDesign(design.getDesignId(), inputMessage.getToken());
+            verify(eventStore).updateDesign(design);
+            verifyNoMoreInteractions(eventStore);
+
+            verifyNoInteractions(updateEmitter);
+            verifyNoInteractions(renderEmitter);
+        }
     }
 
     @Nested
@@ -249,6 +699,151 @@ class DesignUpdateControllerTest {
             }));
             verifyNoMoreInteractions(updateEmitter);
 
+            verifyNoInteractions(renderEmitter);
+        }
+
+        @Test
+        void shouldReturnErrorWhenInputMapperFails() {
+            final RuntimeException exception = new RuntimeException();
+            final Mapper<InputMessage, DesignDeleteRequested> mockedInputMapper = mock();
+            when(mockedInputMapper.transform(any(InputMessage.class))).thenThrow(exception);
+
+            final var inputMessage = DesignDeleteRequestedFactory.createInputMessage(DESIGN_ID_2, aMessageId(), REVISION_2, dateTime.minusMinutes(1), aDesignDeleteRequested(DESIGN_ID_2, COMMAND_ID_3, USER_ID_2));
+
+            when(eventStore.appendMessage(inputMessage)).thenReturn(Single.just(null));
+
+            final var deleteController = new DesignUpdateController.DesignDeleteRequestedController(eventStore, mockedInputMapper, updateOutputMapper, renderOutputMapper, updateEmitter, renderEmitter);
+
+            assertThatThrownBy(() -> deleteController.onNext(inputMessage).toCompletable().await()).isEqualTo(exception);
+
+            verify(mockedInputMapper).transform(any(InputMessage.class));
+            verifyNoMoreInteractions(mockedInputMapper);
+
+            verify(eventStore).appendMessage(inputMessage);
+            verifyNoMoreInteractions(eventStore);
+
+            verifyNoInteractions(updateEmitter);
+            verifyNoInteractions(renderEmitter);
+        }
+
+        @Test
+        void shouldReturnErrorWhenDeleteOutputMapperFails() {
+            final RuntimeException exception = new RuntimeException();
+            final MessageMapper<DesignAggregateUpdated, OutputMessage> mockedOutputMapper = mock();
+            when(mockedOutputMapper.transform(any(DesignAggregateUpdated.class))).thenThrow(exception);
+
+            final var design = aDesign(DESIGN_ID_2, COMMAND_ID_3, USER_ID_2, DATA_2, REVISION_2, "DELETED", LEVELS_DRAFT, TilesBitmap.empty(), dateTime.minusHours(2), dateTime.minusMinutes(3));
+            final var inputMessage = DesignDeleteRequestedFactory.createInputMessage(DESIGN_ID_2, aMessageId(), REVISION_2, dateTime.minusMinutes(1), aDesignDeleteRequested(DESIGN_ID_2, COMMAND_ID_3, USER_ID_2));
+
+            when(eventStore.appendMessage(inputMessage)).thenReturn(Single.just(null));
+            when(eventStore.projectDesign(design.getDesignId(), inputMessage.getToken())).thenReturn(Single.just(Optional.of(design)));
+            when(eventStore.updateDesign(design)).thenReturn(Single.just(Optional.of(design)));
+
+            final var deleteController = new DesignUpdateController.DesignDeleteRequestedController(eventStore, deleteInputMapper, mockedOutputMapper, renderOutputMapper, updateEmitter, renderEmitter);
+
+            assertThatThrownBy(() -> deleteController.onNext(inputMessage).toCompletable().await()).isEqualTo(exception);
+
+            verify(mockedOutputMapper).transform(any(DesignAggregateUpdated.class));
+            verifyNoMoreInteractions(mockedOutputMapper);
+
+            verify(eventStore).appendMessage(inputMessage);
+            verify(eventStore).projectDesign(design.getDesignId(), inputMessage.getToken());
+            verify(eventStore).updateDesign(design);
+            verifyNoMoreInteractions(eventStore);
+
+            verifyNoInteractions(updateEmitter);
+            verifyNoInteractions(renderEmitter);
+        }
+
+        @Test
+        void shouldReturnErrorWhenDeleteEmitterFails() {
+            final RuntimeException exception = new RuntimeException();
+            final MessageEmitter mockedEmitter = mock();
+            when(mockedEmitter.send(any(OutputMessage.class))).thenReturn(Single.error(exception));
+
+            final var design = aDesign(DESIGN_ID_2, COMMAND_ID_3, USER_ID_2, DATA_2, REVISION_2, "DELETED", LEVELS_DRAFT, TilesBitmap.empty(), dateTime.minusHours(2), dateTime.minusMinutes(3));
+            final var inputMessage = DesignDeleteRequestedFactory.createInputMessage(DESIGN_ID_2, aMessageId(), REVISION_2, dateTime.minusMinutes(1), aDesignDeleteRequested(DESIGN_ID_2, COMMAND_ID_3, USER_ID_2));
+
+            when(eventStore.appendMessage(inputMessage)).thenReturn(Single.just(null));
+            when(eventStore.projectDesign(design.getDesignId(), inputMessage.getToken())).thenReturn(Single.just(Optional.of(design)));
+            when(eventStore.updateDesign(design)).thenReturn(Single.just(Optional.of(design)));
+            when(renderEmitter.getTopicName()).thenReturn("render");
+            when(renderEmitter.send(any(), any())).thenReturn(Single.just(null));
+
+            final var deleteController = new DesignUpdateController.DesignDeleteRequestedController(eventStore, deleteInputMapper, updateOutputMapper, renderOutputMapper, mockedEmitter, renderEmitter);
+
+            assertThatThrownBy(() -> deleteController.onNext(inputMessage).toCompletable().await()).isEqualTo(exception);
+
+            verify(eventStore).appendMessage(inputMessage);
+            verify(eventStore).projectDesign(design.getDesignId(), inputMessage.getToken());
+            verify(eventStore).updateDesign(design);
+            verifyNoMoreInteractions(eventStore);
+
+            verifyNoInteractions(renderEmitter);
+
+            verify(mockedEmitter).send(any(OutputMessage.class));
+            verifyNoMoreInteractions(mockedEmitter);
+        }
+
+        @Test
+        void shouldReturnErrorWhenEventStoreCannotAppendMessage() {
+            final RuntimeException exception = new RuntimeException();
+            when(eventStore.appendMessage(any())).thenReturn(Single.error(exception));
+
+            final var inputMessage = DesignDeleteRequestedFactory.createInputMessage(DESIGN_ID_2, aMessageId(), REVISION_2, dateTime.minusMinutes(1), aDesignDeleteRequested(DESIGN_ID_2, COMMAND_ID_3, USER_ID_2));
+
+            final var deleteController = new DesignUpdateController.DesignDeleteRequestedController(eventStore, deleteInputMapper, updateOutputMapper, renderOutputMapper, updateEmitter, renderEmitter);
+
+            assertThatThrownBy(() -> deleteController.onNext(inputMessage).toCompletable().await()).isEqualTo(exception);
+
+            verify(eventStore).appendMessage(inputMessage);
+            verifyNoMoreInteractions(eventStore);
+
+            verifyNoInteractions(updateEmitter);
+            verifyNoInteractions(renderEmitter);
+        }
+
+        @Test
+        void shouldReturnErrorWhenEventStoreCannotProjectDesign() {
+            final var design = aDesign(DESIGN_ID_2, COMMAND_ID_3, USER_ID_2, DATA_2, REVISION_2, "DELETED", LEVELS_DRAFT, TilesBitmap.empty(), dateTime.minusHours(2), dateTime.minusMinutes(3));
+            final var inputMessage = DesignDeleteRequestedFactory.createInputMessage(DESIGN_ID_2, aMessageId(), REVISION_2, dateTime.minusMinutes(1), aDesignDeleteRequested(DESIGN_ID_2, COMMAND_ID_3, USER_ID_2));
+
+            final RuntimeException exception = new RuntimeException();
+            when(eventStore.appendMessage(inputMessage)).thenReturn(Single.just(null));
+            when(eventStore.projectDesign(design.getDesignId(), inputMessage.getToken())).thenReturn(Single.error(exception));
+
+            final var deleteController = new DesignUpdateController.DesignDeleteRequestedController(eventStore, deleteInputMapper, updateOutputMapper, renderOutputMapper, updateEmitter, renderEmitter);
+
+            assertThatThrownBy(() -> deleteController.onNext(inputMessage).toCompletable().await()).isEqualTo(exception);
+
+            verify(eventStore).appendMessage(inputMessage);
+            verify(eventStore).projectDesign(design.getDesignId(), inputMessage.getToken());
+            verifyNoMoreInteractions(eventStore);
+
+            verifyNoInteractions(updateEmitter);
+            verifyNoInteractions(renderEmitter);
+        }
+
+        @Test
+        void shouldReturnErrorWhenEventStoreCannotDeleteDesign() {
+            final var design = aDesign(DESIGN_ID_2, COMMAND_ID_3, USER_ID_2, DATA_2, REVISION_2, "DELETED", LEVELS_DRAFT, TilesBitmap.empty(), dateTime.minusHours(2), dateTime.minusMinutes(3));
+            final var inputMessage = DesignDeleteRequestedFactory.createInputMessage(DESIGN_ID_2, aMessageId(), REVISION_2, dateTime.minusMinutes(1), aDesignDeleteRequested(DESIGN_ID_2, COMMAND_ID_3, USER_ID_2));
+
+            final RuntimeException exception = new RuntimeException();
+            when(eventStore.appendMessage(inputMessage)).thenReturn(Single.just(null));
+            when(eventStore.projectDesign(design.getDesignId(), inputMessage.getToken())).thenReturn(Single.just(Optional.of(design)));
+            when(eventStore.updateDesign(design)).thenReturn(Single.error(exception));
+
+            final var deleteController = new DesignUpdateController.DesignDeleteRequestedController(eventStore, deleteInputMapper, updateOutputMapper, renderOutputMapper, updateEmitter, renderEmitter);
+
+            assertThatThrownBy(() -> deleteController.onNext(inputMessage).toCompletable().await()).isEqualTo(exception);
+
+            verify(eventStore).appendMessage(inputMessage);
+            verify(eventStore).projectDesign(design.getDesignId(), inputMessage.getToken());
+            verify(eventStore).updateDesign(design);
+            verifyNoMoreInteractions(eventStore);
+
+            verifyNoInteractions(updateEmitter);
             verifyNoInteractions(renderEmitter);
         }
     }

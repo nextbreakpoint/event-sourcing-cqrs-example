@@ -68,23 +68,22 @@ class TilesRenderedControllerTest {
 
     private final TilesRenderedController controller = new TilesRenderedController(eventStore, inputMapper, outputMapper, emitter);
 
-    private static final TilesBitmap bitmap0 = TilesBitmap.empty();
     private static final TilesBitmap bitmap1 = TilesBitmap.empty().putTile(0, 0, 0);
     private static final TilesBitmap bitmap2 = TilesBitmap.empty().putTile(0, 0, 0).putTile(1, 1, 0);
     private static final TilesBitmap bitmap3 = TilesBitmap.empty().putTile(0, 0, 0).putTile(1, 1, 0).putTile(2, 2, 1);
 
     @ParameterizedTest
     @MethodSource("someMessages")
-    void shouldPublishAMessageToInformThatTheDesignAggregateHasChanged(Design design, String revision, InputMessage inputMessage, OutputMessage expectedOutputMessage) {
+    void shouldPublishAMessageToInformThatTheDesignAggregateHasChanged(Design design, InputMessage inputMessage, OutputMessage expectedOutputMessage) {
         when(eventStore.appendMessage(inputMessage)).thenReturn(Single.just(null));
-        when(eventStore.projectDesign(design.getDesignId(), revision)).thenReturn(Single.just(Optional.of(design)));
+        when(eventStore.projectDesign(design.getDesignId(), inputMessage.getToken())).thenReturn(Single.just(Optional.of(design)));
         when(eventStore.updateDesign(design)).thenReturn(Single.just(Optional.of(design)));
         when(emitter.send(any())).thenReturn(Single.just(null));
 
         controller.onNext(inputMessage).toCompletable().doOnError(Assertions::fail).await();
 
         verify(eventStore).appendMessage(inputMessage);
-        verify(eventStore).projectDesign(design.getDesignId(), revision);
+        verify(eventStore).projectDesign(design.getDesignId(), inputMessage.getToken());
         verify(eventStore).updateDesign(design);
         verifyNoMoreInteractions(eventStore);
 
@@ -243,30 +242,27 @@ class TilesRenderedControllerTest {
         return Stream.of(
                 Arguments.of(
                         aDesign(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1, REVISION_1, "CREATED", LEVELS_DRAFT, bitmap1, dateTime.minusHours(2), dateTime.minusMinutes(3)),
-                        REVISION_1,
                         TilesRenderedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), REVISION_1, dateTime.minusMinutes(3), aTilesRendered(DESIGN_ID_1, COMMAND_ID_1, REVISION_1, DATA_1, List.of(
                                 Tile.builder().withLevel(0).withRow(0).withCol(0).build()
                         ))),
-                        DesignAggregateUpdatedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), getDesignAggregateUpdated(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, REVISION_1, DATA_1, LEVELS_DRAFT, bitmap1, false, "CREATED"))
+                        DesignAggregateUpdatedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aDesignAggregateUpdated(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, REVISION_1, DATA_1, LEVELS_DRAFT, bitmap1, false, "CREATED", dateTime.minusHours(2), dateTime.minusMinutes(3)))
                 ),
                 Arguments.of(
                         aDesign(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1, REVISION_2, "UPDATED", LEVELS_DRAFT, bitmap2, dateTime.minusHours(2), dateTime.minusMinutes(3)),
-                        REVISION_2,
                         TilesRenderedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), REVISION_2, dateTime.minusMinutes(3), aTilesRendered(DESIGN_ID_1, COMMAND_ID_1, REVISION_2, DATA_1, List.of(
                                 Tile.builder().withLevel(0).withRow(0).withCol(0).build(),
                                 Tile.builder().withLevel(1).withRow(1).withCol(0).build()
                         ))),
-                        DesignAggregateUpdatedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), getDesignAggregateUpdated(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, REVISION_2, DATA_1, LEVELS_DRAFT, bitmap2, false, "UPDATED"))
+                        DesignAggregateUpdatedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aDesignAggregateUpdated(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, REVISION_2, DATA_1, LEVELS_DRAFT, bitmap2, false, "UPDATED", dateTime.minusHours(2), dateTime.minusMinutes(3)))
                 ),
                 Arguments.of(
-                        aDesign(DESIGN_ID_2, COMMAND_ID_2, USER_ID_2, DATA_2, REVISION_2, "UPDATED", LEVELS_READY, bitmap3, dateTime.minusHours(2), dateTime.minusMinutes(3)),
-                        REVISION_2,
-                        TilesRenderedFactory.createInputMessage(DESIGN_ID_2, aMessageId(), REVISION_2, dateTime.minusMinutes(3), aTilesRendered(DESIGN_ID_2, COMMAND_ID_2, REVISION_2, DATA_2, List.of(
+                        aDesign(DESIGN_ID_2, COMMAND_ID_2, USER_ID_2, DATA_2, REVISION_2, "UPDATED", LEVELS_READY, bitmap3, dateTime.minusHours(3), dateTime.minusMinutes(1)),
+                        TilesRenderedFactory.createInputMessage(DESIGN_ID_2, aMessageId(), REVISION_2, dateTime.minusMinutes(1), aTilesRendered(DESIGN_ID_2, COMMAND_ID_2, REVISION_2, DATA_2, List.of(
                                 Tile.builder().withLevel(0).withRow(0).withCol(0).build(),
                                 Tile.builder().withLevel(1).withRow(1).withCol(0).build(),
                                 Tile.builder().withLevel(2).withRow(2).withCol(1).build()
                         ))),
-                        DesignAggregateUpdatedFactory.createOutputMessage(DESIGN_ID_2, aMessageId(), getDesignAggregateUpdated(DESIGN_ID_2, COMMAND_ID_2, USER_ID_2, REVISION_2, DATA_2, LEVELS_READY, bitmap3, true, "UPDATED"))
+                        DesignAggregateUpdatedFactory.createOutputMessage(DESIGN_ID_2, aMessageId(), aDesignAggregateUpdated(DESIGN_ID_2, COMMAND_ID_2, USER_ID_2, REVISION_2, DATA_2, LEVELS_READY, bitmap3, true, "UPDATED", dateTime.minusHours(3), dateTime.minusMinutes(1)))
                 )
         );
     }
@@ -307,7 +303,7 @@ class TilesRenderedControllerTest {
     }
 
     @NotNull
-    private static DesignAggregateUpdated getDesignAggregateUpdated(UUID designId, UUID commandId, UUID userId, String revision, String data, int levels, TilesBitmap bitmap, boolean published, String status) {
+    private static DesignAggregateUpdated aDesignAggregateUpdated(UUID designId, UUID commandId, UUID userId, String revision, String data, int levels, TilesBitmap bitmap, boolean published, String status, LocalDateTime created, LocalDateTime updated) {
         return DesignAggregateUpdated.builder()
                 .withDesignId(designId)
                 .withCommandId(commandId)
@@ -319,8 +315,8 @@ class TilesRenderedControllerTest {
                 .withBitmap(bitmap.getBitmap())
                 .withPublished(published)
                 .withStatus(status)
-                .withCreated(dateTime.minusHours(2))
-                .withUpdated(dateTime.minusMinutes(3))
+                .withCreated(created)
+                .withUpdated(updated)
                 .build();
     }
 

@@ -159,15 +159,15 @@ class DesignAggregateUpdatedControllerTest {
     private static Stream<Arguments> someMessages() {
         return Stream.of(
                 Arguments.of(
-                        DesignAggregateUpdatedFactory.of(DESIGN_ID_1, aMessageId(), REVISION_0, dateTime.minusMinutes(3), anAggregateUpdated(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1, REVISION_0, "CREATED", false, LEVELS_DRAFT, bitmap0)),
-                        DesignDocumentUpdateRequestedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), aDesignDocumentUpdateRequested(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1, REVISION_0, "CREATED", false, LEVELS_DRAFT, bitmap0))
+                        DesignAggregateUpdatedFactory.of(DESIGN_ID_1, aMessageId(), REVISION_0, dateTime.minusMinutes(3), aDesignAggregateUpdated(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1, REVISION_0, "CREATED", false, LEVELS_DRAFT, bitmap0, dateTime.minusHours(2), dateTime.minusHours(1))),
+                        DesignDocumentUpdateRequestedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), aDesignDocumentUpdateRequested(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1, REVISION_0, "CREATED", false, LEVELS_DRAFT, bitmap0, dateTime.minusHours(2), dateTime.minusHours(1)))
                 ),
                 Arguments.of(
-                        DesignAggregateUpdatedFactory.of(DESIGN_ID_2, aMessageId(), REVISION_1, dateTime.minusMinutes(3), anAggregateUpdated(DESIGN_ID_2, COMMAND_ID_2, USER_ID_2, DATA_2, REVISION_1, "UPDATED", true, LEVELS_READY, bitmap1)),
-                        DesignDocumentUpdateRequestedFactory.createInputMessage(DESIGN_ID_2, aMessageId(), aDesignDocumentUpdateRequested(DESIGN_ID_2, COMMAND_ID_2, USER_ID_2, DATA_2, REVISION_1, "UPDATED", true, LEVELS_READY, bitmap1))
+                        DesignAggregateUpdatedFactory.of(DESIGN_ID_2, aMessageId(), REVISION_1, dateTime.minusMinutes(3), aDesignAggregateUpdated(DESIGN_ID_2, COMMAND_ID_2, USER_ID_2, DATA_2, REVISION_1, "UPDATED", true, LEVELS_READY, bitmap1, dateTime.minusHours(2), dateTime.minusHours(1))),
+                        DesignDocumentUpdateRequestedFactory.createInputMessage(DESIGN_ID_2, aMessageId(), aDesignDocumentUpdateRequested(DESIGN_ID_2, COMMAND_ID_2, USER_ID_2, DATA_2, REVISION_1, "UPDATED", true, LEVELS_READY, bitmap1, dateTime.minusHours(2), dateTime.minusHours(1)))
                 ),
                 Arguments.of(
-                        DesignAggregateUpdatedFactory.of(DESIGN_ID_3, aMessageId(), REVISION_2, dateTime.minusMinutes(3), anAggregateUpdated(DESIGN_ID_3, COMMAND_ID_3, USER_ID_1, DATA_3, REVISION_2, "DELETED", false, LEVELS_DRAFT, bitmap2)),
+                        DesignAggregateUpdatedFactory.of(DESIGN_ID_3, aMessageId(), REVISION_2, dateTime.minusMinutes(1), aDesignAggregateUpdated(DESIGN_ID_3, COMMAND_ID_3, USER_ID_1, DATA_3, REVISION_2, "DELETED", false, LEVELS_DRAFT, bitmap2, dateTime.minusHours(2), dateTime.minusHours(1))),
                         DesignDocumentDeleteRequestedFactory.createOutputMessage(DESIGN_ID_3, aMessageId(), aDesignDocumentDeleteRequested(DESIGN_ID_3, COMMAND_ID_3, REVISION_2))
                 )
         );
@@ -179,7 +179,7 @@ class DesignAggregateUpdatedControllerTest {
     }
 
     @NotNull
-    private static DesignAggregateUpdated anAggregateUpdated(UUID designId, UUID commandId, UUID userId, String data, String revision, String CREATED, boolean published, int levels, TilesBitmap bitmap) {
+    private static DesignAggregateUpdated aDesignAggregateUpdated(UUID designId, UUID commandId, UUID userId, String data, String revision, String CREATED, boolean published, int levels, TilesBitmap bitmap, LocalDateTime created, LocalDateTime updated) {
         return DesignAggregateUpdated.builder()
                 .withDesignId(designId)
                 .withCommandId(commandId)
@@ -191,13 +191,13 @@ class DesignAggregateUpdatedControllerTest {
                 .withPublished(published)
                 .withLevels(levels)
                 .withBitmap(bitmap.getBitmap())
-                .withCreated(dateTime.minusHours(2))
-                .withUpdated(dateTime.minusHours(1))
+                .withCreated(created)
+                .withUpdated(updated)
                 .build();
     }
 
     @NotNull
-    private static DesignDocumentUpdateRequested aDesignDocumentUpdateRequested(UUID designId, UUID commandId, UUID userId, String data, String revision, String CREATED, boolean published, int levels, TilesBitmap bitmap) {
+    private static DesignDocumentUpdateRequested aDesignDocumentUpdateRequested(UUID designId, UUID commandId, UUID userId, String data, String revision, String CREATED, boolean published, int levels, TilesBitmap bitmap, LocalDateTime created, LocalDateTime updated) {
         return DesignDocumentUpdateRequested.builder()
                 .withDesignId(designId)
                 .withCommandId(commandId)
@@ -209,8 +209,8 @@ class DesignAggregateUpdatedControllerTest {
                 .withPublished(published)
                 .withLevels(levels)
                 .withTiles(toTiles(bitmap))
-                .withCreated(dateTime.minusHours(2))
-                .withUpdated(dateTime.minusHours(1))
+                .withCreated(created)
+                .withUpdated(updated)
                 .build();
     }
 
@@ -225,12 +225,12 @@ class DesignAggregateUpdatedControllerTest {
 
     @NotNull
     private InputMessage anUpdateInputMessage() {
-        return DesignAggregateUpdatedFactory.of(DESIGN_ID_1, aMessageId(), REVISION_0, dateTime.minusMinutes(3), anAggregateUpdated(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1, REVISION_0, "CREATED", false, LEVELS_DRAFT, bitmap0));
+        return DesignAggregateUpdatedFactory.of(DESIGN_ID_1, aMessageId(), REVISION_0, dateTime.minusMinutes(3), aDesignAggregateUpdated(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1, REVISION_0, "CREATED", false, LEVELS_DRAFT, bitmap0, dateTime.minusHours(2), dateTime.minusHours(1)));
     }
 
     @NotNull
     private InputMessage aDeleteInputMessage() {
-        return DesignAggregateUpdatedFactory.of(DESIGN_ID_1, aMessageId(), REVISION_0, dateTime.minusMinutes(3), anAggregateUpdated(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1, REVISION_0, "DELETED", false, LEVELS_DRAFT, bitmap0));
+        return DesignAggregateUpdatedFactory.of(DESIGN_ID_1, aMessageId(), REVISION_0, dateTime.minusMinutes(3), aDesignAggregateUpdated(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1, REVISION_0, "DELETED", false, LEVELS_DRAFT, bitmap0, dateTime.minusHours(2), dateTime.minusHours(1)));
     }
 
     @NotNull

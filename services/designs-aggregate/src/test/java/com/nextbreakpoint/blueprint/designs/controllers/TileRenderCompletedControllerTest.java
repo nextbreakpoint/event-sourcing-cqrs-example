@@ -159,7 +159,7 @@ class TileRenderCompletedControllerTest {
         final Mapper<InputMessage, TileRenderCompleted> mockedInputMapper = mock();
         when(mockedInputMapper.transform(any(InputMessage.class))).thenThrow(exception);
 
-        final var design = aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8);
+        final var design = aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8, dateTime.minusHours(2), dateTime.minusHours(1));
         when(eventStore.findDesign(design.getDesignId())).thenReturn(Single.just(Optional.of(design)));
 
         final var controller = new TileRenderCompletedController(eventStore, mockedInputMapper, bufferOutputMapper, renderOutputMapper, bufferEmitter, renderEmitter);
@@ -179,7 +179,7 @@ class TileRenderCompletedControllerTest {
         final MessageMapper<TileRenderCompleted, OutputMessage> mockedOutputMapper = mock();
         when(mockedOutputMapper.transform(any(TileRenderCompleted.class))).thenThrow(exception);
 
-        final var design = aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8);
+        final var design = aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8, dateTime.minusHours(2), dateTime.minusHours(1));
         when(eventStore.findDesign(design.getDesignId())).thenReturn(Single.just(Optional.of(design)));
 
         final var controller = new TileRenderCompletedController(eventStore, inputMapper, mockedOutputMapper, renderOutputMapper, bufferEmitter, renderEmitter);
@@ -199,7 +199,7 @@ class TileRenderCompletedControllerTest {
         final MessageMapper<TileRenderRequested, OutputMessage> mockedOutputMapper = mock();
         when(mockedOutputMapper.transform(any(TileRenderRequested.class))).thenThrow(exception);
 
-        final var design = aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8);
+        final var design = aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8, dateTime.minusHours(2), dateTime.minusHours(1));
         when(eventStore.findDesign(design.getDesignId())).thenReturn(Single.just(Optional.of(design)));
         when(bufferEmitter.send(any())).thenReturn(Single.just(null));
 
@@ -221,7 +221,7 @@ class TileRenderCompletedControllerTest {
         final MessageEmitter mockedEmitter = mock();
         when(mockedEmitter.send(any(OutputMessage.class))).thenReturn(Single.error(exception));
 
-        final var design = aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8);
+        final var design = aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8, dateTime.minusHours(2), dateTime.minusHours(1));
         when(eventStore.findDesign(design.getDesignId())).thenReturn(Single.just(Optional.of(design)));
 
         final var controller = new TileRenderCompletedController(eventStore, inputMapper, bufferOutputMapper, renderOutputMapper, mockedEmitter, renderEmitter);
@@ -241,7 +241,7 @@ class TileRenderCompletedControllerTest {
         when(mockedEmitter.getTopicName()).thenReturn("render");
         when(mockedEmitter.send(any(OutputMessage.class), anyString())).thenReturn(Single.error(exception));
 
-        final var design = aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8);
+        final var design = aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8, dateTime.minusHours(2), dateTime.minusHours(1));
         when(eventStore.findDesign(design.getDesignId())).thenReturn(Single.just(Optional.of(design)));
         when(bufferEmitter.send(any())).thenReturn(Single.just(null));
 
@@ -259,7 +259,7 @@ class TileRenderCompletedControllerTest {
 
     @Test
     void shouldNotRequestRenderingWhenNumberOfLevelsIsEqualsToDraftLevels() {
-        final var design = aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 3);
+        final var design = aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 3, dateTime.minusHours(2), dateTime.minusHours(1));
         when(eventStore.findDesign(design.getDesignId())).thenReturn(Single.just(Optional.of(design)));
         when(bufferEmitter.send(any())).thenReturn(Single.just(null));
 
@@ -274,7 +274,7 @@ class TileRenderCompletedControllerTest {
 
     @Test
     void shouldNotRequestRenderingWhenReceivingALateEvent() {
-        final var design = aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 3);
+        final var design = aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 3, dateTime.minusHours(2), dateTime.minusHours(1));
         when(eventStore.findDesign(design.getDesignId())).thenReturn(Single.just(Optional.of(design)));
         when(bufferEmitter.send(any())).thenReturn(Single.just(null));
 
@@ -290,119 +290,119 @@ class TileRenderCompletedControllerTest {
     private static Stream<Arguments> notTerminalMessages() {
         return Stream.of(
                 Arguments.of(
-                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8),
+                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8, dateTime.minusHours(2), dateTime.minusHours(1)),
                         TileRenderCompletedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), REVISION_0, dateTime.minusMinutes(3), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 4, 0, 0)),
                         TileRenderCompletedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 4, 0, 0)),
                         TileRenderRequestedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aTileRenderRequested(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 4, 0, 1)),
                         "render-requested-1"
                 ),
                 Arguments.of(
-                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8),
+                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8, dateTime.minusHours(2), dateTime.minusHours(1)),
                         TileRenderCompletedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), REVISION_0, dateTime.minusMinutes(3), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 4, 0, 1)),
                         TileRenderCompletedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 4, 0, 1)),
                         TileRenderRequestedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aTileRenderRequested(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 4, 0, 2)),
                         "render-requested-1"
                 ),
                 Arguments.of(
-                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8),
+                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8, dateTime.minusHours(2), dateTime.minusHours(1)),
                         TileRenderCompletedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), REVISION_0, dateTime.minusMinutes(3), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 4, 0, 2)),
                         TileRenderCompletedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 4, 0, 2)),
                         TileRenderRequestedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aTileRenderRequested(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 4, 0, 3)),
                         "render-requested-1"
                 ),
                 Arguments.of(
-                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8),
+                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8, dateTime.minusHours(2), dateTime.minusHours(1)),
                         TileRenderCompletedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), REVISION_0, dateTime.minusMinutes(3), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 4, 0, 3)),
                         TileRenderCompletedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 4, 0, 3)),
                         TileRenderRequestedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aTileRenderRequested(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 4, 1, 0)),
                         "render-requested-1"
                 ),
                 Arguments.of(
-                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8),
+                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8, dateTime.minusHours(2), dateTime.minusHours(1)),
                         TileRenderCompletedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), REVISION_0, dateTime.minusMinutes(3), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 4, 1, 3)),
                         TileRenderCompletedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 4, 1, 3)),
                         TileRenderRequestedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aTileRenderRequested(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 4, 2, 0)),
                         "render-requested-1"
                 ),
                 Arguments.of(
-                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8),
+                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8, dateTime.minusHours(2), dateTime.minusHours(1)),
                         TileRenderCompletedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), REVISION_0, dateTime.minusMinutes(3), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 4, 2, 3)),
                         TileRenderCompletedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 4, 2, 3)),
                         TileRenderRequestedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aTileRenderRequested(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 4, 3, 0)),
                         "render-requested-1"
                 ),
                 Arguments.of(
-                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8),
+                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8, dateTime.minusHours(2), dateTime.minusHours(1)),
                         TileRenderCompletedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), REVISION_0, dateTime.minusMinutes(3), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 4, 3, 3)),
                         TileRenderCompletedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 4, 3, 3)),
                         TileRenderRequestedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aTileRenderRequested(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 5, 0, 0)),
                         "render-requested-1"
                 ),
                 Arguments.of(
-                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8),
+                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8, dateTime.minusHours(2), dateTime.minusHours(1)),
                         TileRenderCompletedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), REVISION_0, dateTime.minusMinutes(3), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 4, 4, 0)),
                         TileRenderCompletedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 4, 4, 0)),
                         TileRenderRequestedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aTileRenderRequested(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 4, 4, 1)),
                         "render-requested-1"
                 ),
                 Arguments.of(
-                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8),
+                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8, dateTime.minusHours(2), dateTime.minusHours(1)),
                         TileRenderCompletedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), REVISION_0, dateTime.minusMinutes(3), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 4, 4, 1)),
                         TileRenderCompletedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 4, 4, 1)),
                         TileRenderRequestedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aTileRenderRequested(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 4, 4, 2)),
                         "render-requested-1"
                 ),
                 Arguments.of(
-                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8),
+                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8, dateTime.minusHours(2), dateTime.minusHours(1)),
                         TileRenderCompletedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), REVISION_0, dateTime.minusMinutes(3), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 4, 4, 2)),
                         TileRenderCompletedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 4, 4, 2)),
                         TileRenderRequestedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aTileRenderRequested(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 4, 4, 3)),
                         "render-requested-1"
                 ),
                 Arguments.of(
-                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8),
+                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8, dateTime.minusHours(2), dateTime.minusHours(1)),
                         TileRenderCompletedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), REVISION_0, dateTime.minusMinutes(3), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 4, 4, 3)),
                         TileRenderCompletedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 4, 4, 3)),
                         TileRenderRequestedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aTileRenderRequested(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 4, 5, 0)),
                         "render-requested-1"
                 ),
                 Arguments.of(
-                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8),
+                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8, dateTime.minusHours(2), dateTime.minusHours(1)),
                         TileRenderCompletedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), REVISION_0, dateTime.minusMinutes(3), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 4, 5, 3)),
                         TileRenderCompletedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 4, 5, 3)),
                         TileRenderRequestedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aTileRenderRequested(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 4, 6, 0)),
                         "render-requested-1"
                 ),
                 Arguments.of(
-                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8),
+                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8, dateTime.minusHours(2), dateTime.minusHours(1)),
                         TileRenderCompletedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), REVISION_0, dateTime.minusMinutes(3), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 4, 6, 3)),
                         TileRenderCompletedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 4, 6, 3)),
                         TileRenderRequestedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aTileRenderRequested(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 4, 7, 0)),
                         "render-requested-1"
                 ),
                 Arguments.of(
-                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8),
+                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8, dateTime.minusHours(2), dateTime.minusHours(1)),
                         TileRenderCompletedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), REVISION_0, dateTime.minusMinutes(3), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 4, 7, 3)),
                         TileRenderCompletedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 4, 7, 3)),
                         TileRenderRequestedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aTileRenderRequested(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 5, 8, 0)),
                         "render-requested-1"
                 ),
                 Arguments.of(
-                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8),
+                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8, dateTime.minusHours(2), dateTime.minusHours(1)),
                         TileRenderCompletedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), REVISION_0, dateTime.minusMinutes(3), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 5, 7, 7)),
                         TileRenderCompletedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 5, 7, 7)),
                         TileRenderRequestedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aTileRenderRequested(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 6, 0, 0)),
                         "render-requested-2"
                 ),
                 Arguments.of(
-                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8),
+                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8, dateTime.minusHours(2), dateTime.minusHours(1)),
                         TileRenderCompletedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), REVISION_0, dateTime.minusMinutes(3), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 5, 31, 31)),
                         TileRenderCompletedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 5, 31, 31)),
                         TileRenderRequestedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aTileRenderRequested(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 6, 48, 48)),
                         "render-requested-2"
                 ),
                 Arguments.of(
-                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8),
+                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8, dateTime.minusHours(2), dateTime.minusHours(1)),
                         TileRenderCompletedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), REVISION_0, dateTime.minusMinutes(3), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 6, 63, 63)),
                         TileRenderCompletedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 6, 63, 63)),
                         TileRenderRequestedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aTileRenderRequested(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 7, 96, 96)),
@@ -414,97 +414,97 @@ class TileRenderCompletedControllerTest {
     private static Stream<Arguments> terminalMessages() {
         return Stream.of(
                 Arguments.of(
-                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8),
+                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8, dateTime.minusHours(2), dateTime.minusHours(1)),
                         TileRenderCompletedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), REVISION_0, dateTime.minusMinutes(3), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 7, 31, 31)),
                         TileRenderCompletedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 7, 31, 31)),
                         "render-requested-4"
                 ),
                 Arguments.of(
-                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8),
+                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8, dateTime.minusHours(2), dateTime.minusHours(1)),
                         TileRenderCompletedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), REVISION_0, dateTime.minusMinutes(3), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 7, 31, 63)),
                         TileRenderCompletedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 7, 31, 63)),
                         "render-requested-4"
                 ),
                 Arguments.of(
-                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8),
+                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8, dateTime.minusHours(2), dateTime.minusHours(1)),
                         TileRenderCompletedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), REVISION_0, dateTime.minusMinutes(3), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 7, 31, 95)),
                         TileRenderCompletedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 7, 31, 95)),
                         "render-requested-4"
                 ),
                 Arguments.of(
-                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8),
+                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8, dateTime.minusHours(2), dateTime.minusHours(1)),
                         TileRenderCompletedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), REVISION_0, dateTime.minusMinutes(3), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 7, 31, 127)),
                         TileRenderCompletedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 7, 31, 127)),
                         "render-requested-4"
                 ),
                 Arguments.of(
-                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8),
+                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8, dateTime.minusHours(2), dateTime.minusHours(1)),
                         TileRenderCompletedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), REVISION_0, dateTime.minusMinutes(3), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 7, 63, 31)),
                         TileRenderCompletedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 7, 63, 31)),
                         "render-requested-4"
                 ),
                 Arguments.of(
-                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8),
+                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8, dateTime.minusHours(2), dateTime.minusHours(1)),
                         TileRenderCompletedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), REVISION_0, dateTime.minusMinutes(3), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 7, 63, 63)),
                         TileRenderCompletedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 7, 63, 63)),
                         "render-requested-4"
                 ),
                 Arguments.of(
-                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8),
+                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8, dateTime.minusHours(2), dateTime.minusHours(1)),
                         TileRenderCompletedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), REVISION_0, dateTime.minusMinutes(3), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 7, 63, 95)),
                         TileRenderCompletedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 7, 63, 95)),
                         "render-requested-4"
                 ),
                 Arguments.of(
-                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8),
+                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8, dateTime.minusHours(2), dateTime.minusHours(1)),
                         TileRenderCompletedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), REVISION_0, dateTime.minusMinutes(3), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 7, 63, 127)),
                         TileRenderCompletedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 7, 63, 127)),
                         "render-requested-4"
                 ),
                 Arguments.of(
-                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8),
+                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8, dateTime.minusHours(2), dateTime.minusHours(1)),
                         TileRenderCompletedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), REVISION_0, dateTime.minusMinutes(3), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 7, 95, 31)),
                         TileRenderCompletedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 7, 95, 31)),
                         "render-requested-4"
                 ),
                 Arguments.of(
-                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8),
+                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8, dateTime.minusHours(2), dateTime.minusHours(1)),
                         TileRenderCompletedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), REVISION_0, dateTime.minusMinutes(3), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 7, 95, 63)),
                         TileRenderCompletedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 7, 95, 63)),
                         "render-requested-4"
                 ),
                 Arguments.of(
-                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8),
+                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8, dateTime.minusHours(2), dateTime.minusHours(1)),
                         TileRenderCompletedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), REVISION_0, dateTime.minusMinutes(3), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 7, 95, 95)),
                         TileRenderCompletedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 7, 95, 95)),
                         "render-requested-4"
                 ),
                 Arguments.of(
-                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8),
+                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8, dateTime.minusHours(2), dateTime.minusHours(1)),
                         TileRenderCompletedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), REVISION_0, dateTime.minusMinutes(3), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 7, 95, 127)),
                         TileRenderCompletedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 7, 95, 127)),
                         "render-requested-4"
                 ),
                 Arguments.of(
-                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8),
+                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8, dateTime.minusHours(2), dateTime.minusHours(1)),
                         TileRenderCompletedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), REVISION_0, dateTime.minusMinutes(3), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 7, 127, 31)),
                         TileRenderCompletedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 7, 127, 31)),
                         "render-requested-4"
                 ),
                 Arguments.of(
-                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8),
+                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8, dateTime.minusHours(2), dateTime.minusHours(1)),
                         TileRenderCompletedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), REVISION_0, dateTime.minusMinutes(3), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 7, 127, 63)),
                         TileRenderCompletedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 7, 127, 63)),
                         "render-requested-4"
                 ),
                 Arguments.of(
-                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8),
+                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8, dateTime.minusHours(2), dateTime.minusHours(1)),
                         TileRenderCompletedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), REVISION_0, dateTime.minusMinutes(3), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 7, 127, 95)),
                         TileRenderCompletedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 7, 127, 95)),
                         "render-requested-4"
                 ),
                 Arguments.of(
-                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8),
+                        aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8, dateTime.minusHours(2), dateTime.minusHours(1)),
                         TileRenderCompletedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), REVISION_0, dateTime.minusMinutes(3), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 7, 127, 127)),
                         TileRenderCompletedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 7, 127, 127)),
                         "render-requested-4"
@@ -518,7 +518,7 @@ class TileRenderCompletedControllerTest {
     }
 
     @NotNull
-    private static Design aDesign(UUID designId, UUID commandId, String revision, int levels) {
+    private static Design aDesign(UUID designId, UUID commandId, String revision, int levels, LocalDateTime created, LocalDateTime updated) {
         return Design.builder()
                 .withDesignId(designId)
                 .withCommandId(commandId)
@@ -530,8 +530,8 @@ class TileRenderCompletedControllerTest {
                 .withLevels(levels)
                 .withBitmap(TilesBitmap.empty().getBitmap())
                 .withPublished(levels == LEVELS_READY)
-                .withCreated(dateTime.minusHours(2))
-                .withUpdated(dateTime.minusHours(1))
+                .withCreated(created)
+                .withUpdated(updated)
                 .build();
     }
 

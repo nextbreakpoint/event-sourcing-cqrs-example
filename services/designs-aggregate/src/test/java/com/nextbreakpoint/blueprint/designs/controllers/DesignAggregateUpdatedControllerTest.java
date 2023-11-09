@@ -4,7 +4,7 @@ import com.nextbreakpoint.blueprint.common.core.Checksum;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.MessageEmitter;
-import com.nextbreakpoint.blueprint.common.core.MessageMapper;
+import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.core.Tiles;
 import com.nextbreakpoint.blueprint.common.core.TilesBitmap;
@@ -64,8 +64,8 @@ import static org.mockito.Mockito.when;
 
 class DesignAggregateUpdatedControllerTest {
     private static final Mapper<InputMessage, DesignAggregateUpdated> inputMapper = new DesignAggregateUpdatedInputMapper();
-    private static final MessageMapper<DesignDocumentUpdateRequested, OutputMessage> updateOutputMapper = new DesignDocumentUpdateRequestedOutputMapper(MESSAGE_SOURCE);
-    private static final MessageMapper<DesignDocumentDeleteRequested, OutputMessage> deleteOutputMapper = new DesignDocumentDeleteRequestedOutputMapper(MESSAGE_SOURCE);
+    private static final Mapper<DesignDocumentUpdateRequested, OutputMessage> updateOutputMapper = new DesignDocumentUpdateRequestedOutputMapper(MESSAGE_SOURCE);
+    private static final Mapper<DesignDocumentDeleteRequested, OutputMessage> deleteOutputMapper = new DesignDocumentDeleteRequestedOutputMapper(MESSAGE_SOURCE);
 
     private static final LocalDateTime dateTime = LocalDateTime.now(ZoneId.of("UTC")).truncatedTo(ChronoUnit.MILLIS);
 
@@ -113,7 +113,7 @@ class DesignAggregateUpdatedControllerTest {
     @Test
     void shouldReturnErrorWhenUpdateOutputMapperFails() {
         final RuntimeException exception = new RuntimeException();
-        final MessageMapper<DesignDocumentUpdateRequested, OutputMessage> mockedOutputMapper = mock();
+        final Mapper<DesignDocumentUpdateRequested, OutputMessage> mockedOutputMapper = mock();
         when(mockedOutputMapper.transform(any(DesignDocumentUpdateRequested.class))).thenThrow(exception);
 
         final var controller = new DesignAggregateUpdatedController(inputMapper, mockedOutputMapper, deleteOutputMapper, emitter);
@@ -129,7 +129,7 @@ class DesignAggregateUpdatedControllerTest {
     @Test
     void shouldReturnErrorWhenDeleteOutputMapperFails() {
         final RuntimeException exception = new RuntimeException();
-        final MessageMapper<DesignDocumentDeleteRequested, OutputMessage> mockedOutputMapper = mock();
+        final Mapper<DesignDocumentDeleteRequested, OutputMessage> mockedOutputMapper = mock();
         when(mockedOutputMapper.transform(any(DesignDocumentDeleteRequested.class))).thenThrow(exception);
 
         final var controller = new DesignAggregateUpdatedController(inputMapper, updateOutputMapper, mockedOutputMapper, emitter);

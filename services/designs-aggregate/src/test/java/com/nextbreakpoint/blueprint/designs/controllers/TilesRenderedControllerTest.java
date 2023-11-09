@@ -4,7 +4,7 @@ import com.nextbreakpoint.blueprint.common.core.Checksum;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.MessageEmitter;
-import com.nextbreakpoint.blueprint.common.core.MessageMapper;
+import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.core.Tile;
 import com.nextbreakpoint.blueprint.common.core.TilesBitmap;
@@ -59,7 +59,7 @@ import static org.mockito.Mockito.when;
 
 class TilesRenderedControllerTest {
     private static final Mapper<InputMessage, TilesRendered> inputMapper = new TilesRenderedInputMapper();
-    private static final MessageMapper<DesignAggregateUpdated, OutputMessage> outputMapper = new DesignAggregateUpdatedOutputMapper(MESSAGE_SOURCE);
+    private static final Mapper<DesignAggregateUpdated, OutputMessage> outputMapper = new DesignAggregateUpdatedOutputMapper(MESSAGE_SOURCE);
 
     private static final LocalDateTime dateTime = LocalDateTime.now(ZoneId.of("UTC")).truncatedTo(ChronoUnit.MILLIS);
 
@@ -189,7 +189,7 @@ class TilesRenderedControllerTest {
     @Test
     void shouldReturnErrorWhenOutputMapperFails() {
         final RuntimeException exception = new RuntimeException();
-        final MessageMapper<DesignAggregateUpdated, OutputMessage> mockedOutputMapper = mock();
+        final Mapper<DesignAggregateUpdated, OutputMessage> mockedOutputMapper = mock();
         when(mockedOutputMapper.transform(any(DesignAggregateUpdated.class))).thenThrow(exception);
 
         final Design design = theDefaultDesign(DESIGN_ID_1, REVISION_0);

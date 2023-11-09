@@ -4,7 +4,7 @@ import com.nextbreakpoint.blueprint.common.core.Checksum;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.MessageEmitter;
-import com.nextbreakpoint.blueprint.common.core.MessageMapper;
+import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.core.Tile;
 import com.nextbreakpoint.blueprint.common.core.TilesBitmap;
@@ -57,7 +57,7 @@ import static org.mockito.Mockito.when;
 
 class BufferedTileRenderCompletedControllerTest {
     private static final Mapper<InputMessage, TileRenderCompleted> inputMapper = new TileRenderCompletedInputMapper();
-    private static final MessageMapper<TilesRendered, OutputMessage> outputMapper = new TilesRenderedOutputMapper(MESSAGE_SOURCE);
+    private static final Mapper<TilesRendered, OutputMessage> outputMapper = new TilesRenderedOutputMapper(MESSAGE_SOURCE);
 
     private static final LocalDateTime dateTime = LocalDateTime.now(ZoneId.of("UTC")).truncatedTo(ChronoUnit.MILLIS);
 
@@ -132,7 +132,7 @@ class BufferedTileRenderCompletedControllerTest {
     @Test
     void shouldReturnErrorWhenOutputMapperFails() {
         final RuntimeException exception = new RuntimeException();
-        final MessageMapper<TilesRendered, OutputMessage> mockedOutputMapper = mock();
+        final Mapper<TilesRendered, OutputMessage> mockedOutputMapper = mock();
         when(mockedOutputMapper.transform(any(TilesRendered.class))).thenThrow(exception);
 
         final var design = theDefaultDesign();

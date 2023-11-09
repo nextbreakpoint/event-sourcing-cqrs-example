@@ -4,7 +4,7 @@ import com.nextbreakpoint.blueprint.common.core.Controller;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.MessageEmitter;
-import com.nextbreakpoint.blueprint.common.core.MessageMapper;
+import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.events.DesignDocumentDeleteCompleted;
 import com.nextbreakpoint.blueprint.common.events.DesignDocumentDeleteRequested;
@@ -18,10 +18,10 @@ import java.util.Objects;
 public class DesignDocumentDeleteRequestedController implements Controller<InputMessage, Void> {
     private final Store store;
     private final Mapper<InputMessage, DesignDocumentDeleteRequested> inputMapper;
-    private final MessageMapper<DesignDocumentDeleteCompleted, OutputMessage> outputMapper;
+    private final Mapper<DesignDocumentDeleteCompleted, OutputMessage> outputMapper;
     private final MessageEmitter emitter;
 
-    public DesignDocumentDeleteRequestedController(Store store, Mapper<InputMessage, DesignDocumentDeleteRequested> inputMapper, MessageMapper<DesignDocumentDeleteCompleted, OutputMessage> outputMapper, MessageEmitter emitter) {
+    public DesignDocumentDeleteRequestedController(Store store, Mapper<InputMessage, DesignDocumentDeleteRequested> inputMapper, Mapper<DesignDocumentDeleteCompleted, OutputMessage> outputMapper, MessageEmitter emitter) {
         this.store = Objects.requireNonNull(store);
         this.inputMapper = Objects.requireNonNull(inputMapper);
         this.outputMapper = Objects.requireNonNull(outputMapper);

@@ -4,7 +4,7 @@ import com.nextbreakpoint.blueprint.common.core.Checksum;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.MessageEmitter;
-import com.nextbreakpoint.blueprint.common.core.MessageMapper;
+import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.core.TilesBitmap;
 import com.nextbreakpoint.blueprint.common.events.TileRenderCompleted;
@@ -54,8 +54,8 @@ import static org.mockito.Mockito.when;
 
 class TileRenderCompletedControllerTest {
     private static final Mapper<InputMessage, TileRenderCompleted> inputMapper = new TileRenderCompletedInputMapper();
-    private static final MessageMapper<TileRenderCompleted, OutputMessage> bufferOutputMapper = new TileRenderCompletedOutputMapper(MESSAGE_SOURCE);
-    private static final MessageMapper<TileRenderRequested, OutputMessage> renderOutputMapper = new TileRenderRequestedOutputMapper(MESSAGE_SOURCE);
+    private static final Mapper<TileRenderCompleted, OutputMessage> bufferOutputMapper = new TileRenderCompletedOutputMapper(MESSAGE_SOURCE);
+    private static final Mapper<TileRenderRequested, OutputMessage> renderOutputMapper = new TileRenderRequestedOutputMapper(MESSAGE_SOURCE);
 
     private static final LocalDateTime dateTime = LocalDateTime.now(ZoneId.of("UTC")).truncatedTo(ChronoUnit.MILLIS);
 
@@ -176,7 +176,7 @@ class TileRenderCompletedControllerTest {
     @Test
     void shouldReturnErrorWhenBufferOutputMapperFails() {
         final RuntimeException exception = new RuntimeException();
-        final MessageMapper<TileRenderCompleted, OutputMessage> mockedOutputMapper = mock();
+        final Mapper<TileRenderCompleted, OutputMessage> mockedOutputMapper = mock();
         when(mockedOutputMapper.transform(any(TileRenderCompleted.class))).thenThrow(exception);
 
         final var design = aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8, dateTime.minusHours(2), dateTime.minusHours(1));
@@ -196,7 +196,7 @@ class TileRenderCompletedControllerTest {
     @Test
     void shouldReturnErrorWhenRenderOutputMapperFails() {
         final RuntimeException exception = new RuntimeException();
-        final MessageMapper<TileRenderRequested, OutputMessage> mockedOutputMapper = mock();
+        final Mapper<TileRenderRequested, OutputMessage> mockedOutputMapper = mock();
         when(mockedOutputMapper.transform(any(TileRenderRequested.class))).thenThrow(exception);
 
         final var design = aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_0, 8, dateTime.minusHours(2), dateTime.minusHours(1));

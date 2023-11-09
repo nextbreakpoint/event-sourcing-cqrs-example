@@ -5,7 +5,7 @@ import com.nextbreakpoint.blueprint.common.core.Controller;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.MessageEmitter;
-import com.nextbreakpoint.blueprint.common.core.MessageMapper;
+import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.events.DesignUpdateRequested;
 import com.nextbreakpoint.blueprint.designs.Store;
@@ -15,11 +15,11 @@ import java.util.Objects;
 
 public class DesignUpdateCommandController implements Controller<InputMessage, Void> {
     private final Mapper<InputMessage, DesignUpdateCommand> inputMapper;
-    private final MessageMapper<DesignUpdateRequested, OutputMessage> outputMapper;
+    private final Mapper<DesignUpdateRequested, OutputMessage> outputMapper;
     private final MessageEmitter emitter;
     private final Store store;
 
-    public DesignUpdateCommandController(Store store, Mapper<InputMessage, DesignUpdateCommand> inputMapper, MessageMapper<DesignUpdateRequested, OutputMessage> outputMapper, MessageEmitter emitter) {
+    public DesignUpdateCommandController(Store store, Mapper<InputMessage, DesignUpdateCommand> inputMapper, Mapper<DesignUpdateRequested, OutputMessage> outputMapper, MessageEmitter emitter) {
         this.store = Objects.requireNonNull(store);
         this.inputMapper = Objects.requireNonNull(inputMapper);
         this.outputMapper = Objects.requireNonNull(outputMapper);

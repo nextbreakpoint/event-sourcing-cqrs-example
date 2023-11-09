@@ -4,7 +4,7 @@ import com.nextbreakpoint.blueprint.common.core.Controller;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.MessageEmitter;
-import com.nextbreakpoint.blueprint.common.core.MessageMapper;
+import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.core.Tiles;
 import com.nextbreakpoint.blueprint.common.events.DesignDocumentUpdateCompleted;
@@ -25,10 +25,10 @@ public class DesignDocumentUpdateRequestedController implements Controller<Input
 
     private final Store store;
     private final Mapper<InputMessage, DesignDocumentUpdateRequested> inputMapper;
-    private final MessageMapper<DesignDocumentUpdateCompleted, OutputMessage> outputMapper;
+    private final Mapper<DesignDocumentUpdateCompleted, OutputMessage> outputMapper;
     private final MessageEmitter emitter;
 
-    public DesignDocumentUpdateRequestedController(Store store, Mapper<InputMessage, DesignDocumentUpdateRequested> inputMapper, MessageMapper<DesignDocumentUpdateCompleted, OutputMessage> outputMapper, MessageEmitter emitter) {
+    public DesignDocumentUpdateRequestedController(Store store, Mapper<InputMessage, DesignDocumentUpdateRequested> inputMapper, Mapper<DesignDocumentUpdateCompleted, OutputMessage> outputMapper, MessageEmitter emitter) {
         this.store = Objects.requireNonNull(store);
         this.inputMapper = Objects.requireNonNull(inputMapper);
         this.outputMapper = Objects.requireNonNull(outputMapper);

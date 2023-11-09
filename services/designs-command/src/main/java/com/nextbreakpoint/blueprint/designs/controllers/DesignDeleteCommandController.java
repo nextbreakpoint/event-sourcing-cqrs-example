@@ -5,7 +5,7 @@ import com.nextbreakpoint.blueprint.common.core.Controller;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.MessageEmitter;
-import com.nextbreakpoint.blueprint.common.core.MessageMapper;
+import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.events.DesignDeleteRequested;
 import com.nextbreakpoint.blueprint.designs.Store;
@@ -15,11 +15,11 @@ import java.util.Objects;
 
 public class DesignDeleteCommandController implements Controller<InputMessage, Void> {
     private final Mapper<InputMessage, DesignDeleteCommand> inputMapper;
-    private final MessageMapper<DesignDeleteRequested, OutputMessage> outputMapper;
+    private final Mapper<DesignDeleteRequested, OutputMessage> outputMapper;
     private final MessageEmitter emitter;
     private final Store store;
 
-    public DesignDeleteCommandController(Store store, Mapper<InputMessage, DesignDeleteCommand> inputMapper, MessageMapper<DesignDeleteRequested, OutputMessage> outputMapper, MessageEmitter emitter) {
+    public DesignDeleteCommandController(Store store, Mapper<InputMessage, DesignDeleteCommand> inputMapper, Mapper<DesignDeleteRequested, OutputMessage> outputMapper, MessageEmitter emitter) {
         this.store = Objects.requireNonNull(store);
         this.inputMapper = Objects.requireNonNull(inputMapper);
         this.outputMapper = Objects.requireNonNull(outputMapper);

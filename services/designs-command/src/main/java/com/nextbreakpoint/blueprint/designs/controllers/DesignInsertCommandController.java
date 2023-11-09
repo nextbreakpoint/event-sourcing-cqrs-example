@@ -5,7 +5,7 @@ import com.nextbreakpoint.blueprint.common.core.Controller;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.MessageEmitter;
-import com.nextbreakpoint.blueprint.common.core.MessageMapper;
+import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.events.DesignInsertRequested;
 import com.nextbreakpoint.blueprint.designs.Store;
@@ -15,11 +15,11 @@ import java.util.Objects;
 
 public class DesignInsertCommandController implements Controller<InputMessage, Void> {
     private final Mapper<InputMessage, DesignInsertCommand> inputMapper;
-    private final MessageMapper<DesignInsertRequested, OutputMessage> outputMapper;
+    private final Mapper<DesignInsertRequested, OutputMessage> outputMapper;
     private final MessageEmitter emitter;
     private final Store store;
 
-    public DesignInsertCommandController(Store store, Mapper<InputMessage, DesignInsertCommand> inputMapper, MessageMapper<DesignInsertRequested, OutputMessage> outputMapper, MessageEmitter emitter) {
+    public DesignInsertCommandController(Store store, Mapper<InputMessage, DesignInsertCommand> inputMapper, Mapper<DesignInsertRequested, OutputMessage> outputMapper, MessageEmitter emitter) {
         this.store = Objects.requireNonNull(store);
         this.inputMapper = Objects.requireNonNull(inputMapper);
         this.outputMapper = Objects.requireNonNull(outputMapper);

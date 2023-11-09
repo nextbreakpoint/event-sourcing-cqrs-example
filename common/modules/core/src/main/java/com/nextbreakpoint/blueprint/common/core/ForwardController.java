@@ -6,10 +6,10 @@ import java.util.Objects;
 
 public class ForwardController<T> implements Controller<InputMessage, Void> {
     private final Mapper<InputMessage, T> inputMapper;
-    private final MessageMapper<T, OutputMessage> outputMapper;
+    private final Mapper<T, OutputMessage> outputMapper;
     private final MessageEmitter emitter;
 
-    public ForwardController(Mapper<InputMessage, T> inputMapper, MessageMapper<T, OutputMessage> outputMapper, MessageEmitter emitter) {
+    public ForwardController(Mapper<InputMessage, T> inputMapper, Mapper<T, OutputMessage> outputMapper, MessageEmitter emitter) {
         this.inputMapper = Objects.requireNonNull(inputMapper);
         this.outputMapper = Objects.requireNonNull(outputMapper);
         this.emitter = Objects.requireNonNull(emitter);

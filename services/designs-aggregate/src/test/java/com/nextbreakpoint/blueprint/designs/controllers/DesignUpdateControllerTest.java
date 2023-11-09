@@ -5,7 +5,7 @@ import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.core.Json;
 import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.MessageEmitter;
-import com.nextbreakpoint.blueprint.common.core.MessageMapper;
+import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.core.TilesBitmap;
 import com.nextbreakpoint.blueprint.common.events.DesignAggregateUpdated;
@@ -72,8 +72,8 @@ class DesignUpdateControllerTest {
     private static final Mapper<InputMessage, DesignInsertRequested> insertInputMapper = new DesignInsertRequestedInputMapper();
     private static final Mapper<InputMessage, DesignUpdateRequested> updateInputMapper = new DesignUpdateRequestedInputMapper();
     private static final Mapper<InputMessage, DesignDeleteRequested> deleteInputMapper = new DesignDeleteRequestedInputMapper();
-    private static final MessageMapper<DesignAggregateUpdated, OutputMessage> updateOutputMapper = new DesignAggregateUpdatedOutputMapper(MESSAGE_SOURCE);
-    private static final MessageMapper<TileRenderRequested, OutputMessage> renderOutputMapper = new TileRenderRequestedOutputMapper(MESSAGE_SOURCE);
+    private static final Mapper<DesignAggregateUpdated, OutputMessage> updateOutputMapper = new DesignAggregateUpdatedOutputMapper(MESSAGE_SOURCE);
+    private static final Mapper<TileRenderRequested, OutputMessage> renderOutputMapper = new TileRenderRequestedOutputMapper(MESSAGE_SOURCE);
 
     private static final LocalDateTime dateTime = LocalDateTime.now(ZoneId.of("UTC")).truncatedTo(ChronoUnit.MILLIS);
 
@@ -157,7 +157,7 @@ class DesignUpdateControllerTest {
         @Test
         void shouldReturnErrorWhenUpdateOutputMapperFails() {
             final RuntimeException exception = new RuntimeException();
-            final MessageMapper<DesignAggregateUpdated, OutputMessage> mockedOutputMapper = mock();
+            final Mapper<DesignAggregateUpdated, OutputMessage> mockedOutputMapper = mock();
             when(mockedOutputMapper.transform(any(DesignAggregateUpdated.class))).thenThrow(exception);
 
             final var design = aDesign(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1, REVISION_1, "CREATED", LEVELS_DRAFT, TilesBitmap.empty(), dateTime.minusHours(2), dateTime.minusMinutes(3));
@@ -186,7 +186,7 @@ class DesignUpdateControllerTest {
         @Test
         void shouldReturnErrorWhenRenderOutputMapperFails() {
             final RuntimeException exception = new RuntimeException();
-            final MessageMapper<TileRenderRequested, OutputMessage> mockedOutputMapper = mock();
+            final Mapper<TileRenderRequested, OutputMessage> mockedOutputMapper = mock();
             when(mockedOutputMapper.transform(any(TileRenderRequested.class))).thenThrow(exception);
 
             final var design = aDesign(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1, REVISION_1, "CREATED", LEVELS_DRAFT, TilesBitmap.empty(), dateTime.minusHours(2), dateTime.minusMinutes(3));
@@ -470,7 +470,7 @@ class DesignUpdateControllerTest {
         @Test
         void shouldReturnErrorWhenUpdateOutputMapperFails() {
             final RuntimeException exception = new RuntimeException();
-            final MessageMapper<DesignAggregateUpdated, OutputMessage> mockedOutputMapper = mock();
+            final Mapper<DesignAggregateUpdated, OutputMessage> mockedOutputMapper = mock();
             when(mockedOutputMapper.transform(any(DesignAggregateUpdated.class))).thenThrow(exception);
 
             final var design = aDesign(DESIGN_ID_1, COMMAND_ID_2, USER_ID_1, DATA_2, REVISION_2, "UPDATED", LEVELS_DRAFT, TilesBitmap.empty(), dateTime.minusHours(2), dateTime.minusMinutes(3));
@@ -499,7 +499,7 @@ class DesignUpdateControllerTest {
         @Test
         void shouldReturnErrorWhenRenderOutputMapperFails() {
             final RuntimeException exception = new RuntimeException();
-            final MessageMapper<TileRenderRequested, OutputMessage> mockedOutputMapper = mock();
+            final Mapper<TileRenderRequested, OutputMessage> mockedOutputMapper = mock();
             when(mockedOutputMapper.transform(any(TileRenderRequested.class))).thenThrow(exception);
 
             final var design = aDesign(DESIGN_ID_1, COMMAND_ID_2, USER_ID_1, DATA_2, REVISION_2, "UPDATED", LEVELS_DRAFT, TilesBitmap.empty(), dateTime.minusHours(2), dateTime.minusMinutes(3));
@@ -729,7 +729,7 @@ class DesignUpdateControllerTest {
         @Test
         void shouldReturnErrorWhenDeleteOutputMapperFails() {
             final RuntimeException exception = new RuntimeException();
-            final MessageMapper<DesignAggregateUpdated, OutputMessage> mockedOutputMapper = mock();
+            final Mapper<DesignAggregateUpdated, OutputMessage> mockedOutputMapper = mock();
             when(mockedOutputMapper.transform(any(DesignAggregateUpdated.class))).thenThrow(exception);
 
             final var design = aDesign(DESIGN_ID_2, COMMAND_ID_3, USER_ID_2, DATA_2, REVISION_2, "DELETED", LEVELS_DRAFT, TilesBitmap.empty(), dateTime.minusHours(2), dateTime.minusMinutes(3));

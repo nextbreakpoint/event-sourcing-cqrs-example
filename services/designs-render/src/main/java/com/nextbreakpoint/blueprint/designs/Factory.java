@@ -1,17 +1,18 @@
 package com.nextbreakpoint.blueprint.designs;
 
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
+import com.nextbreakpoint.blueprint.common.core.Messages;
 import com.nextbreakpoint.blueprint.common.core.RxSingleHandler;
 import com.nextbreakpoint.blueprint.common.drivers.KafkaMessageEmitter;
-import com.nextbreakpoint.blueprint.common.events.mappers.TileRenderCompletedOutputMapper;
-import com.nextbreakpoint.blueprint.common.events.mappers.TileRenderRequestedInputMapper;
+import com.nextbreakpoint.blueprint.common.events.avro.Payload;
+import com.nextbreakpoint.blueprint.common.events.avro.TileRenderRequested;
 import com.nextbreakpoint.blueprint.common.vertx.ErrorConsumer;
 import com.nextbreakpoint.blueprint.common.vertx.JsonConsumer;
 import com.nextbreakpoint.blueprint.common.vertx.MessageConsumed;
 import com.nextbreakpoint.blueprint.common.vertx.MessageFailed;
+import com.nextbreakpoint.blueprint.common.vertx.Records;
 import com.nextbreakpoint.blueprint.common.vertx.TemplateHandler;
 import com.nextbreakpoint.blueprint.common.vertx.ZipConsumer;
-import com.nextbreakpoint.blueprint.designs.common.Render;
 import com.nextbreakpoint.blueprint.designs.common.S3Driver;
 import com.nextbreakpoint.blueprint.designs.common.TileRenderer;
 import com.nextbreakpoint.blueprint.designs.controllers.TileRenderRequestedController;
@@ -70,20 +71,23 @@ public class Factory {
                 .build();
     }
 
-    public static RxSingleHandler<InputMessage, ?> createTileRenderRequestedHandler(String topic, KafkaProducer<String, String> producer, String messageSource, WorkerExecutor executor, S3AsyncClient s3AsyncClient, String bucket) {
-        return TemplateHandler.<InputMessage, InputMessage, Void, Void>builder()
-                .withInputMapper(input -> input)
+    public static RxSingleHandler<InputMessage<Object>, Void> createTileRenderRequestedHandler(String topic, KafkaProducer<String, Payload> producer, String messageSource, WorkerExecutor executor, S3AsyncClient s3AsyncClient, String bucket) {
+        return TemplateHandler.<InputMessage<Object>, InputMessage<TileRenderRequested>, Void, Void>builder()
+                .withInputMapper(message -> Messages.asSpecificMessage(message, data -> (TileRenderRequested) data))
                 .withOutputMapper(output -> output)
                 .withController(new TileRenderRequestedController(
-                        new TileRenderRequestedInputMapper(),
-                        new TileRenderCompletedOutputMapper(messageSource, Render::createRenderKey),
-                        new KafkaMessageEmitter(producer, BackendRegistries.getDefaultNow(), topic, 3),
+                        messageSource,
+                        createEventMessageEmitter(producer, topic),
                         executor,
                         new S3Driver(s3AsyncClient, bucket),
                         new TileRenderer()
                 ))
-                .onSuccess(new MessageConsumed())
-                .onFailure(new MessageFailed())
+                .onSuccess(new MessageConsumed<>())
+                .onFailure(new MessageFailed<>())
                 .build();
+    }
+
+    private static <T> KafkaMessageEmitter<Payload, T> createEventMessageEmitter(KafkaProducer<String, Payload> producer, String topic) {
+        return new KafkaMessageEmitter<>(producer, Records.createEventOutputRecordMapper(), BackendRegistries.getDefaultNow(), topic, 3);
     }
 }

@@ -5,9 +5,51 @@
     <parent>
         <groupId>com.nextbreakpoint</groupId>
         <artifactId>com.nextbreakpoint.blueprint</artifactId>
-        <version>1.0.4-wip-fc0da7bd-1699465763</version>
+        <version>1.0.4-avro-migration-76bf9345-1701020097</version>
     </parent>
     <packaging>pom</packaging>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.nextbreakpoint</groupId>
+                <artifactId>com.nextbreakpoint.blueprint.common.drivers</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.nextbreakpoint</groupId>
+                <artifactId>com.nextbreakpoint.blueprint.common.events</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.nextbreakpoint</groupId>
+                <artifactId>com.nextbreakpoint.blueprint.common.commands</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.nextbreakpoint</groupId>
+                <artifactId>com.nextbreakpoint.blueprint.confluent</artifactId>
+                <version>${project.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>io.confluent</groupId>
+                        <artifactId>kafka-schema-serializer</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>io.confluent</groupId>
+                        <artifactId>kafka-avro-serializer</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>io.confluent</groupId>
+                        <artifactId>logredactor</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>io.confluent</groupId>
+                        <artifactId>logredactor-metrics</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
     <dependencies>
         <dependency>
             <groupId>com.nextbreakpoint</groupId>
@@ -18,27 +60,6 @@
             <groupId>com.nextbreakpoint</groupId>
             <artifactId>com.nextbreakpoint.blueprint.common.vertx</artifactId>
             <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.nextbreakpoint</groupId>
-            <artifactId>com.nextbreakpoint.blueprint.common.drivers</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.nextbreakpoint</groupId>
-            <artifactId>com.nextbreakpoint.blueprint.common.events</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.nextbreakpoint</groupId>
-            <artifactId>com.nextbreakpoint.blueprint.common.commands</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.nextbreakpoint</groupId>
-            <artifactId>com.nextbreakpoint.blueprint.common.test</artifactId>
-            <version>${project.version}</version>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -103,6 +124,10 @@
             <artifactId>micrometer-registry-prometheus</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
         </dependency>
@@ -163,9 +188,20 @@
             <artifactId>kotlin-stdlib</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-runtime</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.nextbreakpoint</groupId>
+            <artifactId>com.nextbreakpoint.blueprint.common.test</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>io.ktor</groupId>

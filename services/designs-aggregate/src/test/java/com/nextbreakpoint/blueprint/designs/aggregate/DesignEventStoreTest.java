@@ -4,20 +4,18 @@ import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.designs.Store;
 import com.nextbreakpoint.blueprint.designs.TestUtils;
 import com.nextbreakpoint.blueprint.designs.model.Design;
+import org.apache.avro.specific.SpecificRecord;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import rx.Single;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -32,12 +30,12 @@ class DesignEventStoreTest {
 
     @Test
     void shouldAppendMessage() {
-        final Map<Object, Object> event = new HashMap<>();
+        final SpecificRecord event = mock(SpecificRecord.class);
         final String messageKey = "key";
         final String messageType = "something";
         final String messageToken = "0001";
         final LocalDateTime messageTime = LocalDateTime.now(ZoneId.of("UTC"));
-        final InputMessage message = TestUtils.createInputMessage(messageKey, messageType, UUID.randomUUID(), event, messageToken, messageTime);
+        final InputMessage<SpecificRecord> message = TestUtils.createInputMessageV2(messageKey, messageType, UUID.randomUUID(), event, messageToken, messageTime);
 
         when(store.appendMessage(message)).thenReturn(Single.just(null));
 
@@ -50,12 +48,12 @@ class DesignEventStoreTest {
 
     @Test
     void shouldReturnErrorWhenCannotAppendMessage() {
-        final Map<Object, Object> event = new HashMap<>();
+        final SpecificRecord event = mock(SpecificRecord.class);
         final String messageKey = "key";
         final String messageType = "something";
         final String messageToken = "0001";
         final LocalDateTime messageTime = LocalDateTime.now(ZoneId.of("UTC"));
-        final InputMessage message = TestUtils.createInputMessage(messageKey, messageType, UUID.randomUUID(), event, messageToken, messageTime);
+        final InputMessage<SpecificRecord> message = TestUtils.createInputMessageV2(messageKey, messageType, UUID.randomUUID(), event, messageToken, messageTime);
 
         final RuntimeException exception = new RuntimeException();
         when(store.appendMessage(message)).thenReturn(Single.error(exception));
@@ -149,7 +147,7 @@ class DesignEventStoreTest {
                 .withRevision("0003")
                 .build();
 
-        final List<InputMessage> messages = List.of();
+        final List<InputMessage<SpecificRecord>> messages = List.of();
 
         when(store.findDesign(updatedDesign.getDesignId())).thenReturn(Single.just(Optional.empty()));
         when(store.findMessages(updatedDesign.getDesignId(), REVISION_NULL, "0003")).thenReturn(Single.just(messages));
@@ -181,7 +179,7 @@ class DesignEventStoreTest {
                 .withRevision("0002")
                 .build();
 
-        final List<InputMessage> messages = List.of();
+        final List<InputMessage<SpecificRecord>> messages = List.of();
 
         when(store.findDesign(someDesign.getDesignId())).thenReturn(Single.just(Optional.of(someDesign)));
         when(store.findMessages(someDesign.getDesignId(), someDesign.getRevision(), "0002")).thenReturn(Single.just(messages));
@@ -239,7 +237,7 @@ class DesignEventStoreTest {
                 .withRevision("0001")
                 .build();
 
-        final List<InputMessage> messages = List.of();
+        final List<InputMessage<SpecificRecord>> messages = List.of();
 
         final IllegalStateException exception = new IllegalStateException();
         when(store.findDesign(someDesign.getDesignId())).thenReturn(Single.just(Optional.of(someDesign)));

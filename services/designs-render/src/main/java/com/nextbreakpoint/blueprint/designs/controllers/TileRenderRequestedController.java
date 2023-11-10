@@ -2,12 +2,12 @@ package com.nextbreakpoint.blueprint.designs.controllers;
 
 import com.nextbreakpoint.blueprint.common.core.Controller;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
-import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.MessageEmitter;
-import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
-import com.nextbreakpoint.blueprint.common.events.TileRenderCompleted;
-import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
+import com.nextbreakpoint.blueprint.common.events.avro.TileRenderCompleted;
+import com.nextbreakpoint.blueprint.common.events.avro.TileRenderRequested;
+import com.nextbreakpoint.blueprint.common.events.avro.TileStatus;
+import com.nextbreakpoint.blueprint.common.vertx.MessageFactory;
 import com.nextbreakpoint.blueprint.designs.common.Render;
 import com.nextbreakpoint.blueprint.designs.common.Result;
 import com.nextbreakpoint.blueprint.designs.common.S3Driver;
@@ -21,17 +21,15 @@ import java.util.Objects;
 import static com.nextbreakpoint.blueprint.designs.common.Bucket.createBucketKey;
 
 @Log4j2
-public class TileRenderRequestedController implements Controller<InputMessage, Void> {
-    private Mapper<InputMessage, TileRenderRequested> inputMapper;
-    private final Mapper<TileRenderCompleted, OutputMessage> outputMapper;
-    private final MessageEmitter emitter;
+public class TileRenderRequestedController implements Controller<InputMessage<TileRenderRequested>, Void> {
+    private final MessageEmitter<TileRenderCompleted> emitter;
     private final WorkerExecutor executor;
     private final S3Driver s3Driver;
     private final TileRenderer renderer;
+    private final String messageSource;
 
-    public TileRenderRequestedController(Mapper<InputMessage, TileRenderRequested> inputMapper, Mapper<TileRenderCompleted, OutputMessage> outputMapper, MessageEmitter emitter, WorkerExecutor executor, S3Driver s3Driver, TileRenderer renderer) {
-        this.inputMapper = Objects.requireNonNull(inputMapper);;
-        this.outputMapper = Objects.requireNonNull(outputMapper);
+    public TileRenderRequestedController(String messageSource, MessageEmitter<TileRenderCompleted> emitter, WorkerExecutor executor, S3Driver s3Driver, TileRenderer renderer) {
+        this.messageSource = Objects.requireNonNull(messageSource);
         this.emitter = Objects.requireNonNull(emitter);
         this.executor = Objects.requireNonNull(executor);
         this.s3Driver = Objects.requireNonNull(s3Driver);
@@ -39,16 +37,21 @@ public class TileRenderRequestedController implements Controller<InputMessage, V
     }
 
     @Override
-    public Single<Void> onNext(InputMessage message) {
-        return Single.just(message)
-                .map(inputMapper::transform)
+    public Single<Void> onNext(InputMessage<TileRenderRequested> message) {
+        return Single.fromCallable(() -> message.getValue().getData())
                 .flatMap(this::onTileRenderRequested);
     }
 
     private Single<Void> onTileRenderRequested(TileRenderRequested event) {
-        return renderImage(event).map(result -> createEvent(event, makeStatus(result)))
-                .map(outputMapper::transform)
+        return renderImage(event)
+                .map(result -> createEvent(event, makeStatus(result)))
+                .map(this::createMessage)
                 .flatMap(message -> emitter.send(message, Render.getTopicName(emitter.getTopicName() + "-completed", event.getLevel())));
+    }
+
+    private OutputMessage<TileRenderCompleted> createMessage(TileRenderCompleted event) {
+        return MessageFactory.<TileRenderCompleted>of(messageSource)
+                .createOutputMessage(Render.createRenderKey(event), event);
     }
 
     private String makeStatus(Result result) {
@@ -56,15 +59,15 @@ public class TileRenderRequestedController implements Controller<InputMessage, V
     }
 
     private TileRenderCompleted createEvent(TileRenderRequested event, String status) {
-        return TileRenderCompleted.builder()
-                .withDesignId(event.getDesignId())
-                .withCommandId(event.getCommandId())
-                .withRevision(event.getRevision())
-                .withChecksum(event.getChecksum())
-                .withLevel(event.getLevel())
-                .withRow(event.getRow())
-                .withCol(event.getCol())
-                .withStatus(status)
+        return TileRenderCompleted.newBuilder()
+                .setDesignId(event.getDesignId())
+                .setCommandId(event.getCommandId())
+                .setRevision(event.getRevision())
+                .setChecksum(event.getChecksum())
+                .setLevel(event.getLevel())
+                .setRow(event.getRow())
+                .setCol(event.getCol())
+                .setStatus(TileStatus.valueOf(status))
                 .build();
     }
 
@@ -84,10 +87,11 @@ public class TileRenderRequestedController implements Controller<InputMessage, V
     }
 
     private Single<Result> renderImageBlocking(TileRenderRequested event) {
-        return executor.rxExecuteBlocking(promise -> {
+        return Single.from(executor.executeBlocking(() -> {
             log.debug("Render image: {}", createBucketKey(event));
-            renderer.renderImage(event, promise);
+            final var result = renderer.renderImage(event);
             log.debug("Image rendered: {}", createBucketKey(event));
-        }, false);
+            return result;
+        }).toCompletionStage().toCompletableFuture());
     }
 }

@@ -112,6 +112,22 @@ services:
       - bridge
     volumes:
       - kafka-data:/var/lib/kafka/data
+  schema-registry:
+    container_name: schema-registry
+    restart: unless-stopped
+    image: nextbreakpoint/schema-registry:6.1.0-1
+    environment:
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: 'PLAINTEXT://kafka:9092'
+      SCHEMA_REGISTRY_AVRO_COMPATIBILITY_LEVEL: 'FULL_TRANSITIVE'
+      SCHEMA_REGISTRY_LISTENERS: 'http://0.0.0.0:8081'
+      SCHEMA_REGISTRY_HOST_NAME: 'schema-registry'
+    ports:
+      - target: 8081
+        published: 8081
+        protocol: tcp
+        mode: host
+    networks:
+      - bridge
 #  consul:
 #    container_name: consul
 #    restart: unless-stopped

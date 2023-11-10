@@ -17,5 +17,8 @@ minikube image load  nextbreakpoint/elasticsearch:${ELASTICSEARCH_VERSION}-${PLA
 echo "load image: nextbreakpoint/kafka:${CP_KAFKA_VERSION}-${PLATFORM_VERSION}"
 minikube image load  nextbreakpoint/kafka:${CP_KAFKA_VERSION}-${PLATFORM_VERSION}
 
+echo "load image: nextbreakpoint/schema-registry:${CP_KAFKA_VERSION}-${PLATFORM_VERSION}"
+minikube image load  nextbreakpoint/schema-registry:${CP_KAFKA_VERSION}-${PLATFORM_VERSION}
+
 echo "load image: nextbreakpoint/zookeeper:${ZOOKEEPER_VERSION}-${PLATFORM_VERSION}"
 minikube image load  nextbreakpoint/zookeeper:${ZOOKEEPER_VERSION}-${PLATFORM_VERSION}

@@ -1,25 +1,24 @@
 package com.nextbreakpoint.blueprint.designs.common;
 
-import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
+import com.nextbreakpoint.blueprint.common.events.avro.TileRenderRequested;
 import com.nextbreakpoint.nextfractal.core.common.Bundle;
 import com.nextbreakpoint.nextfractal.core.common.TileGenerator;
 import io.vertx.core.json.JsonObject;
-import io.vertx.rxjava.core.Promise;
 import lombok.extern.log4j.Log4j2;
 
 @Log4j2
 public class TileRenderer {
-    public void renderImage(TileRenderRequested event, Promise<Result> promise) {
+    public Result renderImage(TileRenderRequested event) {
         try {
             final Params params = makeTileParams(event);
             final JsonObject json = new JsonObject(event.getData());
             final Bundle bundle = convertToBundle(json);
             final byte[] image = renderImage(bundle, params);
             log.debug("Image size {}", image.length);
-            promise.complete(Result.of(image, null));
+            return Result.of(image, null);
         } catch (Exception e) {
             log.error("Can't render image", e);
-            promise.complete(Result.of(new byte[0], e));
+            return Result.of(new byte[0], e);
         }
     }
 

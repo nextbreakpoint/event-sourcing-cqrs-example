@@ -1,0 +1,517 @@
+{
+  "type": "record",
+  "name": "Payload",
+  "namespace": "com.nextbreakpoint.blueprint.common.events.avro",
+  "fields": [
+    {
+      "name": "uuid",
+      "type": {
+        "type": "string",
+        "logicalType": "uuid"
+      }
+    },
+    {
+      "name": "type",
+      "type": "string"
+    },
+    {
+      "name": "source",
+      "type": "string"
+    },
+    {
+      "name": "event",
+      "type": [
+        {
+          "type": "record",
+          "name": "DesignInsertRequested",
+          "fields": [
+            {
+              "name": "designId",
+              "type": {
+                "type": "string",
+                "logicalType": "uuid"
+              }
+            },
+            {
+              "name": "commandId",
+              "type": {
+                "type": "string",
+                "logicalType": "uuid"
+              }
+            },
+            {
+              "name": "userId",
+              "type": {
+                "type": "string",
+                "logicalType": "uuid"
+              }
+            },
+            {
+              "name": "data",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "type": "record",
+          "name": "DesignUpdateRequested",
+          "fields": [
+            {
+              "name": "designId",
+              "type": {
+                "type": "string",
+                "logicalType": "uuid"
+              }
+            },
+            {
+              "name": "commandId",
+              "type": {
+                "type": "string",
+                "logicalType": "uuid"
+              }
+            },
+            {
+              "name": "userId",
+              "type": {
+                "type": "string",
+                "logicalType": "uuid"
+              }
+            },
+            {
+              "name": "data",
+              "type": "string"
+            },
+            {
+              "name": "published",
+              "type": "boolean"
+            }
+          ]
+        },
+        {
+          "type": "record",
+          "name": "DesignDeleteRequested",
+          "fields": [
+            {
+              "name": "designId",
+              "type": {
+                "type": "string",
+                "logicalType": "uuid"
+              }
+            },
+            {
+              "name": "commandId",
+              "type": {
+                "type": "string",
+                "logicalType": "uuid"
+              }
+            },
+            {
+              "name": "userId",
+              "type": {
+                "type": "string",
+                "logicalType": "uuid"
+              }
+            }
+          ]
+        },
+        {
+          "type": "record",
+          "name": "DesignAggregateUpdated",
+          "fields": [
+            {
+              "name": "designId",
+              "type": {
+                "type": "string",
+                "logicalType": "uuid"
+              }
+            },
+            {
+              "name": "commandId",
+              "type": {
+                "type": "string",
+                "logicalType": "uuid"
+              }
+            },
+            {
+              "name": "userId",
+              "type": {
+                "type": "string",
+                "logicalType": "uuid"
+              }
+            },
+            {
+              "name": "revision",
+              "type": "string"
+            },
+            {
+              "name": "checksum",
+              "type": "string"
+            },
+            {
+              "name": "data",
+              "type": "string"
+            },
+            {
+              "name": "status",
+              "type": {
+                "type": "enum",
+                "name": "DesignAggregateStatus",
+                "symbols": [
+                  "CREATED",
+                  "UPDATED",
+                  "DELETED"
+                ]
+              }
+            },
+            {
+              "name": "published",
+              "type": "boolean"
+            },
+            {
+              "name": "levels",
+              "type": "int"
+            },
+            {
+              "name": "bitmap",
+              "type": "bytes"
+            },
+            {
+              "name": "created",
+              "type": {
+                "type": "long",
+                "logicalType": "timestamp-millis"
+              }
+            },
+            {
+              "name": "updated",
+              "type": {
+                "type": "long",
+                "logicalType": "timestamp-millis"
+              }
+            }
+          ]
+        },
+        {
+          "type": "record",
+          "name": "DesignDocumentUpdateRequested",
+          "fields": [
+            {
+              "name": "designId",
+              "type": {
+                "type": "string",
+                "logicalType": "uuid"
+              }
+            },
+            {
+              "name": "commandId",
+              "type": {
+                "type": "string",
+                "logicalType": "uuid"
+              }
+            },
+            {
+              "name": "userId",
+              "type": {
+                "type": "string",
+                "logicalType": "uuid"
+              }
+            },
+            {
+              "name": "revision",
+              "type": "string"
+            },
+            {
+              "name": "checksum",
+              "type": "string"
+            },
+            {
+              "name": "data",
+              "type": "string"
+            },
+            {
+              "name": "status",
+              "type": {
+                "type": "enum",
+                "name": "DesignDocumentStatus",
+                "symbols": [
+                  "CREATED",
+                  "UPDATED",
+                  "DELETED"
+                ]
+              }
+            },
+            {
+              "name": "published",
+              "type": "boolean"
+            },
+            {
+              "name": "levels",
+              "type": "int"
+            },
+            {
+              "name": "tiles",
+              "type": {
+                "type": "array",
+                "items": {
+                  "type": "record",
+                  "name": "Tiles",
+                  "fields": [
+                    {
+                      "name": "level",
+                      "type": "int"
+                    },
+                    {
+                      "name": "total",
+                      "type": "int"
+                    },
+                    {
+                      "name": "completed",
+                      "type": "int"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "created",
+              "type": {
+                "type": "long",
+                "logicalType": "timestamp-millis"
+              }
+            },
+            {
+              "name": "updated",
+              "type": {
+                "type": "long",
+                "logicalType": "timestamp-millis"
+              }
+            }
+          ]
+        },
+        {
+          "type": "record",
+          "name": "DesignDocumentUpdateCompleted",
+          "fields": [
+            {
+              "name": "designId",
+              "type": {
+                "type": "string",
+                "logicalType": "uuid"
+              }
+            },
+            {
+              "name": "commandId",
+              "type": {
+                "type": "string",
+                "logicalType": "uuid"
+              }
+            },
+            {
+              "name": "revision",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "type": "record",
+          "name": "DesignDocumentDeleteRequested",
+          "fields": [
+            {
+              "name": "designId",
+              "type": {
+                "type": "string",
+                "logicalType": "uuid"
+              }
+            },
+            {
+              "name": "commandId",
+              "type": {
+                "type": "string",
+                "logicalType": "uuid"
+              }
+            },
+            {
+              "name": "revision",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "type": "record",
+          "name": "DesignDocumentDeleteCompleted",
+          "fields": [
+            {
+              "name": "designId",
+              "type": {
+                "type": "string",
+                "logicalType": "uuid"
+              }
+            },
+            {
+              "name": "commandId",
+              "type": {
+                "type": "string",
+                "logicalType": "uuid"
+              }
+            },
+            {
+              "name": "revision",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "type": "record",
+          "name": "TileRenderRequested",
+          "fields": [
+            {
+              "name": "designId",
+              "type": {
+                "type": "string",
+                "logicalType": "uuid"
+              }
+            },
+            {
+              "name": "commandId",
+              "type": {
+                "type": "string",
+                "logicalType": "uuid"
+              }
+            },
+            {
+              "name": "revision",
+              "type": "string"
+            },
+            {
+              "name": "checksum",
+              "type": "string"
+            },
+            {
+              "name": "data",
+              "type": "string"
+            },
+            {
+              "name": "level",
+              "type": "int"
+            },
+            {
+              "name": "row",
+              "type": "int"
+            },
+            {
+              "name": "col",
+              "type": "int"
+            }
+          ]
+        },
+        {
+          "type": "record",
+          "name": "TileRenderCompleted",
+          "fields": [
+            {
+              "name": "designId",
+              "type": {
+                "type": "string",
+                "logicalType": "uuid"
+              }
+            },
+            {
+              "name": "commandId",
+              "type": {
+                "type": "string",
+                "logicalType": "uuid"
+              }
+            },
+            {
+              "name": "revision",
+              "type": "string"
+            },
+            {
+              "name": "checksum",
+              "type": "string"
+            },
+            {
+              "name": "status",
+              "type": {
+                "type": "enum",
+                "name": "TileStatus",
+                "symbols": [
+                  "COMPLETED",
+                  "FAILED"
+                ]
+              }
+            },
+            {
+              "name": "level",
+              "type": "int"
+            },
+            {
+              "name": "row",
+              "type": "int"
+            },
+            {
+              "name": "col",
+              "type": "int"
+            }
+          ]
+        },
+        {
+          "type": "record",
+          "name": "TilesRendered",
+          "fields": [
+            {
+              "name": "designId",
+              "type": {
+                "type": "string",
+                "logicalType": "uuid"
+              }
+            },
+            {
+              "name": "commandId",
+              "type": {
+                "type": "string",
+                "logicalType": "uuid"
+              }
+            },
+            {
+              "name": "revision",
+              "type": "string"
+            },
+            {
+              "name": "checksum",
+              "type": "string"
+            },
+            {
+              "name": "data",
+              "type": "string"
+            },
+            {
+              "name": "tiles",
+              "type": {
+                "type": "array",
+                "items": {
+                  "type": "record",
+                  "name": "Tile",
+                  "fields": [
+                    {
+                      "name": "level",
+                      "type": "int"
+                    },
+                    {
+                      "name": "row",
+                      "type": "int"
+                    },
+                    {
+                      "name": "col",
+                      "type": "int"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

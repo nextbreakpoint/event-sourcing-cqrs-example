@@ -10,6 +10,7 @@ import com.nextbreakpoint.blueprint.common.core.Authority;
 import com.nextbreakpoint.blueprint.common.core.Checksum;
 import com.nextbreakpoint.blueprint.common.core.Headers;
 import com.nextbreakpoint.blueprint.designs.model.Design;
+import com.nextbreakpoint.blueprint.designs.model.LevelTiles;
 import io.vertx.core.json.JsonObject;
 import org.apache.hc.core5.http.HttpRequest;
 import org.junit.jupiter.api.AfterAll;
@@ -91,8 +92,8 @@ public class VerifyFrontendPact {
     testCases.deleteDesigns();
     testCases.deleteDraftDesigns();
 
-    final Design design1 = new Design(DESIGN_ID_1, USER_ID_1, UUID.randomUUID(), data1, Checksum.of(data1), REVISION_0, "CREATED", false, LEVELS_DRAFT, TestUtils.getTiles(LEVELS_DRAFT, 0.0f), FORMATTER.format(now.minusSeconds(10).truncatedTo(ChronoUnit.MILLIS)), FORMATTER.format(now.truncatedTo(ChronoUnit.MILLIS)));
-    final Design design2 = new Design(DESIGN_ID_2, USER_ID_1, UUID.randomUUID(), data2, Checksum.of(data1), REVISION_1, "UPDATED", true, LEVELS_READY, TestUtils.getTiles(LEVELS_READY, 100.0f), FORMATTER.format(now.minusSeconds(5).truncatedTo(ChronoUnit.MILLIS)), FORMATTER.format(now.truncatedTo(ChronoUnit.MILLIS)));
+    final Design design1 = new Design(DESIGN_ID_1, USER_ID_1, UUID.randomUUID(), data1, Checksum.of(data1), REVISION_0, "CREATED", false, LEVELS_DRAFT, LevelTiles.getTiles(LEVELS_DRAFT, 0.0f), FORMATTER.format(now.minusSeconds(10).truncatedTo(ChronoUnit.MILLIS)), FORMATTER.format(now.truncatedTo(ChronoUnit.MILLIS)));
+    final Design design2 = new Design(DESIGN_ID_2, USER_ID_1, UUID.randomUUID(), data2, Checksum.of(data1), REVISION_1, "UPDATED", true, LEVELS_READY, LevelTiles.getTiles(LEVELS_READY, 100.0f), FORMATTER.format(now.minusSeconds(5).truncatedTo(ChronoUnit.MILLIS)), FORMATTER.format(now.truncatedTo(ChronoUnit.MILLIS)));
 
     List.of(design1, design2).forEach(testCases::insertDraftDesign);
     List.of(design2).forEach(testCases::insertDesign);
@@ -107,7 +108,7 @@ public class VerifyFrontendPact {
     testCases.deleteDesigns();
     testCases.deleteDraftDesigns();
 
-    final Design design = new Design(DESIGN_ID_1, USER_ID_1, UUID.randomUUID(), data, Checksum.of(data), REVISION_0, "CREATED", true, LEVELS_READY, TestUtils.getTiles(LEVELS_READY, 100.0f), FORMATTER.format(now.minusSeconds(5).truncatedTo(ChronoUnit.MILLIS)), FORMATTER.format(now.truncatedTo(ChronoUnit.MILLIS)));
+    final Design design = new Design(DESIGN_ID_1, USER_ID_1, UUID.randomUUID(), data, Checksum.of(data), REVISION_0, "CREATED", true, LEVELS_READY, LevelTiles.getTiles(LEVELS_READY, 100.0f), FORMATTER.format(now.minusSeconds(5).truncatedTo(ChronoUnit.MILLIS)), FORMATTER.format(now.truncatedTo(ChronoUnit.MILLIS)));
 
     List.of(design).forEach(testCases::insertDraftDesign);
     List.of(design).forEach(testCases::insertDesign);

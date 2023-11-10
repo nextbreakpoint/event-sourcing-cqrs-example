@@ -1,15 +1,22 @@
 package com.nextbreakpoint.blueprint.designs;
 
+import com.nextbreakpoint.blueprint.common.commands.avro.DesignDeleteCommand;
+import com.nextbreakpoint.blueprint.common.commands.avro.DesignInsertCommand;
+import com.nextbreakpoint.blueprint.common.commands.avro.DesignUpdateCommand;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignDeleteRequested;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignInsertRequested;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignUpdateRequested;
+
 import java.util.UUID;
 
 public interface TestConstants {
-    String DESIGN_INSERT_REQUESTED = "design-insert-requested-v1";
-    String DESIGN_UPDATE_REQUESTED = "design-update-requested-v1";
-    String DESIGN_DELETE_REQUESTED = "design-delete-requested-v1";
+    String DESIGN_INSERT_REQUESTED = DesignInsertRequested.getClassSchema().getFullName();
+    String DESIGN_UPDATE_REQUESTED = DesignUpdateRequested.getClassSchema().getFullName();
+    String DESIGN_DELETE_REQUESTED = DesignDeleteRequested.getClassSchema().getFullName();
 
-    String DESIGN_INSERT_COMMAND = "design-insert-command-v1";
-    String DESIGN_UPDATE_COMMAND = "design-update-command-v1";
-    String DESIGN_DELETE_COMMAND = "design-delete-command-v1";
+    String DESIGN_INSERT_COMMAND = DesignInsertCommand.getClassSchema().getFullName();
+    String DESIGN_UPDATE_COMMAND = DesignUpdateCommand.getClassSchema().getFullName();
+    String DESIGN_DELETE_COMMAND = DesignDeleteCommand.getClassSchema().getFullName();
 
     String MESSAGE_SOURCE = "service-designs";
     String COMMANDS_TOPIC_NAME = "test-designs-command-commands";

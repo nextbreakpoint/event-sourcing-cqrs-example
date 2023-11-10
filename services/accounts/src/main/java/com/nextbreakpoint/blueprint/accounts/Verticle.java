@@ -148,6 +148,8 @@ public class Verticle extends AbstractVerticle {
 
             final HealthCheckHandler healthCheckHandler = HealthCheckHandler.createWithHealthChecks(HealthChecks.create(vertx));
 
+            final Handler<RoutingContext> metricsHandler = PrometheusScrapingHandler.create();
+
             healthCheckHandler.register("database-table-account", 2000, future -> checkTable(store, future, "ACCOUNT"));
 
             final URL resource = RouterBuilder.class.getClassLoader().getResource("api-v1.yaml");
@@ -169,7 +171,7 @@ public class Verticle extends AbstractVerticle {
                                 .handler(context -> healthCheckHandler.handle(RoutingContext.newInstance(context)));
 
                         routerBuilder.operation("metrics")
-                                .handler(context -> PrometheusScrapingHandler.create().handle(RoutingContext.newInstance(context)));
+                                .handler(context -> metricsHandler.handle(RoutingContext.newInstance(context)));
 
                         routerBuilder.operation("listAccounts")
                                 .handler(context -> listAccountsHandler.handle(RoutingContext.newInstance(context)));

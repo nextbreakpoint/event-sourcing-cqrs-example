@@ -11,15 +11,13 @@ import au.com.dius.pact.provider.junitsupport.Provider;
 import au.com.dius.pact.provider.junitsupport.State;
 import au.com.dius.pact.provider.junitsupport.loader.PactBroker;
 import com.nextbreakpoint.blueprint.common.core.Json;
-import com.nextbreakpoint.blueprint.common.core.KafkaRecord;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
-import com.nextbreakpoint.blueprint.common.events.DesignDeleteRequested;
-import com.nextbreakpoint.blueprint.common.events.DesignInsertRequested;
-import com.nextbreakpoint.blueprint.common.events.DesignUpdateRequested;
-import com.nextbreakpoint.blueprint.common.events.mappers.DesignDeleteRequestedOutputMapper;
-import com.nextbreakpoint.blueprint.common.events.mappers.DesignInsertRequestedOutputMapper;
-import com.nextbreakpoint.blueprint.common.events.mappers.DesignUpdateRequestedOutputMapper;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignDeleteRequested;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignInsertRequested;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignUpdateRequested;
+import com.nextbreakpoint.blueprint.common.test.KafkaRecord;
 import com.nextbreakpoint.blueprint.common.test.PayloadUtils;
+import com.nextbreakpoint.blueprint.common.vertx.MessageFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -106,24 +104,24 @@ public class VerifyAggregatePact {
     private String produceDesignInsertRequested(UUID userId, UUID designId, UUID commandId, String data) {
         final DesignInsertRequested designInsertRequested = new DesignInsertRequested(designId, commandId, userId, data);
 
-        final OutputMessage designInsertRequestedMessage = new DesignInsertRequestedOutputMapper(MESSAGE_SOURCE).transform(designInsertRequested);
+        final OutputMessage<DesignInsertRequested> designInsertRequestedMessage = MessageFactory.<DesignInsertRequested>of(MESSAGE_SOURCE).createOutputMessage(designId.toString(), designInsertRequested);
 
-        return Json.encodeValue(new KafkaRecord(designInsertRequestedMessage.getKey(), PayloadUtils.payloadToMap(designInsertRequestedMessage.getValue())));
+        return Json.encodeValue(new KafkaRecord(designId.toString(), PayloadUtils.payloadToMap(designInsertRequestedMessage.getValue())));
     }
 
     private String produceDesignUpdateRequested(UUID userId, UUID designId, UUID commandId, String data, boolean published) {
         final DesignUpdateRequested designUpdateRequested = new DesignUpdateRequested(designId, commandId, userId, data, published);
 
-        final OutputMessage designUpdateRequestedMessage = new DesignUpdateRequestedOutputMapper(MESSAGE_SOURCE).transform(designUpdateRequested);
+        final OutputMessage<DesignUpdateRequested> designUpdateRequestedMessage = MessageFactory.<DesignUpdateRequested>of(MESSAGE_SOURCE).createOutputMessage(designId.toString(), designUpdateRequested);
 
-        return Json.encodeValue(new KafkaRecord(designUpdateRequestedMessage.getKey(), PayloadUtils.payloadToMap(designUpdateRequestedMessage.getValue())));
+        return Json.encodeValue(new KafkaRecord(designId.toString(), PayloadUtils.payloadToMap(designUpdateRequestedMessage.getValue())));
     }
 
     private String produceDesignDeleteRequested(UUID userId, UUID designId, UUID commandId) {
         final DesignDeleteRequested designDeleteRequested = new DesignDeleteRequested(designId, commandId, userId);
 
-        final OutputMessage designDeleteRequestedMessage = new DesignDeleteRequestedOutputMapper(MESSAGE_SOURCE).transform(designDeleteRequested);
+        final OutputMessage<DesignDeleteRequested> designDeleteRequestedMessage = MessageFactory.<DesignDeleteRequested>of(MESSAGE_SOURCE).createOutputMessage(designId.toString(), designDeleteRequested);
 
-        return Json.encodeValue(new KafkaRecord(designDeleteRequestedMessage.getKey(), PayloadUtils.payloadToMap(designDeleteRequestedMessage.getValue())));
+        return Json.encodeValue(new KafkaRecord(designId.toString(), PayloadUtils.payloadToMap(designDeleteRequestedMessage.getValue())));
     }
 }

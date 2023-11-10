@@ -2,18 +2,16 @@ package com.nextbreakpoint.blueprint.designs.controllers;
 
 import com.nextbreakpoint.blueprint.common.core.Checksum;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
-import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.MessageEmitter;
-import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
-import com.nextbreakpoint.blueprint.common.core.Tile;
-import com.nextbreakpoint.blueprint.common.core.TilesBitmap;
-import com.nextbreakpoint.blueprint.common.events.TileRenderCompleted;
-import com.nextbreakpoint.blueprint.common.events.TilesRendered;
-import com.nextbreakpoint.blueprint.common.events.mappers.TileRenderCompletedInputMapper;
-import com.nextbreakpoint.blueprint.common.events.mappers.TilesRenderedOutputMapper;
+import com.nextbreakpoint.blueprint.common.events.avro.Tile;
+import com.nextbreakpoint.blueprint.common.events.avro.TileRenderCompleted;
+import com.nextbreakpoint.blueprint.common.events.avro.TileStatus;
+import com.nextbreakpoint.blueprint.common.events.avro.TilesRendered;
+import com.nextbreakpoint.blueprint.designs.TestConstants;
 import com.nextbreakpoint.blueprint.designs.TestUtils;
 import com.nextbreakpoint.blueprint.designs.aggregate.DesignEventStore;
+import com.nextbreakpoint.blueprint.designs.common.Bitmap;
 import com.nextbreakpoint.blueprint.designs.model.Design;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Assertions;
@@ -38,7 +36,6 @@ import static com.nextbreakpoint.blueprint.designs.TestConstants.DATA_2;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_ID_1;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_ID_2;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.LEVELS_DRAFT;
-import static com.nextbreakpoint.blueprint.designs.TestConstants.MESSAGE_SOURCE;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.REVISION_0;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.REVISION_1;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.TILES_RENDERED;
@@ -56,19 +53,16 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 class BufferedTileRenderCompletedControllerTest {
-    private static final Mapper<InputMessage, TileRenderCompleted> inputMapper = new TileRenderCompletedInputMapper();
-    private static final Mapper<TilesRendered, OutputMessage> outputMapper = new TilesRenderedOutputMapper(MESSAGE_SOURCE);
-
     private static final LocalDateTime dateTime = LocalDateTime.now(ZoneId.of("UTC")).truncatedTo(ChronoUnit.MILLIS);
 
-    private final MessageEmitter emitter = mock();
+    private final MessageEmitter<TilesRendered> emitter = mock();
     private final DesignEventStore eventStore = mock();
 
-    private final BufferedTileRenderCompletedController controller = new BufferedTileRenderCompletedController(eventStore, inputMapper, outputMapper, emitter);
+    private final BufferedTileRenderCompletedController controller = new BufferedTileRenderCompletedController(TestConstants.MESSAGE_SOURCE, eventStore, emitter);
 
     @ParameterizedTest
     @MethodSource("someMessages")
-    void shouldPublishAMessageToInformThatTilesHaveBeingRendered(Design design, List<InputMessage> inputMessages, OutputMessage expectedOutputMessage) {
+    void shouldPublishAMessageToInformThatTilesHaveBeingRendered(Design design, List<InputMessage<TileRenderCompleted>> inputMessages, OutputMessage<Object> expectedOutputMessage) {
         when(eventStore.findDesign(design.getDesignId())).thenReturn(Single.just(Optional.of(design)));
         when(emitter.send(any())).thenReturn(Single.just(null));
 
@@ -114,53 +108,15 @@ class BufferedTileRenderCompletedControllerTest {
     }
 
     @Test
-    void shouldReturnErrorWhenInputMapperFails() {
-        final RuntimeException exception = new RuntimeException();
-        final Mapper<InputMessage, TileRenderCompleted> mockedInputMapper = mock();
-        when(mockedInputMapper.transform(any(InputMessage.class))).thenThrow(exception);
-
-        final var controller = new BufferedTileRenderCompletedController(eventStore, mockedInputMapper, outputMapper, emitter);
-
-        assertThatThrownBy(() -> controller.onNext(someInputMessages()).toCompletable().await()).isEqualTo(exception);
-
-        verify(mockedInputMapper).transform(any(InputMessage.class));
-        verifyNoMoreInteractions(mockedInputMapper);
-
-        verifyNoInteractions(eventStore, emitter);
-    }
-
-    @Test
-    void shouldReturnErrorWhenOutputMapperFails() {
-        final RuntimeException exception = new RuntimeException();
-        final Mapper<TilesRendered, OutputMessage> mockedOutputMapper = mock();
-        when(mockedOutputMapper.transform(any(TilesRendered.class))).thenThrow(exception);
-
-        final var design = theDefaultDesign();
-        when(eventStore.findDesign(design.getDesignId())).thenReturn(Single.just(Optional.of(design)));
-
-        final var controller = new BufferedTileRenderCompletedController(eventStore, inputMapper, mockedOutputMapper, emitter);
-
-        assertThatThrownBy(() -> controller.onNext(someInputMessages()).toCompletable().await()).isEqualTo(exception);
-
-        verify(eventStore).findDesign(design.getDesignId());
-        verifyNoMoreInteractions(eventStore);
-
-        verify(mockedOutputMapper).transform(any(TilesRendered.class));
-        verifyNoMoreInteractions(mockedOutputMapper);
-
-        verifyNoInteractions(emitter);
-    }
-
-    @Test
     void shouldReturnErrorWhenEmitterFails() {
         final RuntimeException exception = new RuntimeException();
-        final MessageEmitter mockedEmitter = mock();
+        final MessageEmitter<TilesRendered> mockedEmitter = mock();
         when(mockedEmitter.send(any(OutputMessage.class))).thenReturn(Single.error(exception));
 
         final var design = theDefaultDesign();
         when(eventStore.findDesign(design.getDesignId())).thenReturn(Single.just(Optional.of(design)));
 
-        final var controller = new BufferedTileRenderCompletedController(eventStore, inputMapper, outputMapper, mockedEmitter);
+        final var controller = new BufferedTileRenderCompletedController(TestConstants.MESSAGE_SOURCE, eventStore, mockedEmitter);
 
         assertThatThrownBy(() -> controller.onNext(someInputMessages()).toCompletable().await()).isEqualTo(exception);
 
@@ -187,37 +143,37 @@ class BufferedTileRenderCompletedControllerTest {
     private static Stream<Arguments> someMessages() {
         return Stream.of(
                 Arguments.of(
-                        aDesign(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1, REVISION_0, "CREATED", 3, TilesBitmap.empty(), dateTime.minusHours(2), dateTime.minusHours(1)),
+                        aDesign(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1, REVISION_0, "CREATED", 3, Bitmap.empty(), dateTime.minusHours(2), dateTime.minusHours(1)),
                         List.of(
-                                TileRenderCompletedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), REVISION_0, dateTime.minusMinutes(3), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, DATA_1, REVISION_0, "CREATED", 0, 0, 0))
+                                TileRenderCompletedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), REVISION_0, dateTime.minusMinutes(3), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, DATA_1, REVISION_0, "COMPLETED", 0, 0, 0))
                         ),
                         TilesRenderedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aTilesRenderedEvent(DESIGN_ID_1, COMMAND_ID_1, DATA_1, REVISION_0, List.of(
-                                Tile.builder().withLevel(0).withRow(0).withCol(0).build()
+                                Tile.newBuilder().setLevel(0).setRow(0).setCol(0).build()
                         )))
                 ),
                 Arguments.of(
-                        aDesign(DESIGN_ID_2, COMMAND_ID_2, USER_ID_2, DATA_2, REVISION_1, "UPDATED", 3, TilesBitmap.empty(), dateTime.minusHours(5), dateTime.minusHours(3)),
+                        aDesign(DESIGN_ID_2, COMMAND_ID_2, USER_ID_2, DATA_2, REVISION_1, "UPDATED", 3, Bitmap.empty(), dateTime.minusHours(5), dateTime.minusHours(3)),
                         List.of(
-                                TileRenderCompletedFactory.createInputMessage(DESIGN_ID_2, aMessageId(), REVISION_1, dateTime.minusMinutes(3), aTileRenderCompleted(DESIGN_ID_2, COMMAND_ID_2, DATA_2, REVISION_1, "UPDATED", 0, 0, 0)),
-                                TileRenderCompletedFactory.createInputMessage(DESIGN_ID_2, aMessageId(), REVISION_1, dateTime.minusMinutes(2), aTileRenderCompleted(DESIGN_ID_2, COMMAND_ID_2, DATA_2, REVISION_1, "UPDATED", 1, 1, 0)),
-                                TileRenderCompletedFactory.createInputMessage(DESIGN_ID_2, aMessageId(), REVISION_1, dateTime.minusMinutes(1), aTileRenderCompleted(DESIGN_ID_2, COMMAND_ID_2, DATA_2, REVISION_1, "UPDATED", 2, 2, 1))
+                                TileRenderCompletedFactory.createInputMessage(DESIGN_ID_2, aMessageId(), REVISION_1, dateTime.minusMinutes(3), aTileRenderCompleted(DESIGN_ID_2, COMMAND_ID_2, DATA_2, REVISION_1, "COMPLETED", 0, 0, 0)),
+                                TileRenderCompletedFactory.createInputMessage(DESIGN_ID_2, aMessageId(), REVISION_1, dateTime.minusMinutes(2), aTileRenderCompleted(DESIGN_ID_2, COMMAND_ID_2, DATA_2, REVISION_1, "COMPLETED", 1, 1, 0)),
+                                TileRenderCompletedFactory.createInputMessage(DESIGN_ID_2, aMessageId(), REVISION_1, dateTime.minusMinutes(1), aTileRenderCompleted(DESIGN_ID_2, COMMAND_ID_2, DATA_2, REVISION_1, "FAILED", 2, 2, 1))
                         ),
                         TilesRenderedFactory.createOutputMessage(DESIGN_ID_2, aMessageId(), aTilesRenderedEvent(DESIGN_ID_2, COMMAND_ID_2, DATA_2, REVISION_1, List.of(
-                                Tile.builder().withLevel(0).withRow(0).withCol(0).build(),
-                                Tile.builder().withLevel(1).withRow(1).withCol(0).build(),
-                                Tile.builder().withLevel(2).withRow(2).withCol(1).build()
+                                Tile.newBuilder().setLevel(0).setRow(0).setCol(0).build(),
+                                Tile.newBuilder().setLevel(1).setRow(1).setCol(0).build(),
+                                Tile.newBuilder().setLevel(2).setRow(2).setCol(1).build()
                         )))
                 ),
                 Arguments.of(
-                        aDesign(DESIGN_ID_2, COMMAND_ID_2, USER_ID_2, DATA_2, REVISION_1, "UPDATED", 3, TilesBitmap.empty().putTile(4, 0, 0), dateTime.minusHours(5), dateTime.minusHours(3)),
+                        aDesign(DESIGN_ID_2, COMMAND_ID_2, USER_ID_2, DATA_2, REVISION_1, "UPDATED", 3, Bitmap.empty().putTile(4, 0, 0), dateTime.minusHours(5), dateTime.minusHours(3)),
                         List.of(
-                                TileRenderCompletedFactory.createInputMessage(DESIGN_ID_2, aMessageId(), REVISION_1, dateTime.minusMinutes(3), aTileRenderCompleted(DESIGN_ID_2, COMMAND_ID_2, DATA_2, REVISION_1, "UPDATED", 0, 0, 0)),
-                                TileRenderCompletedFactory.createInputMessage(DESIGN_ID_2, aMessageId(), REVISION_1, dateTime.minusMinutes(2), aTileRenderCompleted(DESIGN_ID_2, COMMAND_ID_2, DATA_2, REVISION_1, "UPDATED", 1, 1, 0)),
-                                TileRenderCompletedFactory.createInputMessage(DESIGN_ID_2, aMessageId(), REVISION_1, dateTime.minusMinutes(1), aTileRenderCompleted(DESIGN_ID_2, COMMAND_ID_1, DATA_2, REVISION_1, "UPDATED", 2, 2, 1))
+                                TileRenderCompletedFactory.createInputMessage(DESIGN_ID_2, aMessageId(), REVISION_1, dateTime.minusMinutes(3), aTileRenderCompleted(DESIGN_ID_2, COMMAND_ID_2, DATA_2, REVISION_1, "COMPLETED", 0, 0, 0)),
+                                TileRenderCompletedFactory.createInputMessage(DESIGN_ID_2, aMessageId(), REVISION_1, dateTime.minusMinutes(2), aTileRenderCompleted(DESIGN_ID_2, COMMAND_ID_2, DATA_2, REVISION_1, "FAILED", 1, 1, 0)),
+                                TileRenderCompletedFactory.createInputMessage(DESIGN_ID_2, aMessageId(), REVISION_1, dateTime.minusMinutes(1), aTileRenderCompleted(DESIGN_ID_2, COMMAND_ID_1, DATA_2, REVISION_1, "COMPLETED", 2, 2, 1))
                         ),
                         TilesRenderedFactory.createOutputMessage(DESIGN_ID_2, aMessageId(), aTilesRenderedEvent(DESIGN_ID_2, COMMAND_ID_2, DATA_2, REVISION_1, List.of(
-                                Tile.builder().withLevel(0).withRow(0).withCol(0).build(),
-                                Tile.builder().withLevel(1).withRow(1).withCol(0).build()
+                                Tile.newBuilder().setLevel(0).setRow(0).setCol(0).build(),
+                                Tile.newBuilder().setLevel(1).setRow(1).setCol(0).build()
                         )))
                 )
         );
@@ -229,7 +185,7 @@ class BufferedTileRenderCompletedControllerTest {
     }
 
     @NotNull
-    private static Design aDesign(UUID designId, UUID commandId, UUID userId, String data, String revision, String status, int levels, TilesBitmap bitmap, LocalDateTime created, LocalDateTime updated) {
+    private static Design aDesign(UUID designId, UUID commandId, UUID userId, String data, String revision, String status, int levels, Bitmap bitmap, LocalDateTime created, LocalDateTime updated) {
         return Design.builder()
                 .withDesignId(designId)
                 .withCommandId(commandId)
@@ -239,7 +195,7 @@ class BufferedTileRenderCompletedControllerTest {
                 .withRevision(revision)
                 .withStatus(status)
                 .withLevels(levels)
-                .withBitmap(bitmap.getBitmap())
+                .withBitmap(bitmap.toByteBuffer())
                 .withPublished(false)
                 .withCreated(created)
                 .withUpdated(updated)
@@ -248,54 +204,54 @@ class BufferedTileRenderCompletedControllerTest {
 
     @NotNull
     private static TileRenderCompleted aTileRenderCompleted(UUID designId, UUID commandId, String data, String revision, String status, int level, int row, int col) {
-        return TileRenderCompleted.builder()
-                .withDesignId(designId)
-                .withCommandId(commandId)
-                .withChecksum(Checksum.of(data))
-                .withRevision(revision)
-                .withStatus(status)
-                .withLevel(level)
-                .withRow(row)
-                .withCol(col)
+        return TileRenderCompleted.newBuilder()
+                .setDesignId(designId)
+                .setCommandId(commandId)
+                .setChecksum(Checksum.of(data))
+                .setRevision(revision)
+                .setStatus(TileStatus.valueOf(status))
+                .setLevel(level)
+                .setRow(row)
+                .setCol(col)
                 .build();
     }
 
     @NotNull
     private static TilesRendered aTilesRenderedEvent(UUID designId, UUID commandId, String data, String revision, List<Tile> tiles) {
-        return TilesRendered.builder()
-                .withDesignId(designId)
-                .withCommandId(commandId)
-                .withChecksum(Checksum.of(data))
-                .withRevision(revision)
-                .withData(data)
-                .withTiles(tiles)
+        return TilesRendered.newBuilder()
+                .setDesignId(designId)
+                .setCommandId(commandId)
+                .setChecksum(Checksum.of(data))
+                .setRevision(revision)
+                .setData(data)
+                .setTiles(tiles)
                 .build();
     }
 
     @NotNull
     private static Design theDefaultDesign() {
-        return aDesign(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1, REVISION_0, "CREATED", LEVELS_DRAFT, TilesBitmap.empty(), dateTime.minusHours(2), dateTime.minusHours(1));
+        return aDesign(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1, REVISION_0, "CREATED", LEVELS_DRAFT, Bitmap.empty(), dateTime.minusHours(2), dateTime.minusHours(1));
     }
 
     @NotNull
-    private static List<InputMessage> someInputMessages() {
+    private static List<InputMessage<TileRenderCompleted>> someInputMessages() {
         return List.of(
-                TileRenderCompletedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), REVISION_0, dateTime.minusMinutes(3), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, DATA_1, REVISION_0, "CREATED", 0, 0, 0)),
-                TileRenderCompletedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), REVISION_0, dateTime.minusMinutes(2), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, DATA_1, REVISION_0, "CREATED", 1, 0, 0))
+                TileRenderCompletedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), REVISION_0, dateTime.minusMinutes(3), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, DATA_1, REVISION_0, "COMPLETED", 0, 0, 0)),
+                TileRenderCompletedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), REVISION_0, dateTime.minusMinutes(2), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, DATA_1, REVISION_0, "COMPLETED", 1, 0, 0))
         );
     }
 
     @NotNull
-    private static List<InputMessage> someInvalidInputMessages() {
+    private static List<InputMessage<TileRenderCompleted>> someInvalidInputMessages() {
         return List.of(
-                TileRenderCompletedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), REVISION_0, dateTime.minusMinutes(3), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, DATA_1, REVISION_0, "CREATED", 0, 0, 0)),
-                TileRenderCompletedFactory.createInputMessage(DESIGN_ID_2, aMessageId(), REVISION_0, dateTime.minusMinutes(2), aTileRenderCompleted(DESIGN_ID_2, COMMAND_ID_1, DATA_1, REVISION_0, "CREATED", 1, 0, 0))
+                TileRenderCompletedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), REVISION_0, dateTime.minusMinutes(3), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, DATA_1, REVISION_0, "COMPLETED", 0, 0, 0)),
+                TileRenderCompletedFactory.createInputMessage(DESIGN_ID_2, aMessageId(), REVISION_0, dateTime.minusMinutes(2), aTileRenderCompleted(DESIGN_ID_2, COMMAND_ID_1, DATA_1, REVISION_0, "COMPLETED", 1, 0, 0))
         );
     }
 
     private static class TileRenderCompletedFactory {
         @NotNull
-        public static InputMessage createInputMessage(UUID designId, UUID messageId, String messageToken, LocalDateTime messageTime, TileRenderCompleted tileRenderCompleted) {
+        public static InputMessage<TileRenderCompleted> createInputMessage(UUID designId, UUID messageId, String messageToken, LocalDateTime messageTime, TileRenderCompleted tileRenderCompleted) {
             return TestUtils.createInputMessage(
                     designId.toString(), TILE_RENDER_COMPLETED, messageId, tileRenderCompleted, messageToken, messageTime
             );
@@ -304,7 +260,7 @@ class BufferedTileRenderCompletedControllerTest {
 
     private static class TilesRenderedFactory {
         @NotNull
-        public static OutputMessage createOutputMessage(UUID designId, UUID messageId, TilesRendered tilesRenderedEvent) {
+        public static OutputMessage<TilesRendered> createOutputMessage(UUID designId, UUID messageId, TilesRendered tilesRenderedEvent) {
             return TestUtils.createOutputMessage(
                     designId.toString(), TILES_RENDERED, messageId, tilesRenderedEvent
             );

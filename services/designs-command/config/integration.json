@@ -15,6 +15,7 @@
   "cassandra_port": "9042",
 
   "kafka_bootstrap_servers": "${KAFKA_HOST}:${KAFKA_PORT}",
+  "schema_registry_url": "http://${SCHEMA_REGISTRY_HOST}:${SCHEMA_REGISTRY_PORT}",
   "kafka_group_id": "designs-command",
   "message_source": "service-designs",
   "commands_topic": "${COMMANDS_TOPIC}",

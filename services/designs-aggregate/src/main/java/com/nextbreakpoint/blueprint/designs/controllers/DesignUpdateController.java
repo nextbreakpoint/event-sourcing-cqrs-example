@@ -2,22 +2,24 @@ package com.nextbreakpoint.blueprint.designs.controllers;
 
 import com.nextbreakpoint.blueprint.common.core.Controller;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
-import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.MessageEmitter;
-import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
-import com.nextbreakpoint.blueprint.common.core.Tile;
-import com.nextbreakpoint.blueprint.common.events.DesignAggregateUpdated;
-import com.nextbreakpoint.blueprint.common.events.DesignDeleteRequested;
-import com.nextbreakpoint.blueprint.common.events.DesignInsertRequested;
-import com.nextbreakpoint.blueprint.common.events.DesignUpdateRequested;
-import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignAggregateStatus;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignAggregateUpdated;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignDeleteRequested;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignInsertRequested;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignUpdateRequested;
+import com.nextbreakpoint.blueprint.common.events.avro.Tile;
+import com.nextbreakpoint.blueprint.common.events.avro.TileRenderRequested;
+import com.nextbreakpoint.blueprint.common.vertx.MessageFactory;
 import com.nextbreakpoint.blueprint.designs.aggregate.DesignEventStore;
 import com.nextbreakpoint.blueprint.designs.common.Render;
 import com.nextbreakpoint.blueprint.designs.model.Design;
+import org.apache.avro.specific.SpecificRecord;
 import rx.Observable;
 import rx.Single;
 
+import java.time.ZoneOffset;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Function;
@@ -25,38 +27,32 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-public abstract class DesignUpdateController<T> implements Controller<InputMessage, Void> {
-    private final Mapper<InputMessage, T> inputMapper;
-    private final Mapper<DesignAggregateUpdated, OutputMessage> updateOutputMapper;
-    private final Mapper<TileRenderRequested, OutputMessage> renderOutputMapper;
-    private final MessageEmitter updateEmitter;
-    private final MessageEmitter renderEmitter;
+public abstract class DesignUpdateController<T extends SpecificRecord> implements Controller<InputMessage<T>, Void> {
+    private final MessageEmitter<DesignAggregateUpdated> updateEmitter;
+    private final MessageEmitter<TileRenderRequested> renderEmitter;
     private final DesignEventStore eventStore;
+    private final String messageSource;
     private final Function<T, UUID> extractor;
 
     public DesignUpdateController(
+            String messageSource,
             DesignEventStore eventStore,
-            Mapper<InputMessage, T> inputMapper,
-            Mapper<DesignAggregateUpdated, OutputMessage> updateOutputMapper,
-            Mapper<TileRenderRequested, OutputMessage> renderOutputMapper,
-            MessageEmitter updateEmitter,
-            MessageEmitter renderEmitter,
+            MessageEmitter<DesignAggregateUpdated> updateEmitter,
+            MessageEmitter<TileRenderRequested> renderEmitter,
             Function<T, UUID> extractor
     ) {
         this.eventStore = Objects.requireNonNull(eventStore);
-        this.inputMapper = Objects.requireNonNull(inputMapper);
-        this.updateOutputMapper = Objects.requireNonNull(updateOutputMapper);
-        this.renderOutputMapper = Objects.requireNonNull(renderOutputMapper);
+        this.messageSource = Objects.requireNonNull(messageSource);
         this.updateEmitter = Objects.requireNonNull(updateEmitter);
         this.renderEmitter = Objects.requireNonNull(renderEmitter);
         this.extractor = Objects.requireNonNull(extractor);
     }
 
     @Override
-    public Single<Void> onNext(InputMessage message) {
+    public Single<Void> onNext(InputMessage<T> message) {
         return Single.just(message)
                 .flatMap(this::onMessageReceived)
-                .map(inputMapper::transform)
+                .map(receivedMessage -> receivedMessage.getValue().getData())
                 .flatMapObservable(event -> onEventReceived(extractor.apply(event), message.getToken()))
                 .ignoreElements()
                 .toCompletable()
@@ -64,7 +60,7 @@ public abstract class DesignUpdateController<T> implements Controller<InputMessa
                 .map(value -> null);
     }
 
-    private Single<InputMessage> onMessageReceived(InputMessage message) {
+    private Single<InputMessage<T>> onMessageReceived(InputMessage<T> message) {
         return eventStore.appendMessage(message).map(result -> message);
     }
 
@@ -85,7 +81,7 @@ public abstract class DesignUpdateController<T> implements Controller<InputMessa
 
     private Observable<Void> sendUpdateEvents(Design design) {
         return createUpdateEvents(design)
-                .map(updateOutputMapper::transform)
+                .map(this::createMessage)
                 .flatMapSingle(updateEmitter::send);
     }
 
@@ -94,19 +90,19 @@ public abstract class DesignUpdateController<T> implements Controller<InputMessa
     }
 
     private DesignAggregateUpdated createUpdateEvent(Design design) {
-        return DesignAggregateUpdated.builder()
-                .withDesignId(design.getDesignId())
-                .withCommandId(design.getCommandId())
-                .withUserId(design.getUserId())
-                .withRevision(design.getRevision())
-                .withChecksum(design.getChecksum())
-                .withData(design.getData())
-                .withStatus(design.getStatus())
-                .withPublished(design.isPublished())
-                .withLevels(design.getLevels())
-                .withBitmap(design.getBitmap())
-                .withCreated(design.getCreated())
-                .withUpdated(design.getUpdated())
+        return DesignAggregateUpdated.newBuilder()
+                .setDesignId(design.getDesignId())
+                .setCommandId(design.getCommandId())
+                .setUserId(design.getUserId())
+                .setRevision(design.getRevision())
+                .setChecksum(design.getChecksum())
+                .setData(design.getData())
+                .setStatus(DesignAggregateStatus.valueOf(design.getStatus()))
+                .setPublished(design.isPublished())
+                .setLevels(design.getLevels())
+                .setBitmap(design.getBitmap())
+                .setCreated(design.getCreated().toInstant(ZoneOffset.UTC))
+                .setUpdated(design.getUpdated().toInstant(ZoneOffset.UTC))
                 .build();
     }
 
@@ -119,7 +115,7 @@ public abstract class DesignUpdateController<T> implements Controller<InputMessa
     }
 
     private Single<Void> sendRenderEvent(TileRenderRequested event) {
-        return renderEmitter.send(renderOutputMapper.transform(event), Render.getTopicName(renderEmitter.getTopicName() + "-requested", 0));
+        return renderEmitter.send(createMessage(event), Render.getTopicName(renderEmitter.getTopicName() + "-requested", 0));
     }
 
     private Observable<TileRenderRequested> createRenderEvents(Design design) {
@@ -130,16 +126,26 @@ public abstract class DesignUpdateController<T> implements Controller<InputMessa
     }
 
     private TileRenderRequested createRenderEvent(Design design, Tile tile) {
-        return TileRenderRequested.builder()
-                .withDesignId(design.getDesignId())
-                .withCommandId(design.getCommandId())
-                .withRevision(design.getRevision())
-                .withChecksum(design.getChecksum())
-                .withData(design.getData())
-                .withLevel(tile.getLevel())
-                .withRow(tile.getRow())
-                .withCol(tile.getCol())
+        return TileRenderRequested.newBuilder()
+                .setDesignId(design.getDesignId())
+                .setCommandId(design.getCommandId())
+                .setRevision(design.getRevision())
+                .setChecksum(design.getChecksum())
+                .setData(design.getData())
+                .setLevel(tile.getLevel())
+                .setRow(tile.getRow())
+                .setCol(tile.getCol())
                 .build();
+    }
+
+    private OutputMessage<DesignAggregateUpdated> createMessage(DesignAggregateUpdated event) {
+        return MessageFactory.<DesignAggregateUpdated>of(messageSource)
+                .createOutputMessage(event.getDesignId().toString(), event);
+    }
+
+    private OutputMessage<TileRenderRequested> createMessage(TileRenderRequested event) {
+        return MessageFactory.<TileRenderRequested>of(messageSource)
+                .createOutputMessage(Render.createRenderKey(event), event);
     }
 
     private Observable<Tile> generateTiles(int level) {
@@ -164,40 +170,34 @@ public abstract class DesignUpdateController<T> implements Controller<InputMessa
 
     public static class DesignInsertRequestedController extends DesignUpdateController<DesignInsertRequested> {
         public DesignInsertRequestedController(
+                String messageSource,
                 DesignEventStore eventStore,
-                Mapper<InputMessage, DesignInsertRequested> inputMapper,
-                Mapper<DesignAggregateUpdated, OutputMessage> updateOutputMapper,
-                Mapper<TileRenderRequested, OutputMessage> renderOutputMapper,
-                MessageEmitter eventsEmitter,
-                MessageEmitter renderEmitter
+                MessageEmitter<DesignAggregateUpdated> eventsEmitter,
+                MessageEmitter<TileRenderRequested> renderEmitter
         ) {
-            super(eventStore, inputMapper, updateOutputMapper, renderOutputMapper, eventsEmitter, renderEmitter, DesignInsertRequested::getDesignId);
+            super(messageSource, eventStore, eventsEmitter, renderEmitter, DesignInsertRequested::getDesignId);
         }
     }
 
     public static class DesignUpdateRequestedController extends DesignUpdateController<DesignUpdateRequested> {
         public DesignUpdateRequestedController(
+                String messageSource,
                 DesignEventStore eventStore,
-                Mapper<InputMessage, DesignUpdateRequested> inputMapper,
-                Mapper<DesignAggregateUpdated, OutputMessage> updateOutputMapper,
-                Mapper<TileRenderRequested, OutputMessage> renderOutputMapper,
-                MessageEmitter eventsEmitter,
-                MessageEmitter renderEmitter
+                MessageEmitter<DesignAggregateUpdated> eventsEmitter,
+                MessageEmitter<TileRenderRequested> renderEmitter
         ) {
-            super(eventStore, inputMapper, updateOutputMapper, renderOutputMapper, eventsEmitter, renderEmitter, DesignUpdateRequested::getDesignId);
+            super(messageSource, eventStore, eventsEmitter, renderEmitter, DesignUpdateRequested::getDesignId);
         }
     }
 
     public static class DesignDeleteRequestedController extends DesignUpdateController<DesignDeleteRequested> {
         public DesignDeleteRequestedController(
+                String messageSource,
                 DesignEventStore eventStore,
-                Mapper<InputMessage, DesignDeleteRequested> inputMapper,
-                Mapper<DesignAggregateUpdated, OutputMessage> updateOutputMapper,
-                Mapper<TileRenderRequested, OutputMessage> renderOutputMapper,
-                MessageEmitter eventsEmitter,
-                MessageEmitter renderEmitter
+                MessageEmitter<DesignAggregateUpdated> eventsEmitter,
+                MessageEmitter<TileRenderRequested> renderEmitter
         ) {
-            super(eventStore, inputMapper, updateOutputMapper, renderOutputMapper, eventsEmitter, renderEmitter, DesignDeleteRequested::getDesignId);
+            super(messageSource, eventStore, eventsEmitter, renderEmitter, DesignDeleteRequested::getDesignId);
         }
     }
 }

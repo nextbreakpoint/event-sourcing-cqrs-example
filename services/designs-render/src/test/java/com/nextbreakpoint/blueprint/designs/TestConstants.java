@@ -1,12 +1,14 @@
 package com.nextbreakpoint.blueprint.designs;
 
 import com.nextbreakpoint.blueprint.common.core.Checksum;
+import com.nextbreakpoint.blueprint.common.events.avro.TileRenderCompleted;
+import com.nextbreakpoint.blueprint.common.events.avro.TileRenderRequested;
 
 import java.util.UUID;
 
 public interface TestConstants {
-    String TILE_RENDER_REQUESTED = "tile-render-requested-v1";
-    String TILE_RENDER_COMPLETED = "tile-render-completed-v1";
+    String TILE_RENDER_REQUESTED = TileRenderRequested.getClassSchema().getFullName();
+    String TILE_RENDER_COMPLETED = TileRenderCompleted.getClassSchema().getFullName();
 
     String MESSAGE_SOURCE = "service-designs";
     String RENDER_TOPIC_PREFIX = "test-designs-render";

@@ -1,8 +1,8 @@
 package com.nextbreakpoint.blueprint.designs.common;
 
-import com.nextbreakpoint.blueprint.common.core.Tile;
-import com.nextbreakpoint.blueprint.common.core.TilesBitmap;
-import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
+import com.nextbreakpoint.blueprint.common.events.avro.Tile;
+import com.nextbreakpoint.blueprint.common.events.avro.TileRenderCompleted;
+import com.nextbreakpoint.blueprint.common.events.avro.TileRenderRequested;
 import lombok.extern.log4j.Log4j2;
 
 import java.util.List;
@@ -12,6 +12,10 @@ public class Render {
     private Render() {}
 
     public static String createRenderKey(TileRenderRequested event) {
+        return String.format("%s/%s/%d/%04d%04d.png", event.getDesignId(), event.getCommandId(), event.getLevel(), event.getRow(), event.getCol());
+    }
+
+    public static String createRenderKey(TileRenderCompleted event) {
         return String.format("%s/%s/%d/%04d%04d.png", event.getDesignId(), event.getCommandId(), event.getLevel(), event.getRow(), event.getCol());
     }
 
@@ -25,7 +29,7 @@ public class Render {
         }
     }
 
-    public static List<Tile> generateTiles(Tile tile, int levels, TilesBitmap bitmap) {
+    public static List<Tile> generateTiles(Tile tile, int levels, Bitmap bitmap) {
         int level = tile.getLevel();
 
         if (levels < 8 || level < 2) {

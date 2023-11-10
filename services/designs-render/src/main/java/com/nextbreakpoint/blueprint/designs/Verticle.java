@@ -9,13 +9,15 @@ import com.nextbreakpoint.blueprint.common.drivers.KafkaMessageConsumer;
 import com.nextbreakpoint.blueprint.common.drivers.KafkaMessagePolling;
 import com.nextbreakpoint.blueprint.common.drivers.KafkaProducerConfig;
 import com.nextbreakpoint.blueprint.common.drivers.KafkaRecordsQueue;
-import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
+import com.nextbreakpoint.blueprint.common.events.avro.Payload;
+import com.nextbreakpoint.blueprint.common.events.avro.TileRenderRequested;
 import com.nextbreakpoint.blueprint.common.vertx.AccessHandler;
 import com.nextbreakpoint.blueprint.common.vertx.CorsHandlerFactory;
 import com.nextbreakpoint.blueprint.common.vertx.Initializer;
 import com.nextbreakpoint.blueprint.common.vertx.JWTProviderConfig;
 import com.nextbreakpoint.blueprint.common.vertx.JWTProviderFactory;
 import com.nextbreakpoint.blueprint.common.vertx.OpenApiHandler;
+import com.nextbreakpoint.blueprint.common.vertx.Records;
 import com.nextbreakpoint.blueprint.common.vertx.ResponseHelper;
 import com.nextbreakpoint.blueprint.common.vertx.Server;
 import com.nextbreakpoint.blueprint.common.vertx.ServerConfig;
@@ -78,10 +80,10 @@ import static com.nextbreakpoint.blueprint.designs.Factory.createTileRenderReque
 
 @Log4j2
 public class Verticle extends AbstractVerticle {
-    private KafkaMessagePolling renderKafkaPolling0;
-    private KafkaMessagePolling renderKafkaPolling1;
-    private KafkaMessagePolling renderKafkaPolling2;
-    private KafkaMessagePolling renderKafkaPolling3;
+    private KafkaMessagePolling<Payload, Object, InputMessage<Object>> renderKafkaPolling0;
+    private KafkaMessagePolling<Payload, Object, InputMessage<Object>> renderKafkaPolling1;
+    private KafkaMessagePolling<Payload, Object, InputMessage<Object>> renderKafkaPolling2;
+    private KafkaMessagePolling<Payload, Object, InputMessage<Object>> renderKafkaPolling3;
 
     public static void main(String[] args) {
         try {
@@ -160,9 +162,7 @@ public class Verticle extends AbstractVerticle {
 
             final String bootstrapServers = config.getString("kafka_bootstrap_servers", "localhost:9092");
 
-            final String keySerializer = config.getString("kafka_key_serializer", "org.apache.kafka.common.serialization.StringSerializer");
-
-            final String valSerializer = config.getString("kafka_val_serializer", "org.apache.kafka.common.serialization.StringSerializer");
+            final String schemaRegistryUrl = config.getString("schema_registry_url", "http://localhost:8081");
 
             final String clientId = config.getString("kafka_client_id", "designs-render");
 
@@ -176,9 +176,13 @@ public class Verticle extends AbstractVerticle {
 
             final String truststorePassword = config.getString("kafka_truststore_password");
 
-            final String keyDeserializer = config.getString("kafka_key_serializer", "org.apache.kafka.common.serialization.StringDeserializer");
+            final String schemaRegistryKeystoreLocation = config.getString("schema_registry_keystore_location");
 
-            final String valDeserializer = config.getString("kafka_val_serializer", "org.apache.kafka.common.serialization.StringDeserializer");
+            final String schemaRegistryKeystorePassword = config.getString("schema_registry_keystore_password");
+
+            final String schemaRegistryTruststoreLocation = config.getString("schema_registry_truststore_location");
+
+            final String schemaRegistryTruststorePassword = config.getString("schema_registry_truststore_password");
 
             final String groupId = config.getString("kafka_group_id", "test");
 
@@ -186,39 +190,57 @@ public class Verticle extends AbstractVerticle {
 
             final String enableAutoCommit = config.getString("kafka_enable_auto_commit", "false");
 
+            final String keySerializer = "org.apache.kafka.common.serialization.StringSerializer";
+            final String valSerializer = "io.confluent.kafka.serializers.KafkaAvroSerializer";
+            final String keyDeserializer = "org.apache.kafka.common.serialization.StringDeserializer";
+            final String valDeserializer = "io.confluent.kafka.serializers.KafkaAvroDeserializer";
+
             final MeterRegistry registry = BackendRegistries.getDefaultNow();
 
             final KafkaProducerConfig producerConfig = KafkaProducerConfig.builder()
                     .withBootstrapServers(bootstrapServers)
+                    .withSchemaRegistryUrl(schemaRegistryUrl)
                     .withKeySerializer(keySerializer)
                     .withValueSerializer(valSerializer)
                     .withKeystoreLocation(keystoreLocation)
                     .withKeystorePassword(keystorePassword)
                     .withTruststoreLocation(truststoreLocation)
                     .withTruststorePassword(truststorePassword)
+                    .withSchemaRegistryKeystoreLocation(schemaRegistryKeystoreLocation)
+                    .withSchemaRegistryKeystorePassword(schemaRegistryKeystorePassword)
+                    .withSchemaRegistryTruststoreLocation(schemaRegistryTruststoreLocation)
+                    .withSchemaRegistryTruststorePassword(schemaRegistryTruststorePassword)
                     .withClientId(clientId)
                     .withKafkaAcks(acks)
+                    .withAutoRegisterSchemas(true)
                     .build();
 
-            final KafkaProducer<String, String> kafkaProducer = KafkaClientFactory.createProducer(producerConfig);
+            final KafkaProducer<String, Payload> kafkaProducer = KafkaClientFactory.createProducer(producerConfig);
 
             final KafkaConsumerConfig consumerConfig = KafkaConsumerConfig.builder()
                     .withBootstrapServers(bootstrapServers)
+                    .withSchemaRegistryUrl(schemaRegistryUrl)
                     .withKeyDeserializer(keyDeserializer)
                     .withValueDeserializer(valDeserializer)
                     .withKeystoreLocation(keystoreLocation)
                     .withKeystorePassword(keystorePassword)
                     .withTruststoreLocation(truststoreLocation)
                     .withTruststorePassword(truststorePassword)
+                    .withSchemaRegistryKeystoreLocation(schemaRegistryKeystoreLocation)
+                    .withSchemaRegistryKeystorePassword(schemaRegistryKeystorePassword)
+                    .withSchemaRegistryTruststoreLocation(schemaRegistryTruststoreLocation)
+                    .withSchemaRegistryTruststorePassword(schemaRegistryTruststorePassword)
                     .withAutoOffsetReset(autoOffsetReset)
                     .withEnableAutoCommit(enableAutoCommit)
+                    .withAutoRegisterSchemas(false)
+                    .withSpecificAvroReader(true)
                     .build();
 
-            final KafkaConsumer<String, String> healthKafkaConsumer = KafkaClientFactory.createConsumer(consumerConfig.toBuilder().withGroupId(groupId + "-health").build());
-            final KafkaConsumer<String, String> renderKafkaConsumer0 = KafkaClientFactory.createConsumer(consumerConfig.toBuilder().withGroupId(groupId + "-render-requested-0").build());
-            final KafkaConsumer<String, String> renderKafkaConsumer1 = KafkaClientFactory.createConsumer(consumerConfig.toBuilder().withGroupId(groupId + "-render-requested-1").build());
-            final KafkaConsumer<String, String> renderKafkaConsumer2 = KafkaClientFactory.createConsumer(consumerConfig.toBuilder().withGroupId(groupId + "-render-requested-2").build());
-            final KafkaConsumer<String, String> renderKafkaConsumer3 = KafkaClientFactory.createConsumer(consumerConfig.toBuilder().withGroupId(groupId + "-render-requested-3").build());
+            final KafkaConsumer<String, Object> healthKafkaConsumer = KafkaClientFactory.createConsumer(consumerConfig.toBuilder().withGroupId(groupId + "-health").build());
+            final KafkaConsumer<String, Payload> renderKafkaConsumer0 = KafkaClientFactory.createConsumer(consumerConfig.toBuilder().withGroupId(groupId + "-render-requested-0").build());
+            final KafkaConsumer<String, Payload> renderKafkaConsumer1 = KafkaClientFactory.createConsumer(consumerConfig.toBuilder().withGroupId(groupId + "-render-requested-1").build());
+            final KafkaConsumer<String, Payload> renderKafkaConsumer2 = KafkaClientFactory.createConsumer(consumerConfig.toBuilder().withGroupId(groupId + "-render-requested-2").build());
+            final KafkaConsumer<String, Payload> renderKafkaConsumer3 = KafkaClientFactory.createConsumer(consumerConfig.toBuilder().withGroupId(groupId + "-render-requested-3").build());
 
             final AwsCredentialsProvider credentialsProvider = AwsCredentialsProviderChain.of(DefaultCredentialsProvider.create());
 
@@ -236,9 +258,9 @@ public class Verticle extends AbstractVerticle {
 
             final JWTAuth jwtProvider = JWTProviderFactory.create(vertx, jwtProviderConfig);
 
-            final Map<String, RxSingleHandler<InputMessage, ?>> messageHandlers = new HashMap<>();
+            final Map<String, RxSingleHandler<InputMessage<Object>, Void>> messageHandlers = new HashMap<>();
 
-            messageHandlers.put(TileRenderRequested.TYPE, createTileRenderRequestedHandler(renderTopicPrefix, kafkaProducer, messageSource, workerExecutor, s3AsyncClient, s3Bucket));
+            messageHandlers.put(TileRenderRequested.getClassSchema().getFullName(), createTileRenderRequestedHandler(renderTopicPrefix, kafkaProducer, messageSource, workerExecutor, s3AsyncClient, s3Bucket));
 
             renderKafkaConsumer0.subscribe(Set.of(renderTopicPrefix + "-requested-0"));
             renderKafkaConsumer1.subscribe(Set.of(renderTopicPrefix + "-requested-1"));
@@ -252,10 +274,10 @@ public class Verticle extends AbstractVerticle {
             new KafkaClientMetrics(renderKafkaConsumer2).bindTo(registry);
             new KafkaClientMetrics(renderKafkaConsumer3).bindTo(registry);
 
-            renderKafkaPolling0 = new KafkaMessagePolling<>(renderKafkaConsumer0, messageHandlers, KafkaMessageConsumer.Simple.create(messageHandlers, registry), registry, KafkaRecordsQueue.Compacted.create(), -1, 10);
-            renderKafkaPolling1 = new KafkaMessagePolling<>(renderKafkaConsumer1, messageHandlers, KafkaMessageConsumer.Simple.create(messageHandlers, registry), registry, KafkaRecordsQueue.Compacted.create(), -1, 10);
-            renderKafkaPolling2 = new KafkaMessagePolling<>(renderKafkaConsumer2, messageHandlers, KafkaMessageConsumer.Simple.create(messageHandlers, registry), registry, KafkaRecordsQueue.Compacted.create(), -1, 10);
-            renderKafkaPolling3 = new KafkaMessagePolling<>(renderKafkaConsumer3, messageHandlers, KafkaMessageConsumer.Simple.create(messageHandlers, registry), registry, KafkaRecordsQueue.Compacted.create(), -1, 10);
+            renderKafkaPolling0 = new KafkaMessagePolling<>(renderKafkaConsumer0, Records.createEventInputRecordMapper(), messageHandlers, KafkaMessageConsumer.Simple.create(messageHandlers, registry), registry, KafkaRecordsQueue.Compacted.create(), -1, 10);
+            renderKafkaPolling1 = new KafkaMessagePolling<>(renderKafkaConsumer1, Records.createEventInputRecordMapper(), messageHandlers, KafkaMessageConsumer.Simple.create(messageHandlers, registry), registry, KafkaRecordsQueue.Compacted.create(), -1, 10);
+            renderKafkaPolling2 = new KafkaMessagePolling<>(renderKafkaConsumer2, Records.createEventInputRecordMapper(), messageHandlers, KafkaMessageConsumer.Simple.create(messageHandlers, registry), registry, KafkaRecordsQueue.Compacted.create(), -1, 10);
+            renderKafkaPolling3 = new KafkaMessagePolling<>(renderKafkaConsumer3, Records.createEventInputRecordMapper(), messageHandlers, KafkaMessageConsumer.Simple.create(messageHandlers, registry), registry, KafkaRecordsQueue.Compacted.create(), -1, 10);
 
             renderKafkaPolling0.startPolling();
             renderKafkaPolling1.startPolling();
@@ -275,6 +297,8 @@ public class Verticle extends AbstractVerticle {
             final Handler<RoutingContext> apiV1DocsHandler = new OpenApiHandler(vertx.getDelegate(), executor, "api-v1.yaml");
 
             final HealthCheckHandler healthCheckHandler = HealthCheckHandler.createWithHealthChecks(HealthChecks.create(vertx));
+
+            final Handler<RoutingContext> metricsHandler = PrometheusScrapingHandler.create();
 
             healthCheckHandler.register("kafka-topic-render-requested-0", 2000, future -> checkTopic(healthKafkaConsumer, renderTopicPrefix + "-requested-0", future));
             healthCheckHandler.register("kafka-topic-render-requested-1", 2000, future -> checkTopic(healthKafkaConsumer, renderTopicPrefix + "-requested-1", future));
@@ -305,7 +329,7 @@ public class Verticle extends AbstractVerticle {
                                 .handler(context -> healthCheckHandler.handle(RoutingContext.newInstance(context)));
 
                         routerBuilder.operation("metrics")
-                                .handler(context -> PrometheusScrapingHandler.create().handle(RoutingContext.newInstance(context)));
+                                .handler(context -> metricsHandler.handle(RoutingContext.newInstance(context)));
 
                         routerBuilder.operation("validateDesign")
                                 .handler(context -> validateDesignHandler.handle(RoutingContext.newInstance(context)));
@@ -376,8 +400,8 @@ public class Verticle extends AbstractVerticle {
                 });
     }
 
-    private void checkTopic(KafkaConsumer<String, String> kafkaConsumer, String eventsTopic, Promise<Status> promise) {
-        Single.fromCallable(() -> kafkaConsumer.partitionsFor(eventsTopic))
+    private void checkTopic(KafkaConsumer<String, Object> kafkaConsumer, String topic, Promise<Status> promise) {
+        Single.fromCallable(() -> kafkaConsumer.partitionsFor(topic))
                 .timeout(1, TimeUnit.SECONDS)
                 .subscribe(partitions -> promise.complete(Status.OK()), err -> promise.complete(Status.KO()));
     }

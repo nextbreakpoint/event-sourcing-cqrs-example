@@ -179,6 +179,8 @@ public class Verticle extends AbstractVerticle {
 
             final HealthCheckHandler healthCheckHandler = HealthCheckHandler.createWithHealthChecks(HealthChecks.create(vertx));
 
+            final Handler<RoutingContext> metricsHandler = PrometheusScrapingHandler.create();
+
             final URL resource = RouterBuilder.class.getClassLoader().getResource("api-v1.yaml");
 
             if (resource == null) {
@@ -198,7 +200,7 @@ public class Verticle extends AbstractVerticle {
                                 .handler(context -> healthCheckHandler.handle(RoutingContext.newInstance(context)));
 
                         routerBuilder.operation("metrics")
-                                .handler(context -> PrometheusScrapingHandler.create().handle(RoutingContext.newInstance(context)));
+                                .handler(context -> metricsHandler.handle(RoutingContext.newInstance(context)));
 
                         routerBuilder.operation("signIn")
                                 .handler(context -> signinHandler.handle(RoutingContext.newInstance(context)));
@@ -222,14 +224,12 @@ public class Verticle extends AbstractVerticle {
 
                         final Router mainRouter = Router.router(vertx);
 
-                        final Function<Integer, String> getErrorRedirectURL = (code) -> webUrl + "/error/" + code;
-
                         mainRouter.route().handler(LoggerHandler.create(true, LoggerFormat.DEFAULT));
-                        mainRouter.route().handler(TimeoutHandler.create(10000));
+//                        mainRouter.route().handler(TimeoutHandler.create(10000));
                         mainRouter.route().handler(corsHandler);
                         mainRouter.route().handler(BodyHandler.create());
                         mainRouter.route("/*").subRouter(router);
-                        mainRouter.route().failureHandler(routingContext -> redirectToError(routingContext, getErrorRedirectURL));
+                        mainRouter.route().failureHandler(routingContext -> redirectOnFailure(routingContext, webUrl));
 
                         final ServerConfig serverConfig = ServerConfig.builder()
                                 .withJksStorePath(jksStorePath)

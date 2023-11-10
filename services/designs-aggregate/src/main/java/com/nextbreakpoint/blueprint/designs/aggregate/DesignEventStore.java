@@ -3,6 +3,7 @@ package com.nextbreakpoint.blueprint.designs.aggregate;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.designs.Store;
 import com.nextbreakpoint.blueprint.designs.model.Design;
+import org.apache.avro.specific.SpecificRecord;
 import rx.Single;
 
 import java.util.List;
@@ -22,7 +23,7 @@ public class DesignEventStore {
         this.strategy = Objects.requireNonNull(strategy);
     }
 
-    public Single<Void> appendMessage(InputMessage message) {
+    public Single<Void> appendMessage(InputMessage<? extends SpecificRecord> message) {
         return store.appendMessage(message);
     }
 
@@ -49,7 +50,7 @@ public class DesignEventStore {
         }
     }
 
-    private Single<Optional<Design>> projectDesign(List<InputMessage> messages, Design state) {
+    private Single<Optional<Design>> projectDesign(List<InputMessage<SpecificRecord>> messages, Design state) {
         return Single.fromCallable(() -> strategy.applyEvents(state, messages));
     }
 }

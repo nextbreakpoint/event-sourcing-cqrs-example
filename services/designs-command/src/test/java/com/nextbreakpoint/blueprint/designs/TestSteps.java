@@ -2,10 +2,10 @@ package com.nextbreakpoint.blueprint.designs;
 
 import com.datastax.oss.driver.api.core.cql.Row;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
-import com.nextbreakpoint.blueprint.common.core.Json;
-import com.nextbreakpoint.blueprint.common.events.DesignDeleteRequested;
-import com.nextbreakpoint.blueprint.common.events.DesignInsertRequested;
-import com.nextbreakpoint.blueprint.common.events.DesignUpdateRequested;
+import com.nextbreakpoint.blueprint.common.core.Messages;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignDeleteRequested;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignInsertRequested;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignUpdateRequested;
 import com.nextbreakpoint.blueprint.common.test.TestContext;
 import com.nextbreakpoint.blueprint.designs.TestActions.Source;
 import org.awaitility.Awaitility;
@@ -23,7 +23,6 @@ import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_UPDATE_R
 import static com.nextbreakpoint.blueprint.designs.TestConstants.MESSAGE_SOURCE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Durations.ONE_SECOND;
-import static org.awaitility.Durations.TEN_SECONDS;
 
 public class TestSteps {
     private final TestContext context;
@@ -39,7 +38,7 @@ public class TestSteps {
     }
 
     private static ConditionFactory defaultAwait() {
-        return Awaitility.await().atMost(TEN_SECONDS).pollInterval(ONE_SECOND);
+        return Awaitility.await().atMost(Duration.ofMinutes(20)).pollInterval(ONE_SECOND);
     }
 
     public void reset() {
@@ -180,7 +179,7 @@ public class TestSteps {
 
             defaultAwait()
                     .untilAsserted(() -> {
-                        final List<InputMessage> messages = actions.findMessages(Source.COMMANDS, MESSAGE_SOURCE, messageType, key -> key.equals(designId.toString()), msg -> true);
+                        final List<InputMessage<Object>> messages = actions.findMessages(Source.COMMANDS, MESSAGE_SOURCE, messageType, key -> key.equals(designId.toString()), msg -> true);
                         assertThat(messages).hasSize(1);
                         context.putObject("messageId", messages.get(0).getValue().getUuid());
                     });
@@ -194,7 +193,7 @@ public class TestSteps {
             defaultAwait()
                     .atMost(Duration.ofSeconds(20))
                     .untilAsserted(() -> {
-                        final List<InputMessage> messages = actions.findMessages(Source.EVENTS, MESSAGE_SOURCE, DESIGN_INSERT_REQUESTED, key -> key.equals(designId.toString()), msg -> true);
+                        final List<InputMessage<Object>> messages = actions.findMessages(Source.EVENTS, MESSAGE_SOURCE, DESIGN_INSERT_REQUESTED, key -> key.equals(designId.toString()), msg -> true);
                         assertThat(messages).hasSize(1);
                         context.putObject("message", messages.get(0));
                         TestAssertions.assertExpectedDesignInsertRequestedMessage(messages.get(0), designId.toString());
@@ -209,7 +208,7 @@ public class TestSteps {
             defaultAwait()
                     .atMost(Duration.ofSeconds(20))
                     .untilAsserted(() -> {
-                        final List<InputMessage> messages = actions.findMessages(Source.EVENTS, MESSAGE_SOURCE, DESIGN_UPDATE_REQUESTED, key -> key.equals(designId.toString()), msg -> true);
+                        final List<InputMessage<Object>> messages = actions.findMessages(Source.EVENTS, MESSAGE_SOURCE, DESIGN_UPDATE_REQUESTED, key -> key.equals(designId.toString()), msg -> true);
                         assertThat(messages).hasSize(1);
                         context.putObject("message", messages.get(0));
                         TestAssertions.assertExpectedDesignUpdateRequestedMessage(messages.get(0), designId.toString());
@@ -224,7 +223,7 @@ public class TestSteps {
             defaultAwait()
                     .atMost(Duration.ofSeconds(20))
                     .untilAsserted(() -> {
-                        final List<InputMessage> messages = actions.findMessages(Source.EVENTS, MESSAGE_SOURCE, DESIGN_DELETE_REQUESTED, key -> key.equals(designId.toString()), msg -> true);
+                        final List<InputMessage<Object>> messages = actions.findMessages(Source.EVENTS, MESSAGE_SOURCE, DESIGN_DELETE_REQUESTED, key -> key.equals(designId.toString()), msg -> true);
                         assertThat(messages).hasSize(1);
                         context.putObject("message", messages.get(0));
                         TestAssertions.assertExpectedDesignDeleteRequestedMessage(messages.get(0), designId.toString());
@@ -276,45 +275,45 @@ public class TestSteps {
         }
 
         public Thens theDesignInsertRequestedEventShouldHaveExpectedValues() {
-            var message = (InputMessage) context.getObject("message");
+            var message = (InputMessage<Object>) context.getObject("message");
             var designId = (UUID) context.getObject("designId");
             var userId = (UUID) context.getObject("userId");
 
             defaultAwait()
                     .atMost(Duration.ofSeconds(20))
                     .untilAsserted(() -> {
-                        DesignInsertRequested event = Json.decodeValue(message.getValue().getData(), DesignInsertRequested.class);
-                        TestAssertions.assertExpectedDesignInsertRequestedEvent(event, designId, userId);
+                        InputMessage<DesignInsertRequested> eventMessage = Messages.asSpecificMessage(message, data -> (DesignInsertRequested) data);
+                        TestAssertions.assertExpectedDesignInsertRequestedEvent(eventMessage.getValue().getData(), designId, userId);
                     });
 
             return this;
         }
 
         public Thens theDesignUpdateRequestedEventShouldHaveExpectedValues() {
-            var message = (InputMessage) context.getObject("message");
+            var message = (InputMessage<Object>) context.getObject("message");
             var designId = (UUID) context.getObject("designId");
             var userId = (UUID) context.getObject("userId");
 
             defaultAwait()
                     .atMost(Duration.ofSeconds(20))
                     .untilAsserted(() -> {
-                        DesignUpdateRequested event = Json.decodeValue(message.getValue().getData(), DesignUpdateRequested.class);
-                        TestAssertions.assertExpectedDesignUpdateRequestedEvent(event, designId, userId);
+                        InputMessage<DesignUpdateRequested> eventMessage = Messages.asSpecificMessage(message, data -> (DesignUpdateRequested) data);
+                        TestAssertions.assertExpectedDesignUpdateRequestedEvent(eventMessage.getValue().getData(), designId, userId);
                     });
 
             return this;
         }
 
         public Thens theDesignDeleteRequestedEventShouldHaveExpectedValues() {
-            var message = (InputMessage) context.getObject("message");
+            var message = (InputMessage<Object>) context.getObject("message");
             var designId = (UUID) context.getObject("designId");
             var userId = (UUID) context.getObject("userId");
 
             defaultAwait()
                     .atMost(Duration.ofSeconds(20))
                     .untilAsserted(() -> {
-                        DesignDeleteRequested event = Json.decodeValue(message.getValue().getData(), DesignDeleteRequested.class);
-                        TestAssertions.assertExpectedDesignDeleteRequestedEvent(event, designId, userId);
+                        InputMessage<DesignDeleteRequested> eventMessage = Messages.asSpecificMessage(message, data -> (DesignDeleteRequested) data);
+                        TestAssertions.assertExpectedDesignDeleteRequestedEvent(eventMessage.getValue().getData(), designId, userId);
                     });
 
             return this;

@@ -34,6 +34,8 @@ import static org.hamcrest.CoreMatchers.equalTo;
 @Tag("integration")
 @DisplayName("Verify behaviour of frontend service")
 public class IntegrationTests {
+  private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ISO_INSTANT;
+
   private static final StubServer apiStub = new StubServer(Integer.parseInt("39001"));
 
   private static final TestCases testCases = new TestCases();
@@ -97,7 +99,7 @@ public class IntegrationTests {
             .put("uuid", designUuid.toString())
             .put("json", json)
             .put("checksum", "1")
-            .put("modified", DateTimeFormatter.ISO_INSTANT.format(date.toInstant()))
+            .put("modified", FORMATTER.format(date.toInstant()))
             .encode();
 
     whenHttp(apiStub)
@@ -151,7 +153,7 @@ public class IntegrationTests {
             .put("uuid", designUuid.toString())
             .put("json", json)
             .put("checksum", "1")
-            .put("modified", DateTimeFormatter.ISO_INSTANT.format(date.toInstant()))
+            .put("modified", FORMATTER.format(date.toInstant()))
             .encode();
 
     whenHttp(apiStub)

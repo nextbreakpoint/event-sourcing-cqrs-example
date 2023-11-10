@@ -9,6 +9,8 @@ import au.com.dius.pact.core.model.PactSpecVersion;
 import au.com.dius.pact.core.model.V4Pact;
 import au.com.dius.pact.core.model.annotations.Pact;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignDocumentDeleteCompleted;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignDocumentUpdateCompleted;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -119,10 +121,10 @@ public class PactConsumerTests {
     public void shouldNotifyWatchersOfAllResourcesWhenReceivingADesignDocumentUpdateCompletedEvent(V4Pact pact) {
         assertThat(pact.getInteractions()).hasSize(2);
 
-        final OutputMessage designDocumentUpdateCompletedMessage1 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(0).asAsynchronousMessage()));
-        final OutputMessage designDocumentUpdateCompletedMessage2 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(1).asAsynchronousMessage()));
+        final OutputMessage<DesignDocumentUpdateCompleted> designDocumentUpdateCompletedMessage1 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(0).asAsynchronousMessage()), DesignDocumentUpdateCompleted.class);
+        final OutputMessage<DesignDocumentUpdateCompleted> designDocumentUpdateCompletedMessage2 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(1).asAsynchronousMessage()), DesignDocumentUpdateCompleted.class);
 
-        final List<OutputMessage> designDocumentUpdateCompletedMessages = List.of(
+        final List<OutputMessage<DesignDocumentUpdateCompleted>> designDocumentUpdateCompletedMessages = List.of(
                 designDocumentUpdateCompletedMessage1,
                 designDocumentUpdateCompletedMessage2
         );
@@ -136,10 +138,10 @@ public class PactConsumerTests {
     public void shouldNotifyWatchersOfSingleResourceWhenReceivingAnDesignDocumentUpdateCompletedEvent(V4Pact pact) {
         assertThat(pact.getInteractions()).hasSize(2);
 
-        final OutputMessage designDocumentUpdateCompletedMessage1 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(0).asAsynchronousMessage()));
-        final OutputMessage designDocumentUpdateCompletedMessage2 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(1).asAsynchronousMessage()));
+        final OutputMessage<DesignDocumentUpdateCompleted> designDocumentUpdateCompletedMessage1 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(0).asAsynchronousMessage()), DesignDocumentUpdateCompleted.class);
+        final OutputMessage<DesignDocumentUpdateCompleted> designDocumentUpdateCompletedMessage2 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(1).asAsynchronousMessage()), DesignDocumentUpdateCompleted.class);
 
-        final List<OutputMessage> designDocumentUpdateCompletedMessages = List.of(
+        final List<OutputMessage<DesignDocumentUpdateCompleted>> designDocumentUpdateCompletedMessages = List.of(
                 designDocumentUpdateCompletedMessage1,
                 designDocumentUpdateCompletedMessage2
         );
@@ -153,10 +155,10 @@ public class PactConsumerTests {
     public void shouldNotifyWatchersOfAllResourcesWhenReceivingADesignDocumentDeleteCompletedEvent(V4Pact pact) {
         assertThat(pact.getInteractions()).hasSize(2);
 
-        final OutputMessage designDocumentDeleteCompletedMessage1 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(0).asAsynchronousMessage()));
-        final OutputMessage designDocumentDeleteCompletedMessage2 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(1).asAsynchronousMessage()));
+        final OutputMessage<DesignDocumentDeleteCompleted> designDocumentDeleteCompletedMessage1 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(0).asAsynchronousMessage()), DesignDocumentDeleteCompleted.class);
+        final OutputMessage<DesignDocumentDeleteCompleted> designDocumentDeleteCompletedMessage2 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(1).asAsynchronousMessage()), DesignDocumentDeleteCompleted.class);
 
-        final List<OutputMessage> designDocumentDeleteCompletedMessages = List.of(
+        final List<OutputMessage<DesignDocumentDeleteCompleted>> designDocumentDeleteCompletedMessages = List.of(
                 designDocumentDeleteCompletedMessage1,
                 designDocumentDeleteCompletedMessage2
         );
@@ -170,10 +172,10 @@ public class PactConsumerTests {
     public void shouldNotifyWatchersOfSingleResourceWhenReceivingAnDesignDocumentDeleteCompletedEvent(V4Pact pact) {
         assertThat(pact.getInteractions()).hasSize(2);
 
-        final OutputMessage designDocumentDeleteCompletedMessage1 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(0).asAsynchronousMessage()));
-        final OutputMessage designDocumentDeleteCompletedMessage2 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(1).asAsynchronousMessage()));
+        final OutputMessage<DesignDocumentDeleteCompleted> designDocumentDeleteCompletedMessage1 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(0).asAsynchronousMessage()), DesignDocumentDeleteCompleted.class);
+        final OutputMessage<DesignDocumentDeleteCompleted> designDocumentDeleteCompletedMessage2 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(1).asAsynchronousMessage()), DesignDocumentDeleteCompleted.class);
 
-        final List<OutputMessage> designDocumentDeleteCompletedMessages = List.of(
+        final List<OutputMessage<DesignDocumentDeleteCompleted>> designDocumentDeleteCompletedMessages = List.of(
                 designDocumentDeleteCompletedMessage1,
                 designDocumentDeleteCompletedMessage2
         );

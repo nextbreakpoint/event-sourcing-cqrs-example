@@ -1,17 +1,27 @@
 package com.nextbreakpoint.blueprint.designs;
 
+import com.nextbreakpoint.blueprint.common.events.avro.DesignAggregateUpdated;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignDeleteRequested;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignDocumentDeleteRequested;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignDocumentUpdateRequested;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignInsertRequested;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignUpdateRequested;
+import com.nextbreakpoint.blueprint.common.events.avro.TileRenderCompleted;
+import com.nextbreakpoint.blueprint.common.events.avro.TileRenderRequested;
+import com.nextbreakpoint.blueprint.common.events.avro.TilesRendered;
+
 import java.util.UUID;
 
 public interface TestConstants {
-    String DESIGN_INSERT_REQUESTED = "design-insert-requested-v1";
-    String DESIGN_UPDATE_REQUESTED = "design-update-requested-v1";
-    String DESIGN_DELETE_REQUESTED = "design-delete-requested-v1";
-    String DESIGN_AGGREGATE_UPDATED = "design-aggregate-updated-v1";
-    String TILE_RENDER_REQUESTED = "tile-render-requested-v1";
-    String TILE_RENDER_COMPLETED = "tile-render-completed-v1";
-    String DESIGN_DOCUMENT_UPDATE_REQUESTED = "design-document-update-requested-v1";
-    String DESIGN_DOCUMENT_DELETE_REQUESTED = "design-document-delete-requested-v1";
-    String TILES_RENDERED = "tiles-rendered-v1";
+    String DESIGN_INSERT_REQUESTED = DesignInsertRequested.getClassSchema().getFullName();
+    String DESIGN_UPDATE_REQUESTED = DesignUpdateRequested.getClassSchema().getFullName();
+    String DESIGN_DELETE_REQUESTED = DesignDeleteRequested.getClassSchema().getFullName();
+    String DESIGN_AGGREGATE_UPDATED = DesignAggregateUpdated.getClassSchema().getFullName();
+    String TILE_RENDER_REQUESTED = TileRenderRequested.getClassSchema().getFullName();
+    String TILE_RENDER_COMPLETED = TileRenderCompleted.getClassSchema().getFullName();
+    String DESIGN_DOCUMENT_UPDATE_REQUESTED = DesignDocumentUpdateRequested.getClassSchema().getFullName();
+    String DESIGN_DOCUMENT_DELETE_REQUESTED = DesignDocumentDeleteRequested.getClassSchema().getFullName();
+    String TILES_RENDERED = TilesRendered.getClassSchema().getFullName();
 
     String MESSAGE_SOURCE = "service-designs";
     String EVENTS_TOPIC_NAME = "test-designs-aggregate-events";

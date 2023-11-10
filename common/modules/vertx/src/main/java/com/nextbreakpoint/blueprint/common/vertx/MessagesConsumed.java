@@ -7,9 +7,9 @@ import java.util.List;
 import java.util.function.BiConsumer;
 
 @Log4j2
-public class MessagesConsumed implements BiConsumer<List<InputMessage>, Void> {
+public class MessagesConsumed<T> implements BiConsumer<List<InputMessage<T>>, Void> {
     @Override
-    public void accept(List<InputMessage> messages, Void ignore) {
-        log.debug("Consumed {} message{}", messages.size(), messages.size() > 1 ? "s" : "");
+    public void accept(List<InputMessage<T>> messages, Void ignore) {
+        log.trace("Consumed {} messages", messages.size());
     }
 }

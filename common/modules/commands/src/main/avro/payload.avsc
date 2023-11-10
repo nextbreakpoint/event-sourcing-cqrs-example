@@ -1,0 +1,120 @@
+{
+  "type": "record",
+  "name": "Payload",
+  "namespace": "com.nextbreakpoint.blueprint.common.commands.avro",
+  "fields": [
+    {
+      "name": "uuid",
+      "type": {
+        "type": "string",
+        "logicalType": "uuid"
+      }
+    },
+    {
+      "name": "type",
+      "type": "string"
+    },
+    {
+      "name": "source",
+      "type": "string"
+    },
+    {
+      "name": "command",
+      "type": [
+        {
+          "type": "record",
+          "name": "DesignInsertCommand",
+          "fields": [
+            {
+              "name": "designId",
+              "type": {
+                "type": "string",
+                "logicalType": "uuid"
+              }
+            },
+            {
+              "name": "commandId",
+              "type": {
+                "type": "string",
+                "logicalType": "uuid"
+              }
+            },
+            {
+              "name": "userId",
+              "type": {
+                "type": "string",
+                "logicalType": "uuid"
+              }
+            },
+            {
+              "name": "data",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "type": "record",
+          "name": "DesignUpdateCommand",
+          "fields": [
+            {
+              "name": "designId",
+              "type": {
+                "type": "string",
+                "logicalType": "uuid"
+              }
+            },
+            {
+              "name": "commandId",
+              "type": {
+                "type": "string",
+                "logicalType": "uuid"
+              }
+            },
+            {
+              "name": "userId",
+              "type": {
+                "type": "string",
+                "logicalType": "uuid"
+              }
+            },
+            {
+              "name": "data",
+              "type": "string"
+            },
+            {
+              "name": "published",
+              "type": "boolean"
+            }
+          ]
+        },
+        {
+          "type": "record",
+          "name": "DesignDeleteCommand",
+          "fields": [
+            {
+              "name": "designId",
+              "type": {
+                "type": "string",
+                "logicalType": "uuid"
+              }
+            },
+            {
+              "name": "commandId",
+              "type": {
+                "type": "string",
+                "logicalType": "uuid"
+              }
+            },
+            {
+              "name": "userId",
+              "type": {
+                "type": "string",
+                "logicalType": "uuid"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

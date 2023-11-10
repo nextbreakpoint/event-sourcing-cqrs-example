@@ -3,14 +3,15 @@ package com.nextbreakpoint.blueprint.designs;
 import com.nextbreakpoint.blueprint.common.core.Authority;
 import com.nextbreakpoint.blueprint.common.core.Checksum;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
-import com.nextbreakpoint.blueprint.common.core.Tiles;
-import com.nextbreakpoint.blueprint.common.events.DesignDocumentDeleteRequested;
-import com.nextbreakpoint.blueprint.common.events.DesignDocumentUpdateRequested;
-import com.nextbreakpoint.blueprint.common.events.mappers.DesignDocumentDeleteRequestedOutputMapper;
-import com.nextbreakpoint.blueprint.common.events.mappers.DesignDocumentUpdateRequestedOutputMapper;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignDocumentDeleteRequested;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignDocumentStatus;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignDocumentUpdateRequested;
+import com.nextbreakpoint.blueprint.common.events.avro.Tiles;
+import com.nextbreakpoint.blueprint.common.vertx.MessageFactory;
 import com.nextbreakpoint.blueprint.designs.model.Design;
 import com.nextbreakpoint.blueprint.designs.model.DesignDocument;
 import com.nextbreakpoint.blueprint.designs.model.DesignDocuments;
+import com.nextbreakpoint.blueprint.designs.model.LevelTiles;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.vertx.core.json.JsonObject;
@@ -28,9 +29,8 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.time.Clock;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
@@ -77,11 +77,8 @@ public class IntegrationTests {
   private static final String DATA_2 = new JsonObject(TestUtils.createPostData(MANIFEST, METADATA, SCRIPT2)).toString();
   private static final String DATA_3 = new JsonObject(TestUtils.createPostData(MANIFEST, METADATA, SCRIPT3)).toString();
 
-  private final LocalDateTime createTime = LocalDateTime.ofInstant(Instant.now().truncatedTo(ChronoUnit.MILLIS), ZoneId.of("UTC")).minusDays(1);
-  private final LocalDateTime updateTime = LocalDateTime.ofInstant(Instant.now().truncatedTo(ChronoUnit.MILLIS), ZoneId.of("UTC"));
-
-  private final DesignDocumentUpdateRequestedOutputMapper designDocumentUpdateRequestedMapper = new DesignDocumentUpdateRequestedOutputMapper(MESSAGE_SOURCE);
-  private final DesignDocumentDeleteRequestedOutputMapper designDocumentDeleteRequestedMapper = new DesignDocumentDeleteRequestedOutputMapper(MESSAGE_SOURCE);
+  private final Instant createTime = Instant.now(Clock.systemUTC()).truncatedTo(ChronoUnit.MILLIS).minus(1, ChronoUnit.DAYS);
+  private final Instant updateTime = Instant.now(Clock.systemUTC()).truncatedTo(ChronoUnit.MILLIS);
 
   @BeforeAll
   public static void before() {
@@ -98,9 +95,9 @@ public class IntegrationTests {
     testCases.deleteData();
     testCases.getSteps().reset();
 
-    final Design design1 = new Design(DESIGN_ID_1, USER_ID_1, UUID.randomUUID(), DATA_1, Checksum.of(DATA_1), REVISION_0, "CREATED", false, LEVELS_DRAFT, TestUtils.getTiles(LEVELS_DRAFT, 0.5f), FORMATTER.format(Instant.now()), FORMATTER.format(Instant.now()));
-    final Design design2 = new Design(DESIGN_ID_2, USER_ID_1, UUID.randomUUID(), DATA_2, Checksum.of(DATA_2), REVISION_0, "UPDATED", false, LEVELS_DRAFT, TestUtils.getTiles(LEVELS_DRAFT, 1.0f), FORMATTER.format(Instant.now()), FORMATTER.format(Instant.now()));
-    final Design design3 = new Design(DESIGN_ID_3, USER_ID_1, UUID.randomUUID(), DATA_3, Checksum.of(DATA_3), REVISION_0, "UPDATED", true, LEVELS_READY, TestUtils.getTiles(LEVELS_READY, 1.0f), FORMATTER.format(Instant.now()), FORMATTER.format(Instant.now()));
+    final Design design1 = new Design(DESIGN_ID_1, USER_ID_1, UUID.randomUUID(), DATA_1, Checksum.of(DATA_1), REVISION_0, "CREATED", false, LEVELS_DRAFT, LevelTiles.getTiles(LEVELS_DRAFT, 0.5f), FORMATTER.format(Instant.now()), FORMATTER.format(Instant.now()));
+    final Design design2 = new Design(DESIGN_ID_2, USER_ID_1, UUID.randomUUID(), DATA_2, Checksum.of(DATA_2), REVISION_0, "UPDATED", false, LEVELS_DRAFT, LevelTiles.getTiles(LEVELS_DRAFT, 1.0f), FORMATTER.format(Instant.now()), FORMATTER.format(Instant.now()));
+    final Design design3 = new Design(DESIGN_ID_3, USER_ID_1, UUID.randomUUID(), DATA_3, Checksum.of(DATA_3), REVISION_0, "UPDATED", true, LEVELS_READY, LevelTiles.getTiles(LEVELS_READY, 1.0f), FORMATTER.format(Instant.now()), FORMATTER.format(Instant.now()));
 
     List.of(design1, design2, design3).forEach(testCases::insertDraftDesign);
     List.of(design3).forEach(testCases::insertDesign);
@@ -118,72 +115,72 @@ public class IntegrationTests {
     final List<Tiles> tiles2 = TestUtils.getTiles(LEVELS_DRAFT, 50f);
     final List<Tiles> tiles3 = TestUtils.getTiles(LEVELS_READY, 100f);
 
-    var designDocumentUpdateRequested1 = DesignDocumentUpdateRequested.builder()
-            .withDesignId(DESIGN_ID_4)
-            .withCommandId(COMMAND_ID_1)
-            .withUserId(USER_ID_1)
-            .withData(DATA_1)
-            .withChecksum(Checksum.of(DATA_1))
-            .withRevision(REVISION_0)
-            .withLevels(LEVELS_DRAFT)
-            .withTiles(tiles1)
-            .withStatus("CREATED")
-            .withPublished(false)
-            .withCreated(createTime)
-            .withUpdated(updateTime)
+    var designDocumentUpdateRequested1 = DesignDocumentUpdateRequested.newBuilder()
+            .setDesignId(DESIGN_ID_4)
+            .setCommandId(COMMAND_ID_1)
+            .setUserId(USER_ID_1)
+            .setData(DATA_1)
+            .setChecksum(Checksum.of(DATA_1))
+            .setRevision(REVISION_0)
+            .setLevels(LEVELS_DRAFT)
+            .setTiles(tiles1)
+            .setStatus(DesignDocumentStatus.valueOf("CREATED"))
+            .setPublished(false)
+            .setCreated(createTime)
+            .setUpdated(updateTime)
             .build();
 
-    var designDocumentUpdateRequested2 = DesignDocumentUpdateRequested.builder()
-            .withDesignId(DESIGN_ID_4)
-            .withCommandId(COMMAND_ID_2)
-            .withUserId(USER_ID_1)
-            .withData(DATA_2)
-            .withChecksum(Checksum.of(DATA_2))
-            .withRevision(REVISION_1)
-            .withLevels(LEVELS_DRAFT)
-            .withTiles(tiles2)
-            .withStatus("UPDATED")
-            .withPublished(false)
-            .withCreated(createTime)
-            .withUpdated(updateTime)
+    var designDocumentUpdateRequested2 = DesignDocumentUpdateRequested.newBuilder()
+            .setDesignId(DESIGN_ID_4)
+            .setCommandId(COMMAND_ID_2)
+            .setUserId(USER_ID_1)
+            .setData(DATA_2)
+            .setChecksum(Checksum.of(DATA_2))
+            .setRevision(REVISION_1)
+            .setLevels(LEVELS_DRAFT)
+            .setTiles(tiles2)
+            .setStatus(DesignDocumentStatus.valueOf("UPDATED"))
+            .setPublished(false)
+            .setCreated(createTime)
+            .setUpdated(updateTime)
             .build();
 
-    var designDocumentUpdateRequested3 = DesignDocumentUpdateRequested.builder()
-            .withDesignId(DESIGN_ID_4)
-            .withCommandId(COMMAND_ID_3)
-            .withUserId(USER_ID_1)
-            .withData(DATA_2)
-            .withChecksum(Checksum.of(DATA_2))
-            .withRevision(REVISION_2)
-            .withLevels(LEVELS_READY)
-            .withTiles(tiles3)
-            .withStatus("UPDATED")
-            .withPublished(false)
-            .withCreated(createTime)
-            .withUpdated(updateTime)
+    var designDocumentUpdateRequested3 = DesignDocumentUpdateRequested.newBuilder()
+            .setDesignId(DESIGN_ID_4)
+            .setCommandId(COMMAND_ID_3)
+            .setUserId(USER_ID_1)
+            .setData(DATA_2)
+            .setChecksum(Checksum.of(DATA_2))
+            .setRevision(REVISION_2)
+            .setLevels(LEVELS_READY)
+            .setTiles(tiles3)
+            .setStatus(DesignDocumentStatus.valueOf("UPDATED"))
+            .setPublished(false)
+            .setCreated(createTime)
+            .setUpdated(updateTime)
             .build();
 
-    var designDocumentUpdateRequested4 = DesignDocumentUpdateRequested.builder()
-            .withDesignId(DESIGN_ID_4)
-            .withCommandId(COMMAND_ID_4)
-            .withUserId(USER_ID_1)
-            .withData(DATA_2)
-            .withChecksum(Checksum.of(DATA_2))
-            .withRevision(REVISION_2)
-            .withLevels(LEVELS_READY)
-            .withTiles(tiles3)
-            .withStatus("UPDATED")
-            .withPublished(true)
-            .withCreated(createTime)
-            .withUpdated(updateTime)
+    var designDocumentUpdateRequested4 = DesignDocumentUpdateRequested.newBuilder()
+            .setDesignId(DESIGN_ID_4)
+            .setCommandId(COMMAND_ID_4)
+            .setUserId(USER_ID_1)
+            .setData(DATA_2)
+            .setChecksum(Checksum.of(DATA_2))
+            .setRevision(REVISION_2)
+            .setLevels(LEVELS_READY)
+            .setTiles(tiles3)
+            .setStatus(DesignDocumentStatus.valueOf("UPDATED"))
+            .setPublished(true)
+            .setCreated(createTime)
+            .setUpdated(updateTime)
             .build();
 
-    final OutputMessage designDocumentUpdateRequestedMessage1 = designDocumentUpdateRequestedMapper.transform(designDocumentUpdateRequested1);
-    final OutputMessage designDocumentUpdateRequestedMessage2 = designDocumentUpdateRequestedMapper.transform(designDocumentUpdateRequested2);
-    final OutputMessage designDocumentUpdateRequestedMessage3 = designDocumentUpdateRequestedMapper.transform(designDocumentUpdateRequested3);
-    final OutputMessage designDocumentUpdateRequestedMessage4 = designDocumentUpdateRequestedMapper.transform(designDocumentUpdateRequested4);
+    final OutputMessage<DesignDocumentUpdateRequested> designDocumentUpdateRequestedMessage1 = MessageFactory.<DesignDocumentUpdateRequested>of(MESSAGE_SOURCE).createOutputMessage(designDocumentUpdateRequested1.getDesignId().toString(), designDocumentUpdateRequested1);
+    final OutputMessage<DesignDocumentUpdateRequested> designDocumentUpdateRequestedMessage2 = MessageFactory.<DesignDocumentUpdateRequested>of(MESSAGE_SOURCE).createOutputMessage(designDocumentUpdateRequested2.getDesignId().toString(), designDocumentUpdateRequested2);
+    final OutputMessage<DesignDocumentUpdateRequested> designDocumentUpdateRequestedMessage3 = MessageFactory.<DesignDocumentUpdateRequested>of(MESSAGE_SOURCE).createOutputMessage(designDocumentUpdateRequested3.getDesignId().toString(), designDocumentUpdateRequested3);
+    final OutputMessage<DesignDocumentUpdateRequested> designDocumentUpdateRequestedMessage4 = MessageFactory.<DesignDocumentUpdateRequested>of(MESSAGE_SOURCE).createOutputMessage(designDocumentUpdateRequested4.getDesignId().toString(), designDocumentUpdateRequested4);
 
-    final List<OutputMessage> designDocumentUpdateRequestedMessages = List.of(
+    final List<OutputMessage<DesignDocumentUpdateRequested>> designDocumentUpdateRequestedMessages = List.of(
             designDocumentUpdateRequestedMessage1,
             designDocumentUpdateRequestedMessage2,
             designDocumentUpdateRequestedMessage3,
@@ -198,35 +195,35 @@ public class IntegrationTests {
   public void shouldDeleteTheDesignWhenReceivingADesignDocumentDeleteRequested() {
     final List<Tiles> tiles = TestUtils.getTiles(LEVELS_READY, 100.0f);
 
-    var designDocumentUpdateRequested = DesignDocumentUpdateRequested.builder()
-            .withDesignId(DESIGN_ID_5)
-            .withCommandId(COMMAND_ID_1)
-            .withUserId(USER_ID_2)
-            .withData(DATA_1)
-            .withChecksum(Checksum.of(DATA_1))
-            .withRevision(REVISION_0)
-            .withLevels(LEVELS_READY)
-            .withTiles(tiles)
-            .withStatus("UPDATED")
-            .withPublished(true)
-            .withCreated(createTime)
-            .withUpdated(updateTime)
+    var designDocumentUpdateRequested = DesignDocumentUpdateRequested.newBuilder()
+            .setDesignId(DESIGN_ID_5)
+            .setCommandId(COMMAND_ID_1)
+            .setUserId(USER_ID_2)
+            .setData(DATA_1)
+            .setChecksum(Checksum.of(DATA_1))
+            .setRevision(REVISION_0)
+            .setLevels(LEVELS_READY)
+            .setTiles(tiles)
+            .setStatus(DesignDocumentStatus.valueOf("UPDATED"))
+            .setPublished(true)
+            .setCreated(createTime)
+            .setUpdated(updateTime)
             .build();
 
-    var designDocumentDeleteRequested = DesignDocumentDeleteRequested.builder()
-            .withDesignId(DESIGN_ID_5)
-            .withCommandId(COMMAND_ID_2)
-            .withRevision(REVISION_0)
+    var designDocumentDeleteRequested = DesignDocumentDeleteRequested.newBuilder()
+            .setDesignId(DESIGN_ID_5)
+            .setCommandId(COMMAND_ID_2)
+            .setRevision(REVISION_0)
             .build();
 
-    final OutputMessage designDocumentUpdateRequestedMessage = designDocumentUpdateRequestedMapper.transform(designDocumentUpdateRequested);
-    final OutputMessage designDocumentDeleteRequestedMessage = designDocumentDeleteRequestedMapper.transform(designDocumentDeleteRequested);
+    final OutputMessage<DesignDocumentUpdateRequested> designDocumentUpdateRequestedMessage = MessageFactory.<DesignDocumentUpdateRequested>of(MESSAGE_SOURCE).createOutputMessage(designDocumentUpdateRequested.getDesignId().toString(), designDocumentUpdateRequested);
+    final OutputMessage<DesignDocumentDeleteRequested> designDocumentDeleteRequestedMessage = MessageFactory.<DesignDocumentDeleteRequested>of(MESSAGE_SOURCE).createOutputMessage(designDocumentDeleteRequested.getDesignId().toString(), designDocumentDeleteRequested);
 
     testCases.shouldDeleteTheDesignWhenReceivingADesignDocumentDeleteRequested(designDocumentUpdateRequestedMessage, designDocumentDeleteRequestedMessage);
   }
 
   @Test
-  @DisplayName("Should allow OPTIONS on /designs without access token")
+  @DisplayName("Should allow OPTIONS on /designs setout access token")
   public void shouldAllowOptionsOnDesignsWithoutAccessToken() throws MalformedURLException {
     given().config(TestUtils.getRestAssuredConfig())
             .with().header("Origin", testCases.getOriginUrl())

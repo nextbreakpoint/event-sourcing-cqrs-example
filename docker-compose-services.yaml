@@ -76,6 +76,8 @@ services:
       BUCKET_NAME: tiles
       KAFKA_HOST: host.docker.internal
       KAFKA_PORT: 9094
+      SCHEMA_REGISTRY_HOST: host.docker.internal
+      SCHEMA_REGISTRY_PORT: 8081
       EVENTS_TOPIC: events
       DEBUG_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:35120
       LOGGING_LEVEL: ${LOGGING_LEVEL:-INFO}
@@ -107,6 +109,8 @@ services:
       DATABASE_KEYSPACE: designs_command
       KAFKA_HOST: host.docker.internal
       KAFKA_PORT: 9094
+      SCHEMA_REGISTRY_HOST: host.docker.internal
+      SCHEMA_REGISTRY_PORT: 8081
       COMMANDS_TOPIC: commands
       EVENTS_TOPIC: events
       DEBUG_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:35121
@@ -139,6 +143,8 @@ services:
       DATABASE_KEYSPACE: designs_aggregate
       KAFKA_HOST: host.docker.internal
       KAFKA_PORT: 9094
+      SCHEMA_REGISTRY_HOST: host.docker.internal
+      SCHEMA_REGISTRY_PORT: 8081
       RENDER_TOPIC_PREFIX: render
       EVENTS_TOPIC: events
       BUFFER_TOPIC: buffer
@@ -169,6 +175,8 @@ services:
       CONSUL_HOST: host.docker.internal
       KAFKA_HOST: host.docker.internal
       KAFKA_PORT: 9094
+      SCHEMA_REGISTRY_HOST: host.docker.internal
+      SCHEMA_REGISTRY_PORT: 8081
       EVENTS_TOPIC: events
       DEBUG_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:35123
       LOGGING_LEVEL: ${LOGGING_LEVEL:-INFO}
@@ -201,6 +209,8 @@ services:
       BUCKET_NAME: tiles
       KAFKA_HOST: host.docker.internal
       KAFKA_PORT: 9094
+      SCHEMA_REGISTRY_HOST: host.docker.internal
+      SCHEMA_REGISTRY_PORT: 8081
       RENDER_TOPIC_PREFIX: render
       EVENTS_TOPIC: events
       DEBUG_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:35124
@@ -234,6 +244,8 @@ services:
       BUCKET_NAME: tiles
       KAFKA_HOST: host.docker.internal
       KAFKA_PORT: 9094
+      SCHEMA_REGISTRY_HOST: host.docker.internal
+      SCHEMA_REGISTRY_PORT: 8081
       RENDER_TOPIC_PREFIX: render
       EVENTS_TOPIC: events
       DEBUG_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:35125
@@ -267,6 +279,8 @@ services:
       BUCKET_NAME: tiles
       KAFKA_HOST: host.docker.internal
       KAFKA_PORT: 9094
+      SCHEMA_REGISTRY_HOST: host.docker.internal
+      SCHEMA_REGISTRY_PORT: 8081
       RENDER_TOPIC_PREFIX: render
       EVENTS_TOPIC: events
       DEBUG_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:35126
@@ -300,6 +314,8 @@ services:
       BUCKET_NAME: tiles
       KAFKA_HOST: host.docker.internal
       KAFKA_PORT: 9094
+      SCHEMA_REGISTRY_HOST: host.docker.internal
+      SCHEMA_REGISTRY_PORT: 8081
       RENDER_TOPIC_PREFIX: render
       EVENTS_TOPIC: events
       DEBUG_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:35127

@@ -9,6 +9,7 @@ module com.nextbreakpoint.blueprint.designs.query {
     requires com.fasterxml.jackson.core;
     requires com.fasterxml.jackson.databind;
     requires com.fasterxml.jackson.datatype.jsr310;
+    requires org.apache.avro;
     requires io.vertx.core;
     requires io.vertx.web;
     requires io.vertx.web.openapi;

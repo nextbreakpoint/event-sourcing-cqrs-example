@@ -2,14 +2,15 @@ package com.nextbreakpoint.blueprint.designs.aggregate;
 
 import com.nextbreakpoint.blueprint.common.core.Checksum;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
-import com.nextbreakpoint.blueprint.common.core.Tile;
-import com.nextbreakpoint.blueprint.common.core.TilesBitmap;
-import com.nextbreakpoint.blueprint.common.events.DesignDeleteRequested;
-import com.nextbreakpoint.blueprint.common.events.DesignInsertRequested;
-import com.nextbreakpoint.blueprint.common.events.DesignUpdateRequested;
-import com.nextbreakpoint.blueprint.common.events.TilesRendered;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignDeleteRequested;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignInsertRequested;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignUpdateRequested;
+import com.nextbreakpoint.blueprint.common.events.avro.Tile;
+import com.nextbreakpoint.blueprint.common.events.avro.TilesRendered;
 import com.nextbreakpoint.blueprint.designs.TestUtils;
+import com.nextbreakpoint.blueprint.designs.common.Bitmap;
 import com.nextbreakpoint.blueprint.designs.model.Design;
+import org.apache.avro.specific.SpecificRecord;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -56,195 +57,195 @@ class DesignStateStrategyTest {
 
     private static final LocalDateTime dateTime = LocalDateTime.now(ZoneId.of("UTC")).truncatedTo(ChronoUnit.MILLIS);
 
-    private static final TilesBitmap bitmap0 = TilesBitmap.empty();
-    private static final TilesBitmap bitmap1 = TilesBitmap.empty().putTile(0, 0, 0);
-    private static final TilesBitmap bitmap2 = TilesBitmap.empty().putTile(0, 0, 0).putTile(1, 0, 0);
-    private static final TilesBitmap bitmap3 = TilesBitmap.empty().putTile(0, 0, 0).putTile(1, 0, 0).putTile(1, 1, 0);
-    private static final TilesBitmap bitmap4 = TilesBitmap.empty().putTile(0, 0, 0).putTile(1, 0, 0).putTile(1, 1, 0).putTile(2, 2, 1);
+    private static final Bitmap bitmap0 = Bitmap.empty();
+    private static final Bitmap bitmap1 = Bitmap.empty().putTile(0, 0, 0);
+    private static final Bitmap bitmap2 = Bitmap.empty().putTile(0, 0, 0).putTile(1, 0, 0);
+    private static final Bitmap bitmap3 = Bitmap.empty().putTile(0, 0, 0).putTile(1, 0, 0).putTile(1, 1, 0);
+    private static final Bitmap bitmap4 = Bitmap.empty().putTile(0, 0, 0).putTile(1, 0, 0).putTile(1, 1, 0).putTile(2, 2, 1);
 
-    private static final DesignInsertRequested designInsertRequested = DesignInsertRequested.builder()
-            .withUserId(USER_ID_1)
-            .withDesignId(DESIGN_ID_1)
-            .withCommandId(COMMAND_ID_1)
-            .withData(DATA_1)
+    private static final DesignInsertRequested designInsertRequested = DesignInsertRequested.newBuilder()
+            .setUserId(USER_ID_1)
+            .setDesignId(DESIGN_ID_1)
+            .setCommandId(COMMAND_ID_1)
+            .setData(DATA_1)
             .build();
 
-    private static final DesignInsertRequested invalidDesignInsertRequested = DesignInsertRequested.builder()
-            .withUserId(USER_ID_2)
-            .withDesignId(DESIGN_ID_2)
-            .withCommandId(COMMAND_ID_1)
-            .withData(DATA_2)
+    private static final DesignInsertRequested invalidDesignInsertRequested = DesignInsertRequested.newBuilder()
+            .setUserId(USER_ID_2)
+            .setDesignId(DESIGN_ID_2)
+            .setCommandId(COMMAND_ID_1)
+            .setData(DATA_2)
             .build();
 
-    private static final DesignInsertRequested alternativeDesignInsertRequested = DesignInsertRequested.builder()
-            .withUserId(USER_ID_2)
-            .withDesignId(DESIGN_ID_2)
-            .withCommandId(COMMAND_ID_1)
-            .withData(DATA_3)
+    private static final DesignInsertRequested alternativeDesignInsertRequested = DesignInsertRequested.newBuilder()
+            .setUserId(USER_ID_2)
+            .setDesignId(DESIGN_ID_2)
+            .setCommandId(COMMAND_ID_1)
+            .setData(DATA_3)
             .build();
 
-    private static final DesignUpdateRequested designUpdateRequested = DesignUpdateRequested.builder()
-            .withUserId(USER_ID_1)
-            .withDesignId(DESIGN_ID_1)
-            .withCommandId(COMMAND_ID_2)
-            .withData(DATA_2)
-            .withPublished(false)
+    private static final DesignUpdateRequested designUpdateRequested = DesignUpdateRequested.newBuilder()
+            .setUserId(USER_ID_1)
+            .setDesignId(DESIGN_ID_1)
+            .setCommandId(COMMAND_ID_2)
+            .setData(DATA_2)
+            .setPublished(false)
             .build();
 
-    private static final DesignUpdateRequested anotherDesignUpdateRequested = DesignUpdateRequested.builder()
-            .withUserId(USER_ID_1)
-            .withDesignId(DESIGN_ID_1)
-            .withCommandId(COMMAND_ID_3)
-            .withData(DATA_2)
-            .withPublished(true)
+    private static final DesignUpdateRequested anotherDesignUpdateRequested = DesignUpdateRequested.newBuilder()
+            .setUserId(USER_ID_1)
+            .setDesignId(DESIGN_ID_1)
+            .setCommandId(COMMAND_ID_3)
+            .setData(DATA_2)
+            .setPublished(true)
             .build();
 
-    private static final DesignUpdateRequested invalidDesignUpdateRequested = DesignUpdateRequested.builder()
-            .withUserId(USER_ID_2)
-            .withDesignId(DESIGN_ID_2)
-            .withCommandId(COMMAND_ID_3)
-            .withData(DATA_2)
-            .withPublished(true)
+    private static final DesignUpdateRequested invalidDesignUpdateRequested = DesignUpdateRequested.newBuilder()
+            .setUserId(USER_ID_2)
+            .setDesignId(DESIGN_ID_2)
+            .setCommandId(COMMAND_ID_3)
+            .setData(DATA_2)
+            .setPublished(true)
             .build();
 
-    private static final DesignDeleteRequested designDeleteRequested = DesignDeleteRequested.builder()
-            .withDesignId(DESIGN_ID_1)
-            .withCommandId(COMMAND_ID_8)
-            .withUserId(USER_ID_1)
+    private static final DesignDeleteRequested designDeleteRequested = DesignDeleteRequested.newBuilder()
+            .setDesignId(DESIGN_ID_1)
+            .setCommandId(COMMAND_ID_8)
+            .setUserId(USER_ID_1)
             .build();
 
-    private static final DesignDeleteRequested invalidDesignDeleteRequested = DesignDeleteRequested.builder()
-            .withDesignId(DESIGN_ID_2)
-            .withCommandId(COMMAND_ID_8)
-            .withUserId(USER_ID_2)
+    private static final DesignDeleteRequested invalidDesignDeleteRequested = DesignDeleteRequested.newBuilder()
+            .setDesignId(DESIGN_ID_2)
+            .setCommandId(COMMAND_ID_8)
+            .setUserId(USER_ID_2)
             .build();
 
-    private static final TilesRendered tilesRendered1 = TilesRendered.builder()
-            .withDesignId(DESIGN_ID_1)
-            .withCommandId(COMMAND_ID_4)
-            .withChecksum(Checksum.of(DATA_2))
-            .withRevision(REVISION_1)
-            .withData(DATA_2)
-            .withTiles(List.of(
-                    Tile.builder().withLevel(0).withRow(0).withCol(0).build()
+    private static final TilesRendered tilesRendered1 = TilesRendered.newBuilder()
+            .setDesignId(DESIGN_ID_1)
+            .setCommandId(COMMAND_ID_4)
+            .setChecksum(Checksum.of(DATA_2))
+            .setRevision(REVISION_1)
+            .setData(DATA_2)
+            .setTiles(List.of(
+                    Tile.newBuilder().setLevel(0).setRow(0).setCol(0).build()
             ))
             .build();
 
-    private static final TilesRendered tilesRendered2 = TilesRendered.builder()
-            .withDesignId(DESIGN_ID_1)
-            .withCommandId(COMMAND_ID_5)
-            .withChecksum(Checksum.of(DATA_2))
-            .withRevision(REVISION_1)
-            .withData(DATA_2)
-            .withTiles(List.of(
-                    Tile.builder().withLevel(0).withRow(0).withCol(0).build(),
-                    Tile.builder().withLevel(1).withRow(0).withCol(0).build()
+    private static final TilesRendered tilesRendered2 = TilesRendered.newBuilder()
+            .setDesignId(DESIGN_ID_1)
+            .setCommandId(COMMAND_ID_5)
+            .setChecksum(Checksum.of(DATA_2))
+            .setRevision(REVISION_1)
+            .setData(DATA_2)
+            .setTiles(List.of(
+                    Tile.newBuilder().setLevel(0).setRow(0).setCol(0).build(),
+                    Tile.newBuilder().setLevel(1).setRow(0).setCol(0).build()
             ))
             .build();
 
-    private static final TilesRendered tilesRendered3 = TilesRendered.builder()
-            .withDesignId(DESIGN_ID_1)
-            .withCommandId(COMMAND_ID_6)
-            .withChecksum(Checksum.of(DATA_2))
-            .withRevision(REVISION_1)
-            .withData(DATA_2)
-            .withTiles(List.of(
-                    Tile.builder().withLevel(0).withRow(0).withCol(0).build(),
-                    Tile.builder().withLevel(1).withRow(0).withCol(0).build(),
-                    Tile.builder().withLevel(1).withRow(1).withCol(0).build()
+    private static final TilesRendered tilesRendered3 = TilesRendered.newBuilder()
+            .setDesignId(DESIGN_ID_1)
+            .setCommandId(COMMAND_ID_6)
+            .setChecksum(Checksum.of(DATA_2))
+            .setRevision(REVISION_1)
+            .setData(DATA_2)
+            .setTiles(List.of(
+                    Tile.newBuilder().setLevel(0).setRow(0).setCol(0).build(),
+                    Tile.newBuilder().setLevel(1).setRow(0).setCol(0).build(),
+                    Tile.newBuilder().setLevel(1).setRow(1).setCol(0).build()
             ))
             .build();
 
-    private static final TilesRendered tilesRendered4 = TilesRendered.builder()
-            .withDesignId(DESIGN_ID_1)
-            .withCommandId(COMMAND_ID_7)
-            .withChecksum(Checksum.of(DATA_2))
-            .withRevision(REVISION_1)
-            .withData(DATA_2)
-            .withTiles(List.of(
-                    Tile.builder().withLevel(0).withRow(0).withCol(0).build(),
-                    Tile.builder().withLevel(1).withRow(0).withCol(0).build(),
-                    Tile.builder().withLevel(1).withRow(1).withCol(0).build(),
-                    Tile.builder().withLevel(2).withRow(2).withCol(1).build()
+    private static final TilesRendered tilesRendered4 = TilesRendered.newBuilder()
+            .setDesignId(DESIGN_ID_1)
+            .setCommandId(COMMAND_ID_7)
+            .setChecksum(Checksum.of(DATA_2))
+            .setRevision(REVISION_1)
+            .setData(DATA_2)
+            .setTiles(List.of(
+                    Tile.newBuilder().setLevel(0).setRow(0).setCol(0).build(),
+                    Tile.newBuilder().setLevel(1).setRow(0).setCol(0).build(),
+                    Tile.newBuilder().setLevel(1).setRow(1).setCol(0).build(),
+                    Tile.newBuilder().setLevel(2).setRow(2).setCol(1).build()
             ))
             .build();
 
-    private static final TilesRendered invalidTilesRendered = TilesRendered.builder()
-            .withDesignId(DESIGN_ID_2)
-            .withCommandId(COMMAND_ID_7)
-            .withChecksum(Checksum.of(DATA_2))
-            .withRevision(REVISION_1)
-            .withData(DATA_2)
-            .withTiles(List.of(
-                    Tile.builder().withLevel(0).withRow(0).withCol(0).build(),
-                    Tile.builder().withLevel(1).withRow(0).withCol(0).build(),
-                    Tile.builder().withLevel(1).withRow(1).withCol(0).build(),
-                    Tile.builder().withLevel(2).withRow(2).withCol(1).build()
+    private static final TilesRendered invalidTilesRendered = TilesRendered.newBuilder()
+            .setDesignId(DESIGN_ID_2)
+            .setCommandId(COMMAND_ID_7)
+            .setChecksum(Checksum.of(DATA_2))
+            .setRevision(REVISION_1)
+            .setData(DATA_2)
+            .setTiles(List.of(
+                    Tile.newBuilder().setLevel(0).setRow(0).setCol(0).build(),
+                    Tile.newBuilder().setLevel(1).setRow(0).setCol(0).build(),
+                    Tile.newBuilder().setLevel(1).setRow(1).setCol(0).build(),
+                    Tile.newBuilder().setLevel(2).setRow(2).setCol(1).build()
             ))
             .build();
 
-    private static final InputMessage designInsertRequestedMessage = TestUtils.createInputMessage(
+    private static final InputMessage<SpecificRecord> designInsertRequestedMessage = TestUtils.createInputMessageV2(
             designInsertRequested.getDesignId().toString(), DESIGN_INSERT_REQUESTED, UUID.randomUUID(), designInsertRequested, REVISION_0, dateTime.minusHours(9)
     );
 
-    private static final InputMessage duplicateDesignInsertRequestedMessage = TestUtils.createInputMessage(
+    private static final InputMessage<SpecificRecord> duplicateDesignInsertRequestedMessage = TestUtils.createInputMessageV2(
             designInsertRequested.getDesignId().toString(), DESIGN_INSERT_REQUESTED, UUID.randomUUID(), designInsertRequested, REVISION_0, dateTime.minusHours(8)
     );
 
-    private static final InputMessage invalidDesignInsertRequestedMessage = TestUtils.createInputMessage(
+    private static final InputMessage<SpecificRecord> invalidDesignInsertRequestedMessage = TestUtils.createInputMessageV2(
             invalidDesignInsertRequested.getDesignId().toString(), DESIGN_INSERT_REQUESTED, UUID.randomUUID(), invalidDesignInsertRequested, REVISION_0, dateTime.minusHours(8)
     );
 
-    private static final InputMessage alternativeDesignInsertRequestedMessage = TestUtils.createInputMessage(
+    private static final InputMessage<SpecificRecord> alternativeDesignInsertRequestedMessage = TestUtils.createInputMessageV2(
             alternativeDesignInsertRequested.getDesignId().toString(), DESIGN_INSERT_REQUESTED, UUID.randomUUID(), alternativeDesignInsertRequested, REVISION_0, dateTime.minusHours(8)
     );
 
-    private static final InputMessage designUpdateRequestedMessage = TestUtils.createInputMessage(
+    private static final InputMessage<SpecificRecord> designUpdateRequestedMessage = TestUtils.createInputMessageV2(
             designUpdateRequested.getDesignId().toString(), DESIGN_UPDATE_REQUESTED, UUID.randomUUID(), designUpdateRequested, REVISION_1, dateTime.minusHours(8)
     );
 
-    private static final InputMessage anotherDesignUpdateRequestedMessage = TestUtils.createInputMessage(
+    private static final InputMessage<SpecificRecord> anotherDesignUpdateRequestedMessage = TestUtils.createInputMessageV2(
             anotherDesignUpdateRequested.getDesignId().toString(), DESIGN_UPDATE_REQUESTED, UUID.randomUUID(), anotherDesignUpdateRequested, REVISION_2, dateTime.minusHours(7)
     );
 
-    private static final InputMessage invalidDesignUpdateRequestedMessage = TestUtils.createInputMessage(
+    private static final InputMessage<SpecificRecord> invalidDesignUpdateRequestedMessage = TestUtils.createInputMessageV2(
             invalidDesignUpdateRequested.getDesignId().toString(), DESIGN_UPDATE_REQUESTED, UUID.randomUUID(), invalidDesignUpdateRequested, REVISION_2, dateTime.minusHours(7)
     );
 
-    private static final InputMessage designDeleteRequestedMessage = TestUtils.createInputMessage(
+    private static final InputMessage<SpecificRecord> designDeleteRequestedMessage = TestUtils.createInputMessageV2(
             designDeleteRequested.getDesignId().toString(), DESIGN_DELETE_REQUESTED, UUID.randomUUID(), designDeleteRequested, REVISION_2, dateTime.minusHours(1)
     );
 
-    private static final InputMessage duplicateDesignDeleteRequestedMessage = TestUtils.createInputMessage(
+    private static final InputMessage<SpecificRecord> duplicateDesignDeleteRequestedMessage = TestUtils.createInputMessageV2(
             designDeleteRequested.getDesignId().toString(), DESIGN_DELETE_REQUESTED, UUID.randomUUID(), designDeleteRequested, REVISION_2, dateTime.minusHours(0)
     );
 
-    private static final InputMessage invalidDesignDeleteRequestedMessage = TestUtils.createInputMessage(
+    private static final InputMessage<SpecificRecord> invalidDesignDeleteRequestedMessage = TestUtils.createInputMessageV2(
             invalidDesignDeleteRequested.getDesignId().toString(), DESIGN_DELETE_REQUESTED, UUID.randomUUID(), invalidDesignDeleteRequested, REVISION_2, dateTime.minusHours(1)
     );
 
-    private static final InputMessage tileRenderedMessage1 = TestUtils.createInputMessage(
+    private static final InputMessage<SpecificRecord> tileRenderedMessage1 = TestUtils.createInputMessageV2(
             tilesRendered1.getDesignId().toString(), TILES_RENDERED, UUID.randomUUID(), tilesRendered1, REVISION_2, dateTime.minusHours(6)
     );
 
-    private static final InputMessage tileRenderedMessage2 = TestUtils.createInputMessage(
+    private static final InputMessage<SpecificRecord> tileRenderedMessage2 = TestUtils.createInputMessageV2(
             tilesRendered2.getDesignId().toString(), TILES_RENDERED, UUID.randomUUID(), tilesRendered2, REVISION_2, dateTime.minusHours(5)
     );
 
-    private static final InputMessage tileRenderedMessage3 = TestUtils.createInputMessage(
+    private static final InputMessage<SpecificRecord> tileRenderedMessage3 = TestUtils.createInputMessageV2(
             tilesRendered3.getDesignId().toString(), TILES_RENDERED, UUID.randomUUID(), tilesRendered3, REVISION_2, dateTime.minusHours(4)
     );
 
-    private static final InputMessage tileRenderedMessage4 = TestUtils.createInputMessage(
+    private static final InputMessage<SpecificRecord> tileRenderedMessage4 = TestUtils.createInputMessageV2(
             tilesRendered4.getDesignId().toString(), TILES_RENDERED, UUID.randomUUID(), tilesRendered4, REVISION_2, dateTime.minusHours(3)
     );
 
-    private static final InputMessage invalidTileRenderedMessage = TestUtils.createInputMessage(
+    private static final InputMessage<SpecificRecord> invalidTileRenderedMessage = TestUtils.createInputMessageV2(
             invalidTilesRendered.getDesignId().toString(), TILES_RENDERED, UUID.randomUUID(), invalidTilesRendered, REVISION_2, dateTime.minusHours(3)
     );
 
-    private static final InputMessage unknownMessage = TestUtils.createInputMessage(
-            designInsertRequested.getDesignId().toString(), "UNKNOWN", UUID.randomUUID(), "", REVISION_2, dateTime.minusHours(0)
+    private static final InputMessage<SpecificRecord> unknownMessage = TestUtils.createInputMessageV2(
+            designInsertRequested.getDesignId().toString(), "UNKNOWN", UUID.randomUUID(), null, REVISION_2, dateTime.minusHours(0)
     );
 
     private static final Design state1 = Design.builder()
@@ -256,7 +257,7 @@ class DesignStateStrategyTest {
             .withRevision(REVISION_0)
             .withStatus("CREATED")
             .withLevels(3)
-            .withBitmap(bitmap0.getBitmap())
+            .withBitmap(bitmap0.toByteBuffer())
             .withPublished(false)
             .withCreated(dateTime.minusHours(9))
             .withUpdated(dateTime.minusHours(9))
@@ -271,7 +272,7 @@ class DesignStateStrategyTest {
             .withRevision(REVISION_1)
             .withStatus("UPDATED")
             .withLevels(3)
-            .withBitmap(bitmap0.getBitmap())
+            .withBitmap(bitmap0.toByteBuffer())
             .withPublished(false)
             .withCreated(dateTime.minusHours(9))
             .withUpdated(dateTime.minusHours(8))
@@ -286,7 +287,7 @@ class DesignStateStrategyTest {
             .withRevision(REVISION_2)
             .withStatus("UPDATED")
             .withLevels(8)
-            .withBitmap(bitmap0.getBitmap())
+            .withBitmap(bitmap0.toByteBuffer())
             .withPublished(true)
             .withCreated(dateTime.minusHours(9))
             .withUpdated(dateTime.minusHours(7))
@@ -301,7 +302,7 @@ class DesignStateStrategyTest {
             .withRevision(REVISION_2)
             .withStatus("UPDATED")
             .withLevels(8)
-            .withBitmap(bitmap1.getBitmap())
+            .withBitmap(bitmap1.toByteBuffer())
             .withPublished(true)
             .withCreated(dateTime.minusHours(9))
             .withUpdated(dateTime.minusHours(6))
@@ -316,7 +317,7 @@ class DesignStateStrategyTest {
             .withRevision(REVISION_2)
             .withStatus("UPDATED")
             .withLevels(8)
-            .withBitmap(bitmap2.getBitmap())
+            .withBitmap(bitmap2.toByteBuffer())
             .withPublished(true)
             .withCreated(dateTime.minusHours(9))
             .withUpdated(dateTime.minusHours(5))
@@ -331,7 +332,7 @@ class DesignStateStrategyTest {
             .withRevision(REVISION_2)
             .withStatus("UPDATED")
             .withLevels(8)
-            .withBitmap(bitmap3.getBitmap())
+            .withBitmap(bitmap3.toByteBuffer())
             .withPublished(true)
             .withCreated(dateTime.minusHours(9))
             .withUpdated(dateTime.minusHours(4))
@@ -346,7 +347,7 @@ class DesignStateStrategyTest {
             .withRevision(REVISION_2)
             .withStatus("UPDATED")
             .withLevels(8)
-            .withBitmap(bitmap4.getBitmap())
+            .withBitmap(bitmap4.toByteBuffer())
             .withPublished(true)
             .withCreated(dateTime.minusHours(9))
             .withUpdated(dateTime.minusHours(3))
@@ -361,7 +362,7 @@ class DesignStateStrategyTest {
             .withRevision(REVISION_2)
             .withStatus("DELETED")
             .withLevels(8)
-            .withBitmap(bitmap4.getBitmap())
+            .withBitmap(bitmap4.toByteBuffer())
             .withPublished(true)
             .withCreated(dateTime.minusHours(9))
             .withUpdated(dateTime.minusHours(1))
@@ -376,7 +377,7 @@ class DesignStateStrategyTest {
             .withRevision(REVISION_2)
             .withStatus("DELETED")
             .withLevels(8)
-            .withBitmap(bitmap4.getBitmap())
+            .withBitmap(bitmap4.toByteBuffer())
             .withPublished(true)
             .withCreated(dateTime.minusHours(9))
             .withUpdated(dateTime.minusHours(1))
@@ -391,7 +392,7 @@ class DesignStateStrategyTest {
             .withRevision(REVISION_2)
             .withStatus("DELETED")
             .withLevels(3)
-            .withBitmap(bitmap1.getBitmap())
+            .withBitmap(bitmap1.toByteBuffer())
             .withPublished(false)
             .withCreated(dateTime.minusHours(9))
             .withUpdated(dateTime.minusHours(1))
@@ -406,7 +407,7 @@ class DesignStateStrategyTest {
             .withRevision(REVISION_2)
             .withStatus("DELETED")
             .withLevels(3)
-            .withBitmap(bitmap1.getBitmap())
+            .withBitmap(bitmap1.toByteBuffer())
             .withPublished(false)
             .withCreated(dateTime.minusHours(9))
             .withUpdated(dateTime.minusHours(1))
@@ -421,7 +422,7 @@ class DesignStateStrategyTest {
             .withRevision(REVISION_0)
             .withStatus("CREATED")
             .withLevels(3)
-            .withBitmap(bitmap0.getBitmap())
+            .withBitmap(bitmap0.toByteBuffer())
             .withPublished(false)
             .withCreated(dateTime.minusHours(8))
             .withUpdated(dateTime.minusHours(8))
@@ -443,7 +444,7 @@ class DesignStateStrategyTest {
                 .withRevision(REVISION_0)
                 .withStatus("CREATED")
                 .withLevels(3)
-                .withBitmap(bitmap0.getBitmap())
+                .withBitmap(bitmap0.toByteBuffer())
                 .withPublished(false)
                 .withCreated(createTime)
                 .withUpdated(updateTime)
@@ -458,7 +459,7 @@ class DesignStateStrategyTest {
                 .withRevision(REVISION_0)
                 .withStatus("CREATED")
                 .withLevels(3)
-                .withBitmap(bitmap0.getBitmap())
+                .withBitmap(bitmap0.toByteBuffer())
                 .withPublished(false)
                 .withCreated(createTime)
                 .withUpdated(updateTime)
@@ -470,14 +471,14 @@ class DesignStateStrategyTest {
 
     @ParameterizedTest
     @MethodSource("someValidMessages")
-    void shouldUpdateState(List<InputMessage> messages, Design expectedState) {
+    void shouldUpdateState(List<InputMessage<SpecificRecord>> messages, Design expectedState) {
         final Optional<Design> actualState = strategy.applyEvents(null, messages);
         assertThat(actualState).isPresent().hasValue(expectedState);
     }
 
     @ParameterizedTest
     @MethodSource("someInvalidMessages")
-    void shouldThrowIllegalStateException(List<InputMessage> messages) {
+    void shouldThrowIllegalStateException(List<InputMessage<SpecificRecord>> messages) {
         assertThatThrownBy(() -> strategy.applyEvents(null, messages))
                 .isInstanceOf(IllegalStateException.class);
     }

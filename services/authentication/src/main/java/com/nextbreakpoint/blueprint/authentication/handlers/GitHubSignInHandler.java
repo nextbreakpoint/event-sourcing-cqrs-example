@@ -139,7 +139,6 @@ public class GitHubSignInHandler implements Handler<RoutingContext> {
 
     protected Single<JsonObject> createAccount(GitHubSignInScope scope, JsonObject userInfo) {
         JsonObject account = makeAccount(scope.getUserEmail(), userInfo);
-        log.info("User account: {}", account.encode());
         return accountsClient.post("/v1/accounts")
                 .putHeader(AUTHORIZATION, Authentication.makeAuthorization(scope.getJwtAccessToken()))
                 .putHeader(CONTENT_TYPE, APPLICATION_JSON)
@@ -178,7 +177,7 @@ public class GitHubSignInHandler implements Handler<RoutingContext> {
                 .putHeader("Set-Cookie", scope.getCookie().encode())
                 .putHeader("Location", scope.getRedirectTo())
                 .setStatusCode(303)
-                .rxSend();
+                .rxEnd();
     }
 
     protected String getRedirectTo(RoutingContext routingContext) {
@@ -191,6 +190,8 @@ public class GitHubSignInHandler implements Handler<RoutingContext> {
         } else if (throwable instanceof ComposerException) {
             log.error("Cannot process request", throwable);
             routingContext.fail(Failure.requestFailed(throwable.getCause()));
+        } else {
+            routingContext.fail(Failure.requestFailed(throwable));
         }
     }
 
@@ -216,7 +217,7 @@ public class GitHubSignInHandler implements Handler<RoutingContext> {
         return routingContext.response()
                 .putHeader("Location", location)
                 .setStatusCode(302)
-                .rxSend();
+                .rxEnd();
     }
 
     private JsonObject makeAccount(String userEmail, JsonObject userInfo) {

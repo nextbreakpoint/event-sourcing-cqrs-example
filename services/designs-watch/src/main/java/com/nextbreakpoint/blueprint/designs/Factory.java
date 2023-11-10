@@ -3,10 +3,8 @@ package com.nextbreakpoint.blueprint.designs;
 import com.nextbreakpoint.blueprint.common.core.Controller;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.core.RxSingleHandler;
-import com.nextbreakpoint.blueprint.common.events.DesignDocumentDeleteCompleted;
-import com.nextbreakpoint.blueprint.common.events.DesignDocumentUpdateCompleted;
-import com.nextbreakpoint.blueprint.common.events.mappers.DesignDocumentDeleteCompletedInputMapper;
-import com.nextbreakpoint.blueprint.common.events.mappers.DesignDocumentUpdateCompletedInputMapper;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignDocumentDeleteCompleted;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignDocumentUpdateCompleted;
 import com.nextbreakpoint.blueprint.common.vertx.MessageConsumed;
 import com.nextbreakpoint.blueprint.common.vertx.MessageFailed;
 import com.nextbreakpoint.blueprint.common.vertx.TemplateHandler;
@@ -14,23 +12,23 @@ import com.nextbreakpoint.blueprint.common.vertx.TemplateHandler;
 public class Factory {
     private Factory() {}
 
-    public static RxSingleHandler<InputMessage, ?> createDesignDocumentUpdateCompletedHandler(Controller<DesignDocumentUpdateCompleted, Void> controller) {
-        return TemplateHandler.<InputMessage, DesignDocumentUpdateCompleted, Void, Void>builder()
-                .withInputMapper(new DesignDocumentUpdateCompletedInputMapper())
+    public static RxSingleHandler<InputMessage<Object>, Void> createDesignDocumentUpdateCompletedHandler(Controller<DesignDocumentUpdateCompleted, Void> controller) {
+        return TemplateHandler.<InputMessage<Object>, DesignDocumentUpdateCompleted, Void, Void>builder()
+                .withInputMapper(message -> (DesignDocumentUpdateCompleted) message.getValue().getData())
                 .withOutputMapper(output -> output)
                 .withController(controller)
-                .onSuccess(new MessageConsumed())
-                .onFailure(new MessageFailed())
+                .onSuccess(new MessageConsumed<>())
+                .onFailure(new MessageFailed<>())
                 .build();
     }
 
-    public static RxSingleHandler<InputMessage, ?> createDesignDocumentDeleteCompletedHandler(Controller<DesignDocumentDeleteCompleted, Void> controller) {
-        return TemplateHandler.<InputMessage, DesignDocumentDeleteCompleted, Void, Void>builder()
-                .withInputMapper(new DesignDocumentDeleteCompletedInputMapper())
+    public static RxSingleHandler<InputMessage<Object>, Void> createDesignDocumentDeleteCompletedHandler(Controller<DesignDocumentDeleteCompleted, Void> controller) {
+        return TemplateHandler.<InputMessage<Object>, DesignDocumentDeleteCompleted, Void, Void>builder()
+                .withInputMapper(message -> (DesignDocumentDeleteCompleted) message.getValue().getData())
                 .withOutputMapper(output -> output)
                 .withController(controller)
-                .onSuccess(new MessageConsumed())
-                .onFailure(new MessageFailed())
+                .onSuccess(new MessageConsumed<>())
+                .onFailure(new MessageFailed<>())
                 .build();
     }
 }

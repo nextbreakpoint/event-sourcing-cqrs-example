@@ -2,13 +2,12 @@ package com.nextbreakpoint.blueprint.designs.controllers;
 
 import com.nextbreakpoint.blueprint.common.core.Controller;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
-import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.MessageEmitter;
-import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
-import com.nextbreakpoint.blueprint.common.core.Tile;
-import com.nextbreakpoint.blueprint.common.events.TileRenderCompleted;
-import com.nextbreakpoint.blueprint.common.events.TilesRendered;
+import com.nextbreakpoint.blueprint.common.events.avro.Tile;
+import com.nextbreakpoint.blueprint.common.events.avro.TileRenderCompleted;
+import com.nextbreakpoint.blueprint.common.events.avro.TilesRendered;
+import com.nextbreakpoint.blueprint.common.vertx.MessageFactory;
 import com.nextbreakpoint.blueprint.designs.aggregate.DesignEventStore;
 import com.nextbreakpoint.blueprint.designs.model.Design;
 import lombok.extern.log4j.Log4j2;
@@ -20,28 +19,21 @@ import java.util.List;
 import java.util.Objects;
 
 @Log4j2
-public class BufferedTileRenderCompletedController implements Controller<List<InputMessage>, Void> {
-    private final Mapper<InputMessage, TileRenderCompleted> inputMapper;
-    private final Mapper<TilesRendered, OutputMessage> outputMapper;
-    private final MessageEmitter emitter;
+public class BufferedTileRenderCompletedController implements Controller<List<InputMessage<TileRenderCompleted>>, Void> {
+    private final MessageEmitter<TilesRendered> emitter;
     private final DesignEventStore eventStore;
+    private final String messageSource;
 
-    public BufferedTileRenderCompletedController(
-            DesignEventStore eventStore,
-            Mapper<InputMessage, TileRenderCompleted> inputMapper,
-            Mapper<TilesRendered, OutputMessage> outputMapper,
-            MessageEmitter emitter
-    ) {
+    public BufferedTileRenderCompletedController(String messageSource, DesignEventStore eventStore, MessageEmitter<TilesRendered> emitter) {
+        this.messageSource = Objects.requireNonNull(messageSource);
         this.eventStore = Objects.requireNonNull(eventStore);
-        this.inputMapper = Objects.requireNonNull(inputMapper);
-        this.outputMapper = Objects.requireNonNull(outputMapper);
         this.emitter = Objects.requireNonNull(emitter);
     }
 
     @Override
-    public Single<Void> onNext(List<InputMessage> messages) {
-        return Single.fromCallable(() -> inputMapper.transform(messages.get(0)))
-                .flatMap(event -> eventStore.findDesign(event.getDesignId()))
+    public Single<Void> onNext(List<InputMessage<TileRenderCompleted>> messages) {
+        return Single.fromCallable(() -> messages.get(0))
+                .flatMap(event -> eventStore.findDesign(event.getValue().getData().getDesignId()))
                 .flatMapObservable(result -> result.map(Observable::just).orElseGet(Observable::empty))
                 .flatMap(design -> sendEvents(design, messages))
                 .ignoreElements()
@@ -50,16 +42,21 @@ public class BufferedTileRenderCompletedController implements Controller<List<In
                 .map(result -> null);
     }
 
-    private Observable<Void> sendEvents(Design design, List<InputMessage> messages) {
+    private Observable<Void> sendEvents(Design design, List<InputMessage<TileRenderCompleted>> messages) {
         return Observable.from(messages)
-                .map(inputMapper::transform)
+                .map(message -> message.getValue().getData())
                 .map(event -> checkDesignId(event, design))
                 .filter(event -> !isLateEvent(event, design))
                 .map(this::createTile)
                 .collect(ArrayList<Tile>::new, ArrayList::add)
                 .map(tiles -> createEvent(design, tiles))
-                .map(outputMapper::transform)
+                .map(this::createMessage)
                 .flatMapSingle(emitter::send);
+    }
+
+    private OutputMessage<TilesRendered> createMessage(TilesRendered event) {
+        return MessageFactory.<TilesRendered>of(messageSource)
+                .createOutputMessage(event.getDesignId().toString(), event);
     }
 
     private TileRenderCompleted checkDesignId(TileRenderCompleted event, Design design) {
@@ -78,21 +75,21 @@ public class BufferedTileRenderCompletedController implements Controller<List<In
     }
 
     private Tile createTile(TileRenderCompleted event) {
-        return Tile.builder()
-                .withLevel(event.getLevel())
-                .withRow(event.getRow())
-                .withCol(event.getCol())
+        return Tile.newBuilder()
+                .setLevel(event.getLevel())
+                .setRow(event.getRow())
+                .setCol(event.getCol())
                 .build();
     }
 
     private TilesRendered createEvent(Design design, List<Tile> tiles) {
-        return TilesRendered.builder()
-                .withDesignId(design.getDesignId())
-                .withCommandId(design.getCommandId())
-                .withRevision(design.getRevision())
-                .withChecksum(design.getChecksum())
-                .withData(design.getData())
-                .withTiles(tiles)
+        return TilesRendered.newBuilder()
+                .setDesignId(design.getDesignId())
+                .setCommandId(design.getCommandId())
+                .setRevision(design.getRevision())
+                .setChecksum(design.getChecksum())
+                .setData(design.getData())
+                .setTiles(tiles)
                 .build();
     }
 }

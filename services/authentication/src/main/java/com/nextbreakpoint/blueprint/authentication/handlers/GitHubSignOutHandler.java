@@ -46,7 +46,7 @@ public class GitHubSignOutHandler implements Handler<RoutingContext> {
                 .putHeader("Set-Cookie", scope.getCookie().encode())
                 .putHeader("Location", scope.getRedirectTo())
                 .setStatusCode(303)
-                .rxSend();
+                .rxEnd();
     }
 
     private String getRedirectTo(RoutingContext routingContext) {
@@ -59,6 +59,8 @@ public class GitHubSignOutHandler implements Handler<RoutingContext> {
         } else if (throwable instanceof ComposerException) {
             log.error("Cannot process request", throwable);
             routingContext.fail(Failure.requestFailed(throwable.getCause()));
+        } else {
+            routingContext.fail(Failure.requestFailed(throwable));
         }
     }
 }

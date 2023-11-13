@@ -4,7 +4,7 @@ import com.nextbreakpoint.blueprint.common.core.Controller;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.MessageEmitter;
-import com.nextbreakpoint.blueprint.common.core.MessageMapper;
+import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.core.Tile;
 import com.nextbreakpoint.blueprint.common.core.TilesBitmap;
@@ -23,8 +23,8 @@ import java.util.UUID;
 @Log4j2
 public class TileRenderCompletedController implements Controller<InputMessage, Void> {
     private final Mapper<InputMessage, TileRenderCompleted> inputMapper;
-    private final MessageMapper<TileRenderCompleted, OutputMessage> bufferOutputMapper;
-    private final MessageMapper<TileRenderRequested, OutputMessage> renderOutputMapper;
+    private final Mapper<TileRenderCompleted, OutputMessage> bufferOutputMapper;
+    private final Mapper<TileRenderRequested, OutputMessage> renderOutputMapper;
     private final MessageEmitter bufferEmitter;
     private final MessageEmitter renderEmitter;
     private final DesignEventStore eventStore;
@@ -32,8 +32,8 @@ public class TileRenderCompletedController implements Controller<InputMessage, V
     public TileRenderCompletedController(
             DesignEventStore eventStore,
             Mapper<InputMessage, TileRenderCompleted> inputMapper,
-            MessageMapper<TileRenderCompleted, OutputMessage> bufferOutputMapper,
-            MessageMapper<TileRenderRequested, OutputMessage> renderOutputMapper,
+            Mapper<TileRenderCompleted, OutputMessage> bufferOutputMapper,
+            Mapper<TileRenderRequested, OutputMessage> renderOutputMapper,
             MessageEmitter bufferEmitter,
             MessageEmitter renderEmitter
     ) {
@@ -65,7 +65,7 @@ public class TileRenderCompletedController implements Controller<InputMessage, V
                 .flatMapObservable(result -> result.map(Observable::just).orElseGet(Observable::empty));
     }
 
-    private Observable<? extends Void> sendEvents(TileRenderCompleted event, Design design, String revision) {
+    private Observable<Void> sendEvents(TileRenderCompleted event, Design design, String revision) {
         return sendTileCompletedEvent(event).concatWith(sendRenderEvents(event, design, revision));
     }
 
@@ -98,11 +98,11 @@ public class TileRenderCompletedController implements Controller<InputMessage, V
     private Observable<TileRenderRequested> generateRenderEvents(TileRenderCompleted event, Design design, String revision) {
         final TilesBitmap bitmap = TilesBitmap.of(design.getBitmap());
 
-        return Observable.from(Render.generateTiles(creteTile(event), design.getLevels(), bitmap))
+        return Observable.from(Render.generateTiles(createTile(event), design.getLevels(), bitmap))
                 .map(tile -> createRenderEvent(design, tile, revision));
     }
 
-    private Tile creteTile(TileRenderCompleted event) {
+    private Tile createTile(TileRenderCompleted event) {
         return Tile.builder()
                 .withLevel(event.getLevel())
                 .withRow(event.getRow())

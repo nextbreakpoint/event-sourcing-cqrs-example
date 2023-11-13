@@ -1,7 +1,7 @@
 package com.nextbreakpoint.blueprint.common.events.mappers;
 
 import com.nextbreakpoint.blueprint.common.core.Json;
-import com.nextbreakpoint.blueprint.common.core.MessageMapper;
+import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.core.Payload;
 import com.nextbreakpoint.blueprint.common.events.DesignUpdateRequested;
@@ -9,7 +9,7 @@ import com.nextbreakpoint.blueprint.common.events.DesignUpdateRequested;
 import java.util.Objects;
 import java.util.UUID;
 
-public class DesignUpdateRequestedOutputMapper implements MessageMapper<DesignUpdateRequested, OutputMessage> {
+public class DesignUpdateRequestedOutputMapper implements Mapper<DesignUpdateRequested, OutputMessage> {
     private final String messageSource;
 
     public DesignUpdateRequestedOutputMapper(String messageSource) {

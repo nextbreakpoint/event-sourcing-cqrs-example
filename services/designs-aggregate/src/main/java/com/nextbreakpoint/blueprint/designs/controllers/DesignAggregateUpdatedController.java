@@ -4,7 +4,7 @@ import com.nextbreakpoint.blueprint.common.core.Controller;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.MessageEmitter;
-import com.nextbreakpoint.blueprint.common.core.MessageMapper;
+import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.core.Tiles;
 import com.nextbreakpoint.blueprint.common.core.TilesBitmap;
@@ -20,14 +20,14 @@ import java.util.stream.IntStream;
 
 public class DesignAggregateUpdatedController implements Controller<InputMessage, Void> {
     private final Mapper<InputMessage, DesignAggregateUpdated> inputMapper;
-    private final MessageMapper<DesignDocumentUpdateRequested, OutputMessage> updateOutputMapper;
-    private final MessageMapper<DesignDocumentDeleteRequested, OutputMessage> deleteOutputMapper;
+    private final Mapper<DesignDocumentUpdateRequested, OutputMessage> updateOutputMapper;
+    private final Mapper<DesignDocumentDeleteRequested, OutputMessage> deleteOutputMapper;
     private final MessageEmitter emitter;
 
     public DesignAggregateUpdatedController(
             Mapper<InputMessage, DesignAggregateUpdated> inputMapper,
-            MessageMapper<DesignDocumentUpdateRequested, OutputMessage> updateOutputMapper,
-            MessageMapper<DesignDocumentDeleteRequested, OutputMessage> deleteOutputMapper,
+            Mapper<DesignDocumentUpdateRequested, OutputMessage> updateOutputMapper,
+            Mapper<DesignDocumentDeleteRequested, OutputMessage> deleteOutputMapper,
             MessageEmitter emitter
     ) {
         this.inputMapper = Objects.requireNonNull(inputMapper);

@@ -1,7 +1,7 @@
 package com.nextbreakpoint.blueprint.common.events.mappers;
 
 import com.nextbreakpoint.blueprint.common.core.Json;
-import com.nextbreakpoint.blueprint.common.core.MessageMapper;
+import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.core.Payload;
 import com.nextbreakpoint.blueprint.common.events.TileRenderCompleted;
@@ -10,7 +10,7 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Function;
 
-public class TileRenderCompletedOutputMapper implements MessageMapper<TileRenderCompleted, OutputMessage> {
+public class TileRenderCompletedOutputMapper implements Mapper<TileRenderCompleted, OutputMessage> {
     private final String messageSource;
     private final Function<TileRenderCompleted, String> keyMapper;
 

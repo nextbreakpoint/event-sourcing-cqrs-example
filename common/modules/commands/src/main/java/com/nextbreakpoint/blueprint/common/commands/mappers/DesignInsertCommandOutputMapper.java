@@ -2,14 +2,14 @@ package com.nextbreakpoint.blueprint.common.commands.mappers;
 
 import com.nextbreakpoint.blueprint.common.commands.DesignInsertCommand;
 import com.nextbreakpoint.blueprint.common.core.Json;
-import com.nextbreakpoint.blueprint.common.core.MessageMapper;
+import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.core.Payload;
 
 import java.util.Objects;
 import java.util.UUID;
 
-public class DesignInsertCommandOutputMapper implements MessageMapper<DesignInsertCommand, OutputMessage> {
+public class DesignInsertCommandOutputMapper implements Mapper<DesignInsertCommand, OutputMessage> {
     private final String messageSource;
 
     public DesignInsertCommandOutputMapper(String messageSource) {

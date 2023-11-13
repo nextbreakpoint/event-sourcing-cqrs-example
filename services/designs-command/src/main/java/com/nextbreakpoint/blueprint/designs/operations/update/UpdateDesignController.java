@@ -4,7 +4,7 @@ import com.nextbreakpoint.blueprint.common.commands.DesignUpdateCommand;
 import com.nextbreakpoint.blueprint.common.core.Controller;
 import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.MessageEmitter;
-import com.nextbreakpoint.blueprint.common.core.MessageMapper;
+import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.core.ResultStatus;
 import lombok.extern.log4j.Log4j2;
@@ -15,10 +15,10 @@ import java.util.Objects;
 @Log4j2
 public class UpdateDesignController implements Controller<UpdateDesignRequest, UpdateDesignResponse> {
     private final Mapper<UpdateDesignRequest, DesignUpdateCommand> inputMapper;
-    private final MessageMapper<DesignUpdateCommand, OutputMessage> outputMapper;
+    private final Mapper<DesignUpdateCommand, OutputMessage> outputMapper;
     private final MessageEmitter emitter;
 
-    public UpdateDesignController(Mapper<UpdateDesignRequest, DesignUpdateCommand> inputMapper, MessageMapper<DesignUpdateCommand, OutputMessage> outputMapper, MessageEmitter emitter) {
+    public UpdateDesignController(Mapper<UpdateDesignRequest, DesignUpdateCommand> inputMapper, Mapper<DesignUpdateCommand, OutputMessage> outputMapper, MessageEmitter emitter) {
         this.emitter = Objects.requireNonNull(emitter);
         this.inputMapper = Objects.requireNonNull(inputMapper);
         this.outputMapper = Objects.requireNonNull(outputMapper);

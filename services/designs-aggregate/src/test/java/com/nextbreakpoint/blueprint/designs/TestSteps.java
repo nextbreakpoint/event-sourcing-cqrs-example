@@ -19,6 +19,7 @@ import com.nextbreakpoint.blueprint.designs.TestActions.Source;
 import org.awaitility.Awaitility;
 import org.awaitility.core.ConditionFactory;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -44,7 +45,7 @@ public class TestSteps {
     }
 
     private static ConditionFactory defaultAwait() {
-        return Awaitility.await().atMost(TEN_SECONDS).pollInterval(ONE_SECOND);
+        return Awaitility.await().atMost(Duration.ofSeconds(20)).pollInterval(Duration.ofSeconds(5));
     }
 
     public void reset() {

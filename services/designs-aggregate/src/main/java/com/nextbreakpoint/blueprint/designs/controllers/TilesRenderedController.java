@@ -4,7 +4,7 @@ import com.nextbreakpoint.blueprint.common.core.Controller;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.MessageEmitter;
-import com.nextbreakpoint.blueprint.common.core.MessageMapper;
+import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.events.DesignAggregateUpdated;
 import com.nextbreakpoint.blueprint.common.events.TilesRendered;
@@ -17,14 +17,14 @@ import java.util.Objects;
 
 public class TilesRenderedController implements Controller<InputMessage, Void> {
     private final Mapper<InputMessage, TilesRendered> inputMapper;
-    private final MessageMapper<DesignAggregateUpdated, OutputMessage> outputMapper;
+    private final Mapper<DesignAggregateUpdated, OutputMessage> outputMapper;
     private final MessageEmitter emitter;
     private final DesignEventStore eventStore;
 
     public TilesRenderedController(
             DesignEventStore eventStore,
             Mapper<InputMessage, TilesRendered> inputMapper,
-            MessageMapper<DesignAggregateUpdated, OutputMessage> outputMapper,
+            Mapper<DesignAggregateUpdated, OutputMessage> outputMapper,
             MessageEmitter emitter
     ) {
         this.eventStore = Objects.requireNonNull(eventStore);

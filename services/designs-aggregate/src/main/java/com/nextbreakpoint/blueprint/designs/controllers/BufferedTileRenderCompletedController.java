@@ -4,7 +4,7 @@ import com.nextbreakpoint.blueprint.common.core.Controller;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.MessageEmitter;
-import com.nextbreakpoint.blueprint.common.core.MessageMapper;
+import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.core.Tile;
 import com.nextbreakpoint.blueprint.common.events.TileRenderCompleted;
@@ -22,14 +22,14 @@ import java.util.Objects;
 @Log4j2
 public class BufferedTileRenderCompletedController implements Controller<List<InputMessage>, Void> {
     private final Mapper<InputMessage, TileRenderCompleted> inputMapper;
-    private final MessageMapper<TilesRendered, OutputMessage> outputMapper;
+    private final Mapper<TilesRendered, OutputMessage> outputMapper;
     private final MessageEmitter emitter;
     private final DesignEventStore eventStore;
 
     public BufferedTileRenderCompletedController(
             DesignEventStore eventStore,
             Mapper<InputMessage, TileRenderCompleted> inputMapper,
-            MessageMapper<TilesRendered, OutputMessage> outputMapper,
+            Mapper<TilesRendered, OutputMessage> outputMapper,
             MessageEmitter emitter
     ) {
         this.eventStore = Objects.requireNonNull(eventStore);

@@ -4,7 +4,7 @@ import com.nextbreakpoint.blueprint.common.core.Controller;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.MessageEmitter;
-import com.nextbreakpoint.blueprint.common.core.MessageMapper;
+import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.core.Tile;
 import com.nextbreakpoint.blueprint.common.events.DesignAggregateUpdated;
@@ -27,8 +27,8 @@ import java.util.stream.Stream;
 
 public abstract class DesignUpdateController<T> implements Controller<InputMessage, Void> {
     private final Mapper<InputMessage, T> inputMapper;
-    private final MessageMapper<DesignAggregateUpdated, OutputMessage> updateOutputMapper;
-    private final MessageMapper<TileRenderRequested, OutputMessage> renderOutputMapper;
+    private final Mapper<DesignAggregateUpdated, OutputMessage> updateOutputMapper;
+    private final Mapper<TileRenderRequested, OutputMessage> renderOutputMapper;
     private final MessageEmitter updateEmitter;
     private final MessageEmitter renderEmitter;
     private final DesignEventStore eventStore;
@@ -37,8 +37,8 @@ public abstract class DesignUpdateController<T> implements Controller<InputMessa
     public DesignUpdateController(
             DesignEventStore eventStore,
             Mapper<InputMessage, T> inputMapper,
-            MessageMapper<DesignAggregateUpdated, OutputMessage> updateOutputMapper,
-            MessageMapper<TileRenderRequested, OutputMessage> renderOutputMapper,
+            Mapper<DesignAggregateUpdated, OutputMessage> updateOutputMapper,
+            Mapper<TileRenderRequested, OutputMessage> renderOutputMapper,
             MessageEmitter updateEmitter,
             MessageEmitter renderEmitter,
             Function<T, UUID> extractor
@@ -166,8 +166,8 @@ public abstract class DesignUpdateController<T> implements Controller<InputMessa
         public DesignInsertRequestedController(
                 DesignEventStore eventStore,
                 Mapper<InputMessage, DesignInsertRequested> inputMapper,
-                MessageMapper<DesignAggregateUpdated, OutputMessage> updateOutputMapper,
-                MessageMapper<TileRenderRequested, OutputMessage> renderOutputMapper,
+                Mapper<DesignAggregateUpdated, OutputMessage> updateOutputMapper,
+                Mapper<TileRenderRequested, OutputMessage> renderOutputMapper,
                 MessageEmitter eventsEmitter,
                 MessageEmitter renderEmitter
         ) {
@@ -179,8 +179,8 @@ public abstract class DesignUpdateController<T> implements Controller<InputMessa
         public DesignUpdateRequestedController(
                 DesignEventStore eventStore,
                 Mapper<InputMessage, DesignUpdateRequested> inputMapper,
-                MessageMapper<DesignAggregateUpdated, OutputMessage> updateOutputMapper,
-                MessageMapper<TileRenderRequested, OutputMessage> renderOutputMapper,
+                Mapper<DesignAggregateUpdated, OutputMessage> updateOutputMapper,
+                Mapper<TileRenderRequested, OutputMessage> renderOutputMapper,
                 MessageEmitter eventsEmitter,
                 MessageEmitter renderEmitter
         ) {
@@ -192,8 +192,8 @@ public abstract class DesignUpdateController<T> implements Controller<InputMessa
         public DesignDeleteRequestedController(
                 DesignEventStore eventStore,
                 Mapper<InputMessage, DesignDeleteRequested> inputMapper,
-                MessageMapper<DesignAggregateUpdated, OutputMessage> updateOutputMapper,
-                MessageMapper<TileRenderRequested, OutputMessage> renderOutputMapper,
+                Mapper<DesignAggregateUpdated, OutputMessage> updateOutputMapper,
+                Mapper<TileRenderRequested, OutputMessage> renderOutputMapper,
                 MessageEmitter eventsEmitter,
                 MessageEmitter renderEmitter
         ) {

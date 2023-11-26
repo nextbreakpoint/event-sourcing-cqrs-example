@@ -11,13 +11,12 @@ import au.com.dius.pact.provider.junitsupport.Provider;
 import au.com.dius.pact.provider.junitsupport.State;
 import au.com.dius.pact.provider.junitsupport.loader.PactBroker;
 import com.nextbreakpoint.blueprint.common.core.Json;
-import com.nextbreakpoint.blueprint.common.core.KafkaRecord;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
-import com.nextbreakpoint.blueprint.common.events.DesignDocumentDeleteCompleted;
-import com.nextbreakpoint.blueprint.common.events.DesignDocumentUpdateCompleted;
-import com.nextbreakpoint.blueprint.common.events.mappers.DesignDocumentDeleteCompletedOutputMapper;
-import com.nextbreakpoint.blueprint.common.events.mappers.DesignDocumentUpdateCompletedOutputMapper;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignDocumentDeleteCompleted;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignDocumentUpdateCompleted;
+import com.nextbreakpoint.blueprint.common.test.KafkaRecord;
 import com.nextbreakpoint.blueprint.common.test.PayloadUtils;
+import com.nextbreakpoint.blueprint.common.vertx.MessageFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -91,7 +90,7 @@ public class VerifyNotifyPact {
     private String produceDesignDocumentUpdateCompleted(UUID designId, UUID commandId, String revision) {
         final DesignDocumentUpdateCompleted designDocumentUpdateCompleted = new DesignDocumentUpdateCompleted(designId, commandId, revision);
 
-        final OutputMessage designDocumentUpdateCompletedMessage = new DesignDocumentUpdateCompletedOutputMapper(MESSAGE_SOURCE).transform(designDocumentUpdateCompleted);
+        final OutputMessage<DesignDocumentUpdateCompleted> designDocumentUpdateCompletedMessage = MessageFactory.<DesignDocumentUpdateCompleted>of(MESSAGE_SOURCE).createOutputMessage(designDocumentUpdateCompleted.getDesignId().toString(), designDocumentUpdateCompleted);
 
         return Json.encodeValue(new KafkaRecord(designDocumentUpdateCompletedMessage.getKey(), PayloadUtils.payloadToMap(designDocumentUpdateCompletedMessage.getValue())));
     }
@@ -99,7 +98,7 @@ public class VerifyNotifyPact {
     private String produceDesignDocumentDeleteCompleted(UUID designId, UUID commandId, String revision) {
         final DesignDocumentDeleteCompleted designDocumentDeleteCompleted = new DesignDocumentDeleteCompleted(designId, commandId, revision);
 
-        final OutputMessage designDocumentDeleteCompletedMessage = new DesignDocumentDeleteCompletedOutputMapper(MESSAGE_SOURCE).transform(designDocumentDeleteCompleted);
+        final OutputMessage<DesignDocumentDeleteCompleted> designDocumentDeleteCompletedMessage = MessageFactory.<DesignDocumentDeleteCompleted>of(MESSAGE_SOURCE).createOutputMessage(designDocumentDeleteCompleted.getDesignId().toString(), designDocumentDeleteCompleted);
 
         return Json.encodeValue(new KafkaRecord(designDocumentDeleteCompletedMessage.getKey(), PayloadUtils.payloadToMap(designDocumentDeleteCompletedMessage.getValue())));
     }

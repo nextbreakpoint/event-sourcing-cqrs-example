@@ -7,6 +7,7 @@ images=(
   cassandra
   zookeeper
   kafka
+  schema-registry
 )
 
 for image in ${images[@]}; do

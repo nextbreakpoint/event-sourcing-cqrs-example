@@ -8,7 +8,7 @@ if [ $? -eq 0 ]
 
 then
 
-pipeline/create-repository.sh
+pipeline/create-maven-repositories.sh
 
 else
 

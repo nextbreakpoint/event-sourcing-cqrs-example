@@ -7,9 +7,9 @@ import java.util.List;
 import java.util.function.BiConsumer;
 
 @Log4j2
-public class MessagesFailed implements BiConsumer<List<InputMessage>, Throwable> {
+public class MessagesFailed<T> implements BiConsumer<List<InputMessage<T>>, Throwable> {
     @Override
-    public void accept(List<InputMessage> messages, Throwable error) {
-        log.error("An error occurred while consuming {} message{}", messages.size(), messages.size() > 1 ? "s" : "", error);
+    public void accept(List<InputMessage<T>> messages, Throwable error) {
+        log.error("An error occurred while consuming {} message", messages.size(), error);
     }
 }

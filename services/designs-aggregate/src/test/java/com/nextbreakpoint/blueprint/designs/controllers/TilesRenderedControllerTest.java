@@ -2,18 +2,16 @@ package com.nextbreakpoint.blueprint.designs.controllers;
 
 import com.nextbreakpoint.blueprint.common.core.Checksum;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
-import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.MessageEmitter;
-import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
-import com.nextbreakpoint.blueprint.common.core.Tile;
-import com.nextbreakpoint.blueprint.common.core.TilesBitmap;
-import com.nextbreakpoint.blueprint.common.events.DesignAggregateUpdated;
-import com.nextbreakpoint.blueprint.common.events.TilesRendered;
-import com.nextbreakpoint.blueprint.common.events.mappers.DesignAggregateUpdatedOutputMapper;
-import com.nextbreakpoint.blueprint.common.events.mappers.TilesRenderedInputMapper;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignAggregateStatus;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignAggregateUpdated;
+import com.nextbreakpoint.blueprint.common.events.avro.Tile;
+import com.nextbreakpoint.blueprint.common.events.avro.TilesRendered;
+import com.nextbreakpoint.blueprint.designs.TestConstants;
 import com.nextbreakpoint.blueprint.designs.TestUtils;
 import com.nextbreakpoint.blueprint.designs.aggregate.DesignEventStore;
+import com.nextbreakpoint.blueprint.designs.common.Bitmap;
 import com.nextbreakpoint.blueprint.designs.model.Design;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Assertions;
@@ -25,6 +23,7 @@ import rx.Single;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
@@ -40,7 +39,6 @@ import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_ID_1;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_ID_2;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.LEVELS_DRAFT;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.LEVELS_READY;
-import static com.nextbreakpoint.blueprint.designs.TestConstants.MESSAGE_SOURCE;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.REVISION_0;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.REVISION_1;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.REVISION_2;
@@ -58,23 +56,20 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 class TilesRenderedControllerTest {
-    private static final Mapper<InputMessage, TilesRendered> inputMapper = new TilesRenderedInputMapper();
-    private static final Mapper<DesignAggregateUpdated, OutputMessage> outputMapper = new DesignAggregateUpdatedOutputMapper(MESSAGE_SOURCE);
-
     private static final LocalDateTime dateTime = LocalDateTime.now(ZoneId.of("UTC")).truncatedTo(ChronoUnit.MILLIS);
 
-    private final MessageEmitter emitter = mock();
+    private final MessageEmitter<DesignAggregateUpdated> emitter = mock();
     private final DesignEventStore eventStore = mock();
 
-    private final TilesRenderedController controller = new TilesRenderedController(eventStore, inputMapper, outputMapper, emitter);
+    private final TilesRenderedController controller = new TilesRenderedController(TestConstants.MESSAGE_SOURCE, eventStore, emitter);
 
-    private static final TilesBitmap bitmap1 = TilesBitmap.empty().putTile(0, 0, 0);
-    private static final TilesBitmap bitmap2 = TilesBitmap.empty().putTile(0, 0, 0).putTile(1, 1, 0);
-    private static final TilesBitmap bitmap3 = TilesBitmap.empty().putTile(0, 0, 0).putTile(1, 1, 0).putTile(2, 2, 1);
+    private static final Bitmap bitmap1 = Bitmap.empty().putTile(0, 0, 0);
+    private static final Bitmap bitmap2 = Bitmap.empty().putTile(0, 0, 0).putTile(1, 1, 0);
+    private static final Bitmap bitmap3 = Bitmap.empty().putTile(0, 0, 0).putTile(1, 1, 0).putTile(2, 2, 1);
 
     @ParameterizedTest
     @MethodSource("someMessages")
-    void shouldPublishAMessageToInformThatTheDesignAggregateHasChanged(Design design, InputMessage inputMessage, OutputMessage expectedOutputMessage) {
+    void shouldPublishAMessageToInformThatTheDesignAggregateHasChanged(Design design, InputMessage<TilesRendered> inputMessage, OutputMessage<TilesRendered> expectedOutputMessage) {
         when(eventStore.appendMessage(inputMessage)).thenReturn(Single.just(null));
         when(eventStore.projectDesign(design.getDesignId(), inputMessage.getToken())).thenReturn(Single.just(Optional.of(design)));
         when(eventStore.updateDesign(design)).thenReturn(Single.just(Optional.of(design)));
@@ -99,7 +94,7 @@ class TilesRenderedControllerTest {
 
     @Test
     void shouldDoNothingIfDesignDoesNotExists() {
-        final InputMessage inputMessage = anInputMessage(DESIGN_ID_1, REVISION_0);
+        final InputMessage<TilesRendered> inputMessage = anInputMessage(DESIGN_ID_1, REVISION_0);
         when(eventStore.appendMessage(inputMessage)).thenReturn(Single.just(null));
         when(eventStore.projectDesign(DESIGN_ID_1, REVISION_0)).thenReturn(Single.just(Optional.empty()));
 
@@ -115,7 +110,7 @@ class TilesRenderedControllerTest {
     @Test
     void shouldReturnErrorWhenProjectDesignFails() {
         final RuntimeException exception = new RuntimeException();
-        final InputMessage inputMessage = anInputMessage(DESIGN_ID_1, REVISION_0);
+        final InputMessage<TilesRendered> inputMessage = anInputMessage(DESIGN_ID_1, REVISION_0);
         when(eventStore.appendMessage(inputMessage)).thenReturn(Single.error(exception));
 
         assertThatThrownBy(() -> controller.onNext(inputMessage).toCompletable().await()).isEqualTo(exception);
@@ -129,7 +124,7 @@ class TilesRenderedControllerTest {
     @Test
     void shouldReturnErrorWhenAppendMessageFails() {
         final RuntimeException exception = new RuntimeException();
-        final InputMessage inputMessage = anInputMessage(DESIGN_ID_1, REVISION_0);
+        final InputMessage<TilesRendered> inputMessage = anInputMessage(DESIGN_ID_1, REVISION_0);
         when(eventStore.appendMessage(inputMessage)).thenReturn(Single.just(null));
         when(eventStore.projectDesign(DESIGN_ID_1, REVISION_0)).thenReturn(Single.error(exception));
 
@@ -146,7 +141,7 @@ class TilesRenderedControllerTest {
     void shouldReturnErrorWhenUpdateDesignFails() {
         final RuntimeException exception = new RuntimeException();
         final Design design = theDefaultDesign(DESIGN_ID_1, REVISION_0);
-        final InputMessage inputMessage = anInputMessage(DESIGN_ID_1, REVISION_0);
+        final InputMessage<TilesRendered> inputMessage = anInputMessage(DESIGN_ID_1, REVISION_0);
         when(eventStore.appendMessage(inputMessage)).thenReturn(Single.just(null));
         when(eventStore.projectDesign(DESIGN_ID_1, REVISION_0)).thenReturn(Single.just(Optional.of(design)));
         when(eventStore.updateDesign(design)).thenReturn(Single.error(exception));
@@ -157,58 +152,6 @@ class TilesRenderedControllerTest {
         verify(eventStore).projectDesign(DESIGN_ID_1, REVISION_0);
         verify(eventStore).updateDesign(design);
         verifyNoMoreInteractions(eventStore);
-
-        verifyNoInteractions(emitter);
-    }
-
-    @Test
-    void shouldReturnErrorWhenInputMapperFails() {
-        final RuntimeException exception = new RuntimeException();
-        final Mapper<InputMessage, TilesRendered> mockedInputMapper = mock();
-        when(mockedInputMapper.transform(any(InputMessage.class))).thenThrow(exception);
-
-        final Design design = theDefaultDesign(DESIGN_ID_1, REVISION_0);
-        final InputMessage inputMessage = anInputMessage(DESIGN_ID_1, REVISION_0);
-        when(eventStore.appendMessage(inputMessage)).thenReturn(Single.just(null));
-        when(eventStore.projectDesign(DESIGN_ID_1, REVISION_0)).thenReturn(Single.just(Optional.of(design)));
-        when(eventStore.updateDesign(design)).thenReturn(Single.error(exception));
-
-        final var controller = new TilesRenderedController(eventStore, mockedInputMapper, outputMapper, emitter);
-
-        assertThatThrownBy(() -> controller.onNext(inputMessage).toCompletable().await()).isEqualTo(exception);
-
-        verify(mockedInputMapper).transform(any(InputMessage.class));
-        verifyNoMoreInteractions(mockedInputMapper);
-
-        verify(eventStore).appendMessage(inputMessage);
-        verifyNoMoreInteractions(eventStore);
-
-        verifyNoInteractions(emitter);
-    }
-
-    @Test
-    void shouldReturnErrorWhenOutputMapperFails() {
-        final RuntimeException exception = new RuntimeException();
-        final Mapper<DesignAggregateUpdated, OutputMessage> mockedOutputMapper = mock();
-        when(mockedOutputMapper.transform(any(DesignAggregateUpdated.class))).thenThrow(exception);
-
-        final Design design = theDefaultDesign(DESIGN_ID_1, REVISION_0);
-        final InputMessage inputMessage = anInputMessage(DESIGN_ID_1, REVISION_0);
-        when(eventStore.appendMessage(inputMessage)).thenReturn(Single.just(null));
-        when(eventStore.projectDesign(DESIGN_ID_1, REVISION_0)).thenReturn(Single.just(Optional.of(design)));
-        when(eventStore.updateDesign(design)).thenReturn(Single.just(Optional.of(design)));
-
-        final var controller = new TilesRenderedController(eventStore, inputMapper, mockedOutputMapper, emitter);
-
-        assertThatThrownBy(() -> controller.onNext(inputMessage).toCompletable().await()).isEqualTo(exception);
-
-        verify(eventStore).appendMessage(inputMessage);
-        verify(eventStore).projectDesign(DESIGN_ID_1, REVISION_0);
-        verify(eventStore).updateDesign(design);
-        verifyNoMoreInteractions(eventStore);
-
-        verify(mockedOutputMapper).transform(any(DesignAggregateUpdated.class));
-        verifyNoMoreInteractions(mockedOutputMapper);
 
         verifyNoInteractions(emitter);
     }
@@ -216,16 +159,16 @@ class TilesRenderedControllerTest {
     @Test
     void shouldReturnErrorWhenEmitterFails() {
         final RuntimeException exception = new RuntimeException();
-        final MessageEmitter mockedEmitter = mock();
+        final MessageEmitter<DesignAggregateUpdated> mockedEmitter = mock();
         when(mockedEmitter.send(any(OutputMessage.class))).thenReturn(Single.error(exception));
 
         final Design design = theDefaultDesign(DESIGN_ID_1, REVISION_0);
-        final InputMessage inputMessage = anInputMessage(DESIGN_ID_1, REVISION_0);
+        final InputMessage<TilesRendered> inputMessage = anInputMessage(DESIGN_ID_1, REVISION_0);
         when(eventStore.appendMessage(inputMessage)).thenReturn(Single.just(null));
         when(eventStore.projectDesign(DESIGN_ID_1, REVISION_0)).thenReturn(Single.just(Optional.of(design)));
         when(eventStore.updateDesign(design)).thenReturn(Single.just(Optional.of(design)));
 
-        final var controller = new TilesRenderedController(eventStore, inputMapper, outputMapper, mockedEmitter);
+        final var controller = new TilesRenderedController(TestConstants.MESSAGE_SOURCE, eventStore, mockedEmitter);
 
         assertThatThrownBy(() -> controller.onNext(inputMessage).toCompletable().await()).isEqualTo(exception);
 
@@ -242,27 +185,27 @@ class TilesRenderedControllerTest {
         return Stream.of(
                 Arguments.of(
                         aDesign(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1, REVISION_1, "CREATED", LEVELS_DRAFT, bitmap1, dateTime.minusHours(2), dateTime.minusMinutes(3)),
-                        TilesRenderedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), REVISION_1, dateTime.minusMinutes(3), aTilesRendered(DESIGN_ID_1, COMMAND_ID_1, REVISION_1, DATA_1, List.of(
-                                Tile.builder().withLevel(0).withRow(0).withCol(0).build()
+                        TilesRenderedFactory.createInputMessage(aMessageId(), REVISION_1, dateTime.minusMinutes(3), aTilesRendered(DESIGN_ID_1, COMMAND_ID_1, REVISION_1, DATA_1, List.of(
+                                Tile.newBuilder().setLevel(0).setRow(0).setCol(0).build()
                         ))),
-                        DesignAggregateUpdatedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aDesignAggregateUpdated(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, REVISION_1, DATA_1, LEVELS_DRAFT, bitmap1, false, "CREATED", dateTime.minusHours(2), dateTime.minusMinutes(3)))
+                        DesignAggregateUpdatedFactory.createOutputMessage(aMessageId(), aDesignAggregateUpdated(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, REVISION_1, DATA_1, LEVELS_DRAFT, bitmap1, false, "CREATED", dateTime.minusHours(2), dateTime.minusMinutes(3)))
                 ),
                 Arguments.of(
                         aDesign(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1, REVISION_2, "UPDATED", LEVELS_DRAFT, bitmap2, dateTime.minusHours(2), dateTime.minusMinutes(3)),
-                        TilesRenderedFactory.createInputMessage(DESIGN_ID_1, aMessageId(), REVISION_2, dateTime.minusMinutes(3), aTilesRendered(DESIGN_ID_1, COMMAND_ID_1, REVISION_2, DATA_1, List.of(
-                                Tile.builder().withLevel(0).withRow(0).withCol(0).build(),
-                                Tile.builder().withLevel(1).withRow(1).withCol(0).build()
+                        TilesRenderedFactory.createInputMessage(aMessageId(), REVISION_2, dateTime.minusMinutes(3), aTilesRendered(DESIGN_ID_1, COMMAND_ID_1, REVISION_2, DATA_1, List.of(
+                                Tile.newBuilder().setLevel(0).setRow(0).setCol(0).build(),
+                                Tile.newBuilder().setLevel(1).setRow(1).setCol(0).build()
                         ))),
-                        DesignAggregateUpdatedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aDesignAggregateUpdated(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, REVISION_2, DATA_1, LEVELS_DRAFT, bitmap2, false, "UPDATED", dateTime.minusHours(2), dateTime.minusMinutes(3)))
+                        DesignAggregateUpdatedFactory.createOutputMessage(aMessageId(), aDesignAggregateUpdated(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, REVISION_2, DATA_1, LEVELS_DRAFT, bitmap2, false, "UPDATED", dateTime.minusHours(2), dateTime.minusMinutes(3)))
                 ),
                 Arguments.of(
                         aDesign(DESIGN_ID_2, COMMAND_ID_2, USER_ID_2, DATA_2, REVISION_2, "UPDATED", LEVELS_READY, bitmap3, dateTime.minusHours(3), dateTime.minusMinutes(1)),
-                        TilesRenderedFactory.createInputMessage(DESIGN_ID_2, aMessageId(), REVISION_2, dateTime.minusMinutes(1), aTilesRendered(DESIGN_ID_2, COMMAND_ID_2, REVISION_2, DATA_2, List.of(
-                                Tile.builder().withLevel(0).withRow(0).withCol(0).build(),
-                                Tile.builder().withLevel(1).withRow(1).withCol(0).build(),
-                                Tile.builder().withLevel(2).withRow(2).withCol(1).build()
+                        TilesRenderedFactory.createInputMessage(aMessageId(), REVISION_2, dateTime.minusMinutes(1), aTilesRendered(DESIGN_ID_2, COMMAND_ID_2, REVISION_2, DATA_2, List.of(
+                                Tile.newBuilder().setLevel(0).setRow(0).setCol(0).build(),
+                                Tile.newBuilder().setLevel(1).setRow(1).setCol(0).build(),
+                                Tile.newBuilder().setLevel(2).setRow(2).setCol(1).build()
                         ))),
-                        DesignAggregateUpdatedFactory.createOutputMessage(DESIGN_ID_2, aMessageId(), aDesignAggregateUpdated(DESIGN_ID_2, COMMAND_ID_2, USER_ID_2, REVISION_2, DATA_2, LEVELS_READY, bitmap3, true, "UPDATED", dateTime.minusHours(3), dateTime.minusMinutes(1)))
+                        DesignAggregateUpdatedFactory.createOutputMessage(aMessageId(), aDesignAggregateUpdated(DESIGN_ID_2, COMMAND_ID_2, USER_ID_2, REVISION_2, DATA_2, LEVELS_READY, bitmap3, true, "UPDATED", dateTime.minusHours(3), dateTime.minusMinutes(1)))
                 )
         );
     }
@@ -273,7 +216,7 @@ class TilesRenderedControllerTest {
     }
 
     @NotNull
-    private static Design aDesign(UUID designId, UUID commandId, UUID userId, String data, String revision, String status, int levels, TilesBitmap bitmap, LocalDateTime created, LocalDateTime updated) {
+    private static Design aDesign(UUID designId, UUID commandId, UUID userId, String data, String revision, String status, int levels, Bitmap bitmap, LocalDateTime created, LocalDateTime updated) {
         return Design.builder()
                 .withDesignId(designId)
                 .withCommandId(commandId)
@@ -283,7 +226,7 @@ class TilesRenderedControllerTest {
                 .withRevision(revision)
                 .withStatus(status)
                 .withLevels(levels)
-                .withBitmap(bitmap.getBitmap())
+                .withBitmap(bitmap.toByteBuffer())
                 .withPublished(levels == LEVELS_READY)
                 .withCreated(created)
                 .withUpdated(updated)
@@ -292,58 +235,58 @@ class TilesRenderedControllerTest {
 
     @NotNull
     private static TilesRendered aTilesRendered(UUID designId, UUID commandId, String revision, String data, List<Tile> tiles) {
-        return TilesRendered.builder()
-                .withDesignId(designId)
-                .withCommandId(commandId)
-                .withRevision(revision)
-                .withData(data)
-                .withChecksum(Checksum.of(data))
-                .withTiles(tiles)
+        return TilesRendered.newBuilder()
+                .setDesignId(designId)
+                .setCommandId(commandId)
+                .setRevision(revision)
+                .setData(data)
+                .setChecksum(Checksum.of(data))
+                .setTiles(tiles)
                 .build();
     }
 
     @NotNull
-    private static DesignAggregateUpdated aDesignAggregateUpdated(UUID designId, UUID commandId, UUID userId, String revision, String data, int levels, TilesBitmap bitmap, boolean published, String status, LocalDateTime created, LocalDateTime updated) {
-        return DesignAggregateUpdated.builder()
-                .withDesignId(designId)
-                .withCommandId(commandId)
-                .withUserId(userId)
-                .withRevision(revision)
-                .withData(data)
-                .withChecksum(Checksum.of(data))
-                .withLevels(levels)
-                .withBitmap(bitmap.getBitmap())
-                .withPublished(published)
-                .withStatus(status)
-                .withCreated(created)
-                .withUpdated(updated)
+    private static DesignAggregateUpdated aDesignAggregateUpdated(UUID designId, UUID commandId, UUID userId, String revision, String data, int levels, Bitmap bitmap, boolean published, String status, LocalDateTime created, LocalDateTime updated) {
+        return DesignAggregateUpdated.newBuilder()
+                .setDesignId(designId)
+                .setCommandId(commandId)
+                .setUserId(userId)
+                .setRevision(revision)
+                .setData(data)
+                .setChecksum(Checksum.of(data))
+                .setLevels(levels)
+                .setBitmap(bitmap.toByteBuffer())
+                .setPublished(published)
+                .setStatus(DesignAggregateStatus.valueOf(status))
+                .setCreated(created.toInstant(ZoneOffset.UTC))
+                .setUpdated(updated.toInstant(ZoneOffset.UTC))
                 .build();
     }
 
     @NotNull
     private static Design theDefaultDesign(UUID designId, String revision) {
-        return aDesign(designId, COMMAND_ID_1, USER_ID_1, DATA_1, revision, "CREATED", LEVELS_DRAFT, TilesBitmap.empty(), dateTime.minusHours(2), dateTime.minusHours(1));
+        return aDesign(designId, COMMAND_ID_1, USER_ID_1, DATA_1, revision, "CREATED", LEVELS_DRAFT, Bitmap.empty(), dateTime.minusHours(2), dateTime.minusHours(1));
     }
 
     @NotNull
-    private InputMessage anInputMessage(UUID designId, String revision) {
-        return TilesRenderedFactory.createInputMessage(designId, aMessageId(), revision, dateTime.minusMinutes(3), aTilesRendered(designId, COMMAND_ID_1, revision, DATA_1, List.of(Tile.builder().withLevel(0).withRow(0).withCol(0).build())));
+    private InputMessage<TilesRendered> anInputMessage(UUID designId, String revision) {
+        return TilesRenderedFactory.createInputMessage(aMessageId(), revision, dateTime.minusMinutes(3), aTilesRendered(designId, COMMAND_ID_1, revision, DATA_1, List.of(Tile.newBuilder().setLevel(0).setRow(0).setCol(0).build())));
     }
 
     private static class TilesRenderedFactory {
         @NotNull
-        public static InputMessage createInputMessage(UUID designId, UUID messageId, String messageToken, LocalDateTime messageTime, TilesRendered tilesRendered) {
+        public static InputMessage<TilesRendered> createInputMessage(UUID messageId, String messageToken, LocalDateTime messageTime, TilesRendered tilesRendered) {
             return TestUtils.createInputMessage(
-                    designId.toString(), TILES_RENDERED, messageId, tilesRendered, messageToken, messageTime
+                    tilesRendered.getDesignId().toString(), TILES_RENDERED, messageId, tilesRendered, messageToken, messageTime
             );
         }
     }
 
     private static class DesignAggregateUpdatedFactory {
         @NotNull
-        public static OutputMessage createOutputMessage(UUID designId, UUID messageId, DesignAggregateUpdated designAggregateUpdated) {
+        public static OutputMessage<DesignAggregateUpdated> createOutputMessage(UUID messageId, DesignAggregateUpdated designAggregateUpdated) {
             return TestUtils.createOutputMessage(
-                    designId.toString(), DESIGN_AGGREGATE_UPDATED, messageId, designAggregateUpdated
+                    designAggregateUpdated.getDesignId().toString(), DESIGN_AGGREGATE_UPDATED, messageId, designAggregateUpdated
             );
         }
     }

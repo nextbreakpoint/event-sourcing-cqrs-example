@@ -3,10 +3,14 @@ package com.nextbreakpoint.blueprint.designs;
 import com.datastax.oss.driver.api.core.cql.Row;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
-import com.nextbreakpoint.blueprint.common.events.DesignAggregateUpdated;
-import com.nextbreakpoint.blueprint.common.events.DesignDocumentDeleteRequested;
-import com.nextbreakpoint.blueprint.common.events.DesignDocumentUpdateRequested;
-import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignAggregateStatus;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignAggregateUpdated;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignDocumentDeleteRequested;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignDocumentStatus;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignDocumentUpdateRequested;
+import com.nextbreakpoint.blueprint.common.events.avro.TileRenderRequested;
+import com.nextbreakpoint.blueprint.common.vertx.Codec;
+import org.apache.avro.specific.SpecificRecord;
 import org.assertj.core.api.SoftAssertions;
 
 import java.nio.ByteBuffer;
@@ -22,7 +26,7 @@ import static com.nextbreakpoint.blueprint.designs.TestConstants.TILE_RENDER_REQ
 public class TestAssertions {
     private TestAssertions() {}
 
-    public static void assertExpectedMessage(Row row, OutputMessage message) {
+    public static void assertExpectedMessage(Row row, OutputMessage<Object> message, Class<? extends SpecificRecord> clazz) {
         final String actualType = row.getString("MESSAGE_TYPE");
         final String actualValue = row.getString("MESSAGE_VALUE");
         final UUID actualUuid = row.getUuid("MESSAGE_UUID");
@@ -32,7 +36,7 @@ public class TestAssertions {
         final Instant actualTimestamp = row.getInstant("MESSAGE_TIMESTAMP");
         SoftAssertions softly = new SoftAssertions();
         softly.assertThat(actualUuid).isEqualTo(message.getValue().getUuid());
-        softly.assertThat(actualValue).isEqualTo(message.getValue().getData());
+        softly.assertThat(actualValue).isEqualTo(Codec.asString(clazz, message.getValue().getData()));
         softly.assertThat(actualType).isEqualTo(message.getValue().getType());
         softly.assertThat(actualSource).isEqualTo(message.getValue().getSource());
         softly.assertThat(actualKey).isEqualTo(message.getKey());
@@ -56,7 +60,7 @@ public class TestAssertions {
         softly.assertAll();
     }
 
-    public static void assertExpectedDesignAggregateUpdatedMessage(InputMessage actualMessage, UUID designId) {
+    public static void assertExpectedDesignAggregateUpdatedMessage(InputMessage<Object> actualMessage, UUID designId) {
         SoftAssertions softly = new SoftAssertions();
         softly.assertThat(actualMessage.getTimestamp()).isNotNull();
         softly.assertThat(actualMessage.getKey()).isEqualTo(designId.toString());
@@ -76,7 +80,7 @@ public class TestAssertions {
         softly.assertThat(actualEvent.getRevision()).isNotNull();
         softly.assertThat(actualEvent.getChecksum()).isEqualTo(checksum);
         softly.assertThat(actualEvent.getData()).isEqualTo(data);
-        softly.assertThat(actualEvent.getStatus()).isEqualTo(status);
+        softly.assertThat(actualEvent.getStatus()).isEqualTo(DesignAggregateStatus.valueOf(status));
         softly.assertThat(actualEvent.getLevels()).isEqualTo(levels);
         softly.assertThat(actualEvent.getBitmap()).isNotNull();
         softly.assertThat(actualEvent.getUpdated()).isNotNull();
@@ -84,7 +88,7 @@ public class TestAssertions {
         softly.assertAll();
     }
 
-    public static void assertExpectedTileRenderRequestedMessage(InputMessage actualMessage, UUID designId) {
+    public static void assertExpectedTileRenderRequestedMessage(InputMessage<Object> actualMessage, UUID designId) {
         SoftAssertions softly = new SoftAssertions();
         softly.assertThat(actualMessage.getTimestamp()).isNotNull();
         softly.assertThat(actualMessage.getKey()).startsWith(designId.toString());
@@ -109,7 +113,7 @@ public class TestAssertions {
         softly.assertAll();
     }
 
-    public static void assertExpectedDesignDocumentUpdateRequestedMessage(InputMessage actualMessage, UUID designId) {
+    public static void assertExpectedDesignDocumentUpdateRequestedMessage(InputMessage<Object> actualMessage, UUID designId) {
         SoftAssertions softly = new SoftAssertions();
         softly.assertThat(actualMessage.getTimestamp()).isNotNull();
         softly.assertThat(actualMessage.getKey()).isEqualTo(designId.toString());
@@ -127,15 +131,15 @@ public class TestAssertions {
         softly.assertThat(actualEvent.getCommandId()).isNotNull();
         softly.assertThat(actualEvent.getRevision()).isNotNull();
         softly.assertThat(actualEvent.getData()).isEqualTo(data);
-        softly.assertThat(actualEvent.getStatus()).isEqualTo(status);
+        softly.assertThat(actualEvent.getStatus()).isEqualTo(DesignDocumentStatus.valueOf(status));
         softly.assertThat(actualEvent.getChecksum()).isEqualTo(checksum);
-        softly.assertThat(actualEvent.isPublished()).isEqualTo(published);
+        softly.assertThat(actualEvent.getPublished()).isEqualTo(published);
         softly.assertThat(actualEvent.getLevels()).isEqualTo(levels);
         softly.assertThat(actualEvent.getTiles()).isNotNull();
         softly.assertAll();
     }
 
-    public static void assertExpectedDesignDocumentDeleteRequestedMessage(InputMessage actualMessage, UUID designId) {
+    public static void assertExpectedDesignDocumentDeleteRequestedMessage(InputMessage<Object> actualMessage, UUID designId) {
         SoftAssertions softly = new SoftAssertions();
         softly.assertThat(actualMessage.getTimestamp()).isNotNull();
         softly.assertThat(actualMessage.getKey()).isEqualTo(designId.toString());

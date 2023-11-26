@@ -11,6 +11,8 @@ import au.com.dius.pact.core.model.V4Pact;
 import au.com.dius.pact.core.model.annotations.Pact;
 import com.nextbreakpoint.blueprint.common.core.Checksum;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignDocumentDeleteRequested;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignDocumentUpdateRequested;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -20,6 +22,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -112,8 +115,8 @@ public class PactConsumerTests {
                 .stringValue("status", status)
                 .booleanValue("published", published)
                 .numberValue("levels", levels)
-                .date("created", "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
-                .date("updated", "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+                .numberType("created", Instant.parse("2023-11-22T08:00:00.000Z").toEpochMilli())
+                .numberType("updated", Instant.parse("2023-11-23T11:12:00.000Z").toEpochMilli())
                 .object("tiles", tiles);
 
         PactDslJsonBody payload = new PactDslJsonBody()
@@ -197,12 +200,12 @@ public class PactConsumerTests {
     public void shouldUpdateTheDesignWhenReceivingADesignDocumentUpdateRequestedMessage(V4Pact pact) {
         assertThat(pact.getInteractions()).hasSize(4);
 
-        final OutputMessage designDocumentUpdateRequestedMessage1 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(0).asAsynchronousMessage()));
-        final OutputMessage designDocumentUpdateRequestedMessage2 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(1).asAsynchronousMessage()));
-        final OutputMessage designDocumentUpdateRequestedMessage3 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(2).asAsynchronousMessage()));
-        final OutputMessage designDocumentUpdateRequestedMessage4 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(3).asAsynchronousMessage()));
+        final OutputMessage<DesignDocumentUpdateRequested> designDocumentUpdateRequestedMessage1 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(0).asAsynchronousMessage()), DesignDocumentUpdateRequested.class);
+        final OutputMessage<DesignDocumentUpdateRequested> designDocumentUpdateRequestedMessage2 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(1).asAsynchronousMessage()), DesignDocumentUpdateRequested.class);
+        final OutputMessage<DesignDocumentUpdateRequested> designDocumentUpdateRequestedMessage3 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(2).asAsynchronousMessage()), DesignDocumentUpdateRequested.class);
+        final OutputMessage<DesignDocumentUpdateRequested> designDocumentUpdateRequestedMessage4 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(3).asAsynchronousMessage()), DesignDocumentUpdateRequested.class);
 
-        final List<OutputMessage> designDocumentUpdateRequestedMessages = List.of(
+        final List<OutputMessage<DesignDocumentUpdateRequested>> designDocumentUpdateRequestedMessages = List.of(
                 designDocumentUpdateRequestedMessage1,
                 designDocumentUpdateRequestedMessage2,
                 designDocumentUpdateRequestedMessage3,
@@ -218,8 +221,8 @@ public class PactConsumerTests {
     public void shouldDeleteTheDesignWhenReceivingADesignDocumentDeleteRequestedMessage(V4Pact pact) {
         assertThat(pact.getInteractions()).hasSize(2);
 
-        final OutputMessage designDocumentUpdateRequestedMessage = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(0).asAsynchronousMessage()));
-        final OutputMessage designDocumentDeleteRequestedMessage = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(1).asAsynchronousMessage()));
+        final OutputMessage<DesignDocumentUpdateRequested> designDocumentUpdateRequestedMessage = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(0).asAsynchronousMessage()), DesignDocumentUpdateRequested.class);
+        final OutputMessage<DesignDocumentDeleteRequested> designDocumentDeleteRequestedMessage = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(1).asAsynchronousMessage()), DesignDocumentDeleteRequested.class);
 
         testCases.shouldDeleteTheDesignWhenReceivingADesignDocumentDeleteRequested(designDocumentUpdateRequestedMessage, designDocumentDeleteRequestedMessage);
     }

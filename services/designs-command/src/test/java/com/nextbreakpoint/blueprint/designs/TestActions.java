@@ -12,7 +12,7 @@ import java.util.function.Predicate;
 public interface TestActions {
     void clearMessages(Source source);
 
-    List<InputMessage> findMessages(Source source, String messageSource, String messageType, Predicate<String> keyPredicate, Predicate<InputMessage> messagePredicate);
+    List<InputMessage<Object>> findMessages(Source source, String messageSource, String messageType, Predicate<String> keyPredicate, Predicate<InputMessage<Object>> messagePredicate);
 
     List<Row> fetchMessages(UUID designId, UUID messageId);
 
@@ -25,6 +25,6 @@ public interface TestActions {
     void submitDeleteDesignRequest(String authorization, UUID designId) throws MalformedURLException;
 
     enum Source {
-        EVENTS, COMMANDS;
+        EVENTS, COMMANDS
     }
 }

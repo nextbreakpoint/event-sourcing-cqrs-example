@@ -26,8 +26,8 @@ public class TestScenario {
   private final boolean useContainers = TestUtils.getVariable("USE_CONTAINERS", System.getProperty("use.containers", "true")).equals("true");
   private final boolean startPlatform = TestUtils.getVariable("START_PLATFORM", System.getProperty("start.platform", "false")).equals("true");
   private final String dockerHost = TestUtils.getVariable("DOCKER_HOST", System.getProperty("docker.host", "host.docker.internal"));
+  private final String uniqueTestId = TestUtils.getVariable("TEST_ID", System.getProperty("test.id", UUID.randomUUID().toString()));
   private final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-  private final String uniqueTestId = UUID.randomUUID().toString();
 
   private Network network = Network.builder().driver("bridge").build();
 
@@ -41,6 +41,10 @@ public class TestScenario {
           .dependsOn(zookeeper)
           .waitingFor(Wait.forLogMessage(".* started \\(kafka.server.KafkaServer\\).*", 1).withStartupTimeout(Duration.ofSeconds(90)));
 
+  private GenericContainer schemaRegistry = ContainerUtils.createSchemaRegistryContainer(network)
+          .dependsOn(kafka)
+          .waitingFor(Wait.forLogMessage(".* Server started, listening for requests.*", 1).withStartupTimeout(Duration.ofSeconds(60)));
+
   private GenericContainer<?> service = new GenericContainer<>(DockerImageName.parse("integration/" + serviceName + ":" + version))
           .withEnv("DEBUG_OPTS", "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:" + DEBUG_PORT)
           .withEnv("LOGGING_LEVEL", "DEBUG")
@@ -52,6 +56,8 @@ public class TestScenario {
           .withEnv("DATABASE_PASSWORD", "password")
           .withEnv("KAFKA_HOST", resolveHost("kafka"))
           .withEnv("KAFKA_PORT", resolveKafkaPort("9092"))
+          .withEnv("SCHEMA_REGISTRY_HOST", resolveHost("schema-registry"))
+          .withEnv("SCHEMA_REGISTRY_PORT", "8081")
           .withEnv("RENDER_TOPIC_PREFIX", TestConstants.RENDER_TOPIC_PREFIX + "-" + uniqueTestId)
           .withEnv("EVENTS_TOPIC", TestConstants.EVENTS_TOPIC_NAME + "-" + uniqueTestId)
           .withEnv("BUFFER_TOPIC", TestConstants.BUFFER_TOPIC_NAME + "-" + uniqueTestId)
@@ -73,8 +79,9 @@ public class TestScenario {
         cassandra.start();
         zookeeper.start();
         kafka.start();
+        schemaRegistry.start();
 
-        service = service.dependsOn(zookeeper, kafka, cassandra);
+        service = service.dependsOn(zookeeper, kafka, schemaRegistry, cassandra);
       } else {
         System.out.println("Don't start platform");
       }
@@ -96,6 +103,7 @@ public class TestScenario {
       service.stop();
 
       if (startPlatform) {
+        schemaRegistry.stop();
         kafka.stop();
         zookeeper.stop();
         cassandra.stop();
@@ -143,6 +151,14 @@ public class TestScenario {
 
   public Integer getKafkaPort() {
     return getPort(kafka, 9093);
+  }
+
+  public String getSchemaRegistryHost() {
+    return getHost(schemaRegistry);
+  }
+
+  public Integer getSchemaRegistryPort() {
+    return getPort(schemaRegistry, 8081);
   }
 
   public String getCassandraHost() {

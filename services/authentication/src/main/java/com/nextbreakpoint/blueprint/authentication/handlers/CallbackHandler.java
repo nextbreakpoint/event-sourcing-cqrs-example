@@ -6,7 +6,6 @@ import io.vertx.ext.auth.oauth2.OAuth2FlowType;
 import io.vertx.ext.auth.oauth2.Oauth2Credentials;
 import io.vertx.rxjava.ext.auth.oauth2.OAuth2Auth;
 import io.vertx.rxjava.ext.web.RoutingContext;
-import lombok.extern.log4j.Log4j2;
 
 import java.util.Objects;
 
@@ -14,7 +13,6 @@ import static io.vertx.core.http.HttpHeaders.CACHE_CONTROL;
 import static io.vertx.core.http.HttpHeaders.EXPIRES;
 import static io.vertx.core.http.HttpHeaders.LOCATION;
 
-@Log4j2
 public class CallbackHandler implements Handler<RoutingContext> {
     private final String authUrl;
     private final OAuth2Auth oauthHandler;
@@ -36,25 +34,25 @@ public class CallbackHandler implements Handler<RoutingContext> {
     }
 
     private void handleCallback(RoutingContext ctx) {
-        String error = ctx.request().getParam("error");
+        final String error = ctx.request().getParam("error");
         if (error != null) {
             handleError(ctx, error);
             return;
         }
 
-        String code = ctx.request().getParam("code");
+        final String code = ctx.request().getParam("code");
         if (code == null) {
             ctx.fail(400, new IllegalStateException("Missing code parameter"));
             return;
         }
 
-        String state = ctx.request().getParam("state");
+        final String state = ctx.request().getParam("state");
         if (state == null) {
             ctx.fail(400, new IllegalStateException("Missing state parameter"));
             return;
         }
 
-        Oauth2Credentials credentials = new Oauth2Credentials()
+        final Oauth2Credentials credentials = new Oauth2Credentials()
                 .setRedirectUri(authUrl + callbackPath)
                 .setFlow(OAuth2FlowType.AUTH_CODE)
                 .setCode(code);
@@ -64,37 +62,30 @@ public class CallbackHandler implements Handler<RoutingContext> {
                 ctx.fail(res.cause());
             } else {
                 ctx.setUser(res.result());
-                String location = state != null ? state : "/";
-                if (location.length() != 0 && location.charAt(0) == '/') {
-                    ctx.reroute(location);
-                    return;
-                }
-                ctx.response()
+                if (state.length() != 0 && state.charAt(0) == '/') {
+                    ctx.reroute(state);
+                } else {
+                    ctx.response()
                         .putHeader(CACHE_CONTROL, "no-cache, no-store, must-revalidate")
                         .putHeader("Pragma", "no-cache")
                         .putHeader(EXPIRES, "0")
-                        .putHeader(LOCATION, location)
+                        .putHeader(LOCATION, state)
                         .setStatusCode(302)
-                        .end("Redirecting to " + location + ".");
+                        .end("Redirecting to " + state + ".");
+                }
             }
         });
     }
 
     private static void handleError(RoutingContext ctx, String error) {
-        short errorCode;
-        switch (error) {
-            case "invalid_token":
-                errorCode = 401;
-                break;
-            case "insufficient_scope":
-                errorCode = 403;
-                break;
-            case "invalid_request":
-            default:
-                errorCode = 400;
-        }
+        short errorCode = switch (error) {
+            case "invalid_token" -> 401;
+            case "insufficient_scope" -> 403;
+            case "invalid_request" -> 400;
+            default -> 400;
+        };
 
-        String errorDescription = ctx.request().getParam("error_description");
+        final String errorDescription = ctx.request().getParam("error_description");
         if (errorDescription != null) {
             ctx.fail(errorCode, new IllegalStateException(error + ": " + errorDescription));
         } else {

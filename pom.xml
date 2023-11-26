@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.nextbreakpoint</groupId>
     <artifactId>com.nextbreakpoint.blueprint</artifactId>
-    <version>1.0.4-wip-fc0da7bd-1699465763</version>
+    <version>1.0.4-avro-migration-76bf9345-1701020097</version>
     <packaging>pom</packaging>
     <licenses>
         <license>
@@ -35,10 +35,14 @@
         <httpcore.version>4.4.16</httpcore.version>
         <httpclient.version>4.5.14</httpclient.version>
         <awssdk.version>2.17.138</awssdk.version>
+        <avro.version>1.11.3</avro.version>
+        <kafka-schema-registry-client.version>7.5.1</kafka-schema-registry-client.version>
+        <kafka-avro-serializer.version>7.5.1</kafka-avro-serializer.version>
         <opentelemetry.version>1.12.0</opentelemetry.version>
         <elasticsearch-java.version>8.10.3</elasticsearch-java.version>
         <jctools-core.version>3.3.0</jctools-core.version>
         <kotlin-stdlib.version>1.9.10</kotlin-stdlib.version>
+        <kotlin-runtime.version>1.2.71</kotlin-runtime.version>
         <junit5jupiter.version>5.10.0</junit5jupiter.version>
         <junit5platform.version>1.10.0</junit5platform.version>
         <mockito.version>5.6.0</mockito.version>
@@ -66,7 +70,9 @@
         <build-helper-maven-plugin.version>3.4.0</build-helper-maven-plugin.version>
         <lombok-maven-plugin.version>1.18.20.0</lombok-maven-plugin.version>
         <exec-maven-plugin.version>3.1.0</exec-maven-plugin.version>
+        <avro-maven-plugin.version>1.11.3</avro-maven-plugin.version>
         <pact-provider-maven.version>4.6.3</pact-provider-maven.version>
+<!--        <kotlin-maven-plugin.version>1.9.10</kotlin-maven-plugin.version>-->
         <java.version>17</java.version>
         <maven.source.release>17</maven.source.release>
         <maven.target.release>17</maven.target.release>
@@ -76,6 +82,10 @@
         <pactbroker.port>9292</pactbroker.port>
         <nexus.host>localhost</nexus.host>
         <nexus.port>38081</nexus.port>
+        <slf4j-api.version>2.0.9</slf4j-api.version>
+        <guava.version>32.0.1-jre</guava.version>
+        <logredactor.version>1.0.12</logredactor.version>
+        <commons-compress.version>1.21</commons-compress.version>
     </properties>
     <build>
         <pluginManagement>
@@ -144,6 +154,42 @@
                     <groupId>org.projectlombok</groupId>
                     <artifactId>lombok-maven-plugin</artifactId>
                     <version>${lombok-maven-plugin.version}</version>
+                </plugin>
+<!--                <plugin>-->
+<!--                    <groupId>org.jetbrains.kotlin</groupId>-->
+<!--                    <artifactId>kotlin-maven-plugin</artifactId>-->
+<!--                    <version>${kotlin-maven-plugin.version}</version>-->
+<!--                    <executions>-->
+<!--                        <execution>-->
+<!--                            <id>compile</id>-->
+<!--                            <phase>compile</phase>-->
+<!--                            <goals>-->
+<!--                                <goal>compile</goal>-->
+<!--                            </goals>-->
+<!--                        </execution>-->
+<!--                    </executions>-->
+<!--                </plugin>-->
+                <plugin>
+                    <groupId>org.apache.avro</groupId>
+                    <artifactId>avro-maven-plugin</artifactId>
+                    <version>${avro-maven-plugin.version}</version>
+                    <executions>
+                        <execution>
+                            <phase>generate-sources</phase>
+                            <goals>
+                                <goal>schema</goal>
+                            </goals>
+                            <configuration>
+                                <createSetters>false</createSetters>
+                                <fieldVisibility>PRIVATE</fieldVisibility>
+                                <stringType>String</stringType>
+                                <createOptionalGetters>false</createOptionalGetters>
+                                <gettersReturnOptional>false</gettersReturnOptional>
+                                <enableDecimalLogicalType>true</enableDecimalLogicalType>
+                                <optionalGettersForNullableFieldsOnly>true</optionalGettersForNullableFieldsOnly>
+                            </configuration>
+                        </execution>
+                    </executions>
                 </plugin>
             </plugins>
         </pluginManagement>
@@ -545,6 +591,11 @@
                 <version>${httpclient.version}</version>
             </dependency>
             <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
+                <version>${slf4j-api.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.apache.logging.log4j</groupId>
                 <artifactId>log4j-api</artifactId>
                 <version>${log4j2.version}</version>
@@ -595,11 +646,56 @@
                 <version>${kotlin-stdlib.version}</version>
             </dependency>
             <dependency>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-runtime</artifactId>
+                <version>${kotlin-runtime.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>software.amazon.awssdk</groupId>
                 <artifactId>bom</artifactId>
                 <version>${awssdk.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.avro</groupId>
+                <artifactId>avro</artifactId>
+                <version>${avro.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.confluent</groupId>
+                <artifactId>kafka-schema-serializer</artifactId>
+                <version>${kafka-avro-serializer.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.confluent</groupId>
+                <artifactId>kafka-avro-serializer</artifactId>
+                <version>${kafka-avro-serializer.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.confluent</groupId>
+                <artifactId>kafka-schema-registry-client</artifactId>
+                <version>${kafka-schema-registry-client.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>${guava.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.confluent</groupId>
+                <artifactId>logredactor</artifactId>
+                <version>${logredactor.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.confluent</groupId>
+                <artifactId>logredactor-metrics</artifactId>
+                <version>${logredactor.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-compress</artifactId>
+                <version>${commons-compress.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.junit.jupiter</groupId>
@@ -894,6 +990,18 @@
                     <url>http://${nexus.host}:${nexus.port}/repository/maven-internal/</url>
                 </repository>
             </distributionManagement>
+        </profile>
+        <profile>
+            <id>confluent</id>
+            <activation>
+                <property>
+                    <name>confluent</name>
+                    <value>true</value>
+                </property>
+            </activation>
+            <modules>
+                <module>confluent</module>
+            </modules>
         </profile>
         <profile>
             <id>common</id>

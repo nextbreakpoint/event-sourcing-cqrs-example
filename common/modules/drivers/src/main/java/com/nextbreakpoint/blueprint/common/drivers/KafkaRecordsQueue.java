@@ -1,37 +1,36 @@
 package com.nextbreakpoint.blueprint.common.drivers;
 
-import com.nextbreakpoint.blueprint.common.core.Payload;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
+import com.nextbreakpoint.blueprint.common.core.InputRecord;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public interface KafkaRecordsQueue {
-    void addRecord(QueuedRecord entry);
+public interface KafkaRecordsQueue<T> {
+    void addRecord(QueuedRecord<T> entry);
 
-    List<QueuedRecord> getRecords();
+    List<QueuedRecord<T>> getRecords();
 
-    void deleteRecord(QueuedRecord entry);
+    void deleteRecord(QueuedRecord<T> entry);
 
     int size();
 
     void clear();
 
-    class Simple implements KafkaRecordsQueue {
-        private List<QueuedRecord> records = new ArrayList<>();
+    class Simple<T> implements KafkaRecordsQueue<T> {
+        private List<QueuedRecord<T>> records = new ArrayList<>();
 
         @Override
-        public void addRecord(QueuedRecord record) {
+        public void addRecord(QueuedRecord<T> record) {
             records.add(record);
         }
 
         @Override
-        public void deleteRecord(QueuedRecord record) {}
+        public void deleteRecord(QueuedRecord<T> record) {}
 
         @Override
-        public List<QueuedRecord> getRecords() {
+        public List<QueuedRecord<T>> getRecords() {
             return new ArrayList<>(records);
         }
 
@@ -45,26 +44,26 @@ public interface KafkaRecordsQueue {
             records.clear();
         }
 
-        public static Simple create() {
-            return new Simple();
+        public static <T> Simple<T> create() {
+            return new Simple<>();
         }
     }
 
-    class Compacted implements KafkaRecordsQueue {
-        private Map<String, QueuedRecord> records = new HashMap<>();
+    class Compacted<T> implements KafkaRecordsQueue<T> {
+        private Map<String, QueuedRecord<T>> records = new HashMap<>();
 
         @Override
-        public void addRecord(QueuedRecord record) {
-            records.put(record.record.key(), record);
+        public void addRecord(QueuedRecord<T> record) {
+            records.put(record.record.getKey(), record);
         }
 
         @Override
-        public void deleteRecord(QueuedRecord record) {
-            records.remove(record.record.key());
+        public void deleteRecord(QueuedRecord<T> record) {
+            records.remove(record.record.getKey());
         }
 
         @Override
-        public List<QueuedRecord> getRecords() {
+        public List<QueuedRecord<T>> getRecords() {
             return new ArrayList<>(records.values());
         }
 
@@ -78,26 +77,20 @@ public interface KafkaRecordsQueue {
             records.clear();
         }
 
-        public static Compacted create() {
-            return new Compacted();
+        public static <T> Compacted<T> create() {
+            return new Compacted<>();
         }
     }
 
-    class QueuedRecord {
-        private ConsumerRecord<String, String> record;
-        private Payload payload;
+    class QueuedRecord<T> {
+        private InputRecord<T> record;
 
-        public QueuedRecord(ConsumerRecord<String, String> record, Payload payload) {
+        public QueuedRecord(InputRecord<T> record) {
             this.record = record;
-            this.payload = payload;
         }
 
-        public ConsumerRecord<String, String> getRecord() {
+        public InputRecord<T> getRecord() {
             return record;
-        }
-
-        public Payload getPayload() {
-            return payload;
         }
     }
 }

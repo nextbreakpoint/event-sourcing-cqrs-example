@@ -2,15 +2,14 @@ package com.nextbreakpoint.blueprint.designs.controllers;
 
 import com.nextbreakpoint.blueprint.common.core.Controller;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
-import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.MessageEmitter;
-import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
-import com.nextbreakpoint.blueprint.common.core.Tile;
-import com.nextbreakpoint.blueprint.common.core.TilesBitmap;
-import com.nextbreakpoint.blueprint.common.events.TileRenderCompleted;
-import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
+import com.nextbreakpoint.blueprint.common.events.avro.Tile;
+import com.nextbreakpoint.blueprint.common.events.avro.TileRenderCompleted;
+import com.nextbreakpoint.blueprint.common.events.avro.TileRenderRequested;
+import com.nextbreakpoint.blueprint.common.vertx.MessageFactory;
 import com.nextbreakpoint.blueprint.designs.aggregate.DesignEventStore;
+import com.nextbreakpoint.blueprint.designs.common.Bitmap;
 import com.nextbreakpoint.blueprint.designs.common.Render;
 import com.nextbreakpoint.blueprint.designs.model.Design;
 import lombok.extern.log4j.Log4j2;
@@ -21,34 +20,27 @@ import java.util.Objects;
 import java.util.UUID;
 
 @Log4j2
-public class TileRenderCompletedController implements Controller<InputMessage, Void> {
-    private final Mapper<InputMessage, TileRenderCompleted> inputMapper;
-    private final Mapper<TileRenderCompleted, OutputMessage> bufferOutputMapper;
-    private final Mapper<TileRenderRequested, OutputMessage> renderOutputMapper;
-    private final MessageEmitter bufferEmitter;
-    private final MessageEmitter renderEmitter;
+public class TileRenderCompletedController implements Controller<InputMessage<TileRenderCompleted>, Void> {
+    private final String messageSource;
+    private final MessageEmitter<TileRenderCompleted> bufferEmitter;
+    private final MessageEmitter<TileRenderRequested> renderEmitter;
     private final DesignEventStore eventStore;
 
     public TileRenderCompletedController(
+            String messageSource,
             DesignEventStore eventStore,
-            Mapper<InputMessage, TileRenderCompleted> inputMapper,
-            Mapper<TileRenderCompleted, OutputMessage> bufferOutputMapper,
-            Mapper<TileRenderRequested, OutputMessage> renderOutputMapper,
-            MessageEmitter bufferEmitter,
-            MessageEmitter renderEmitter
+            MessageEmitter<TileRenderCompleted> bufferEmitter,
+            MessageEmitter<TileRenderRequested> renderEmitter
     ) {
+        this.messageSource = Objects.requireNonNull(messageSource);
         this.eventStore = Objects.requireNonNull(eventStore);
-        this.inputMapper = Objects.requireNonNull(inputMapper);
-        this.bufferOutputMapper = Objects.requireNonNull(bufferOutputMapper);
-        this.renderOutputMapper = Objects.requireNonNull(renderOutputMapper);
         this.bufferEmitter = Objects.requireNonNull(bufferEmitter);
         this.renderEmitter = Objects.requireNonNull(renderEmitter);
     }
 
     @Override
-    public Single<Void> onNext(InputMessage message) {
-        return Single.just(message)
-                .map(inputMapper::transform)
+    public Single<Void> onNext(InputMessage<TileRenderCompleted> message) {
+        return Single.fromCallable(() -> message.getValue().getData())
                 .flatMapObservable(event -> onUpdateRequested(event, message.getToken()))
                 .ignoreElements()
                 .toCompletable()
@@ -71,7 +63,7 @@ public class TileRenderCompletedController implements Controller<InputMessage, V
 
     private Observable<Void> sendTileCompletedEvent(TileRenderCompleted event) {
         return Observable.just(event)
-                .map(bufferOutputMapper::transform)
+                .map(this::createMessage)
                 .flatMapSingle(bufferEmitter::send);
     }
 
@@ -80,7 +72,9 @@ public class TileRenderCompletedController implements Controller<InputMessage, V
     }
 
     private Single<Void> sendRenderEvent(TileRenderRequested event) {
-        return renderEmitter.send(renderOutputMapper.transform(event), Render.getTopicName(renderEmitter.getTopicName() + "-requested", event.getLevel()));
+        return Single.just(event)
+                .map(this::createMessage)
+                .flatMap(message -> renderEmitter.send(message, Render.getTopicName(renderEmitter.getTopicName() + "-requested", event.getLevel())));
     }
 
     private Observable<TileRenderRequested> createRenderEvents(TileRenderCompleted event, Design design, String revision) {
@@ -96,30 +90,40 @@ public class TileRenderCompletedController implements Controller<InputMessage, V
     }
 
     private Observable<TileRenderRequested> generateRenderEvents(TileRenderCompleted event, Design design, String revision) {
-        final TilesBitmap bitmap = TilesBitmap.of(design.getBitmap());
+        final Bitmap bitmap = Bitmap.of(design.getBitmap());
 
         return Observable.from(Render.generateTiles(createTile(event), design.getLevels(), bitmap))
                 .map(tile -> createRenderEvent(design, tile, revision));
     }
 
+    private OutputMessage<TileRenderCompleted> createMessage(TileRenderCompleted event) {
+        return MessageFactory.<TileRenderCompleted>of(messageSource)
+                .createOutputMessage(event.getDesignId().toString(), event);
+    }
+
+    private OutputMessage<TileRenderRequested> createMessage(TileRenderRequested event) {
+        return MessageFactory.<TileRenderRequested>of(messageSource)
+                .createOutputMessage(Render.createRenderKey(event), event);
+    }
+
     private Tile createTile(TileRenderCompleted event) {
-        return Tile.builder()
-                .withLevel(event.getLevel())
-                .withRow(event.getRow())
-                .withCol(event.getCol())
+        return Tile.newBuilder()
+                .setLevel(event.getLevel())
+                .setRow(event.getRow())
+                .setCol(event.getCol())
                 .build();
     }
 
     private TileRenderRequested createRenderEvent(Design design, Tile tile, String revision) {
-        return TileRenderRequested.builder()
-                .withDesignId(design.getDesignId())
-                .withCommandId(design.getCommandId())
-                .withRevision(revision)
-                .withData(design.getData())
-                .withChecksum(design.getChecksum())
-                .withLevel(tile.getLevel())
-                .withRow(tile.getRow())
-                .withCol(tile.getCol())
+        return TileRenderRequested.newBuilder()
+                .setDesignId(design.getDesignId())
+                .setCommandId(design.getCommandId())
+                .setRevision(revision)
+                .setData(design.getData())
+                .setChecksum(design.getChecksum())
+                .setLevel(tile.getLevel())
+                .setRow(tile.getRow())
+                .setCol(tile.getCol())
                 .build();
     }
 }

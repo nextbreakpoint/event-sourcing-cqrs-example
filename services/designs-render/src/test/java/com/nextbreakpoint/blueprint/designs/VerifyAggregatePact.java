@@ -11,11 +11,12 @@ import au.com.dius.pact.provider.junitsupport.Provider;
 import au.com.dius.pact.provider.junitsupport.State;
 import au.com.dius.pact.provider.junitsupport.loader.PactBroker;
 import com.nextbreakpoint.blueprint.common.core.Json;
-import com.nextbreakpoint.blueprint.common.core.KafkaRecord;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
-import com.nextbreakpoint.blueprint.common.events.TileRenderCompleted;
-import com.nextbreakpoint.blueprint.common.events.mappers.TileRenderCompletedOutputMapper;
+import com.nextbreakpoint.blueprint.common.events.avro.TileRenderCompleted;
+import com.nextbreakpoint.blueprint.common.events.avro.TileStatus;
+import com.nextbreakpoint.blueprint.common.test.KafkaRecord;
 import com.nextbreakpoint.blueprint.common.test.PayloadUtils;
+import com.nextbreakpoint.blueprint.common.vertx.MessageFactory;
 import com.nextbreakpoint.blueprint.designs.common.Render;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -103,9 +104,9 @@ public class VerifyAggregatePact {
     }
 
     private String produceTileRenderCompleted(UUID designId, UUID commandId, String checksum, String revision, int level, int row, int col, String status) {
-        final TileRenderCompleted tileRenderCompleted = new TileRenderCompleted(designId, commandId, revision, checksum, level, row, col, status);
+        final TileRenderCompleted tileRenderCompleted = new TileRenderCompleted(designId, commandId, revision, checksum, TileStatus.valueOf(status), level, row, col);
 
-        final OutputMessage tileRenderCompletedMessage = new TileRenderCompletedOutputMapper(MESSAGE_SOURCE).transform(tileRenderCompleted);
+        final OutputMessage<TileRenderCompleted> tileRenderCompletedMessage = MessageFactory.<TileRenderCompleted>of(MESSAGE_SOURCE).createOutputMessage(tileRenderCompleted.getDesignId().toString(), tileRenderCompleted);
 
         return Json.encodeValue(new KafkaRecord(Render.createRenderKey(tileRenderCompleted), PayloadUtils.payloadToMap(tileRenderCompletedMessage.getValue())));
     }

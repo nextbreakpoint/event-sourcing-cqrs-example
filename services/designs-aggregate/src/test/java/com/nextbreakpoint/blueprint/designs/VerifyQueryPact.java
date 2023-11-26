@@ -12,15 +12,14 @@ import au.com.dius.pact.provider.junitsupport.State;
 import au.com.dius.pact.provider.junitsupport.loader.PactBroker;
 import com.nextbreakpoint.blueprint.common.core.Checksum;
 import com.nextbreakpoint.blueprint.common.core.Json;
-import com.nextbreakpoint.blueprint.common.core.KafkaRecord;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
-import com.nextbreakpoint.blueprint.common.core.Tiles;
-import com.nextbreakpoint.blueprint.common.core.TilesBitmap;
-import com.nextbreakpoint.blueprint.common.events.DesignDocumentDeleteRequested;
-import com.nextbreakpoint.blueprint.common.events.DesignDocumentUpdateRequested;
-import com.nextbreakpoint.blueprint.common.events.mappers.DesignDocumentDeleteRequestedOutputMapper;
-import com.nextbreakpoint.blueprint.common.events.mappers.DesignDocumentUpdateRequestedOutputMapper;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignDocumentDeleteRequested;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignDocumentStatus;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignDocumentUpdateRequested;
+import com.nextbreakpoint.blueprint.common.events.avro.Tiles;
+import com.nextbreakpoint.blueprint.common.test.KafkaRecord;
 import com.nextbreakpoint.blueprint.common.test.PayloadUtils;
+import com.nextbreakpoint.blueprint.common.vertx.MessageFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -30,10 +29,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import static com.nextbreakpoint.blueprint.designs.TestConstants.COMMAND_ID_1;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.COMMAND_ID_2;
@@ -116,13 +114,11 @@ public class VerifyQueryPact {
     }
 
     private String produceDesignDocumentUpdateRequested(UUID designId, UUID commandId, String data, String checksum, String status, float completePercentage, String revision, UUID userId, boolean published, int levels) {
-        final TilesBitmap bitmap = TestUtils.createBitmap(levels, completePercentage);
+        final List<Tiles> tiles = TestUtils.createBitmap(levels, completePercentage).toTiles();
 
-        final List<Tiles> tiles = IntStream.range(0, 8).mapToObj(bitmap::toTiles).collect(Collectors.toList());
+        final DesignDocumentUpdateRequested designDocumentUpdateRequested = new DesignDocumentUpdateRequested(designId, commandId, userId, revision, checksum, data, DesignDocumentStatus.valueOf(status), published, levels, tiles, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")).toInstant(ZoneOffset.UTC), LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")).toInstant(ZoneOffset.UTC));
 
-        final DesignDocumentUpdateRequested designDocumentUpdateRequested = new DesignDocumentUpdateRequested(designId, commandId, userId, revision, checksum, data, status, published, levels, tiles, LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")), LocalDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
-
-        final OutputMessage designDocumentUpdateRequestedMessage = new DesignDocumentUpdateRequestedOutputMapper(MESSAGE_SOURCE).transform(designDocumentUpdateRequested);
+        final OutputMessage<DesignDocumentUpdateRequested> designDocumentUpdateRequestedMessage = MessageFactory.<DesignDocumentUpdateRequested>of(MESSAGE_SOURCE).createOutputMessage(designDocumentUpdateRequested.getDesignId().toString(), designDocumentUpdateRequested);
 
         return Json.encodeValue(new KafkaRecord(designDocumentUpdateRequestedMessage.getKey(), PayloadUtils.payloadToMap(designDocumentUpdateRequestedMessage.getValue())));
     }
@@ -130,7 +126,7 @@ public class VerifyQueryPact {
     private String produceDesignDocumentDeleteRequested(UUID designId, UUID commandId, String revision) {
         final DesignDocumentDeleteRequested designDocumentDeleteRequested = new DesignDocumentDeleteRequested(designId, commandId, revision);
 
-        final OutputMessage designDocumentDeleteRequestedMessage = new DesignDocumentDeleteRequestedOutputMapper(MESSAGE_SOURCE).transform(designDocumentDeleteRequested);
+        final OutputMessage<DesignDocumentDeleteRequested> designDocumentDeleteRequestedMessage = MessageFactory.<DesignDocumentDeleteRequested>of(MESSAGE_SOURCE).createOutputMessage(designDocumentDeleteRequested.getDesignId().toString(), designDocumentDeleteRequested);
 
         return Json.encodeValue(new KafkaRecord(designDocumentDeleteRequestedMessage.getKey(), PayloadUtils.payloadToMap(designDocumentDeleteRequestedMessage.getValue())));
     }

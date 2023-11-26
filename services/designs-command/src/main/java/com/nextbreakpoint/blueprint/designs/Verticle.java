@@ -1,9 +1,10 @@
 package com.nextbreakpoint.blueprint.designs;
 
 import com.datastax.oss.driver.api.core.CqlSession;
-import com.nextbreakpoint.blueprint.common.commands.DesignDeleteCommand;
-import com.nextbreakpoint.blueprint.common.commands.DesignInsertCommand;
-import com.nextbreakpoint.blueprint.common.commands.DesignUpdateCommand;
+import com.nextbreakpoint.blueprint.common.commands.avro.DesignDeleteCommand;
+import com.nextbreakpoint.blueprint.common.commands.avro.DesignInsertCommand;
+import com.nextbreakpoint.blueprint.common.commands.avro.DesignUpdateCommand;
+import com.nextbreakpoint.blueprint.common.commands.avro.Payload;
 import com.nextbreakpoint.blueprint.common.core.IOUtils;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.core.RxSingleHandler;
@@ -20,6 +21,7 @@ import com.nextbreakpoint.blueprint.common.vertx.Initializer;
 import com.nextbreakpoint.blueprint.common.vertx.JWTProviderConfig;
 import com.nextbreakpoint.blueprint.common.vertx.JWTProviderFactory;
 import com.nextbreakpoint.blueprint.common.vertx.OpenApiHandler;
+import com.nextbreakpoint.blueprint.common.vertx.Records;
 import com.nextbreakpoint.blueprint.common.vertx.ResponseHelper;
 import com.nextbreakpoint.blueprint.common.vertx.Server;
 import com.nextbreakpoint.blueprint.common.vertx.ServerConfig;
@@ -77,7 +79,7 @@ import static com.nextbreakpoint.blueprint.designs.Factory.createDesignUpdateCom
 
 @Log4j2
 public class Verticle extends AbstractVerticle {
-    private KafkaMessagePolling kafkaPolling;
+    private KafkaMessagePolling<Payload, Object, InputMessage<Object>> kafkaPolling;
 
     public static void main(String[] args) {
         try {
@@ -149,9 +151,7 @@ public class Verticle extends AbstractVerticle {
 
             final String bootstrapServers = config.getString("kafka_bootstrap_servers", "localhost:9092");
 
-            final String keySerializer = config.getString("kafka_key_serializer", "org.apache.kafka.common.serialization.StringSerializer");
-
-            final String valSerializer = config.getString("kafka_val_serializer", "org.apache.kafka.common.serialization.StringSerializer");
+            final String schemaRegistryUrl = config.getString("schema_registry_url", "http://localhost:8081");
 
             final String clientId = config.getString("kafka_client_id", "designs-command");
 
@@ -165,15 +165,24 @@ public class Verticle extends AbstractVerticle {
 
             final String truststorePassword = config.getString("kafka_truststore_password");
 
-            final String keyDeserializer = config.getString("kafka_key_serializer", "org.apache.kafka.common.serialization.StringDeserializer");
+            final String schemaRegistryKeystoreLocation = config.getString("schema_registry_keystore_location");
 
-            final String valDeserializer = config.getString("kafka_val_serializer", "org.apache.kafka.common.serialization.StringDeserializer");
+            final String schemaRegistryKeystorePassword = config.getString("schema_registry_keystore_password");
+
+            final String schemaRegistryTruststoreLocation = config.getString("schema_registry_truststore_location");
+
+            final String schemaRegistryTruststorePassword = config.getString("schema_registry_truststore_password");
 
             final String groupId = config.getString("kafka_group_id", "test");
 
             final String autoOffsetReset = config.getString("kafka_auto_offset_reset", "earliest");
 
             final String enableAutoCommit = config.getString("kafka_enable_auto_commit", "false");
+
+            final String keySerializer = "org.apache.kafka.common.serialization.StringSerializer";
+            final String valSerializer = "io.confluent.kafka.serializers.KafkaAvroSerializer";
+            final String keyDeserializer = "org.apache.kafka.common.serialization.StringDeserializer";
+            final String valDeserializer = "io.confluent.kafka.serializers.KafkaAvroDeserializer";
 
             final MeterRegistry registry = BackendRegistries.getDefaultNow();
 
@@ -187,32 +196,46 @@ public class Verticle extends AbstractVerticle {
 
             final KafkaProducerConfig producerConfig = KafkaProducerConfig.builder()
                     .withBootstrapServers(bootstrapServers)
+                    .withSchemaRegistryUrl(schemaRegistryUrl)
                     .withKeySerializer(keySerializer)
                     .withValueSerializer(valSerializer)
                     .withKeystoreLocation(keystoreLocation)
                     .withKeystorePassword(keystorePassword)
                     .withTruststoreLocation(truststoreLocation)
                     .withTruststorePassword(truststorePassword)
+                    .withSchemaRegistryKeystoreLocation(schemaRegistryKeystoreLocation)
+                    .withSchemaRegistryKeystorePassword(schemaRegistryKeystorePassword)
+                    .withSchemaRegistryTruststoreLocation(schemaRegistryTruststoreLocation)
+                    .withSchemaRegistryTruststorePassword(schemaRegistryTruststorePassword)
                     .withClientId(clientId)
                     .withKafkaAcks(acks)
+                    .withAutoRegisterSchemas(true)
                     .build();
 
-            final KafkaProducer<String, String> kafkaProducer = KafkaClientFactory.createProducer(producerConfig);
+            final KafkaProducer<String, com.nextbreakpoint.blueprint.common.commands.avro.Payload> commandKafkaProducer = KafkaClientFactory.createProducer(producerConfig);
+            final KafkaProducer<String, com.nextbreakpoint.blueprint.common.events.avro.Payload> eventKafkaProducer = KafkaClientFactory.createProducer(producerConfig);
 
             final KafkaConsumerConfig consumerConfig = KafkaConsumerConfig.builder()
                     .withBootstrapServers(bootstrapServers)
+                    .withSchemaRegistryUrl(schemaRegistryUrl)
                     .withKeyDeserializer(keyDeserializer)
                     .withValueDeserializer(valDeserializer)
                     .withKeystoreLocation(keystoreLocation)
                     .withKeystorePassword(keystorePassword)
                     .withTruststoreLocation(truststoreLocation)
                     .withTruststorePassword(truststorePassword)
+                    .withSchemaRegistryKeystoreLocation(schemaRegistryKeystoreLocation)
+                    .withSchemaRegistryKeystorePassword(schemaRegistryKeystorePassword)
+                    .withSchemaRegistryTruststoreLocation(schemaRegistryTruststoreLocation)
+                    .withSchemaRegistryTruststorePassword(schemaRegistryTruststorePassword)
                     .withAutoOffsetReset(autoOffsetReset)
                     .withEnableAutoCommit(enableAutoCommit)
+                    .withAutoRegisterSchemas(false)
+                    .withSpecificAvroReader(true)
                     .build();
 
-            final KafkaConsumer<String, String> commandsKafkaConsumer = KafkaClientFactory.createConsumer(consumerConfig.toBuilder().withGroupId(groupId + "-commands").build());
-            final KafkaConsumer<String, String> healthKafkaConsumer = KafkaClientFactory.createConsumer(consumerConfig.toBuilder().withGroupId(groupId + "-health").build());
+            final KafkaConsumer<String, com.nextbreakpoint.blueprint.common.commands.avro.Payload> commandsKafkaConsumer = KafkaClientFactory.createConsumer(consumerConfig.toBuilder().withGroupId(groupId + "-commands").build());
+            final KafkaConsumer<String, Object> healthKafkaConsumer = KafkaClientFactory.createConsumer(consumerConfig.toBuilder().withGroupId(groupId + "-health").build());
 
             final CassandraClientConfig cassandraConfig = CassandraClientConfig.builder()
                     .withClusterName(clusterName)
@@ -229,17 +252,17 @@ public class Verticle extends AbstractVerticle {
 
             commandsKafkaConsumer.subscribe(List.of(commandsTopic));
 
-            final Map<String, RxSingleHandler<InputMessage, ?>> messageHandlers = new HashMap<>();
+            final Map<String, RxSingleHandler<InputMessage<Object>, Void>> messageHandlers = new HashMap<>();
 
-            messageHandlers.put(DesignInsertCommand.TYPE, createDesignInsertCommandHandler(store, eventsTopic, kafkaProducer, messageSource));
-            messageHandlers.put(DesignUpdateCommand.TYPE, createDesignUpdateCommandHandler(store, eventsTopic, kafkaProducer, messageSource));
-            messageHandlers.put(DesignDeleteCommand.TYPE, createDesignDeleteCommandHandler(store, eventsTopic, kafkaProducer, messageSource));
+            messageHandlers.put(DesignInsertCommand.getClassSchema().getFullName(), createDesignInsertCommandHandler(store, eventsTopic, eventKafkaProducer, messageSource));
+            messageHandlers.put(DesignUpdateCommand.getClassSchema().getFullName(), createDesignUpdateCommandHandler(store, eventsTopic, eventKafkaProducer, messageSource));
+            messageHandlers.put(DesignDeleteCommand.getClassSchema().getFullName(), createDesignDeleteCommandHandler(store, eventsTopic, eventKafkaProducer, messageSource));
 
-            new KafkaClientMetrics(kafkaProducer).bindTo(registry);
+            new KafkaClientMetrics(eventKafkaProducer).bindTo(registry);
             new KafkaClientMetrics(healthKafkaConsumer).bindTo(registry);
             new KafkaClientMetrics(commandsKafkaConsumer).bindTo(registry);
 
-            kafkaPolling = new KafkaMessagePolling<>(commandsKafkaConsumer, messageHandlers, KafkaMessageConsumer.Simple.create(messageHandlers, registry), registry);
+            kafkaPolling = new KafkaMessagePolling<>(commandsKafkaConsumer, Records.createCommandInputRecordMapper(), messageHandlers, KafkaMessageConsumer.Simple.create(messageHandlers, registry), registry);
 
             kafkaPolling.startPolling();
 
@@ -247,15 +270,15 @@ public class Verticle extends AbstractVerticle {
 
             final Handler<RoutingContext> onAccessDenied = routingContext -> routingContext.response().setStatusCode(403).setStatusMessage("Access denied").end();
 
-            final Handler<RoutingContext> insertDesignHandler = new AccessHandler(jwtProvider, Factory.createInsertDesignHandler(kafkaProducer, commandsTopic, messageSource), onAccessDenied, List.of(ADMIN));
-
-            final Handler<RoutingContext> updateDesignHandler = new AccessHandler(jwtProvider, Factory.createUpdateDesignHandler(kafkaProducer, commandsTopic, messageSource), onAccessDenied, List.of(ADMIN));
-
-            final Handler<RoutingContext> deleteDesignHandler = new AccessHandler(jwtProvider, Factory.createDeleteDesignHandler(kafkaProducer, commandsTopic, messageSource), onAccessDenied, List.of(ADMIN));
+            final Handler<RoutingContext> insertDesignHandler = new AccessHandler(jwtProvider, Factory.createInsertDesignHandler(commandKafkaProducer, commandsTopic, messageSource), onAccessDenied, List.of(ADMIN));
+            final Handler<RoutingContext> updateDesignHandler = new AccessHandler(jwtProvider, Factory.createUpdateDesignHandler(commandKafkaProducer, commandsTopic, messageSource), onAccessDenied, List.of(ADMIN));
+            final Handler<RoutingContext> deleteDesignHandler = new AccessHandler(jwtProvider, Factory.createDeleteDesignHandler(commandKafkaProducer, commandsTopic, messageSource), onAccessDenied, List.of(ADMIN));
 
             final Handler<RoutingContext> apiV1DocsHandler = new OpenApiHandler(vertx.getDelegate(), executor, "api-v1.yaml");
 
             final HealthCheckHandler healthCheckHandler = HealthCheckHandler.createWithHealthChecks(HealthChecks.create(vertx));
+
+            final Handler<RoutingContext> metricsHandler = PrometheusScrapingHandler.create();
 
             healthCheckHandler.register("kafka-topic-events", 2000, future -> checkTopic(healthKafkaConsumer, eventsTopic, future));
             healthCheckHandler.register("kafka-topic-commands", 2000, future -> checkTopic(healthKafkaConsumer, commandsTopic, future));
@@ -280,7 +303,7 @@ public class Verticle extends AbstractVerticle {
                                 .handler(context -> healthCheckHandler.handle(RoutingContext.newInstance(context)));
 
                         routerBuilder.operation("metrics")
-                                .handler(context -> PrometheusScrapingHandler.create().handle(RoutingContext.newInstance(context)));
+                                .handler(context -> metricsHandler.handle(RoutingContext.newInstance(context)));
 
                         routerBuilder.operation("insertDesign")
                                 .handler(context -> insertDesignHandler.handle(RoutingContext.newInstance(context)));
@@ -342,8 +365,8 @@ public class Verticle extends AbstractVerticle {
                 .subscribe(exists -> promise.complete(exists ? Status.OK() : Status.KO()), err -> promise.complete(Status.KO()));
     }
 
-    private void checkTopic(KafkaConsumer<String, String> kafkaConsumer, String eventsTopic, Promise<Status> promise) {
-        Single.fromCallable(() -> kafkaConsumer.partitionsFor(eventsTopic))
+    private void checkTopic(KafkaConsumer<String, Object> kafkaConsumer, String topic, Promise<Status> promise) {
+        Single.fromCallable(() -> kafkaConsumer.partitionsFor(topic))
                 .timeout(1, TimeUnit.SECONDS)
                 .subscribe(partitions -> promise.complete(Status.OK()), err -> promise.complete(Status.KO()));
     }

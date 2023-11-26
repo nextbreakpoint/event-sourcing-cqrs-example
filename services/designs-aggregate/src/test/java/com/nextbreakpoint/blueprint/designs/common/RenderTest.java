@@ -1,27 +1,31 @@
 package com.nextbreakpoint.blueprint.designs.common;
 
 import com.nextbreakpoint.blueprint.common.core.Checksum;
-import com.nextbreakpoint.blueprint.common.core.Tile;
-import com.nextbreakpoint.blueprint.common.core.TilesBitmap;
-import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
-import com.nextbreakpoint.blueprint.designs.TestConstants;
+import com.nextbreakpoint.blueprint.common.events.avro.Tile;
+import com.nextbreakpoint.blueprint.common.events.avro.TileRenderRequested;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Stream;
 
-import static com.nextbreakpoint.blueprint.designs.TestConstants.*;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.COMMAND_ID_1;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.COMMAND_ID_2;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DATA_1;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DATA_2;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_ID_1;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_ID_2;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.REVISION_0;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.REVISION_1;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class RenderTest {
     @ParameterizedTest
     @MethodSource("generateValuesForNextTile")
     void shouldReturnNextTile(Tile tile, Tile expectedTile) {
-        List<Tile> result = Render.generateTiles(tile, 8, TilesBitmap.empty());
+        List<Tile> result = Render.generateTiles(tile, 8, Bitmap.empty());
         assertThat(result).hasSize(1);
         assertThat(result.get(0)).isEqualTo(expectedTile);
     }
@@ -32,7 +36,7 @@ public class RenderTest {
         List<Tile> tiles = new ArrayList<>();
         List<Tile> result = List.of(tile);
         for (;;) {
-            result = Render.generateTiles(result.get(0), 8, TilesBitmap.empty());
+            result = Render.generateTiles(result.get(0), 8, Bitmap.empty());
             if (result.isEmpty()) {
                 break;
             }
@@ -145,28 +149,28 @@ public class RenderTest {
     private static Stream<Arguments> generateTileRenderRequestedEvents() {
         return Stream.of(
                 Arguments.of(
-                        TileRenderRequested.builder()
-                                .withDesignId(DESIGN_ID_1)
-                                .withCommandId(COMMAND_ID_1)
-                                .withData(DATA_1)
-                                .withChecksum(Checksum.of(DATA_1))
-                                .withRevision(REVISION_0)
-                                .withLevel(0)
-                                .withRow(0)
-                                .withCol(0)
+                        TileRenderRequested.newBuilder()
+                                .setDesignId(DESIGN_ID_1)
+                                .setCommandId(COMMAND_ID_1)
+                                .setData(DATA_1)
+                                .setChecksum(Checksum.of(DATA_1))
+                                .setRevision(REVISION_0)
+                                .setLevel(0)
+                                .setRow(0)
+                                .setCol(0)
                                 .build(),
                         "%s/%s/%d/%04d%04d.png".formatted(DESIGN_ID_1, COMMAND_ID_1, 0, 0, 0)
                 ),
                 Arguments.of(
-                        TileRenderRequested.builder()
-                                .withDesignId(DESIGN_ID_2)
-                                .withCommandId(COMMAND_ID_2)
-                                .withData(DATA_2)
-                                .withChecksum(Checksum.of(DATA_2))
-                                .withRevision(REVISION_1)
-                                .withLevel(3)
-                                .withRow(1)
-                                .withCol(2)
+                        TileRenderRequested.newBuilder()
+                                .setDesignId(DESIGN_ID_2)
+                                .setCommandId(COMMAND_ID_2)
+                                .setData(DATA_2)
+                                .setChecksum(Checksum.of(DATA_2))
+                                .setRevision(REVISION_1)
+                                .setLevel(3)
+                                .setRow(1)
+                                .setCol(2)
                                 .build(),
                         "%s/%s/%d/%04d%04d.png".formatted(DESIGN_ID_2, COMMAND_ID_2, 3, 1, 2)
                 )
@@ -174,6 +178,10 @@ public class RenderTest {
     }
 
     private static Tile makeTile(int level, int row, int col) {
-        return Tile.builder().withLevel(level).withRow(row).withCol(col).build();
+        return Tile.newBuilder()
+                .setLevel(level)
+                .setRow(row)
+                .setCol(col)
+                .build();
     }
 }

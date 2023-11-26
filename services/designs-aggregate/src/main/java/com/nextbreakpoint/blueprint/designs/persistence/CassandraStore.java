@@ -8,7 +8,8 @@ import com.datastax.oss.driver.api.core.cql.ResultSet;
 import com.datastax.oss.driver.api.core.cql.Row;
 import com.nextbreakpoint.blueprint.common.core.Checksum;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
-import com.nextbreakpoint.blueprint.common.core.Payload;
+import com.nextbreakpoint.blueprint.common.core.MessagePayload;
+import com.nextbreakpoint.blueprint.common.vertx.Codec;
 import com.nextbreakpoint.blueprint.designs.Store;
 import com.nextbreakpoint.blueprint.designs.model.Design;
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -16,6 +17,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Scope;
 import lombok.extern.log4j.Log4j2;
+import org.apache.avro.specific.SpecificRecord;
 import rx.Single;
 
 import java.nio.ByteBuffer;
@@ -64,14 +66,14 @@ public class CassandraStore implements Store {
     }
 
     @Override
-    public Single<List<InputMessage>> findMessages(UUID uuid, String fromRevision, String toRevision) {
+    public Single<List<InputMessage<SpecificRecord>>> findMessages(UUID uuid, String fromRevision, String toRevision) {
         return withSession()
                 .flatMap(session -> selectMessages(session, makeSelectMessagesParams(uuid, fromRevision, toRevision)))
                 .doOnError(err -> handleError(ERROR_SELECT_MESSAGES, err));
     }
 
     @Override
-    public Single<Void> appendMessage(InputMessage message) {
+    public Single<Void> appendMessage(InputMessage<? extends SpecificRecord> message) {
         return withSession()
                 .flatMap(session -> insertMessage(session, makeInsertMessageParams(message)))
                 .doOnError(err -> handleError(ERROR_INSERT_MESSAGE, err));
@@ -119,11 +121,11 @@ public class CassandraStore implements Store {
         return Single.just(session);
     }
 
-    private Single<List<InputMessage>> selectMessages(CqlSession session, Object[] values) {
+    private Single<List<InputMessage<SpecificRecord>>> selectMessages(CqlSession session, Object[] values) {
         return selectMessages
                 .map(pst -> pst.bind(values).setConsistencyLevel(ConsistencyLevel.QUORUM))
                 .map(stmt -> execute(session, stmt))
-                .map(rows -> StreamSupport.stream(rows.spliterator(), false).map(this::convertRowToMessage).collect(Collectors.toList()));
+                .map(rows -> convertRowsToMessages(rows));
     }
 
     private Single<Void> insertMessage(CqlSession session, Object[] values) {
@@ -189,7 +191,13 @@ public class CassandraStore implements Store {
         return new Design(designId, userId, commandId, data, checksum, revision, status, published, levels, bitmap, toDate(created), toDate(updated));
     }
 
-    private InputMessage convertRowToMessage(Row row) {
+    private List<InputMessage<SpecificRecord>> convertRowsToMessages(ResultSet rows) {
+        return StreamSupport.stream(rows.spliterator(), false)
+                .map(this::convertRowToMessage)
+                .collect(Collectors.toList());
+    }
+
+    private InputMessage<SpecificRecord> convertRowToMessage(Row row) {
         final String token  = row.getString("MESSAGE_TOKEN");
         final String key = row.getString("MESSAGE_KEY");
         final UUID uuid = row.getUuid("MESSAGE_UUID");
@@ -197,9 +205,20 @@ public class CassandraStore implements Store {
         final String value = row.getString("MESSAGE_VALUE");
         final String source = row.getString("MESSAGE_SOURCE");
         final Instant timestamp = row.getInstant("MESSAGE_TIMESTAMP");
-        final Payload payload = new Payload(uuid, type, value, source);
-        final long messageTimestamp = timestamp != null ? timestamp.toEpochMilli() : 0L;
-        return new InputMessage(key, token, payload, messageTimestamp);
+
+        final var payload = MessagePayload.<SpecificRecord>builder()
+                .withUuid(uuid)
+                .withSource(source)
+                .withType(type)
+                .withData(Codec.fromString(getClazz(type), value))
+                .build();
+
+        return InputMessage.<SpecificRecord>builder()
+                .withKey(key)
+                .withToken(token)
+                .withTimestamp(timestamp != null ? timestamp.toEpochMilli() : 0L)
+                .withValue(payload)
+                .build();
     }
 
     private LocalDateTime toDate(Instant instant) {
@@ -210,13 +229,13 @@ public class CassandraStore implements Store {
         return new Object[] { uuid.toString(), toRevision, fromRevision };
     }
 
-    private Object[] makeInsertMessageParams(InputMessage message) {
+    private Object[] makeInsertMessageParams(InputMessage<? extends SpecificRecord> message) {
         return new Object[] {
                 message.getToken(),
                 message.getKey(),
                 message.getValue().getUuid(),
                 message.getValue().getType(),
-                message.getValue().getData(),
+                Codec.asString(message.getValue().getData().getClass(), message.getValue().getData()),
                 message.getValue().getSource(),
                 Instant.ofEpochMilli(message.getTimestamp())
         };
@@ -249,5 +268,13 @@ public class CassandraStore implements Store {
 
     private void handleError(String message, Throwable err) {
         log.error(message, err);
+    }
+
+    private static Class<SpecificRecord> getClazz(String type) {
+        try {
+            return (Class<SpecificRecord>) Class.forName(type);
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

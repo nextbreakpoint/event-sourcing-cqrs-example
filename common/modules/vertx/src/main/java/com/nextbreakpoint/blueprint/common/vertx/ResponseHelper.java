@@ -8,7 +8,6 @@ import lombok.extern.log4j.Log4j2;
 
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 @Log4j2
 public class ResponseHelper {
@@ -18,7 +17,7 @@ public class ResponseHelper {
         final Optional<Throwable> throwable = Optional.ofNullable(routingContext.failure());
 
         final String message = throwable.map(Throwable::getMessage)
-                .orElse("Error " + routingContext.statusCode());
+                .orElse("Error " + routingContext.statusCode() + " (Request URL: " + routingContext.getDelegate().request().absoluteURI() + ")");
 
         final int statusCode = throwable.filter(x -> x instanceof Failure)
                 .map(x -> ((Failure) x).getStatusCode())
@@ -40,7 +39,7 @@ public class ResponseHelper {
         final Optional<Throwable> throwable = Optional.ofNullable(routingContext.failure());
 
         final String message = throwable.map(Throwable::getMessage)
-                .orElse("Error " + routingContext.statusCode());
+                .orElse("Error " + routingContext.statusCode() + " (Request URL: " + routingContext.getDelegate().request().absoluteURI() + ")");
 
         final int statusCode = throwable.filter(x -> x instanceof Failure)
                 .map(x -> ((Failure) x).getStatusCode())
@@ -54,13 +53,6 @@ public class ResponseHelper {
 
         routingContext.response()
                 .putHeader("Location", getErrorRedirectURL.apply(statusCode))
-                .setStatusCode(303)
-                .end();
-    }
-
-    public static void redirectToURL(RoutingContext routingContext, Supplier<String> getRedirectURL) {
-        routingContext.response()
-                .putHeader("Location", getRedirectURL.get())
                 .setStatusCode(303)
                 .end();
     }

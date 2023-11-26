@@ -270,17 +270,17 @@ export NEXUS_USERNAME
 export NEXUS_PASSWORD
 
 if [ "$CLEAN" == "true" ]; then
-  mvn clean ${MAVEN_ARGS} -e -Dcommon=true -Dservices=true -Dplatform=true -Dnexus=true
+  mvn clean ${MAVEN_ARGS} -e -Dconfluent=true -Dcommon=true -Dservices=true -Dplatform=true -Dnexus=true
 fi
 
-mvn versions:set versions:commit ${MAVEN_ARGS} -e -DnewVersion=$VERSION -Dcommon=true -Dservices=true -Dplatform=true
+mvn versions:set versions:commit ${MAVEN_ARGS} -e -DnewVersion=$VERSION -Dconfluent=true -Dcommon=true -Dservices=true -Dplatform=true
 
 if [ "$PACKAGE" == "true" ]; then
-  mvn package -s settings.xml ${MAVEN_ARGS} -Dcommon=true -Dservices=true -Dplatform=true -Dnexus=true -DskipTests=true
+  mvn package -s settings.xml ${MAVEN_ARGS} -Dconfluent=true -Dcommon=true -Dservices=true -Dplatform=true -Dnexus=true -DskipTests=true
 fi
 
 if [ "$DEPLOY" == "true" ]; then
-  mvn deploy -s settings.xml ${MAVEN_ARGS} -Dcommon=true -Dservices=true -Dnexus=true
+  mvn deploy -s settings.xml ${MAVEN_ARGS} -Dconfluent=true -Dcommon=true -Dservices=true -Dnexus=true
 fi
 
 if [ "$IMAGES" == "true" ]; then
@@ -310,6 +310,8 @@ for service in ${services[@]}; do
 done
 
 fi
+
+set +e
 
 export pact_do_not_track=true
 

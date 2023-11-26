@@ -9,15 +9,15 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 public interface TestActions {
-    void emitMessage(Source source, OutputMessage message, Function<String, String> router);
+    void emitMessage(Source source, OutputMessage<Object> message, Function<String, String> router);
 
-    List<InputMessage> findMessages(Source source, String messageSource, String messageType, Predicate<String> keyPredicate, Predicate<InputMessage> messagePredicate);
+    List<InputMessage<Object>> findMessages(Source source, String messageSource, String messageType, Predicate<String> keyPredicate, Predicate<InputMessage<Object>> messagePredicate);
 
     void subscribe(List<TestCases.SSENotification> notifications, Runnable callback);
     void subscribe(List<TestCases.SSENotification> notifications, Runnable callback, UUID designId);
     void unsubscribe();
 
     enum Source {
-        EVENTS;
+        EVENTS
     }
 }

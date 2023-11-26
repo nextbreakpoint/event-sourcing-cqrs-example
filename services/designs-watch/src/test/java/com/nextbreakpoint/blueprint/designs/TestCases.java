@@ -4,10 +4,14 @@ import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.drivers.KafkaClientFactory;
 import com.nextbreakpoint.blueprint.common.drivers.KafkaProducerConfig;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignDocumentDeleteCompleted;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignDocumentUpdateCompleted;
+import com.nextbreakpoint.blueprint.common.events.avro.Payload;
 import com.nextbreakpoint.blueprint.common.test.EventSource;
 import com.nextbreakpoint.blueprint.common.test.KafkaTestEmitter;
 import com.nextbreakpoint.blueprint.common.test.TestContext;
 import com.nextbreakpoint.blueprint.common.vertx.HttpClientConfig;
+import com.nextbreakpoint.blueprint.common.vertx.Records;
 import io.vertx.rxjava.core.RxHelper;
 import io.vertx.rxjava.core.Vertx;
 import org.apache.kafka.clients.producer.KafkaProducer;
@@ -16,8 +20,6 @@ import rx.plugins.RxJavaHooks;
 import rx.schedulers.Schedulers;
 
 import java.net.MalformedURLException;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
@@ -34,9 +36,7 @@ public class TestCases {
 
     private EventSource eventSource;
 
-    private KafkaTestEmitter eventEmitter;
-
-    private List<SSENotification> notifications = Collections.synchronizedList(new ArrayList<>());
+    private KafkaTestEmitter<Object, Payload> eventEmitter;
 
     public TestCases() {}
 
@@ -46,9 +46,9 @@ public class TestCases {
         RxJavaHooks.setOnComputationScheduler(s -> RxHelper.scheduler(vertx));
         RxJavaHooks.setOnIOScheduler(s -> RxHelper.blockingScheduler(vertx));
 
-        KafkaProducer<String, String> producer = KafkaClientFactory.createProducer(createProducerConfig("integration"));
+        KafkaProducer<String, Payload> producer = KafkaClientFactory.createProducer(createProducerConfig("integration"));
 
-        eventEmitter = new KafkaTestEmitter(producer, TestConstants.EVENTS_TOPIC_NAME + "-" + scenario.getUniqueTestId());
+        eventEmitter = new KafkaTestEmitter<>(producer, Records.createEventOutputRecordMapper(), TestConstants.EVENTS_TOPIC_NAME + "-" + scenario.getUniqueTestId());
 
         eventSource = new EventSource(vertx, getServiceUrl(), getEventSourceConfig());
 
@@ -89,8 +89,10 @@ public class TestCases {
     private KafkaProducerConfig createProducerConfig(String clientId) {
         return KafkaProducerConfig.builder()
                 .withBootstrapServers(scenario.getKafkaHost() + ":" + scenario.getKafkaPort())
+                .withSchemaRegistryUrl("http://" + scenario.getSchemaRegistryHost() + ":" + scenario.getSchemaRegistryPort())
+                .withAutoRegisterSchemas(true)
                 .withKeySerializer("org.apache.kafka.common.serialization.StringSerializer")
-                .withValueSerializer("org.apache.kafka.common.serialization.StringSerializer")
+                .withValueSerializer("io.confluent.kafka.serializers.KafkaAvroSerializer")
                 .withClientId(clientId)
                 .withKafkaAcks("1")
                 .build();
@@ -108,7 +110,7 @@ public class TestCases {
                 .build();
     }
 
-    public void shouldNotifyWatchersOfAllResourcesWhenReceivingADesignDocumentUpdateCompletedEvent(List<OutputMessage> designDocumentUpdateCompletedMessages) {
+    public void shouldNotifyWatchersOfAllResourcesWhenReceivingADesignDocumentUpdateCompletedEvent(List<OutputMessage<DesignDocumentUpdateCompleted>> designDocumentUpdateCompletedMessages) {
         getSteps()
                 .given().theDesignDocumentUpdateCompletedMessage(designDocumentUpdateCompletedMessages.get(0))
                 .when().discardMessages()
@@ -118,7 +120,7 @@ public class TestCases {
                 .then().shouldNotifyWatchersOfAllResources();
     }
 
-    public void shouldNotifyWatchersOfSingleResourceWhenReceivingAnDesignDocumentUpdateCompletedEvent(List<OutputMessage> designDocumentUpdateCompletedMessages, UUID designId) {
+    public void shouldNotifyWatchersOfSingleResourceWhenReceivingAnDesignDocumentUpdateCompletedEvent(List<OutputMessage<DesignDocumentUpdateCompleted>> designDocumentUpdateCompletedMessages, UUID designId) {
         getSteps()
                 .given().theDesignDocumentUpdateCompletedMessage(designDocumentUpdateCompletedMessages.get(0))
                 .when().discardMessages()
@@ -128,7 +130,7 @@ public class TestCases {
                 .then().shouldNotifyWatchersOfAResource(designId);
     }
 
-    public void shouldNotifyWatchersOfAllResourcesWhenReceivingADesignDocumentDeleteCompletedEvent(List<OutputMessage> designDocumentDeleteCompletedMessages) {
+    public void shouldNotifyWatchersOfAllResourcesWhenReceivingADesignDocumentDeleteCompletedEvent(List<OutputMessage<DesignDocumentDeleteCompleted>> designDocumentDeleteCompletedMessages) {
         getSteps()
                 .given().theDesignDocumentDeleteCompletedMessage(designDocumentDeleteCompletedMessages.get(0))
                 .when().discardMessages()
@@ -138,7 +140,7 @@ public class TestCases {
                 .then().shouldNotifyWatchersOfAllResources();
     }
 
-    public void shouldNotifyWatchersOfSingleResourceWhenReceivingAnDesignDocumentDeleteCompletedEvent(List<OutputMessage> designDocumentDeleteCompletedMessages, UUID designId) {
+    public void shouldNotifyWatchersOfSingleResourceWhenReceivingAnDesignDocumentDeleteCompletedEvent(List<OutputMessage<DesignDocumentDeleteCompleted>> designDocumentDeleteCompletedMessages, UUID designId) {
         getSteps()
                 .given().theDesignDocumentDeleteCompletedMessage(designDocumentDeleteCompletedMessages.get(0))
                 .when().discardMessages()
@@ -165,12 +167,12 @@ public class TestCases {
 
     private class TestActionsImpl implements TestActions {
         @Override
-        public void emitMessage(Source source, OutputMessage message, Function<String, String> topicMapper) {
+        public void emitMessage(Source source, OutputMessage<Object> message, Function<String, String> topicMapper) {
             emitter(source).send(message, topicMapper.apply(emitter(source).getTopicName()));
         }
 
         @Override
-        public List<InputMessage> findMessages(Source source, String messageSource, String messageType, Predicate<String> keyPredicate, Predicate<InputMessage> messagePredicate) {
+        public List<InputMessage<Object>> findMessages(Source source, String messageSource, String messageType, Predicate<String> keyPredicate, Predicate<InputMessage<Object>> messagePredicate) {
             return null;
         }
 
@@ -235,7 +237,7 @@ public class TestCases {
             eventSource.close();
         }
 
-        private KafkaTestEmitter emitter(Source source) {
+        private KafkaTestEmitter<Object, Payload> emitter(Source source) {
             return switch (source) {
                 case EVENTS -> eventEmitter;
             };

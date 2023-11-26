@@ -8,6 +8,7 @@
   "origin_pattern": "http://localhost(:[0-9]+)?",
 
   "kafka_bootstrap_servers": "${KAFKA_HOST}:${KAFKA_PORT}",
+  "schema_registry_url": "http://${SCHEMA_REGISTRY_HOST}:${SCHEMA_REGISTRY_PORT}",
   "kafka_group_id": "designs-watch",
   "events_topic": "${EVENTS_TOPIC}"
 }

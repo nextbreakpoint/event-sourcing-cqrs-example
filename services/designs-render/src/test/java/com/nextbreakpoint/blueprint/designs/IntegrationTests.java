@@ -6,8 +6,8 @@ import com.nextbreakpoint.blueprint.common.core.ContentType;
 import com.nextbreakpoint.blueprint.common.core.IOUtils;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.core.ValidationStatus;
-import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
-import com.nextbreakpoint.blueprint.common.events.mappers.TileRenderRequestedOutputMapper;
+import com.nextbreakpoint.blueprint.common.events.avro.TileRenderRequested;
+import com.nextbreakpoint.blueprint.common.vertx.MessageFactory;
 import io.restassured.RestAssured;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterAll;
@@ -45,8 +45,6 @@ import static io.restassured.RestAssured.given;
 public class IntegrationTests {
     private static TestCases testCases = new TestCases("DesignsRenderIntegrationTests");
 
-    private final TileRenderRequestedOutputMapper tileRenderRequestedMapper = new TileRenderRequestedOutputMapper(MESSAGE_SOURCE);
-
     @BeforeAll
     public static void before() {
         testCases.before();
@@ -71,68 +69,68 @@ public class IntegrationTests {
     @Test
     @DisplayName("Should start rendering an image after receiving a TileRenderRequested message")
     public void shouldStartRenderingAnImageWhenReceivingATileRenderRequestedMessage() {
-        var tileRenderRequested1 = TileRenderRequested.builder()
-                .withDesignId(DESIGN_ID_1)
-                .withCommandId(COMMAND_ID_1)
-                .withData(DATA_1)
-                .withChecksum(Checksum.of(DATA_1))
-                .withRevision(REVISION_0)
-                .withLevel(0)
-                .withRow(0)
-                .withCol(0)
+        var tileRenderRequested1 = TileRenderRequested.newBuilder()
+                .setDesignId(DESIGN_ID_1)
+                .setCommandId(COMMAND_ID_1)
+                .setData(DATA_1)
+                .setChecksum(Checksum.of(DATA_1))
+                .setRevision(REVISION_0)
+                .setLevel(0)
+                .setRow(0)
+                .setCol(0)
                 .build();
 
-        var tileRenderRequested2 = TileRenderRequested.builder()
-                .withDesignId(DESIGN_ID_2)
-                .withCommandId(COMMAND_ID_2)
-                .withData(DATA_2)
-                .withChecksum(Checksum.of(DATA_2))
-                .withRevision(REVISION_1)
-                .withLevel(4)
-                .withRow(1)
-                .withCol(2)
+        var tileRenderRequested2 = TileRenderRequested.newBuilder()
+                .setDesignId(DESIGN_ID_2)
+                .setCommandId(COMMAND_ID_2)
+                .setData(DATA_2)
+                .setChecksum(Checksum.of(DATA_2))
+                .setRevision(REVISION_1)
+                .setLevel(4)
+                .setRow(1)
+                .setCol(2)
                 .build();
 
-        var tileRenderRequested3 = TileRenderRequested.builder()
-                .withDesignId(DESIGN_ID_2)
-                .withCommandId(COMMAND_ID_2)
-                .withData(DATA_2)
-                .withChecksum(Checksum.of(DATA_2))
-                .withRevision(REVISION_1)
-                .withLevel(5)
-                .withRow(1)
-                .withCol(2)
+        var tileRenderRequested3 = TileRenderRequested.newBuilder()
+                .setDesignId(DESIGN_ID_2)
+                .setCommandId(COMMAND_ID_2)
+                .setData(DATA_2)
+                .setChecksum(Checksum.of(DATA_2))
+                .setRevision(REVISION_1)
+                .setLevel(5)
+                .setRow(1)
+                .setCol(2)
                 .build();
 
-        var tileRenderRequested4 = TileRenderRequested.builder()
-                .withDesignId(DESIGN_ID_2)
-                .withCommandId(COMMAND_ID_2)
-                .withData(DATA_2)
-                .withChecksum(Checksum.of(DATA_2))
-                .withRevision(REVISION_1)
-                .withLevel(6)
-                .withRow(1)
-                .withCol(2)
+        var tileRenderRequested4 = TileRenderRequested.newBuilder()
+                .setDesignId(DESIGN_ID_2)
+                .setCommandId(COMMAND_ID_2)
+                .setData(DATA_2)
+                .setChecksum(Checksum.of(DATA_2))
+                .setRevision(REVISION_1)
+                .setLevel(6)
+                .setRow(1)
+                .setCol(2)
                 .build();
 
-        var tileRenderRequested5 = TileRenderRequested.builder()
-                .withDesignId(DESIGN_ID_2)
-                .withCommandId(COMMAND_ID_2)
-                .withData(DATA_2)
-                .withChecksum(Checksum.of(DATA_2))
-                .withRevision(REVISION_1)
-                .withLevel(7)
-                .withRow(1)
-                .withCol(2)
+        var tileRenderRequested5 = TileRenderRequested.newBuilder()
+                .setDesignId(DESIGN_ID_2)
+                .setCommandId(COMMAND_ID_2)
+                .setData(DATA_2)
+                .setChecksum(Checksum.of(DATA_2))
+                .setRevision(REVISION_1)
+                .setLevel(7)
+                .setRow(1)
+                .setCol(2)
                 .build();
 
-        final OutputMessage tileRenderRequestedMessage1 = tileRenderRequestedMapper.transform(tileRenderRequested1);
-        final OutputMessage tileRenderRequestedMessage2 = tileRenderRequestedMapper.transform(tileRenderRequested2);
-        final OutputMessage tileRenderRequestedMessage3 = tileRenderRequestedMapper.transform(tileRenderRequested3);
-        final OutputMessage tileRenderRequestedMessage4 = tileRenderRequestedMapper.transform(tileRenderRequested4);
-        final OutputMessage tileRenderRequestedMessage5 = tileRenderRequestedMapper.transform(tileRenderRequested5);
+        final OutputMessage<TileRenderRequested> tileRenderRequestedMessage1 = MessageFactory.<TileRenderRequested>of(MESSAGE_SOURCE).createOutputMessage(tileRenderRequested1.getDesignId().toString(), tileRenderRequested1);
+        final OutputMessage<TileRenderRequested> tileRenderRequestedMessage2 = MessageFactory.<TileRenderRequested>of(MESSAGE_SOURCE).createOutputMessage(tileRenderRequested2.getDesignId().toString(), tileRenderRequested2);
+        final OutputMessage<TileRenderRequested> tileRenderRequestedMessage3 = MessageFactory.<TileRenderRequested>of(MESSAGE_SOURCE).createOutputMessage(tileRenderRequested3.getDesignId().toString(), tileRenderRequested3);
+        final OutputMessage<TileRenderRequested> tileRenderRequestedMessage4 = MessageFactory.<TileRenderRequested>of(MESSAGE_SOURCE).createOutputMessage(tileRenderRequested4.getDesignId().toString(), tileRenderRequested4);
+        final OutputMessage<TileRenderRequested> tileRenderRequestedMessage5 = MessageFactory.<TileRenderRequested>of(MESSAGE_SOURCE).createOutputMessage(tileRenderRequested5.getDesignId().toString(), tileRenderRequested5);
 
-        final List<OutputMessage> tileRenderRequestedMessages = List.of(
+        final List<OutputMessage<TileRenderRequested>> tileRenderRequestedMessages = List.of(
                 tileRenderRequestedMessage1,
                 tileRenderRequestedMessage2,
                 tileRenderRequestedMessage3,

@@ -3,8 +3,8 @@ package com.nextbreakpoint.blueprint.designs;
 
 import com.nextbreakpoint.blueprint.common.core.Json;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
-import com.nextbreakpoint.blueprint.common.events.DesignDocumentDeleteCompleted;
-import com.nextbreakpoint.blueprint.common.events.DesignDocumentUpdateCompleted;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignDocumentDeleteCompleted;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignDocumentUpdateCompleted;
 import com.nextbreakpoint.blueprint.common.test.TestContext;
 import com.nextbreakpoint.blueprint.designs.TestActions.Source;
 import org.awaitility.Awaitility;
@@ -61,8 +61,8 @@ public class TestSteps {
             return new Whens(context, actions);
         }
 
-        public Givens theDesignDocumentUpdateCompletedMessage(OutputMessage message) {
-            final DesignDocumentUpdateCompleted designDocumentUpdateCompleted = Json.decodeValue(message.getValue().getData(), DesignDocumentUpdateCompleted.class);
+        public Givens theDesignDocumentUpdateCompletedMessage(OutputMessage<DesignDocumentUpdateCompleted> message) {
+            final DesignDocumentUpdateCompleted designDocumentUpdateCompleted = message.getValue().getData();
             context.putObject("designId", designDocumentUpdateCompleted.getDesignId());
             context.putObject(designDocumentUpdateCompleted.getDesignId() + ".commandId", designDocumentUpdateCompleted.getCommandId());
             context.putObject(designDocumentUpdateCompleted.getDesignId() + ".revision", designDocumentUpdateCompleted.getRevision());
@@ -70,8 +70,8 @@ public class TestSteps {
             return this;
         }
 
-        public Givens theDesignDocumentDeleteCompletedMessage(OutputMessage message) {
-            final DesignDocumentDeleteCompleted designDocumentDeleteCompleted = Json.decodeValue(message.getValue().getData(), DesignDocumentDeleteCompleted.class);
+        public Givens theDesignDocumentDeleteCompletedMessage(OutputMessage<DesignDocumentDeleteCompleted> message) {
+            final DesignDocumentDeleteCompleted designDocumentDeleteCompleted = message.getValue().getData();
             context.putObject("designId", designDocumentDeleteCompleted.getDesignId());
             context.putObject(designDocumentDeleteCompleted.getDesignId() + ".commandId", designDocumentDeleteCompleted.getCommandId());
             context.putObject(designDocumentDeleteCompleted.getDesignId() + ".revision", designDocumentDeleteCompleted.getRevision());
@@ -102,15 +102,15 @@ public class TestSteps {
         }
 
         public Whens appendMessage() {
-            var message = (OutputMessage) context.getObject("message");
-            var messages = (List<OutputMessage>) context.getObject("outputMessages", new ArrayList<>());
+            var message = (OutputMessage<Object>) context.getObject("message");
+            var messages = (List<OutputMessage<Object>>) context.getObject("outputMessages", new ArrayList<>());
             messages.add(message);
             context.putObject("outputMessages", messages);
             return this;
         }
 
         public Whens discardMessages() {
-            var messages = (List<OutputMessage>) context.getObject("outputMessages", new ArrayList<>());
+            var messages = (List<OutputMessage<Object>>) context.getObject("outputMessages", new ArrayList<>());
             messages.clear();
             context.putObject("outputMessages", messages);
             return this;
@@ -142,7 +142,7 @@ public class TestSteps {
             try {
                 List<TestCases.SSENotification> notifications = Collections.synchronizedList(new ArrayList<>());
 
-                var messages = (List<OutputMessage>) context.getObject("outputMessages");
+                var messages = (List<OutputMessage<Object>>) context.getObject("outputMessages");
 
                 actions.subscribe(notifications, () -> messages.forEach(message -> actions.emitMessage(Source.EVENTS, message, Function.identity())));
 
@@ -177,7 +177,7 @@ public class TestSteps {
             try {
                 List<TestCases.SSENotification> notifications = Collections.synchronizedList(new ArrayList<>());
 
-                var messages = (List<OutputMessage>) context.getObject("outputMessages");
+                var messages = (List<OutputMessage<Object>>) context.getObject("outputMessages");
 
                 actions.subscribe(notifications, () -> messages.forEach(message -> actions.emitMessage(Source.EVENTS, message, Function.identity())), designId);
 

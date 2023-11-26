@@ -47,6 +47,17 @@ public class ContainerUtils {
                 .withExposedPorts(9092, 9093);
     }
 
+    public static GenericContainer createSchemaRegistryContainer(Network network) {
+        return new GenericContainer(DockerImageName.parse("nextbreakpoint/schema-registry:6.1.0-1"))
+                .withEnv("SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS", "kafka:9092")
+                .withEnv("SCHEMA_REGISTRY_AVRO_COMPATIBILITY_LEVEL", "FULL_TRANSITIVE")
+                .withEnv("SCHEMA_REGISTRY_LISTENERS", "http://0.0.0.0:8081")
+                .withEnv("SCHEMA_REGISTRY_HOST_NAME", "schema-registry")
+                .withNetwork(network)
+                .withNetworkAliases("schema-registry")
+                .withExposedPorts(8081, 8081);
+    }
+
     public static GenericContainer createCassandraContainer(Network network) {
         return new GenericContainer(DockerImageName.parse("nextbreakpoint/cassandra:3.11.10-1"))
                 .withEnv("CASSANDRA_DC", "datacenter1")

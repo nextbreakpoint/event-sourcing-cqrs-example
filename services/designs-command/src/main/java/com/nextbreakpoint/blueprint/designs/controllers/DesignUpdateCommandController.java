@@ -1,56 +1,54 @@
 package com.nextbreakpoint.blueprint.designs.controllers;
 
-import com.nextbreakpoint.blueprint.common.commands.DesignUpdateCommand;
+import com.nextbreakpoint.blueprint.common.commands.avro.DesignUpdateCommand;
 import com.nextbreakpoint.blueprint.common.core.Controller;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
-import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.MessageEmitter;
-import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
-import com.nextbreakpoint.blueprint.common.events.DesignUpdateRequested;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignUpdateRequested;
+import com.nextbreakpoint.blueprint.common.vertx.MessageFactory;
 import com.nextbreakpoint.blueprint.designs.Store;
 import rx.Single;
 
 import java.util.Objects;
 
-public class DesignUpdateCommandController implements Controller<InputMessage, Void> {
-    private final Mapper<InputMessage, DesignUpdateCommand> inputMapper;
-    private final Mapper<DesignUpdateRequested, OutputMessage> outputMapper;
-    private final MessageEmitter emitter;
+public class DesignUpdateCommandController implements Controller<InputMessage<DesignUpdateCommand>, Void> {
     private final Store store;
+    private final String messageSource;
+    private final MessageEmitter<DesignUpdateRequested> emitter;
 
-    public DesignUpdateCommandController(Store store, Mapper<InputMessage, DesignUpdateCommand> inputMapper, Mapper<DesignUpdateRequested, OutputMessage> outputMapper, MessageEmitter emitter) {
+    public DesignUpdateCommandController(Store store, String messageSource, MessageEmitter<DesignUpdateRequested> emitter) {
         this.store = Objects.requireNonNull(store);
-        this.inputMapper = Objects.requireNonNull(inputMapper);
-        this.outputMapper = Objects.requireNonNull(outputMapper);
+        this.messageSource = Objects.requireNonNull(messageSource);
         this.emitter = Objects.requireNonNull(emitter);
     }
 
     @Override
-    public Single<Void> onNext(InputMessage message) {
+    public Single<Void> onNext(InputMessage<DesignUpdateCommand> message) {
         return Single.just(message)
                 .flatMap(this::onMessageReceived)
-                .map(inputMapper::transform)
-                .flatMap(this::onDesignUpdateRequested)
-                .map(outputMapper::transform)
                 .flatMap(emitter::send);
     }
 
-    private Single<InputMessage> onMessageReceived(InputMessage message) {
-        return store.appendMessage(message).map(result -> message);
-    }
-
-    private Single<DesignUpdateRequested> onDesignUpdateRequested(DesignUpdateCommand command) {
-        return Single.just(createEvent(command));
+    private Single<OutputMessage<DesignUpdateRequested>> onMessageReceived(InputMessage<DesignUpdateCommand> message) {
+        return store.appendMessage(message)
+                .map(ignore -> message.getValue())
+                .map(payload -> createEvent(payload.getData()))
+                .map(this::createMessage);
     }
 
     private DesignUpdateRequested createEvent(DesignUpdateCommand command) {
-        return DesignUpdateRequested.builder()
-                .withDesignId(command.getDesignId())
-                .withCommandId(command.getCommandId())
-                .withUserId(command.getUserId())
-                .withData(command.getData())
-                .withPublished(command.getPublished())
+        return DesignUpdateRequested.newBuilder()
+                .setDesignId(command.getDesignId())
+                .setCommandId(command.getCommandId())
+                .setUserId(command.getUserId())
+                .setData(command.getData())
+                .setPublished(command.getPublished())
                 .build();
+    }
+
+    private OutputMessage<DesignUpdateRequested> createMessage(DesignUpdateRequested event) {
+        return MessageFactory.<DesignUpdateRequested>of(messageSource)
+                .createOutputMessage(event.getDesignId().toString(), event);
     }
 }

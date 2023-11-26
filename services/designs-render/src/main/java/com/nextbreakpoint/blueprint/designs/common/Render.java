@@ -1,6 +1,6 @@
 package com.nextbreakpoint.blueprint.designs.common;
 
-import com.nextbreakpoint.blueprint.common.events.TileRenderCompleted;
+import com.nextbreakpoint.blueprint.common.events.avro.TileRenderCompleted;
 
 public class Render {
     private Render() {}

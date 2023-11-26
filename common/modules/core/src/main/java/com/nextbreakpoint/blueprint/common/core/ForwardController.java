@@ -4,22 +4,19 @@ import rx.Single;
 
 import java.util.Objects;
 
-public class ForwardController<T> implements Controller<InputMessage, Void> {
-    private final Mapper<InputMessage, T> inputMapper;
-    private final Mapper<T, OutputMessage> outputMapper;
-    private final MessageEmitter emitter;
+public class ForwardController<T> implements Controller<InputMessage<T>, Void> {
+    private final Mapper<InputMessage<T>, OutputMessage<T>> mapper;
+    private final MessageEmitter<T> emitter;
 
-    public ForwardController(Mapper<InputMessage, T> inputMapper, Mapper<T, OutputMessage> outputMapper, MessageEmitter emitter) {
-        this.inputMapper = Objects.requireNonNull(inputMapper);
-        this.outputMapper = Objects.requireNonNull(outputMapper);
+    public ForwardController(Mapper<InputMessage<T>, OutputMessage<T>> mapper, MessageEmitter<T> emitter) {
+        this.mapper = Objects.requireNonNull(mapper);
         this.emitter = Objects.requireNonNull(emitter);
     }
 
     @Override
-    public Single<Void> onNext(InputMessage message) {
+    public Single<Void> onNext(InputMessage<T> message) {
         return Single.just(message)
-                .map(inputMapper::transform)
-                .map(outputMapper::transform)
+                .map(mapper::transform)
                 .flatMap(emitter::send);
     }
 }

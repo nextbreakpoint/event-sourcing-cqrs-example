@@ -2,6 +2,7 @@ package com.nextbreakpoint.blueprint.designs;
 
 import au.com.dius.pact.provider.junit5.HttpTestTarget;
 import com.datastax.oss.driver.api.core.cql.Row;
+import com.nextbreakpoint.blueprint.common.commands.avro.Payload;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.drivers.CassandraClientConfig;
 import com.nextbreakpoint.blueprint.common.drivers.CassandraClientFactory;
@@ -9,6 +10,7 @@ import com.nextbreakpoint.blueprint.common.drivers.KafkaClientFactory;
 import com.nextbreakpoint.blueprint.common.drivers.KafkaConsumerConfig;
 import com.nextbreakpoint.blueprint.common.test.KafkaTestPolling;
 import com.nextbreakpoint.blueprint.common.test.TestContext;
+import com.nextbreakpoint.blueprint.common.vertx.Records;
 import io.restassured.http.ContentType;
 import io.vertx.rxjava.core.RxHelper;
 import io.vertx.rxjava.core.Vertx;
@@ -37,8 +39,8 @@ public class TestCases {
 
     private final Vertx vertx = new Vertx(io.vertx.core.Vertx.vertx());
 
-    private KafkaTestPolling commandsPolling;
-    private KafkaTestPolling eventsPolling;
+    private KafkaTestPolling<Object, Payload> commandsPolling;
+    private KafkaTestPolling<Object, com.nextbreakpoint.blueprint.common.events.avro.Payload> eventsPolling;
 
     private TestCassandra testCassandra;
 
@@ -56,12 +58,11 @@ public class TestCases {
 
         testCassandra = new TestCassandra(CassandraClientFactory.create(createCassandraConfig()));
 
-        KafkaConsumer<String, String> commandsConsumer = KafkaClientFactory.createConsumer(createConsumerConfig(consumerGroupId));
+        KafkaConsumer<String, com.nextbreakpoint.blueprint.common.commands.avro.Payload> commandsConsumer = KafkaClientFactory.createConsumer(createConsumerConfig(consumerGroupId));
+        KafkaConsumer<String, com.nextbreakpoint.blueprint.common.events.avro.Payload> eventsConsumer = KafkaClientFactory.createConsumer(createConsumerConfig(consumerGroupId));
 
-        KafkaConsumer<String, String> eventsConsumer = KafkaClientFactory.createConsumer(createConsumerConfig(consumerGroupId));
-
-        commandsPolling = new KafkaTestPolling(commandsConsumer, TestConstants.COMMANDS_TOPIC_NAME + "-" + scenario.getUniqueTestId());
-        eventsPolling = new KafkaTestPolling(eventsConsumer, TestConstants.EVENTS_TOPIC_NAME + "-" + scenario.getUniqueTestId());
+        commandsPolling = new KafkaTestPolling<>(commandsConsumer, Records.createCommandInputRecordMapper(), TestConstants.COMMANDS_TOPIC_NAME + "-" + scenario.getUniqueTestId());
+        eventsPolling = new KafkaTestPolling<>(eventsConsumer, Records.createEventInputRecordMapper(), TestConstants.EVENTS_TOPIC_NAME + "-" + scenario.getUniqueTestId());
 
         commandsPolling.startPolling();
         eventsPolling.startPolling();
@@ -142,8 +143,11 @@ public class TestCases {
     private KafkaConsumerConfig createConsumerConfig(String groupId) {
         return KafkaConsumerConfig.builder()
                 .withBootstrapServers(scenario.getKafkaHost() + ":" + scenario.getKafkaPort())
+                .withSchemaRegistryUrl("http://" + scenario.getSchemaRegistryHost() + ":" + scenario.getSchemaRegistryPort())
+                .withSpecificAvroReader(true)
+                .withAutoRegisterSchemas(false)
                 .withKeyDeserializer("org.apache.kafka.common.serialization.StringDeserializer")
-                .withValueDeserializer("org.apache.kafka.common.serialization.StringDeserializer")
+                .withValueDeserializer("io.confluent.kafka.serializers.KafkaAvroDeserializer")
                 .withAutoOffsetReset("earliest")
                 .withEnableAutoCommit("false")
                 .withGroupId(groupId)
@@ -190,7 +194,7 @@ public class TestCases {
         }
 
         @Override
-        public List<InputMessage> findMessages(Source source, String messageSource, String messageType, Predicate<String> keyPredicate, Predicate<InputMessage> messagePredicate) {
+        public List<InputMessage<Object>> findMessages(Source source, String messageSource, String messageType, Predicate<String> keyPredicate, Predicate<InputMessage<Object>> messagePredicate) {
             return polling(source).findMessages(messageSource, messageType, keyPredicate, messagePredicate);
         }
 
@@ -220,7 +224,7 @@ public class TestCases {
             TestCases.this.submitDeleteDesignRequest(authorization, designId.toString());
         }
 
-        private KafkaTestPolling polling(Source source) {
+        private KafkaTestPolling<Object, ?> polling(Source source) {
             return switch (source) {
                 case EVENTS -> eventsPolling;
                 case COMMANDS -> commandsPolling;

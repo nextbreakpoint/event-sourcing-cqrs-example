@@ -8,6 +8,7 @@
   "origin_pattern": "http://localhost(:[0-9]+)?",
 
   "kafka_bootstrap_servers": "${KAFKA_HOST}:${KAFKA_PORT}",
+  "schema_registry_url": "http://${SCHEMA_REGISTRY_HOST}:${SCHEMA_REGISTRY_PORT}",
   "kafka_group_id": "designs-render",
   "message_source": "service-designs",
   "render_topic_prefix": "${RENDER_TOPIC_PREFIX}",

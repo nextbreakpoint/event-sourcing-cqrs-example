@@ -4,11 +4,15 @@ module com.nextbreakpoint.blueprint.designs.command {
     requires com.nextbreakpoint.blueprint.common.events;
     requires com.nextbreakpoint.blueprint.common.commands;
     requires com.nextbreakpoint.blueprint.common.drivers;
+    requires com.nextbreakpoint.blueprint.confluent;
     requires com.nextbreakpoint.nextfractal.core;
     requires com.nextbreakpoint.nextfractal.mandelbrot;
     requires org.apache.logging.log4j;
+    requires org.slf4j;
     requires com.fasterxml.jackson.core;
     requires com.fasterxml.jackson.databind;
+    requires org.apache.avro;
+    requires kafka.schema.registry.client;
     requires io.vertx.core;
     requires io.vertx.web;
     requires io.vertx.web.openapi;

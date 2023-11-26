@@ -1,0 +1,81 @@
+{{- $fullname := include "service.fullname" . -}}
+{{- $name := include "service.name" . -}}
+{{- $chart := include "service.chart" . -}}
+{{- $root := . }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $root.Values.name | default "schema-registry" | quote }}
+  namespace: {{ $root.Release.Namespace | quote }}
+  labels:
+    component: {{ $root.Values.name | default "schema-registry" | quote }}
+    chart: {{ $chart }}
+    release: {{ $root.Release.Name }}
+    heritage: {{ $root.Release.Service }}
+spec:
+  replicas: {{ $root.Values.replicas | default 1 }}
+  {{- if $root.Values.strategy }}
+  strategy:
+    {{ toYaml $root.Values.strategy | indent 4 | trim }}
+  {{- end}}
+  selector:
+    matchLabels:
+      component: {{ $root.Values.name | default "schema-registry" | quote }}
+  template:
+    metadata:
+      {{- if $root.Values.annotations }}
+      annotations:
+        {{ toYaml $root.Values.annotations | indent 8 | trim }}
+      {{- end}}
+      labels:
+        component: {{ $root.Values.name | default "schema-registry" | quote }}
+    spec:
+      serviceAccountName: {{ $root.Values.serviceAccount | default "schema-registry" }}
+      {{- if $root.Values.image }}
+      {{- if $root.Values.image.pullSecrets }}
+      imagePullSecrets:
+        - name: {{ toYaml $root.Values.image.pullSecrets | indent 8 | trim }}
+      {{- end}}
+      {{- end}}
+      hostname: {{ $root.Values.internalName | default "schema-registry" }}
+      containers:
+        - name: {{ $root.Values.name | default "schema-registry" | quote }}
+          image: "{{ $root.Values.image.registry }}{{ $root.Values.image.repository }}:{{ $root.Values.image.tag }}"
+          imagePullPolicy: {{ $root.Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8081
+              protocol: TCP
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            {{- if $root.Values.secretName}}
+            - name: KEYSTORE_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $root.Values.secretName }}
+                  key: KEYSTORE_SECRET
+            - name: TRUSTSTORE_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $root.Values.secretName }}
+                  key: TRUSTSTORE_SECRET
+            {{- end}}
+            - name: SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS
+              value: "PLAINTEXT://kafka:9092"
+            - name: SCHEMA_REGISTRY_AVRO_COMPATIBILITY_LEVEL
+              value: "FULL_TRANSITIVE"
+            - name: SCHEMA_REGISTRY_LISTENERS
+              value: "http://0.0.0.0:8081"
+            - name: SCHEMA_REGISTRY_HOST_NAME
+              value: "schema-registry"
+          {{- if $root.Values.resources }}
+          resources:
+            {{ $root.Values.resources | toYaml | indent 12 | trim }}
+          {{- end}}

@@ -10,7 +10,7 @@
     <parent>
         <groupId>com.nextbreakpoint</groupId>
         <artifactId>com.nextbreakpoint.blueprint.service</artifactId>
-        <version>1.0.4-wip-fc0da7bd-1699465763</version>
+        <version>1.0.4-avro-migration-76bf9345-1701020097</version>
     </parent>
     <repositories>
         <repository>
@@ -71,6 +71,8 @@
                         <BUCKET_NAME>tiles</BUCKET_NAME>
                         <KAFKA_HOST>localhost</KAFKA_HOST>
                         <KAFKA_PORT>9093</KAFKA_PORT>
+                        <SCHEMA_REGISTRY_HOST>localhost</SCHEMA_REGISTRY_HOST>
+                        <SCHEMA_REGISTRY_PORT>8081</SCHEMA_REGISTRY_PORT>
                         <RENDER_TOPIC_PREFIX>render</RENDER_TOPIC_PREFIX>
                     </environmentVariables>
                     <arguments>
@@ -119,6 +121,30 @@
     <dependencies>
         <dependency>
             <groupId>com.nextbreakpoint</groupId>
+            <artifactId>com.nextbreakpoint.blueprint.common.drivers</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.nextbreakpoint</groupId>
+            <artifactId>com.nextbreakpoint.blueprint.common.events</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.nextbreakpoint</groupId>
+            <artifactId>com.nextbreakpoint.blueprint.common.commands</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.nextbreakpoint</groupId>
+            <artifactId>com.nextbreakpoint.blueprint.confluent</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.confluent</groupId>
+            <artifactId>kafka-schema-registry-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.avro</groupId>
+            <artifactId>avro</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.nextbreakpoint</groupId>
             <artifactId>com.nextbreakpoint.nextfractal.core</artifactId>
         </dependency>
         <dependency>
@@ -144,10 +170,6 @@
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.micrometer</groupId>
-            <artifactId>micrometer-registry-prometheus</artifactId>
         </dependency>
         <dependency>
             <groupId>au.com.dius.pact</groupId>

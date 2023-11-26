@@ -41,9 +41,9 @@ Export Nexus password:
 
     export NEXUS_PASSWORD=$(./scripts/get-nexus-password.sh)
 
-Create Maven repository:
+Create Maven repositories:
 
-    ./scripts/create-repository.sh --nexus-host=localhost --nexus-port=8082 --nexus-username=admin --nexus-password=${NEXUS_PASSWORD}
+    ./scripts/create-maven-repositories.sh --nexus-host=localhost --nexus-port=8082 --nexus-username=admin --nexus-password=${NEXUS_PASSWORD}
 
 Build services:
 
@@ -496,9 +496,9 @@ Export variables:
     export NEXUS_USERNAME=admin
     export NEXUS_PASSWORD=$(kubectl -n pipeline exec $(kubectl -n pipeline get pod -l component=nexus -o json | jq -r '.items[0].metadata.name') -c nexus -- cat /opt/sonatype/sonatype-work/nexus3/admin.password)
 
-Create Maven repository:
+Create Maven repositories:
 
-    ./scripts/create-repository.sh --nexus-host=${NEXUS_HOST} --nexus-port=${NEXUS_PORT} --nexus-username=${NEXUS_USERNAME} --nexus-password=${NEXUS_PASSWORD}
+    ./scripts/create-maven-repositories.sh --nexus-host=${NEXUS_HOST} --nexus-port=${NEXUS_PORT} --nexus-username=${NEXUS_USERNAME} --nexus-password=${NEXUS_PASSWORD}
 
 Select Docker engine running on Minikube:
 
@@ -533,9 +533,9 @@ Export variables:
     export NEXUS_USERNAME=admin
     export NEXUS_PASSWORD=$(kubectl -n pipeline exec $(kubectl -n pipeline get pod -l component=nexus -o json | jq -r '.items[0].metadata.name') -c nexus -- cat /opt/sonatype/sonatype-work/nexus3/admin.password)
 
-Create Maven repository:
+Create Maven repositories:
 
-    ./scripts/create-repository.sh --nexus-host=${NEXUS_HOST} --nexus-port=${NEXUS_PORT} --nexus-username=${NEXUS_USERNAME} --nexus-password=${NEXUS_PASSWORD}
+    ./scripts/create-maven-repositories.sh --nexus-host=${NEXUS_HOST} --nexus-port=${NEXUS_PORT} --nexus-username=${NEXUS_USERNAME} --nexus-password=${NEXUS_PASSWORD}
 
 Reset Docker environment variables to use local Docker engine:
 

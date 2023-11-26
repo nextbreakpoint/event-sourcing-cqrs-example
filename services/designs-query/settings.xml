@@ -1,16 +1,47 @@
 <settings>
+    <servers>
+        <server>
+            <id>nexus</id>
+            <username>${env.NEXUS_USERNAME}</username>
+            <password>${env.NEXUS_PASSWORD}</password>
+        </server>
+    </servers>
+    <profiles>
+        <profile>
+            <id>use-multiple-repos</id>
+            <repositories>
+                <repository>
+                    <id>nexus-confluent-proxy</id>
+                    <name>Nexus - Confluent Proxy</name>
+                    <url>http://${nexus.host}:${nexus.port}/repository/confluent-proxy</url>
+                    <releases>
+                        <enabled>true</enabled>
+                    </releases>
+                </repository>
+            </repositories>
+        </profile>
+    </profiles>
+    <activeProfiles>
+        <activeProfile>use-multiple-repos</activeProfile>
+    </activeProfiles>
     <mirrors>
         <mirror>
             <id>nexus-maven-central</id>
             <name>Nexus - Maven Central</name>
             <url>http://${nexus.host}:${nexus.port}/repository/maven-central</url>
-            <mirrorOf>*,!nexus</mirrorOf>
+            <mirrorOf>central</mirrorOf>
         </mirror>
         <mirror>
             <id>nexus-maven-internal</id>
             <name>Nexus - Maven Internal</name>
             <url>http://${nexus.host}:${nexus.port}/repository/maven-internal</url>
             <mirrorOf>nexus</mirrorOf>
+        </mirror>
+        <mirror>
+            <id>nexus-confluent-proxy</id>
+            <name>Nexus - Confluent Proxy</name>
+            <url>http://${nexus.host}:${nexus.port}/repository/confluent-proxy</url>
+            <mirrorOf>*,!nexus,!central</mirrorOf>
         </mirror>
     </mirrors>
 </settings>

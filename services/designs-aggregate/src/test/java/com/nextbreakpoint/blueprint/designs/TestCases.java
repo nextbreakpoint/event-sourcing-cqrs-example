@@ -3,16 +3,22 @@ package com.nextbreakpoint.blueprint.designs;
 import com.datastax.oss.driver.api.core.cql.Row;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
-import com.nextbreakpoint.blueprint.common.core.TilesBitmap;
 import com.nextbreakpoint.blueprint.common.drivers.CassandraClientConfig;
 import com.nextbreakpoint.blueprint.common.drivers.CassandraClientFactory;
 import com.nextbreakpoint.blueprint.common.drivers.KafkaClientFactory;
 import com.nextbreakpoint.blueprint.common.drivers.KafkaConsumerConfig;
 import com.nextbreakpoint.blueprint.common.drivers.KafkaProducerConfig;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignDeleteRequested;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignInsertRequested;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignUpdateRequested;
+import com.nextbreakpoint.blueprint.common.events.avro.Payload;
+import com.nextbreakpoint.blueprint.common.events.avro.TileRenderCompleted;
 import com.nextbreakpoint.blueprint.common.test.KafkaTestEmitter;
 import com.nextbreakpoint.blueprint.common.test.KafkaTestPolling;
 import com.nextbreakpoint.blueprint.common.test.TestContext;
+import com.nextbreakpoint.blueprint.common.vertx.Records;
 import com.nextbreakpoint.blueprint.designs.TestActions.Source;
+import com.nextbreakpoint.blueprint.designs.common.Bitmap;
 import io.vertx.rxjava.core.RxHelper;
 import io.vertx.rxjava.core.Vertx;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -46,10 +52,10 @@ public class TestCases {
 
     private final Vertx vertx = new Vertx(io.vertx.core.Vertx.vertx());
 
-    private KafkaTestPolling eventsPolling;
-    private KafkaTestPolling renderPolling;
-    private KafkaTestEmitter eventEmitter;
-    private KafkaTestEmitter renderEmitter;
+    private KafkaTestPolling<Object, Payload> eventsPolling;
+    private KafkaTestPolling<Object, Payload> renderPolling;
+    private KafkaTestEmitter<Object, Payload> eventEmitter;
+    private KafkaTestEmitter<Object, Payload> renderEmitter;
 
     private TestCassandra testCassandra;
 
@@ -67,11 +73,11 @@ public class TestCases {
 
         testCassandra = new TestCassandra(CassandraClientFactory.create(createCassandraConfig()));
 
-        KafkaProducer<String, String> producer = KafkaClientFactory.createProducer(createProducerConfig("integration"));
+        KafkaProducer<String, Payload> producer = KafkaClientFactory.createProducer(createProducerConfig("integration"));
 
-        KafkaConsumer<String, String> eventsConsumer = KafkaClientFactory.createConsumer(createConsumerConfig(consumerGroupId));
+        KafkaConsumer<String, Payload> eventsConsumer = KafkaClientFactory.createConsumer(createConsumerConfig(consumerGroupId));
 
-        KafkaConsumer<String, String> renderConsumer = KafkaClientFactory.createConsumer(createConsumerConfig(consumerGroupId));
+        KafkaConsumer<String, Payload> renderConsumer = KafkaClientFactory.createConsumer(createConsumerConfig(consumerGroupId));
 
         final Set<String> renderTopics = Set.of(
                 TestConstants.RENDER_TOPIC_PREFIX + "-" + scenario.getUniqueTestId() + "-completed-0",
@@ -84,14 +90,14 @@ public class TestCases {
                 TestConstants.RENDER_TOPIC_PREFIX + "-" + scenario.getUniqueTestId() + "-requested-3"
         );
 
-        eventsPolling = new KafkaTestPolling(eventsConsumer, TestConstants.EVENTS_TOPIC_NAME + "-" + scenario.getUniqueTestId());
-        renderPolling = new KafkaTestPolling(renderConsumer, renderTopics);
+        eventsPolling = new KafkaTestPolling<>(eventsConsumer, Records.createEventInputRecordMapper(), TestConstants.EVENTS_TOPIC_NAME + "-" + scenario.getUniqueTestId());
+        renderPolling = new KafkaTestPolling<>(renderConsumer, Records.createEventInputRecordMapper(), renderTopics);
 
         eventsPolling.startPolling();
         renderPolling.startPolling();
 
-        eventEmitter = new KafkaTestEmitter(producer, TestConstants.EVENTS_TOPIC_NAME + "-" + scenario.getUniqueTestId());
-        renderEmitter = new KafkaTestEmitter(producer, TestConstants.RENDER_TOPIC_PREFIX + "-" + scenario.getUniqueTestId());
+        eventEmitter = new KafkaTestEmitter<>(producer, Records.createEventOutputRecordMapper(), TestConstants.EVENTS_TOPIC_NAME + "-" + scenario.getUniqueTestId());
+        renderEmitter = new KafkaTestEmitter<>(producer, Records.createEventOutputRecordMapper(), TestConstants.RENDER_TOPIC_PREFIX + "-" + scenario.getUniqueTestId());
 
         deleteData();
 
@@ -149,8 +155,11 @@ public class TestCases {
     private KafkaConsumerConfig createConsumerConfig(String groupId) {
         return KafkaConsumerConfig.builder()
                 .withBootstrapServers(scenario.getKafkaHost() + ":" + scenario.getKafkaPort())
+                .withSchemaRegistryUrl("http://" + scenario.getSchemaRegistryHost() + ":" + scenario.getSchemaRegistryPort())
+                .withSpecificAvroReader(true)
+                .withAutoRegisterSchemas(false)
                 .withKeyDeserializer("org.apache.kafka.common.serialization.StringDeserializer")
-                .withValueDeserializer("org.apache.kafka.common.serialization.StringDeserializer")
+                .withValueDeserializer("io.confluent.kafka.serializers.KafkaAvroDeserializer")
                 .withAutoOffsetReset("earliest")
                 .withEnableAutoCommit("false")
                 .withGroupId(groupId)
@@ -161,20 +170,22 @@ public class TestCases {
     private KafkaProducerConfig createProducerConfig(String clientId) {
         return KafkaProducerConfig.builder()
                 .withBootstrapServers(scenario.getKafkaHost() + ":" + scenario.getKafkaPort())
+                .withSchemaRegistryUrl("http://" + scenario.getSchemaRegistryHost() + ":" + scenario.getSchemaRegistryPort())
+                .withAutoRegisterSchemas(true)
                 .withKeySerializer("org.apache.kafka.common.serialization.StringSerializer")
-                .withValueSerializer("org.apache.kafka.common.serialization.StringSerializer")
+                .withValueSerializer("io.confluent.kafka.serializers.KafkaAvroSerializer")
                 .withClientId(clientId)
                 .withKafkaAcks("1")
                 .build();
     }
 
-    public void shouldUpdateTheDesignAfterReceivingADesignInsertRequestedMessage(OutputMessage designInsertRequestedMessage) {
+    public void shouldUpdateTheDesignAfterReceivingADesignInsertRequestedMessage(OutputMessage<DesignInsertRequested> designInsertRequestedMessage) {
         getSteps()
                 .given().theDesignInsertRequestedMessage(designInsertRequestedMessage)
                 .when().discardReceivedMessages(Source.RENDER)
                 .and().discardReceivedMessages(Source.EVENTS)
                 .and().publishTheMessage(Source.EVENTS)
-                .then().theMessageShouldBeSaved()
+                .then().theMessageShouldBeSaved(DesignInsertRequested.class)
                 .and().aMessageShouldBePublished(Source.EVENTS, DESIGN_AGGREGATE_UPDATED)
                 .and().theAggregateUpdatedMessageHasExpectedValues("CREATED", LEVELS_DRAFT)
                 .and().manyMessagesShouldBePublished(Source.RENDER, TILE_RENDER_REQUESTED, key -> key.startsWith(DESIGN_ID_1.toString()), TestUtils.totalTilesByLevels(LEVELS_DRAFT))
@@ -184,7 +195,7 @@ public class TestCases {
                 .and().theDesignShouldBeSaved("CREATED", LEVELS_DRAFT);
     }
 
-    public void shouldUpdateTheDesignAfterReceivingADesignUpdateRequestedMessage(OutputMessage designInsertRequestedMessage, OutputMessage designUpdateRequestedMessage1, OutputMessage designUpdateRequestedMessage2) {
+    public void shouldUpdateTheDesignAfterReceivingADesignUpdateRequestedMessage(OutputMessage<DesignInsertRequested> designInsertRequestedMessage, OutputMessage<DesignUpdateRequested> designUpdateRequestedMessage1, OutputMessage<DesignUpdateRequested> designUpdateRequestedMessage2) {
         getSteps()
                 .given().theDesignInsertRequestedMessage(designInsertRequestedMessage)
                 .when().discardReceivedMessages(Source.RENDER)
@@ -197,7 +208,7 @@ public class TestCases {
                 .when().discardReceivedMessages(Source.RENDER)
                 .and().discardReceivedMessages(Source.EVENTS)
                 .and().publishTheMessage(Source.EVENTS)
-                .then().theMessageShouldBeSaved()
+                .then().theMessageShouldBeSaved(DesignUpdateRequested.class)
                 .and().theDesignShouldBeSaved("UPDATED", LEVELS_DRAFT)
                 .and().aMessageShouldBePublished(Source.EVENTS, DESIGN_AGGREGATE_UPDATED)
                 .and().theAggregateUpdatedMessageHasExpectedValues("UPDATED", LEVELS_DRAFT)
@@ -209,7 +220,7 @@ public class TestCases {
                 .when().discardReceivedMessages(Source.RENDER)
                 .and().discardReceivedMessages(Source.EVENTS)
                 .and().publishTheMessage(Source.EVENTS)
-                .then().theMessageShouldBeSaved()
+                .then().theMessageShouldBeSaved(DesignUpdateRequested.class)
                 .and().aMessageShouldBePublished(Source.EVENTS, DESIGN_AGGREGATE_UPDATED)
                 .and().theAggregateUpdatedMessageHasExpectedValues("UPDATED", LEVELS_READY)
                 .and().manyMessagesShouldBePublished(Source.RENDER, TILE_RENDER_REQUESTED, key -> key.startsWith(DESIGN_ID_2.toString()), TestUtils.totalTilesByLevels(LEVELS_DRAFT))
@@ -219,7 +230,7 @@ public class TestCases {
                 .and().theDesignShouldBeSaved("UPDATED", LEVELS_READY);
     }
 
-    public void shouldUpdateTheDesignAfterReceivingADesignDeleteRequestedMessage(OutputMessage designInsertRequestedMessage, OutputMessage designDeleteRequestedMessage) {
+    public void shouldUpdateTheDesignAfterReceivingADesignDeleteRequestedMessage(OutputMessage<DesignInsertRequested> designInsertRequestedMessage, OutputMessage<DesignDeleteRequested> designDeleteRequestedMessage) {
         getSteps()
                 .given().theDesignInsertRequestedMessage(designInsertRequestedMessage)
                 .when().discardReceivedMessages(Source.RENDER)
@@ -232,7 +243,7 @@ public class TestCases {
                 .when().discardReceivedMessages(Source.RENDER)
                 .and().discardReceivedMessages(Source.EVENTS)
                 .and().publishTheMessage(Source.EVENTS)
-                .then().theMessageShouldBeSaved()
+                .then().theMessageShouldBeSaved(DesignDeleteRequested.class)
                 .and().aMessageShouldBePublished(Source.EVENTS, DESIGN_AGGREGATE_UPDATED)
                 .and().theAggregateUpdatedMessageHasExpectedValues("DELETED", LEVELS_DRAFT)
                 .and().aMessageShouldBePublished(Source.EVENTS, DESIGN_DOCUMENT_DELETE_REQUESTED)
@@ -240,7 +251,7 @@ public class TestCases {
                 .and().theDesignShouldBeSaved("DELETED", LEVELS_DRAFT);
     }
 
-    public void shouldUpdateTheDesignAfterReceivingATileRenderCompletedMessage(OutputMessage designInsertRequestedMessage, List<OutputMessage> tileRenderCompletedMessages, TilesBitmap bitmap) {
+    public void shouldUpdateTheDesignAfterReceivingATileRenderCompletedMessage(OutputMessage<DesignInsertRequested> designInsertRequestedMessage, List<OutputMessage<TileRenderCompleted>> tileRenderCompletedMessages, Bitmap bitmap) {
         getSteps()
                 .given().theDesignInsertRequestedMessage(designInsertRequestedMessage)
                 .when().discardReceivedMessages(Source.RENDER)
@@ -276,12 +287,12 @@ public class TestCases {
         }
 
         @Override
-        public void emitMessage(Source source, OutputMessage message, Function<String, String> router) {
+        public void emitMessage(Source source, OutputMessage<Object> message, Function<String, String> router) {
             emitter(source).send(message, router.apply(emitter(source).getTopicName()));
         }
 
         @Override
-        public List<InputMessage> findMessages(Source source, String messageSource, String messageType, Predicate<String> keyPredicate, Predicate<InputMessage> messagePredicate) {
+        public List<InputMessage<Object>> findMessages(Source source, String messageSource, String messageType, Predicate<String> keyPredicate, Predicate<InputMessage<Object>> messagePredicate) {
             return polling(source).findMessages(messageSource, messageType, keyPredicate, messagePredicate);
         }
 
@@ -295,14 +306,14 @@ public class TestCases {
             return testCassandra.fetchDesigns(designId);
         }
 
-        private KafkaTestPolling polling(Source source) {
+        private KafkaTestPolling<Object, Payload> polling(Source source) {
             return switch (source) {
                 case EVENTS -> eventsPolling;
                 case RENDER -> renderPolling;
             };
         }
 
-        private KafkaTestEmitter emitter(Source source) {
+        private KafkaTestEmitter<Object, Payload> emitter(Source source) {
             return switch (source) {
                 case EVENTS -> eventEmitter;
                 case RENDER -> renderEmitter;

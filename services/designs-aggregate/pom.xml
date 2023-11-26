@@ -10,7 +10,7 @@
     <parent>
         <groupId>com.nextbreakpoint</groupId>
         <artifactId>com.nextbreakpoint.blueprint.service</artifactId>
-        <version>1.0.4-wip-fc0da7bd-1699465763</version>
+        <version>1.0.4-avro-migration-76bf9345-1701020097</version>
     </parent>
     <repositories>
         <repository>
@@ -77,6 +77,8 @@
                         <DATABASE_KEYSPACE>designs_aggregate</DATABASE_KEYSPACE>
                         <KAFKA_HOST>localhost</KAFKA_HOST>
                         <KAFKA_PORT>9093</KAFKA_PORT>
+                        <SCHEMA_REGISTRY_HOST>localhost</SCHEMA_REGISTRY_HOST>
+                        <SCHEMA_REGISTRY_PORT>8081</SCHEMA_REGISTRY_PORT>
                         <EVENTS_TOPIC>events</EVENTS_TOPIC>
                         <BUFFER_TOPIC>buffer</BUFFER_TOPIC>
                         <RENDER_TOPIC_PREFIX>render</RENDER_TOPIC_PREFIX>
@@ -128,6 +130,26 @@
     </build>
     <dependencies>
         <dependency>
+            <groupId>com.nextbreakpoint</groupId>
+            <artifactId>com.nextbreakpoint.blueprint.common.drivers</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.nextbreakpoint</groupId>
+            <artifactId>com.nextbreakpoint.blueprint.common.events</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.nextbreakpoint</groupId>
+            <artifactId>com.nextbreakpoint.blueprint.confluent</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.confluent</groupId>
+            <artifactId>kafka-schema-registry-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.avro</groupId>
+            <artifactId>avro</artifactId>
+        </dependency>
+        <dependency>
             <groupId>io.reactivex</groupId>
             <artifactId>rxjava</artifactId>
         </dependency>
@@ -142,10 +164,6 @@
         <dependency>
             <groupId>com.datastax.oss</groupId>
             <artifactId>java-driver-metrics-micrometer</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.micrometer</groupId>
-            <artifactId>micrometer-registry-prometheus</artifactId>
         </dependency>
         <dependency>
             <groupId>au.com.dius.pact</groupId>

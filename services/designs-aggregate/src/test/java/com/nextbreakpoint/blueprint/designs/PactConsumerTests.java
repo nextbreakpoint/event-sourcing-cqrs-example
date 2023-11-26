@@ -10,9 +10,12 @@ import au.com.dius.pact.core.model.V4Pact;
 import au.com.dius.pact.core.model.annotations.Pact;
 import com.nextbreakpoint.blueprint.common.core.Checksum;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
-import com.nextbreakpoint.blueprint.common.core.TilesBitmap;
-import com.nextbreakpoint.blueprint.common.events.DesignInsertRequested;
-import com.nextbreakpoint.blueprint.common.events.mappers.DesignInsertRequestedOutputMapper;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignDeleteRequested;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignInsertRequested;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignUpdateRequested;
+import com.nextbreakpoint.blueprint.common.events.avro.TileRenderCompleted;
+import com.nextbreakpoint.blueprint.common.vertx.MessageFactory;
+import com.nextbreakpoint.blueprint.designs.common.Bitmap;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -213,7 +216,7 @@ public class PactConsumerTests {
     public void shouldUpdateTheDesignAfterReceivingADesignInsertRequestedMessage(V4Pact pact) {
         assertThat(pact.getInteractions()).hasSize(1);
 
-        final OutputMessage designInsertRequestedMessage = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(0).asAsynchronousMessage()));
+        final OutputMessage<DesignInsertRequested> designInsertRequestedMessage = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(0).asAsynchronousMessage()), DesignInsertRequested.class);
 
         testCases.shouldUpdateTheDesignAfterReceivingADesignInsertRequestedMessage(designInsertRequestedMessage);
     }
@@ -224,9 +227,9 @@ public class PactConsumerTests {
     public void shouldUpdateTheDesignAfterReceivingADesignUpdateRequestedMessage(V4Pact pact) {
         assertThat(pact.getInteractions()).hasSize(3);
 
-        final OutputMessage designInsertRequestedMessage = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(0).asAsynchronousMessage()));
-        final OutputMessage designUpdateRequestedMessage1 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(1).asAsynchronousMessage()));
-        final OutputMessage designUpdateRequestedMessage2 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(2).asAsynchronousMessage()));
+        final OutputMessage<DesignInsertRequested> designInsertRequestedMessage = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(0).asAsynchronousMessage()), DesignInsertRequested.class);
+        final OutputMessage<DesignUpdateRequested> designUpdateRequestedMessage1 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(1).asAsynchronousMessage()), DesignUpdateRequested.class);
+        final OutputMessage<DesignUpdateRequested> designUpdateRequestedMessage2 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(2).asAsynchronousMessage()), DesignUpdateRequested.class);
 
         testCases.shouldUpdateTheDesignAfterReceivingADesignUpdateRequestedMessage(designInsertRequestedMessage, designUpdateRequestedMessage1, designUpdateRequestedMessage2);
     }
@@ -237,8 +240,8 @@ public class PactConsumerTests {
     public void shouldUpdateTheDesignAfterReceivingADesignDeleteRequestedMessage(V4Pact pact) {
         assertThat(pact.getInteractions()).hasSize(2);
 
-        final OutputMessage designInsertRequestedMessage = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(0).asAsynchronousMessage()));
-        final OutputMessage designDeleteRequestedMessage = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(1).asAsynchronousMessage()));
+        final OutputMessage<DesignInsertRequested> designInsertRequestedMessage = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(0).asAsynchronousMessage()), DesignInsertRequested.class);
+        final OutputMessage<DesignDeleteRequested> designDeleteRequestedMessage = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(1).asAsynchronousMessage()), DesignDeleteRequested.class);
 
         testCases.shouldUpdateTheDesignAfterReceivingADesignDeleteRequestedMessage(designInsertRequestedMessage, designDeleteRequestedMessage);
     }
@@ -249,15 +252,16 @@ public class PactConsumerTests {
     public void shouldUpdateTheDesignAfterReceivingATileRenderCompletedMessage(V4Pact pact) {
         assertThat(pact.getInteractions()).hasSize(5);
 
-        final DesignInsertRequestedOutputMapper outputMapper = new DesignInsertRequestedOutputMapper(MESSAGE_SOURCE);
-        final OutputMessage designInsertRequestedMessage = outputMapper.transform(new DesignInsertRequested(DESIGN_ID_2, COMMAND_ID_4, USER_ID_2, DATA_2));
-        final OutputMessage tileRenderCompletedMessage1 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(0).asAsynchronousMessage()));
-        final OutputMessage tileRenderCompletedMessage2 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(1).asAsynchronousMessage()));
-        final OutputMessage tileRenderCompletedMessage3 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(2).asAsynchronousMessage()));
-        final OutputMessage tileRenderCompletedMessage4 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(3).asAsynchronousMessage()));
-        final OutputMessage tileRenderCompletedMessage5 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(4).asAsynchronousMessage()));
+        final DesignInsertRequested designInsertRequested = new DesignInsertRequested(DESIGN_ID_2, COMMAND_ID_4, USER_ID_2, DATA_2);
+        final OutputMessage<DesignInsertRequested> designInsertRequestedMessage = MessageFactory.<com.nextbreakpoint.blueprint.common.events.avro.DesignInsertRequested>of(MESSAGE_SOURCE).createOutputMessage(designInsertRequested.getDesignId().toString(), designInsertRequested);
 
-        final TilesBitmap bitmap = TilesBitmap.empty();
+        final OutputMessage<TileRenderCompleted> tileRenderCompletedMessage1 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(0).asAsynchronousMessage()), TileRenderCompleted.class);
+        final OutputMessage<TileRenderCompleted> tileRenderCompletedMessage2 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(1).asAsynchronousMessage()), TileRenderCompleted.class);
+        final OutputMessage<TileRenderCompleted> tileRenderCompletedMessage3 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(2).asAsynchronousMessage()), TileRenderCompleted.class);
+        final OutputMessage<TileRenderCompleted> tileRenderCompletedMessage4 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(3).asAsynchronousMessage()), TileRenderCompleted.class);
+        final OutputMessage<TileRenderCompleted> tileRenderCompletedMessage5 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(4).asAsynchronousMessage()), TileRenderCompleted.class);
+
+        final Bitmap bitmap = Bitmap.empty();
         bitmap.putTile(0, 0, 0);
         bitmap.putTile(1, 0, 0);
         bitmap.putTile(1, 1, 0);

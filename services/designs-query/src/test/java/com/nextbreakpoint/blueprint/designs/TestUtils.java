@@ -2,16 +2,18 @@ package com.nextbreakpoint.blueprint.designs;
 
 import au.com.dius.pact.core.model.V4Interaction;
 import com.nextbreakpoint.blueprint.common.core.Json;
-import com.nextbreakpoint.blueprint.common.core.KafkaRecord;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
-import com.nextbreakpoint.blueprint.common.core.Tile;
-import com.nextbreakpoint.blueprint.common.core.Tiles;
+import com.nextbreakpoint.blueprint.common.events.avro.Tile;
+import com.nextbreakpoint.blueprint.common.events.avro.Tiles;
+import com.nextbreakpoint.blueprint.common.test.KafkaRecord;
 import com.nextbreakpoint.blueprint.common.test.PayloadUtils;
 import com.nextbreakpoint.blueprint.designs.model.Design;
+import com.nextbreakpoint.blueprint.designs.model.LevelTiles;
 import io.restassured.config.LogConfig;
 import io.restassured.config.RedirectConfig;
 import io.restassured.config.RestAssuredConfig;
 import io.restassured.config.SSLConfig;
+import org.apache.avro.specific.SpecificRecord;
 import org.jetbrains.annotations.NotNull;
 import rx.Observable;
 
@@ -78,6 +80,13 @@ public class TestUtils {
     }
 
     @NotNull
+    private static Tiles makeTiles(int level, float completePercentage) {
+        final int total = (int) Math.rint(Math.pow(2, level * 2));
+        final int completed = (int) Math.rint((completePercentage * total) / 100f);
+        return new Tiles(level, total, completed);
+    }
+
+    @NotNull
     private static Observable<String> generateKeys(Design design, int level) {
         if (design.getLevels() > level) {
             return rx.Observable.from(generateTiles(level))
@@ -105,15 +114,27 @@ public class TestUtils {
     }
 
     @NotNull
-    private static Tiles makeTiles(int level, float completePercentage) {
-        final int total = (int) Math.rint(Math.pow(2, level * 2));
-        final int completed = (int) Math.rint((completePercentage * total) / 100f);
-        return new Tiles(level, total, completed);
+    public static <T extends SpecificRecord> OutputMessage<T> toOutputMessage(V4Interaction.AsynchronousMessage message, Class<T> clazz) {
+        final String json = message.getContents().getContents().valueAsString();
+        final KafkaRecord kafkaRecord = Json.decodeValue(json, KafkaRecord.class);
+
+        return OutputMessage.<T>builder()
+                .withKey(kafkaRecord.getKey())
+                .withValue(PayloadUtils.mapToPayload(kafkaRecord.getValue(), clazz))
+                .build();
     }
 
     @NotNull
-    public static OutputMessage toOutputMessage(V4Interaction.AsynchronousMessage message) {
-        final KafkaRecord kafkaRecord = Json.decodeValue(message.getContents().getContents().valueAsString(), KafkaRecord.class);
-        return OutputMessage.from(kafkaRecord.getKey(), PayloadUtils.mapToPayload(kafkaRecord.getValue()));
+    public static List<LevelTiles> getLevelTiles(List<Tiles> tiles) {
+        return tiles.stream().map(TestUtils::getLevelTiles).toList();
+    }
+
+    @NotNull
+    public static LevelTiles getLevelTiles(Tiles tile) {
+        return LevelTiles.builder()
+                .withLevel(tile.getLevel())
+                .withTotal(tile.getTotal())
+                .withCompleted(tile.getCompleted())
+                .build();
     }
 }

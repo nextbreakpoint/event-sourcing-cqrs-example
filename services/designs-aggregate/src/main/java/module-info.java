@@ -6,6 +6,7 @@ module com.nextbreakpoint.blueprint.designs.aggregate {
     requires org.apache.logging.log4j;
     requires com.fasterxml.jackson.core;
     requires com.fasterxml.jackson.databind;
+    requires org.apache.avro;
     requires io.vertx.core;
     requires io.vertx.web;
     requires io.vertx.web.openapi;

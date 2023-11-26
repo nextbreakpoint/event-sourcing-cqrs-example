@@ -23,11 +23,11 @@ keytool -genkeypair -keystore $OUTPUT/keystore_auth.jceks -storetype JCEKS -stor
 keytool -genkeypair -keystore $OUTPUT/keystore_auth.jceks -storetype JCEKS -storepass secret -keyalg EC -groupname secp256r1 -alias ES384 -keypass secret -sigalg SHA384withECDSA -dname "CN=blueprint" -validity 365
 keytool -genkeypair -keystore $OUTPUT/keystore_auth.jceks -storetype JCEKS -storepass secret -keyalg EC -groupname secp256r1 -alias ES512 -keypass secret -sigalg SHA512withECDSA -dname "CN=blueprint" -validity 365
 
-#echo "Create certificate authority (CA)"
-#keytool -noprompt -keystore $OUTPUT/keystore_ca.jks -genkeypair -alias ca -dname "CN=blueprint" -ext KeyUsage=digitalSignature,keyCertSign -ext BasicConstraints=ca:true,PathLen:3 -storetype PKCS12 -keyalg RSA -keysize 2048 -validity 365 -storepass secret -keypass secret
-#openssl pkcs12 -in $OUTPUT/keystore_ca.jks -nocerts -nodes -passin pass:secret -out $OUTPUT/ca_key.pem
-#openssl pkcs12 -in $OUTPUT/keystore_ca.jks -nokeys -nodes -passin pass:secret -out $OUTPUT/ca_cert.pem
-#
+echo "Create certificate authority (CA)"
+keytool -noprompt -keystore $OUTPUT/keystore_ca.jks -genkeypair -alias ca -dname "CN=blueprint" -ext KeyUsage=digitalSignature,keyCertSign -ext BasicConstraints=ca:true,PathLen:3 -storetype PKCS12 -keyalg RSA -keysize 2048 -validity 365 -storepass secret -keypass secret
+openssl pkcs12 -in $OUTPUT/keystore_ca.jks -nocerts -nodes -passin pass:secret -out $OUTPUT/ca_key.pem
+openssl pkcs12 -in $OUTPUT/keystore_ca.jks -nokeys -nodes -passin pass:secret -out $OUTPUT/ca_cert.pem
+
 #echo "Create client keystore"
 #keytool -noprompt -keystore $OUTPUT/keystore_client.jks -genkeypair -alias client -dname "CN=blueprint" -storetype PKCS12 -keyalg RSA -keysize 2048 -validity 365 -storepass secret -keypass secret
 #
@@ -59,18 +59,18 @@ keytool -genkeypair -keystore $OUTPUT/keystore_auth.jceks -storetype JCEKS -stor
 #echo "Export certificates"
 #openssl pkcs12 -in $OUTPUT/keystore_client.jks -nocerts -nodes -passin pass:secret -out $OUTPUT/client_key.pem
 #openssl pkcs12 -in $OUTPUT/keystore_server.jks -nocerts -nodes -passin pass:secret -out $OUTPUT/server_key.pem
-#
-#echo "Create NGINX keystore"
-#keytool -noprompt -keystore $OUTPUT/keystore_nginx.jks -genkeypair -alias nginx -dname "CN=blueprint" -storetype PKCS12 -keyalg RSA -keysize 2048 -validity 365 -storepass secret -keypass secret
-#
-#echo "Sign NGINX certificate"
-#keytool -noprompt -keystore $OUTPUT/keystore_nginx.jks -alias nginx -certreq -file $OUTPUT/nginx_csr.pem -storepass secret
-#keytool -noprompt -keystore $OUTPUT/keystore_ca.jks -alias ca -gencert -infile $OUTPUT/nginx_csr.pem -outfile $OUTPUT/nginx_cert.pem -sigalg SHA256withRSA -ext KeyUsage=digitalSignature,keyAgreement -ext ExtendedKeyUsage=serverAuth,clientAuth -ext $SAN -rfc -validity 365 -storepass secret -keypass secret
-#
-#echo "Export NGINX key"
-#openssl pkcs12 -in $OUTPUT/keystore_nginx.jks -nocerts -nodes -passin pass:secret -out $OUTPUT/nginx_key.pem
-#
-#echo "Create NGINX certificates"
-#cat $OUTPUT/nginx_key.pem > $OUTPUT/nginx_server_key.pem
-#cat $OUTPUT/nginx_cert.pem > $OUTPUT/nginx_server_cert.pem
-#cat $OUTPUT/ca_cert.pem >> $OUTPUT/nginx_server_cert.pem
+
+echo "Create NGINX keystore"
+keytool -noprompt -keystore $OUTPUT/keystore_nginx.jks -genkeypair -alias nginx -dname "CN=blueprint" -storetype PKCS12 -keyalg RSA -keysize 2048 -validity 365 -storepass secret -keypass secret
+
+echo "Sign NGINX certificate"
+keytool -noprompt -keystore $OUTPUT/keystore_nginx.jks -alias nginx -certreq -file $OUTPUT/nginx_csr.pem -storepass secret
+keytool -noprompt -keystore $OUTPUT/keystore_ca.jks -alias ca -gencert -infile $OUTPUT/nginx_csr.pem -outfile $OUTPUT/nginx_cert.pem -sigalg SHA256withRSA -ext KeyUsage=digitalSignature,keyAgreement -ext ExtendedKeyUsage=serverAuth,clientAuth -ext $SAN -rfc -validity 365 -storepass secret -keypass secret
+
+echo "Export NGINX key"
+openssl pkcs12 -in $OUTPUT/keystore_nginx.jks -nocerts -nodes -passin pass:secret -out $OUTPUT/nginx_key.pem
+
+echo "Create NGINX certificates"
+cat $OUTPUT/nginx_key.pem > $OUTPUT/nginx_server_key.pem
+cat $OUTPUT/nginx_cert.pem > $OUTPUT/nginx_server_cert.pem
+cat $OUTPUT/ca_cert.pem >> $OUTPUT/nginx_server_cert.pem

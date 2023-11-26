@@ -3,17 +3,18 @@ package com.nextbreakpoint.blueprint.designs;
 import au.com.dius.pact.core.model.V4Interaction;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.core.Json;
-import com.nextbreakpoint.blueprint.common.core.KafkaRecord;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
-import com.nextbreakpoint.blueprint.common.core.Payload;
-import com.nextbreakpoint.blueprint.common.core.Tile;
-import com.nextbreakpoint.blueprint.common.core.TilesBitmap;
-import com.nextbreakpoint.blueprint.common.events.DesignAggregateUpdated;
-import com.nextbreakpoint.blueprint.common.events.DesignDocumentDeleteRequested;
-import com.nextbreakpoint.blueprint.common.events.DesignDocumentUpdateRequested;
-import com.nextbreakpoint.blueprint.common.events.TileRenderCompleted;
-import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
+import com.nextbreakpoint.blueprint.common.core.MessagePayload;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignAggregateUpdated;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignDocumentDeleteRequested;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignDocumentUpdateRequested;
+import com.nextbreakpoint.blueprint.common.events.avro.Tile;
+import com.nextbreakpoint.blueprint.common.events.avro.TileRenderCompleted;
+import com.nextbreakpoint.blueprint.common.events.avro.TileRenderRequested;
+import com.nextbreakpoint.blueprint.common.test.KafkaRecord;
 import com.nextbreakpoint.blueprint.common.test.PayloadUtils;
+import com.nextbreakpoint.blueprint.designs.common.Bitmap;
+import org.apache.avro.specific.SpecificRecord;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.LocalDateTime;
@@ -48,7 +49,7 @@ public class TestUtils {
     }
 
     @NotNull
-    public static List<TileRenderRequested> extractTileRenderRequestedEvents(List<InputMessage> messages, Predicate<TileRenderRequested> predicate) {
+    public static List<TileRenderRequested> extractTileRenderRequestedEvents(List<InputMessage<Object>> messages, Predicate<TileRenderRequested> predicate) {
         return messages.stream()
                 .map(TestUtils::extractTileRenderRequestedEvent)
                 .filter(predicate)
@@ -56,34 +57,39 @@ public class TestUtils {
     }
 
     @NotNull
-    public static TileRenderRequested extractTileRenderRequestedEvent(InputMessage message) {
-        return Json.decodeValue(message.getValue().getData(), TileRenderRequested.class);
+    public static TileRenderRequested extractTileRenderRequestedEvent(InputMessage<Object> message) {
+        return (TileRenderRequested) message.getValue().getData();
     }
 
     @NotNull
-    public static DesignAggregateUpdated extractDesignAggregateUpdatedEvent(InputMessage message) {
-        return Json.decodeValue(message.getValue().getData(), DesignAggregateUpdated.class);
+    public static DesignAggregateUpdated extractDesignAggregateUpdatedEvent(InputMessage<Object> message) {
+        return (DesignAggregateUpdated) message.getValue().getData();
     }
 
     @NotNull
-    public static DesignDocumentUpdateRequested extractDesignDocumentUpdateRequestedEvent(InputMessage inputMessage) {
-        return Json.decodeValue(inputMessage.getValue().getData(), DesignDocumentUpdateRequested.class);
+    public static DesignDocumentUpdateRequested extractDesignDocumentUpdateRequestedEvent(InputMessage<Object> message) {
+        return (DesignDocumentUpdateRequested) message.getValue().getData();
     }
 
     @NotNull
-    public static DesignDocumentDeleteRequested extractDesignDocumentDeleteRequestedEvent(InputMessage inputMessage) {
-        return Json.decodeValue(inputMessage.getValue().getData(), DesignDocumentDeleteRequested.class);
+    public static DesignDocumentDeleteRequested extractDesignDocumentDeleteRequestedEvent(InputMessage<Object> message) {
+        return (DesignDocumentDeleteRequested) message.getValue().getData();
     }
 
     @NotNull
-    public static OutputMessage toOutputMessage(V4Interaction.AsynchronousMessage message) {
-        final KafkaRecord kafkaRecord = Json.decodeValue(message.getContents().getContents().valueAsString(), KafkaRecord.class);
-        return OutputMessage.from(kafkaRecord.getKey(), PayloadUtils.mapToPayload(kafkaRecord.getValue()));
+    public static <T extends SpecificRecord> OutputMessage<T> toOutputMessage(V4Interaction.AsynchronousMessage message, Class<T> clazz) {
+        final String json = message.getContents().getContents().valueAsString();
+        final KafkaRecord kafkaRecord = Json.decodeValue(json, KafkaRecord.class);
+
+        return OutputMessage.<T>builder()
+                .withKey(kafkaRecord.getKey())
+                .withValue(PayloadUtils.mapToPayload(kafkaRecord.getValue(), clazz))
+                .build();
     }
 
     @NotNull
-    public static TilesBitmap createBitmap(int levels, float completePercentage) {
-        TilesBitmap bitmap = TilesBitmap.empty();
+    public static Bitmap createBitmap(int levels, float completePercentage) {
+        Bitmap bitmap = Bitmap.empty();
 
         IntStream.range(0, levels)
                 .forEach(level -> TestUtils.makeLevel(bitmap, level, completePercentage));
@@ -91,7 +97,7 @@ public class TestUtils {
         return bitmap;
     }
 
-    private static void makeLevel(TilesBitmap bitmap, int level, float completePercentage) {
+    private static void makeLevel(Bitmap bitmap, int level, float completePercentage) {
         final int total = (int) Math.rint(Math.pow(2, level * 2));
         final int limit = (int) Math.ceil(completePercentage * total);
 
@@ -109,40 +115,72 @@ public class TestUtils {
                 .flatMap(row ->
                         IntStream.range(0, size)
                                 .boxed()
-                                .map(col -> new com.nextbreakpoint.blueprint.common.core.Tile(level, row, col))
+                                .map(col -> new Tile(level, row, col))
                 )
                 .collect(Collectors.toList());
     }
 
     @NotNull
-    public static InputMessage createInputMessage(String messageKey, String messageType, UUID messageId, Object messageData, String messageToken, LocalDateTime messageTime) {
-        final Payload payload = Payload.builder()
+    public static <T> InputMessage<T> createInputMessage(String messageKey, String messageType, UUID messageId, T messageData, String messageToken, LocalDateTime messageTime) {
+        final MessagePayload<T> payload = MessagePayload.<T>builder()
                 .withUuid(messageId)
-                .withData(Json.encodeValue(messageData))
+                .withData(messageData)
                 .withType(messageType)
                 .withSource(MESSAGE_SOURCE)
                 .build();
 
-        return InputMessage.builder()
-                .key(messageKey)
-                .value(payload)
-                .token(messageToken)
-                .timestamp(messageTime.toInstant(ZoneOffset.UTC).toEpochMilli())
+        return InputMessage.<T>builder()
+                .withKey(messageKey)
+                .withValue(payload)
+                .withToken(messageToken)
+                .withTimestamp(messageTime.toInstant(ZoneOffset.UTC).toEpochMilli())
                 .build();
     }
 
     @NotNull
-    public static OutputMessage createOutputMessage(String messageKey, String messageType, UUID messageId, Object messageData) {
-        final Payload payload = Payload.builder()
+    public static <T> OutputMessage<T> createOutputMessage(String messageKey, String messageType, UUID messageId, T messageData) {
+        final MessagePayload<T> payload = MessagePayload.<T>builder()
                 .withUuid(messageId)
-                .withData(Json.encodeValue(messageData))
+                .withData(messageData)
                 .withType(messageType)
                 .withSource(MESSAGE_SOURCE)
                 .build();
 
-        return OutputMessage.builder()
-                .key(messageKey)
-                .value(payload)
+        return OutputMessage.<T>builder()
+                .withKey(messageKey)
+                .withValue(payload)
+                .build();
+    }
+
+    @NotNull
+    public static InputMessage<SpecificRecord> createInputMessageV2(String messageKey, String messageType, UUID messageId, SpecificRecord messageData, String messageToken, LocalDateTime messageTime) {
+        final MessagePayload<SpecificRecord> payload = MessagePayload.<SpecificRecord>builder()
+                .withUuid(messageId)
+                .withData(messageData)
+                .withType(messageType)
+                .withSource(MESSAGE_SOURCE)
+                .build();
+
+        return InputMessage.<SpecificRecord>builder()
+                .withKey(messageKey)
+                .withValue(payload)
+                .withToken(messageToken)
+                .withTimestamp(messageTime.toInstant(ZoneOffset.UTC).toEpochMilli())
+                .build();
+    }
+
+    @NotNull
+    public static OutputMessage<SpecificRecord> createOutputMessageV2(String messageKey, String messageType, UUID messageId, SpecificRecord messageData) {
+        final MessagePayload<SpecificRecord> payload = MessagePayload.<SpecificRecord>builder()
+                .withUuid(messageId)
+                .withData(messageData)
+                .withType(messageType)
+                .withSource(MESSAGE_SOURCE)
+                .build();
+
+        return OutputMessage.<SpecificRecord>builder()
+                .withKey(messageKey)
+                .withValue(payload)
                 .build();
     }
 }

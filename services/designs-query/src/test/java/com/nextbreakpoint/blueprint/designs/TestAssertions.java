@@ -1,10 +1,10 @@
 package com.nextbreakpoint.blueprint.designs;
 
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
-import com.nextbreakpoint.blueprint.common.core.Tiles;
-import com.nextbreakpoint.blueprint.common.events.DesignDocumentDeleteCompleted;
-import com.nextbreakpoint.blueprint.common.events.DesignDocumentUpdateCompleted;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignDocumentDeleteCompleted;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignDocumentUpdateCompleted;
 import com.nextbreakpoint.blueprint.designs.model.Design;
+import com.nextbreakpoint.blueprint.designs.model.LevelTiles;
 import org.assertj.core.api.SoftAssertions;
 
 import java.util.List;
@@ -13,7 +13,7 @@ import java.util.UUID;
 public class TestAssertions {
     private TestAssertions() {}
 
-    public static void assertExpectedDesignDocumentUpdateCompletedMessage(InputMessage actualMessage, UUID designId) {
+    public static void assertExpectedDesignDocumentUpdateCompletedMessage(InputMessage<Object> actualMessage, UUID designId) {
         SoftAssertions softly = new SoftAssertions();
         softly.assertThat(actualMessage.getTimestamp()).isNotNull();
         softly.assertThat(actualMessage.getKey()).isEqualTo(designId.toString());
@@ -25,7 +25,7 @@ public class TestAssertions {
         softly.assertAll();
     }
 
-    public static void assertExpectedDesignDocumentDeleteCompletedMessage(InputMessage actualMessage, UUID designId) {
+    public static void assertExpectedDesignDocumentDeleteCompletedMessage(InputMessage<Object> actualMessage, UUID designId) {
         SoftAssertions softly = new SoftAssertions();
         softly.assertThat(actualMessage.getTimestamp()).isNotNull();
         softly.assertThat(actualMessage.getKey()).isEqualTo(designId.toString());
@@ -53,7 +53,7 @@ public class TestAssertions {
         softly.assertAll();
     }
 
-    public static void assertExpectedDesign(Design actualDesign, UUID designId, UUID commandId, UUID userId, String data, String checksum, String revision, String status, List<Tiles> tiles, int levels) {
+    public static void assertExpectedDesign(Design actualDesign, UUID designId, UUID commandId, UUID userId, String data, String checksum, String revision, String status, List<LevelTiles> tiles, int levels) {
         SoftAssertions softly = new SoftAssertions();
         softly.assertThat(actualDesign.getDesignId()).isEqualTo(designId);
         softly.assertThat(actualDesign.getCommandId()).isEqualTo(commandId);

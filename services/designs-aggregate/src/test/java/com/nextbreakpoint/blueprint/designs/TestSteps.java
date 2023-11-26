@@ -3,19 +3,19 @@ package com.nextbreakpoint.blueprint.designs;
 import com.datastax.oss.driver.api.core.cql.Row;
 import com.nextbreakpoint.blueprint.common.core.Checksum;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
-import com.nextbreakpoint.blueprint.common.core.Json;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
-import com.nextbreakpoint.blueprint.common.core.TilesBitmap;
-import com.nextbreakpoint.blueprint.common.events.DesignAggregateUpdated;
-import com.nextbreakpoint.blueprint.common.events.DesignDeleteRequested;
-import com.nextbreakpoint.blueprint.common.events.DesignDocumentDeleteRequested;
-import com.nextbreakpoint.blueprint.common.events.DesignDocumentUpdateRequested;
-import com.nextbreakpoint.blueprint.common.events.DesignInsertRequested;
-import com.nextbreakpoint.blueprint.common.events.DesignUpdateRequested;
-import com.nextbreakpoint.blueprint.common.events.TileRenderCompleted;
-import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignAggregateUpdated;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignDeleteRequested;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignDocumentDeleteRequested;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignDocumentUpdateRequested;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignInsertRequested;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignUpdateRequested;
+import com.nextbreakpoint.blueprint.common.events.avro.TileRenderCompleted;
+import com.nextbreakpoint.blueprint.common.events.avro.TileRenderRequested;
 import com.nextbreakpoint.blueprint.common.test.TestContext;
 import com.nextbreakpoint.blueprint.designs.TestActions.Source;
+import com.nextbreakpoint.blueprint.designs.common.Bitmap;
+import org.apache.avro.specific.SpecificRecord;
 import org.awaitility.Awaitility;
 import org.awaitility.core.ConditionFactory;
 
@@ -28,8 +28,6 @@ import java.util.function.Predicate;
 
 import static com.nextbreakpoint.blueprint.designs.TestConstants.MESSAGE_SOURCE;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Durations.ONE_SECOND;
-import static org.awaitility.Durations.TEN_SECONDS;
 
 public class TestSteps {
     private final TestContext context;
@@ -69,8 +67,8 @@ public class TestSteps {
             return new Whens(context, actions);
         }
 
-        public Givens theDesignInsertRequestedMessage(OutputMessage message) {
-            final DesignInsertRequested designInsertRequested = Json.decodeValue(message.getValue().getData(), DesignInsertRequested.class);
+        public Givens theDesignInsertRequestedMessage(OutputMessage<DesignInsertRequested> message) {
+            final DesignInsertRequested designInsertRequested = message.getValue().getData();
             context.putObject("designId", designInsertRequested.getDesignId());
             context.putObject(designInsertRequested.getDesignId() + ".userId", designInsertRequested.getUserId());
             context.putObject(designInsertRequested.getDesignId() + ".commandId", designInsertRequested.getCommandId());
@@ -81,8 +79,8 @@ public class TestSteps {
             return this;
         }
 
-        public Givens theDesignUpdateRequestedMessage(OutputMessage message) {
-            final DesignUpdateRequested designUpdateRequested = Json.decodeValue(message.getValue().getData(), DesignUpdateRequested.class);
+        public Givens theDesignUpdateRequestedMessage(OutputMessage<DesignUpdateRequested> message) {
+            final DesignUpdateRequested designUpdateRequested = message.getValue().getData();
             context.putObject("designId", designUpdateRequested.getDesignId());
             context.putObject(designUpdateRequested.getDesignId() + ".userId", designUpdateRequested.getUserId());
             context.putObject(designUpdateRequested.getDesignId() + ".commandId", designUpdateRequested.getCommandId());
@@ -93,8 +91,8 @@ public class TestSteps {
             return this;
         }
 
-        public Givens theDesignDeleteRequestedMessage(OutputMessage message) {
-            final DesignDeleteRequested designDeleteRequested = Json.decodeValue(message.getValue().getData(), DesignDeleteRequested.class);
+        public Givens theDesignDeleteRequestedMessage(OutputMessage<DesignDeleteRequested> message) {
+            final DesignDeleteRequested designDeleteRequested = message.getValue().getData();
             context.putObject("designId", designDeleteRequested.getDesignId());
             context.putObject(designDeleteRequested.getDesignId() + ".userId", designDeleteRequested.getUserId());
             context.putObject(designDeleteRequested.getDesignId() + ".commandId", designDeleteRequested.getCommandId());
@@ -102,8 +100,8 @@ public class TestSteps {
             return this;
         }
 
-        public Givens theTileRenderCompletedMessage(OutputMessage message) {
-            final TileRenderCompleted tileRenderCompleted = Json.decodeValue(message.getValue().getData(), TileRenderCompleted.class);
+        public Givens theTileRenderCompletedMessage(OutputMessage<TileRenderCompleted> message) {
+            final TileRenderCompleted tileRenderCompleted = message.getValue().getData();
             context.putObject("designId", tileRenderCompleted.getDesignId());
             context.putObject(tileRenderCompleted.getDesignId() + ".commandId", tileRenderCompleted.getCommandId());
             context.putObject(tileRenderCompleted.getDesignId() + ".revision", tileRenderCompleted.getRevision());
@@ -139,7 +137,7 @@ public class TestSteps {
         }
 
         public Whens publishTheMessage(Source source, Function<String, String> topicMapper) {
-            final OutputMessage message = (OutputMessage) context.getObject("message");
+            final OutputMessage<Object> message = (OutputMessage<Object>) context.getObject("message");
             actions.emitMessage(source, message, topicMapper);
             return this;
         }
@@ -191,10 +189,10 @@ public class TestSteps {
             return this;
         }
 
-        private Thens manyMessagesShouldBePublished(Source source, String messageType, Predicate<String> keyPredicate, Predicate<InputMessage> messagePredicate, int count) {
+        private Thens manyMessagesShouldBePublished(Source source, String messageType, Predicate<String> keyPredicate, Predicate<InputMessage<Object>> messagePredicate, int count) {
             defaultAwait()
                     .untilAsserted(() -> {
-                        final List<InputMessage> messages = actions.findMessages(source, MESSAGE_SOURCE, messageType, keyPredicate, messagePredicate);
+                        final List<InputMessage<Object>> messages = actions.findMessages(source, MESSAGE_SOURCE, messageType, keyPredicate, messagePredicate);
                         assertThat(messages).hasSize(count);
                         context.putObject("messages", messages);
                     });
@@ -202,26 +200,26 @@ public class TestSteps {
             return this;
         }
 
-        public Thens theMessageShouldBeSaved() {
+        public Thens theMessageShouldBeSaved(Class<? extends SpecificRecord> clazz) {
             var designId = (UUID) context.getObject("designId");
-            var message = (OutputMessage) context.getObject("message");
+            var message = (OutputMessage<Object>) context.getObject("message");
 
             defaultAwait()
                     .untilAsserted(() -> {
                         final List<Row> rows = actions.fetchMessages(designId, message.getValue().getUuid());
                         assertThat(rows).hasSize(1);
-                        TestAssertions.assertExpectedMessage(rows.get(0), message);
+                        TestAssertions.assertExpectedMessage(rows.get(0), message, clazz);
                     });
 
             return this;
         }
 
         public Thens theDesignShouldBeSaved(String status, int levels) {
-            theDesignShouldBeSaved(status, TilesBitmap.empty(), levels);
+            theDesignShouldBeSaved(status, Bitmap.empty(), levels);
             return this;
         }
 
-        public Thens theDesignShouldBeSaved(String status, TilesBitmap bitmap, int levels) {
+        public Thens theDesignShouldBeSaved(String status, Bitmap bitmap, int levels) {
             var designId = (UUID) context.getObject("designId");
             var data = (String) context.getObject(designId + ".data");
 
@@ -229,7 +227,7 @@ public class TestSteps {
                     .untilAsserted(() -> {
                         final List<Row> rows = actions.fetchDesigns(designId);
                         assertThat(rows).hasSize(1);
-                        TestAssertions.assertExpectedDesign(rows.get(0), data, status, bitmap.getBitmap().array(), levels);
+                        TestAssertions.assertExpectedDesign(rows.get(0), data, status, bitmap.toByteBuffer().array(), levels);
                     });
 
             return this;
@@ -239,7 +237,7 @@ public class TestSteps {
             var designId = (UUID) context.getObject("designId");
             var data = (String) context.getObject(designId + ".data");
             var checksum = (String) context.getObject(designId + ".checksum");
-            var messages = (List<InputMessage>) context.getObject("messages");
+            var messages = (List<InputMessage<Object>>) context.getObject("messages");
 
             defaultAwait()
                     .untilAsserted(() -> {
@@ -255,7 +253,7 @@ public class TestSteps {
             var designId = (UUID) context.getObject("designId");
             var data = (String) context.getObject(designId + ".data");
             var checksum = (String) context.getObject(designId + ".checksum");
-            var messages = (List<InputMessage>) context.getObject("messages");
+            var messages = (List<InputMessage<Object>>) context.getObject("messages");
 
             defaultAwait()
                     .untilAsserted(() -> {
@@ -275,7 +273,7 @@ public class TestSteps {
             var data = (String) context.getObject(designId + ".data");
             var checksum = (String) context.getObject(designId + ".checksum");
             var published = (Boolean) context.getObject(designId + ".published");
-            var messages = (List<InputMessage>) context.getObject("messages");
+            var messages = (List<InputMessage<Object>>) context.getObject("messages");
 
             defaultAwait()
                     .untilAsserted(() -> {
@@ -289,7 +287,7 @@ public class TestSteps {
 
         public Thens theDesignDocumentDeleteRequestedMessageHasExpectedValues() {
             var designId = (UUID) context.getObject("designId");
-            var messages = (List<InputMessage>) context.getObject("messages");
+            var messages = (List<InputMessage<Object>>) context.getObject("messages");
 
             defaultAwait()
                     .untilAsserted(() -> {

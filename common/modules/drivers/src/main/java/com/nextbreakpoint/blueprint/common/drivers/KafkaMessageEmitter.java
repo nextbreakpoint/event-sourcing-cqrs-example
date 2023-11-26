@@ -1,9 +1,11 @@
 package com.nextbreakpoint.blueprint.common.drivers;
 
-import com.nextbreakpoint.blueprint.common.core.Json;
+import com.nextbreakpoint.blueprint.common.core.Header;
+import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.MessageEmitter;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
-import com.nextbreakpoint.blueprint.common.core.Payload;
+import com.nextbreakpoint.blueprint.common.core.OutputRecord;
+import com.nextbreakpoint.blueprint.common.core.MessagePayload;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tag;
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -17,8 +19,6 @@ import lombok.extern.log4j.Log4j2;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
-import org.apache.kafka.common.header.Header;
-import org.apache.kafka.common.header.internals.RecordHeader;
 import rx.Single;
 
 import java.util.HashMap;
@@ -26,15 +26,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 @Log4j2
-public class KafkaMessageEmitter implements MessageEmitter {
+public class KafkaMessageEmitter<T, R> implements MessageEmitter<R> {
     public static final String KAFKA_EMITTER_ERROR_COUNT = "kafka_emitter_error_count";
     public static final String KAFKA_EMITTER_RECORD_TYPE_COUNT = "kafka_emitter_record_type_count";
 
-    private final KafkaProducer<String, String> producer;
-    private MeterRegistry registry;
+    private final KafkaProducer<String, T> producer;
+    private final Mapper<OutputRecord<R>, ProducerRecord<String, T>> recordMapper;
+    private final MeterRegistry registry;
     private final String topicName;
     private final int retries;
 
@@ -42,8 +42,9 @@ public class KafkaMessageEmitter implements MessageEmitter {
 
     private final TextMapSetter<Map<String, String>> setter = Map::put;
 
-    public KafkaMessageEmitter(KafkaProducer<String, String> producer, MeterRegistry registry, String topicName, int retries) {
+    public KafkaMessageEmitter(KafkaProducer<String, T> producer, Mapper<OutputRecord<R>, ProducerRecord<String, T>> recordMapper, MeterRegistry registry, String topicName, int retries) {
         this.producer = Objects.requireNonNull(producer);
+        this.recordMapper = Objects.requireNonNull(recordMapper);
         this.registry = Objects.requireNonNull(registry);
         this.topicName = Objects.requireNonNull(topicName);
         this.retries = retries;
@@ -52,12 +53,12 @@ public class KafkaMessageEmitter implements MessageEmitter {
     }
 
     @Override
-    public Single<Void> send(OutputMessage message) {
+    public Single<Void> send(OutputMessage<R> message) {
         return send(message, topicName);
     }
 
     @Override
-    public Single<Void> send(OutputMessage message, String topicName) {
+    public Single<Void> send(OutputMessage<R> message, String topicName) {
         return Single.just(message)
                 .doOnEach(notification -> log.trace("Sending message to topic {}: {}", topicName, notification.getValue()))
                 .map(outputMessage -> writeRecord(outputMessage, topicName))
@@ -66,16 +67,16 @@ public class KafkaMessageEmitter implements MessageEmitter {
                 .map(result -> null);
     }
 
-    private RecordMetadata writeRecord(OutputMessage message, String topicName) {
+    private RecordMetadata writeRecord(OutputMessage<R> message, String topicName) {
         try {
-            final Payload payload = message.getValue();
+            final MessagePayload payload = message.getValue();
 
             final Span messageSpan = tracer.spanBuilder("Sending message " + payload.getType()).startSpan();
 
             try (Scope scope = messageSpan.makeCurrent()) {
                 final Span span = Span.current();
 
-                final ProducerRecord<String, String> record = createRecord(message, topicName);
+                final ProducerRecord<String, T> record = createRecord(message, topicName);
 
                 span.setAttribute("message.source", payload.getSource());
                 span.setAttribute("message.type", payload.getType());
@@ -106,16 +107,23 @@ public class KafkaMessageEmitter implements MessageEmitter {
         }
     }
 
-    private ProducerRecord<String, String> createRecord(OutputMessage message, String topicName) {
+    private ProducerRecord<String, T> createRecord(OutputMessage<R> message, String topicName) {
         final Map<String, String> headers = new HashMap<>();
 
         W3CTraceContextPropagator.getInstance().inject(Context.current(), headers, setter);
 
         final List<Header> recordHeaders = headers.entrySet().stream()
-                .map(e -> new RecordHeader(e.getKey(), e.getValue().getBytes()))
-                .collect(Collectors.toList());
+                .map(e -> Header.builder().withKey(e.getKey()).withValue(e.getValue()).build())
+                .toList();
 
-        return new ProducerRecord<>(topicName, null, message.getKey(), Json.encodeValue(message.getValue()), recordHeaders);
+        final OutputRecord<R> record = OutputRecord.<R>builder()
+                .withKey(message.getKey())
+                .withTopicName(topicName)
+                .withPayloadV2(message.getValue())
+                .withHeaders(recordHeaders)
+                .build();
+
+        return recordMapper.transform(record);
     }
 
     @Override

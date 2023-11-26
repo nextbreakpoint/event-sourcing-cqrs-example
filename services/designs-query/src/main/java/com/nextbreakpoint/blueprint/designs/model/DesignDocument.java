@@ -3,7 +3,6 @@ package com.nextbreakpoint.blueprint.designs.model;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.nextbreakpoint.blueprint.common.core.Tiles;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -14,15 +13,15 @@ import java.util.UUID;
 
 @Data
 @JsonPropertyOrder({
-        "uuid",
-        "json",
-        "checksum",
-        "revision",
-        "created",
-        "updated",
-        "published",
-        "levels",
-        "tiles"
+    "uuid",
+    "json",
+    "checksum",
+    "revision",
+    "created",
+    "updated",
+    "published",
+    "levels",
+    "tiles"
 })
 @Builder(access = AccessLevel.PUBLIC, setterPrefix = "with")
 public class DesignDocument {
@@ -34,7 +33,7 @@ public class DesignDocument {
     private final String updated;
     private final boolean published;
     private final int levels;
-    private final List<Tiles> tiles;
+    private final List<LevelTiles> tiles;
 
     @JsonCreator
     public DesignDocument(
@@ -46,7 +45,7 @@ public class DesignDocument {
         @JsonProperty("updated") String updated,
         @JsonProperty("published") boolean published,
         @JsonProperty("levels") int levels,
-        @JsonProperty("tiles") List<Tiles> tiles
+        @JsonProperty("tiles") List<LevelTiles> tiles
     ) {
         this.uuid = Objects.requireNonNull(uuid);
         this.json = Objects.requireNonNull(json);

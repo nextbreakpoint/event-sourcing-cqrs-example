@@ -1,7 +1,7 @@
 package com.nextbreakpoint.blueprint.common.drivers;
 
-import com.nextbreakpoint.blueprint.common.core.Json;
-import com.nextbreakpoint.blueprint.common.core.Payload;
+import com.nextbreakpoint.blueprint.common.core.InputRecord;
+import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.RxSingleHandler;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tag;
@@ -20,7 +20,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Log4j2
-public class KafkaMessagePolling<T> {
+public class KafkaMessagePolling<T, R, S> {
     public static final String KAFKA_POLLING_ERROR_COUNT = "kafka_polling_error_count";
     public static final String KAFKA_POLLING_QUEUE_SIZE = "kafka_polling_queue_size";
     public static final String KAFKA_POLLING_PROCESS_RECORDS_TIME = "kafka_polling_process_records_time";
@@ -32,17 +32,19 @@ public class KafkaMessagePolling<T> {
 
     private final Map<TopicPartition, Long> suspendedPartitions = new HashMap<>();
 
-    private final KafkaConsumer<String, String> kafkaConsumer;
+    private final KafkaConsumer<String, T> kafkaConsumer;
 
-    private final Map<String, RxSingleHandler<T, ?>> messageHandlers;
+    private final Mapper<ConsumerRecord<String, T>, InputRecord<R>> recordMapper;
 
-    private final KafkaMessageConsumer recordsConsumer;
+    private final Map<String, RxSingleHandler<S, Void>> messageHandlers;
+
+    private final KafkaMessageConsumer<R> recordsConsumer;
 
     private final List<Tag> tags;
 
-    private MeterRegistry registry;
+    private final MeterRegistry registry;
 
-    private final KafkaRecordsQueue queue;
+    private final KafkaRecordsQueue<R> queue;
 
     private final int latency;
 
@@ -52,12 +54,13 @@ public class KafkaMessagePolling<T> {
 
     private Thread pollingThread;
 
-    public KafkaMessagePolling(KafkaConsumer<String, String> kafkaConsumer, Map<String, RxSingleHandler<T, ?>> messageHandlers, KafkaMessageConsumer recordsConsumer, MeterRegistry registry) {
-        this(kafkaConsumer, messageHandlers, recordsConsumer, registry, KafkaRecordsQueue.Simple.create(), -1, 10);
+    public KafkaMessagePolling(KafkaConsumer<String, T> kafkaConsumer, Mapper<ConsumerRecord<String, T>, InputRecord<R>> recordMapper, Map<String, RxSingleHandler<S, Void>> messageHandlers, KafkaMessageConsumer<R> recordsConsumer, MeterRegistry registry) {
+        this(kafkaConsumer, recordMapper, messageHandlers, recordsConsumer, registry, KafkaRecordsQueue.Simple.create(), -1, 10);
     }
 
-    public KafkaMessagePolling(KafkaConsumer<String, String> kafkaConsumer, Map<String, RxSingleHandler<T, ?>> messageHandlers, KafkaMessageConsumer recordsConsumer, MeterRegistry registry, KafkaRecordsQueue queue, int latency, int maxRecords) {
+    public KafkaMessagePolling(KafkaConsumer<String, T> kafkaConsumer, Mapper<ConsumerRecord<String, T>, InputRecord<R>> recordMapper, Map<String, RxSingleHandler<S, Void>> messageHandlers, KafkaMessageConsumer<R> recordsConsumer, MeterRegistry registry, KafkaRecordsQueue<R> queue, int latency, int maxRecords) {
         this.kafkaConsumer = Objects.requireNonNull(kafkaConsumer);
+        this.recordMapper = Objects.requireNonNull(recordMapper);
         this.messageHandlers = Objects.requireNonNull(messageHandlers);
         this.recordsConsumer = Objects.requireNonNull(recordsConsumer);
         this.registry = Objects.requireNonNull(registry);
@@ -134,27 +137,27 @@ public class KafkaMessagePolling<T> {
             try {
                 enqueueRecords(topicPartition, records);
             } catch (RecordProcessingException e) {
-                suspendPartition(topicPartition, e.getRecord().offset());
+                suspendPartition(topicPartition, e.getRecord().getOffset());
             }
         });
     }
 
-    private void enqueueRecords(TopicPartition topicPartition, List<ConsumerRecord<String, String>> records) {
-        records.forEach(record -> {
+    private void enqueueRecords(TopicPartition topicPartition, List<ConsumerRecord<String, T>> records) {
+        records.forEach(consumerRecord -> {
+            final InputRecord<R> record = recordMapper.transform(consumerRecord);
+
             try {
-                if (record.value() == null) {
-                    log.trace("Skipping tombstone record {} in partition ({})", record.key(), topicPartition);
+                if (record.getPayloadV2() == null) {
+                    log.trace("Skipping tombstone record {} in partition ({})", record.getKey(), topicPartition);
 
                     registry.counter(KAFKA_POLLING_QUEUE_DELETE_RECORD_COUNT, tags).increment();
 
-                    queue.deleteRecord(new KafkaRecordsQueue.QueuedRecord(record, null));
+                    queue.deleteRecord(new KafkaRecordsQueue.QueuedRecord<>(record));
 
                     return;
                 }
 
-                final Payload payload = Json.decodeValue(record.value(), Payload.class);
-
-                final RxSingleHandler<T, ?> handler = messageHandlers.get(payload.getType());
+                final RxSingleHandler<S, ?> handler = messageHandlers.get(record.getPayloadV2().getType());
 
                 if (handler == null) {
                     return;
@@ -166,7 +169,7 @@ public class KafkaMessagePolling<T> {
 
                 registry.counter(KAFKA_POLLING_QUEUE_ADD_RECORD_COUNT, tags).increment();
 
-                queue.addRecord(new KafkaRecordsQueue.QueuedRecord(record, payload));
+                queue.addRecord(new KafkaRecordsQueue.QueuedRecord<>(record));
             } catch (Exception e) {
                 final List<Tag> tags = List.of(
                         Tag.of("group_id", kafkaConsumer.groupMetadata().groupId()),
@@ -175,7 +178,7 @@ public class KafkaMessagePolling<T> {
 
                 registry.counter(KAFKA_POLLING_ERROR_COUNT, tags).increment();
 
-                log.error("Failed to process record: " + record.key());
+                log.error("Failed to process record: " + record.getKey());
 
                 throw new RecordProcessingException(record);
             }
@@ -199,7 +202,7 @@ public class KafkaMessagePolling<T> {
 
                     registry.counter(KAFKA_POLLING_ERROR_COUNT, tags).increment();
 
-                    suspendPartition(topicPartition, e.getRecord().offset());
+                    suspendPartition(topicPartition, e.getRecord().getOffset());
                 }
             });
 
@@ -209,7 +212,7 @@ public class KafkaMessagePolling<T> {
         }
     }
 
-    private void consumeRecords(TopicPartition topicPartition, List<KafkaRecordsQueue.QueuedRecord> records) {
+    private void consumeRecords(TopicPartition topicPartition, List<KafkaRecordsQueue.QueuedRecord<R>> records) {
         try {
             registry.timer(KAFKA_POLLING_CONSUME_RECORDS_TIME, tags)
                     .record(() -> recordsConsumer.consumeRecords(topicPartition, records));
@@ -235,7 +238,7 @@ public class KafkaMessagePolling<T> {
         resumePartitions(resumePartitions);
     }
 
-    private ConsumerRecords<String, String> pollRecords() {
+    private ConsumerRecords<String, T> pollRecords() {
         return kafkaConsumer.poll(Duration.ofSeconds(5));
     }
 
@@ -258,13 +261,13 @@ public class KafkaMessagePolling<T> {
         }
     }
 
-    private Map<TopicPartition, List<ConsumerRecord<String, String>>> partitionRecords(ConsumerRecords<String, String> records) {
-        final Map<TopicPartition, List<ConsumerRecord<String, String>>> partitionedRecords = new HashMap<>();
+    private Map<TopicPartition, List<ConsumerRecord<String, T>>> partitionRecords(ConsumerRecords<String, T> records) {
+        final Map<TopicPartition, List<ConsumerRecord<String, T>>> partitionedRecords = new HashMap<>();
 
         records.forEach(record -> {
             final TopicPartition topicPartition = new TopicPartition(record.topic(), record.partition());
 
-            final List<ConsumerRecord<String, String>> recordList = partitionedRecords.computeIfAbsent(topicPartition, key -> new ArrayList<>());
+            final List<ConsumerRecord<String, T>> recordList = partitionedRecords.computeIfAbsent(topicPartition, key -> new ArrayList<>());
 
             recordList.add(record);
         });
@@ -272,13 +275,13 @@ public class KafkaMessagePolling<T> {
         return partitionedRecords;
     }
 
-    private Map<TopicPartition, List<KafkaRecordsQueue.QueuedRecord>> partitionQueuedRecords(List<KafkaRecordsQueue.QueuedRecord> records) {
-        final Map<TopicPartition, List<KafkaRecordsQueue.QueuedRecord>> partitionedRecords = new HashMap<>();
+    private Map<TopicPartition, List<KafkaRecordsQueue.QueuedRecord<R>>> partitionQueuedRecords(List<KafkaRecordsQueue.QueuedRecord<R>> records) {
+        final Map<TopicPartition, List<KafkaRecordsQueue.QueuedRecord<R>>> partitionedRecords = new HashMap<>();
 
         records.forEach(record -> {
-            final TopicPartition topicPartition = new TopicPartition(record.getRecord().topic(), record.getRecord().partition());
+            final TopicPartition topicPartition = new TopicPartition(record.getRecord().getTopicName(), record.getRecord().getPartition());
 
-            final List<KafkaRecordsQueue.QueuedRecord> recordList = partitionedRecords.computeIfAbsent(topicPartition, key -> new ArrayList<>());
+            final List<KafkaRecordsQueue.QueuedRecord<R>> recordList = partitionedRecords.computeIfAbsent(topicPartition, key -> new ArrayList<>());
 
             recordList.add(record);
         });
@@ -287,13 +290,13 @@ public class KafkaMessagePolling<T> {
     }
 
     public static class RecordProcessingException extends RuntimeException {
-        private ConsumerRecord<String, String> record;
+        private InputRecord<?> record;
 
-        public RecordProcessingException(ConsumerRecord<String, String> record) {
+        public RecordProcessingException(InputRecord<?> record) {
             this.record = record;
         }
 
-        public ConsumerRecord<String, String> getRecord() {
+        public InputRecord<?> getRecord() {
             return record;
         }
     }

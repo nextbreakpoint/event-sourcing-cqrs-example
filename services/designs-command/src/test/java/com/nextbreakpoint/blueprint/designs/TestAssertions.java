@@ -1,21 +1,21 @@
 package com.nextbreakpoint.blueprint.designs;
 
 import com.datastax.oss.driver.api.core.cql.Row;
-import com.nextbreakpoint.blueprint.common.commands.DesignDeleteCommand;
-import com.nextbreakpoint.blueprint.common.commands.DesignInsertCommand;
-import com.nextbreakpoint.blueprint.common.commands.DesignUpdateCommand;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.core.Json;
-import com.nextbreakpoint.blueprint.common.events.DesignDeleteRequested;
-import com.nextbreakpoint.blueprint.common.events.DesignInsertRequested;
-import com.nextbreakpoint.blueprint.common.events.DesignUpdateRequested;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignDeleteRequested;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignInsertRequested;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignUpdateRequested;
 import org.assertj.core.api.SoftAssertions;
 
 import java.time.Instant;
 import java.util.UUID;
 
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_DELETE_COMMAND;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_DELETE_REQUESTED;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_INSERT_COMMAND;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_INSERT_REQUESTED;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_UPDATE_COMMAND;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_UPDATE_REQUESTED;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.MANIFEST;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.MESSAGE_SOURCE;
@@ -25,7 +25,7 @@ import static com.nextbreakpoint.blueprint.designs.TestConstants.SCRIPT;
 public class TestAssertions {
     private TestAssertions() {}
 
-    public static void assertExpectedDesignInsertRequestedMessage(InputMessage actualMessage, String designId) {
+    public static void assertExpectedDesignInsertRequestedMessage(InputMessage<Object> actualMessage, String designId) {
         SoftAssertions softly = new SoftAssertions();
         softly.assertThat(actualMessage.getTimestamp()).isNotNull();
         softly.assertThat(actualMessage.getKey()).isEqualTo(designId);
@@ -38,7 +38,7 @@ public class TestAssertions {
         softly.assertAll();
     }
 
-    public static void assertExpectedDesignUpdateRequestedMessage(InputMessage actualMessage, String designId) {
+    public static void assertExpectedDesignUpdateRequestedMessage(InputMessage<Object> actualMessage, String designId) {
         SoftAssertions softly = new SoftAssertions();
         softly.assertThat(actualMessage.getTimestamp()).isNotNull();
         softly.assertThat(actualMessage.getKey()).isEqualTo(designId);
@@ -51,7 +51,7 @@ public class TestAssertions {
         softly.assertAll();
     }
 
-    public static void assertExpectedDesignDeleteRequestedMessage(InputMessage actualMessage, String designId) {
+    public static void assertExpectedDesignDeleteRequestedMessage(InputMessage<Object> actualMessage, String designId) {
         SoftAssertions softly = new SoftAssertions();
         softly.assertThat(actualMessage.getTimestamp()).isNotNull();
         softly.assertThat(actualMessage.getKey()).isEqualTo(designId);
@@ -111,7 +111,7 @@ public class TestAssertions {
         softly.assertThat(actualUuid).isNotNull();
         softly.assertThat(actualToken).isNotNull();
         softly.assertThat(actualValue).isNotNull();
-        softly.assertThat(actualType).isEqualTo(DesignInsertCommand.TYPE);
+        softly.assertThat(actualType).isEqualTo(DESIGN_INSERT_COMMAND);
         softly.assertThat(actualSource).isNotNull();
         softly.assertThat(actualKey).isEqualTo(uuid);
         softly.assertThat(actualTimestamp).isNotNull();
@@ -130,7 +130,7 @@ public class TestAssertions {
         softly.assertThat(actualUuid).isNotNull();
         softly.assertThat(actualToken).isNotNull();
         softly.assertThat(actualValue).isNotNull();
-        softly.assertThat(actualType).isEqualTo(DesignUpdateCommand.TYPE);
+        softly.assertThat(actualType).isEqualTo(DESIGN_UPDATE_COMMAND);
         softly.assertThat(actualSource).isNotNull();
         softly.assertThat(actualKey).isEqualTo(uuid);
         softly.assertThat(actualTimestamp).isNotNull();
@@ -149,7 +149,7 @@ public class TestAssertions {
         softly.assertThat(actualUuid).isNotNull();
         softly.assertThat(actualToken).isNotNull();
         softly.assertThat(actualValue).isNotNull();
-        softly.assertThat(actualType).isEqualTo(DesignDeleteCommand.TYPE);
+        softly.assertThat(actualType).isEqualTo(DESIGN_DELETE_COMMAND);
         softly.assertThat(actualSource).isNotNull();
         softly.assertThat(actualKey).isEqualTo(uuid);
         softly.assertThat(actualTimestamp).isNotNull();

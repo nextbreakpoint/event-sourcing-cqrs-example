@@ -10,6 +10,7 @@ import au.com.dius.pact.core.model.V4Pact;
 import au.com.dius.pact.core.model.annotations.Pact;
 import com.nextbreakpoint.blueprint.common.core.Checksum;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
+import com.nextbreakpoint.blueprint.common.events.avro.TileRenderRequested;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -109,13 +110,13 @@ public class PactConsumerTests {
     public void shouldStartRenderingAnImageWhenReceivingATileRenderRequestedMessage(V4Pact pact) {
         assertThat(pact.getInteractions()).hasSize(5);
 
-        final OutputMessage tileRenderRequestedMessage1 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(0).asAsynchronousMessage()));
-        final OutputMessage tileRenderRequestedMessage2 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(1).asAsynchronousMessage()));
-        final OutputMessage tileRenderRequestedMessage3 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(2).asAsynchronousMessage()));
-        final OutputMessage tileRenderRequestedMessage4 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(3).asAsynchronousMessage()));
-        final OutputMessage tileRenderRequestedMessage5 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(4).asAsynchronousMessage()));
+        final OutputMessage<TileRenderRequested> tileRenderRequestedMessage1 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(0).asAsynchronousMessage()), TileRenderRequested.class);
+        final OutputMessage<TileRenderRequested> tileRenderRequestedMessage2 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(1).asAsynchronousMessage()), TileRenderRequested.class);
+        final OutputMessage<TileRenderRequested> tileRenderRequestedMessage3 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(2).asAsynchronousMessage()), TileRenderRequested.class);
+        final OutputMessage<TileRenderRequested> tileRenderRequestedMessage4 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(3).asAsynchronousMessage()), TileRenderRequested.class);
+        final OutputMessage<TileRenderRequested> tileRenderRequestedMessage5 = TestUtils.toOutputMessage(Objects.requireNonNull(pact.getInteractions().get(4).asAsynchronousMessage()), TileRenderRequested.class);
 
-        final List<OutputMessage> tileRenderRequestedMessages = List.of(
+        final List<OutputMessage<TileRenderRequested>> tileRenderRequestedMessages = List.of(
                 tileRenderRequestedMessage1,
                 tileRenderRequestedMessage2,
                 tileRenderRequestedMessage3,

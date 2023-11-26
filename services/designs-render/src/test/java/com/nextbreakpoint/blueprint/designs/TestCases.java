@@ -6,9 +6,12 @@ import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.drivers.KafkaClientFactory;
 import com.nextbreakpoint.blueprint.common.drivers.KafkaConsumerConfig;
 import com.nextbreakpoint.blueprint.common.drivers.KafkaProducerConfig;
+import com.nextbreakpoint.blueprint.common.events.avro.Payload;
+import com.nextbreakpoint.blueprint.common.events.avro.TileRenderRequested;
 import com.nextbreakpoint.blueprint.common.test.KafkaTestEmitter;
 import com.nextbreakpoint.blueprint.common.test.KafkaTestPolling;
 import com.nextbreakpoint.blueprint.common.test.TestContext;
+import com.nextbreakpoint.blueprint.common.vertx.Records;
 import com.nextbreakpoint.blueprint.designs.TestActions.Source;
 import io.vertx.rxjava.core.RxHelper;
 import io.vertx.rxjava.core.Vertx;
@@ -42,8 +45,8 @@ public class TestCases {
 
     private final Vertx vertx = new Vertx(io.vertx.core.Vertx.vertx());
 
-    private KafkaTestPolling renderPolling;
-    private KafkaTestEmitter renderEmitter;
+    private KafkaTestPolling<Object, Payload> renderPolling;
+    private KafkaTestEmitter<Object, Payload> renderEmitter;
 
     private String consumerGroupId;
 
@@ -57,9 +60,9 @@ public class TestCases {
         RxJavaHooks.setOnComputationScheduler(s -> RxHelper.scheduler(vertx));
         RxJavaHooks.setOnIOScheduler(s -> RxHelper.blockingScheduler(vertx));
 
-        KafkaProducer<String, String> producer = KafkaClientFactory.createProducer(createProducerConfig("integration"));
+        KafkaProducer<String, Payload> producer = KafkaClientFactory.createProducer(createProducerConfig("integration"));
 
-        KafkaConsumer<String, String> renderConsumer = KafkaClientFactory.createConsumer(createConsumerConfig(consumerGroupId));
+        KafkaConsumer<String, Payload> renderConsumer = KafkaClientFactory.createConsumer(createConsumerConfig(consumerGroupId));
 
         final Set<String> renderTopics = Set.of(
                 TestConstants.RENDER_TOPIC_PREFIX + "-" + scenario.getUniqueTestId() + "-completed-0",
@@ -72,11 +75,11 @@ public class TestCases {
                 TestConstants.RENDER_TOPIC_PREFIX + "-" + scenario.getUniqueTestId() + "-requested-3"
         );
 
-        renderPolling = new KafkaTestPolling(renderConsumer, renderTopics);
+        renderPolling = new KafkaTestPolling<>(renderConsumer, Records.createEventInputRecordMapper(), renderTopics);
 
         renderPolling.startPolling();
 
-        renderEmitter = new KafkaTestEmitter(producer, TestConstants.RENDER_TOPIC_PREFIX + "-" + scenario.getUniqueTestId());
+        renderEmitter = new KafkaTestEmitter<>(producer, Records.createEventOutputRecordMapper(), TestConstants.RENDER_TOPIC_PREFIX + "-" + scenario.getUniqueTestId());
 
         deleteData();
 
@@ -143,8 +146,11 @@ public class TestCases {
     private KafkaConsumerConfig createConsumerConfig(String groupId) {
         return KafkaConsumerConfig.builder()
                 .withBootstrapServers(scenario.getKafkaHost() + ":" + scenario.getKafkaPort())
+                .withSchemaRegistryUrl("http://" + scenario.getSchemaRegistryHost() + ":" + scenario.getSchemaRegistryPort())
+                .withSpecificAvroReader(true)
+                .withAutoRegisterSchemas(false)
                 .withKeyDeserializer("org.apache.kafka.common.serialization.StringDeserializer")
-                .withValueDeserializer("org.apache.kafka.common.serialization.StringDeserializer")
+                .withValueDeserializer("io.confluent.kafka.serializers.KafkaAvroDeserializer")
                 .withAutoOffsetReset("earliest")
                 .withEnableAutoCommit("false")
                 .withGroupId(groupId)
@@ -155,14 +161,16 @@ public class TestCases {
     private KafkaProducerConfig createProducerConfig(String clientId) {
         return KafkaProducerConfig.builder()
                 .withBootstrapServers(scenario.getKafkaHost() + ":" + scenario.getKafkaPort())
+                .withSchemaRegistryUrl("http://" + scenario.getSchemaRegistryHost() + ":" + scenario.getSchemaRegistryPort())
+                .withAutoRegisterSchemas(true)
                 .withKeySerializer("org.apache.kafka.common.serialization.StringSerializer")
-                .withValueSerializer("org.apache.kafka.common.serialization.StringSerializer")
+                .withValueSerializer("io.confluent.kafka.serializers.KafkaAvroSerializer")
                 .withClientId(clientId)
                 .withKafkaAcks("1")
                 .build();
     }
 
-    public void shouldStartRenderingAnImageWhenReceivingATileRenderRequestedMessage(List<OutputMessage> tileRenderRequestedMessages) {
+    public void shouldStartRenderingAnImageWhenReceivingATileRenderRequestedMessage(List<OutputMessage<TileRenderRequested>> tileRenderRequestedMessages) {
         getSteps()
                 .given().theTileRenderRequestedMessage(tileRenderRequestedMessages.get(0))
                 .when().discardReceivedMessages(Source.RENDER)
@@ -208,12 +216,12 @@ public class TestCases {
         }
 
         @Override
-        public void emitMessage(Source source, OutputMessage message, Function<String, String> router) {
+        public void emitMessage(Source source, OutputMessage<Object> message, Function<String, String> router) {
             emitter(source).send(message, router.apply(emitter(source).getTopicName()));
         }
 
         @Override
-        public List<InputMessage> findMessages(Source source, String messageSource, String messageType, Predicate<String> keyPredicate, Predicate<InputMessage> messagePredicate) {
+        public List<InputMessage<Object>> findMessages(Source source, String messageSource, String messageType, Predicate<String> keyPredicate, Predicate<InputMessage<Object>> messagePredicate) {
             return polling(source).findMessages(messageSource, messageType, keyPredicate, messagePredicate);
         }
 
@@ -224,13 +232,13 @@ public class TestCases {
             return response.asByteArray();
         }
 
-        private KafkaTestPolling polling(Source source) {
+        private KafkaTestPolling<Object, Payload> polling(Source source) {
             return switch (source) {
                 case RENDER -> renderPolling;
             };
         }
 
-        private KafkaTestEmitter emitter(Source source) {
+        private KafkaTestEmitter<Object, Payload> emitter(Source source) {
             return switch (source) {
                 case RENDER -> renderEmitter;
             };

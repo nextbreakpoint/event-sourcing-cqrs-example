@@ -14,9 +14,13 @@ import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.drivers.KafkaClientFactory;
 import com.nextbreakpoint.blueprint.common.drivers.KafkaConsumerConfig;
 import com.nextbreakpoint.blueprint.common.drivers.KafkaProducerConfig;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignDocumentDeleteRequested;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignDocumentUpdateRequested;
+import com.nextbreakpoint.blueprint.common.events.avro.Payload;
 import com.nextbreakpoint.blueprint.common.test.KafkaTestEmitter;
 import com.nextbreakpoint.blueprint.common.test.KafkaTestPolling;
 import com.nextbreakpoint.blueprint.common.test.TestContext;
+import com.nextbreakpoint.blueprint.common.vertx.Records;
 import com.nextbreakpoint.blueprint.designs.model.Design;
 import io.vertx.rxjava.core.RxHelper;
 import io.vertx.rxjava.core.Vertx;
@@ -46,8 +50,8 @@ public class TestCases {
 
     private final Vertx vertx = new Vertx(io.vertx.core.Vertx.vertx());
 
-    private KafkaTestPolling eventsPolling;
-    private KafkaTestEmitter eventEmitter;
+    private KafkaTestPolling<Object, Payload> eventsPolling;
+    private KafkaTestEmitter<Object, Payload> eventEmitter;
 
     private TestElasticsearch testElasticsearch;
     private TestElasticsearch testDraftElasticsearch;
@@ -72,15 +76,15 @@ public class TestCases {
         TestS3.deleteBucket(s3Client, TestConstants.BUCKET);
         TestS3.createBucket(s3Client, TestConstants.BUCKET);
 
-        KafkaProducer<String, String> producer = KafkaClientFactory.createProducer(createProducerConfig("integration"));
+        KafkaProducer<String, Payload> producer = KafkaClientFactory.createProducer(createProducerConfig("integration"));
 
-        KafkaConsumer<String, String> eventsConsumer = KafkaClientFactory.createConsumer(createConsumerConfig(consumerGroupId));
+        KafkaConsumer<String, Payload> eventsConsumer = KafkaClientFactory.createConsumer(createConsumerConfig(consumerGroupId));
 
-        eventsPolling = new KafkaTestPolling(eventsConsumer, TestConstants.EVENTS_TOPIC_NAME + "-" + scenario.getUniqueTestId());
+        eventsPolling = new KafkaTestPolling<>(eventsConsumer, Records.createEventInputRecordMapper(), TestConstants.EVENTS_TOPIC_NAME + "-" + scenario.getUniqueTestId());
 
         eventsPolling.startPolling();
 
-        eventEmitter = new KafkaTestEmitter(producer, TestConstants.EVENTS_TOPIC_NAME + "-" + scenario.getUniqueTestId());
+        eventEmitter = new KafkaTestEmitter<>(producer, Records.createEventOutputRecordMapper(), TestConstants.EVENTS_TOPIC_NAME + "-" + scenario.getUniqueTestId());
 
         final RestClient restClient = RestClient.builder(new HttpHost(scenario.getElasticsearchHost(), scenario.getElasticsearchPort())).build();
 
@@ -163,8 +167,11 @@ public class TestCases {
     private KafkaConsumerConfig createConsumerConfig(String groupId) {
         return KafkaConsumerConfig.builder()
                 .withBootstrapServers(scenario.getKafkaHost() + ":" + scenario.getKafkaPort())
+                .withSchemaRegistryUrl("http://" + scenario.getSchemaRegistryHost() + ":" + scenario.getSchemaRegistryPort())
+                .withSpecificAvroReader(true)
+                .withAutoRegisterSchemas(false)
                 .withKeyDeserializer("org.apache.kafka.common.serialization.StringDeserializer")
-                .withValueDeserializer("org.apache.kafka.common.serialization.StringDeserializer")
+                .withValueDeserializer("io.confluent.kafka.serializers.KafkaAvroDeserializer")
                 .withAutoOffsetReset("earliest")
                 .withEnableAutoCommit("false")
                 .withGroupId(groupId)
@@ -175,8 +182,10 @@ public class TestCases {
     private KafkaProducerConfig createProducerConfig(String clientId) {
         return KafkaProducerConfig.builder()
                 .withBootstrapServers(scenario.getKafkaHost() + ":" + scenario.getKafkaPort())
+                .withSchemaRegistryUrl("http://" + scenario.getSchemaRegistryHost() + ":" + scenario.getSchemaRegistryPort())
+                .withAutoRegisterSchemas(true)
                 .withKeySerializer("org.apache.kafka.common.serialization.StringSerializer")
-                .withValueSerializer("org.apache.kafka.common.serialization.StringSerializer")
+                .withValueSerializer("io.confluent.kafka.serializers.KafkaAvroSerializer")
                 .withClientId(clientId)
                 .withKafkaAcks("1")
                 .build();
@@ -246,7 +255,7 @@ public class TestCases {
                 .await();
     }
 
-    public void shouldUpdateTheDesignWhenReceivingADesignDocumentUpdateRequested(List<OutputMessage> designDocumentUpdateRequestedMessages) {
+    public void shouldUpdateTheDesignWhenReceivingADesignDocumentUpdateRequested(List<OutputMessage<DesignDocumentUpdateRequested>> designDocumentUpdateRequestedMessages) {
         getSteps()
                 .given().theDesignDocumentUpdateRequestedMessage(designDocumentUpdateRequestedMessages.get(0))
                 .when().publishTheMessage()
@@ -274,7 +283,7 @@ public class TestCases {
                 .and().theDesignDocumentShouldBeUpdated();
     }
 
-    public void shouldDeleteTheDesignWhenReceivingADesignDocumentDeleteRequested(OutputMessage designDocumentUpdateRequestedMessage, OutputMessage designDocumentDeleteRequestedMessage) {
+    public void shouldDeleteTheDesignWhenReceivingADesignDocumentDeleteRequested(OutputMessage<DesignDocumentUpdateRequested> designDocumentUpdateRequestedMessage, OutputMessage<DesignDocumentDeleteRequested> designDocumentDeleteRequestedMessage) {
         getSteps()
                 .given().theDesignDocumentUpdateRequestedMessage(designDocumentUpdateRequestedMessage)
                 .when().publishTheMessage()
@@ -297,12 +306,12 @@ public class TestCases {
         }
 
         @Override
-        public void emitMessage(Source source, OutputMessage message, Function<String, String> router) {
+        public void emitMessage(Source source, OutputMessage<Object> message, Function<String, String> router) {
             emitter(source).send(message, router.apply(emitter(source).getTopicName()));
         }
 
         @Override
-        public List<InputMessage> findMessages(Source source, String messageSource, String messageType, Predicate<String> keyPredicate, Predicate<InputMessage> messagePredicate) {
+        public List<InputMessage<Object>> findMessages(Source source, String messageSource, String messageType, Predicate<String> keyPredicate, Predicate<InputMessage<Object>> messagePredicate) {
             return polling(source).findMessages(messageSource, messageType, keyPredicate, messagePredicate);
         }
 
@@ -326,13 +335,13 @@ public class TestCases {
                     .join();
         }
 
-        private KafkaTestPolling polling(Source source) {
+        private KafkaTestPolling<Object, Payload> polling(Source source) {
             return switch (source) {
                 case EVENTS -> eventsPolling;
             };
         }
 
-        private KafkaTestEmitter emitter(Source source) {
+        private KafkaTestEmitter<Object, Payload> emitter(Source source) {
             return switch (source) {
                 case EVENTS -> eventEmitter;
             };

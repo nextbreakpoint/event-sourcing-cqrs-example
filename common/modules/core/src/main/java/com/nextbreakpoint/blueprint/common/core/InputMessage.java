@@ -1,39 +1,15 @@
 package com.nextbreakpoint.blueprint.common.core;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.Builder;
 import lombok.Data;
 
-import java.util.Objects;
-
 @Data
-@JsonPropertyOrder({
-        "key",
-        "token",
-        "value",
-        "timestamp"
-})
-@Builder(toBuilder = true)
-public class InputMessage {
-    private String key;
-    private String token;
-    private Payload value;
-    private Long timestamp;
-
-    @JsonCreator
-    public InputMessage(
-            @JsonProperty("key") String key,
-            @JsonProperty("token") String token,
-            @JsonProperty("value") Payload value,
-            @JsonProperty("timestamp") Long timestamp
-    ) {
-        this.key = Objects.requireNonNull(key);
-        this.token = Objects.requireNonNull(token);
-        this.value = Objects.requireNonNull(value);
-        this.timestamp = Objects.requireNonNull(timestamp);
-    }
+@Builder(toBuilder = true, setterPrefix = "with")
+public class InputMessage<T> {
+    private final String key;
+    private final String token;
+    private final MessagePayload<T> value;
+    private final Long timestamp;
 
     @Override
     public String toString() {

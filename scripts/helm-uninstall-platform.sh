@@ -4,6 +4,7 @@ set +e
 
 helm uninstall integration-elasticsearch -n platform
 helm uninstall integration-cassandra -n platform
+helm uninstall integration-schema-registry -n platform
 helm uninstall integration-kafka -n platform
 helm uninstall integration-zookeeper -n platform
 helm uninstall integration-mysql -n platform

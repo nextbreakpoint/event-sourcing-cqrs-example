@@ -12,11 +12,11 @@ import au.com.dius.pact.provider.junitsupport.State;
 import au.com.dius.pact.provider.junitsupport.loader.PactBroker;
 import com.nextbreakpoint.blueprint.common.core.Checksum;
 import com.nextbreakpoint.blueprint.common.core.Json;
-import com.nextbreakpoint.blueprint.common.core.KafkaRecord;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
-import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
-import com.nextbreakpoint.blueprint.common.events.mappers.TileRenderRequestedOutputMapper;
+import com.nextbreakpoint.blueprint.common.events.avro.TileRenderRequested;
+import com.nextbreakpoint.blueprint.common.test.KafkaRecord;
 import com.nextbreakpoint.blueprint.common.test.PayloadUtils;
+import com.nextbreakpoint.blueprint.common.vertx.MessageFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -95,7 +95,7 @@ public class VerifyRenderPact {
     private String produceTileRenderRequested(UUID designId, int level, int row, int col, UUID commandId, String data, String checksum, String revision) {
         final TileRenderRequested tileRenderRequested = new TileRenderRequested(designId, commandId, revision, checksum, data, level,  row, col);
 
-        final OutputMessage tileRenderRequestedMessage = new TileRenderRequestedOutputMapper(MESSAGE_SOURCE, event -> TestUtils.createRenderKey(tileRenderRequested)).transform(tileRenderRequested);
+        final OutputMessage<TileRenderRequested> tileRenderRequestedMessage = MessageFactory.<TileRenderRequested>of(MESSAGE_SOURCE).createOutputMessage(TestUtils.createRenderKey(tileRenderRequested), tileRenderRequested);
 
         return Json.encodeValue(new KafkaRecord(tileRenderRequestedMessage.getKey(), PayloadUtils.payloadToMap(tileRenderRequestedMessage.getValue())));
     }

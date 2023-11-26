@@ -2,13 +2,12 @@ package com.nextbreakpoint.blueprint.designs;
 
 import com.nextbreakpoint.blueprint.common.core.Checksum;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
-import com.nextbreakpoint.blueprint.common.core.Json;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
-import com.nextbreakpoint.blueprint.common.core.Tiles;
-import com.nextbreakpoint.blueprint.common.events.DesignDocumentDeleteCompleted;
-import com.nextbreakpoint.blueprint.common.events.DesignDocumentDeleteRequested;
-import com.nextbreakpoint.blueprint.common.events.DesignDocumentUpdateCompleted;
-import com.nextbreakpoint.blueprint.common.events.DesignDocumentUpdateRequested;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignDocumentDeleteCompleted;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignDocumentDeleteRequested;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignDocumentUpdateCompleted;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignDocumentUpdateRequested;
+import com.nextbreakpoint.blueprint.common.events.avro.Tiles;
 import com.nextbreakpoint.blueprint.common.test.TestContext;
 import com.nextbreakpoint.blueprint.designs.TestActions.Source;
 import com.nextbreakpoint.blueprint.designs.model.Design;
@@ -67,13 +66,13 @@ public class TestSteps {
             return new Whens(context, actions);
         }
 
-        public Givens theDesignDocumentUpdateRequestedMessage(OutputMessage message) {
-            final DesignDocumentUpdateRequested designDocumentUpdateRequested = Json.decodeValue(message.getValue().getData(), DesignDocumentUpdateRequested.class);
+        public Givens theDesignDocumentUpdateRequestedMessage(OutputMessage<DesignDocumentUpdateRequested> message) {
+            final DesignDocumentUpdateRequested designDocumentUpdateRequested = message.getValue().getData();
             context.putObject("designId", designDocumentUpdateRequested.getDesignId());
             context.putObject(designDocumentUpdateRequested.getDesignId() + ".userId", designDocumentUpdateRequested.getUserId());
             context.putObject(designDocumentUpdateRequested.getDesignId() + ".commandId", designDocumentUpdateRequested.getCommandId());
             context.putObject(designDocumentUpdateRequested.getDesignId() + ".data", designDocumentUpdateRequested.getData());
-            context.putObject(designDocumentUpdateRequested.getDesignId() + ".status", designDocumentUpdateRequested.getStatus());
+            context.putObject(designDocumentUpdateRequested.getDesignId() + ".status", designDocumentUpdateRequested.getStatus().toString());
             context.putObject(designDocumentUpdateRequested.getDesignId() + ".checksum", Checksum.of(designDocumentUpdateRequested.getData()));
             context.putObject(designDocumentUpdateRequested.getDesignId() + ".revision", designDocumentUpdateRequested.getRevision());
             context.putObject(designDocumentUpdateRequested.getDesignId() + ".levels", designDocumentUpdateRequested.getLevels());
@@ -82,8 +81,8 @@ public class TestSteps {
             return this;
         }
 
-        public Givens theDesignDocumentDeleteRequestedMessage(OutputMessage message) {
-            final DesignDocumentDeleteRequested designDocumentDeleteRequested = Json.decodeValue(message.getValue().getData(), DesignDocumentDeleteRequested.class);
+        public Givens theDesignDocumentDeleteRequestedMessage(OutputMessage<DesignDocumentDeleteRequested> message) {
+            final DesignDocumentDeleteRequested designDocumentDeleteRequested = message.getValue().getData();
             context.putObject("designId", designDocumentDeleteRequested.getDesignId());
             context.putObject(designDocumentDeleteRequested.getDesignId() + ".commandId", designDocumentDeleteRequested.getCommandId());
             context.putObject(designDocumentDeleteRequested.getDesignId() + ".revision", designDocumentDeleteRequested.getRevision());
@@ -119,7 +118,7 @@ public class TestSteps {
         }
 
         public Whens publishTheMessage(Source source, Function<String, String> topicMapper) {
-            final OutputMessage message = (OutputMessage) context.getObject("message");
+            final OutputMessage<Object> message = (OutputMessage<Object>) context.getObject("message");
 
             actions.clearMessages(source);
             actions.emitMessage(source, message, topicMapper);
@@ -154,7 +153,7 @@ public class TestSteps {
 
             defaultAwait()
                     .untilAsserted(() -> {
-                        final List<InputMessage> messages = actions.findMessages(Source.EVENTS, MESSAGE_SOURCE, DESIGN_DOCUMENT_UPDATE_COMPLETED, key -> key.equals(designId.toString()), msg -> true);
+                        final List<InputMessage<Object>> messages = actions.findMessages(Source.EVENTS, MESSAGE_SOURCE, DESIGN_DOCUMENT_UPDATE_COMPLETED, key -> key.equals(designId.toString()), msg -> true);
                         assertThat(messages).hasSize(1);
                         context.putObject("message", messages.get(0));
                         TestAssertions.assertExpectedDesignDocumentUpdateCompletedMessage(messages.get(0), designId);
@@ -168,7 +167,7 @@ public class TestSteps {
 
             defaultAwait()
                     .untilAsserted(() -> {
-                        final List<InputMessage> messages = actions.findMessages(Source.EVENTS, MESSAGE_SOURCE, DESIGN_DOCUMENT_DELETE_COMPLETED, key -> key.equals(designId.toString()), msg -> true);
+                        final List<InputMessage<Object>> messages = actions.findMessages(Source.EVENTS, MESSAGE_SOURCE, DESIGN_DOCUMENT_DELETE_COMPLETED, key -> key.equals(designId.toString()), msg -> true);
                         assertThat(messages).hasSize(1);
                         context.putObject("message", messages.get(0));
                         TestAssertions.assertExpectedDesignDocumentDeleteCompletedMessage(messages.get(0), designId);
@@ -179,11 +178,11 @@ public class TestSteps {
 
         public Thens theDocumentUpdateCompletedEventShouldHaveExpectedValues() {
             var designId = (UUID) context.getObject("designId");
-            var message = (InputMessage) context.getObject("message");
+            var message = (InputMessage<Object>) context.getObject("message");
 
             defaultAwait()
                     .untilAsserted(() -> {
-                        DesignDocumentUpdateCompleted designDocumentUpdateCompleted = Json.decodeValue(message.getValue().getData(), DesignDocumentUpdateCompleted.class);
+                        DesignDocumentUpdateCompleted designDocumentUpdateCompleted = (DesignDocumentUpdateCompleted) message.getValue().getData();
                         TestAssertions.assertExpectedDesignDocumentUpdateCompletedEvent(designDocumentUpdateCompleted, designId);
                     });
 
@@ -192,11 +191,11 @@ public class TestSteps {
 
         public Thens theDocumentDeleteCompletedEventShouldHaveExpectedValues() {
             var designId = (UUID) context.getObject("designId");
-            var message = (InputMessage) context.getObject("message");
+            var message = (InputMessage<Object>) context.getObject("message");
 
             defaultAwait()
                     .untilAsserted(() -> {
-                        DesignDocumentDeleteCompleted designDocumentDeleteCompleted = Json.decodeValue(message.getValue().getData(), DesignDocumentDeleteCompleted.class);
+                        DesignDocumentDeleteCompleted designDocumentDeleteCompleted = (DesignDocumentDeleteCompleted) message.getValue().getData();
                         TestAssertions.assertExpectedDesignDocumentDeleteCompletedEvent(designDocumentDeleteCompleted, designId);
                     });
 
@@ -219,7 +218,7 @@ public class TestSteps {
                     .untilAsserted(() -> {
                         final List<Design> designs = actions.findDesigns(designId);
                         assertThat(designs).hasSize(1);
-                        TestAssertions.assertExpectedDesign(designs.get(0), designId, commandId, userId, data, checksum, revision, status, tiles, levels);
+                        TestAssertions.assertExpectedDesign(designs.get(0), designId, commandId, userId, data, checksum, revision, status, TestUtils.getLevelTiles(tiles), levels);
                     });
 
             return this;
@@ -241,7 +240,7 @@ public class TestSteps {
                     .untilAsserted(() -> {
                         final List<Design> designs = actions.findDraftDesigns(designId);
                         assertThat(designs).hasSize(1);
-                        TestAssertions.assertExpectedDesign(designs.get(0), designId, commandId, userId, data, checksum, revision, status, tiles, levels);
+                        TestAssertions.assertExpectedDesign(designs.get(0), designId, commandId, userId, data, checksum, revision, status, TestUtils.getLevelTiles(tiles), levels);
                     });
 
             return this;

@@ -1,5 +1,6 @@
 module com.nextbreakpoint.blueprint.common.drivers {
     requires static com.nextbreakpoint.blueprint.common.core;
+    requires static com.nextbreakpoint.blueprint.confluent;
     requires static io.opentelemetry.semconv;
     requires static io.opentelemetry.context;
     requires static io.opentelemetry.sdk.common;

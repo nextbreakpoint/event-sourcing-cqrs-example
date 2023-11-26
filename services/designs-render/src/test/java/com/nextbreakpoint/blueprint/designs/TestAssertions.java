@@ -1,15 +1,15 @@
 package com.nextbreakpoint.blueprint.designs;
 
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
-import com.nextbreakpoint.blueprint.common.events.TileRenderCompleted;
-import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
+import com.nextbreakpoint.blueprint.common.events.avro.TileRenderCompleted;
+import com.nextbreakpoint.blueprint.common.events.avro.TileRenderRequested;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class TestAssertions {
     private TestAssertions() {}
 
-    public static void assertExpectedTileRenderCompletedMessage(InputMessage actualMessage, TileRenderRequested tileRenderRequested) {
+    public static void assertExpectedTileRenderCompletedMessage(InputMessage<Object> actualMessage, TileRenderRequested tileRenderRequested) {
         assertThat(actualMessage.getTimestamp()).isNotNull();
         assertThat(actualMessage.getKey()).isEqualTo(TestUtils.createRenderKey(tileRenderRequested));
         assertThat(actualMessage.getToken()).isNotNull();

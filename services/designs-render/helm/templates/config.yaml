@@ -23,6 +23,7 @@ data:
       "origin_pattern": "{{ $root.Values.clientProtocol | default "http" }}://{{ $root.Values.clientDomain | default "localhost" }}(:[0-9]+)?",
 
       "kafka_bootstrap_servers": {{ $root.Values.kafkaServers | default "kafka.platform:9094" | quote }},
+      "schema_registry_url": {{ $root.Values.schemaRegistryUrl | default "http://schema-registry.platform:8081" | quote }},
       "kafka_group_id": {{ $root.Values.kafkaGroupId | default "designs-render" | quote }},
       "message_source": {{ $root.Values.messageSource | default "service-designs" | quote }},
       "render_topic_prefix": {{ $root.Values.renderTopicPrefix | default "render" | quote }},

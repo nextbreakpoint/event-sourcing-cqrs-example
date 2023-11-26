@@ -2,18 +2,19 @@ package com.nextbreakpoint.blueprint.designs;
 
 import com.nextbreakpoint.blueprint.common.core.Image;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
+import com.nextbreakpoint.blueprint.common.core.Messages;
 import com.nextbreakpoint.blueprint.common.core.RxSingleHandler;
 import com.nextbreakpoint.blueprint.common.drivers.KafkaMessageEmitter;
-import com.nextbreakpoint.blueprint.common.events.mappers.DesignDocumentDeleteCompletedOutputMapper;
-import com.nextbreakpoint.blueprint.common.events.mappers.DesignDocumentDeleteRequestedInputMapper;
-import com.nextbreakpoint.blueprint.common.events.mappers.DesignDocumentUpdateCompletedOutputMapper;
-import com.nextbreakpoint.blueprint.common.events.mappers.DesignDocumentUpdateRequestedInputMapper;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignDocumentDeleteRequested;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignDocumentUpdateRequested;
+import com.nextbreakpoint.blueprint.common.events.avro.Payload;
 import com.nextbreakpoint.blueprint.common.vertx.ErrorConsumer;
 import com.nextbreakpoint.blueprint.common.vertx.JsonConsumer;
 import com.nextbreakpoint.blueprint.common.vertx.MessageConsumed;
 import com.nextbreakpoint.blueprint.common.vertx.MessageFailed;
 import com.nextbreakpoint.blueprint.common.vertx.NotFoundConsumer;
 import com.nextbreakpoint.blueprint.common.vertx.PNGConsumer;
+import com.nextbreakpoint.blueprint.common.vertx.Records;
 import com.nextbreakpoint.blueprint.common.vertx.TemplateHandler;
 import com.nextbreakpoint.blueprint.designs.common.S3Driver;
 import com.nextbreakpoint.blueprint.designs.controllers.DesignDocumentDeleteRequestedController;
@@ -74,33 +75,35 @@ public class Factory {
                 .build();
     }
 
-    public static RxSingleHandler<InputMessage, ?> createDesignDocumentUpdateRequestedHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
-        return TemplateHandler.<InputMessage, InputMessage, Void, Void>builder()
-                .withInputMapper(input -> input)
+    public static RxSingleHandler<InputMessage<Object>, Void> createDesignDocumentUpdateRequestedHandler(Store store, String topic, KafkaProducer<String, Payload> producer, String messageSource) {
+        return TemplateHandler.<InputMessage<Object>, InputMessage<DesignDocumentUpdateRequested>, Void, Void>builder()
+                .withInputMapper(message -> Messages.asSpecificMessage(message, data -> (DesignDocumentUpdateRequested) data))
                 .withOutputMapper(output -> output)
                 .withController(new DesignDocumentUpdateRequestedController(
+                        messageSource,
                         store,
-                        new DesignDocumentUpdateRequestedInputMapper(),
-                        new DesignDocumentUpdateCompletedOutputMapper(messageSource),
-                        new KafkaMessageEmitter(producer, BackendRegistries.getDefaultNow(), topic, 3)
+                        createEventMessageEmitter(producer, topic)
                 ))
-                .onSuccess(new MessageConsumed())
-                .onFailure(new MessageFailed())
+                .onSuccess(new MessageConsumed<>())
+                .onFailure(new MessageFailed<>())
                 .build();
     }
 
-    public static RxSingleHandler<InputMessage, ?> createDesignDocumentDeleteRequestedHandler(Store store, String topic, KafkaProducer<String, String> producer, String messageSource) {
-        return TemplateHandler.<InputMessage, InputMessage, Void, Void>builder()
-                .withInputMapper(input -> input)
+    public static RxSingleHandler<InputMessage<Object>, Void> createDesignDocumentDeleteRequestedHandler(Store store, String topic, KafkaProducer<String, Payload> producer, String messageSource) {
+        return TemplateHandler.<InputMessage<Object>, InputMessage<DesignDocumentDeleteRequested>, Void, Void>builder()
+                .withInputMapper(message -> Messages.asSpecificMessage(message, data -> (DesignDocumentDeleteRequested) data))
                 .withOutputMapper(output -> output)
                 .withController(new DesignDocumentDeleteRequestedController(
+                        messageSource,
                         store,
-                        new DesignDocumentDeleteRequestedInputMapper(),
-                        new DesignDocumentDeleteCompletedOutputMapper(messageSource),
-                        new KafkaMessageEmitter(producer, BackendRegistries.getDefaultNow(), topic, 3)
+                        createEventMessageEmitter(producer, topic)
                 ))
-                .onSuccess(new MessageConsumed())
-                .onFailure(new MessageFailed())
+                .onSuccess(new MessageConsumed<>())
+                .onFailure(new MessageFailed<>())
                 .build();
+    }
+
+    private static <T> KafkaMessageEmitter<Payload, T> createEventMessageEmitter(KafkaProducer<String, Payload> producer, String topic) {
+        return new KafkaMessageEmitter<>(producer, Records.createEventOutputRecordMapper(), BackendRegistries.getDefaultNow(), topic, 3);
     }
 }

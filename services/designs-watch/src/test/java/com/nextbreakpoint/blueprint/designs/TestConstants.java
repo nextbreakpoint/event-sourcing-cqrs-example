@@ -1,10 +1,13 @@
 package com.nextbreakpoint.blueprint.designs;
 
+import com.nextbreakpoint.blueprint.common.events.avro.DesignDocumentDeleteCompleted;
+import com.nextbreakpoint.blueprint.common.events.avro.DesignDocumentUpdateCompleted;
+
 import java.util.UUID;
 
 public interface TestConstants {
-    String DESIGN_DOCUMENT_UPDATE_COMPLETED = "design-document-update-completed-v1";
-    String DESIGN_DOCUMENT_DELETE_COMPLETED = "design-document-delete-completed-v1";
+    String DESIGN_DOCUMENT_UPDATE_COMPLETED = DesignDocumentUpdateCompleted.getClassSchema().getFullName();
+    String DESIGN_DOCUMENT_DELETE_COMPLETED = DesignDocumentDeleteCompleted.getClassSchema().getFullName();
 
     String MESSAGE_SOURCE = "service-designs";
     String EVENTS_TOPIC_NAME = "test-designs-watch-events";

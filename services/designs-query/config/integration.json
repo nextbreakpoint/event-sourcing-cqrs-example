@@ -12,6 +12,7 @@
   "elasticsearch_index": "${ELASTICSEARCH_INDEX}",
 
   "kafka_bootstrap_servers": "${KAFKA_HOST}:${KAFKA_PORT}",
+  "schema_registry_url": "http://${SCHEMA_REGISTRY_HOST}:${SCHEMA_REGISTRY_PORT}",
   "kafka_group_id": "designs-query",
   "message_source": "service-designs",
   "events_topic": "${EVENTS_TOPIC}",

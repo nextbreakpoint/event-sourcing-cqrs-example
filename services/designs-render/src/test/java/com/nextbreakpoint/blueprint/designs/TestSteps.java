@@ -1,10 +1,9 @@
 package com.nextbreakpoint.blueprint.designs;
 
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
-import com.nextbreakpoint.blueprint.common.core.Json;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
-import com.nextbreakpoint.blueprint.common.events.TileRenderCompleted;
-import com.nextbreakpoint.blueprint.common.events.TileRenderRequested;
+import com.nextbreakpoint.blueprint.common.events.avro.TileRenderCompleted;
+import com.nextbreakpoint.blueprint.common.events.avro.TileRenderRequested;
 import com.nextbreakpoint.blueprint.common.test.TestContext;
 import com.nextbreakpoint.blueprint.designs.TestActions.Source;
 import org.awaitility.Awaitility;
@@ -58,8 +57,8 @@ public class TestSteps {
             return new Whens(context, actions);
         }
 
-        public Givens theTileRenderRequestedMessage(OutputMessage message) {
-            final TileRenderRequested tileRenderRequested = Json.decodeValue(message.getValue().getData(), TileRenderRequested.class);
+        public Givens theTileRenderRequestedMessage(OutputMessage<TileRenderRequested> message) {
+            final TileRenderRequested tileRenderRequested = message.getValue().getData();
             context.putObject("designId", tileRenderRequested.getDesignId());
             context.putObject(tileRenderRequested.getDesignId() + ".commandId", tileRenderRequested.getCommandId());
             context.putObject(tileRenderRequested.getDesignId() + ".data", tileRenderRequested.getData());
@@ -100,7 +99,7 @@ public class TestSteps {
         }
 
         public Whens publishTheMessage(Source source, Function<String, String> topicMapper) {
-            final OutputMessage message = (OutputMessage) context.getObject("message");
+            final OutputMessage<Object> message = (OutputMessage<Object>) context.getObject("message");
             actions.emitMessage(source, message, topicMapper);
             context.putObject("outputMessage", message);
             return this;
@@ -148,10 +147,10 @@ public class TestSteps {
             return this;
         }
 
-        private Thens manyMessagesShouldBePublished(Source source, String messageType, Predicate<String> keyPredicate, Predicate<InputMessage> messagePredicate, int count) {
+        private Thens manyMessagesShouldBePublished(Source source, String messageType, Predicate<String> keyPredicate, Predicate<InputMessage<Object>> messagePredicate, int count) {
             defaultAwait()
                     .untilAsserted(() -> {
-                        final List<InputMessage> messages = actions.findMessages(source, MESSAGE_SOURCE, messageType, keyPredicate, messagePredicate);
+                        final List<InputMessage<Object>> messages = actions.findMessages(source, MESSAGE_SOURCE, messageType, keyPredicate, messagePredicate);
                         assertThat(messages).hasSize(count);
                         context.putObject("messages", messages);
                     });
@@ -160,8 +159,8 @@ public class TestSteps {
         }
 
         public Thens theTileRenderCompletedMessageShouldHaveExpectedValues() {
-            var lastMessage = (OutputMessage) context.getObject("outputMessage");
-            var messages = (List<InputMessage>) context.getObject("messages");
+            var lastMessage = (OutputMessage<Object>) context.getObject("outputMessage");
+            var messages = (List<InputMessage<Object>>) context.getObject("messages");
 
             defaultAwait()
                     .untilAsserted(() -> {
@@ -173,13 +172,13 @@ public class TestSteps {
         }
 
         public Thens theTileRenderCompletedEventShouldHaveExpectedValues() {
-            var lastMessage = (OutputMessage) context.getObject("outputMessage");
-            var messages = (List<InputMessage>) context.getObject("messages");
+            var lastMessage = (OutputMessage<Object>) context.getObject("outputMessage");
+            var messages = (List<InputMessage<Object>>) context.getObject("messages");
 
             defaultAwait()
                     .untilAsserted(() -> {
                         final TileRenderRequested tileRenderRequested = TestUtils.extractTileRenderRequestedEvent(lastMessage);
-                        TileRenderCompleted tileRenderCompleted = Json.decodeValue(messages.get(0).getValue().getData(), TileRenderCompleted.class);
+                        TileRenderCompleted tileRenderCompleted = (TileRenderCompleted) messages.get(0).getValue().getData();
                         TestAssertions.assertExpectedTileRenderCompletedEvent(tileRenderCompleted, tileRenderRequested);
                     });
 
@@ -187,7 +186,7 @@ public class TestSteps {
         }
 
         public Thens theImageShouldHasBeenCreated() {
-            var lastMessage = (OutputMessage) context.getObject("outputMessage");
+            var lastMessage = (OutputMessage<Object>) context.getObject("outputMessage");
             var tileRenderRequested = TestUtils.extractTileRenderRequestedEvent(lastMessage);
             var bytes = actions.getImage(TestUtils.createBucketKey(tileRenderRequested));
             assertThat(bytes).isNotEmpty();

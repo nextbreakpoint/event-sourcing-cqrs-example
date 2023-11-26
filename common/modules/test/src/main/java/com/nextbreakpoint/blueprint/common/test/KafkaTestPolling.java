@@ -1,8 +1,8 @@
 package com.nextbreakpoint.blueprint.common.test;
 
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
-import com.nextbreakpoint.blueprint.common.core.Json;
-import com.nextbreakpoint.blueprint.common.core.Payload;
+import com.nextbreakpoint.blueprint.common.core.InputRecord;
+import com.nextbreakpoint.blueprint.common.core.Mapper;
 import com.nextbreakpoint.blueprint.common.core.Token;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -16,33 +16,36 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-public class KafkaTestPolling {
-    private final List<InputMessage> messages = new ArrayList<>();
+public class KafkaTestPolling<T, R> {
+    private final List<InputMessage<T>> messages = new ArrayList<>();
 
-    private final KafkaConsumer<String, String> kafkaConsumer;
+    private final KafkaConsumer<String, R> kafkaConsumer;
 
-    private Set<String> topicNames;
+    private final Mapper<ConsumerRecord<String, R>, InputRecord<T>> recordMapper;
+
+    private final Set<String> topicNames;
 
     private Thread pollingThread;
 
-    public KafkaTestPolling(KafkaConsumer<String, String> kafkaConsumer, String topicName) {
-        this(kafkaConsumer, Set.of(topicName));
+    public KafkaTestPolling(KafkaConsumer<String, R> kafkaConsumer, Mapper<ConsumerRecord<String, R>, InputRecord<T>> recordMapper, String topicName) {
+        this(kafkaConsumer, recordMapper, Set.of(topicName));
     }
 
-    public KafkaTestPolling(KafkaConsumer<String, String> kafkaConsumer, Set<String> topicNames) {
+    public KafkaTestPolling(KafkaConsumer<String, R> kafkaConsumer, Mapper<ConsumerRecord<String, R>, InputRecord<T>> recordMapper, Set<String> topicNames) {
         this.kafkaConsumer = kafkaConsumer;
+        this.recordMapper = recordMapper;
         this.topicNames = topicNames;
     }
 
-    public List<InputMessage> findMessages(String messageSource, String messageType, String partitionKey) {
+    public List<InputMessage<T>> findMessages(String messageSource, String messageType, String partitionKey) {
         return findMessages(messageSource, messageType, key -> key.equals(partitionKey));
     }
 
-    public List<InputMessage> findMessages(String messageSource, String messageType, Predicate<String> keyPredicate) {
+    public List<InputMessage<T>> findMessages(String messageSource, String messageType, Predicate<String> keyPredicate) {
         return findMessages(messageSource, messageType, keyPredicate, (message) -> true);
     }
 
-    public List<InputMessage> findMessages(String messageSource, String messageType, Predicate<String> keyPredicate, Predicate<InputMessage> messagePredicate) {
+    public List<InputMessage<T>> findMessages(String messageSource, String messageType, Predicate<String> keyPredicate, Predicate<InputMessage<T>> messagePredicate) {
         synchronized (messages) {
             return messages.stream()
                     .filter(message -> message.getValue().getSource().equals(messageSource))
@@ -71,7 +74,7 @@ public class KafkaTestPolling {
 
             while (!Thread.currentThread().isInterrupted()) {
                 try {
-                    ConsumerRecords<String, String> records = kafkaConsumer.poll(Duration.ofSeconds(10));
+                    ConsumerRecords<String, R> records = kafkaConsumer.poll(Duration.ofSeconds(10));
 
                     System.out.println("Received " + records.count() + " messages");
 
@@ -108,7 +111,7 @@ public class KafkaTestPolling {
         }
     }
 
-    private void consumeMessages(ConsumerRecords<String, String> consumerRecords) {
+    private void consumeMessages(ConsumerRecords<String, R> consumerRecords) {
         StreamSupport.stream(consumerRecords.spliterator(), false)
                 .filter(record -> record.value() != null)
                 .map(this::convertToMessage)
@@ -116,15 +119,20 @@ public class KafkaTestPolling {
                 .forEach(this::appendMessage);
     }
 
-    private InputMessage convertToMessage(ConsumerRecord<String, String> record) {
-        final Payload payload = Json.decodeValue(record.value(), Payload.class);
+    private InputMessage<T> convertToMessage(ConsumerRecord<String, R> consumerRecord) {
+        final InputRecord<T> record = recordMapper.transform(consumerRecord);
 
-        final String token = Token.from(record.timestamp(), record.offset());
+        final String token = Token.from(record.getTimestamp(), record.getOffset());
 
-        return new InputMessage(record.key(), token, payload, record.timestamp());
+        return InputMessage.<T>builder()
+                .withKey(record.getKey())
+                .withToken(token)
+                .withValue(record.getPayloadV2())
+                .withTimestamp(record.getTimestamp())
+                .build();
     }
 
-    private void appendMessage(InputMessage message) {
+    private void appendMessage(InputMessage<T> message) {
         synchronized (messages) {
             messages.add(message);
         }

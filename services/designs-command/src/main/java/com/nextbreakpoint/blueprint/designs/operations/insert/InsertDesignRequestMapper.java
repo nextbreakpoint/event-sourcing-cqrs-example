@@ -9,18 +9,22 @@ import java.util.UUID;
 public class InsertDesignRequestMapper implements Mapper<RoutingContext, InsertDesignRequest> {
     @Override
     public InsertDesignRequest transform(RoutingContext context) {
-        final JsonObject bodyAsJson = context.getBodyAsJson();
+        if (context.user() == null) {
+            throw new IllegalStateException("the user is not authenticated");
+        }
 
-        if (bodyAsJson == null) {
+        if (context.body() == null) {
             throw new IllegalStateException("the request's body is not defined");
         }
+
+        final JsonObject bodyAsJson = context.body().asJsonObject();
 
         final String manifest = bodyAsJson.getString("manifest");
         final String metadata = bodyAsJson.getString("metadata");
         final String script = bodyAsJson.getString("script");
 
         if (manifest == null || metadata == null || script == null) {
-            throw new IllegalArgumentException("the request's body doesn't contain the required properties: manifest, metadata, script");
+            throw new IllegalStateException("the request's body doesn't contain the required properties: manifest, metadata, script");
         }
 
         final String json = new JsonObject()

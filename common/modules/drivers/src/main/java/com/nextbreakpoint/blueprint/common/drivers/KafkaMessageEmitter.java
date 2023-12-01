@@ -119,7 +119,7 @@ public class KafkaMessageEmitter<T, R> implements MessageEmitter<R> {
         final OutputRecord<R> record = OutputRecord.<R>builder()
                 .withKey(message.getKey())
                 .withTopicName(topicName)
-                .withPayloadV2(message.getValue())
+                .withPayload(message.getValue())
                 .withHeaders(recordHeaders)
                 .build();
 

@@ -1,7 +1,6 @@
 package com.nextbreakpoint.blueprint.designs.controllers;
 
 import com.nextbreakpoint.blueprint.common.core.Checksum;
-import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.core.MessageEmitter;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.events.avro.DesignAggregateStatus;
@@ -10,8 +9,7 @@ import com.nextbreakpoint.blueprint.common.events.avro.DesignDeleteRequested;
 import com.nextbreakpoint.blueprint.common.events.avro.DesignInsertRequested;
 import com.nextbreakpoint.blueprint.common.events.avro.DesignUpdateRequested;
 import com.nextbreakpoint.blueprint.common.events.avro.TileRenderRequested;
-import com.nextbreakpoint.blueprint.designs.TestConstants;
-import com.nextbreakpoint.blueprint.designs.TestUtils;
+import com.nextbreakpoint.blueprint.designs.TestFactory;
 import com.nextbreakpoint.blueprint.designs.aggregate.DesignEventStore;
 import com.nextbreakpoint.blueprint.designs.common.Bitmap;
 import com.nextbreakpoint.blueprint.designs.common.Render;
@@ -35,12 +33,8 @@ import static com.nextbreakpoint.blueprint.designs.TestConstants.COMMAND_ID_2;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.COMMAND_ID_3;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.DATA_1;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.DATA_2;
-import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_AGGREGATE_UPDATED;
-import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_DELETE_REQUESTED;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_ID_1;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_ID_2;
-import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_INSERT_REQUESTED;
-import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_UPDATE_REQUESTED;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.LEVELS_DRAFT;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.LEVELS_READY;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.MESSAGE_SOURCE;
@@ -69,17 +63,17 @@ class DesignUpdateControllerTest {
     private final MessageEmitter<TileRenderRequested> renderEmitter = mock();
     private final DesignEventStore eventStore = mock();
 
-    private final DesignUpdateController.DesignInsertRequestedController insertController = new DesignUpdateController.DesignInsertRequestedController(TestConstants.MESSAGE_SOURCE, eventStore, updateEmitter, renderEmitter);
-    private final DesignUpdateController.DesignUpdateRequestedController updateController = new DesignUpdateController.DesignUpdateRequestedController(TestConstants.MESSAGE_SOURCE, eventStore, updateEmitter, renderEmitter);
-    private final DesignUpdateController.DesignDeleteRequestedController deleteController = new DesignUpdateController.DesignDeleteRequestedController(TestConstants.MESSAGE_SOURCE, eventStore, updateEmitter, renderEmitter);
+    private final DesignUpdateController.DesignInsertRequestedController insertController = new DesignUpdateController.DesignInsertRequestedController(MESSAGE_SOURCE, eventStore, updateEmitter, renderEmitter);
+    private final DesignUpdateController.DesignUpdateRequestedController updateController = new DesignUpdateController.DesignUpdateRequestedController(MESSAGE_SOURCE, eventStore, updateEmitter, renderEmitter);
+    private final DesignUpdateController.DesignDeleteRequestedController deleteController = new DesignUpdateController.DesignDeleteRequestedController(MESSAGE_SOURCE, eventStore, updateEmitter, renderEmitter);
 
     @Nested
     class InsertController {
         @Test
         void shouldPublishMessagesToInformThatTheDesignAggregateHasChangedAndRequestTheRenderingOf21Tiles() {
             final var design = aDesign(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1, REVISION_1, "CREATED", LEVELS_DRAFT, Bitmap.empty(), dateTime.minusHours(2), dateTime.minusMinutes(3));
-            final var inputMessage = DesignInsertRequestedFactory.createInputMessage(aMessageId(), REVISION_1, dateTime.minusMinutes(3), aDesignInsertRequested(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1));
-            final var expectedOutputMessage = DesignAggregateUpdatedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aDesignAggregateUpdated(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, REVISION_1, DATA_1, LEVELS_DRAFT, Bitmap.empty(), false, "CREATED", dateTime.minusHours(2), dateTime.minusMinutes(3)));
+            final var inputMessage = TestFactory.createInputMessage(aMessageId(), REVISION_1, dateTime.minusMinutes(3), aDesignInsertRequested(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1));
+            final var expectedOutputMessage = TestFactory.createOutputMessage(aMessageId(), aDesignAggregateUpdated(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, REVISION_1, DATA_1, LEVELS_DRAFT, Bitmap.empty(), false, "CREATED", dateTime.minusHours(2), dateTime.minusMinutes(3)));
 
             when(eventStore.appendMessage(inputMessage)).thenReturn(Single.just(null));
             when(eventStore.projectDesign(design.getDesignId(), inputMessage.getToken())).thenReturn(Single.just(Optional.of(design)));
@@ -124,7 +118,7 @@ class DesignUpdateControllerTest {
             when(mockedEmitter.send(any(OutputMessage.class))).thenReturn(Single.error(exception));
 
             final var design = aDesign(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1, REVISION_1, "CREATED", LEVELS_DRAFT, Bitmap.empty(), dateTime.minusHours(2), dateTime.minusMinutes(3));
-            final var inputMessage = DesignInsertRequestedFactory.createInputMessage(aMessageId(), REVISION_1, dateTime.minusMinutes(3), aDesignInsertRequested(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1));
+            final var inputMessage = TestFactory.createInputMessage(aMessageId(), REVISION_1, dateTime.minusMinutes(3), aDesignInsertRequested(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1));
 
             when(eventStore.appendMessage(inputMessage)).thenReturn(Single.just(null));
             when(eventStore.projectDesign(design.getDesignId(), inputMessage.getToken())).thenReturn(Single.just(Optional.of(design)));
@@ -132,7 +126,7 @@ class DesignUpdateControllerTest {
             when(renderEmitter.getTopicName()).thenReturn("render");
             when(renderEmitter.send(any(), any())).thenReturn(Single.just(null));
 
-            final var insertController = new DesignUpdateController.DesignInsertRequestedController(TestConstants.MESSAGE_SOURCE, eventStore, mockedEmitter, renderEmitter);
+            final var insertController = new DesignUpdateController.DesignInsertRequestedController(MESSAGE_SOURCE, eventStore, mockedEmitter, renderEmitter);
 
             assertThatThrownBy(() -> insertController.onNext(inputMessage).toCompletable().await()).isEqualTo(exception);
 
@@ -154,15 +148,15 @@ class DesignUpdateControllerTest {
             when(mockedEmitter.send(any(OutputMessage.class), anyString())).thenReturn(Single.error(exception));
 
             final var design = aDesign(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1, REVISION_1, "CREATED", LEVELS_DRAFT, Bitmap.empty(), dateTime.minusHours(2), dateTime.minusMinutes(3));
-            final var inputMessage = DesignInsertRequestedFactory.createInputMessage(aMessageId(), REVISION_1, dateTime.minusMinutes(3), aDesignInsertRequested(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1));
-            final var expectedOutputMessage = DesignAggregateUpdatedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aDesignAggregateUpdated(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, REVISION_1, DATA_1, LEVELS_DRAFT, Bitmap.empty(), false, "CREATED", dateTime.minusHours(2), dateTime.minusMinutes(3)));
+            final var inputMessage = TestFactory.createInputMessage(aMessageId(), REVISION_1, dateTime.minusMinutes(3), aDesignInsertRequested(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1));
+            final var expectedOutputMessage = TestFactory.createOutputMessage(aMessageId(), aDesignAggregateUpdated(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, REVISION_1, DATA_1, LEVELS_DRAFT, Bitmap.empty(), false, "CREATED", dateTime.minusHours(2), dateTime.minusMinutes(3)));
 
             when(eventStore.appendMessage(inputMessage)).thenReturn(Single.just(null));
             when(eventStore.projectDesign(design.getDesignId(), inputMessage.getToken())).thenReturn(Single.just(Optional.of(design)));
             when(eventStore.updateDesign(design)).thenReturn(Single.just(Optional.of(design)));
             when(updateEmitter.send(any())).thenReturn(Single.just(null));
 
-            final var insertController = new DesignUpdateController.DesignInsertRequestedController(TestConstants.MESSAGE_SOURCE, eventStore, updateEmitter, mockedEmitter);
+            final var insertController = new DesignUpdateController.DesignInsertRequestedController(MESSAGE_SOURCE, eventStore, updateEmitter, mockedEmitter);
 
             assertThatThrownBy(() -> insertController.onNext(inputMessage).toCompletable().await()).isEqualTo(exception);
 
@@ -190,9 +184,9 @@ class DesignUpdateControllerTest {
             final RuntimeException exception = new RuntimeException();
             when(eventStore.appendMessage(any())).thenReturn(Single.error(exception));
 
-            final var inputMessage = DesignInsertRequestedFactory.createInputMessage(aMessageId(), REVISION_1, dateTime.minusMinutes(3), aDesignInsertRequested(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1));
+            final var inputMessage = TestFactory.createInputMessage(aMessageId(), REVISION_1, dateTime.minusMinutes(3), aDesignInsertRequested(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1));
 
-            final var insertController = new DesignUpdateController.DesignInsertRequestedController(TestConstants.MESSAGE_SOURCE, eventStore, updateEmitter, renderEmitter);
+            final var insertController = new DesignUpdateController.DesignInsertRequestedController(MESSAGE_SOURCE, eventStore, updateEmitter, renderEmitter);
 
             assertThatThrownBy(() -> insertController.onNext(inputMessage).toCompletable().await()).isEqualTo(exception);
 
@@ -206,13 +200,13 @@ class DesignUpdateControllerTest {
         @Test
         void shouldReturnErrorWhenEventStoreCannotProjectDesign() {
             final var design = aDesign(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1, REVISION_1, "CREATED", LEVELS_DRAFT, Bitmap.empty(), dateTime.minusHours(2), dateTime.minusMinutes(3));
-            final var inputMessage = DesignInsertRequestedFactory.createInputMessage(aMessageId(), REVISION_1, dateTime.minusMinutes(3), aDesignInsertRequested(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1));
+            final var inputMessage = TestFactory.createInputMessage(aMessageId(), REVISION_1, dateTime.minusMinutes(3), aDesignInsertRequested(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1));
 
             final RuntimeException exception = new RuntimeException();
             when(eventStore.appendMessage(inputMessage)).thenReturn(Single.just(null));
             when(eventStore.projectDesign(design.getDesignId(), inputMessage.getToken())).thenReturn(Single.error(exception));
 
-            final var insertController = new DesignUpdateController.DesignInsertRequestedController(TestConstants.MESSAGE_SOURCE, eventStore, updateEmitter, renderEmitter);
+            final var insertController = new DesignUpdateController.DesignInsertRequestedController(MESSAGE_SOURCE, eventStore, updateEmitter, renderEmitter);
 
             assertThatThrownBy(() -> insertController.onNext(inputMessage).toCompletable().await()).isEqualTo(exception);
 
@@ -227,14 +221,14 @@ class DesignUpdateControllerTest {
         @Test
         void shouldReturnErrorWhenEventStoreCannotUpdateDesign() {
             final var design = aDesign(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1, REVISION_1, "CREATED", LEVELS_DRAFT, Bitmap.empty(), dateTime.minusHours(2), dateTime.minusMinutes(3));
-            final var inputMessage = DesignInsertRequestedFactory.createInputMessage(aMessageId(), REVISION_1, dateTime.minusMinutes(3), aDesignInsertRequested(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1));
+            final var inputMessage = TestFactory.createInputMessage(aMessageId(), REVISION_1, dateTime.minusMinutes(3), aDesignInsertRequested(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1));
 
             final RuntimeException exception = new RuntimeException();
             when(eventStore.appendMessage(inputMessage)).thenReturn(Single.just(null));
             when(eventStore.projectDesign(design.getDesignId(), inputMessage.getToken())).thenReturn(Single.just(Optional.of(design)));
             when(eventStore.updateDesign(design)).thenReturn(Single.error(exception));
 
-            final var insertController = new DesignUpdateController.DesignInsertRequestedController(TestConstants.MESSAGE_SOURCE, eventStore, updateEmitter, renderEmitter);
+            final var insertController = new DesignUpdateController.DesignInsertRequestedController(MESSAGE_SOURCE, eventStore, updateEmitter, renderEmitter);
 
             assertThatThrownBy(() -> insertController.onNext(inputMessage).toCompletable().await()).isEqualTo(exception);
 
@@ -253,8 +247,8 @@ class DesignUpdateControllerTest {
         @Test
         void shouldPublishMessagesToInformThatTheDesignAggregateHasChangedAndRequestTheRenderingOf21Tiles() {
             final var design = aDesign(DESIGN_ID_1, COMMAND_ID_2, USER_ID_1, DATA_2, REVISION_2, "UPDATED", LEVELS_DRAFT, Bitmap.empty(), dateTime.minusHours(2), dateTime.minusMinutes(3));
-            final var inputMessage = DesignUpdateRequestedFactory.createInputMessage(aMessageId(), REVISION_2, dateTime.minusMinutes(3), aDesignUpdateRequested(DESIGN_ID_1, COMMAND_ID_2, USER_ID_1, DATA_2, false));
-            final var expectedOutputMessage = DesignAggregateUpdatedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aDesignAggregateUpdated(DESIGN_ID_1, COMMAND_ID_2, USER_ID_1, REVISION_2, DATA_2, LEVELS_DRAFT, Bitmap.empty(), false, "UPDATED", dateTime.minusHours(2), dateTime.minusMinutes(3)));
+            final var inputMessage = TestFactory.createInputMessage(aMessageId(), REVISION_2, dateTime.minusMinutes(3), aDesignUpdateRequested(DESIGN_ID_1, COMMAND_ID_2, USER_ID_1, DATA_2, false));
+            final var expectedOutputMessage = TestFactory.createOutputMessage(aMessageId(), aDesignAggregateUpdated(DESIGN_ID_1, COMMAND_ID_2, USER_ID_1, REVISION_2, DATA_2, LEVELS_DRAFT, Bitmap.empty(), false, "UPDATED", dateTime.minusHours(2), dateTime.minusMinutes(3)));
 
             when(eventStore.appendMessage(inputMessage)).thenReturn(Single.just(null));
             when(eventStore.projectDesign(design.getDesignId(), inputMessage.getToken())).thenReturn(Single.just(Optional.of(design)));
@@ -295,8 +289,8 @@ class DesignUpdateControllerTest {
         @Test
         void shouldPublishMessagesToInformThatTheDesignAggregateHasChangedAndRequestTheRenderingOf21TilesRegardlessOfTheNumberOfLevels() {
             final var design = aDesign(DESIGN_ID_1, COMMAND_ID_2, USER_ID_1, DATA_2, REVISION_2, "UPDATED", LEVELS_READY, Bitmap.empty(), dateTime.minusHours(2), dateTime.minusMinutes(3));
-            final var inputMessage = DesignUpdateRequestedFactory.createInputMessage(aMessageId(), REVISION_2, dateTime.minusMinutes(3), aDesignUpdateRequested(DESIGN_ID_1, COMMAND_ID_2, USER_ID_1, DATA_2, true));
-            final var expectedOutputMessage = DesignAggregateUpdatedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aDesignAggregateUpdated(DESIGN_ID_1, COMMAND_ID_2, USER_ID_1, REVISION_2, DATA_2, LEVELS_READY, Bitmap.empty(), true, "UPDATED", dateTime.minusHours(2), dateTime.minusMinutes(3)));
+            final var inputMessage = TestFactory.createInputMessage(aMessageId(), REVISION_2, dateTime.minusMinutes(3), aDesignUpdateRequested(DESIGN_ID_1, COMMAND_ID_2, USER_ID_1, DATA_2, true));
+            final var expectedOutputMessage = TestFactory.createOutputMessage(aMessageId(), aDesignAggregateUpdated(DESIGN_ID_1, COMMAND_ID_2, USER_ID_1, REVISION_2, DATA_2, LEVELS_READY, Bitmap.empty(), true, "UPDATED", dateTime.minusHours(2), dateTime.minusMinutes(3)));
 
             when(eventStore.appendMessage(inputMessage)).thenReturn(Single.just(null));
             when(eventStore.projectDesign(design.getDesignId(), inputMessage.getToken())).thenReturn(Single.just(Optional.of(design)));
@@ -341,7 +335,7 @@ class DesignUpdateControllerTest {
             when(mockedEmitter.send(any(OutputMessage.class))).thenReturn(Single.error(exception));
 
             final var design = aDesign(DESIGN_ID_1, COMMAND_ID_2, USER_ID_1, DATA_2, REVISION_2, "UPDATED", LEVELS_DRAFT, Bitmap.empty(), dateTime.minusHours(2), dateTime.minusMinutes(3));
-            final var inputMessage = DesignUpdateRequestedFactory.createInputMessage(aMessageId(), REVISION_2, dateTime.minusMinutes(3), aDesignUpdateRequested(DESIGN_ID_1, COMMAND_ID_2, USER_ID_1, DATA_2, false));
+            final var inputMessage = TestFactory.createInputMessage(aMessageId(), REVISION_2, dateTime.minusMinutes(3), aDesignUpdateRequested(DESIGN_ID_1, COMMAND_ID_2, USER_ID_1, DATA_2, false));
 
             when(eventStore.appendMessage(inputMessage)).thenReturn(Single.just(null));
             when(eventStore.projectDesign(design.getDesignId(), inputMessage.getToken())).thenReturn(Single.just(Optional.of(design)));
@@ -349,7 +343,7 @@ class DesignUpdateControllerTest {
             when(renderEmitter.getTopicName()).thenReturn("render");
             when(renderEmitter.send(any(), any())).thenReturn(Single.just(null));
 
-            final var updateController = new DesignUpdateController.DesignUpdateRequestedController(TestConstants.MESSAGE_SOURCE, eventStore, mockedEmitter, renderEmitter);
+            final var updateController = new DesignUpdateController.DesignUpdateRequestedController(MESSAGE_SOURCE, eventStore, mockedEmitter, renderEmitter);
 
             assertThatThrownBy(() -> updateController.onNext(inputMessage).toCompletable().await()).isEqualTo(exception);
 
@@ -371,15 +365,15 @@ class DesignUpdateControllerTest {
             when(mockedEmitter.send(any(OutputMessage.class), anyString())).thenReturn(Single.error(exception));
 
             final var design = aDesign(DESIGN_ID_1, COMMAND_ID_2, USER_ID_1, DATA_2, REVISION_2, "UPDATED", LEVELS_DRAFT, Bitmap.empty(), dateTime.minusHours(2), dateTime.minusMinutes(3));
-            final var inputMessage = DesignUpdateRequestedFactory.createInputMessage(aMessageId(), REVISION_2, dateTime.minusMinutes(3), aDesignUpdateRequested(DESIGN_ID_1, COMMAND_ID_2, USER_ID_1, DATA_2, false));
-            final var expectedOutputMessage = DesignAggregateUpdatedFactory.createOutputMessage(DESIGN_ID_1, aMessageId(), aDesignAggregateUpdated(DESIGN_ID_1, COMMAND_ID_2, USER_ID_1, REVISION_2, DATA_2, LEVELS_DRAFT, Bitmap.empty(), false, "UPDATED", dateTime.minusHours(2), dateTime.minusMinutes(3)));
+            final var inputMessage = TestFactory.createInputMessage(aMessageId(), REVISION_2, dateTime.minusMinutes(3), aDesignUpdateRequested(DESIGN_ID_1, COMMAND_ID_2, USER_ID_1, DATA_2, false));
+            final var expectedOutputMessage = TestFactory.createOutputMessage(aMessageId(), aDesignAggregateUpdated(DESIGN_ID_1, COMMAND_ID_2, USER_ID_1, REVISION_2, DATA_2, LEVELS_DRAFT, Bitmap.empty(), false, "UPDATED", dateTime.minusHours(2), dateTime.minusMinutes(3)));
 
             when(eventStore.appendMessage(inputMessage)).thenReturn(Single.just(null));
             when(eventStore.projectDesign(design.getDesignId(), inputMessage.getToken())).thenReturn(Single.just(Optional.of(design)));
             when(eventStore.updateDesign(design)).thenReturn(Single.just(Optional.of(design)));
             when(updateEmitter.send(any())).thenReturn(Single.just(null));
 
-            final var updateController = new DesignUpdateController.DesignUpdateRequestedController(TestConstants.MESSAGE_SOURCE, eventStore, updateEmitter, mockedEmitter);
+            final var updateController = new DesignUpdateController.DesignUpdateRequestedController(MESSAGE_SOURCE, eventStore, updateEmitter, mockedEmitter);
 
             assertThatThrownBy(() -> updateController.onNext(inputMessage).toCompletable().await()).isEqualTo(exception);
 
@@ -407,9 +401,9 @@ class DesignUpdateControllerTest {
             final RuntimeException exception = new RuntimeException();
             when(eventStore.appendMessage(any())).thenReturn(Single.error(exception));
 
-            final var inputMessage = DesignUpdateRequestedFactory.createInputMessage(aMessageId(), REVISION_2, dateTime.minusMinutes(3), aDesignUpdateRequested(DESIGN_ID_1, COMMAND_ID_2, USER_ID_1, DATA_2, false));
+            final var inputMessage = TestFactory.createInputMessage(aMessageId(), REVISION_2, dateTime.minusMinutes(3), aDesignUpdateRequested(DESIGN_ID_1, COMMAND_ID_2, USER_ID_1, DATA_2, false));
 
-            final var updateController = new DesignUpdateController.DesignUpdateRequestedController(TestConstants.MESSAGE_SOURCE, eventStore, updateEmitter, renderEmitter);
+            final var updateController = new DesignUpdateController.DesignUpdateRequestedController(MESSAGE_SOURCE, eventStore, updateEmitter, renderEmitter);
 
             assertThatThrownBy(() -> updateController.onNext(inputMessage).toCompletable().await()).isEqualTo(exception);
 
@@ -423,13 +417,13 @@ class DesignUpdateControllerTest {
         @Test
         void shouldReturnErrorWhenEventStoreCannotProjectDesign() {
             final var design = aDesign(DESIGN_ID_1, COMMAND_ID_2, USER_ID_1, DATA_2, REVISION_2, "UPDATED", LEVELS_DRAFT, Bitmap.empty(), dateTime.minusHours(2), dateTime.minusMinutes(3));
-            final var inputMessage = DesignUpdateRequestedFactory.createInputMessage(aMessageId(), REVISION_2, dateTime.minusMinutes(3), aDesignUpdateRequested(DESIGN_ID_1, COMMAND_ID_2, USER_ID_1, DATA_2, false));
+            final var inputMessage = TestFactory.createInputMessage(aMessageId(), REVISION_2, dateTime.minusMinutes(3), aDesignUpdateRequested(DESIGN_ID_1, COMMAND_ID_2, USER_ID_1, DATA_2, false));
 
             final RuntimeException exception = new RuntimeException();
             when(eventStore.appendMessage(inputMessage)).thenReturn(Single.just(null));
             when(eventStore.projectDesign(design.getDesignId(), inputMessage.getToken())).thenReturn(Single.error(exception));
 
-            final var updateController = new DesignUpdateController.DesignUpdateRequestedController(TestConstants.MESSAGE_SOURCE, eventStore, updateEmitter, renderEmitter);
+            final var updateController = new DesignUpdateController.DesignUpdateRequestedController(MESSAGE_SOURCE, eventStore, updateEmitter, renderEmitter);
 
             assertThatThrownBy(() -> updateController.onNext(inputMessage).toCompletable().await()).isEqualTo(exception);
 
@@ -444,14 +438,14 @@ class DesignUpdateControllerTest {
         @Test
         void shouldReturnErrorWhenEventStoreCannotUpdateDesign() {
             final var design = aDesign(DESIGN_ID_1, COMMAND_ID_2, USER_ID_1, DATA_2, REVISION_2, "UPDATED", LEVELS_DRAFT, Bitmap.empty(), dateTime.minusHours(2), dateTime.minusMinutes(3));
-            final var inputMessage = DesignUpdateRequestedFactory.createInputMessage(aMessageId(), REVISION_2, dateTime.minusMinutes(3), aDesignUpdateRequested(DESIGN_ID_1, COMMAND_ID_2, USER_ID_1, DATA_2, false));
+            final var inputMessage = TestFactory.createInputMessage(aMessageId(), REVISION_2, dateTime.minusMinutes(3), aDesignUpdateRequested(DESIGN_ID_1, COMMAND_ID_2, USER_ID_1, DATA_2, false));
 
             final RuntimeException exception = new RuntimeException();
             when(eventStore.appendMessage(inputMessage)).thenReturn(Single.just(null));
             when(eventStore.projectDesign(design.getDesignId(), inputMessage.getToken())).thenReturn(Single.just(Optional.of(design)));
             when(eventStore.updateDesign(design)).thenReturn(Single.error(exception));
 
-            final var updateController = new DesignUpdateController.DesignUpdateRequestedController(TestConstants.MESSAGE_SOURCE, eventStore, updateEmitter, renderEmitter);
+            final var updateController = new DesignUpdateController.DesignUpdateRequestedController(MESSAGE_SOURCE, eventStore, updateEmitter, renderEmitter);
 
             assertThatThrownBy(() -> updateController.onNext(inputMessage).toCompletable().await()).isEqualTo(exception);
 
@@ -470,8 +464,8 @@ class DesignUpdateControllerTest {
         @Test
         void shouldPublishMessagesToInformThatTheDesignAggregateHasChanged() {
             final var design = aDesign(DESIGN_ID_2, COMMAND_ID_3, USER_ID_2, DATA_2, REVISION_2, "DELETED", LEVELS_DRAFT, Bitmap.empty(), dateTime.minusHours(2), dateTime.minusMinutes(3));
-            final var inputMessage = DesignDeleteRequestedFactory.createInputMessage(aMessageId(), REVISION_2, dateTime.minusMinutes(1), aDesignDeleteRequested(DESIGN_ID_2, COMMAND_ID_3, USER_ID_2));
-            final var expectedOutputMessage = DesignAggregateUpdatedFactory.createOutputMessage(DESIGN_ID_2, aMessageId(), aDesignAggregateUpdated(DESIGN_ID_2, COMMAND_ID_3, USER_ID_2, REVISION_2, DATA_2, LEVELS_DRAFT, Bitmap.empty(), false, "DELETED", dateTime.minusHours(2), dateTime.minusMinutes(3)));
+            final var inputMessage = TestFactory.createInputMessage(aMessageId(), REVISION_2, dateTime.minusMinutes(1), aDesignDeleteRequested(DESIGN_ID_2, COMMAND_ID_3, USER_ID_2));
+            final var expectedOutputMessage = TestFactory.createOutputMessage(aMessageId(), aDesignAggregateUpdated(DESIGN_ID_2, COMMAND_ID_3, USER_ID_2, REVISION_2, DATA_2, LEVELS_DRAFT, Bitmap.empty(), false, "DELETED", dateTime.minusHours(2), dateTime.minusMinutes(3)));
 
             when(eventStore.appendMessage(inputMessage)).thenReturn(Single.just(null));
             when(eventStore.projectDesign(design.getDesignId(), inputMessage.getToken())).thenReturn(Single.just(Optional.of(design)));
@@ -504,9 +498,9 @@ class DesignUpdateControllerTest {
             final RuntimeException exception = new RuntimeException();
             when(eventStore.appendMessage(any())).thenReturn(Single.error(exception));
 
-            final var inputMessage = DesignDeleteRequestedFactory.createInputMessage(aMessageId(), REVISION_2, dateTime.minusMinutes(1), aDesignDeleteRequested(DESIGN_ID_2, COMMAND_ID_3, USER_ID_2));
+            final var inputMessage = TestFactory.createInputMessage(aMessageId(), REVISION_2, dateTime.minusMinutes(1), aDesignDeleteRequested(DESIGN_ID_2, COMMAND_ID_3, USER_ID_2));
 
-            final var deleteController = new DesignUpdateController.DesignDeleteRequestedController(TestConstants.MESSAGE_SOURCE, eventStore, updateEmitter, renderEmitter);
+            final var deleteController = new DesignUpdateController.DesignDeleteRequestedController(MESSAGE_SOURCE, eventStore, updateEmitter, renderEmitter);
 
             assertThatThrownBy(() -> deleteController.onNext(inputMessage).toCompletable().await()).isEqualTo(exception);
 
@@ -520,13 +514,13 @@ class DesignUpdateControllerTest {
         @Test
         void shouldReturnErrorWhenEventStoreCannotProjectDesign() {
             final var design = aDesign(DESIGN_ID_2, COMMAND_ID_3, USER_ID_2, DATA_2, REVISION_2, "DELETED", LEVELS_DRAFT, Bitmap.empty(), dateTime.minusHours(2), dateTime.minusMinutes(3));
-            final var inputMessage = DesignDeleteRequestedFactory.createInputMessage(aMessageId(), REVISION_2, dateTime.minusMinutes(1), aDesignDeleteRequested(DESIGN_ID_2, COMMAND_ID_3, USER_ID_2));
+            final var inputMessage = TestFactory.createInputMessage(aMessageId(), REVISION_2, dateTime.minusMinutes(1), aDesignDeleteRequested(DESIGN_ID_2, COMMAND_ID_3, USER_ID_2));
 
             final RuntimeException exception = new RuntimeException();
             when(eventStore.appendMessage(inputMessage)).thenReturn(Single.just(null));
             when(eventStore.projectDesign(design.getDesignId(), inputMessage.getToken())).thenReturn(Single.error(exception));
 
-            final var deleteController = new DesignUpdateController.DesignDeleteRequestedController(TestConstants.MESSAGE_SOURCE, eventStore, updateEmitter, renderEmitter);
+            final var deleteController = new DesignUpdateController.DesignDeleteRequestedController(MESSAGE_SOURCE, eventStore, updateEmitter, renderEmitter);
 
             assertThatThrownBy(() -> deleteController.onNext(inputMessage).toCompletable().await()).isEqualTo(exception);
 
@@ -541,14 +535,14 @@ class DesignUpdateControllerTest {
         @Test
         void shouldReturnErrorWhenEventStoreCannotDeleteDesign() {
             final var design = aDesign(DESIGN_ID_2, COMMAND_ID_3, USER_ID_2, DATA_2, REVISION_2, "DELETED", LEVELS_DRAFT, Bitmap.empty(), dateTime.minusHours(2), dateTime.minusMinutes(3));
-            final var inputMessage = DesignDeleteRequestedFactory.createInputMessage(aMessageId(), REVISION_2, dateTime.minusMinutes(1), aDesignDeleteRequested(DESIGN_ID_2, COMMAND_ID_3, USER_ID_2));
+            final var inputMessage = TestFactory.createInputMessage(aMessageId(), REVISION_2, dateTime.minusMinutes(1), aDesignDeleteRequested(DESIGN_ID_2, COMMAND_ID_3, USER_ID_2));
 
             final RuntimeException exception = new RuntimeException();
             when(eventStore.appendMessage(inputMessage)).thenReturn(Single.just(null));
             when(eventStore.projectDesign(design.getDesignId(), inputMessage.getToken())).thenReturn(Single.just(Optional.of(design)));
             when(eventStore.updateDesign(design)).thenReturn(Single.error(exception));
 
-            final var deleteController = new DesignUpdateController.DesignDeleteRequestedController(TestConstants.MESSAGE_SOURCE, eventStore, updateEmitter, renderEmitter);
+            final var deleteController = new DesignUpdateController.DesignDeleteRequestedController(MESSAGE_SOURCE, eventStore, updateEmitter, renderEmitter);
 
             assertThatThrownBy(() -> deleteController.onNext(inputMessage).toCompletable().await()).isEqualTo(exception);
 
@@ -672,41 +666,5 @@ class DesignUpdateControllerTest {
                 .setRow(row)
                 .setCol(col)
                 .build();
-    }
-
-    private static class DesignInsertRequestedFactory {
-        @NotNull
-        public static InputMessage<DesignInsertRequested> createInputMessage(UUID messageId, String messageToken, LocalDateTime messageTime, DesignInsertRequested designInsertRequested) {
-            return TestUtils.createInputMessage(
-                    designInsertRequested.getDesignId().toString(), DESIGN_INSERT_REQUESTED, messageId, designInsertRequested, messageToken, messageTime
-            );
-        }
-    }
-
-    private static class DesignUpdateRequestedFactory {
-        @NotNull
-        public static InputMessage<DesignUpdateRequested> createInputMessage(UUID messageId, String messageToken, LocalDateTime messageTime, DesignUpdateRequested designUpdateRequested) {
-            return TestUtils.createInputMessage(
-                    designUpdateRequested.getDesignId().toString(), DESIGN_UPDATE_REQUESTED, messageId, designUpdateRequested, messageToken, messageTime
-            );
-        }
-    }
-
-    private static class DesignDeleteRequestedFactory {
-        @NotNull
-        public static InputMessage<DesignDeleteRequested> createInputMessage(UUID messageId, String messageToken, LocalDateTime messageTime, DesignDeleteRequested designDeleteRequested) {
-            return TestUtils.createInputMessage(
-                    designDeleteRequested.getDesignId().toString(), DESIGN_DELETE_REQUESTED, messageId, designDeleteRequested, messageToken, messageTime
-            );
-        }
-    }
-
-    private static class DesignAggregateUpdatedFactory {
-        @NotNull
-        public static OutputMessage<DesignAggregateUpdated> createOutputMessage(UUID designId, UUID messageId, DesignAggregateUpdated designAggregateUpdated) {
-            return TestUtils.createOutputMessage(
-                    designAggregateUpdated.getDesignId().toString(), DESIGN_AGGREGATE_UPDATED, messageId, designAggregateUpdated
-            );
-        }
     }
 }

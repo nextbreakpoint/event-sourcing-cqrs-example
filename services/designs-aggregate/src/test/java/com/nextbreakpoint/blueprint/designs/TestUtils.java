@@ -151,36 +151,4 @@ public class TestUtils {
                 .withValue(payload)
                 .build();
     }
-
-    @NotNull
-    public static InputMessage<SpecificRecord> createInputMessageV2(String messageKey, String messageType, UUID messageId, SpecificRecord messageData, String messageToken, LocalDateTime messageTime) {
-        final MessagePayload<SpecificRecord> payload = MessagePayload.<SpecificRecord>builder()
-                .withUuid(messageId)
-                .withData(messageData)
-                .withType(messageType)
-                .withSource(MESSAGE_SOURCE)
-                .build();
-
-        return InputMessage.<SpecificRecord>builder()
-                .withKey(messageKey)
-                .withValue(payload)
-                .withToken(messageToken)
-                .withTimestamp(messageTime.toInstant(ZoneOffset.UTC).toEpochMilli())
-                .build();
-    }
-
-    @NotNull
-    public static OutputMessage<SpecificRecord> createOutputMessageV2(String messageKey, String messageType, UUID messageId, SpecificRecord messageData) {
-        final MessagePayload<SpecificRecord> payload = MessagePayload.<SpecificRecord>builder()
-                .withUuid(messageId)
-                .withData(messageData)
-                .withType(messageType)
-                .withSource(MESSAGE_SOURCE)
-                .build();
-
-        return OutputMessage.<SpecificRecord>builder()
-                .withKey(messageKey)
-                .withValue(payload)
-                .build();
-    }
 }

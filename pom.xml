@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.nextbreakpoint</groupId>
     <artifactId>com.nextbreakpoint.blueprint</artifactId>
-    <version>1.0.4-avro-migration-76bf9345-1701020097</version>
+    <version>1.0.4-wip-0c588a30-1701214795</version>
     <packaging>pom</packaging>
     <licenses>
         <license>

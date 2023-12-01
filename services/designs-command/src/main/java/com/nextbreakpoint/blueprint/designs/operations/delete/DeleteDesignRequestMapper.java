@@ -15,6 +15,10 @@ public class DeleteDesignRequestMapper implements Mapper<RoutingContext, DeleteD
             throw new IllegalStateException("the required parameter designId is missing");
         }
 
+        if (context.user() == null) {
+            throw new IllegalStateException("the user is not authenticated");
+        }
+
         final JsonObject principal = context.user().principal();
 
         final UUID owner = UUID.fromString(principal.getString("user"));

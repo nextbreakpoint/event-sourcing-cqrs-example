@@ -67,7 +67,7 @@ public interface KafkaMessageConsumer<T> {
 
         private void consumeMessage(TopicPartition topicPartition, KafkaRecordsQueue.QueuedRecord<T> record) {
             try {
-                final RxSingleHandler<InputMessage<T>, ?> handler = messageHandlers.get(record.getRecord().getPayloadV2().getType());
+                final RxSingleHandler<InputMessage<T>, ?> handler = messageHandlers.get(record.getRecord().getPayload().getType());
 
                 if (handler == null) {
                     return;
@@ -78,7 +78,7 @@ public interface KafkaMessageConsumer<T> {
                 final InputMessage<T> message = InputMessage.<T>builder()
                         .withKey(record.getRecord().getKey())
                         .withToken(token)
-                        .withValue(record.getRecord().getPayloadV2())
+                        .withValue(record.getRecord().getPayload())
                         .withTimestamp(record.getRecord().getTimestamp())
                         .build();
 
@@ -191,7 +191,7 @@ public interface KafkaMessageConsumer<T> {
             return InputMessage.<T>builder()
                     .withKey(record.getRecord().getKey())
                     .withToken(token)
-                    .withValue(record.getRecord().getPayloadV2())
+                    .withValue(record.getRecord().getPayload())
                     .withTimestamp(record.getRecord().getTimestamp())
                     .build();
         }

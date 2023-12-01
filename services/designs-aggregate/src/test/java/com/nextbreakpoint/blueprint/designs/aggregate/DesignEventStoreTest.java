@@ -1,20 +1,24 @@
 package com.nextbreakpoint.blueprint.designs.aggregate;
 
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
+import com.nextbreakpoint.blueprint.common.core.MessagePayload;
 import com.nextbreakpoint.blueprint.designs.Store;
 import com.nextbreakpoint.blueprint.designs.TestUtils;
 import com.nextbreakpoint.blueprint.designs.model.Design;
 import org.apache.avro.specific.SpecificRecord;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import rx.Single;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import static com.nextbreakpoint.blueprint.designs.TestConstants.MESSAGE_SOURCE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -35,7 +39,7 @@ class DesignEventStoreTest {
         final String messageType = "something";
         final String messageToken = "0001";
         final LocalDateTime messageTime = LocalDateTime.now(ZoneId.of("UTC"));
-        final InputMessage<SpecificRecord> message = TestUtils.createInputMessageV2(messageKey, messageType, UUID.randomUUID(), event, messageToken, messageTime);
+        final InputMessage<SpecificRecord> message = createInputMessage(messageKey, messageType, UUID.randomUUID(), event, messageToken, messageTime);
 
         when(store.appendMessage(message)).thenReturn(Single.just(null));
 
@@ -53,7 +57,7 @@ class DesignEventStoreTest {
         final String messageType = "something";
         final String messageToken = "0001";
         final LocalDateTime messageTime = LocalDateTime.now(ZoneId.of("UTC"));
-        final InputMessage<SpecificRecord> message = TestUtils.createInputMessageV2(messageKey, messageType, UUID.randomUUID(), event, messageToken, messageTime);
+        final InputMessage<SpecificRecord> message = createInputMessage(messageKey, messageType, UUID.randomUUID(), event, messageToken, messageTime);
 
         final RuntimeException exception = new RuntimeException();
         when(store.appendMessage(message)).thenReturn(Single.error(exception));
@@ -251,5 +255,22 @@ class DesignEventStoreTest {
         verify(store).findMessages(someDesign.getDesignId(), someDesign.getRevision(), "0002");
         verify(strategy).applyEvents(someDesign, messages);
         verifyNoMoreInteractions(store, strategy);
+    }
+
+    @NotNull
+    private static InputMessage<SpecificRecord> createInputMessage(String messageKey, String messageType, UUID messageId, SpecificRecord messageData, String messageToken, LocalDateTime messageTime) {
+        final MessagePayload<SpecificRecord> payload = MessagePayload.<SpecificRecord>builder()
+                .withUuid(messageId)
+                .withData(messageData)
+                .withType(messageType)
+                .withSource(MESSAGE_SOURCE)
+                .build();
+
+        return InputMessage.<SpecificRecord>builder()
+                .withKey(messageKey)
+                .withValue(payload)
+                .withToken(messageToken)
+                .withTimestamp(messageTime.toInstant(ZoneOffset.UTC).toEpochMilli())
+                .build();
     }
 }

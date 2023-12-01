@@ -15,11 +15,15 @@ public class UpdateDesignRequestMapper implements Mapper<RoutingContext, UpdateD
             throw new IllegalStateException("the required parameter designId is missing");
         }
 
-        final JsonObject bodyAsJson = context.getBodyAsJson();
+        if (context.user() == null) {
+            throw new IllegalStateException("the user is not authenticated");
+        }
 
-        if (bodyAsJson == null) {
+        if (context.body() == null) {
             throw new IllegalStateException("the request's body is not defined");
         }
+
+        final JsonObject bodyAsJson = context.body().asJsonObject();
 
         final String manifest = bodyAsJson.getString("manifest");
         final String metadata = bodyAsJson.getString("metadata");

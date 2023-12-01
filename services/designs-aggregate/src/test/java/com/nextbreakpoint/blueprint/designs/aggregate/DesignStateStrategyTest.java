@@ -2,6 +2,7 @@ package com.nextbreakpoint.blueprint.designs.aggregate;
 
 import com.nextbreakpoint.blueprint.common.core.Checksum;
 import com.nextbreakpoint.blueprint.common.core.InputMessage;
+import com.nextbreakpoint.blueprint.common.core.MessagePayload;
 import com.nextbreakpoint.blueprint.common.events.avro.DesignDeleteRequested;
 import com.nextbreakpoint.blueprint.common.events.avro.DesignInsertRequested;
 import com.nextbreakpoint.blueprint.common.events.avro.DesignUpdateRequested;
@@ -11,6 +12,7 @@ import com.nextbreakpoint.blueprint.designs.TestUtils;
 import com.nextbreakpoint.blueprint.designs.common.Bitmap;
 import com.nextbreakpoint.blueprint.designs.model.Design;
 import org.apache.avro.specific.SpecificRecord;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -18,6 +20,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
@@ -27,6 +30,7 @@ import java.util.stream.Stream;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_DELETE_REQUESTED;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_INSERT_REQUESTED;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_UPDATE_REQUESTED;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.MESSAGE_SOURCE;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.TILES_RENDERED;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -184,67 +188,67 @@ class DesignStateStrategyTest {
             ))
             .build();
 
-    private static final InputMessage<SpecificRecord> designInsertRequestedMessage = TestUtils.createInputMessageV2(
+        private static final InputMessage<SpecificRecord> designInsertRequestedMessage = createInputMessage(
             designInsertRequested.getDesignId().toString(), DESIGN_INSERT_REQUESTED, UUID.randomUUID(), designInsertRequested, REVISION_0, dateTime.minusHours(9)
     );
 
-    private static final InputMessage<SpecificRecord> duplicateDesignInsertRequestedMessage = TestUtils.createInputMessageV2(
+    private static final InputMessage<SpecificRecord> duplicateDesignInsertRequestedMessage = createInputMessage(
             designInsertRequested.getDesignId().toString(), DESIGN_INSERT_REQUESTED, UUID.randomUUID(), designInsertRequested, REVISION_0, dateTime.minusHours(8)
     );
 
-    private static final InputMessage<SpecificRecord> invalidDesignInsertRequestedMessage = TestUtils.createInputMessageV2(
+    private static final InputMessage<SpecificRecord> invalidDesignInsertRequestedMessage = createInputMessage(
             invalidDesignInsertRequested.getDesignId().toString(), DESIGN_INSERT_REQUESTED, UUID.randomUUID(), invalidDesignInsertRequested, REVISION_0, dateTime.minusHours(8)
     );
 
-    private static final InputMessage<SpecificRecord> alternativeDesignInsertRequestedMessage = TestUtils.createInputMessageV2(
+    private static final InputMessage<SpecificRecord> alternativeDesignInsertRequestedMessage = createInputMessage(
             alternativeDesignInsertRequested.getDesignId().toString(), DESIGN_INSERT_REQUESTED, UUID.randomUUID(), alternativeDesignInsertRequested, REVISION_0, dateTime.minusHours(8)
     );
 
-    private static final InputMessage<SpecificRecord> designUpdateRequestedMessage = TestUtils.createInputMessageV2(
+    private static final InputMessage<SpecificRecord> designUpdateRequestedMessage = createInputMessage(
             designUpdateRequested.getDesignId().toString(), DESIGN_UPDATE_REQUESTED, UUID.randomUUID(), designUpdateRequested, REVISION_1, dateTime.minusHours(8)
     );
 
-    private static final InputMessage<SpecificRecord> anotherDesignUpdateRequestedMessage = TestUtils.createInputMessageV2(
+    private static final InputMessage<SpecificRecord> anotherDesignUpdateRequestedMessage = createInputMessage(
             anotherDesignUpdateRequested.getDesignId().toString(), DESIGN_UPDATE_REQUESTED, UUID.randomUUID(), anotherDesignUpdateRequested, REVISION_2, dateTime.minusHours(7)
     );
 
-    private static final InputMessage<SpecificRecord> invalidDesignUpdateRequestedMessage = TestUtils.createInputMessageV2(
+    private static final InputMessage<SpecificRecord> invalidDesignUpdateRequestedMessage = createInputMessage(
             invalidDesignUpdateRequested.getDesignId().toString(), DESIGN_UPDATE_REQUESTED, UUID.randomUUID(), invalidDesignUpdateRequested, REVISION_2, dateTime.minusHours(7)
     );
 
-    private static final InputMessage<SpecificRecord> designDeleteRequestedMessage = TestUtils.createInputMessageV2(
+    private static final InputMessage<SpecificRecord> designDeleteRequestedMessage = createInputMessage(
             designDeleteRequested.getDesignId().toString(), DESIGN_DELETE_REQUESTED, UUID.randomUUID(), designDeleteRequested, REVISION_2, dateTime.minusHours(1)
     );
 
-    private static final InputMessage<SpecificRecord> duplicateDesignDeleteRequestedMessage = TestUtils.createInputMessageV2(
+    private static final InputMessage<SpecificRecord> duplicateDesignDeleteRequestedMessage = createInputMessage(
             designDeleteRequested.getDesignId().toString(), DESIGN_DELETE_REQUESTED, UUID.randomUUID(), designDeleteRequested, REVISION_2, dateTime.minusHours(0)
     );
 
-    private static final InputMessage<SpecificRecord> invalidDesignDeleteRequestedMessage = TestUtils.createInputMessageV2(
+    private static final InputMessage<SpecificRecord> invalidDesignDeleteRequestedMessage = createInputMessage(
             invalidDesignDeleteRequested.getDesignId().toString(), DESIGN_DELETE_REQUESTED, UUID.randomUUID(), invalidDesignDeleteRequested, REVISION_2, dateTime.minusHours(1)
     );
 
-    private static final InputMessage<SpecificRecord> tileRenderedMessage1 = TestUtils.createInputMessageV2(
+    private static final InputMessage<SpecificRecord> tileRenderedMessage1 = createInputMessage(
             tilesRendered1.getDesignId().toString(), TILES_RENDERED, UUID.randomUUID(), tilesRendered1, REVISION_2, dateTime.minusHours(6)
     );
 
-    private static final InputMessage<SpecificRecord> tileRenderedMessage2 = TestUtils.createInputMessageV2(
+    private static final InputMessage<SpecificRecord> tileRenderedMessage2 = createInputMessage(
             tilesRendered2.getDesignId().toString(), TILES_RENDERED, UUID.randomUUID(), tilesRendered2, REVISION_2, dateTime.minusHours(5)
     );
 
-    private static final InputMessage<SpecificRecord> tileRenderedMessage3 = TestUtils.createInputMessageV2(
+    private static final InputMessage<SpecificRecord> tileRenderedMessage3 = createInputMessage(
             tilesRendered3.getDesignId().toString(), TILES_RENDERED, UUID.randomUUID(), tilesRendered3, REVISION_2, dateTime.minusHours(4)
     );
 
-    private static final InputMessage<SpecificRecord> tileRenderedMessage4 = TestUtils.createInputMessageV2(
+    private static final InputMessage<SpecificRecord> tileRenderedMessage4 = createInputMessage(
             tilesRendered4.getDesignId().toString(), TILES_RENDERED, UUID.randomUUID(), tilesRendered4, REVISION_2, dateTime.minusHours(3)
     );
 
-    private static final InputMessage<SpecificRecord> invalidTileRenderedMessage = TestUtils.createInputMessageV2(
+    private static final InputMessage<SpecificRecord> invalidTileRenderedMessage = createInputMessage(
             invalidTilesRendered.getDesignId().toString(), TILES_RENDERED, UUID.randomUUID(), invalidTilesRendered, REVISION_2, dateTime.minusHours(3)
     );
 
-    private static final InputMessage<SpecificRecord> unknownMessage = TestUtils.createInputMessageV2(
+    private static final InputMessage<SpecificRecord> unknownMessage = createInputMessage(
             designInsertRequested.getDesignId().toString(), "UNKNOWN", UUID.randomUUID(), null, REVISION_2, dateTime.minusHours(0)
     );
 
@@ -618,5 +622,22 @@ class DesignStateStrategyTest {
                         invalidTileRenderedMessage
                 ))
         );
+    }
+
+    @NotNull
+    public static InputMessage<SpecificRecord> createInputMessage(String messageKey, String messageType, UUID messageId, SpecificRecord messageData, String messageToken, LocalDateTime messageTime) {
+        final MessagePayload<SpecificRecord> payload = MessagePayload.<SpecificRecord>builder()
+                .withUuid(messageId)
+                .withData(messageData)
+                .withType(messageType)
+                .withSource(MESSAGE_SOURCE)
+                .build();
+
+        return InputMessage.<SpecificRecord>builder()
+                .withKey(messageKey)
+                .withValue(payload)
+                .withToken(messageToken)
+                .withTimestamp(messageTime.toInstant(ZoneOffset.UTC).toEpochMilli())
+                .build();
     }
 }

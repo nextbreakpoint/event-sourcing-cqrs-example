@@ -39,8 +39,8 @@ public class DesignDocumentDeleteRequestedController implements Controller<Input
 
     private Observable<DesignDocumentDeleteCompleted> onDesignDocumentDeleteRequested(DesignDocumentDeleteRequested event) {
         return store.deleteDesign(new DeleteDesignRequest(event.getDesignId(), false))
-                .flatMap(result -> store.deleteDesign(new DeleteDesignRequest(event.getDesignId(), true)))
-                .map(result -> new DesignDocumentDeleteCompleted(event.getDesignId(), event.getCommandId(), event.getRevision()))
+                .flatMap(ignored -> store.deleteDesign(new DeleteDesignRequest(event.getDesignId(), true)))
+                .map(ignored -> new DesignDocumentDeleteCompleted(event.getDesignId(), event.getCommandId(), event.getRevision()))
                 .toObservable();
     }
 

@@ -70,7 +70,7 @@ class DesignCommandControllerTest {
         }
 
         @Test
-        void ReturnErrorWhenStoreFails() {
+        void shouldReturnErrorWhenStoreFails() {
             final RuntimeException exception = new RuntimeException();
             final Store mockedStore = mock();
             when(mockedStore.appendMessage(any(InputMessage.class))).thenReturn(Single.error(exception));
@@ -88,7 +88,7 @@ class DesignCommandControllerTest {
         }
 
         @Test
-        void ReturnErrorWhenEmitterFails() {
+        void shouldReturnErrorWhenEmitterFails() {
             final RuntimeException exception = new RuntimeException();
             final MessageEmitter<DesignInsertRequested> mockedEmitter = mock();
             when(mockedEmitter.send(any(OutputMessage.class))).thenReturn(Single.error(exception));
@@ -130,7 +130,7 @@ class DesignCommandControllerTest {
         }
 
         @Test
-        void ReturnErrorWhenStoreFails() {
+        void shouldReturnErrorWhenStoreFails() {
             final RuntimeException exception = new RuntimeException();
             final Store mockedStore = mock();
             when(mockedStore.appendMessage(any(InputMessage.class))).thenReturn(Single.error(exception));
@@ -148,7 +148,7 @@ class DesignCommandControllerTest {
         }
 
         @Test
-        void ReturnErrorWhenEmitterFails() {
+        void shouldReturnErrorWhenEmitterFails() {
             final RuntimeException exception = new RuntimeException();
             final MessageEmitter<DesignUpdateRequested> mockedEmitter = mock();
             when(mockedEmitter.send(any(OutputMessage.class))).thenReturn(Single.error(exception));
@@ -190,7 +190,7 @@ class DesignCommandControllerTest {
         }
 
         @Test
-        void ReturnErrorWhenStoreFails() {
+        void shouldReturnErrorWhenStoreFails() {
             final RuntimeException exception = new RuntimeException();
             final Store mockedStore = mock();
             when(mockedStore.appendMessage(any(InputMessage.class))).thenReturn(Single.error(exception));
@@ -208,7 +208,7 @@ class DesignCommandControllerTest {
         }
 
         @Test
-        void ReturnErrorWhenEmitterFails() {
+        void shouldReturnErrorWhenEmitterFails() {
             final RuntimeException exception = new RuntimeException();
             final MessageEmitter<DesignDeleteRequested> mockedEmitter = mock();
             when(mockedEmitter.send(any(OutputMessage.class))).thenReturn(Single.error(exception));

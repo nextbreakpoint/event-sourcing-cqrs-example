@@ -1,7 +1,9 @@
 package com.nextbreakpoint.blueprint.designs;
 
 import au.com.dius.pact.core.model.V4Interaction;
+import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.core.Json;
+import com.nextbreakpoint.blueprint.common.core.MessagePayload;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.events.avro.Tile;
 import com.nextbreakpoint.blueprint.common.events.avro.Tiles;
@@ -18,13 +20,18 @@ import org.jetbrains.annotations.NotNull;
 import rx.Observable;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
+
+import static com.nextbreakpoint.blueprint.designs.TestConstants.MESSAGE_SOURCE;
 
 public class TestUtils {
     private TestUtils() {}
@@ -135,6 +142,38 @@ public class TestUtils {
                 .withLevel(tile.getLevel())
                 .withTotal(tile.getTotal())
                 .withCompleted(tile.getCompleted())
+                .build();
+    }
+
+    @NotNull
+    public static <T> InputMessage<T> createInputMessage(String messageKey, String messageType, UUID messageId, T messageData, String messageToken, LocalDateTime messageTime) {
+        final MessagePayload<T> payload = MessagePayload.<T>builder()
+                .withUuid(messageId)
+                .withData(messageData)
+                .withType(messageType)
+                .withSource(MESSAGE_SOURCE)
+                .build();
+
+        return InputMessage.<T>builder()
+                .withKey(messageKey)
+                .withValue(payload)
+                .withToken(messageToken)
+                .withTimestamp(messageTime.toInstant(ZoneOffset.UTC).toEpochMilli())
+                .build();
+    }
+
+    @NotNull
+    public static <T> OutputMessage<T> createOutputMessage(String messageKey, String messageType, UUID messageId, T messageData) {
+        final MessagePayload<T> payload = MessagePayload.<T>builder()
+                .withUuid(messageId)
+                .withData(messageData)
+                .withType(messageType)
+                .withSource(MESSAGE_SOURCE)
+                .build();
+
+        return OutputMessage.<T>builder()
+                .withKey(messageKey)
+                .withValue(payload)
                 .build();
     }
 }

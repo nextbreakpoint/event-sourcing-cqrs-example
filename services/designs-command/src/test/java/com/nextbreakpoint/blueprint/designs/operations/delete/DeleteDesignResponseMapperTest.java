@@ -16,7 +16,7 @@ class DeleteDesignResponseMapperTest {
 
     @Test
     void shouldCreateResponse() {
-        final UUID uuid = UUID.randomUUID();
+        final var uuid = UUID.randomUUID();
 
         final var response = DeleteDesignResponse.builder()
                 .withUuid(uuid)
@@ -33,7 +33,7 @@ class DeleteDesignResponseMapperTest {
 
     @Test
     void shouldCreateUnsuccessfulResponse() {
-        final UUID uuid = UUID.randomUUID();
+        final var uuid = UUID.randomUUID();
 
         final var response = DeleteDesignResponse.builder()
                 .withUuid(uuid)

@@ -59,7 +59,7 @@ class DesignEventStoreTest {
         final LocalDateTime messageTime = LocalDateTime.now(ZoneId.of("UTC"));
         final InputMessage<SpecificRecord> message = createInputMessage(messageKey, messageType, UUID.randomUUID(), event, messageToken, messageTime);
 
-        final RuntimeException exception = new RuntimeException();
+        final var exception = new RuntimeException();
         when(store.appendMessage(message)).thenReturn(Single.error(exception));
 
         eventStore.appendMessage(message)
@@ -94,7 +94,7 @@ class DesignEventStoreTest {
                 .withDesignId(UUID.randomUUID())
                 .build();
 
-        final RuntimeException exception = new RuntimeException();
+        final var exception = new RuntimeException();
         when(store.findDesign(someDesign.getDesignId())).thenReturn(Single.error(exception));
 
         eventStore.findDesign(someDesign.getDesignId())
@@ -129,7 +129,7 @@ class DesignEventStoreTest {
                 .withDesignId(UUID.randomUUID())
                 .build();
 
-        final RuntimeException exception = new RuntimeException();
+        final var exception = new RuntimeException();
         when(store.updateDesign(someDesign)).thenReturn(Single.error(exception));
 
         eventStore.updateDesign(someDesign)
@@ -205,7 +205,7 @@ class DesignEventStoreTest {
                 .withRevision("0001")
                 .build();
 
-        final RuntimeException exception = new RuntimeException();
+        final var exception = new RuntimeException();
         when(store.findDesign(someDesign.getDesignId())).thenReturn(Single.error(exception));
 
         eventStore.projectDesign(someDesign.getDesignId(), "0002")
@@ -222,7 +222,7 @@ class DesignEventStoreTest {
                 .withRevision("0001")
                 .build();
 
-        final RuntimeException exception = new RuntimeException();
+        final var exception = new RuntimeException();
         when(store.findDesign(someDesign.getDesignId())).thenReturn(Single.just(Optional.of(someDesign)));
         when(store.findMessages(someDesign.getDesignId(), someDesign.getRevision(), "0002")).thenReturn(Single.error(exception));
 

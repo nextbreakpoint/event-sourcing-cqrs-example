@@ -52,7 +52,7 @@ class InsertDesignControllerTest {
 
     @Test
     void shouldReturnErrorWhenEmitterFails() {
-        final RuntimeException exception = new RuntimeException("Some error");
+        final var exception = new RuntimeException("Some error");
         final MessageEmitter<DesignInsertCommand> mockedEmitter = mock();
         when(mockedEmitter.send(any(OutputMessage.class))).thenReturn(Single.error(exception));
 

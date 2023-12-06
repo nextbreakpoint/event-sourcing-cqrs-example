@@ -7,12 +7,13 @@ import java.io.PrintStream;
 import java.util.Optional;
 
 public class TestUtils {
-    private TestUtils() {}
+    private TestUtils() {
+    }
 
     public static void copyBytes(InputStream in, OutputStream out, int buffSize) throws IOException {
-        PrintStream ps = out instanceof PrintStream ? (PrintStream)out : null;
+        PrintStream ps = out instanceof PrintStream ? (PrintStream) out : null;
         byte[] buf = new byte[buffSize];
-        for(int bytesRead = in.read(buf); bytesRead >= 0; bytesRead = in.read(buf)) {
+        for (int bytesRead = in.read(buf); bytesRead >= 0; bytesRead = in.read(buf)) {
             out.write(buf, 0, bytesRead);
             if (ps != null && ps.checkError()) {
                 throw new IOException("Unable to write to output stream.");

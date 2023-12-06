@@ -88,7 +88,7 @@ class DesignAggregateUpdatedControllerTest {
 
     @Test
     void shouldReturnErrorWhenEmitterFails() {
-        final RuntimeException exception = new RuntimeException();
+        final var exception = new RuntimeException();
         final MessageEmitter<SpecificRecord> mockedEmitter = mock();
         when(mockedEmitter.send(any(OutputMessage.class))).thenReturn(Single.error(exception));
 

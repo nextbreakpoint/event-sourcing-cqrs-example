@@ -3,14 +3,12 @@ package com.nextbreakpoint.blueprint.designs.controllers;
 import com.nextbreakpoint.blueprint.common.core.Checksum;
 import com.nextbreakpoint.blueprint.common.core.MessageEmitter;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
-import com.nextbreakpoint.blueprint.common.core.Time;
 import com.nextbreakpoint.blueprint.common.events.avro.DesignDocumentStatus;
 import com.nextbreakpoint.blueprint.common.events.avro.DesignDocumentUpdateCompleted;
 import com.nextbreakpoint.blueprint.common.events.avro.DesignDocumentUpdateRequested;
 import com.nextbreakpoint.blueprint.designs.Store;
 import com.nextbreakpoint.blueprint.designs.TestFactory;
 import com.nextbreakpoint.blueprint.designs.TestUtils;
-import com.nextbreakpoint.blueprint.designs.model.Design;
 import com.nextbreakpoint.blueprint.designs.persistence.dto.DeleteDesignRequest;
 import com.nextbreakpoint.blueprint.designs.persistence.dto.InsertDesignRequest;
 import org.assertj.core.api.SoftAssertions;
@@ -55,7 +53,7 @@ class DesignDocumentUpdateRequestedControllerTest {
         final var updated = Instant.now(Clock.systemUTC());
         final var created = updated.minus(1, DAYS);
 
-        final var design = aPublishedDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_1, created, updated);
+        final var design = TestUtils.aPublishedDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_1, created, updated, DATA_1);
 
         final var inputMessage = TestFactory.createInputMessage(aMessageId(), "001", dateTime, aDesignDocumentUpdateRequested(DESIGN_ID_1, COMMAND_ID_1, REVISION_1, created, updated, 8, 100, true));
         final var expectedOutputMessage = TestFactory.createOutputMessage(aMessageId(), aDesignDocumentUpdateCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_1));
@@ -78,7 +76,7 @@ class DesignDocumentUpdateRequestedControllerTest {
         final var updated = Instant.now(Clock.systemUTC());
         final var created = updated.minus(1, DAYS);
 
-        final var design = aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_1, created, updated, 8, 100, false);
+        final var design = TestUtils.aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_1, created, updated, 8, 100, false, DATA_1);
 
         final var inputMessage = TestFactory.createInputMessage(aMessageId(), "001", dateTime, aDesignDocumentUpdateRequested(DESIGN_ID_1, COMMAND_ID_1, REVISION_1, created, updated, 8, 100, false));
         final var expectedOutputMessage = TestFactory.createOutputMessage(aMessageId(), aDesignDocumentUpdateCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_1));
@@ -102,7 +100,7 @@ class DesignDocumentUpdateRequestedControllerTest {
         final var updated = Instant.now(Clock.systemUTC());
         final var created = updated.minus(1, DAYS);
 
-        final var design = aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_1, created, updated, 8, 50, true);
+        final var design = TestUtils.aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_1, created, updated, 8, 50, true, DATA_1);
 
         final var inputMessage = TestFactory.createInputMessage(aMessageId(), "001", dateTime, aDesignDocumentUpdateRequested(DESIGN_ID_1, COMMAND_ID_1, REVISION_1, created, updated, 8, 50, true));
         final var expectedOutputMessage = TestFactory.createOutputMessage(aMessageId(), aDesignDocumentUpdateCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_1));
@@ -126,7 +124,7 @@ class DesignDocumentUpdateRequestedControllerTest {
         final var updated = Instant.now(Clock.systemUTC());
         final var created = updated.minus(1, DAYS);
 
-        final var design = aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_1, created, updated, 3, 100, true);
+        final var design = TestUtils.aDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_1, created, updated, 3, 100, true, DATA_1);
 
         final var inputMessage = TestFactory.createInputMessage(aMessageId(), "001", dateTime, aDesignDocumentUpdateRequested(DESIGN_ID_1, COMMAND_ID_1, REVISION_1, created, updated, 3, 100, true));
         final var expectedOutputMessage = TestFactory.createOutputMessage(aMessageId(), aDesignDocumentUpdateCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_1));
@@ -150,9 +148,9 @@ class DesignDocumentUpdateRequestedControllerTest {
         final var updated = Instant.now(Clock.systemUTC());
         final var created = updated.minus(1, DAYS);
 
-        final var design = aPublishedDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_1, created, updated);
+        final var design = TestUtils.aPublishedDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_1, created, updated, DATA_1);
 
-        final RuntimeException exception = new RuntimeException();
+        final var exception = new RuntimeException();
         final Store mockedStore = mock();
         when(mockedStore.insertDesign(InsertDesignRequest.builder().withUuid(DESIGN_ID_1).withDraft(true).withDesign(design).build())).thenReturn(Single.error(exception));
 
@@ -173,9 +171,9 @@ class DesignDocumentUpdateRequestedControllerTest {
         final var updated = Instant.now(Clock.systemUTC());
         final var created = updated.minus(1, DAYS);
 
-        final var design = aPublishedDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_1, created, updated);
+        final var design = TestUtils.aPublishedDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_1, created, updated, DATA_1);
 
-        final RuntimeException exception = new RuntimeException();
+        final var exception = new RuntimeException();
         final Store mockedStore = mock();
         when(mockedStore.insertDesign(InsertDesignRequest.builder().withUuid(DESIGN_ID_1).withDraft(true).withDesign(design).build())).thenReturn(Single.just(null));
         when(mockedStore.insertDesign(InsertDesignRequest.builder().withUuid(DESIGN_ID_1).withDraft(false).withDesign(design).build())).thenReturn(Single.error(exception));
@@ -198,9 +196,9 @@ class DesignDocumentUpdateRequestedControllerTest {
         final var updated = Instant.now(Clock.systemUTC());
         final var created = updated.minus(1, DAYS);
 
-        final var design = aDraftDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_1, created, updated);
+        final var design = TestUtils.aDraftDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_1, created, updated, DATA_1);
 
-        final RuntimeException exception = new RuntimeException();
+        final var exception = new RuntimeException();
         final Store mockedStore = mock();
         when(mockedStore.insertDesign(InsertDesignRequest.builder().withUuid(DESIGN_ID_1).withDraft(true).withDesign(design).build())).thenReturn(Single.just(null));
         when(mockedStore.deleteDesign(any(DeleteDesignRequest.class))).thenReturn(Single.error(exception));
@@ -223,9 +221,9 @@ class DesignDocumentUpdateRequestedControllerTest {
         final var updated = Instant.now(Clock.systemUTC());
         final var created = updated.minus(1, DAYS);
 
-        final var design = aPublishedDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_1, created, updated);
+        final var design = TestUtils.aPublishedDesign(DESIGN_ID_1, COMMAND_ID_1, REVISION_1, created, updated, DATA_1);
 
-        final RuntimeException exception = new RuntimeException();
+        final var exception = new RuntimeException();
         final MessageEmitter<DesignDocumentUpdateCompleted> mockedEmitter = mock();
         when(mockedEmitter.send(any(OutputMessage.class))).thenReturn(Single.error(exception));
 
@@ -244,31 +242,6 @@ class DesignDocumentUpdateRequestedControllerTest {
 
         verify(mockedEmitter).send(assertArg(message -> hasExpectedDesignDocumentUpdateCompleted(message, expectedOutputMessage)));
         verifyNoMoreInteractions(mockedEmitter);
-    }
-
-    private static Design aPublishedDesign(UUID designId, UUID commandId, String revision, Instant created, Instant updated) {
-        return aDesign(designId, commandId, revision, created, updated, 8, 100, true);
-    }
-
-    private static Design aDraftDesign(UUID designId, UUID commandId, String revision, Instant created, Instant updated) {
-        return aDesign(designId, commandId, revision, created, updated, 3, 100, false);
-    }
-
-    private static Design aDesign(UUID designId, UUID commandId, String revision, Instant created, Instant updated, int levels, int percentage, boolean published) {
-        return Design.builder()
-                .withDesignId(designId)
-                .withCommandId(commandId)
-                .withUserId(USER_ID_1)
-                .withData(DATA_1)
-                .withChecksum(Checksum.of(DATA_1))
-                .withRevision(revision)
-                .withLevels(levels)
-                .withTiles(TestUtils.getLevelTiles(TestUtils.getTiles(levels, percentage)))
-                .withStatus("CREATED")
-                .withPublished(published)
-                .withCreated(Time.format(created))
-                .withUpdated(Time.format(updated))
-                .build();
     }
 
     @NotNull

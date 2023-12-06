@@ -113,7 +113,7 @@ class DesignUpdateControllerTest {
 
         @Test
         void shouldReturnErrorWhenUpdateEmitterFails() {
-            final RuntimeException exception = new RuntimeException();
+            final var exception = new RuntimeException();
             final MessageEmitter<DesignAggregateUpdated> mockedEmitter = mock();
             when(mockedEmitter.send(any(OutputMessage.class))).thenReturn(Single.error(exception));
 
@@ -143,7 +143,7 @@ class DesignUpdateControllerTest {
 
         @Test
         void shouldReturnErrorWhenRenderEmitterFails() {
-            final RuntimeException exception = new RuntimeException();
+            final var exception = new RuntimeException();
             final MessageEmitter<TileRenderRequested> mockedEmitter = mock();
             when(mockedEmitter.send(any(OutputMessage.class), anyString())).thenReturn(Single.error(exception));
 
@@ -181,7 +181,7 @@ class DesignUpdateControllerTest {
 
         @Test
         void shouldReturnErrorWhenEventStoreCannotAppendMessage() {
-            final RuntimeException exception = new RuntimeException();
+            final var exception = new RuntimeException();
             when(eventStore.appendMessage(any())).thenReturn(Single.error(exception));
 
             final var inputMessage = TestFactory.createInputMessage(aMessageId(), REVISION_1, dateTime.minusMinutes(3), aDesignInsertRequested(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1));
@@ -202,7 +202,7 @@ class DesignUpdateControllerTest {
             final var design = aDesign(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1, REVISION_1, "CREATED", LEVELS_DRAFT, Bitmap.empty(), dateTime.minusHours(2), dateTime.minusMinutes(3));
             final var inputMessage = TestFactory.createInputMessage(aMessageId(), REVISION_1, dateTime.minusMinutes(3), aDesignInsertRequested(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1));
 
-            final RuntimeException exception = new RuntimeException();
+            final var exception = new RuntimeException();
             when(eventStore.appendMessage(inputMessage)).thenReturn(Single.just(null));
             when(eventStore.projectDesign(design.getDesignId(), inputMessage.getToken())).thenReturn(Single.error(exception));
 
@@ -223,7 +223,7 @@ class DesignUpdateControllerTest {
             final var design = aDesign(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1, REVISION_1, "CREATED", LEVELS_DRAFT, Bitmap.empty(), dateTime.minusHours(2), dateTime.minusMinutes(3));
             final var inputMessage = TestFactory.createInputMessage(aMessageId(), REVISION_1, dateTime.minusMinutes(3), aDesignInsertRequested(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1));
 
-            final RuntimeException exception = new RuntimeException();
+            final var exception = new RuntimeException();
             when(eventStore.appendMessage(inputMessage)).thenReturn(Single.just(null));
             when(eventStore.projectDesign(design.getDesignId(), inputMessage.getToken())).thenReturn(Single.just(Optional.of(design)));
             when(eventStore.updateDesign(design)).thenReturn(Single.error(exception));
@@ -330,7 +330,7 @@ class DesignUpdateControllerTest {
 
         @Test
         void shouldReturnErrorWhenUpdateEmitterFails() {
-            final RuntimeException exception = new RuntimeException();
+            final var exception = new RuntimeException();
             final MessageEmitter<DesignAggregateUpdated> mockedEmitter = mock();
             when(mockedEmitter.send(any(OutputMessage.class))).thenReturn(Single.error(exception));
 
@@ -360,7 +360,7 @@ class DesignUpdateControllerTest {
 
         @Test
         void shouldReturnErrorWhenRenderEmitterFails() {
-            final RuntimeException exception = new RuntimeException();
+            final var exception = new RuntimeException();
             final MessageEmitter<TileRenderRequested> mockedEmitter = mock();
             when(mockedEmitter.send(any(OutputMessage.class), anyString())).thenReturn(Single.error(exception));
 
@@ -398,7 +398,7 @@ class DesignUpdateControllerTest {
 
         @Test
         void shouldReturnErrorWhenEventStoreCannotAppendMessage() {
-            final RuntimeException exception = new RuntimeException();
+            final var exception = new RuntimeException();
             when(eventStore.appendMessage(any())).thenReturn(Single.error(exception));
 
             final var inputMessage = TestFactory.createInputMessage(aMessageId(), REVISION_2, dateTime.minusMinutes(3), aDesignUpdateRequested(DESIGN_ID_1, COMMAND_ID_2, USER_ID_1, DATA_2, false));
@@ -419,7 +419,7 @@ class DesignUpdateControllerTest {
             final var design = aDesign(DESIGN_ID_1, COMMAND_ID_2, USER_ID_1, DATA_2, REVISION_2, "UPDATED", LEVELS_DRAFT, Bitmap.empty(), dateTime.minusHours(2), dateTime.minusMinutes(3));
             final var inputMessage = TestFactory.createInputMessage(aMessageId(), REVISION_2, dateTime.minusMinutes(3), aDesignUpdateRequested(DESIGN_ID_1, COMMAND_ID_2, USER_ID_1, DATA_2, false));
 
-            final RuntimeException exception = new RuntimeException();
+            final var exception = new RuntimeException();
             when(eventStore.appendMessage(inputMessage)).thenReturn(Single.just(null));
             when(eventStore.projectDesign(design.getDesignId(), inputMessage.getToken())).thenReturn(Single.error(exception));
 
@@ -440,7 +440,7 @@ class DesignUpdateControllerTest {
             final var design = aDesign(DESIGN_ID_1, COMMAND_ID_2, USER_ID_1, DATA_2, REVISION_2, "UPDATED", LEVELS_DRAFT, Bitmap.empty(), dateTime.minusHours(2), dateTime.minusMinutes(3));
             final var inputMessage = TestFactory.createInputMessage(aMessageId(), REVISION_2, dateTime.minusMinutes(3), aDesignUpdateRequested(DESIGN_ID_1, COMMAND_ID_2, USER_ID_1, DATA_2, false));
 
-            final RuntimeException exception = new RuntimeException();
+            final var exception = new RuntimeException();
             when(eventStore.appendMessage(inputMessage)).thenReturn(Single.just(null));
             when(eventStore.projectDesign(design.getDesignId(), inputMessage.getToken())).thenReturn(Single.just(Optional.of(design)));
             when(eventStore.updateDesign(design)).thenReturn(Single.error(exception));
@@ -495,7 +495,7 @@ class DesignUpdateControllerTest {
 
         @Test
         void shouldReturnErrorWhenEventStoreCannotAppendMessage() {
-            final RuntimeException exception = new RuntimeException();
+            final var exception = new RuntimeException();
             when(eventStore.appendMessage(any())).thenReturn(Single.error(exception));
 
             final var inputMessage = TestFactory.createInputMessage(aMessageId(), REVISION_2, dateTime.minusMinutes(1), aDesignDeleteRequested(DESIGN_ID_2, COMMAND_ID_3, USER_ID_2));
@@ -516,7 +516,7 @@ class DesignUpdateControllerTest {
             final var design = aDesign(DESIGN_ID_2, COMMAND_ID_3, USER_ID_2, DATA_2, REVISION_2, "DELETED", LEVELS_DRAFT, Bitmap.empty(), dateTime.minusHours(2), dateTime.minusMinutes(3));
             final var inputMessage = TestFactory.createInputMessage(aMessageId(), REVISION_2, dateTime.minusMinutes(1), aDesignDeleteRequested(DESIGN_ID_2, COMMAND_ID_3, USER_ID_2));
 
-            final RuntimeException exception = new RuntimeException();
+            final var exception = new RuntimeException();
             when(eventStore.appendMessage(inputMessage)).thenReturn(Single.just(null));
             when(eventStore.projectDesign(design.getDesignId(), inputMessage.getToken())).thenReturn(Single.error(exception));
 
@@ -537,7 +537,7 @@ class DesignUpdateControllerTest {
             final var design = aDesign(DESIGN_ID_2, COMMAND_ID_3, USER_ID_2, DATA_2, REVISION_2, "DELETED", LEVELS_DRAFT, Bitmap.empty(), dateTime.minusHours(2), dateTime.minusMinutes(3));
             final var inputMessage = TestFactory.createInputMessage(aMessageId(), REVISION_2, dateTime.minusMinutes(1), aDesignDeleteRequested(DESIGN_ID_2, COMMAND_ID_3, USER_ID_2));
 
-            final RuntimeException exception = new RuntimeException();
+            final var exception = new RuntimeException();
             when(eventStore.appendMessage(inputMessage)).thenReturn(Single.just(null));
             when(eventStore.projectDesign(design.getDesignId(), inputMessage.getToken())).thenReturn(Single.just(Optional.of(design)));
             when(eventStore.updateDesign(design)).thenReturn(Single.error(exception));

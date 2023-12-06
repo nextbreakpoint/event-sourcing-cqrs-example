@@ -28,7 +28,7 @@ class UpdateDesignRequestMapperTest {
 
     @Test
     void shouldCreateRequest() {
-        final UUID userId = UUID.randomUUID();
+        final var userId = UUID.randomUUID();
         final var designId = UUID.randomUUID();
 
         when(context.request()).thenReturn(httpRequest);
@@ -59,7 +59,7 @@ class UpdateDesignRequestMapperTest {
 
     @Test
     void shouldThrowExceptionWhenBodyIsMissing() {
-        final UUID userId = UUID.randomUUID();
+        final var userId = UUID.randomUUID();
 
         when(context.request()).thenReturn(httpRequest);
         when(context.user()).thenReturn(user);
@@ -71,7 +71,7 @@ class UpdateDesignRequestMapperTest {
 
     @Test
     void shouldThrowExceptionWhenBodyDoesNotContainScript() {
-        final UUID userId = UUID.randomUUID();
+        final var userId = UUID.randomUUID();
 
         when(context.request()).thenReturn(httpRequest);
         when(context.user()).thenReturn(user);
@@ -84,7 +84,7 @@ class UpdateDesignRequestMapperTest {
 
     @Test
     void shouldThrowExceptionWhenBodyDoesNotContainMetadata() {
-        final UUID userId = UUID.randomUUID();
+        final var userId = UUID.randomUUID();
 
         when(context.request()).thenReturn(httpRequest);
         when(context.user()).thenReturn(user);
@@ -97,7 +97,7 @@ class UpdateDesignRequestMapperTest {
 
     @Test
     void shouldThrowExceptionWhenBodyDoesNotContainManifest() {
-        final UUID userId = UUID.randomUUID();
+        final var userId = UUID.randomUUID();
 
         when(context.request()).thenReturn(httpRequest);
         when(context.user()).thenReturn(user);

@@ -14,7 +14,7 @@ class UpdateDesignResponseMapperTest {
 
     @Test
     void shouldCreateResponse() {
-        final UUID uuid = UUID.randomUUID();
+        final var uuid = UUID.randomUUID();
 
         final var response = UpdateDesignResponse.builder()
                 .withUuid(uuid)
@@ -31,7 +31,7 @@ class UpdateDesignResponseMapperTest {
 
     @Test
     void shouldCreateUnsuccessfulResponse() {
-        final UUID uuid = UUID.randomUUID();
+        final var uuid = UUID.randomUUID();
 
         final var response = UpdateDesignResponse.builder()
                 .withUuid(uuid)

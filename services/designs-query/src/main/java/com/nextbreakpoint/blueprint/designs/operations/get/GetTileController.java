@@ -15,29 +15,33 @@ import java.util.Objects;
 @Log4j2
 public class GetTileController implements Controller<GetTileRequest, GetTileResponse> {
     private final Store store;
-    private final S3Driver s3Driver;
+    private final S3Driver driver;
 
-    public GetTileController(Store store, S3Driver s3Driver) {
+    public GetTileController(Store store, S3Driver driver) {
         this.store = Objects.requireNonNull(store);
-        this.s3Driver = Objects.requireNonNull(s3Driver);
+        this.driver = Objects.requireNonNull(driver);
     }
 
     @Override
     public Single<GetTileResponse> onNext(GetTileRequest request) {
         return store.loadDesign(new LoadDesignRequest(request.getUuid(), request.isDraft()))
             .map(LoadDesignResponse::getDesign)
-            .flatMap(result -> result.map(design -> getImage(request, design)).orElse(Single.just(new GetTileResponse(null))));
+            .flatMap(result -> result.map(design -> getImage(request, design)).orElse(Single.just(null)))
+            .onErrorReturn(error -> null)
+            .map(GetTileResponse::new);
     }
 
-    private Single<GetTileResponse> getImage(GetTileRequest request, Design document) {
-        return s3Driver.getObject(getBucketKey(request, document.getChecksum()))
-                .map(bytes -> new Image(bytes, document.getChecksum()))
-                .doOnError(error -> log.warn("Failed to load image: {}", error.getMessage()))
-                .onErrorReturn(error -> null)
-                .map(GetTileResponse::new);
+    private Single<Image> getImage(GetTileRequest request, Design document) {
+        return driver.getObject(getBucketKey(request, document.getChecksum()))
+                .map(bytes -> createImage(document, bytes))
+                .doOnError(error -> log.warn("Failed to load image: {}", error.getMessage()));
     }
 
-    private String getBucketKey(GetTileRequest request, String checksum) {
+    private static Image createImage(Design document, byte[] bytes) {
+        return Image.builder().withData(bytes).withChecksum(document.getChecksum()).build();
+    }
+
+    private static String getBucketKey(GetTileRequest request, String checksum) {
         return String.format("%s/%d/%04d%04d.png", checksum, request.getLevel(), request.getRow(), request.getCol());
     }
 }

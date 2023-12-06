@@ -131,7 +131,7 @@ class DesignCommandControllerTest {
 
         @Test
         void shouldReturnErrorWhenStoreFails() {
-            final RuntimeException exception = new RuntimeException();
+            final var exception = new RuntimeException();
             final Store mockedStore = mock();
             when(mockedStore.appendMessage(any(InputMessage.class))).thenReturn(Single.error(exception));
 
@@ -149,7 +149,7 @@ class DesignCommandControllerTest {
 
         @Test
         void shouldReturnErrorWhenEmitterFails() {
-            final RuntimeException exception = new RuntimeException();
+            final var exception = new RuntimeException();
             final MessageEmitter<DesignUpdateRequested> mockedEmitter = mock();
             when(mockedEmitter.send(any(OutputMessage.class))).thenReturn(Single.error(exception));
 
@@ -191,7 +191,7 @@ class DesignCommandControllerTest {
 
         @Test
         void shouldReturnErrorWhenStoreFails() {
-            final RuntimeException exception = new RuntimeException();
+            final var exception = new RuntimeException();
             final Store mockedStore = mock();
             when(mockedStore.appendMessage(any(InputMessage.class))).thenReturn(Single.error(exception));
 
@@ -209,7 +209,7 @@ class DesignCommandControllerTest {
 
         @Test
         void shouldReturnErrorWhenEmitterFails() {
-            final RuntimeException exception = new RuntimeException();
+            final var exception = new RuntimeException();
             final MessageEmitter<DesignDeleteRequested> mockedEmitter = mock();
             when(mockedEmitter.send(any(OutputMessage.class))).thenReturn(Single.error(exception));
 

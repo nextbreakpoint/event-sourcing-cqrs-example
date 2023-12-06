@@ -23,7 +23,7 @@ class DeleteDesignRequestMapperTest {
 
     @Test
     void shouldCreateRequest() {
-        final UUID userId = UUID.randomUUID();
+        final var userId = UUID.randomUUID();
         final var designId = UUID.randomUUID();
 
         when(context.request()).thenReturn(httpRequest);

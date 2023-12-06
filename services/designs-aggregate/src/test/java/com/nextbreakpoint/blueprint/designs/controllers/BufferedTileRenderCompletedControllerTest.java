@@ -94,7 +94,7 @@ class BufferedTileRenderCompletedControllerTest {
 
     @Test
     void shouldReturnErrorWhenFindDesignFails() {
-        final RuntimeException exception = new RuntimeException();
+        final var exception = new RuntimeException();
         when(eventStore.findDesign(DESIGN_ID_1)).thenReturn(Single.error(exception));
 
         assertThatThrownBy(() -> controller.onNext(someInputMessages()).toCompletable().await()).isEqualTo(exception);
@@ -107,7 +107,7 @@ class BufferedTileRenderCompletedControllerTest {
 
     @Test
     void shouldReturnErrorWhenEmitterFails() {
-        final RuntimeException exception = new RuntimeException();
+        final var exception = new RuntimeException();
         final MessageEmitter<TilesRendered> mockedEmitter = mock();
         when(mockedEmitter.send(any(OutputMessage.class))).thenReturn(Single.error(exception));
 

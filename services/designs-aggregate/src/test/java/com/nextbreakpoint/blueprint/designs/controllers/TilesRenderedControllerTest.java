@@ -111,7 +111,7 @@ class TilesRenderedControllerTest {
 
     @Test
     void shouldReturnErrorWhenProjectDesignFails() {
-        final RuntimeException exception = new RuntimeException();
+        final var exception = new RuntimeException();
         final InputMessage<TilesRendered> inputMessage = anInputMessage(DESIGN_ID_1, REVISION_0);
         when(eventStore.appendMessage(inputMessage)).thenReturn(Single.error(exception));
 
@@ -125,7 +125,7 @@ class TilesRenderedControllerTest {
 
     @Test
     void shouldReturnErrorWhenAppendMessageFails() {
-        final RuntimeException exception = new RuntimeException();
+        final var exception = new RuntimeException();
         final InputMessage<TilesRendered> inputMessage = anInputMessage(DESIGN_ID_1, REVISION_0);
         when(eventStore.appendMessage(inputMessage)).thenReturn(Single.just(null));
         when(eventStore.projectDesign(DESIGN_ID_1, REVISION_0)).thenReturn(Single.error(exception));
@@ -141,7 +141,7 @@ class TilesRenderedControllerTest {
 
     @Test
     void shouldReturnErrorWhenUpdateDesignFails() {
-        final RuntimeException exception = new RuntimeException();
+        final var exception = new RuntimeException();
         final Design design = theDefaultDesign(DESIGN_ID_1, REVISION_0);
         final InputMessage<TilesRendered> inputMessage = anInputMessage(DESIGN_ID_1, REVISION_0);
         when(eventStore.appendMessage(inputMessage)).thenReturn(Single.just(null));
@@ -160,7 +160,7 @@ class TilesRenderedControllerTest {
 
     @Test
     void shouldReturnErrorWhenEmitterFails() {
-        final RuntimeException exception = new RuntimeException();
+        final var exception = new RuntimeException();
         final MessageEmitter<DesignAggregateUpdated> mockedEmitter = mock();
         when(mockedEmitter.send(any(OutputMessage.class))).thenReturn(Single.error(exception));
 

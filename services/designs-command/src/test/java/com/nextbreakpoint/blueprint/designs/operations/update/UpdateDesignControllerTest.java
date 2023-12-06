@@ -52,7 +52,7 @@ class UpdateDesignControllerTest {
 
     @Test
     void shouldReturnErrorWhenEmitterFails() {
-        final RuntimeException exception = new RuntimeException("Some error");
+        final var exception = new RuntimeException("Some error");
         final MessageEmitter<DesignUpdateCommand> mockedEmitter = mock();
         when(mockedEmitter.send(any(OutputMessage.class))).thenReturn(Single.error(exception));
 

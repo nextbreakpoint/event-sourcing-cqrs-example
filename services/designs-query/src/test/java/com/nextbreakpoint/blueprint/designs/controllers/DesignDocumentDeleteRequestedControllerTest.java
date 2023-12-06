@@ -59,7 +59,7 @@ class DesignDocumentDeleteRequestedControllerTest {
 
     @Test
     void shouldReturnErrorWhenStoreFailsWhileDeletingDraftDocument() {
-        final RuntimeException exception = new RuntimeException();
+        final var exception = new RuntimeException();
         final Store mockedStore = mock();
         when(mockedStore.deleteDesign(DeleteDesignRequest.builder().withUuid(DESIGN_ID_1).withDraft(false).build())).thenReturn(Single.error(exception));
 
@@ -77,7 +77,7 @@ class DesignDocumentDeleteRequestedControllerTest {
 
     @Test
     void shouldReturnErrorWhenStoreFailsWhileDeletingDocument() {
-        final RuntimeException exception = new RuntimeException();
+        final var exception = new RuntimeException();
         final Store mockedStore = mock();
         when(mockedStore.deleteDesign(any(DeleteDesignRequest.class))).thenReturn(Single.just(null));
         when(mockedStore.deleteDesign(DeleteDesignRequest.builder().withUuid(DESIGN_ID_1).withDraft(true).build())).thenReturn(Single.error(exception));
@@ -97,7 +97,7 @@ class DesignDocumentDeleteRequestedControllerTest {
 
     @Test
     void shouldReturnErrorWhenEmitterFails() {
-        final RuntimeException exception = new RuntimeException();
+        final var exception = new RuntimeException();
         final MessageEmitter<DesignDocumentDeleteCompleted> mockedEmitter = mock();
         when(mockedEmitter.send(any(OutputMessage.class))).thenReturn(Single.error(exception));
 

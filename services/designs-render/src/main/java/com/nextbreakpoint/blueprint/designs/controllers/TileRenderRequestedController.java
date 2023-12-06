@@ -24,15 +24,15 @@ import static com.nextbreakpoint.blueprint.designs.common.Bucket.createBucketKey
 public class TileRenderRequestedController implements Controller<InputMessage<TileRenderRequested>, Void> {
     private final MessageEmitter<TileRenderCompleted> emitter;
     private final WorkerExecutor executor;
-    private final S3Driver s3Driver;
+    private final S3Driver driver;
     private final TileRenderer renderer;
     private final String messageSource;
 
-    public TileRenderRequestedController(String messageSource, MessageEmitter<TileRenderCompleted> emitter, WorkerExecutor executor, S3Driver s3Driver, TileRenderer renderer) {
+    public TileRenderRequestedController(String messageSource, MessageEmitter<TileRenderCompleted> emitter, WorkerExecutor executor, S3Driver driver, TileRenderer renderer) {
         this.messageSource = Objects.requireNonNull(messageSource);
         this.emitter = Objects.requireNonNull(emitter);
         this.executor = Objects.requireNonNull(executor);
-        this.s3Driver = Objects.requireNonNull(s3Driver);
+        this.driver = Objects.requireNonNull(driver);
         this.renderer = Objects.requireNonNull(renderer);
     }
 
@@ -49,13 +49,13 @@ public class TileRenderRequestedController implements Controller<InputMessage<Ti
                 .flatMap(message -> emitter.send(message, Render.getTopicName(emitter.getTopicName() + "-completed", event.getLevel())));
     }
 
+    private String makeStatus(Result result) {
+        return (result.getError().isPresent() || result.getImage().length == 0) ? "FAILED" : "COMPLETED";
+    }
+
     private OutputMessage<TileRenderCompleted> createMessage(TileRenderCompleted event) {
         return MessageFactory.<TileRenderCompleted>of(messageSource)
                 .createOutputMessage(Render.createRenderKey(event), event);
-    }
-
-    private String makeStatus(Result result) {
-        return (result.getError().isPresent() || result.getImage().length == 0) ? "FAILED" : "COMPLETED";
     }
 
     private TileRenderCompleted createEvent(TileRenderRequested event, String status) {
@@ -71,15 +71,8 @@ public class TileRenderRequestedController implements Controller<InputMessage<Ti
                 .build();
     }
 
-    private Single<Result> uploadImage(TileRenderRequested event, Result result) {
-        return s3Driver.putObject(createBucketKey(event), result.getImage())
-                .doOnSuccess(response -> log.info("Image uploaded: {}", createBucketKey(event)))
-                .doOnError(response -> log.info("Can't upload image: {}", createBucketKey(event)))
-                .map(response -> result);
-    }
-
     private Single<Result> renderImage(TileRenderRequested event) {
-        return s3Driver.getObject(createBucketKey(event))
+        return driver.getObject(createBucketKey(event))
                 .doOnError(err -> log.debug("Image not found: {}", createBucketKey(event)))
                 .map(image -> Result.of(image, null))
                 .doOnSuccess(result -> log.info("Image found: {}", createBucketKey(event)))
@@ -93,5 +86,12 @@ public class TileRenderRequestedController implements Controller<InputMessage<Ti
             log.debug("Image rendered: {}", createBucketKey(event));
             return result;
         }).toCompletionStage().toCompletableFuture());
+    }
+
+    private Single<Result> uploadImage(TileRenderRequested event, Result result) {
+        return driver.putObject(createBucketKey(event), result.getImage())
+                .doOnSuccess(response -> log.info("Image uploaded: {}", createBucketKey(event)))
+                .doOnError(response -> log.info("Can't upload image: {}", createBucketKey(event)))
+                .map(response -> result);
     }
 }

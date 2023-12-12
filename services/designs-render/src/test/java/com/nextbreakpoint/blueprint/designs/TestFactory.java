@@ -5,6 +5,7 @@ import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.events.avro.TileRenderCompleted;
 import com.nextbreakpoint.blueprint.common.events.avro.TileRenderRequested;
 import com.nextbreakpoint.blueprint.common.test.MessageUtils;
+import com.nextbreakpoint.blueprint.designs.common.Render;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.LocalDateTime;
@@ -20,14 +21,14 @@ public class TestFactory {
     @NotNull
     public static InputMessage<TileRenderRequested> createInputMessage(UUID messageId, String messageToken, LocalDateTime messageTime, TileRenderRequested tileRenderRequested) {
         return MessageUtils.createInputMessage(
-                MESSAGE_SOURCE, tileRenderRequested.getDesignId().toString(), TILE_RENDER_REQUESTED, messageId, tileRenderRequested, messageToken, messageTime
+                MESSAGE_SOURCE, Render.createRenderKey(tileRenderRequested), TILE_RENDER_REQUESTED, messageId, tileRenderRequested, messageToken, messageTime
         );
     }
 
     @NotNull
     public static OutputMessage<TileRenderCompleted> createOutputMessage(UUID messageId, TileRenderCompleted tileRenderCompleted) {
         return MessageUtils.createOutputMessage(
-                MESSAGE_SOURCE, tileRenderCompleted.getDesignId().toString(), TILE_RENDER_COMPLETED, messageId, tileRenderCompleted
+                MESSAGE_SOURCE, Render.createRenderKey(tileRenderCompleted), TILE_RENDER_COMPLETED, messageId, tileRenderCompleted
         );
     }
 }

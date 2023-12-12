@@ -13,6 +13,7 @@ import com.nextbreakpoint.blueprint.common.vertx.MessageFailed;
 import com.nextbreakpoint.blueprint.common.vertx.Records;
 import com.nextbreakpoint.blueprint.common.vertx.TemplateHandler;
 import com.nextbreakpoint.blueprint.common.vertx.ZipConsumer;
+import com.nextbreakpoint.blueprint.designs.common.AsyncTileRenderer;
 import com.nextbreakpoint.blueprint.designs.common.S3Driver;
 import com.nextbreakpoint.blueprint.designs.common.TileRenderer;
 import com.nextbreakpoint.blueprint.designs.controllers.TileRenderRequestedController;
@@ -78,9 +79,8 @@ public class Factory {
                 .withController(new TileRenderRequestedController(
                         messageSource,
                         createEventMessageEmitter(producer, topic),
-                        executor,
                         new S3Driver(s3AsyncClient, bucket),
-                        new TileRenderer()
+                        new AsyncTileRenderer(executor, new TileRenderer())
                 ))
                 .onSuccess(new MessageConsumed<>())
                 .onFailure(new MessageFailed<>())

@@ -1,0 +1,31 @@
+fractal {
+	orbit [-1.5 - 1.5i,+1.5 + 1.5i] [x,n] {
+		trap rectangle [<0,0>] {
+			MOVETO(<0.0,0.0>);
+			LINETO(<0.0,-1.0>);
+			LINETO(<+1.0,-1.0>);
+			LINETO(<+1.0,0.0>);
+			LINETO(<0.0,0.0>);
+		}		
+		loop [0, 200] (mod2(x) > 40 | rectangle ? x) {
+			x = x * x + w;
+		}
+	}
+	color [(1,0,0,0)] {
+		palette gradient {
+			[#FFFF0A0A > #FFFFFFFF, 80];
+			[#FFFFFFFF > #FF0042A9, 20];
+			[#FF0042A9 > #FF000000, 80];
+		}
+		init {
+			p = atan2(re(x),im(x)) / 2pi;
+			if (p < 0) {
+				p = p + 1;
+			}
+			p = 179 * p;
+		}
+		rule (n > 0) [1] {
+			gradient[p]
+		}
+	}
+}

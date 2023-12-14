@@ -37,7 +37,7 @@ class UploadDesignControllerTest {
     }
 
     @Test
-    void shouldReturnErrorForInvalidData() throws Exception {
+    void shouldReturnAnErrorForInvalidData() throws Exception {
         final var file = Files.createTempFile("test-", ".nf.zip");
 
         final var request = UploadDesignRequest.builder()

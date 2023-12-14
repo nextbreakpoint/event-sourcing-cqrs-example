@@ -18,7 +18,7 @@ public class NotificationPublisher {
 
     public Single<Void> publish(DesignChangedNotification notification) {
         return Single.fromCallable(() -> Json.encodeValue(notification))
-                .flatMap(payload -> vertx.eventBus().rxRequest(address, payload))
-                .map(message -> null);
+                .map(payload -> vertx.eventBus().send(address, payload))
+                .map(ignored -> null);
     }
 }

@@ -14,6 +14,7 @@ import com.nextbreakpoint.blueprint.common.vertx.Records;
 import com.nextbreakpoint.blueprint.common.vertx.TemplateHandler;
 import com.nextbreakpoint.blueprint.common.vertx.ZipConsumer;
 import com.nextbreakpoint.blueprint.designs.common.AsyncTileRenderer;
+import com.nextbreakpoint.blueprint.designs.common.BundleValidator;
 import com.nextbreakpoint.blueprint.designs.common.S3Driver;
 import com.nextbreakpoint.blueprint.designs.common.TileRenderer;
 import com.nextbreakpoint.blueprint.designs.controllers.TileRenderRequestedController;
@@ -45,7 +46,7 @@ public class Factory {
     public static Handler<RoutingContext> createValidateDesignHandler() {
         return TemplateHandler.<RoutingContext, ValidateDesignRequest, ValidateDesignResponse, String>builder()
                 .withInputMapper(new ValidateDesignRequestMapper())
-                .withController(new ValidateDesignController())
+                .withController(new ValidateDesignController(new BundleValidator()))
                 .withOutputMapper(new ValidateDesignResponseMapper())
                 .onSuccess(new JsonConsumer(200))
                 .onFailure(new ErrorConsumer())

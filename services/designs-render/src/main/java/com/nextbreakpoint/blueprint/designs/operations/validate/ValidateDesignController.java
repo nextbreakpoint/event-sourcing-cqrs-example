@@ -1,48 +1,36 @@
 package com.nextbreakpoint.blueprint.designs.operations.validate;
 
-import com.nextbreakpoint.Try;
 import com.nextbreakpoint.blueprint.common.core.Controller;
 import com.nextbreakpoint.blueprint.common.core.ValidationStatus;
-import com.nextbreakpoint.blueprint.designs.common.BundleUtils;
-import com.nextbreakpoint.nextfractal.core.common.Bundle;
-import com.nextbreakpoint.nextfractal.mandelbrot.dsl.DSLCompiler;
-import com.nextbreakpoint.nextfractal.mandelbrot.dsl.DSLParser;
-import com.nextbreakpoint.nextfractal.mandelbrot.dsl.ParserResult;
+import com.nextbreakpoint.blueprint.designs.common.BundleValidator;
+import com.nextbreakpoint.blueprint.designs.common.BundleValidatorException;
 import rx.Single;
 
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Objects;
 
 public class ValidateDesignController implements Controller<ValidateDesignRequest, ValidateDesignResponse> {
+    private final BundleValidator validator;
+
+    public ValidateDesignController(BundleValidator validator) {
+        this.validator = Objects.requireNonNull(validator);
+    }
+
     @Override
     public Single<ValidateDesignResponse> onNext(ValidateDesignRequest request) {
         try {
-            final Try<Bundle, Exception> bundle = BundleUtils.createBundle(request.getManifest(), request.getMetadata(), request.getScript());
-
-            final DSLParser parser = new DSLParser(DSLParser.class.getPackage().getName() + ".generated", "Compile" + System.nanoTime());
-
-            final ParserResult result = parser.parse(bundle.orThrow().getSession().getScript());
-
-            if (result.getErrors().isEmpty()) {
-                DSLCompiler compiler = new DSLCompiler();
-                compiler.compileOrbit(result).create();
-                compiler.compileColor(result).create();
-            }
-
-            final List<String> errors = result.getErrors().stream()
-                    .map(sourceError -> String.format("[%d:%d] %s", sourceError.getLine(), sourceError.getCharPositionInLine(), sourceError.getMessage()))
-                    .collect(Collectors.toList());
+            validator.parseAndCompile(request.getManifest(), request.getMetadata(), request.getScript());
 
             final ValidateDesignResponse response = ValidateDesignResponse.builder()
-                    .withStatus(errors.isEmpty() ? ValidationStatus.ACCEPTED : ValidationStatus.REJECTED)
-                    .withErrors(errors)
+                    .withStatus(ValidationStatus.ACCEPTED)
+                    .withErrors(List.of())
                     .build();
 
             return Single.just(response);
-        } catch (Exception e) {
+        } catch (BundleValidatorException e) {
             final ValidateDesignResponse response = ValidateDesignResponse.builder()
                     .withStatus(ValidationStatus.REJECTED)
-                    .withErrors(List.of(e.getMessage()))
+                    .withErrors(e.getErrors())
                     .build();
 
             return Single.just(response);

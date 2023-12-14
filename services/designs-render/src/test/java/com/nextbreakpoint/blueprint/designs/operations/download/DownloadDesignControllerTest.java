@@ -27,7 +27,7 @@ class DownloadDesignControllerTest {
     }
 
     @Test
-    void shouldReturnErrorForInvalidData() {
+    void shouldReturnAnEmptyArrayForInvalidData() {
         final var request = DownloadDesignRequest.builder()
                 .withManifest(INVALID_MANIFEST)
                 .withMetadata(METADATA)

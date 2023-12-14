@@ -7,18 +7,12 @@ import com.nextbreakpoint.nextfractal.core.common.Bundle;
 import rx.Single;
 
 public class DownloadDesignController implements Controller<DownloadDesignRequest, DownloadDesignResponse> {
-    public DownloadDesignController() {}
-
     @Override
     public Single<DownloadDesignResponse> onNext(DownloadDesignRequest request) {
-        return Single.just(request).flatMap(this::onRequest);
-    }
-
-    private Single<DownloadDesignResponse> onRequest(DownloadDesignRequest request) {
         try {
-            final Bundle bundle = BundleUtils.createBundle(request.getManifest(), request.getMetadata(), request.getScript());
+            final Try<Bundle, Exception> bundle = BundleUtils.createBundle(request.getManifest(), request.getMetadata(), request.getScript());
 
-            final Try<byte[], Exception> result = BundleUtils.writeBundle(bundle);
+            final Try<byte[], Exception> result = BundleUtils.writeBundle(bundle.orThrow());
 
             final DownloadDesignResponse response = DownloadDesignResponse.builder()
                     .withBytes(result.orElse(null))

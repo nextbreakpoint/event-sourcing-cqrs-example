@@ -20,6 +20,7 @@ import com.nextbreakpoint.blueprint.common.vertx.Records;
 import com.nextbreakpoint.blueprint.common.vertx.ResponseHelper;
 import com.nextbreakpoint.blueprint.common.vertx.Server;
 import com.nextbreakpoint.blueprint.common.vertx.ServerConfig;
+import com.nextbreakpoint.blueprint.designs.common.NotificationPublisher;
 import com.nextbreakpoint.blueprint.designs.controllers.DesignDocumentDeleteCompletedController;
 import com.nextbreakpoint.blueprint.designs.controllers.DesignDocumentUpdateCompletedController;
 import com.nextbreakpoint.blueprint.designs.handlers.WatchHandler;
@@ -196,8 +197,10 @@ public class Verticle extends AbstractVerticle {
 
             final Map<String, RxSingleHandler<InputMessage<Object>, Void>> messageHandlers = new HashMap<>();
 
-            messageHandlers.put(DesignDocumentUpdateCompleted.getClassSchema().getFullName(), Factory.createDesignDocumentUpdateCompletedHandler(new DesignDocumentUpdateCompletedController(vertx, "notifications")));
-            messageHandlers.put(DesignDocumentDeleteCompleted.getClassSchema().getFullName(), Factory.createDesignDocumentDeleteCompletedHandler(new DesignDocumentDeleteCompletedController(vertx, "notifications")));
+            final NotificationPublisher notificationPublisher = new NotificationPublisher(vertx, "notifications");
+
+            messageHandlers.put(DesignDocumentUpdateCompleted.getClassSchema().getFullName(), Factory.createDesignDocumentUpdateCompletedHandler(new DesignDocumentUpdateCompletedController(notificationPublisher)));
+            messageHandlers.put(DesignDocumentDeleteCompleted.getClassSchema().getFullName(), Factory.createDesignDocumentDeleteCompletedHandler(new DesignDocumentDeleteCompletedController(notificationPublisher)));
 
             eventsKafkaConsumer.subscribe(List.of(eventsTopic));
 

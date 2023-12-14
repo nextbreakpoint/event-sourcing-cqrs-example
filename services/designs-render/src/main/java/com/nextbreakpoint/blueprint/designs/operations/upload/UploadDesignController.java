@@ -11,14 +11,8 @@ import java.io.File;
 import java.util.List;
 
 public class UploadDesignController implements Controller<UploadDesignRequest, UploadDesignResponse> {
-    public UploadDesignController() {}
-
     @Override
     public Single<UploadDesignResponse> onNext(UploadDesignRequest request) {
-        return Single.just(request).flatMap(this::onRequest);
-    }
-
-    private Single<UploadDesignResponse> onRequest(UploadDesignRequest request) {
         try {
             final Bundle bundle = FileManager.loadFile(new File(request.getFile())).orThrow();
 

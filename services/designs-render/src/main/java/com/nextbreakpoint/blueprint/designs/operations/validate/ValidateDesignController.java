@@ -1,5 +1,6 @@
 package com.nextbreakpoint.blueprint.designs.operations.validate;
 
+import com.nextbreakpoint.Try;
 import com.nextbreakpoint.blueprint.common.core.Controller;
 import com.nextbreakpoint.blueprint.common.core.ValidationStatus;
 import com.nextbreakpoint.blueprint.designs.common.BundleUtils;
@@ -13,20 +14,14 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class ValidateDesignController implements Controller<ValidateDesignRequest, ValidateDesignResponse> {
-    public ValidateDesignController() {}
-
     @Override
     public Single<ValidateDesignResponse> onNext(ValidateDesignRequest request) {
-        return Single.just(request).flatMap(this::onRequest);
-    }
-
-    private Single<ValidateDesignResponse> onRequest(ValidateDesignRequest request) {
         try {
-            final Bundle bundle = BundleUtils.createBundle(request.getManifest(), request.getMetadata(), request.getScript());
+            final Try<Bundle, Exception> bundle = BundleUtils.createBundle(request.getManifest(), request.getMetadata(), request.getScript());
 
             final DSLParser parser = new DSLParser(DSLParser.class.getPackage().getName() + ".generated", "Compile" + System.nanoTime());
 
-            final ParserResult result = parser.parse(bundle.getSession().getScript());
+            final ParserResult result = parser.parse(bundle.orThrow().getSession().getScript());
 
             if (result.getErrors().isEmpty()) {
                 DSLCompiler compiler = new DSLCompiler();

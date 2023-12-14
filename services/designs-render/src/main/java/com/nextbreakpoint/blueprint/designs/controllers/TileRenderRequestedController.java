@@ -37,18 +37,23 @@ public class TileRenderRequestedController implements Controller<InputMessage<Ti
     @Override
     public Single<Void> onNext(InputMessage<TileRenderRequested> message) {
         return Single.fromCallable(() -> message.getValue().getData())
-                .flatMap(this::onTileRenderRequested);
-    }
-
-    private Single<Void> onTileRenderRequested(TileRenderRequested event) {
-        return renderImage(event)
-                .map(result -> createEvent(event, makeStatus(result)))
+                .flatMap(event -> renderImage(event)
+                .map(this::makeStatus)
+                .map(status -> createEvent(event, status))
                 .map(this::createMessage)
-                .flatMap(message -> emitter.send(message, Render.getTopicName(emitter.getTopicName() + "-completed", event.getLevel())));
+                .flatMap(this::sendMessage));
     }
 
-    private String makeStatus(Result result) {
-        return (result.getError().isPresent() || result.getImage().length == 0) ? "FAILED" : "COMPLETED";
+    private Single<Void> sendMessage(OutputMessage<TileRenderCompleted> message) {
+        return emitter.send(message, makeTopicName(message));
+    }
+
+    private String makeTopicName(OutputMessage<TileRenderCompleted> message) {
+        return Render.getTopicName(emitter.getTopicName() + "-completed", message.getValue().getData().getLevel());
+    }
+
+    private TileStatus makeStatus(Result result) {
+        return (result.getError().isPresent() || result.getImage().length == 0) ? TileStatus.FAILED : TileStatus.COMPLETED;
     }
 
     private OutputMessage<TileRenderCompleted> createMessage(TileRenderCompleted event) {
@@ -56,7 +61,7 @@ public class TileRenderRequestedController implements Controller<InputMessage<Ti
                 .createOutputMessage(createRenderKey(event), event);
     }
 
-    private TileRenderCompleted createEvent(TileRenderRequested event, String status) {
+    private TileRenderCompleted createEvent(TileRenderRequested event, TileStatus value) {
         return TileRenderCompleted.newBuilder()
                 .setDesignId(event.getDesignId())
                 .setCommandId(event.getCommandId())
@@ -65,7 +70,7 @@ public class TileRenderRequestedController implements Controller<InputMessage<Ti
                 .setLevel(event.getLevel())
                 .setRow(event.getRow())
                 .setCol(event.getCol())
-                .setStatus(TileStatus.valueOf(status))
+                .setStatus(value)
                 .build();
     }
 

@@ -22,16 +22,23 @@ import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
+import static com.nextbreakpoint.blueprint.common.events.avro.TileStatus.COMPLETED;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.COMMAND_ID_1;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.COMMAND_ID_2;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.DATA_1;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DATA_2;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_ID_1;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_ID_2;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.MESSAGE_SOURCE;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.REVISION_1;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.REVISION_2;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.assertArg;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
@@ -47,7 +54,7 @@ class TileRenderRequestedControllerTest {
     @Test
     void shouldRenderTileAndPublishEventToNotifyRenderIsCompleted() {
         final var inputMessage = TestFactory.createInputMessage(aMessageId(), "001", dateTime, aTileRenderRequested(DESIGN_ID_1, COMMAND_ID_1, REVISION_1, DATA_1, 0, 0, 0));
-        final var expectedOutputMessage = TestFactory.createOutputMessage(aMessageId(), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_1, DATA_1, 0, 0, 0, TileStatus.COMPLETED));
+        final var expectedOutputMessage = TestFactory.createOutputMessage(aMessageId(), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_1, DATA_1, 0, 0, 0, COMPLETED));
 
         final byte[] image = { 0, 1, 2 };
 
@@ -58,6 +65,100 @@ class TileRenderRequestedControllerTest {
         when(emitter.getTopicName()).thenReturn("render");
 
         controller.onNext(inputMessage).toCompletable().doOnError(Assertions::fail).await();
+
+        verify(driver).getObject(Bucket.createBucketKey(inputMessage.getValue().getData()));
+        verify(driver).putObject(Bucket.createBucketKey(inputMessage.getValue().getData()), image);
+        verifyNoMoreInteractions(driver);
+
+        verify(renderer).renderImage(inputMessage.getValue().getData());
+        verifyNoMoreInteractions(renderer);
+
+        verify(emitter).getTopicName();
+        verify(emitter).send(assertArg(message -> hasExpectedTileRenderCompleted(message, expectedOutputMessage)), eq("render-completed-0"));
+        verifyNoMoreInteractions(emitter);
+    }
+
+    @Test
+    void shouldReturnCachedImageAndPublishEventToNotifyRenderIsCompleted() {
+        final var inputMessage = TestFactory.createInputMessage(aMessageId(), "001", dateTime, aTileRenderRequested(DESIGN_ID_2, COMMAND_ID_2, REVISION_2, DATA_2, 0, 0, 0));
+        final var expectedOutputMessage = TestFactory.createOutputMessage(aMessageId(), aTileRenderCompleted(DESIGN_ID_2, COMMAND_ID_2, REVISION_2, DATA_2, 0, 0, 0, COMPLETED));
+
+        final byte[] image = { 0, 1, 2 };
+
+        when(driver.getObject(any())).thenReturn(Single.just(image));
+        when(emitter.send(any(), any())).thenReturn(Single.just(null));
+        when(emitter.getTopicName()).thenReturn("render");
+
+        controller.onNext(inputMessage).toCompletable().doOnError(Assertions::fail).await();
+
+        verify(driver).getObject(Bucket.createBucketKey(inputMessage.getValue().getData()));
+        verifyNoMoreInteractions(driver);
+
+        verifyNoInteractions(renderer);
+
+        verify(emitter).getTopicName();
+        verify(emitter).send(assertArg(message -> hasExpectedTileRenderCompleted(message, expectedOutputMessage)), eq("render-completed-0"));
+        verifyNoMoreInteractions(emitter);
+    }
+
+    @Test
+    void shouldReturnErrorWhenDriverFails() {
+        final var inputMessage = TestFactory.createInputMessage(aMessageId(), "001", dateTime, aTileRenderRequested(DESIGN_ID_1, COMMAND_ID_1, REVISION_1, DATA_1, 0, 0, 0));
+
+        final byte[] image = { 0, 1, 2 };
+        final var exception = new RuntimeException();
+
+        when(driver.getObject(any())).thenReturn(Single.error(null));
+        when(renderer.renderImage(any())).thenReturn(Single.just(Result.of(image, null)));
+        when(driver.putObject(any(), any(byte[].class))).thenReturn(Single.error(exception));
+
+        assertThatThrownBy(() -> controller.onNext(inputMessage).toCompletable().await()).isEqualTo(exception);
+
+        verify(driver).getObject(Bucket.createBucketKey(inputMessage.getValue().getData()));
+        verify(driver).putObject(Bucket.createBucketKey(inputMessage.getValue().getData()), image);
+        verifyNoMoreInteractions(driver);
+
+        verify(renderer).renderImage(inputMessage.getValue().getData());
+        verifyNoMoreInteractions(renderer);
+
+        verifyNoInteractions(emitter);
+    }
+
+    @Test
+    void shouldReturnErrorWhenRendererFails() {
+        final var inputMessage = TestFactory.createInputMessage(aMessageId(), "001", dateTime, aTileRenderRequested(DESIGN_ID_1, COMMAND_ID_1, REVISION_1, DATA_1, 0, 0, 0));
+
+        final var exception = new RuntimeException();
+
+        when(driver.getObject(any())).thenReturn(Single.error(null));
+        when(renderer.renderImage(any())).thenReturn(Single.error(exception));
+
+        assertThatThrownBy(() -> controller.onNext(inputMessage).toCompletable().await()).isEqualTo(exception);
+
+        verify(driver).getObject(Bucket.createBucketKey(inputMessage.getValue().getData()));
+        verifyNoMoreInteractions(driver);
+
+        verify(renderer).renderImage(inputMessage.getValue().getData());
+        verifyNoMoreInteractions(renderer);
+
+        verifyNoInteractions(emitter);
+    }
+
+    @Test
+    void shouldReturnErrorWhenEmitterFails() {
+        final var inputMessage = TestFactory.createInputMessage(aMessageId(), "001", dateTime, aTileRenderRequested(DESIGN_ID_1, COMMAND_ID_1, REVISION_1, DATA_1, 0, 0, 0));
+        final var expectedOutputMessage = TestFactory.createOutputMessage(aMessageId(), aTileRenderCompleted(DESIGN_ID_1, COMMAND_ID_1, REVISION_1, DATA_1, 0, 0, 0, COMPLETED));
+
+        final byte[] image = { 0, 1, 2 };
+        final var exception = new RuntimeException();
+
+        when(driver.getObject(any())).thenReturn(Single.error(null));
+        when(renderer.renderImage(any())).thenReturn(Single.just(Result.of(image, null)));
+        when(driver.putObject(any(), any(byte[].class))).thenReturn(Single.just(null));
+        when(emitter.send(any(), any())).thenReturn(Single.error(exception));
+        when(emitter.getTopicName()).thenReturn("render");
+
+        assertThatThrownBy(() -> controller.onNext(inputMessage).toCompletable().await()).isEqualTo(exception);
 
         verify(driver).getObject(Bucket.createBucketKey(inputMessage.getValue().getData()));
         verify(driver).putObject(Bucket.createBucketKey(inputMessage.getValue().getData()), image);

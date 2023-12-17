@@ -44,7 +44,7 @@ public class CallbackHandler implements Handler<RoutingContextAdapter> {
 
         oauthAdapter.authenticate(code, res -> {
             if (res.failed()) {
-                routingContext.fail(403, res.cause());
+                routingContext.fail(500, res.cause());
             } else {
                 routingContext.setUser(res.result());
                 if (state.length() != 0 && state.charAt(0) == '/') {

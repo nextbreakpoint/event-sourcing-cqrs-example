@@ -8,6 +8,10 @@ public class ListAccountsRequestMapper implements Mapper<RoutingContext, ListAcc
     public ListAccountsRequest transform(RoutingContext context) {
         final String email = context.request().getParam("email");
 
+        if (email == null) {
+            throw new IllegalStateException("the required parameter email is missing");
+        }
+
         return new ListAccountsRequest(email);
     }
 }

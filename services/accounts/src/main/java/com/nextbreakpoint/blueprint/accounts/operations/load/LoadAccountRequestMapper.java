@@ -10,6 +10,14 @@ public class LoadAccountRequestMapper implements Mapper<RoutingContext, LoadAcco
     public LoadAccountRequest transform(RoutingContext context) {
         final String uuid = context.request().getParam("accountId");
 
-        return new LoadAccountRequest(UUID.fromString(uuid));
+        if (uuid == null) {
+            throw new IllegalStateException("the required parameter accountId is missing");
+        }
+
+        try {
+            return new LoadAccountRequest(UUID.fromString(uuid));
+        } catch (Exception e) {
+            throw new IllegalStateException("invalid request: " + e.getMessage());
+        }
     }
 }

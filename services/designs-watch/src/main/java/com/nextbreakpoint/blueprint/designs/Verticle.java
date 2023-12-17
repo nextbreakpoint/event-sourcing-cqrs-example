@@ -20,7 +20,9 @@ import com.nextbreakpoint.blueprint.common.vertx.Records;
 import com.nextbreakpoint.blueprint.common.vertx.ResponseHelper;
 import com.nextbreakpoint.blueprint.common.vertx.Server;
 import com.nextbreakpoint.blueprint.common.vertx.ServerConfig;
+import com.nextbreakpoint.blueprint.designs.common.EventBusAdapter;
 import com.nextbreakpoint.blueprint.designs.common.NotificationPublisher;
+import com.nextbreakpoint.blueprint.designs.common.WatchHandlerAdapter;
 import com.nextbreakpoint.blueprint.designs.controllers.DesignDocumentDeleteCompletedController;
 import com.nextbreakpoint.blueprint.designs.controllers.DesignDocumentUpdateCompletedController;
 import com.nextbreakpoint.blueprint.designs.handlers.WatchHandler;
@@ -193,11 +195,15 @@ public class Verticle extends AbstractVerticle {
 
             final Handler<RoutingContext> onAccessDenied = routingContext -> routingContext.response().setStatusCode(403).setStatusMessage("Access denied").end();
 
-            final Handler<RoutingContext> watchHandler = new AccessHandler(jwtProvider, WatchHandler.create(vertx), onAccessDenied, List.of(ANONYMOUS, ADMIN, GUEST));
+            final EventBusAdapter eventBusAdapter = new EventBusAdapter(vertx);
+
+            final WatchHandlerAdapter watchHandlerAdapter = new WatchHandlerAdapter(WatchHandler.create(eventBusAdapter));
+
+            final Handler<RoutingContext> watchHandler = new AccessHandler(jwtProvider, watchHandlerAdapter, onAccessDenied, List.of(ANONYMOUS, ADMIN, GUEST));
 
             final Map<String, RxSingleHandler<InputMessage<Object>, Void>> messageHandlers = new HashMap<>();
 
-            final NotificationPublisher notificationPublisher = new NotificationPublisher(vertx, "notifications");
+            final NotificationPublisher notificationPublisher = new NotificationPublisher(eventBusAdapter);
 
             messageHandlers.put(DesignDocumentUpdateCompleted.getClassSchema().getFullName(), Factory.createDesignDocumentUpdateCompletedHandler(new DesignDocumentUpdateCompletedController(notificationPublisher)));
             messageHandlers.put(DesignDocumentDeleteCompleted.getClassSchema().getFullName(), Factory.createDesignDocumentDeleteCompletedHandler(new DesignDocumentDeleteCompletedController(notificationPublisher)));

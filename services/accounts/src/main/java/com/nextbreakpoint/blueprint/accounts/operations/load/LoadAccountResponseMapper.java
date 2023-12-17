@@ -14,8 +14,8 @@ public class LoadAccountResponseMapper implements Mapper<LoadAccountResponse, Op
 
     private JsonObject makeAccount(Account account) {
         return new JsonObject()
-                        .put("uuid", account.getUuid())
-                        .put("name", account.getName())
-                        .put("role", account.getAuthorities());
+                .put("uuid", account.getUuid())
+                .put("name", account.getName())
+                .put("role", account.getAuthorities());
     }
 }

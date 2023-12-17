@@ -10,6 +10,14 @@ public class DeleteAccountRequestMapper implements Mapper<RoutingContext, Delete
     public DeleteAccountRequest transform(RoutingContext context) {
         final String uuid = context.request().getParam("accountId");
 
-        return new DeleteAccountRequest(UUID.fromString(uuid));
+        if (uuid == null) {
+            throw new IllegalStateException("the required parameter accountId is missing");
+        }
+
+        try {
+            return new DeleteAccountRequest(UUID.fromString(uuid));
+        } catch (Exception e) {
+            throw new IllegalStateException("invalid request: " + e.getMessage());
+        }
     }
 }

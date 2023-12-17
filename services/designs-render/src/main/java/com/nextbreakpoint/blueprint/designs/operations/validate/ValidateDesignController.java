@@ -3,12 +3,14 @@ package com.nextbreakpoint.blueprint.designs.operations.validate;
 import com.nextbreakpoint.blueprint.common.core.Controller;
 import com.nextbreakpoint.blueprint.common.core.ValidationStatus;
 import com.nextbreakpoint.blueprint.designs.common.BundleValidator;
-import com.nextbreakpoint.blueprint.designs.common.BundleValidatorException;
+import com.nextbreakpoint.blueprint.designs.common.ValidationException;
+import lombok.extern.log4j.Log4j2;
 import rx.Single;
 
 import java.util.List;
 import java.util.Objects;
 
+@Log4j2
 public class ValidateDesignController implements Controller<ValidateDesignRequest, ValidateDesignResponse> {
     private final BundleValidator validator;
 
@@ -27,7 +29,9 @@ public class ValidateDesignController implements Controller<ValidateDesignReques
                     .build();
 
             return Single.just(response);
-        } catch (BundleValidatorException e) {
+        } catch (ValidationException e) {
+            log.warn("Bundle is not valid", e);
+
             final ValidateDesignResponse response = ValidateDesignResponse.builder()
                     .withStatus(ValidationStatus.REJECTED)
                     .withErrors(e.getErrors())

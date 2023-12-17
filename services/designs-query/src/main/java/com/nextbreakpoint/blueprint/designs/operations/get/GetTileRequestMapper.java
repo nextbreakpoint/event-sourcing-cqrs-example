@@ -14,31 +14,31 @@ public class GetTileRequestMapper implements Mapper<RoutingContext, GetTileReque
         final String uuidParam = request.getParam("designId");
 
         if (uuidParam == null) {
-            throw new IllegalStateException("parameter designId missing from routing context");
+            throw new IllegalStateException("the required parameter designId is missing");
         }
 
         final String levelParam = request.getParam("level");
 
         if (levelParam == null) {
-            throw new IllegalStateException("parameter level missing from routing context");
+            throw new IllegalStateException("the required parameter level is missing");
         }
 
         final String colParam = request.getParam("col");
 
         if (colParam == null) {
-            throw new IllegalStateException("parameter col missing from routing context");
+            throw new IllegalStateException("the required parameter col is missing");
         }
 
         final String rowParam = request.getParam("row");
 
         if (rowParam == null) {
-            throw new IllegalStateException("parameter row missing from routing context");
+            throw new IllegalStateException("the required parameter row is missing");
         }
 
         final String sizePram = request.getParam("size");
 
         if (sizePram == null) {
-            throw new IllegalStateException("parameter size missing from routing context");
+            throw new IllegalStateException("the required parameter size is missing");
         }
 
         final String draftParam = request.getParam("draft", "false");
@@ -65,7 +65,7 @@ public class GetTileRequestMapper implements Mapper<RoutingContext, GetTileReque
                     .withDraft(draft)
                     .build();
         } catch (Exception e) {
-            throw new IllegalStateException("invalid parameters: " + e.getMessage());
+            throw new IllegalStateException("invalid request: " + e.getMessage());
         }
     }
 }

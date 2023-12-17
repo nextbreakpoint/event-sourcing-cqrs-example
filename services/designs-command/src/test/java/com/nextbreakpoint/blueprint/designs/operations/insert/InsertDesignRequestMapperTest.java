@@ -47,7 +47,7 @@ class InsertDesignRequestMapperTest {
     }
 
     @Test
-    void shouldThrowExceptionWhenBodyIsMissing() {
+    void shouldThrowExceptionWhenBodyIsEmpty() {
         final var userId = UUID.randomUUID();
 
         when(context.request()).thenReturn(httpRequest);
@@ -55,7 +55,9 @@ class InsertDesignRequestMapperTest {
         when(context.body()).thenReturn(null);
         when(user.principal()).thenReturn(JsonObject.of("user", userId));
 
-        assertThatThrownBy(() -> mapper.transform(context)).isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> mapper.transform(context))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("body is empty");
     }
 
     @Test
@@ -68,7 +70,9 @@ class InsertDesignRequestMapperTest {
         when(user.principal()).thenReturn(JsonObject.of("user", userId));
         when(requestBody.asJsonObject()).thenReturn(JsonObject.of("manifest", MANIFEST, "metadata", METADATA));
 
-        assertThatThrownBy(() -> mapper.transform(context)).isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> mapper.transform(context))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("contain the required properties: script is missing");
     }
 
     @Test
@@ -81,7 +85,9 @@ class InsertDesignRequestMapperTest {
         when(user.principal()).thenReturn(JsonObject.of("user", userId));
         when(requestBody.asJsonObject()).thenReturn(JsonObject.of("manifest", MANIFEST, "script", SCRIPT));
 
-        assertThatThrownBy(() -> mapper.transform(context)).isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> mapper.transform(context))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("contain the required properties: metadata is missing");
     }
 
     @Test
@@ -94,7 +100,9 @@ class InsertDesignRequestMapperTest {
         when(user.principal()).thenReturn(JsonObject.of("user", userId));
         when(requestBody.asJsonObject()).thenReturn(JsonObject.of("script", SCRIPT, "metadata", METADATA));
 
-        assertThatThrownBy(() -> mapper.transform(context)).isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> mapper.transform(context))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("contain the required properties: manifest is missing");
     }
 
     @Test
@@ -102,6 +110,21 @@ class InsertDesignRequestMapperTest {
         when(context.request()).thenReturn(httpRequest);
         when(context.user()).thenReturn(null);
 
-        assertThatThrownBy(() -> mapper.transform(context)).isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> mapper.transform(context))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("user is not authenticated");
+    }
+
+    @Test
+    void shouldThrowExceptionWhenUserIdIsMalformed() {
+        when(context.request()).thenReturn(httpRequest);
+        when(context.user()).thenReturn(user);
+        when(context.body()).thenReturn(requestBody);
+        when(user.principal()).thenReturn(JsonObject.of("user", "abc"));
+        when(requestBody.asJsonObject()).thenReturn(JsonObject.of("manifest", MANIFEST, "metadata", METADATA, "script", SCRIPT));
+
+        assertThatThrownBy(() -> mapper.transform(context))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("invalid request");
     }
 }

@@ -1,7 +1,7 @@
 package com.nextbreakpoint.blueprint.designs.operations.validate;
 
 import com.nextbreakpoint.blueprint.designs.common.BundleValidator;
-import com.nextbreakpoint.blueprint.designs.common.BundleValidatorException;
+import com.nextbreakpoint.blueprint.designs.common.ValidationException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -24,7 +24,7 @@ class ValidateDesignControllerTest {
     private final ValidateDesignController controller = new ValidateDesignController(validator);
 
     @Test
-    void shouldHandleRequest() throws BundleValidatorException {
+    void shouldHandleRequest() throws ValidationException {
         final var request = ValidateDesignRequest.builder()
                 .withManifest(MANIFEST)
                 .withMetadata(METADATA)
@@ -41,8 +41,8 @@ class ValidateDesignControllerTest {
     }
 
     @Test
-    void shouldReturnAnErrorWhenThereIsAValidationError() throws BundleValidatorException {
-        doThrow(new BundleValidatorException("error", List.of("some error"))).when(validator).parseAndCompile(any(), any(), any());
+    void shouldReturnAnErrorWhenThereIsAValidationError() throws ValidationException {
+        doThrow(new ValidationException("error", List.of("some error"))).when(validator).parseAndCompile(any(), any(), any());
 
         final var request = ValidateDesignRequest.builder()
                 .withManifest(MANIFEST)

@@ -50,69 +50,126 @@ class UpdateDesignRequestMapperTest {
     }
 
     @Test
-    void shouldThrowExceptionWhenDesignIdIsMissing() {
+    void shouldThrowExceptionWhenParameterDesignIdIsMissing() {
         when(context.request()).thenReturn(httpRequest);
         when(httpRequest.getParam("designId")).thenReturn(null);
 
-        assertThatThrownBy(() -> mapper.transform(context)).isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> mapper.transform(context))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("designId is missing");
     }
 
     @Test
-    void shouldThrowExceptionWhenBodyIsMissing() {
+    void shouldThrowExceptionWhenParameterDesignIdIsMalformed() {
         final var userId = UUID.randomUUID();
 
         when(context.request()).thenReturn(httpRequest);
         when(context.user()).thenReturn(user);
+        when(context.body()).thenReturn(requestBody);
+        when(user.principal()).thenReturn(JsonObject.of("user", userId));
+        when(httpRequest.getParam("designId")).thenReturn("abc");
+        when(requestBody.asJsonObject()).thenReturn(JsonObject.of("manifest", MANIFEST, "metadata", METADATA, "script", SCRIPT, "published", true));
+
+        assertThatThrownBy(() -> mapper.transform(context))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageStartingWith("invalid request");
+    }
+
+    @Test
+    void shouldThrowExceptionWhenBodyIsEmpty() {
+        final var userId = UUID.randomUUID();
+        final var designId = UUID.randomUUID();
+
+        when(context.request()).thenReturn(httpRequest);
+        when(context.user()).thenReturn(user);
         when(context.body()).thenReturn(null);
+        when(httpRequest.getParam("designId")).thenReturn(designId.toString());
         when(user.principal()).thenReturn(JsonObject.of("user", userId));
 
-        assertThatThrownBy(() -> mapper.transform(context)).isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> mapper.transform(context))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("body is empty");
     }
 
     @Test
     void shouldThrowExceptionWhenBodyDoesNotContainScript() {
         final var userId = UUID.randomUUID();
+        final var designId = UUID.randomUUID();
 
         when(context.request()).thenReturn(httpRequest);
         when(context.user()).thenReturn(user);
         when(context.body()).thenReturn(requestBody);
         when(user.principal()).thenReturn(JsonObject.of("user", userId));
+        when(httpRequest.getParam("designId")).thenReturn(designId.toString());
         when(requestBody.asJsonObject()).thenReturn(JsonObject.of("manifest", MANIFEST, "metadata", METADATA));
 
-        assertThatThrownBy(() -> mapper.transform(context)).isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> mapper.transform(context))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("contain the required properties: script is missing");
     }
 
     @Test
     void shouldThrowExceptionWhenBodyDoesNotContainMetadata() {
         final var userId = UUID.randomUUID();
+        final var designId = UUID.randomUUID();
 
         when(context.request()).thenReturn(httpRequest);
         when(context.user()).thenReturn(user);
         when(context.body()).thenReturn(requestBody);
         when(user.principal()).thenReturn(JsonObject.of("user", userId));
+        when(httpRequest.getParam("designId")).thenReturn(designId.toString());
         when(requestBody.asJsonObject()).thenReturn(JsonObject.of("manifest", MANIFEST, "script", SCRIPT));
 
-        assertThatThrownBy(() -> mapper.transform(context)).isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> mapper.transform(context))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("contain the required properties: metadata is missing");
     }
 
     @Test
     void shouldThrowExceptionWhenBodyDoesNotContainManifest() {
         final var userId = UUID.randomUUID();
+        final var designId = UUID.randomUUID();
 
         when(context.request()).thenReturn(httpRequest);
         when(context.user()).thenReturn(user);
         when(context.body()).thenReturn(requestBody);
         when(user.principal()).thenReturn(JsonObject.of("user", userId));
+        when(httpRequest.getParam("designId")).thenReturn(designId.toString());
         when(requestBody.asJsonObject()).thenReturn(JsonObject.of("script", SCRIPT, "metadata", METADATA));
 
-        assertThatThrownBy(() -> mapper.transform(context)).isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> mapper.transform(context))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("contain the required properties: manifest is missing");
     }
 
     @Test
     void shouldThrowExceptionWhenUserIsNotAuthenticated() {
+        final var designId = UUID.randomUUID();
+
         when(context.request()).thenReturn(httpRequest);
         when(context.user()).thenReturn(null);
+        when(context.body()).thenReturn(requestBody);
+        when(httpRequest.getParam("designId")).thenReturn(designId.toString());
+        when(requestBody.asJsonObject()).thenReturn(JsonObject.of("manifest", MANIFEST, "metadata", METADATA, "script", SCRIPT, "published", true));
 
-        assertThatThrownBy(() -> mapper.transform(context)).isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> mapper.transform(context))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("user is not authenticated");
+    }
+
+    @Test
+    void shouldThrowExceptionWhenUserIdIsMalformed() {
+        final var designId = UUID.randomUUID();
+
+        when(context.request()).thenReturn(httpRequest);
+        when(context.user()).thenReturn(user);
+        when(context.body()).thenReturn(requestBody);
+        when(user.principal()).thenReturn(JsonObject.of("user", "abc"));
+        when(httpRequest.getParam("designId")).thenReturn(designId.toString());
+        when(requestBody.asJsonObject()).thenReturn(JsonObject.of("manifest", MANIFEST, "metadata", METADATA, "script", SCRIPT, "published", true));
+
+        assertThatThrownBy(() -> mapper.transform(context))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("invalid request");
     }
 }

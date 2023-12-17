@@ -9,9 +9,9 @@ import java.util.UUID;
 public class DeleteDesignRequestMapper implements Mapper<RoutingContext, DeleteDesignRequest> {
     @Override
     public DeleteDesignRequest transform(RoutingContext context) {
-        final String uuid = context.request().getParam("designId");
+        final String uuidParam = context.request().getParam("designId");
 
-        if (uuid == null) {
+        if (uuidParam == null) {
             throw new IllegalStateException("the required parameter designId is missing");
         }
 
@@ -21,12 +21,18 @@ public class DeleteDesignRequestMapper implements Mapper<RoutingContext, DeleteD
 
         final JsonObject principal = context.user().principal();
 
-        final UUID owner = UUID.fromString(principal.getString("user"));
+        try {
+            final UUID owner = UUID.fromString(principal.getString("user"));
 
-        return DeleteDesignRequest.builder()
-                .withOwner(owner)
-                .withUuid(UUID.fromString(uuid))
-                .withChange(UUID.randomUUID())
-                .build();
+            final UUID uuid = UUID.fromString(uuidParam);
+
+            return DeleteDesignRequest.builder()
+                    .withOwner(owner)
+                    .withUuid(uuid)
+                    .withChange(UUID.randomUUID())
+                    .build();
+        } catch (Exception e) {
+            throw new IllegalStateException("invalid request: " + e.getMessage());
+        }
     }
 }

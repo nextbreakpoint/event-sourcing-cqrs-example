@@ -8,7 +8,7 @@ public class UploadDesignRequestMapper implements Mapper<RoutingContext, UploadD
     @Override
     public UploadDesignRequest transform(RoutingContext context) {
         final FileUpload fileUpload = context.fileUploads().stream().findFirst()
-                .orElseThrow(() -> new IllegalStateException("the required file is missing"));
+                .orElseThrow(() -> new IllegalStateException("the request doesn't contain the required file"));
 
         return UploadDesignRequest.builder()
                 .withFile(fileUpload.uploadedFileName())

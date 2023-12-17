@@ -29,7 +29,7 @@ public class ListDesignsRequestMapper implements Mapper<RoutingContext, ListDesi
                     .withSize(size)
                     .build();
         } catch (Exception e) {
-            throw new IllegalStateException("invalid parameters: " + e.getMessage());
+            throw new IllegalStateException("invalid request: " + e.getMessage());
         }
     }
 }

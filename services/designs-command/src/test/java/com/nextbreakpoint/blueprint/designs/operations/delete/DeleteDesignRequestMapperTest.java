@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -41,11 +40,25 @@ class DeleteDesignRequestMapperTest {
     }
 
     @Test
-    void shouldThrowExceptionWhenDesignIdIsMissing() {
+    void shouldThrowExceptionWhenParameterDesignIdIsMissing() {
         when(context.request()).thenReturn(httpRequest);
         when(httpRequest.getParam("designId")).thenReturn(null);
 
-        assertThatThrownBy(() -> mapper.transform(context)).isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> mapper.transform(context))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("designId is missing");
+    }
+
+    @Test
+    void shouldThrowExceptionWhenParameterDesignIdIsMalformed() {
+        when(context.request()).thenReturn(httpRequest);
+        when(context.user()).thenReturn(user);
+        when(httpRequest.getParam("designId")).thenReturn("abc");
+        when(user.principal()).thenReturn(JsonObject.of("user", "abc"));
+
+        assertThatThrownBy(() -> mapper.transform(context))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageStartingWith("invalid request");
     }
 
     @Test
@@ -56,6 +69,22 @@ class DeleteDesignRequestMapperTest {
         when(context.user()).thenReturn(null);
         when(httpRequest.getParam("designId")).thenReturn(designId.toString());
 
-        assertThatThrownBy(() -> mapper.transform(context)).isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> mapper.transform(context))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("user is not authenticated");
+    }
+
+    @Test
+    void shouldThrowExceptionWhenUserIdIsMalformed() {
+        final var designId = UUID.randomUUID();
+
+        when(context.request()).thenReturn(httpRequest);
+        when(context.user()).thenReturn(user);
+        when(httpRequest.getParam("designId")).thenReturn(designId.toString());
+        when(user.principal()).thenReturn(JsonObject.of("user", "abc"));
+
+        assertThatThrownBy(() -> mapper.transform(context))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("invalid request");
     }
 }

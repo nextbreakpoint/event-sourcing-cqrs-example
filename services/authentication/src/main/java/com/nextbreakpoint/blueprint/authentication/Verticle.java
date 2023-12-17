@@ -1,5 +1,10 @@
 package com.nextbreakpoint.blueprint.authentication;
 
+import com.nextbreakpoint.blueprint.authentication.common.AccountsClient;
+import com.nextbreakpoint.blueprint.authentication.common.GitHubClient;
+import com.nextbreakpoint.blueprint.authentication.common.OAuthAdapter;
+import com.nextbreakpoint.blueprint.authentication.common.RoutingContextHandlerAdapter;
+import com.nextbreakpoint.blueprint.authentication.common.TokenProvider;
 import com.nextbreakpoint.blueprint.authentication.handlers.CallbackHandler;
 import com.nextbreakpoint.blueprint.authentication.handlers.GitHubSignInHandler;
 import com.nextbreakpoint.blueprint.authentication.handlers.GitHubSignOutHandler;
@@ -30,11 +35,9 @@ import io.vertx.rxjava.ext.healthchecks.HealthCheckHandler;
 import io.vertx.rxjava.ext.healthchecks.HealthChecks;
 import io.vertx.rxjava.ext.web.Router;
 import io.vertx.rxjava.ext.web.RoutingContext;
-import io.vertx.rxjava.ext.web.client.WebClient;
 import io.vertx.rxjava.ext.web.handler.BodyHandler;
 import io.vertx.rxjava.ext.web.handler.CorsHandler;
 import io.vertx.rxjava.ext.web.handler.LoggerHandler;
-import io.vertx.rxjava.ext.web.handler.TimeoutHandler;
 import io.vertx.rxjava.micrometer.PrometheusScrapingHandler;
 import lombok.extern.log4j.Log4j2;
 import rx.Completable;
@@ -48,7 +51,6 @@ import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.nextbreakpoint.blueprint.common.core.Headers.ACCEPT;
@@ -165,15 +167,19 @@ public class Verticle extends AbstractVerticle {
 
             final JWTAuth jwtProvider = JWTProviderFactory.create(vertx, jwtProviderConfig);
 
-            final WebClient accountsClient = WebClientFactory.create(vertx, accountsUrl, webClientConfig);
+            final AccountsClient accountsClient = new AccountsClient(WebClientFactory.create(vertx, accountsUrl, webClientConfig), adminUsers);
 
-            final WebClient githubClient = WebClientFactory.create(vertx, githubUrl);
+            final GitHubClient githubClient = new GitHubClient(WebClientFactory.create(vertx, githubUrl));
 
-            final Handler<RoutingContext> signinHandler = createSignInHandler(cookieDomain, webUrl, authUrl, adminUsers, accountsClient, githubClient, jwtProvider, authenticationProvider, oauthAuthority, CALLBACK_PATH);
+            final TokenProvider tokenProvider = new TokenProvider(jwtProvider);
 
-            final Handler<RoutingContext> signoutHandler = createSignOutHandler(cookieDomain, webUrl);
+            final OAuthAdapter oauthAdapter = new OAuthAdapter(authenticationProvider, authUrl, oauthAuthority, CALLBACK_PATH);
 
-            final Handler<RoutingContext> callbackHandler = createCallbackHandler(authUrl, authenticationProvider, CALLBACK_PATH);
+            final Handler<RoutingContext> signinHandler = createSignInHandler(webUrl, cookieDomain, githubClient, accountsClient, tokenProvider, oauthAdapter);
+
+            final Handler<RoutingContext> signoutHandler = createSignOutHandler(webUrl, cookieDomain);
+
+            final Handler<RoutingContext> callbackHandler = createCallbackHandler(webUrl, oauthAdapter);
 
             final Handler<RoutingContext> apiV1DocsHandler = new OpenApiHandler(vertx.getDelegate(), executor, "api-v1.yaml");
 
@@ -263,15 +269,15 @@ public class Verticle extends AbstractVerticle {
         redirectToError(routingContext, statusCode -> webUrl + "/error/" + statusCode);
     }
 
-    protected Handler<RoutingContext> createSignInHandler(String cookieDomain, String webUrl, String authUrl, Set<String> adminUsers, WebClient accountsClient, WebClient githubClient, JWTAuth jwtProvider, OAuth2Auth authHandler, String oauthAuthority, String callbackPath) {
-        return new GitHubSignInHandler(cookieDomain, webUrl, authUrl, adminUsers, accountsClient, githubClient, jwtProvider, authHandler, oauthAuthority, callbackPath);
+    protected Handler<RoutingContext> createSignInHandler(String webUrl, String cookieDomain, GitHubClient githubClient, AccountsClient accountsClient, TokenProvider tokenProvider, OAuthAdapter oauthAdapter) {
+        return new RoutingContextHandlerAdapter(webUrl, new GitHubSignInHandler(cookieDomain, githubClient, accountsClient, tokenProvider, oauthAdapter));
     }
 
-    protected Handler<RoutingContext> createSignOutHandler(String cookieDomain, String webUrl) {
-        return new GitHubSignOutHandler(cookieDomain, webUrl);
+    protected Handler<RoutingContext> createSignOutHandler(String webUrl, String cookieDomain) {
+        return new RoutingContextHandlerAdapter(webUrl, new GitHubSignOutHandler(cookieDomain));
     }
 
-    protected Handler<RoutingContext> createCallbackHandler(String authUrl, OAuth2Auth authHandler, String callbackPath) {
-        return new CallbackHandler(authUrl, authHandler, callbackPath);
+    protected Handler<RoutingContext> createCallbackHandler(String webUrl, OAuthAdapter oauthAdapter) {
+        return new RoutingContextHandlerAdapter(webUrl, new CallbackHandler(oauthAdapter));
     }
 }

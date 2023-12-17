@@ -1,17 +1,16 @@
 package com.nextbreakpoint.blueprint.authentication;
 
+import com.nextbreakpoint.blueprint.authentication.common.AccountsClient;
+import com.nextbreakpoint.blueprint.authentication.common.GitHubClient;
+import com.nextbreakpoint.blueprint.authentication.common.OAuthAdapter;
+import com.nextbreakpoint.blueprint.authentication.common.RoutingContextAdapter;
+import com.nextbreakpoint.blueprint.authentication.common.TokenProvider;
 import com.nextbreakpoint.blueprint.authentication.handlers.GitHubSignInHandler;
 import com.nextbreakpoint.blueprint.authentication.handlers.GitHubSignInScope;
 import io.vertx.core.Handler;
 import io.vertx.core.Launcher;
 import io.vertx.core.json.JsonObject;
-import io.vertx.rxjava.ext.auth.jwt.JWTAuth;
-import io.vertx.rxjava.ext.auth.oauth2.OAuth2Auth;
-import io.vertx.rxjava.ext.web.RoutingContext;
-import io.vertx.rxjava.ext.web.client.WebClient;
 import rx.Single;
-
-import java.util.Set;
 
 public class VerticleStub extends Verticle {
     public static final String DEFAULT_EMAIL = "test@localhost";
@@ -21,10 +20,10 @@ public class VerticleStub extends Verticle {
     }
 
     @Override
-    protected Handler<RoutingContext> createSignInHandler(String cookieDomain, String webUrl, String authUrl, Set<String> adminUsers, WebClient accountsClient, WebClient githubClient, JWTAuth jwtProvider, OAuth2Auth oauthHandler, String oauthAuthority, String callbackPath) {
-        return new GitHubSignInHandler(cookieDomain, webUrl, authUrl, adminUsers, accountsClient, githubClient, jwtProvider, oauthHandler, oauthAuthority, callbackPath) {
+    protected Handler<RoutingContextAdapter> createSignInHandler(String cookieDomain, GitHubClient githubClient, AccountsClient accountsClient, TokenProvider tokenProvider, OAuthAdapter oauthAdapter) {
+        return new GitHubSignInHandler(cookieDomain, githubClient, accountsClient, tokenProvider, oauthAdapter) {
             @Override
-            public void handle(RoutingContext routingContext) {
+            public void handle(RoutingContextAdapter routingContext) {
                 handleAuthenticatedAccess(routingContext);
             }
 
@@ -35,7 +34,7 @@ public class VerticleStub extends Verticle {
 
             @Override
             protected Single<String> fetchUserEmail(GitHubSignInScope scope) {
-                final String email = scope.getRoutingContext().request().getParam("email");
+                final String email = scope.getRoutingContext().getRequestParam("email");
                 return Single.just(email != null ? email : DEFAULT_EMAIL);
             }
 

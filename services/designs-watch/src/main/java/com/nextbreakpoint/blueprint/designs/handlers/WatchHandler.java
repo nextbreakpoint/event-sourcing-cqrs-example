@@ -21,11 +21,11 @@ import java.util.UUID;
 public class WatchHandler implements Handler<RoutingContextAdapter> {
     private final Map<String, Set<Watcher>> watcherMap = new HashMap<>();
 
-    private final EventBusAdapter adapter;
+    private final EventBusAdapter eventBusAdapter;
 
-    protected WatchHandler(EventBusAdapter adapter) {
-        this.adapter = Objects.requireNonNull(adapter);
-        adapter.registerDesignChangeNotificationConsumer(this::dispatchNotification);
+    protected WatchHandler(EventBusAdapter eventBusAdapter) {
+        this.eventBusAdapter = Objects.requireNonNull(eventBusAdapter);
+        eventBusAdapter.registerDesignChangeNotificationConsumer(this::dispatchNotification);
     }
 
     public static WatchHandler create(EventBusAdapter adapter) {
@@ -63,7 +63,7 @@ public class WatchHandler implements Handler<RoutingContextAdapter> {
         routingContext.initiateEventStreamResponse();
         routingContext.writeEvent("open", watcher.getEventId(), openData.encode());
 
-        final MessageConsumerAdapter consumer = adapter.registerSessionUpdateNotificationConsumer(sessionId, notification -> {
+        final MessageConsumerAdapter consumer = eventBusAdapter.registerSessionUpdateNotificationConsumer(sessionId, notification -> {
             try {
                 final String newRevision = notification.getRevision();
 
@@ -109,7 +109,7 @@ public class WatchHandler implements Handler<RoutingContextAdapter> {
     private void notifyWatcher(Watcher watcher, String revision) {
         log.info("Notify watcher for session {}", watcher.sessionId);
         final var notification = SessionUpdatedNotification.builder().withRevision(revision).build();
-        adapter.publishSessionUpdateNotification(watcher.getSessionId(), notification);
+        eventBusAdapter.publishSessionUpdateNotification(watcher.getSessionId(), notification);
     }
 
     private void dispatchNotification(DesignChangedNotification notification) {

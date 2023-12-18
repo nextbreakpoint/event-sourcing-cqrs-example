@@ -47,22 +47,22 @@ public class GitHubSignInHandler implements Handler<RoutingContextAdapter> {
         }
     }
 
-    private void handleUnauthenticatedAccess(RoutingContextAdapter routingContext) {
-        Single.just(oauthAdapter.authorizeURL(routingContext.getRequestUri()))
-                .flatMap(routingContext::sendRedirectResponse)
-                .subscribe(result -> {}, routingContext::handleException);
-    }
-
     protected void handleAuthenticatedAccess(RoutingContextAdapter routingContext) {
         Single.just(newScope(routingContext))
                 .flatMap(scope -> getAccessTokenOrFail(scope).map(oauthToken -> scope.toBuilder().withOauthAccessToken(oauthToken).build()))
                 .flatMap(scope -> fetchUserEmail(scope).map(email -> scope.toBuilder().withUserEmail(email).build()))
-                .flatMap(scope -> createJwtAccessToken().map(accessToken -> scope.toBuilder().withJwtAccessToken(accessToken).build()))
+                .flatMap(scope -> createPlatformAccessToken().map(accessToken -> scope.toBuilder().withJwtAccessToken(accessToken).build()))
                 .flatMap(scope -> findAccounts(scope.getJwtAccessToken(), scope.getUserEmail()).map(accounts -> scope.toBuilder().withAccounts(accounts).build()))
                 .flatMap(scope -> fetchOrCreateAccount(scope).map(account -> scope.toBuilder().withAccount(account).build()))
                 .flatMap(scope -> createCookie(scope).map(cookie -> scope.toBuilder().withCookie(cookie).build()))
                 .flatMap(this::sendRedirectResponse)
                 .subscribe(scope -> {}, routingContext::handleException);
+    }
+
+    private void handleUnauthenticatedAccess(RoutingContextAdapter routingContext) {
+        Single.fromCallable(() -> oauthAdapter.authorizeURL(routingContext.getRequestUri()))
+                .flatMap(routingContext::sendRedirectResponse)
+                .subscribe(result -> {}, routingContext::handleException);
     }
 
     private GitHubSignInScope newScope(RoutingContextAdapter routingContext) {
@@ -96,16 +96,16 @@ public class GitHubSignInHandler implements Handler<RoutingContextAdapter> {
         return scope.getRoutingContext().sendRedirectResponse(scope.getRedirectTo(), scope.getCookie());
     }
 
-    private String createToken(String userUuid, List<String> authorities) {
+    private Single<String> createToken(String userUuid, List<String> authorities) {
         return tokenProvider.generateToken(userUuid, authorities);
     }
 
-    private Single<String> createJwtAccessToken() {
-        return Single.fromCallable(() -> createToken(NULL_USER_UUID, List.of(Authority.PLATFORM)));
+    private Single<String> createPlatformAccessToken() {
+        return createToken(NULL_USER_UUID, List.of(Authority.PLATFORM));
     }
 
     private Single<Cookie> createJwtCookie(String uuid, String role) {
-        return Single.fromCallable(() -> Authentication.createCookie(createToken(uuid, List.of(role)), cookieDomain));
+        return createToken(uuid, List.of(role)).map(token -> Authentication.createCookie(token, cookieDomain));
     }
 
     private Single<JsonArray> findAccounts(String jwtAccessToken, String email) {

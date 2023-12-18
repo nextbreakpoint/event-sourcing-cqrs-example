@@ -2,6 +2,7 @@ package com.nextbreakpoint.blueprint.authentication.common;
 
 import com.nextbreakpoint.blueprint.common.vertx.Authentication;
 import io.vertx.rxjava.ext.auth.jwt.JWTAuth;
+import rx.Single;
 
 import java.util.List;
 import java.util.Objects;
@@ -13,7 +14,7 @@ public class TokenProvider {
         this.jwtProvider = Objects.requireNonNull(jwtProvider);
     }
 
-    public String generateToken(String userUuid, List<String> authorities) {
-        return Authentication.generateToken(jwtProvider, userUuid, authorities);
+    public Single<String> generateToken(String userUuid, List<String> authorities) {
+        return Single.fromCallable(() -> Authentication.generateToken(jwtProvider, userUuid, authorities));
     }
 }

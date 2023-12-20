@@ -1,8 +1,10 @@
 package com.nextbreakpoint.blueprint.designs;
 
 import au.com.dius.pact.core.model.V4Interaction;
+import com.nextbreakpoint.blueprint.common.core.Checksum;
 import com.nextbreakpoint.blueprint.common.core.Json;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
+import com.nextbreakpoint.blueprint.common.core.Time;
 import com.nextbreakpoint.blueprint.common.events.avro.Tile;
 import com.nextbreakpoint.blueprint.common.events.avro.Tiles;
 import com.nextbreakpoint.blueprint.common.test.KafkaRecord;
@@ -18,13 +20,17 @@ import org.jetbrains.annotations.NotNull;
 import rx.Observable;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
+
+import static com.nextbreakpoint.blueprint.designs.TestConstants.USER_ID_1;
 
 public class TestUtils {
     private TestUtils() {}
@@ -65,11 +71,6 @@ public class TestUtils {
         return generateKeys(design, 0)
                 .concatWith(generateKeys(design, 1))
                 .concatWith(generateKeys(design, 2));
-//                .concatWith(generateKeys(design, 3));
-//                .concatWith(generateKeys(design, 4))
-//                .concatWith(generateKeys(design, 5))
-//                .concatWith(generateKeys(design, 6))
-//                .concatWith(generateKeys(design, 7));
     }
 
     @NotNull
@@ -135,6 +136,34 @@ public class TestUtils {
                 .withLevel(tile.getLevel())
                 .withTotal(tile.getTotal())
                 .withCompleted(tile.getCompleted())
+                .build();
+    }
+
+    @NotNull
+    public static Design aPublishedDesign(UUID designId, UUID commandId, String revision, Instant created, Instant updated, String data) {
+        return aDesign(designId, commandId, revision, created, updated, 8, 100, true, data);
+    }
+
+    @NotNull
+    public static Design aDraftDesign(UUID designId, UUID commandId, String revision, Instant created, Instant updated, String data) {
+        return aDesign(designId, commandId, revision, created, updated, 3, 100, false, data);
+    }
+
+    @NotNull
+    public static Design aDesign(UUID designId, UUID commandId, String revision, Instant created, Instant updated, int levels, int percentage, boolean published, String data) {
+        return Design.builder()
+                .withDesignId(designId)
+                .withCommandId(commandId)
+                .withUserId(USER_ID_1)
+                .withData(data)
+                .withChecksum(Checksum.of(data))
+                .withRevision(revision)
+                .withLevels(levels)
+                .withTiles(TestUtils.getLevelTiles(TestUtils.getTiles(levels, percentage)))
+                .withStatus("CREATED")
+                .withPublished(published)
+                .withCreated(Time.format(created))
+                .withUpdated(Time.format(updated))
                 .build();
     }
 }

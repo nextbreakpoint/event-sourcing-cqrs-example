@@ -1,41 +1,38 @@
 package com.nextbreakpoint.blueprint.designs.handlers;
 
-import com.nextbreakpoint.blueprint.common.core.Json;
 import com.nextbreakpoint.blueprint.common.vertx.Failure;
+import com.nextbreakpoint.blueprint.designs.common.EventBusAdapter;
+import com.nextbreakpoint.blueprint.designs.common.MessageConsumerAdapter;
+import com.nextbreakpoint.blueprint.designs.common.RoutingContextAdapter;
 import com.nextbreakpoint.blueprint.designs.model.DesignChangedNotification;
+import com.nextbreakpoint.blueprint.designs.model.SessionUpdatedNotification;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
-import io.vertx.rxjava.core.Vertx;
-import io.vertx.rxjava.core.eventbus.Message;
-import io.vertx.rxjava.core.eventbus.MessageConsumer;
-import io.vertx.rxjava.ext.web.RoutingContext;
 import lombok.extern.log4j.Log4j2;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
 @Log4j2
-public class WatchHandler implements Handler<RoutingContext> {
-    private static final String REVISION_NULL = "0000000000000000-0000000000000000";
+public class WatchHandler implements Handler<RoutingContextAdapter> {
+    private final Map<String, Set<Watcher>> watcherMap = new HashMap<>();
 
-    private Map<String, Set<Watcher>> watcherMap = new HashMap<>();
+    private final EventBusAdapter eventBusAdapter;
 
-    private final Vertx vertx;
-
-    protected WatchHandler(Vertx vertx) {
-        this.vertx = vertx;
-
-        vertx.eventBus().consumer("notifications", this::handleMessage);
+    protected WatchHandler(EventBusAdapter eventBusAdapter) {
+        this.eventBusAdapter = Objects.requireNonNull(eventBusAdapter);
+        eventBusAdapter.registerDesignChangeNotificationConsumer(this::dispatchNotification);
     }
 
-    public static WatchHandler create(Vertx vertx) {
-        return new WatchHandler(vertx);
+    public static WatchHandler create(EventBusAdapter adapter) {
+        return new WatchHandler(adapter);
     }
 
-    public void handle(RoutingContext routingContext) {
+    public void handle(RoutingContextAdapter routingContext) {
         try {
             createWatcher(routingContext);
         } catch (Exception e) {
@@ -43,21 +40,10 @@ public class WatchHandler implements Handler<RoutingContext> {
         }
     }
 
-    private void handleMessage(Message<Object> message) {
-        try {
-            dispatchNotification(Json.decodeValue((String) message.body(), DesignChangedNotification.class));
-        } catch (Exception e) {
-            log.error("Failed to process event", e);
-        }
-    }
-
-    protected void createWatcher(RoutingContext routingContext) {
-        final long eventId = getLastMessageId(routingContext);
-
-        final String revision = getRevision(routingContext);
-
-        final String watchKey = getWatchKey(routingContext);
-
+    private void createWatcher(RoutingContextAdapter routingContext) {
+        final long eventId = routingContext.getLastMessageId();
+        final String revision = routingContext.getRevision();
+        final String watchKey = routingContext.getWatchKey();
         final String sessionId = UUID.randomUUID().toString();
 
         final Watcher watcher = new Watcher(watchKey, sessionId, eventId);
@@ -70,43 +56,34 @@ public class WatchHandler implements Handler<RoutingContext> {
 
         log.info("Session created (session = {}, eventId = {})", sessionId, eventId);
 
-        routingContext.response().setChunked(true);
+        final JsonObject openData = new JsonObject()
+            .put("session", sessionId)
+            .put("revision", revision);
 
-        routingContext.response().headers().add("Content-Type", "text/event-stream;charset=UTF-8");
+        routingContext.initiateEventStreamResponse();
+        routingContext.writeEvent("open", watcher.getEventId(), openData.encode());
 
-        routingContext.response().headers().add("Connection", "keep-alive");
-
-        final JsonObject openData = new JsonObject();
-
-        openData.put("session", sessionId);
-        openData.put("revision", revision);
-
-        routingContext.response().write(makeEvent("open", watcher.getEventId(), openData.encode()));
-
-        final MessageConsumer<JsonObject> consumer = vertx.eventBus().consumer("notifications." + sessionId, msg -> {
+        final MessageConsumerAdapter consumer = eventBusAdapter.registerSessionUpdateNotificationConsumer(sessionId, notification -> {
             try {
-                final JsonObject message = msg.body();
-
-                final JsonObject updateData = new JsonObject();
-
-                final String newRevision = (String) message.getValue("revision");
+                final String newRevision = notification.getRevision();
 
                 watcher.setRevision(newRevision);
                 watcher.setEventId(watcher.getEventId() + 1);
 
-                updateData.put("uuid", watcher.getWatchKey());
-                updateData.put("session", watcher.getSessionId());
-                updateData.put("revision", watcher.getRevision());
+                final JsonObject updateData = new JsonObject()
+                    .put("uuid", watcher.getWatchKey())
+                    .put("session", watcher.getSessionId())
+                    .put("revision", watcher.getRevision());
 
                 log.info("Send update notification (session = {}, revision = {})", watcher.getSessionId(), watcher.getRevision());
 
-                routingContext.response().write(makeEvent("update", watcher.getEventId(), updateData.encode()));
+                routingContext.writeEvent("update", watcher.getEventId(), updateData.encode());
             } catch (Exception e) {
                 log.warn("Cannot write message (session = {})", sessionId, e);
             }
         });
 
-        routingContext.response().closeHandler(nothing -> {
+        routingContext.setResponseCloseHandler(ignored -> {
             try {
                 log.info("Session closed (session = {})", sessionId);
 
@@ -129,42 +106,10 @@ public class WatchHandler implements Handler<RoutingContext> {
         }
     }
 
-    private String makeEvent(String name, long timestamp, String data) {
-        return "event: " + name + "\nid: " + timestamp + "\ndata: " + data + "\n\n";
-    }
-
     private void notifyWatcher(Watcher watcher, String revision) {
         log.info("Notify watcher for session {}", watcher.sessionId);
-
-        final JsonObject message = makeMessageData(revision);
-
-        vertx.eventBus().publish("notifications." + watcher.getSessionId(), message);
-    }
-
-    private JsonObject makeMessageData(String revision) {
-        final JsonObject message = new JsonObject();
-
-        message.put("revision", revision);
-
-        return message;
-    }
-
-    private String getWatchKey(RoutingContext routingContext) {
-        return routingContext.queryParam("designId").stream().findFirst().orElse("*");
-    }
-
-    private String getRevision(RoutingContext routingContext) {
-        return routingContext.queryParam("revision").stream().findFirst().orElse(REVISION_NULL);
-    }
-
-    private long getLastMessageId(RoutingContext routingContext) {
-        final String lastEventId = routingContext.request().headers().get("Last-Message-ID");
-
-        if (lastEventId != null) {
-            return Long.parseLong(lastEventId);
-        }
-
-        return 0L;
+        final var notification = SessionUpdatedNotification.builder().withRevision(revision).build();
+        eventBusAdapter.publishSessionUpdateNotification(watcher.getSessionId(), notification);
     }
 
     private void dispatchNotification(DesignChangedNotification notification) {

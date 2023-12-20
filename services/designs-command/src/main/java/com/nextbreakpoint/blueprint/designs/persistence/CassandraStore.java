@@ -38,10 +38,9 @@ public class CassandraStore implements Store {
 
     private final Tracer tracer;
 
-    private CqlSession session;
-
-    private Single<PreparedStatement> insertMessage;
-    private Single<PreparedStatement> selectMessages;
+    private final ThreadLocal<CqlSession> session = new ThreadLocal<>();
+    private final ThreadLocal<Single<PreparedStatement>> insertMessage = new ThreadLocal<>();
+    private final ThreadLocal<Single<PreparedStatement>> selectMessages = new ThreadLocal<>();
 
     public CassandraStore(Supplier<CqlSession> supplier) {
         this.supplier = Objects.requireNonNull(supplier);
@@ -70,26 +69,26 @@ public class CassandraStore implements Store {
     }
 
     private Single<CqlSession> withSession() {
-        if (session == null) {
-            session = supplier.get();
+        if (session.get() == null) {
+            session.set(supplier.get());
             if (session == null) {
                 return Single.error(new RuntimeException("Cannot create session"));
             }
-            insertMessage = Single.fromCallable(() -> session.prepare(INSERT_MESSAGE));
-            selectMessages = Single.fromCallable(() -> session.prepare(SELECT_MESSAGES));
+            insertMessage.set(Single.fromCallable(() -> session.get().prepare(INSERT_MESSAGE)));
+            selectMessages.set(Single.fromCallable(() -> session.get().prepare(SELECT_MESSAGES)));
         }
-        return Single.just(session);
+        return Single.just(session.get());
     }
 
     private Single<List<InputMessage<SpecificRecord>>> selectMessages(CqlSession session, Object[] values) {
-        return selectMessages
+        return selectMessages.get()
                 .map(pst -> pst.bind(values).setConsistencyLevel(ConsistencyLevel.QUORUM))
                 .map(stmt -> execute(session, stmt))
                 .map(this::convertRowsToMessages);
     }
 
     private Single<Void> insertMessage(CqlSession session, Object[] values) {
-        return insertMessage
+        return insertMessage.get()
                 .map(pst -> pst.bind(values).setConsistencyLevel(ConsistencyLevel.QUORUM))
                 .map(stmt -> execute(session, stmt))
                 .map(rs -> null);

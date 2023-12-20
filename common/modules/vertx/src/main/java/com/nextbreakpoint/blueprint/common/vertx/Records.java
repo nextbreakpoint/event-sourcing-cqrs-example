@@ -26,7 +26,7 @@ public class Records {
                 .withPartition(record.partition())
                 .withOffset(record.offset())
                 .withHeaders(createHeaders(record.headers()))
-                .withPayloadV2(createCommandPayload(record))
+                .withPayload(createCommandPayload(record))
                 .withTimestamp(record.timestamp())
                 .build();
     }
@@ -38,7 +38,7 @@ public class Records {
                 .withPartition(record.partition())
                 .withOffset(record.offset())
                 .withHeaders(createHeaders(record.headers()))
-                .withPayloadV2(createEventPayload(record))
+                .withPayload(createEventPayload(record))
                 .withTimestamp(record.timestamp())
                 .build();
     }
@@ -83,19 +83,19 @@ public class Records {
 
     private static <T> com.nextbreakpoint.blueprint.common.commands.avro.Payload createCommandPayload(OutputRecord<T> outputRecord) {
         return com.nextbreakpoint.blueprint.common.commands.avro.Payload.newBuilder()
-                .setUuid(outputRecord.getPayloadV2().getUuid())
-                .setType(outputRecord.getPayloadV2().getType())
-                .setSource(outputRecord.getPayloadV2().getSource())
-                .setCommand(outputRecord.getPayloadV2().getData())
+                .setUuid(outputRecord.getPayload().getUuid())
+                .setType(outputRecord.getPayload().getType())
+                .setSource(outputRecord.getPayload().getSource())
+                .setCommand(outputRecord.getPayload().getData())
                 .build();
     }
 
     private static <T> com.nextbreakpoint.blueprint.common.events.avro.Payload createEventPayload(OutputRecord<T> outputRecord) {
         return com.nextbreakpoint.blueprint.common.events.avro.Payload.newBuilder()
-                .setUuid(outputRecord.getPayloadV2().getUuid())
-                .setType(outputRecord.getPayloadV2().getType())
-                .setSource(outputRecord.getPayloadV2().getSource())
-                .setEvent(outputRecord.getPayloadV2().getData())
+                .setUuid(outputRecord.getPayload().getUuid())
+                .setType(outputRecord.getPayload().getType())
+                .setSource(outputRecord.getPayload().getSource())
+                .setEvent(outputRecord.getPayload().getData())
                 .build();
     }
 

@@ -9,24 +9,38 @@ import java.util.UUID;
 public class UpdateDesignRequestMapper implements Mapper<RoutingContext, UpdateDesignRequest> {
     @Override
     public UpdateDesignRequest transform(RoutingContext context) {
-        final String uuid = context.request().getParam("designId");
+        final String uuidParam = context.request().getParam("designId");
 
-        if (uuid == null) {
+        if (uuidParam == null) {
             throw new IllegalStateException("the required parameter designId is missing");
         }
 
-        final JsonObject bodyAsJson = context.getBodyAsJson();
-
-        if (bodyAsJson == null) {
-            throw new IllegalStateException("the request's body is not defined");
+        if (context.user() == null) {
+            throw new IllegalStateException("the user is not authenticated");
         }
 
+        if (context.body() == null) {
+            throw new IllegalStateException("the request's body is empty");
+        }
+
+        final JsonObject bodyAsJson = context.body().asJsonObject();
+
         final String manifest = bodyAsJson.getString("manifest");
+
+        if (manifest == null) {
+            throw new IllegalStateException("the request's body doesn't contain the required properties: manifest is missing");
+        }
+
         final String metadata = bodyAsJson.getString("metadata");
+
+        if (metadata == null) {
+            throw new IllegalStateException("the request's body doesn't contain the required properties: metadata is missing");
+        }
+
         final String script = bodyAsJson.getString("script");
 
-        if (manifest == null || metadata == null || script == null) {
-            throw new IllegalArgumentException("the request's body doesn't contain the required properties: manifest, metadata, script");
+        if (script == null) {
+            throw new IllegalStateException("the request's body doesn't contain the required properties: script is missing");
         }
 
         final Boolean published = bodyAsJson.getBoolean("published", false);
@@ -39,14 +53,20 @@ public class UpdateDesignRequestMapper implements Mapper<RoutingContext, UpdateD
 
         final JsonObject principal = context.user().principal();
 
-        final UUID owner = UUID.fromString(principal.getString("user"));
+        try {
+            final UUID owner = UUID.fromString(principal.getString("user"));
 
-        return UpdateDesignRequest.builder()
-                .withOwner(owner)
-                .withUuid(UUID.fromString(uuid))
-                .withChange(UUID.randomUUID())
-                .withJson(json)
-                .withPublished(published)
-                .build();
+            final UUID uuid = UUID.fromString(uuidParam);
+
+            return UpdateDesignRequest.builder()
+                    .withOwner(owner)
+                    .withUuid(uuid)
+                    .withChange(UUID.randomUUID())
+                    .withJson(json)
+                    .withPublished(published)
+                    .build();
+        } catch (Exception e) {
+            throw new IllegalStateException("invalid request: " + e.getMessage());
+        }
     }
 }

@@ -53,12 +53,11 @@ public class KafkaTestEmitter<T, R> {
         final OutputRecord<T> record = OutputRecord.<T>builder()
                 .withKey(message.getKey())
                 .withTopicName(topicName)
-                .withPayloadV2(message.getValue())
+                .withPayload(message.getValue())
                 .withHeaders(makeHeaders(message))
                 .build();
 
         return recordMapper.transform(record);
-//        return new ProducerRecord<>(topicName, null, message.getKey(), producerRecord, headers);
     }
 
     private List<Header> makeHeaders(OutputMessage<T> message) {

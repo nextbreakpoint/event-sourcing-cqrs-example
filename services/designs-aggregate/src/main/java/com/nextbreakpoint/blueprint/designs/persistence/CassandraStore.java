@@ -51,13 +51,12 @@ public class CassandraStore implements Store {
 
     private final Tracer tracer;
 
-    private CqlSession session;
-
-    private Single<PreparedStatement> selectDesign;
-    private Single<PreparedStatement> insertDesign;
-    private Single<PreparedStatement> deleteDesign;
-    private Single<PreparedStatement> insertMessage;
-    private Single<PreparedStatement> selectMessages;
+    private final ThreadLocal<CqlSession> session = new ThreadLocal<>();
+    private final ThreadLocal<Single<PreparedStatement>> selectDesign = new ThreadLocal<>();
+    private final ThreadLocal<Single<PreparedStatement>> insertDesign = new ThreadLocal<>();
+    private final ThreadLocal<Single<PreparedStatement>> deleteDesign = new ThreadLocal<>();
+    private final ThreadLocal<Single<PreparedStatement>> insertMessage = new ThreadLocal<>();
+    private final ThreadLocal<Single<PreparedStatement>> selectMessages = new ThreadLocal<>();
 
     public CassandraStore(Supplier<CqlSession> supplier) {
         this.supplier = Objects.requireNonNull(supplier);
@@ -107,50 +106,50 @@ public class CassandraStore implements Store {
     }
 
     private Single<CqlSession> withSession() {
-        if (session == null) {
-            session = supplier.get();
+        if (session.get() == null) {
+            session.set(supplier.get());
             if (session == null) {
                 return Single.error(new RuntimeException("Cannot create session"));
             }
-            selectDesign = Single.fromCallable(() -> session.prepare(SELECT_DESIGN));
-            insertDesign = Single.fromCallable(() -> session.prepare(INSERT_DESIGN));
-            deleteDesign = Single.fromCallable(() -> session.prepare(DELETE_DESIGN));
-            insertMessage = Single.fromCallable(() -> session.prepare(INSERT_MESSAGE));
-            selectMessages = Single.fromCallable(() -> session.prepare(SELECT_MESSAGES));
+            selectDesign.set(Single.fromCallable(() -> session.get().prepare(SELECT_DESIGN)));
+            insertDesign.set(Single.fromCallable(() -> session.get().prepare(INSERT_DESIGN)));
+            deleteDesign.set(Single.fromCallable(() -> session.get().prepare(DELETE_DESIGN)));
+            insertMessage.set(Single.fromCallable(() -> session.get().prepare(INSERT_MESSAGE)));
+            selectMessages.set(Single.fromCallable(() -> session.get().prepare(SELECT_MESSAGES)));
         }
-        return Single.just(session);
+        return Single.just(session.get());
     }
 
     private Single<List<InputMessage<SpecificRecord>>> selectMessages(CqlSession session, Object[] values) {
-        return selectMessages
+        return selectMessages.get()
                 .map(pst -> pst.bind(values).setConsistencyLevel(ConsistencyLevel.QUORUM))
                 .map(stmt -> execute(session, stmt))
-                .map(rows -> convertRowsToMessages(rows));
+                .map(this::convertRowsToMessages);
     }
 
     private Single<Void> insertMessage(CqlSession session, Object[] values) {
-        return insertMessage
+        return insertMessage.get()
                 .map(pst -> pst.bind(values).setConsistencyLevel(ConsistencyLevel.QUORUM))
                 .map(stmt -> execute(session, stmt))
                 .map(rs -> null);
     }
 
     private Single<Void> insertDesign(CqlSession session, Object[] values) {
-        return insertDesign
+        return insertDesign.get()
                 .map(pst -> pst.bind(values).setConsistencyLevel(ConsistencyLevel.QUORUM))
                 .map(stmt -> execute(session, stmt))
                 .map(rs -> null);
     }
 
     private Single<Void> deleteDesign(CqlSession session, Object[] values) {
-        return deleteDesign
+        return deleteDesign.get()
                 .map(pst -> pst.bind(values).setConsistencyLevel(ConsistencyLevel.QUORUM))
                 .map(stmt -> execute(session, stmt))
                 .map(rs -> null);
     }
 
     private Single<Optional<Design>> selectDesign(CqlSession session, Object[] values) {
-        return selectDesign
+        return selectDesign.get()
                 .map(pst -> pst.bind(values).setConsistencyLevel(ConsistencyLevel.QUORUM))
                 .map(stmt -> execute(session, stmt))
                 .map(rows -> StreamSupport.stream(rows.spliterator(), false).limit(1).findFirst())

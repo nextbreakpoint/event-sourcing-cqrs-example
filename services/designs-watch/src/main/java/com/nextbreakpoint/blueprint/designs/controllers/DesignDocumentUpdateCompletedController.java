@@ -1,32 +1,36 @@
 package com.nextbreakpoint.blueprint.designs.controllers;
 
 import com.nextbreakpoint.blueprint.common.core.Controller;
-import com.nextbreakpoint.blueprint.common.core.Json;
+import com.nextbreakpoint.blueprint.common.core.InputMessage;
 import com.nextbreakpoint.blueprint.common.events.avro.DesignDocumentUpdateCompleted;
+import com.nextbreakpoint.blueprint.designs.common.NotificationPublisher;
 import com.nextbreakpoint.blueprint.designs.model.DesignChangedNotification;
-import io.vertx.rxjava.core.Vertx;
 import rx.Single;
 
 import java.util.Objects;
 
-public class DesignDocumentUpdateCompletedController implements Controller<DesignDocumentUpdateCompleted, Void> {
-    private final Vertx vertx;
-    private final String address;
+public class DesignDocumentUpdateCompletedController implements Controller<InputMessage<DesignDocumentUpdateCompleted>, Void> {
+    private final NotificationPublisher publisher;
 
-    public DesignDocumentUpdateCompletedController(Vertx vertx, String address) {
-        this.vertx = Objects.requireNonNull(vertx);
-        this.address = Objects.requireNonNull(address);
+    public DesignDocumentUpdateCompletedController(NotificationPublisher publisher) {
+        this.publisher = Objects.requireNonNull(publisher);
     }
 
     @Override
-    public Single<Void> onNext(DesignDocumentUpdateCompleted event) {
-        DesignChangedNotification notification = DesignChangedNotification.builder()
+    public Single<Void> onNext(InputMessage<DesignDocumentUpdateCompleted> message) {
+        return Single.just(message.getValue().getData())
+                .map(this::createNotification)
+                .flatMap(this::publishNotification);
+    }
+
+    private DesignChangedNotification createNotification(DesignDocumentUpdateCompleted event) {
+        return DesignChangedNotification.builder()
                 .withKey(event.getDesignId().toString())
                 .withRevision(event.getRevision())
                 .build();
+    }
 
-        vertx.eventBus().publish(address, Json.encodeValue(notification));
-
-        return Single.just(null);
+    private Single<Void> publishNotification(DesignChangedNotification notification) {
+        return publisher.publish(notification);
     }
 }

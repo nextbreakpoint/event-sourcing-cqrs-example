@@ -127,7 +127,7 @@ public class KafkaTestPolling<T, R> {
         return InputMessage.<T>builder()
                 .withKey(record.getKey())
                 .withToken(token)
-                .withValue(record.getPayloadV2())
+                .withValue(record.getPayload())
                 .withTimestamp(record.getTimestamp())
                 .build();
     }

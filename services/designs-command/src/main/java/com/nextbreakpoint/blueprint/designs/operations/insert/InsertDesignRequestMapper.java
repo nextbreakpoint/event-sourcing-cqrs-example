@@ -9,18 +9,32 @@ import java.util.UUID;
 public class InsertDesignRequestMapper implements Mapper<RoutingContext, InsertDesignRequest> {
     @Override
     public InsertDesignRequest transform(RoutingContext context) {
-        final JsonObject bodyAsJson = context.getBodyAsJson();
-
-        if (bodyAsJson == null) {
-            throw new IllegalStateException("the request's body is not defined");
+        if (context.user() == null) {
+            throw new IllegalStateException("the user is not authenticated");
         }
 
+        if (context.body() == null) {
+            throw new IllegalStateException("the request's body is empty");
+        }
+
+        final JsonObject bodyAsJson = context.body().asJsonObject();
+
         final String manifest = bodyAsJson.getString("manifest");
+
+        if (manifest == null) {
+            throw new IllegalStateException("the request's body doesn't contain the required properties: manifest is missing");
+        }
+
         final String metadata = bodyAsJson.getString("metadata");
+
+        if (metadata == null) {
+            throw new IllegalStateException("the request's body doesn't contain the required properties: metadata is missing");
+        }
+
         final String script = bodyAsJson.getString("script");
 
-        if (manifest == null || metadata == null || script == null) {
-            throw new IllegalArgumentException("the request's body doesn't contain the required properties: manifest, metadata, script");
+        if (script == null) {
+            throw new IllegalStateException("the request's body doesn't contain the required properties: script is missing");
         }
 
         final String json = new JsonObject()
@@ -31,13 +45,17 @@ public class InsertDesignRequestMapper implements Mapper<RoutingContext, InsertD
 
         final JsonObject principal = context.user().principal();
 
-        final UUID owner = UUID.fromString(principal.getString("user"));
+        try {
+            final UUID owner = UUID.fromString(principal.getString("user"));
 
-        return InsertDesignRequest.builder()
-                .withOwner(owner)
-                .withUuid(UUID.randomUUID())
-                .withChange(UUID.randomUUID())
-                .withJson(json)
-                .build();
+            return InsertDesignRequest.builder()
+                    .withOwner(owner)
+                    .withUuid(UUID.randomUUID())
+                    .withChange(UUID.randomUUID())
+                    .withJson(json)
+                    .build();
+        } catch (Exception e) {
+            throw new IllegalStateException("invalid request: " + e.getMessage());
+        }
     }
 }

@@ -147,7 +147,7 @@ public class KafkaMessagePolling<T, R, S> {
             final InputRecord<R> record = recordMapper.transform(consumerRecord);
 
             try {
-                if (record.getPayloadV2() == null) {
+                if (record.getPayload() == null) {
                     log.trace("Skipping tombstone record {} in partition ({})", record.getKey(), topicPartition);
 
                     registry.counter(KAFKA_POLLING_QUEUE_DELETE_RECORD_COUNT, tags).increment();
@@ -157,7 +157,7 @@ public class KafkaMessagePolling<T, R, S> {
                     return;
                 }
 
-                final RxSingleHandler<S, ?> handler = messageHandlers.get(record.getPayloadV2().getType());
+                final RxSingleHandler<S, ?> handler = messageHandlers.get(record.getPayload().getType());
 
                 if (handler == null) {
                     return;

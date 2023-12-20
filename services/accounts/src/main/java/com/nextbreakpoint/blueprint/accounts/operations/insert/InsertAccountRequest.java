@@ -1,8 +1,13 @@
 package com.nextbreakpoint.blueprint.accounts.operations.insert;
 
+import lombok.Builder;
+import lombok.Data;
+
 import java.util.Objects;
 import java.util.UUID;
 
+@Data
+@Builder(setterPrefix = "with")
 public class InsertAccountRequest {
     private final UUID uuid;
     private final String name;
@@ -14,21 +19,5 @@ public class InsertAccountRequest {
         this.name = Objects.requireNonNull(name);
         this.authorities = Objects.requireNonNull(authorities);
         this.email = Objects.requireNonNull(email);
-    }
-
-    public UUID getUuid() {
-        return uuid;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public String getAuthorities() {
-        return authorities;
     }
 }

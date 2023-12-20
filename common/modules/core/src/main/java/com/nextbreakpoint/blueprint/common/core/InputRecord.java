@@ -10,7 +10,7 @@ import java.util.List;
 public class InputRecord<T> {
     private final String topicName;
     private final String key;
-    private final MessagePayload<T> payloadV2;
+    private final MessagePayload<T> payload;
     private final List<Header> headers;
     private final int partition;
     private final long offset;

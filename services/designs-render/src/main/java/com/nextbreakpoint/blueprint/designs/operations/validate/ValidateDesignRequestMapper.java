@@ -7,24 +7,28 @@ import io.vertx.rxjava.ext.web.RoutingContext;
 public class ValidateDesignRequestMapper implements Mapper<RoutingContext, ValidateDesignRequest> {
     @Override
     public ValidateDesignRequest transform(RoutingContext context) {
-        final JsonObject json = context.getBodyAsJson();
+        if (context.body() == null) {
+            throw new IllegalStateException("the request's body is empty");
+        }
 
-        final String manifest = json.getString("manifest");
+        final JsonObject bodyAsJson = context.body().asJsonObject();
+
+        final String manifest = bodyAsJson.getString("manifest");
 
         if (manifest == null) {
-            throw new IllegalStateException("the required parameter manifest is missing");
+            throw new IllegalStateException("the request's body doesn't contain the required properties: manifest is missing");
         }
 
-        final String metadata = json.getString("metadata");
+        final String metadata = bodyAsJson.getString("metadata");
 
         if (metadata == null) {
-            throw new IllegalStateException("the required parameter metadata is missing");
+            throw new IllegalStateException("the request's body doesn't contain the required properties: metadata is missing");
         }
 
-        final String script = json.getString("script");
+        final String script = bodyAsJson.getString("script");
 
         if (script == null) {
-            throw new IllegalStateException("the required parameter script is missing");
+            throw new IllegalStateException("the request's body doesn't contain the required properties: script is missing");
         }
 
         return ValidateDesignRequest.builder()

@@ -39,7 +39,7 @@ public class TileRenderer {
         final String manifest = jsonObject.getString("manifest");
         final String metadata = jsonObject.getString("metadata");
         final String script = jsonObject.getString("script");
-        return BundleUtils.createBundle(manifest, metadata, script);
+        return BundleUtils.createBundle(manifest, metadata, script).orThrow();
     }
 
     private static class Params {

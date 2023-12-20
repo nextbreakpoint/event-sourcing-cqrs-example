@@ -15,7 +15,7 @@ public class LoadDesignRequestMapper implements Mapper<RoutingContext, LoadDesig
         final String uuidParam = request.getParam("designId");
 
         if (uuidParam == null) {
-            throw new IllegalStateException("parameter designId missing from routing context");
+            throw new IllegalStateException("the required parameter designId is missing");
         }
 
         final String draftParam = request.getParam("draft", "false");
@@ -30,7 +30,7 @@ public class LoadDesignRequestMapper implements Mapper<RoutingContext, LoadDesig
                     .withDraft(draft)
                     .build();
         } catch (Exception e) {
-            throw new IllegalStateException("invalid parameters: " + e.getMessage());
+            throw new IllegalStateException("invalid request: " + e.getMessage());
         }
     }
 }

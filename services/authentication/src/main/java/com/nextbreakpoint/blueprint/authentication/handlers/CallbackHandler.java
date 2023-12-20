@@ -1,95 +1,76 @@
 package com.nextbreakpoint.blueprint.authentication.handlers;
 
-import com.nextbreakpoint.blueprint.common.vertx.Failure;
+import com.nextbreakpoint.blueprint.authentication.common.OAuthAdapter;
+import com.nextbreakpoint.blueprint.authentication.common.RoutingContextAdapter;
 import io.vertx.core.Handler;
-import io.vertx.ext.auth.oauth2.OAuth2FlowType;
-import io.vertx.ext.auth.oauth2.Oauth2Credentials;
-import io.vertx.rxjava.ext.auth.oauth2.OAuth2Auth;
-import io.vertx.rxjava.ext.web.RoutingContext;
 
 import java.util.Objects;
 
-import static io.vertx.core.http.HttpHeaders.CACHE_CONTROL;
-import static io.vertx.core.http.HttpHeaders.EXPIRES;
-import static io.vertx.core.http.HttpHeaders.LOCATION;
+public class CallbackHandler implements Handler<RoutingContextAdapter> {
+    private final OAuthAdapter oauthAdapter;
 
-public class CallbackHandler implements Handler<RoutingContext> {
-    private final String authUrl;
-    private final OAuth2Auth oauthHandler;
-    private final String callbackPath;
-
-    public CallbackHandler(String authUrl, OAuth2Auth oauthHandler, String callbackPath) {
-        this.authUrl = Objects.requireNonNull(authUrl);
-        this.oauthHandler = Objects.requireNonNull(oauthHandler);
-        this.callbackPath = Objects.requireNonNull(callbackPath);
+    public CallbackHandler(OAuthAdapter oauthAdapter) {
+        this.oauthAdapter = Objects.requireNonNull(oauthAdapter);
     }
 
     @Override
-    public void handle(RoutingContext routingContext) {
-        try {
-            handleCallback(routingContext);
-        } catch (Exception e) {
-            routingContext.fail(Failure.requestFailed(e));
-        }
-    }
-
-    private void handleCallback(RoutingContext ctx) {
-        final String error = ctx.request().getParam("error");
+    public void handle(RoutingContextAdapter routingContext) {
+        final String error = routingContext.getRequestParam("error");
         if (error != null) {
-            handleError(ctx, error);
+            handleError(routingContext);
             return;
         }
 
-        final String code = ctx.request().getParam("code");
+        final String code = routingContext.getRequestParam("code");
         if (code == null) {
-            ctx.fail(400, new IllegalStateException("Missing code parameter"));
+            handleMissingCode(routingContext);
             return;
         }
 
-        final String state = ctx.request().getParam("state");
+        final String state = routingContext.getRequestParam("state");
         if (state == null) {
-            ctx.fail(400, new IllegalStateException("Missing state parameter"));
+            handleMissingState(routingContext);
             return;
         }
 
-        final Oauth2Credentials credentials = new Oauth2Credentials()
-                .setRedirectUri(authUrl + callbackPath)
-                .setFlow(OAuth2FlowType.AUTH_CODE)
-                .setCode(code);
-
-        oauthHandler.authenticate(credentials, (res) -> {
+        oauthAdapter.authenticate(code, res -> {
             if (res.failed()) {
-                ctx.fail(res.cause());
+                routingContext.fail(500, res.cause());
             } else {
-                ctx.setUser(res.result());
+                routingContext.setUser(res.result());
                 if (state.length() != 0 && state.charAt(0) == '/') {
-                    ctx.reroute(state);
+                    routingContext.reroute(state);
                 } else {
-                    ctx.response()
-                        .putHeader(CACHE_CONTROL, "no-cache, no-store, must-revalidate")
-                        .putHeader("Pragma", "no-cache")
-                        .putHeader(EXPIRES, "0")
-                        .putHeader(LOCATION, state)
-                        .setStatusCode(302)
-                        .end("Redirecting to " + state + ".");
+                    routingContext.sendRedirectResponse(state);
                 }
             }
         });
     }
 
-    private static void handleError(RoutingContext ctx, String error) {
-        short errorCode = switch (error) {
+    private static void handleMissingState(RoutingContextAdapter routingContext) {
+        routingContext.fail(400, new IllegalStateException("Missing state parameter"));
+    }
+
+    private static void handleMissingCode(RoutingContextAdapter routingContext) {
+        routingContext.fail(400, new IllegalStateException("Missing code parameter"));
+    }
+
+    private static void handleError(RoutingContextAdapter routingContext) {
+        final String error = routingContext.getRequestParam("error");
+        final String errorDescription = routingContext.getRequestParam("error_description");
+        if (errorDescription != null) {
+            routingContext.fail(getErrorCode(error), new IllegalStateException("Authentication error: " + error + ". " + errorDescription));
+        } else {
+            routingContext.fail(getErrorCode(error), new IllegalStateException("Authentication error: " + error));
+        }
+    }
+
+    private static short getErrorCode(String error) {
+        return switch (error) {
             case "invalid_token" -> 401;
             case "insufficient_scope" -> 403;
             case "invalid_request" -> 400;
             default -> 400;
         };
-
-        final String errorDescription = ctx.request().getParam("error_description");
-        if (errorDescription != null) {
-            ctx.fail(errorCode, new IllegalStateException(error + ": " + errorDescription));
-        } else {
-            ctx.fail(errorCode, new IllegalStateException(error));
-        }
     }
 }

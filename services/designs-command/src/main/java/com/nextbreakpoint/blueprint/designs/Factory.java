@@ -14,9 +14,7 @@ import com.nextbreakpoint.blueprint.common.vertx.MessageConsumed;
 import com.nextbreakpoint.blueprint.common.vertx.MessageFailed;
 import com.nextbreakpoint.blueprint.common.vertx.Records;
 import com.nextbreakpoint.blueprint.common.vertx.TemplateHandler;
-import com.nextbreakpoint.blueprint.designs.controllers.DesignDeleteCommandController;
-import com.nextbreakpoint.blueprint.designs.controllers.DesignInsertCommandController;
-import com.nextbreakpoint.blueprint.designs.controllers.DesignUpdateCommandController;
+import com.nextbreakpoint.blueprint.designs.controllers.DesignCommandController;
 import com.nextbreakpoint.blueprint.designs.operations.delete.DeleteDesignController;
 import com.nextbreakpoint.blueprint.designs.operations.delete.DeleteDesignRequest;
 import com.nextbreakpoint.blueprint.designs.operations.delete.DeleteDesignRequestMapper;
@@ -74,7 +72,7 @@ public class Factory {
         return TemplateHandler.<InputMessage<Object>, InputMessage<DesignInsertCommand>, Void, Void>builder()
                 .withInputMapper(message -> Messages.asSpecificMessage(message, data -> (DesignInsertCommand) data))
                 .withOutputMapper(output -> output)
-                .withController(new DesignInsertCommandController(store, messageSource, createEventMessageEmitter(producer, topic)))
+                .withController(new DesignCommandController.DesignInsertCommandController(messageSource, store, createEventMessageEmitter(producer, topic)))
                 .onSuccess(new MessageConsumed<>())
                 .onFailure(new MessageFailed<>())
                 .build();
@@ -84,7 +82,7 @@ public class Factory {
         return TemplateHandler.<InputMessage<Object>, InputMessage<DesignUpdateCommand>, Void, Void>builder()
                 .withInputMapper(message -> Messages.asSpecificMessage(message, data -> (DesignUpdateCommand) data))
                 .withOutputMapper(output -> output)
-                .withController(new DesignUpdateCommandController(store, messageSource, createEventMessageEmitter(producer, topic)))
+                .withController(new DesignCommandController.DesignUpdateCommandController(messageSource, store, createEventMessageEmitter(producer, topic)))
                 .onSuccess(new MessageConsumed<>())
                 .onFailure(new MessageFailed<>())
                 .build();
@@ -94,7 +92,7 @@ public class Factory {
         return TemplateHandler.<InputMessage<Object>, InputMessage<DesignDeleteCommand>, Void, Void>builder()
                 .withInputMapper(message -> Messages.asSpecificMessage(message, data -> (DesignDeleteCommand) data))
                 .withOutputMapper(output -> output)
-                .withController(new DesignDeleteCommandController(store, messageSource, createEventMessageEmitter(producer, topic)))
+                .withController(new DesignCommandController.DesignDeleteCommandController(messageSource, store, createEventMessageEmitter(producer, topic)))
                 .onSuccess(new MessageConsumed<>())
                 .onFailure(new MessageFailed<>())
                 .build();

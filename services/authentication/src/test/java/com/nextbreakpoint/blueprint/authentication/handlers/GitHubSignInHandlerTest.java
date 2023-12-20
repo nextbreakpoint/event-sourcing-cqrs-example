@@ -53,7 +53,7 @@ class GitHubSignInHandlerTest {
     }
 
     @Test
-    void shouldReturnErrorWhenUserIsNotAuthenticatedAndRedirectFails() {
+    void shouldProduceExceptionWhenUserIsNotAuthenticatedAndRedirectFails() {
         final var exception = new RuntimeException();
         when(routingContext.isUserAuthenticated()).thenReturn(false);
         when(routingContext.getRequestUri()).thenReturn("http://localhost/resource");
@@ -109,7 +109,7 @@ class GitHubSignInHandlerTest {
     }
 
     @Test
-    void shouldReturnErrorWhenUserIsAuthenticatedAndRedirectFails() {
+    void shouldProduceExceptionWhenUserIsAuthenticatedAndRedirectFails() {
         final var exception = new RuntimeException();
         when(routingContext.isUserAuthenticated()).thenReturn(true);
         when(routingContext.getSignInRedirectUrl()).thenReturn("http://localhost/signin");
@@ -145,7 +145,7 @@ class GitHubSignInHandlerTest {
     }
 
     @Test
-    void shouldReturnErrorWhenUserIsAuthenticatedAndFetchUserEmailFails() {
+    void shouldProduceExceptionWhenUserIsAuthenticatedAndFetchUserEmailFails() {
         final var exception = new RuntimeException();
         when(routingContext.isUserAuthenticated()).thenReturn(true);
         when(routingContext.getSignInRedirectUrl()).thenReturn("http://localhost/signin");
@@ -167,7 +167,7 @@ class GitHubSignInHandlerTest {
     }
 
     @Test
-    void shouldReturnErrorWhenUserIsAuthenticatedAndFindAccountsFails() {
+    void shouldProduceExceptionWhenUserIsAuthenticatedAndFindAccountsFails() {
         final var exception = new RuntimeException();
         when(routingContext.isUserAuthenticated()).thenReturn(true);
         when(routingContext.getSignInRedirectUrl()).thenReturn("http://localhost/signin");
@@ -197,7 +197,7 @@ class GitHubSignInHandlerTest {
     }
 
     @Test
-    void shouldReturnErrorWhenUserIsAuthenticatedAndFetchAccountFails() {
+    void shouldProduceExceptionWhenUserIsAuthenticatedAndFetchAccountFails() {
         final var exception = new RuntimeException();
         when(routingContext.isUserAuthenticated()).thenReturn(true);
         when(routingContext.getSignInRedirectUrl()).thenReturn("http://localhost/signin");
@@ -229,7 +229,7 @@ class GitHubSignInHandlerTest {
     }
 
     @Test
-    void shouldReturnErrorWhenAccessTokenIsMissing() {
+    void shouldProduceExceptionWhenAccessTokenIsMissing() {
         when(routingContext.isUserAuthenticated()).thenReturn(true);
         when(routingContext.getSignInRedirectUrl()).thenReturn("http://localhost/signin");
         when(routingContext.getAccessToken()).thenReturn(null);
@@ -246,7 +246,7 @@ class GitHubSignInHandlerTest {
     }
 
     @Test
-    void shouldReturnErrorWhenUserIsAuthenticatedButAccountIsMissingUuid() {
+    void shouldProduceExceptionWhenUserIsAuthenticatedButAccountIsMissingUuid() {
         when(routingContext.isUserAuthenticated()).thenReturn(true);
         when(routingContext.getSignInRedirectUrl()).thenReturn("http://localhost/signin");
         when(routingContext.getAccessToken()).thenReturn("abc");
@@ -278,7 +278,7 @@ class GitHubSignInHandlerTest {
     }
 
     @Test
-    void shouldReturnErrorWhenUserIsAuthenticatedButAccountIsMissingRole() {
+    void shouldProduceExceptionWhenUserIsAuthenticatedButAccountIsMissingRole() {
         when(routingContext.isUserAuthenticated()).thenReturn(true);
         when(routingContext.getSignInRedirectUrl()).thenReturn("http://localhost/signin");
         when(routingContext.getAccessToken()).thenReturn("abc");
@@ -346,7 +346,7 @@ class GitHubSignInHandlerTest {
     }
 
     @Test
-    void shouldReturnErrorWhenUserIsAuthenticatedAndAccountDoesNotExistAndFetchUserInfoFails() {
+    void shouldProduceExceptionWhenUserIsAuthenticatedAndAccountDoesNotExistAndFetchUserInfoFails() {
         final var exception = new RuntimeException();
         when(routingContext.isUserAuthenticated()).thenReturn(true);
         when(routingContext.getSignInRedirectUrl()).thenReturn("http://localhost/signin");
@@ -378,7 +378,7 @@ class GitHubSignInHandlerTest {
     }
 
     @Test
-    void shouldReturnErrorWhenUserIsAuthenticatedAndAccountDoesNotExistAndCreateAccountFails() {
+    void shouldProduceExceptionWhenUserIsAuthenticatedAndAccountDoesNotExistAndCreateAccountFails() {
         final var exception = new RuntimeException();
         when(routingContext.isUserAuthenticated()).thenReturn(true);
         when(routingContext.getSignInRedirectUrl()).thenReturn("http://localhost/signin");
@@ -412,7 +412,7 @@ class GitHubSignInHandlerTest {
     }
 
     @Test
-    void shouldReturnErrorWhenUserIsAuthenticatedAndAccountDoesNotExistAndAccountIsMissingUuid() {
+    void shouldProduceExceptionWhenUserIsAuthenticatedAndAccountDoesNotExistAndAccountIsMissingUuid() {
         when(routingContext.isUserAuthenticated()).thenReturn(true);
         when(routingContext.getSignInRedirectUrl()).thenReturn("http://localhost/signin");
         when(routingContext.getAccessToken()).thenReturn("abc");
@@ -445,7 +445,7 @@ class GitHubSignInHandlerTest {
     }
 
     @Test
-    void shouldReturnErrorWhenUserIsAuthenticatedAndAccountDoesNotExistAndAccountIsMissingRole() {
+    void shouldProduceExceptionWhenUserIsAuthenticatedAndAccountDoesNotExistAndAccountIsMissingRole() {
         when(routingContext.isUserAuthenticated()).thenReturn(true);
         when(routingContext.getSignInRedirectUrl()).thenReturn("http://localhost/signin");
         when(routingContext.getAccessToken()).thenReturn("abc");

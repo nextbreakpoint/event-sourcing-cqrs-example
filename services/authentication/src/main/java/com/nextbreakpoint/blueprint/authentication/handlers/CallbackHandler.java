@@ -2,7 +2,6 @@ package com.nextbreakpoint.blueprint.authentication.handlers;
 
 import com.nextbreakpoint.blueprint.authentication.common.OAuthAdapter;
 import com.nextbreakpoint.blueprint.authentication.common.RoutingContextAdapter;
-import com.nextbreakpoint.blueprint.common.vertx.Failure;
 import io.vertx.core.Handler;
 
 import java.util.Objects;
@@ -16,14 +15,6 @@ public class CallbackHandler implements Handler<RoutingContextAdapter> {
 
     @Override
     public void handle(RoutingContextAdapter routingContext) {
-        try {
-            handleCallback(routingContext);
-        } catch (Exception e) {
-            routingContext.fail(Failure.requestFailed(e));
-        }
-    }
-
-    private void handleCallback(RoutingContextAdapter routingContext) {
         final String error = routingContext.getRequestParam("error");
         if (error != null) {
             handleError(routingContext);
@@ -32,13 +23,13 @@ public class CallbackHandler implements Handler<RoutingContextAdapter> {
 
         final String code = routingContext.getRequestParam("code");
         if (code == null) {
-            routingContext.fail(400, new IllegalStateException("Missing code parameter"));
+            handleMissingCode(routingContext);
             return;
         }
 
         final String state = routingContext.getRequestParam("state");
         if (state == null) {
-            routingContext.fail(400, new IllegalStateException("Missing state parameter"));
+            handleMissingState(routingContext);
             return;
         }
 
@@ -56,13 +47,21 @@ public class CallbackHandler implements Handler<RoutingContextAdapter> {
         });
     }
 
+    private static void handleMissingState(RoutingContextAdapter routingContext) {
+        routingContext.fail(400, new IllegalStateException("Missing state parameter"));
+    }
+
+    private static void handleMissingCode(RoutingContextAdapter routingContext) {
+        routingContext.fail(400, new IllegalStateException("Missing code parameter"));
+    }
+
     private static void handleError(RoutingContextAdapter routingContext) {
         final String error = routingContext.getRequestParam("error");
         final String errorDescription = routingContext.getRequestParam("error_description");
         if (errorDescription != null) {
-            routingContext.fail(getErrorCode(error), new IllegalStateException(error + ": " + errorDescription));
+            routingContext.fail(getErrorCode(error), new IllegalStateException("Authentication error: " + error + ". " + errorDescription));
         } else {
-            routingContext.fail(getErrorCode(error), new IllegalStateException(error));
+            routingContext.fail(getErrorCode(error), new IllegalStateException("Authentication error: " + error));
         }
     }
 

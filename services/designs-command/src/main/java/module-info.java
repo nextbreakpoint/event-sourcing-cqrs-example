@@ -8,6 +8,7 @@ module com.nextbreakpoint.blueprint.designs.command {
     requires com.nextbreakpoint.nextfractal.core;
     requires com.nextbreakpoint.nextfractal.mandelbrot;
     requires org.apache.logging.log4j;
+    requires org.apache.commons.logging;
     requires org.slf4j;
     requires com.fasterxml.jackson.core;
     requires com.fasterxml.jackson.databind;

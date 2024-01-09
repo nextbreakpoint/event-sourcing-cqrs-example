@@ -4,6 +4,7 @@ module com.nextbreakpoint.blueprint.designs.aggregate {
     requires com.nextbreakpoint.blueprint.common.events;
     requires com.nextbreakpoint.blueprint.common.drivers;
     requires org.apache.logging.log4j;
+    requires org.apache.commons.logging;
     requires com.fasterxml.jackson.core;
     requires com.fasterxml.jackson.databind;
     requires org.apache.avro;

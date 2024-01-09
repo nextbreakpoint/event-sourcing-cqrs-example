@@ -2,6 +2,7 @@ module com.nextbreakpoint.blueprint.authentication {
     requires com.nextbreakpoint.blueprint.common.core;
     requires com.nextbreakpoint.blueprint.common.vertx;
     requires org.apache.logging.log4j;
+    requires org.apache.commons.logging;
     requires com.fasterxml.jackson.core;
     requires com.fasterxml.jackson.databind;
     requires io.vertx.core;

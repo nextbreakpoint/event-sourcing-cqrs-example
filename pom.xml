@@ -24,6 +24,7 @@
         <vertx.version>4.4.6</vertx.version>
         <jackson.version>2.16.1</jackson.version>
         <activation.version>1.1.1</activation.version>
+        <commons-logging.version>1.3.0</commons-logging.version>
         <jaxb-api.version>2.4.0-b180830.0359</jaxb-api.version>
         <rxjava.version>1.3.8</rxjava.version>
         <kafka-clients.version>7.5.3-ce</kafka-clients.version>
@@ -432,6 +433,11 @@
                 <groupId>javax.activation</groupId>
                 <artifactId>activation</artifactId>
                 <version>${activation.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>commons-logging</groupId>
+                <artifactId>commons-logging</artifactId>
+                <version>${commons-logging.version}</version>
             </dependency>
 <!--            <dependency>-->
 <!--                <groupId>jakarta.xml.bind</groupId>-->

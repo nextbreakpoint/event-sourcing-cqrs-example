@@ -6,7 +6,6 @@ module com.nextbreakpoint.blueprint.designs.query {
     requires com.nextbreakpoint.nextfractal.core;
     requires com.nextbreakpoint.nextfractal.mandelbrot;
     requires org.apache.logging.log4j;
-    requires org.apache.commons.logging;
     requires com.fasterxml.jackson.core;
     requires com.fasterxml.jackson.databind;
     requires com.fasterxml.jackson.datatype.jsr310;

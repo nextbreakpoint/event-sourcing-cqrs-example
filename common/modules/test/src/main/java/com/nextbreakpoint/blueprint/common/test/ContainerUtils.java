@@ -9,7 +9,7 @@ public class ContainerUtils {
     private ContainerUtils() {}
 
     public static GenericContainer createMySqlContainer(Network network, String password, String initScript) {
-        return new GenericContainer(DockerImageName.parse("mysql:8.0.13"))
+        return new GenericContainer(DockerImageName.parse("mysql:8.2.0"))
                 .withEnv("MYSQL_ROOT_PASSWORD", password)
                 .withFileSystemBind(initScript, "/docker-entrypoint-initdb.d/init.sql", BindMode.READ_ONLY)
                 .withNetwork(network)
@@ -18,7 +18,7 @@ public class ContainerUtils {
     }
 
     public static GenericContainer createZookeeperContainer(Network network) {
-        return new GenericContainer(DockerImageName.parse("nextbreakpoint/zookeeper:3.6.2-1"))
+        return new GenericContainer(DockerImageName.parse("nextbreakpoint/zookeeper:3.9.1-1"))
                 .withEnv("ZOO_MY_ID", "1")
                 .withNetwork(network)
                 .withNetworkAliases("zookeeper")
@@ -26,7 +26,7 @@ public class ContainerUtils {
     }
 
     public static GenericContainer createKafkaContainer(Network network) {
-        return new KafkaGenericContainer(DockerImageName.parse("nextbreakpoint/kafka:6.1.0-1"))
+        return new KafkaGenericContainer(DockerImageName.parse("nextbreakpoint/kafka:7.5.3-1"))
                 .withEnv("KAFKA_ZOOKEEPER_CONNECT", "zookeeper:2181")
                 .withEnv("KAFKA_ADVERTISED_LISTENERS", "PLAINTEXT_EXTERNAL://localhost:9093,PLAINTEXT_INTERNAL://kafka:9092")
                 .withEnv("KAFKA_LISTENERS", "PLAINTEXT_EXTERNAL://0.0.0.0:9093,PLAINTEXT_INTERNAL://0.0.0.0:9092")
@@ -48,7 +48,7 @@ public class ContainerUtils {
     }
 
     public static GenericContainer createSchemaRegistryContainer(Network network) {
-        return new GenericContainer(DockerImageName.parse("nextbreakpoint/schema-registry:6.1.0-1"))
+        return new GenericContainer(DockerImageName.parse("nextbreakpoint/schema-registry:7.5.3-1"))
                 .withEnv("SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS", "kafka:9092")
                 .withEnv("SCHEMA_REGISTRY_AVRO_COMPATIBILITY_LEVEL", "FULL_TRANSITIVE")
                 .withEnv("SCHEMA_REGISTRY_LISTENERS", "http://0.0.0.0:8081")
@@ -59,7 +59,7 @@ public class ContainerUtils {
     }
 
     public static GenericContainer createCassandraContainer(Network network) {
-        return new GenericContainer(DockerImageName.parse("nextbreakpoint/cassandra:3.11.10-1"))
+        return new GenericContainer(DockerImageName.parse("nextbreakpoint/cassandra:3.11.16-1"))
                 .withEnv("CASSANDRA_DC", "datacenter1")
                 .withEnv("CASSANDRA_RACK", "rack1")
                 .withEnv("JVM_OPTS", "-Xms2G -Xmx2G")
@@ -70,7 +70,7 @@ public class ContainerUtils {
     }
 
     public static GenericContainer createElasticsearchContainer(Network network) {
-        return new GenericContainer(DockerImageName.parse("nextbreakpoint/elasticsearch:7.17.1-1"))
+        return new GenericContainer(DockerImageName.parse("nextbreakpoint/elasticsearch:8.11.3-1"))
                 .withEnv("ES_JAVA_OPTS", "-Xms2G -Xmx2G")
                 .withEnv("discovery.type", "single-node")
                 .withEnv("xpack.security.enabled", "false")
@@ -81,7 +81,7 @@ public class ContainerUtils {
     }
 
     public static GenericContainer createMinioContainer(Network network) {
-        return new GenericContainer(DockerImageName.parse("minio/minio:latest"))
+        return new GenericContainer(DockerImageName.parse("minio/minio:RELEASE.2024-01-01T16-36-33Z"))
                 .withEnv("MINIO_ROOT_USER", "admin")
                 .withEnv("MINIO_ROOT_PASSWORD", "password")
                 .withNetwork(network)
@@ -91,7 +91,7 @@ public class ContainerUtils {
     }
 
     public static GenericContainer createConsulContainer(Network network, String configFile) {
-        return new GenericContainer(DockerImageName.parse("consul:1.11.4"))
+        return new GenericContainer(DockerImageName.parse("consul:1.15.4"))
                 .withFileSystemBind(configFile, "/consul/config/config.json", BindMode.READ_ONLY)
                 .withCommand("consul", "agent", "-data-dir=/consul/data", "-config-dir=/consul/config")
                 .withNetwork(network)

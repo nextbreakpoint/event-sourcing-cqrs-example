@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.nextbreakpoint</groupId>
     <artifactId>com.nextbreakpoint.blueprint</artifactId>
-    <version>1.0.4-wip-a0febcbf-1702855671</version>
+    <version>1.0.4-wip-5182bd1f-1704991588</version>
     <packaging>pom</packaging>
     <licenses>
         <license>
@@ -35,7 +35,7 @@
         <gson.version>2.10.1</gson.version>
         <httpcore.version>4.4.16</httpcore.version>
         <httpclient.version>4.5.14</httpclient.version>
-        <awssdk.version>2.22.13</awssdk.version>
+        <awssdk.version>2.17.295</awssdk.version>
         <avro.version>1.11.3</avro.version>
         <kafka-schema-registry-client.version>7.5.3</kafka-schema-registry-client.version>
         <kafka-avro-serializer.version>7.5.3</kafka-avro-serializer.version>
@@ -74,11 +74,11 @@
         <avro-maven-plugin.version>1.11.3</avro-maven-plugin.version>
         <pact-provider-maven.version>4.6.4</pact-provider-maven.version>
 <!--        <kotlin-maven-plugin.version>1.9.10</kotlin-maven-plugin.version>-->
-        <java.version>17</java.version>
-        <maven.source.release>17</maven.source.release>
-        <maven.target.release>17</maven.target.release>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <java.version>21</java.version>
+        <maven.source.release>21</maven.source.release>
+        <maven.target.release>21</maven.target.release>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
         <pactbroker.host>localhost</pactbroker.host>
         <pactbroker.port>9292</pactbroker.port>
         <nexus.host>localhost</nexus.host>

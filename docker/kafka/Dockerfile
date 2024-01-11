@@ -1,6 +1,6 @@
 ARG version
 FROM busybox:latest AS build
-RUN wget -O /jmx-exporter.jar https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/0.15.0/jmx_prometheus_javaagent-0.15.0.jar
+RUN wget -O /jmx-exporter.jar https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/0.20.0/jmx_prometheus_javaagent-0.20.0.jar
 FROM confluentinc/cp-kafka:${version}
 USER root
 RUN mkdir -p /opt/jmx-exporter && mkdir -p /etc/jmx-exporter

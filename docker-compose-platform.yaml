@@ -3,7 +3,7 @@ services:
   mysql:
     container_name: mysql
     restart: unless-stopped
-    image: mysql:8.0.28
+    image: mysql:8.2.0
     environment:
       MYSQL_ROOT_PASSWORD: 'password'
     ports:
@@ -19,7 +19,7 @@ services:
   cassandra:
     container_name: cassandra
     restart: unless-stopped
-    image: nextbreakpoint/cassandra:3.11.10-1
+    image: nextbreakpoint/cassandra:3.11.16-1
     environment:
       CASSANDRA_DC: 'DC1'
       CASSANDRA_RACK: 'RACK1'
@@ -44,7 +44,7 @@ services:
   zookeeper:
     container_name: zookeeper
     restart: unless-stopped
-    image: nextbreakpoint/zookeeper:3.6.2-1
+    image: nextbreakpoint/zookeeper:3.9.1-1
     environment:
       ZOO_MY_ID: '1'
     ports:
@@ -67,7 +67,7 @@ services:
   kafka:
     container_name: kafka
     restart: unless-stopped
-    image: nextbreakpoint/kafka:6.1.0-1
+    image: nextbreakpoint/kafka:7.5.3-1
     environment:
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
       KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT_DOCKER_UNIX://172.17.0.1:9095,PLAINTEXT_DOCKER_MAC://host.docker.internal:9094,PLAINTEXT_EXTERNAL://localhost:9093,PLAINTEXT_INTERNAL://kafka:9092'
@@ -115,7 +115,7 @@ services:
   schema-registry:
     container_name: schema-registry
     restart: unless-stopped
-    image: nextbreakpoint/schema-registry:6.1.0-1
+    image: nextbreakpoint/schema-registry:7.5.3-1
     environment:
       SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: 'PLAINTEXT://kafka:9092'
       SCHEMA_REGISTRY_AVRO_COMPATIBILITY_LEVEL: 'FULL_TRANSITIVE'
@@ -131,7 +131,7 @@ services:
 #  consul:
 #    container_name: consul
 #    restart: unless-stopped
-#    image: consul:1.11.4
+#    image: consul:1.15.4
 #    command:
 #      - consul
 #      - agent
@@ -165,7 +165,7 @@ services:
   nginx:
     container_name: nginx
     restart: unless-stopped
-    image: nginx:1.20.2-alpine
+    image: nginx:1.24.0-alpine
     ports:
       - target: 8000
         published: 8000
@@ -180,7 +180,7 @@ services:
   elasticsearch:
     container_name: elasticsearch
     restart: unless-stopped
-    image: nextbreakpoint/elasticsearch:7.17.1-1
+    image: nextbreakpoint/elasticsearch:8.11.3-1
     environment:
       node.name: "elasticsearch"
       cluster.name: "elasticsearch"
@@ -212,7 +212,7 @@ services:
 #  kibana:
 #    container_name: kibana
 #    restart: unless-stopped
-#    image: kibana:7.17.1
+#    image: kibana:8.11.3
 #    environment:
 #      xpack.security.enabled: 'false'
 #      elasticsearch.hosts: 'http://elasticsearch:9200'
@@ -226,7 +226,7 @@ services:
   jaeger:
     container_name: jaeger
     restart: unless-stopped
-    image: jaegertracing/all-in-one:1.22
+    image: jaegertracing/all-in-one:1.53
     environment:
       SPAN_STORAGE_TYPE: elasticsearch
       ES_SERVER_URLS: http://elasticsearch:9200
@@ -269,7 +269,7 @@ services:
   minio:
     container_name: minio
     restart: unless-stopped
-    image: minio/minio:RELEASE.2022-03-11T11-08-23Z.hotfix.29c773d72
+    image: minio/minio:RELEASE.2024-01-01T16-36-33Z
     environment:
       MINIO_ROOT_USER: admin
       MINIO_ROOT_PASSWORD: password

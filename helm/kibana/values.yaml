@@ -4,7 +4,7 @@
 
 image:
   repository: kibana
-  tag: 7.17.1
+  tag: 8.11.3
   pullPolicy: IfNotPresent
   pullSecrets:
 

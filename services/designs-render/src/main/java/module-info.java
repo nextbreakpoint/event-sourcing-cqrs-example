@@ -25,7 +25,6 @@ module com.nextbreakpoint.blueprint.designs.render {
     requires io.opentelemetry.exporter.jaeger;
     requires io.opentelemetry.exporter.otlp.trace;
     requires micrometer.core;
-    requires org.jctools.core;
     requires org.yaml.snakeyaml;
     requires kotlin.stdlib;
     requires vertx.rx.java;

@@ -1,6 +1,7 @@
 module com.nextbreakpoint.blueprint.accounts {
     requires com.nextbreakpoint.blueprint.common.core;
     requires com.nextbreakpoint.blueprint.common.vertx;
+    requires org.slf4j;
     requires org.apache.logging.log4j;
     requires org.apache.commons.logging;
     requires com.fasterxml.jackson.core;

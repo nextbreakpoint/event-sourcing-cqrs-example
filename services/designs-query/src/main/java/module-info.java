@@ -5,6 +5,7 @@ module com.nextbreakpoint.blueprint.designs.query {
     requires com.nextbreakpoint.blueprint.common.drivers;
     requires com.nextbreakpoint.nextfractal.core;
     requires com.nextbreakpoint.nextfractal.mandelbrot;
+    requires org.slf4j;
     requires org.apache.logging.log4j;
     requires org.apache.commons.logging;
     requires com.fasterxml.jackson.core;

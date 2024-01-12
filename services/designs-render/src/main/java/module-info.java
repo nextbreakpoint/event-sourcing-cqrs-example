@@ -6,6 +6,7 @@ module com.nextbreakpoint.blueprint.designs.render {
     requires com.nextbreakpoint.nextfractal.core;
     requires com.nextbreakpoint.nextfractal.mandelbrot;
     requires com.nextbreakpoint.try4java;
+    requires org.slf4j;
     requires org.apache.logging.log4j;
     requires com.fasterxml.jackson.core;
     requires com.fasterxml.jackson.databind;

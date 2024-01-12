@@ -3,6 +3,7 @@ module com.nextbreakpoint.blueprint.designs.watch {
     requires com.nextbreakpoint.blueprint.common.vertx;
     requires com.nextbreakpoint.blueprint.common.events;
     requires com.nextbreakpoint.blueprint.common.drivers;
+    requires org.slf4j;
     requires org.apache.logging.log4j;
     requires org.apache.commons.logging;
     requires com.fasterxml.jackson.core;

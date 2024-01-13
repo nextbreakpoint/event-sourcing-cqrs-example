@@ -1,4 +1,4 @@
-FROM node:17-alpine3.12 AS build
+FROM node:21.5.0-alpine3.19 AS build
 ARG maven_args
 ADD react /react
 WORKDIR /react
@@ -8,7 +8,7 @@ RUN npm -dd --fetch-timeout=600000 install
 RUN npm run build
 RUN ls -al
 
-FROM node:17-alpine3.12
+FROM node:21.5.0-alpine3.19
 COPY /app /app
 WORKDIR /app
 RUN cat package.json

@@ -49,8 +49,8 @@ export VERSION
 case $COMMAND in
   start)
     if [[ -z $VERSION ]]; then
-      echo "Missing or invalid value for argument: --version"
-      exit 1
+      export VERSION=$(mvn -q help:evaluate -Dexpression=project.version -DforceStdout)
+      echo "Selected version: $VERSION"
     fi
 
     if [[ -z $GITHUB_ACCOUNT_EMAIL ]]; then

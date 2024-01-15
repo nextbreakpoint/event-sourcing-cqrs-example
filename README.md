@@ -5,6 +5,20 @@ The frontend is Node.js with Express, Handlebars, and React. The backend is Java
 The application runs on Kubernetes. Helm charts for deploying the application on Kubernetes are provided and have been tested on Minikube.
 The application can also run on Docker. Docker compose files for running and debugging the application are provided.
 
+## Requirements
+
+Here is the list of the required tools and versions:
+
+- Docker 23 (or later version)
+- Minikube 1.31
+- Kubectl 1.29
+- Helm 3.11
+- Maven 3.9
+- Java JDK Temurin 21 (or other compatible JDK)
+- jq
+- nc
+- curl
+
 ## Preparation
 
 There are few certificates which are required to run the application. For the purpose of this example we use self-signed certificates.
@@ -115,11 +129,11 @@ Wait until Kafka is ready:
 
 Create Kafka topics:
 
-    ./scripts/docker-create-topics.sh
+    ./scripts/docker-create-kafka-topics.sh
 
 Create Minio bucket:
 
-    docker run -i --network platform_bridge -e MINIO_ROOT_USER=admin -e MINIO_ROOT_PASSWORD=password --entrypoint sh minio/mc:latest < scripts/minio-create-bucket.sh
+    ./scripts/docker-create-minio-bucket.sh
 
 Create a GitHub OAuth application like:
 
@@ -137,7 +151,7 @@ then export the application secrets:
 
 Start services:
 
-    ./scripts/docker-services.sh --start --version=$(./scripts/get-version.sh)
+    ./scripts/docker-services.sh --start
 
 Open application:
 
@@ -159,7 +173,7 @@ Open Jaeger console:
 
 Restart services with debug logging level:
 
-    ./scripts/docker-services.sh --start --version=$(./scripts/get-version.sh) --debug
+    ./scripts/docker-services.sh --start --debug
 
 Tail services containers:
 
@@ -221,39 +235,39 @@ Minikube is the recommended environment for testing the deployment of the servic
 
 Setup Minikube:
 
-    minikube start --vm-driver=hyperkit --cpus 8 --memory 49152m --disk-size 128g --kubernetes-version=v1.27.6
+    minikube start --vm-driver=hyperkit --cpus 8 --memory 49152m --disk-size 128g --kubernetes-version=v1.29.0
 
-Create alias (unless you already have kubectl installed):
+Create alias for kubectl (unless you have installed kubectl 1.29 already):
 
     alias kubectl="minikube kubectl --"
+
+Install Minikube addons:
+
+    ./scripts/minikube-install-addons.sh
+
+Deploy Certificate Manager:
+
+    ./scripts/helm-install-cert-manager.sh
+
+Install Hostpath Provisioner:
+
+    ./scripts/helm-install-hostpath-provisioner.sh
 
 Create namespaces:
 
     ./scripts/kube-create-namespaces.sh
 
-Install addons:
-
-    minikube addons enable metrics-server
-    minikube addons enable dashboard
-    minikube addons enable ingress
-
-Install Hostpath Provisioner:
-
-    kubectl create -f https://raw.githubusercontent.com/kubevirt/hostpath-provisioner-operator/main/deploy/namespace.yaml
-    kubectl create -f https://raw.githubusercontent.com/kubevirt/hostpath-provisioner-operator/main/deploy/webhook.yaml -n hostpath-provisioner
-    kubectl create -f https://raw.githubusercontent.com/kubevirt/hostpath-provisioner-operator/main/deploy/operator.yaml -n hostpath-provisioner
-
 Create volumes:
 
     kubectl apply -f scripts/volumes.yaml
 
-Load Docker images required for running platform:
+Load Docker images required for running platform (it might take a while):
 
     ./scripts/minikube-load-platform-images.sh 
 
-Load Docker images required for running services:
+Load Docker images required for running services (it might take a while):
 
-    ./scripts/minikube-load-services-images.sh --version=$(./scripts/get-version.sh)
+    ./scripts/minikube-load-services-images.sh 
 
 ### Run platform and services
 
@@ -280,37 +294,17 @@ Create secrets:
     ./scripts/kube-create-nginx-secrets.sh
     ./scripts/kube-create-services-secrets.sh
 
-Deploy Certificate Manager:
+Deploy Kube Prometheus Stack, Jaeger, and Fluent Bit:
 
-    helm repo add jetstack https://charts.jetstack.io
-    helm repo update
-    helm upgrade --install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --version v1.7.1 --set installCRDs=true
+    ./scripts/helm-install-observability-tools.sh
 
-Deploy Prometheus operator:
+Deploy observability services:
 
-    helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-    helm repo update
-    helm upgrade --install kube-prometheus-stack prometheus-community/kube-prometheus-stack -n monitoring -f scripts/prometheus-values.yaml
+    ./scripts/helm-install-observability-services.sh
 
-Deploy Jaeger operator:
+Expose observability services:
 
-    helm repo add jaegertracing https://jaegertracing.github.io/helm-charts
-    helm repo update
-    helm upgrade --install jaeger-operator jaegertracing/jaeger-operator --namespace monitoring --set rbac.create=true --version 2.47.0
-
-Deploy Fluent Bit:
-
-    helm repo add fluent https://fluent.github.io/helm-charts
-    helm repo update
-    helm upgrade --install fluent-bit fluent/fluent-bit -n monitoring -f scripts/fluentbit-values.yaml
-
-Deploy monitoring:
-
-    ./scripts/helm-install-monitoring.sh
-
-Expose monitoring:
-
-    ./scripts/kube-expose-monitoring.sh
+    ./scripts/kube-expose-observability-services.sh
 
 Deploy platform:
 
@@ -326,7 +320,7 @@ Wait until Kafka is ready:
 
 Create Kafka topics:
 
-    ./scripts/kube-create-topics.sh
+    ./scripts/kube-create-kafka-topics.sh
 
 Wait until Cassandra is ready:
 
@@ -334,35 +328,35 @@ Wait until Cassandra is ready:
 
 Create Cassandra tables:
 
-    kubectl -n platform exec $(kubectl -n platform get pod -l component=cassandra -o json | jq -r '.items[0].metadata.name') -- cqlsh -u cassandra -p cassandra < scripts/init.cql  
+    ./scripts/kube-create-cassandra-tables.sh
 
 Wait until Elasticsearch is ready:
 
-    ./scripts/wait-for.sh --timeout=60 --command="kubectl -n platform logs --tail=100 -l component=elasticsearch | grep '\"message\": \"started\"'"
+    ./scripts/wait-for.sh --timeout=60 --command="kubectl -n platform logs --tail=100 -l component=elasticsearch | grep '\"message\":\"started'"
 
-Create Elasticsearch index:
+Create Elasticsearch indices:
 
-    kubectl -n platform exec $(kubectl -n platform get pod -l component=elasticsearch -o json | jq -r '.items[0].metadata.name') -- sh -c "$(cat scripts/init.sh)"
+    ./scripts/kube-create-elasticsearch-indices.sh 
 
 Create Minio bucket:
 
-    kubectl -n platform delete job -l component=minio-init
-    kubectl -n platform apply -f scripts/minio-init.yaml
+    ./scripts/kube-create-minio-bucket.sh
 
 Create Kibana index pattern:
 
-    curl "http://$(minikube ip):5601/api/index_patterns/index_pattern" -H "kbn-xsrf: reporting" -H "Content-Type: application/json" -d @$(pwd)/scripts/index-pattern.json
+    ./scripts/kube-create-kibana-pattern.sh
 
 Deploy services:
 
-    ./scripts/helm-install-services.sh --version=$(./scripts/get-version.sh)
+    ./scripts/helm-install-services.sh 
 
-Create monitoring resources:
+Create observability resources:
 
-    kubectl apply -f scripts/jaeger.yaml
-    kubectl apply -f scripts/services-monitoring.yaml
-    kubectl apply -f scripts/grafana-datasource.yaml
-    kubectl apply -f scripts/grafana-dashboards.yaml
+    ./scripts/kube-create-observability-resources.sh
+
+Expose observability resources:
+
+    ./scripts/kube-expose-observability-resources.sh
 
 Scale services:
 
@@ -455,9 +449,11 @@ Uninstall platform:
 
     ./scripts/helm-uninstall-platform.sh
 
-Uninstall monitoring:
+Uninstall observability:
 
-    ./scripts/helm-uninstall-monitoring.sh
+    ./scripts/kube-delete-observability-resources.sh
+    ./scripts/helm-uninstall-observability-services.sh
+    ./scripts/helm-uninstall-observability-tools.sh
 
 Uninstall Nexus and Pact Broker:
 

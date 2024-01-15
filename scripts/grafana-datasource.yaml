@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: prometheus-datasource
-  namespace: monitoring
+  namespace: observability
   labels:
     grafana_datasource: "1"
 data:

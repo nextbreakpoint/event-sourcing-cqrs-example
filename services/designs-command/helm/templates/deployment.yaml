@@ -79,7 +79,7 @@ spec:
             - name: JAEGER_ATTRIBUTES
               value: 'service.name={{ $root.Values.name | default "designs-command" }},service.version={{ $root.Values.image.tag }},service.namespace={{ $root.Release.Namespace }},environment={{ $root.Values.environment | default "dev" }},release={{ $root.Release.Name }}'
             - name: JAEGER_ENDPOINT
-              value: {{ $root.Values.jaegerEndpoint | default "http://jaeger-collector.monitoring:14250" | quote }}
+              value: {{ $root.Values.jaegerEndpoint | default "http://jaeger-collector.observability:14250" | quote }}
             {{- if $root.Values.enableDebug }}
             - name: DEBUG_OPTS
               value: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"

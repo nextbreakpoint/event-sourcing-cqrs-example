@@ -52,6 +52,7 @@ config:
         Port 9200
         Replace_Dots On
         Logstash_Format On
+        Suppress_Type_Name On
         Retry_Limit false
         Trace_Error Off
         Log_Level info
@@ -63,6 +64,7 @@ config:
         Port 9200
         Logstash_Format On
         Logstash_Prefix node
+        Suppress_Type_Name On
         Retry_Limit False
         Trace_Error Off
         Log_Level info

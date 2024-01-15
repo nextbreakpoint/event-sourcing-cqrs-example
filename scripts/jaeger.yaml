@@ -2,7 +2,7 @@ apiVersion: jaegertracing.io/v1
 kind: Jaeger
 metadata:
   name: jaeger
-  namespace: monitoring
+  namespace: observability
 spec:
   ingress:
     enabled: false
@@ -31,7 +31,7 @@ spec:
     type: elasticsearch
     options:
       es:
-        server-urls: http://elasticsearch.monitoring:9200
+        server-urls: http://elasticsearch.observability:9200
     esIndexCleaner:
       enabled: true
       numberOfDays: 1
@@ -40,12 +40,12 @@ spec:
 kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: jaeger-operator-in-monitoring
-  namespace: monitoring
+  name: jaeger-operator-in-observability
+  namespace: observability
 subjects:
   - kind: ServiceAccount
     name: jaeger-operator
-    namespace: monitoring
+    namespace: observability
 roleRef:
   kind: Role
   name: jaeger-operator

@@ -10,7 +10,7 @@
     <parent>
         <groupId>com.nextbreakpoint</groupId>
         <artifactId>com.nextbreakpoint.blueprint.service</artifactId>
-        <version>1.0.4-wip-a0febcbf-1702855671</version>
+        <version>1.0.4-wip-d86eaa44-1705139256</version>
     </parent>
     <repositories>
         <repository>
@@ -175,6 +175,10 @@
         <dependency>
             <groupId>co.elastic.clients</groupId>
             <artifactId>elasticsearch-java</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
         </dependency>
         <dependency>
             <groupId>software.amazon.awssdk</groupId>

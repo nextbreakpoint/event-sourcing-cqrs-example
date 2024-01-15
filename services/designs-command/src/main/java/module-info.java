@@ -7,8 +7,9 @@ module com.nextbreakpoint.blueprint.designs.command {
     requires com.nextbreakpoint.blueprint.confluent;
     requires com.nextbreakpoint.nextfractal.core;
     requires com.nextbreakpoint.nextfractal.mandelbrot;
-    requires org.apache.logging.log4j;
     requires org.slf4j;
+    requires org.apache.logging.log4j;
+    requires org.apache.commons.logging;
     requires com.fasterxml.jackson.core;
     requires com.fasterxml.jackson.databind;
     requires org.apache.avro;
@@ -28,7 +29,6 @@ module com.nextbreakpoint.blueprint.designs.command {
     requires io.opentelemetry.exporter.jaeger;
     requires io.opentelemetry.exporter.otlp.trace;
     requires micrometer.core;
-    requires org.jctools.core;
     requires org.yaml.snakeyaml;
     requires kotlin.stdlib;
     requires vertx.rx.java;

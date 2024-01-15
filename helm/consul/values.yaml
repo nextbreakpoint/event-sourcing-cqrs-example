@@ -4,7 +4,7 @@
 
 image:
   repository: consul
-  tag: 1.11.4
+  tag: 1.15.4
   pullPolicy: IfNotPresent
   pullSecrets:
 

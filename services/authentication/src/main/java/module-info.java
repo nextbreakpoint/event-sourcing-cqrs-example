@@ -1,7 +1,9 @@
 module com.nextbreakpoint.blueprint.authentication {
     requires com.nextbreakpoint.blueprint.common.core;
     requires com.nextbreakpoint.blueprint.common.vertx;
+    requires org.slf4j;
     requires org.apache.logging.log4j;
+    requires org.apache.commons.logging;
     requires com.fasterxml.jackson.core;
     requires com.fasterxml.jackson.databind;
     requires io.vertx.core;
@@ -20,7 +22,6 @@ module com.nextbreakpoint.blueprint.authentication {
     requires io.opentelemetry.sdk.common;
     requires io.opentelemetry.exporter.jaeger;
     requires io.opentelemetry.exporter.otlp.trace;
-    requires org.jctools.core;
     requires org.yaml.snakeyaml;
     requires kotlin.stdlib;
     requires vertx.rx.java;

@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.nextbreakpoint</groupId>
     <artifactId>com.nextbreakpoint.blueprint</artifactId>
-    <version>1.0.4-wip-a0febcbf-1702855671</version>
+    <version>1.0.4-wip-d86eaa44-1705139256</version>
     <packaging>pom</packaging>
     <licenses>
         <license>
@@ -22,70 +22,70 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <nextfractal.version>2.1.4</nextfractal.version>
         <vertx.version>4.4.6</vertx.version>
-        <jackson.version>2.15.2</jackson.version>
+        <jackson.version>2.16.1</jackson.version>
         <activation.version>1.1.1</activation.version>
+        <commons-logging.version>1.3.0</commons-logging.version>
         <jaxb-api.version>2.4.0-b180830.0359</jaxb-api.version>
         <rxjava.version>1.3.8</rxjava.version>
-        <kafka-clients.version>3.6.0</kafka-clients.version>
+        <kafka-clients.version>7.5.3-ce</kafka-clients.version>
         <cassandra-driver-core.version>4.16.0</cassandra-driver-core.version>
-        <mysql-connector.version>8.1.0</mysql-connector.version>
-        <micrometer.version>1.11.5</micrometer.version>
-        <log4j2.version>2.20.0</log4j2.version>
+        <mysql-connector.version>8.2.0</mysql-connector.version>
+        <micrometer.version>1.12.2</micrometer.version>
+        <log4j2.version>2.22.1</log4j2.version>
         <gson.version>2.10.1</gson.version>
         <httpcore.version>4.4.16</httpcore.version>
         <httpclient.version>4.5.14</httpclient.version>
-        <awssdk.version>2.17.138</awssdk.version>
+        <awssdk.version>2.22.13</awssdk.version>
         <avro.version>1.11.3</avro.version>
-        <kafka-schema-registry-client.version>7.5.1</kafka-schema-registry-client.version>
-        <kafka-avro-serializer.version>7.5.1</kafka-avro-serializer.version>
+        <kafka-schema-registry-client.version>7.5.3</kafka-schema-registry-client.version>
+        <kafka-avro-serializer.version>7.5.3</kafka-avro-serializer.version>
         <opentelemetry.version>1.12.0</opentelemetry.version>
-        <elasticsearch-java.version>8.10.3</elasticsearch-java.version>
-        <jctools-core.version>3.3.0</jctools-core.version>
-        <kotlin-stdlib.version>1.9.10</kotlin-stdlib.version>
+        <elasticsearch-java.version>8.11.3</elasticsearch-java.version>
+        <kotlin-stdlib.version>1.9.22</kotlin-stdlib.version>
         <kotlin-runtime.version>1.2.71</kotlin-runtime.version>
-        <junit5jupiter.version>5.10.0</junit5jupiter.version>
-        <junit5platform.version>1.10.0</junit5platform.version>
-        <mockito.version>5.6.0</mockito.version>
-        <assertj.version>3.24.2</assertj.version>
-        <restassured.version>5.3.2</restassured.version>
+        <junit5jupiter.version>5.10.1</junit5jupiter.version>
+        <junit5platform.version>1.10.1</junit5platform.version>
+        <mockito.version>5.8.0</mockito.version>
+        <assertj.version>3.25.1</assertj.version>
+        <restassured.version>5.4.0</restassured.version>
         <hamcrest.version>2.2</hamcrest.version>
-        <pact-jvm-provider.version>4.6.3</pact-jvm-provider.version>
-        <pact-jvm-consumer.version>4.6.3</pact-jvm-consumer.version>
+        <pact-jvm-provider.version>4.6.4</pact-jvm-provider.version>
+        <pact-jvm-consumer.version>4.6.4</pact-jvm-consumer.version>
         <restito.version>1.1.0</restito.version>
         <awaitility.version>4.2.0</awaitility.version>
-        <testcontainers.version>1.19.1</testcontainers.version>
-        <ktor.version>2.3.5</ktor.version>
+        <testcontainers.version>1.19.3</testcontainers.version>
+        <ktor.version>2.3.7</ktor.version>
         <lombok.version>1.18.30</lombok.version>
-        <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
+        <maven-compiler-plugin.version>3.12.1</maven-compiler-plugin.version>
         <maven-source-plugin.version>3.3.0</maven-source-plugin.version>
         <maven-jar-plugin.version>3.3.0</maven-jar-plugin.version>
-        <maven-javadoc-plugin.version>3.6.0</maven-javadoc-plugin.version>
-        <maven-surefire-plugin.version>3.1.2</maven-surefire-plugin.version>
-        <maven-failsafe-plugin.version>3.1.2</maven-failsafe-plugin.version>
+        <maven-javadoc-plugin.version>3.6.3</maven-javadoc-plugin.version>
+        <maven-surefire-plugin.version>3.2.3</maven-surefire-plugin.version>
+        <maven-failsafe-plugin.version>3.2.3</maven-failsafe-plugin.version>
         <maven-toolchains-plugin.version>3.1.0</maven-toolchains-plugin.version>
         <maven-shade-plugin.version>3.5.1</maven-shade-plugin.version>
-        <maven-dependency-plugin.version>3.6.0</maven-dependency-plugin.version>
+        <maven-dependency-plugin.version>3.6.1</maven-dependency-plugin.version>
         <maven-enforcer-plugin.version>3.4.1</maven-enforcer-plugin.version>
-        <versions-maven-plugin.version>2.16.1</versions-maven-plugin.version>
+        <versions-maven-plugin.version>2.16.2</versions-maven-plugin.version>
         <build-helper-maven-plugin.version>3.4.0</build-helper-maven-plugin.version>
         <lombok-maven-plugin.version>1.18.20.0</lombok-maven-plugin.version>
-        <exec-maven-plugin.version>3.1.0</exec-maven-plugin.version>
+        <exec-maven-plugin.version>3.1.1</exec-maven-plugin.version>
         <avro-maven-plugin.version>1.11.3</avro-maven-plugin.version>
-        <pact-provider-maven.version>4.6.3</pact-provider-maven.version>
+        <pact-provider-maven.version>4.6.4</pact-provider-maven.version>
 <!--        <kotlin-maven-plugin.version>1.9.10</kotlin-maven-plugin.version>-->
-        <java.version>17</java.version>
-        <maven.source.release>17</maven.source.release>
-        <maven.target.release>17</maven.target.release>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <java.version>21</java.version>
+        <maven.source.release>21</maven.source.release>
+        <maven.target.release>21</maven.target.release>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
         <pactbroker.host>localhost</pactbroker.host>
         <pactbroker.port>9292</pactbroker.port>
         <nexus.host>localhost</nexus.host>
         <nexus.port>38081</nexus.port>
-        <slf4j-api.version>2.0.9</slf4j-api.version>
-        <guava.version>32.0.1-jre</guava.version>
+        <slf4j-api.version>2.0.11</slf4j-api.version>
+        <guava.version>33.0.0-jre</guava.version>
         <logredactor.version>1.0.12</logredactor.version>
-        <commons-compress.version>1.21</commons-compress.version>
+        <commons-compress.version>1.25.0</commons-compress.version>
     </properties>
     <build>
         <pluginManagement>
@@ -433,6 +433,11 @@
                 <artifactId>activation</artifactId>
                 <version>${activation.version}</version>
             </dependency>
+            <dependency>
+                <groupId>commons-logging</groupId>
+                <artifactId>commons-logging</artifactId>
+                <version>${commons-logging.version}</version>
+            </dependency>
 <!--            <dependency>-->
 <!--                <groupId>jakarta.xml.bind</groupId>-->
 <!--                <artifactId>jakarta.xml.bind-api</artifactId>-->
@@ -634,11 +639,6 @@
                 <groupId>com.mysql</groupId>
                 <artifactId>mysql-connector-j</artifactId>
                 <version>${mysql-connector.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.jctools</groupId>
-                <artifactId>jctools-core</artifactId>
-                <version>${jctools-core.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.jetbrains.kotlin</groupId>

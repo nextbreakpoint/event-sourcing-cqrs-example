@@ -29,6 +29,7 @@ public class TestS3 {
                 .region(Region.EU_WEST_1)
                 .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create("admin", "password")))
                 .endpointOverride(endpoint)
+                .forcePathStyle(true)
                 .build();
     }
 

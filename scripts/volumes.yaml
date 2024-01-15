@@ -197,8 +197,8 @@ spec:
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: monitoring-elasticsearch
-  namespace: monitoring
+  name: observability-elasticsearch
+  namespace: observability
   labels:
     type: local
     component: elasticsearch
@@ -210,8 +210,8 @@ spec:
   accessModes:
     - ReadWriteOnce
   hostPath:
-    path: "/data/monitoring/elasticsearch"
+    path: "/data/observability/elasticsearch"
     type: DirectoryOrCreate
   claimRef:
     name: elasticsearch
-    namespace: monitoring
+    namespace: observability

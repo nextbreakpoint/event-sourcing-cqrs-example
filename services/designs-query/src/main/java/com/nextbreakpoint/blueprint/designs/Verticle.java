@@ -211,6 +211,7 @@ public class Verticle extends AbstractVerticle {
                     .region(Region.of(s3Region))
                     .credentialsProvider(credentialsProvider)
                     .endpointOverride(URI.create(s3Endpoint))
+                    .forcePathStyle(true)
                     .build();
 
             final RestClient restClient = RestClient.builder(new HttpHost(elasticsearchHost, elasticsearchPort)).build();

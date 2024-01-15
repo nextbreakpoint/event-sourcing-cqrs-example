@@ -1,4 +1,4 @@
-FROM maven:3-eclipse-temurin-17 AS build
+FROM maven:3-eclipse-temurin-21 AS build
 ARG maven_args
 ADD . /src
 WORKDIR /src
@@ -12,7 +12,7 @@ RUN mvn clean verify -s settings.xml -t toolchains.xml $maven_args -DexcludedGro
 
 #FROM gcr.io/distroless/base
 #COPY --from=native-image designs-query /designs-query
-FROM eclipse-temurin:17-jdk
+FROM eclipse-temurin:21-jdk
 COPY --from=build /src/target/libs/* /libs/
 COPY --from=build /src/target/service.jar /libs/
 COPY entrypoint.sh /entrypoint.sh

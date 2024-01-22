@@ -14,6 +14,10 @@ public class Render {
         return String.format("%s/%s/%d/%04d%04d.png", event.getDesignId(), event.getCommandId(), event.getLevel(), event.getRow(), event.getCol());
     }
 
+    public static String getCacheKey(String checksum) {
+        return "/cache/" + checksum;
+    }
+
     public static String getTopicName(String topicPrefix, int level) {
         if (level < 3) {
             return topicPrefix + "-0";

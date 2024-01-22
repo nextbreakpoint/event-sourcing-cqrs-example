@@ -24,12 +24,14 @@ import java.net.MalformedURLException;
 import java.util.List;
 
 import static com.nextbreakpoint.blueprint.common.core.Headers.AUTHORIZATION;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.CHECKSUM;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.COMMAND_ID_1;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.COMMAND_ID_2;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.DATA_1;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.DATA_2;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_ID_1;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_ID_2;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.INVALID_MANIFEST;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.MANIFEST;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.MESSAGE_SOURCE;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.METADATA;
@@ -153,6 +155,7 @@ public class IntegrationTests {
                 .and().body(TestUtils.createPostData(MANIFEST, METADATA, SCRIPT))
                 .when().post(testCases.makeBaseURL("/v1/designs/validate"))
                 .then().assertThat().statusCode(200)
+                .and().assertThat().contentType("application/json")
                 .and().assertThat().body("status", Matchers.equalTo(ValidationStatus.ACCEPTED.toString()))
                 .and().assertThat().body("errors", Matchers.empty());
     }
@@ -169,13 +172,14 @@ public class IntegrationTests {
                 .and().body(TestUtils.createPostData(MANIFEST, METADATA, SCRIPT_WITH_ERRORS))
                 .when().post(testCases.makeBaseURL("/v1/designs/validate"))
                 .then().assertThat().statusCode(200)
+                .and().assertThat().contentType("application/json")
                 .and().assertThat().body("status", Matchers.equalTo(ValidationStatus.REJECTED.toString()))
                 .and().assertThat().body("errors", Matchers.equalTo(List.of("[1:0] Parse failed. Expected tokens: FRACTAL, 'fractal'")));
     }
 
     @Test
-    @DisplayName("Should return the design when uploading a file")
-    public void shouldReturnTheDesignWhenUploadingAFile() throws IOException {
+    @DisplayName("Should upload a design")
+    public void shouldUploadADesign() throws IOException {
         final String authorization = testCases.makeAuthorization("test", Authority.ADMIN);
 
         final String manifest = getContent("/test.nf/manifest");
@@ -188,6 +192,7 @@ public class IntegrationTests {
                     .and().multiPart("fileName", "test.nf.zip", inputStream)
                     .when().post(testCases.makeBaseURL("/v1/designs/upload"))
                     .then().assertThat().statusCode(200)
+                    .and().assertThat().contentType("application/json")
                     .and().assertThat().body("manifest", Matchers.equalTo(manifest))
                     .and().assertThat().body("metadata", Matchers.equalTo(metadata))
                     .and().assertThat().body("script", Matchers.equalTo(script));
@@ -195,8 +200,8 @@ public class IntegrationTests {
     }
 
     @Test
-    @DisplayName("Should return file when design is valid")
-    public void shouldReturnFileWhenDesignIsValid() throws MalformedURLException {
+    @DisplayName("Should download a design")
+    public void shouldDownloadADesign() throws MalformedURLException {
         final String authorization = testCases.makeAuthorization("test", Authority.ADMIN);
 
         given().config(TestUtils.getRestAssuredConfig())
@@ -208,6 +213,54 @@ public class IntegrationTests {
                 .then().assertThat().statusCode(200)
                 .and().assertThat().contentType("application/zip")
                 .and().assertThat().body(Matchers.notNullValue());
+    }
+
+    @Test
+    @DisplayName("Should render a design")
+    public void shouldRenderADesign() throws MalformedURLException {
+        final String authorization = testCases.makeAuthorization("test", Authority.ADMIN);
+
+        given().config(TestUtils.getRestAssuredConfig())
+                .with().header(AUTHORIZATION, authorization)
+                .and().contentType("application/json")
+                .and().body(TestUtils.createPostData(MANIFEST, METADATA, SCRIPT))
+                .when().post(testCases.makeBaseURL("/v1/designs/render"))
+                .then().assertThat().statusCode(200)
+                .and().assertThat().contentType("application/json")
+                .and().assertThat().body("checksum", Matchers.equalTo(CHECKSUM))
+                .and().assertThat().body("errors", Matchers.empty());
+    }
+
+    @Test
+    @DisplayName("Should return errors when cannot render a design")
+    public void shouldReturnErrorsWhenCannotRenderADesign() throws MalformedURLException {
+        final String authorization = testCases.makeAuthorization("test", Authority.ADMIN);
+
+        given().config(TestUtils.getRestAssuredConfig())
+                .with().header(AUTHORIZATION, authorization)
+                .and().contentType("application/json")
+                .and().body(TestUtils.createPostData(MANIFEST, METADATA, SCRIPT_WITH_ERRORS))
+                .when().post(testCases.makeBaseURL("/v1/designs/render"))
+                .then().assertThat().statusCode(200)
+                .and().assertThat().contentType("application/json")
+                .and().assertThat().body("checksum", Matchers.notNullValue())
+                .and().assertThat().body("errors", Matchers.empty());
+    }
+
+    @Test
+    @DisplayName("Should return errors when manifest is invalid")
+    public void shouldReturnErrorsWhenManifestIsInvalid() throws MalformedURLException {
+        final String authorization = testCases.makeAuthorization("test", Authority.ADMIN);
+
+        given().config(TestUtils.getRestAssuredConfig())
+                .with().header(AUTHORIZATION, authorization)
+                .and().contentType("application/json")
+                .and().body(TestUtils.createPostData(INVALID_MANIFEST, METADATA, SCRIPT))
+                .when().post(testCases.makeBaseURL("/v1/designs/render"))
+                .then().assertThat().statusCode(200)
+                .and().assertThat().contentType("application/json")
+                .and().assertThat().body("checksum", Matchers.nullValue())
+                .and().assertThat().body("errors", Matchers.hasSize(1));
     }
 
     private String getContent(String resource) throws IOException {

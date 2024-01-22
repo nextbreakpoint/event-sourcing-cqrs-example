@@ -30,6 +30,11 @@ public class TestUtils {
     }
 
     @NotNull
+    public static String getCacheKey(String checksum) {
+        return "/cache/" + checksum;
+    }
+
+    @NotNull
     public static <T extends SpecificRecord> OutputMessage<T> toOutputMessage(V4Interaction.AsynchronousMessage message, Class<T> clazz) {
         final String json = message.getContents().getContents().valueAsString();
         final KafkaRecord kafkaRecord = Json.decodeValue(json, KafkaRecord.class);

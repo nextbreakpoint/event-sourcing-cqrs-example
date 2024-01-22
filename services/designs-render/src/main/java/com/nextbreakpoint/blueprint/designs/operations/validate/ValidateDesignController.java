@@ -30,7 +30,7 @@ public class ValidateDesignController implements Controller<ValidateDesignReques
 
             return Single.just(response);
         } catch (ValidationException e) {
-            log.warn("Bundle is not valid", e);
+            log.warn("Data not valid", e);
 
             final ValidateDesignResponse response = ValidateDesignResponse.builder()
                     .withStatus(ValidationStatus.REJECTED)

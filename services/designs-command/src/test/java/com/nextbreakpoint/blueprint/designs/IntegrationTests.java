@@ -15,6 +15,8 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.UUID;
 
+import static com.nextbreakpoint.blueprint.common.core.Headers.AUTHORIZATION;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.*;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_DELETE_COMMAND;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_ID_1;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_ID_2;
@@ -79,31 +81,71 @@ public class IntegrationTests {
     }
 
     @Test
-    @DisplayName("Should forbid a POST request on /v1/designs without access token")
-    public void shouldForbidPostRequestOnDesignsWithoutAccessToken() throws MalformedURLException {
+    @DisplayName("Should forbid a POST request on /v1/designs when user is not authenticated")
+    public void shouldForbidPostRequestOnDesignsWhenUserIsNotAuthenticated() throws MalformedURLException {
         given().config(TestUtils.getRestAssuredConfig())
                 .and().contentType(ContentType.JSON)
                 .and().accept(ContentType.JSON)
-                .and().body(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT))
+                .and().body(TestUtils.createPostData(MANIFEST, METADATA, SCRIPT))
                 .when().post(testCases.makeBaseURL("/v1/designs"))
                 .then().assertThat().statusCode(403);
     }
 
     @Test
-    @DisplayName("Should forbid a PUT request on /v1/designs/id without access token")
-    public void shouldForbidPutRequestOnDesignsSlashIdWithoutAccessToken() throws MalformedURLException {
+    @DisplayName("Should forbid a PUT request on /v1/designs/id when user is not authenticated")
+    public void shouldForbidPutRequestOnDesignsSlashIdWhenUserIsNotAuthenticated() throws MalformedURLException {
         given().config(TestUtils.getRestAssuredConfig())
                 .and().contentType(ContentType.JSON)
                 .and().accept(ContentType.JSON)
-                .and().body(TestUtils.createPostData(TestConstants.MANIFEST, TestConstants.METADATA, TestConstants.SCRIPT))
+                .and().body(TestUtils.createPostData(MANIFEST, METADATA, SCRIPT))
                 .when().put(testCases.makeBaseURL("/v1/designs/" + UUID.randomUUID()))
                 .then().assertThat().statusCode(403);
     }
 
     @Test
-    @DisplayName("Should forbid a DELETE request on /v1/designs/id without access token")
-    public void shouldForbidDeleteRequestOnDesignsSlashIdWithoutAccessToken() throws MalformedURLException {
+    @DisplayName("Should forbid a DELETE request on /v1/designs/id when user is not authenticated")
+    public void shouldForbidDeleteRequestOnDesignsSlashIdWhenUserIsNotAuthenticated() throws MalformedURLException {
         given().config(TestUtils.getRestAssuredConfig())
+                .and().accept(ContentType.JSON)
+                .when().delete(testCases.makeBaseURL("/v1/designs/" + UUID.randomUUID()))
+                .then().assertThat().statusCode(403);
+    }
+
+    @Test
+    @DisplayName("Should forbid a POST request on /v1/designs when user is not authorized")
+    public void shouldForbidPostRequestOnDesignsWhenUserIsNotAuthorized() throws MalformedURLException {
+        final String authorization = testCases.makeAuthorization("test", Authority.GUEST);
+
+        given().config(TestUtils.getRestAssuredConfig())
+                .with().header(AUTHORIZATION, authorization)
+                .and().contentType(ContentType.JSON)
+                .and().accept(ContentType.JSON)
+                .and().body(TestUtils.createPostData(MANIFEST, METADATA, SCRIPT))
+                .when().post(testCases.makeBaseURL("/v1/designs"))
+                .then().assertThat().statusCode(403);
+    }
+
+    @Test
+    @DisplayName("Should forbid a PUT request on /v1/designs/id when user is not authorized")
+    public void shouldForbidPutRequestOnDesignsSlashIdWhenUserIsNotAuthorized() throws MalformedURLException {
+        final String authorization = testCases.makeAuthorization("test", Authority.GUEST);
+
+        given().config(TestUtils.getRestAssuredConfig())
+                .with().header(AUTHORIZATION, authorization)
+                .and().contentType(ContentType.JSON)
+                .and().accept(ContentType.JSON)
+                .and().body(TestUtils.createPostData(MANIFEST, METADATA, SCRIPT))
+                .when().put(testCases.makeBaseURL("/v1/designs/" + UUID.randomUUID()))
+                .then().assertThat().statusCode(403);
+    }
+
+    @Test
+    @DisplayName("Should forbid a DELETE request on /v1/designs/id when user is not authorized")
+    public void shouldForbidDeleteRequestOnDesignsSlashIdWhenUserIsNotAuthorized() throws MalformedURLException {
+        final String authorization = testCases.makeAuthorization("test", Authority.GUEST);
+
+        given().config(TestUtils.getRestAssuredConfig())
+                .with().header(AUTHORIZATION, authorization)
                 .and().accept(ContentType.JSON)
                 .when().delete(testCases.makeBaseURL("/v1/designs/" + UUID.randomUUID()))
                 .then().assertThat().statusCode(403);

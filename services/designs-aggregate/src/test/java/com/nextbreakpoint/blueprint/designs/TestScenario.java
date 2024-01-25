@@ -32,7 +32,7 @@ public class TestScenario {
   private Network network = Network.builder().driver("bridge").build();
 
   private GenericContainer cassandra = ContainerUtils.createCassandraContainer(network)
-          .waitingFor(Wait.forLogMessage(".* Initializing test_designs_aggregate.design.*", 1).withStartupTimeout(Duration.ofSeconds(60)));
+          .waitingFor(Wait.forLogMessage(".* Initializing test_designs_aggregate.design.*", 1).withStartupTimeout(Duration.ofSeconds(120)));
 
   private GenericContainer zookeeper = ContainerUtils.createZookeeperContainer(network)
           .waitingFor(Wait.forLogMessage(".* binding to port /0.0.0.0:2181.*", 1).withStartupTimeout(Duration.ofSeconds(60)));

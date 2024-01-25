@@ -59,7 +59,7 @@ public class ContainerUtils {
     }
 
     public static GenericContainer createCassandraContainer(Network network) {
-        return new GenericContainer(DockerImageName.parse("nextbreakpoint/cassandra:4.1.3-1"))
+        return new GenericContainer(DockerImageName.parse("nextbreakpoint/cassandra:5.0-1"))
                 .withEnv("CASSANDRA_DC", "datacenter1")
                 .withEnv("CASSANDRA_RACK", "rack1")
                 .withEnv("JVM_OPTS", "-Xms2G -Xmx2G")

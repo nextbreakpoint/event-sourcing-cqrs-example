@@ -214,6 +214,7 @@ let PreviewPage = class PreviewPage extends React.Component {
                                 component.props.handleShowErrorMessage("Can't publish the design")
                             })
                      } else {
+                        console.log("Can't publish the design: " + result.status)
                         component.props.handleShowErrorMessage("Can't publish the design")
                      }
                 } else {
@@ -266,6 +267,7 @@ let PreviewPage = class PreviewPage extends React.Component {
                                 component.props.handleShowErrorMessage("Can't unpublish the design")
                             })
                      } else {
+                        console.log("Can't unpublish the design: " + result.status)
                         component.props.handleShowErrorMessage("Can't unpublish the design")
                      }
                 } else {

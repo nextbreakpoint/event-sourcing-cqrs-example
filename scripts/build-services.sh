@@ -269,6 +269,9 @@ fi
 export NEXUS_USERNAME
 export NEXUS_PASSWORD
 
+export NPM_REGISTRY="http://${DOCKER_NEXUS_HOST}:${NEXUS_PORT}/repository/npmjs-proxy/"
+export NPM_AUTH="//${DOCKER_NEXUS_HOST}:${NEXUS_PORT}/repository/npmjs-proxy/:_auth $(echo -n ${NEXUS_USERNAME}:${NEXUS_PASSWORD} | base64)"
+
 if [ "$CLEAN" == "true" ]; then
   mvn clean ${MAVEN_ARGS} -e -Dconfluent=true -Dcommon=true -Dservices=true -Dplatform=true -Dnexus=true
 fi
@@ -287,7 +290,7 @@ if [ "$IMAGES" == "true" ]; then
 
 for service in ${services[@]}; do
   pushd services/$service
-   docker build --progress=plain -t ${REPOSITORY}/$service:${VERSION} --build-arg maven_args="${DOCKER_MAVEN_ARGS}" .
+   docker build --progress=plain -t ${REPOSITORY}/$service:${VERSION} --build-arg maven_args="${DOCKER_MAVEN_ARGS}" --build-arg npm_registry="${NPM_REGISTRY}" --build-arg npm_auth="${NPM_AUTH}" .
   popd
 done
 

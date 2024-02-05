@@ -179,7 +179,7 @@ paths:
 #      security:
 #        - design_auth:
 #            - admin
-  /v1/designs/image:
+  /v1/designs/image/{checksum}:
     options:
       operationId: getImageOptions
       responses:
@@ -191,6 +191,13 @@ paths:
         - get
       summary: Get rendered image
       operationId: getImage
+      parameters:
+        - name: checksum
+          in: path
+          description: checksum of design
+          required: true
+          schema:
+            type: string
       responses:
         200:
           description: Image data

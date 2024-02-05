@@ -343,7 +343,7 @@ public class IntegrationTests {
     }
 
     @Test
-    @DisplayName("Should forbid a POST request on /v1/designs/download when user is not authenticated")
+    @DisplayName("Should forbid a POST request on /v1/designs/render when user is not authenticated")
     public void shouldForbidPostRequestOnDesignsSlashRenderWhenUserIsNotAuthenticated() throws MalformedURLException {
         given().config(TestUtils.getRestAssuredConfig())
                 .and().contentType("application/json")
@@ -353,7 +353,7 @@ public class IntegrationTests {
     }
 
     @Test
-    @DisplayName("Should forbid a POST request on /v1/designs/download when user is not authorized")
+    @DisplayName("Should forbid a POST request on /v1/designs/render when user is not authorized")
     public void shouldForbidPostRequestOnDesignsSlashRenderWhenUserIsNotAuthorized() throws MalformedURLException {
         final String authorization = testCases.makeAuthorization("test", Authority.GUEST);
 
@@ -366,7 +366,7 @@ public class IntegrationTests {
     }
 
     @Test
-    @DisplayName("Should allow a POST request on /v1/designs/image and return status code 200 when image exists")
+    @DisplayName("Should allow a GET request on /v1/designs/image and return status code 200 when image exists")
     public void shouldAllowGetRequestOnDesignsSlashImageAndReturnStatusCode200WhenImageExists() throws IOException {
         final String authorization = testCases.makeAuthorization("test", Authority.ADMIN);
 
@@ -383,8 +383,7 @@ public class IntegrationTests {
         byte[] result = given().config(TestUtils.getRestAssuredConfig())
                 .with().header(AUTHORIZATION, authorization)
                 .and().accept("image/png")
-                .and().queryParam("checksum", CHECKSUM)
-                .when().get(testCases.makeBaseURL("/v1/designs/image"))
+                .when().get(testCases.makeBaseURL("/v1/designs/image/" + CHECKSUM))
                 .then().assertThat().statusCode(200)
                 .and().assertThat().contentType("image/png")
                 .and().extract().asByteArray();
@@ -398,7 +397,7 @@ public class IntegrationTests {
     }
 
     @Test
-    @DisplayName("Should allow a POST request on /v1/designs/image and return status code 404 when image does not exist")
+    @DisplayName("Should allow a GET request on /v1/designs/image and return status code 404 when image does not exist")
     public void shouldAllowGetRequestOnDesignsSlashImageAndReturnStatusCode404WhenImageDoesNotExist() throws IOException {
         final String authorization = testCases.makeAuthorization("test", Authority.ADMIN);
 
@@ -406,30 +405,28 @@ public class IntegrationTests {
                 .with().header(AUTHORIZATION, authorization)
                 .and().accept("image/png")
                 .and().queryParam("checksum", "123")
-                .when().get(testCases.makeBaseURL("/v1/designs/image"))
+                .when().get(testCases.makeBaseURL("/v1/designs/image/123"))
                 .then().assertThat().statusCode(404);
     }
 
     @Test
-    @DisplayName("Should forbid a POST request on /v1/designs/download when user is not authenticated")
+    @DisplayName("Should forbid a GET request on /v1/designs/image when user is not authenticated")
     public void shouldForbidGetRequestOnDesignsSlashImageWhenUserIsNotAuthenticated() throws MalformedURLException {
         given().config(TestUtils.getRestAssuredConfig())
                 .and().accept("image/png")
-                .and().queryParam("checksum", CHECKSUM)
-                .when().get(testCases.makeBaseURL("/v1/designs/image"))
+                .when().get(testCases.makeBaseURL("/v1/designs/image/" + CHECKSUM))
                 .then().assertThat().statusCode(403);
     }
 
     @Test
-    @DisplayName("Should forbid a POST request on /v1/designs/download when user is not authorized")
+    @DisplayName("Should forbid a GET request on /v1/designs/image when user is not authorized")
     public void shouldForbidGetRequestOnDesignsSlashImageWhenUserIsNotAuthorized() throws MalformedURLException {
         final String authorization = testCases.makeAuthorization("test", Authority.GUEST);
 
         given().config(TestUtils.getRestAssuredConfig())
                 .with().header(AUTHORIZATION, authorization)
                 .and().accept("image/png")
-                .and().queryParam("checksum", CHECKSUM)
-                .when().get(testCases.makeBaseURL("/v1/designs/image"))
+                .when().get(testCases.makeBaseURL("/v1/designs/image/" + CHECKSUM))
                 .then().assertThat().statusCode(403);
     }
 

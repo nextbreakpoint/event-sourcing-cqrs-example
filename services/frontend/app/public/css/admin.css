@@ -67,9 +67,18 @@ footer a, footer a:active, footer a:hover, footer a:visited {
     margin: 2%;
 }
 
-.preview {
-    padding: 2%;
+.image-preview {
     text-align: center;
+    min-height: 544px;
+}
+
+.image-preview img {
+    border-radius: 3%;
+}
+
+.map-preview {
+    text-align: center;
+    padding: 2%;
 }
 
 .script {
@@ -162,4 +171,9 @@ footer a, footer a:active, footer a:hover, footer a:visited {
 
 .highlight {
     background-color: rgba(25, 118, 210, 0.08);
+}
+
+.message {
+    padding: 2%;
+    text-align: left;
 }

@@ -21,8 +21,8 @@ class GetImageRequestMapperTest {
 
     @ParameterizedTest
     @MethodSource("someFixtures")
-    void shouldCreateRequest(List<String> checksums, String checksum) {
-        givenARequest(checksums);
+    void shouldCreateRequest(String checksum) {
+        givenARequest(checksum);
 
         final var request = mapper.transform(context);
 
@@ -33,22 +33,21 @@ class GetImageRequestMapperTest {
 
     @Test
     void shouldThrowExceptionWhenQueryParameterIsMissing() {
-        givenARequest(List.of());
+        givenARequest(null);
 
         assertThatThrownBy(() -> mapper.transform(context))
                 .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("the required query parameter: checksum is missing");
+                .hasMessageContaining("the required path parameter: checksum is missing");
     }
 
-    private void givenARequest(List<String> checksum) {
-        when(context.queryParam("checksum")).thenReturn(checksum);
+    private void givenARequest(String checksum) {
+        when(context.pathParam("checksum")).thenReturn(checksum);
     }
 
     public static Stream<Arguments> someFixtures() {
         return Stream.of(
-                Arguments.of(List.of("123"), "123"),
-                Arguments.of(List.of("123", "456"), "123"),
-                Arguments.of(List.of("123", "456", "789"), "123")
+                Arguments.of("123"),
+                Arguments.of("456")
         );
     }
 }

@@ -9,14 +9,14 @@ import java.util.List;
 public class GetImageRequestMapper implements Mapper<RoutingContext, GetImageRequest> {
     @Override
     public GetImageRequest transform(RoutingContext context) {
-        final List<String> checksum = context.queryParam("checksum");
+        final String checksum = context.pathParam("checksum");
 
-        if (checksum == null || checksum.isEmpty()) {
-            throw new IllegalStateException("the request doesn't have the required query parameter: checksum is missing");
+        if (checksum == null) {
+            throw new IllegalStateException("the request doesn't have the required path parameter: checksum is missing");
         }
 
         return GetImageRequest.builder()
-                .withChecksum(checksum.getFirst())
+                .withChecksum(checksum)
                 .build();
     }
 }

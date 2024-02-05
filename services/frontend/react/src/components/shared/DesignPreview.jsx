@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from "react"
 import PropTypes from 'prop-types'
 
 import Button from '@mui/material/Button'
+import Stack from '@mui/material/Stack'
 import Grid from '@mui/material/Grid'
 
 import { MapContainer, TileLayer, useMap } from 'react-leaflet'
@@ -17,6 +18,7 @@ export default function DesignPreview(props) {
     let [metadata, setMetadata] = useState(props.metadata)
     let [checksum, setChecksum] = useState(null)
     let [imageUrl, setImageUrl] = useState(null)
+    let [message, setMessage] = useState("Initializing...")
 
     useEffect(() => {
         let timeout = setTimeout(() => {
@@ -41,7 +43,7 @@ export default function DesignPreview(props) {
             withCredentials: true
         }
 
-//         component.props.handleHideErrorMessage()
+        setMessage("Rendering...")
 
         axios.post(props.config.api_url + '/v1/designs/validate', design, config)
             .then(function (response) {
@@ -53,29 +55,31 @@ export default function DesignPreview(props) {
                             .then(function (response) {
                                 if (response.status == 200) {
                                     console.log("Checksum = " + response.data.checksum)
+                                    let date = new Date()
                                     setChecksum(response.data.checksum)
-                                    setImageUrl(props.config.api_url + '/v1/designs/image?checksum=' + response.data.checksum + '&t=' + Date.now())
+                                    setImageUrl(props.config.api_url + '/v1/designs/image/' + response.data.checksum + '?t=' + date.getTime())
+                                    setMessage("Last updated " + date.toISOString())
                                 } else {
                                     console.log("Can't render the design: status = " + response.status)
-//                                     component.props.handleShowErrorMessage("Can't render the design")
+                                    setMessage("Can't render the design")
                                 }
                             })
                             .catch(function (error) {
                                 console.log("Can't render the design: " + error)
-//                                 component.props.handleShowErrorMessage("Can't render the design")
+                                setMessage("Can't render the design")
                             })
                      } else {
                         console.log("Can't render the design: " + result.status)
-//                         component.props.handleShowErrorMessage("Can't render the design")
+                        setMessage("Can't render the design")
                      }
                 } else {
                     console.log("Can't render the design: status = " + response.status)
-//                     component.props.handleShowErrorMessage("Can't render the design")
+                    setMessage("Can't render the design")
                 }
             })
             .catch(function (error) {
                 console.log("Can't render the design: " + error)
-//                 component.props.handleShowErrorMessage("Can't render the design")
+                setMessage("Can't render the design")
             })
     }
 
@@ -92,11 +96,12 @@ export default function DesignPreview(props) {
     return (
         <Grid container justify="space-between" alignItems="stretch" alignContent="space-between">
             <Grid item xs={6}>
-                <div className="preview">
-                    {imageUrl != null && (
-                        <img src={imageUrl}/>
-                    )}
-                </div>
+                <Stack direction="column" alignItems="center" justifyContent="space-between">
+                  <div className="image-preview">
+                      {imageUrl != null && (<img src={imageUrl}/>)}
+                  </div>
+                  <div className="message">{message}</div>
+                </Stack>
             </Grid>
             <Grid item xs={6}>
                 <DesignForm script={script} metadata={metadata} onScriptChanged={e => handleScriptChanged(setScript, e)} onMetadataChanged={e => handleMetadataChanged(setMetadata, e)}/>

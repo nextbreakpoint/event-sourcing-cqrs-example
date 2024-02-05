@@ -23,7 +23,7 @@ public class BundleValidator {
 
     private static Try<Bundle, Exception> createBundle(String manifest, String metadata, String script) {
         return BundleUtils.createBundle(manifest, metadata, script)
-                .mapper(e -> new Exception("Can't create bundle", e));
+                .mapper(e -> makeValidationException("Can't create bundle", e));
     }
 
     private static Try<ParserResult, Exception> parseBundle(Bundle bundle) {
@@ -32,7 +32,7 @@ public class BundleValidator {
             final String className = "Compile" + System.nanoTime();
             final DSLParser parser = new DSLParser(packageName, className);
             return parser.parse(bundle.getSession().getScript());
-        }).mapper(e -> new Exception("Can't parse bundle", e));
+        }).mapper(e -> makeValidationException("Can't parse bundle", e));
     }
 
     private static Try<ParserResult, Exception> compileCode(ParserResult result) {
@@ -41,12 +41,20 @@ public class BundleValidator {
             compiler.compileOrbit(result).create();
             compiler.compileColor(result).create();
             return result;
-        }).mapper(e -> new Exception("Can't compile bundle", e));
+        }).mapper(e -> makeValidationException("Can't compile bundle", e));
     }
 
     private static Try<ParserResult, Exception> checkResult(ParserResult result) {
         if (result.getErrors().isEmpty()) return Try.success(result);
-        return Try.failure(new ValidationException("Can't parse bundle", formatErrors(result)));
+        return Try.<ParserResult>failure(makeValidationException(result)).mapper(e -> e);
+    }
+
+    private static ValidationException makeValidationException(ParserResult result) {
+        return new ValidationException("Bundle has errors", formatErrors(result));
+    }
+
+    private static ValidationException makeValidationException(String message, Exception error) {
+        return new ValidationException(message, List.of(error.getMessage()), error.getCause());
     }
 
     private static List<String> formatErrors(ParserResult result) {
@@ -59,6 +67,6 @@ public class BundleValidator {
 
     private static ValidationException createException(Exception e) {
         if (e instanceof ValidationException) return (ValidationException) e;
-        return new ValidationException(e.getMessage(), List.of(e.getMessage()), e.getCause());
+        return new ValidationException("Bundle has errors", List.of(e.getMessage()), e.getCause());
     }
 }

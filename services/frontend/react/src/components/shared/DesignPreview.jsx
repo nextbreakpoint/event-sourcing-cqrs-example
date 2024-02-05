@@ -69,17 +69,18 @@ export default function DesignPreview(props) {
                                 setMessage("Can't render the design")
                             })
                      } else {
-                        console.log("Can't render the design: " + result.status)
-                        setMessage("Can't render the design")
+                        let errors = result.errors.join(', ');
+                        console.log("The design contains some errors: " + errors)
+                        setMessage("The design contains some errors: " + errors)
                      }
                 } else {
-                    console.log("Can't render the design: status = " + response.status)
-                    setMessage("Can't render the design")
+                    console.log("Can't validate the design: status = " + response.status)
+                    setMessage("Can't validate the design")
                 }
             })
             .catch(function (error) {
-                console.log("Can't render the design: " + error)
-                setMessage("Can't render the design")
+                console.log("Can't validate the design: " + error)
+                setMessage("Can't validate the design")
             })
     }
 

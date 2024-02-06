@@ -39,6 +39,8 @@ module com.nextbreakpoint.blueprint.designs.render {
     requires software.amazon.awssdk.services.s3;
     requires static lombok;
     exports com.nextbreakpoint.blueprint.designs to com.fasterxml.jackson.databind;
+    exports com.nextbreakpoint.blueprint.designs.operations.render to com.fasterxml.jackson.databind;
     exports com.nextbreakpoint.blueprint.designs.operations.upload to com.fasterxml.jackson.databind;
+    exports com.nextbreakpoint.blueprint.designs.operations.download to com.fasterxml.jackson.databind;
     exports com.nextbreakpoint.blueprint.designs.operations.validate to com.fasterxml.jackson.databind;
 }

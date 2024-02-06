@@ -223,7 +223,7 @@ public class IntegrationTests {
   }
 
   @Test
-  @DisplayName("Should allow OPTIONS on /designs setout access token")
+  @DisplayName("Should allow OPTIONS on /designs without access token")
   public void shouldAllowOptionsOnDesignsWithoutAccessToken() throws MalformedURLException {
     given().config(TestUtils.getRestAssuredConfig())
             .with().header("Origin", testCases.getOriginUrl())
@@ -598,7 +598,7 @@ public class IntegrationTests {
             .and().accept(ContentType.JSON)
             .when().get(testCases.makeBaseURL("/v1/designs" + (draft ? "?draft=true" : "")))
             .then().assertThat().statusCode(200)
-            .extract().body().as(DesignDocuments.class);
+            .and().extract().body().as(DesignDocuments.class);
   }
 
   private static DesignDocument loadDesign(String authorization, UUID uuid, boolean draft) throws MalformedURLException {
@@ -607,7 +607,7 @@ public class IntegrationTests {
             .and().accept(ContentType.JSON)
             .when().get(testCases.makeBaseURL("/v1/designs/" + uuid + (draft ? "?draft=true" : "")))
             .then().assertThat().statusCode(200)
-            .extract().body().as(DesignDocument.class);
+            .and().extract().body().as(DesignDocument.class);
   }
 
   private static byte[] getTile(String authorization, UUID uuid, boolean draft) throws MalformedURLException {
@@ -617,6 +617,6 @@ public class IntegrationTests {
             .when().get(testCases.makeBaseURL("/v1/designs/" + uuid + "/0/0/0/256.png" + (draft ? "?draft=true" : "")))
             .then().assertThat().statusCode(200)
             .and().assertThat().contentType("image/png")
-            .extract().response().asByteArray();
+            .and().extract().response().asByteArray();
   }
 }

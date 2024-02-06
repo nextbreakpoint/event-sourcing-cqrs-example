@@ -9,6 +9,7 @@ import com.nextbreakpoint.blueprint.common.core.ValidationStatus;
 import com.nextbreakpoint.blueprint.common.events.avro.TileRenderRequested;
 import com.nextbreakpoint.blueprint.common.vertx.MessageFactory;
 import io.restassured.RestAssured;
+import org.assertj.core.api.SoftAssertions;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -18,18 +19,23 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.util.List;
 
 import static com.nextbreakpoint.blueprint.common.core.Headers.AUTHORIZATION;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.CHECKSUM;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.COMMAND_ID_1;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.COMMAND_ID_2;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.DATA_1;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.DATA_2;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_ID_1;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_ID_2;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.INVALID_MANIFEST;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.MANIFEST;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.MESSAGE_SOURCE;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.METADATA;
@@ -142,8 +148,8 @@ public class IntegrationTests {
     }
 
     @Test
-    @DisplayName("Should not return errors when design is valid")
-    public void shouldReturnNoErrorsWhenDesignIsValid() throws MalformedURLException {
+    @DisplayName("Should allow a POST request on /v1/designs/validate and return status code 200 when design does not have validation errors")
+    public void shouldAllowPostRequestOnDesignsSlashValidateAndReturnStatusCode200WhenDesignDoesNotHaveValidationErrors() throws MalformedURLException {
         final String authorization = testCases.makeAuthorization("test", Authority.ADMIN);
 
         given().config(TestUtils.getRestAssuredConfig())
@@ -153,13 +159,14 @@ public class IntegrationTests {
                 .and().body(TestUtils.createPostData(MANIFEST, METADATA, SCRIPT))
                 .when().post(testCases.makeBaseURL("/v1/designs/validate"))
                 .then().assertThat().statusCode(200)
+                .and().assertThat().contentType("application/json")
                 .and().assertThat().body("status", Matchers.equalTo(ValidationStatus.ACCEPTED.toString()))
                 .and().assertThat().body("errors", Matchers.empty());
     }
 
     @Test
-    @DisplayName("Should return errors when design is invalid")
-    public void shouldReturnErrorsWhenDesignIsInvalid() throws MalformedURLException {
+    @DisplayName("Should allow a POST request on /v1/designs/validate and return status code 200 when design has validation errors")
+    public void shouldAllowPostRequestOnDesignsSlashValidateAndReturnStatusCode200WhenDesignHasValidationErrors() throws MalformedURLException {
         final String authorization = testCases.makeAuthorization("test", Authority.ADMIN);
 
         given().config(TestUtils.getRestAssuredConfig())
@@ -169,13 +176,39 @@ public class IntegrationTests {
                 .and().body(TestUtils.createPostData(MANIFEST, METADATA, SCRIPT_WITH_ERRORS))
                 .when().post(testCases.makeBaseURL("/v1/designs/validate"))
                 .then().assertThat().statusCode(200)
+                .and().assertThat().contentType("application/json")
                 .and().assertThat().body("status", Matchers.equalTo(ValidationStatus.REJECTED.toString()))
                 .and().assertThat().body("errors", Matchers.equalTo(List.of("[1:0] Parse failed. Expected tokens: FRACTAL, 'fractal'")));
     }
 
     @Test
-    @DisplayName("Should return the design when uploading a file")
-    public void shouldReturnTheDesignWhenUploadingAFile() throws IOException {
+    @DisplayName("Should forbid POST request on /v1/designs/validate when user is not authenticated")
+    public void shouldForbidPostRequestOnDesignsSlashValidateWhenUserIsNotAuthenticated() throws MalformedURLException {
+        given().config(TestUtils.getRestAssuredConfig())
+                .and().contentType(ContentType.APPLICATION_JSON)
+                .and().accept(ContentType.APPLICATION_JSON)
+                .and().body(TestUtils.createPostData(MANIFEST, METADATA, SCRIPT))
+                .when().post(testCases.makeBaseURL("/v1/designs/validate"))
+                .then().assertThat().statusCode(403);
+    }
+
+    @Test
+    @DisplayName("Should forbid POST request on /v1/designs/validate when user is not authorized")
+    public void shouldForbidPostRequestOnDesignsSlashValidateWhenUserIsNotAuthorized() throws MalformedURLException {
+        final String authorization = testCases.makeAuthorization("test", Authority.GUEST);
+
+        given().config(TestUtils.getRestAssuredConfig())
+                .with().header(AUTHORIZATION, authorization)
+                .and().contentType(ContentType.APPLICATION_JSON)
+                .and().accept(ContentType.APPLICATION_JSON)
+                .and().body(TestUtils.createPostData(MANIFEST, METADATA, SCRIPT))
+                .when().post(testCases.makeBaseURL("/v1/designs/validate"))
+                .then().assertThat().statusCode(403);
+    }
+
+    @Test
+    @DisplayName("Should allow a POST request on /v1/designs/upload and return status code 200 when design does not have errors")
+    public void shouldAllowPostRequestOnDesignsSlashUploadAndReturnStatusCode200WhenDesignDoesNotHaveErrors() throws IOException {
         final String authorization = testCases.makeAuthorization("test", Authority.ADMIN);
 
         final String manifest = getContent("/test.nf/manifest");
@@ -188,6 +221,7 @@ public class IntegrationTests {
                     .and().multiPart("fileName", "test.nf.zip", inputStream)
                     .when().post(testCases.makeBaseURL("/v1/designs/upload"))
                     .then().assertThat().statusCode(200)
+                    .and().assertThat().contentType("application/json")
                     .and().assertThat().body("manifest", Matchers.equalTo(manifest))
                     .and().assertThat().body("metadata", Matchers.equalTo(metadata))
                     .and().assertThat().body("script", Matchers.equalTo(script));
@@ -195,8 +229,33 @@ public class IntegrationTests {
     }
 
     @Test
-    @DisplayName("Should return file when design is valid")
-    public void shouldReturnFileWhenDesignIsValid() throws MalformedURLException {
+    @DisplayName("Should forbid a POST request on /v1/designs/upload when user is not authenticated")
+    public void shouldForbidPostRequestOnDesignsSlashUploadWhenUserIsNotAuthenticated() throws IOException {
+        try (InputStream inputStream = getClass().getResourceAsStream("/test.nf.zip")) {
+            given().config(TestUtils.getRestAssuredConfig())
+                    .and().multiPart("fileName", "test.nf.zip", inputStream)
+                    .when().post(testCases.makeBaseURL("/v1/designs/upload"))
+                    .then().assertThat().statusCode(403);
+        }
+    }
+
+    @Test
+    @DisplayName("Should forbid a POST request on /v1/designs/upload when user is not authorized")
+    public void shouldForbidPostRequestOnDesignsSlashUploadWhenUserIsNotAuthorized() throws IOException {
+        final String authorization = testCases.makeAuthorization("test", Authority.GUEST);
+
+        try (InputStream inputStream = getClass().getResourceAsStream("/test.nf.zip")) {
+            given().config(TestUtils.getRestAssuredConfig())
+                    .with().header(AUTHORIZATION, authorization)
+                    .and().multiPart("fileName", "test.nf.zip", inputStream)
+                    .when().post(testCases.makeBaseURL("/v1/designs/upload"))
+                    .then().assertThat().statusCode(403);
+        }
+    }
+
+    @Test
+    @DisplayName("Should allow a POST request on /v1/designs/download and return status code 200 when design does not have errors")
+    public void shouldAllowPostRequestOnDesignsSlashDownloadAndReturnStatusCode200WhenDesignDoesNotHaveErrors() throws MalformedURLException {
         final String authorization = testCases.makeAuthorization("test", Authority.ADMIN);
 
         given().config(TestUtils.getRestAssuredConfig())
@@ -208,6 +267,167 @@ public class IntegrationTests {
                 .then().assertThat().statusCode(200)
                 .and().assertThat().contentType("application/zip")
                 .and().assertThat().body(Matchers.notNullValue());
+    }
+
+    @Test
+    @DisplayName("Should forbid a POST request on /v1/designs/download when user is not authenticated")
+    public void shouldForbidPostRequestOnDesignsSlashDownloadWhenUserIsNotAuthenticated() throws MalformedURLException {
+        given().config(TestUtils.getRestAssuredConfig())
+                .and().contentType("application/json")
+                .and().accept("application/zip")
+                .and().body(TestUtils.createPostData(MANIFEST, METADATA, SCRIPT))
+                .when().post(testCases.makeBaseURL("/v1/designs/download"))
+                .then().assertThat().statusCode(403);
+    }
+
+    @Test
+    @DisplayName("Should forbid a POST request on /v1/designs/download when user is not authorized")
+    public void shouldForbidPostRequestOnDesignsSlashDownloadWhenUserIsNotAuthorized() throws MalformedURLException {
+        final String authorization = testCases.makeAuthorization("test", Authority.GUEST);
+
+        given().config(TestUtils.getRestAssuredConfig())
+                .with().header(AUTHORIZATION, authorization)
+                .and().contentType("application/json")
+                .and().accept("application/zip")
+                .and().body(TestUtils.createPostData(MANIFEST, METADATA, SCRIPT))
+                .when().post(testCases.makeBaseURL("/v1/designs/download"))
+                .then().assertThat().statusCode(403);
+    }
+
+    @Test
+    @DisplayName("Should allow a POST request on /v1/designs/render and return status code 200 when design does not have errors")
+    public void shouldAllowPostRequestOnDesignsSlashRenderAndReturnStatusCode200WhenDesignDoesNotHaveErrors() throws MalformedURLException {
+        final String authorization = testCases.makeAuthorization("test", Authority.ADMIN);
+
+        given().config(TestUtils.getRestAssuredConfig())
+                .with().header(AUTHORIZATION, authorization)
+                .and().contentType("application/json")
+                .and().body(TestUtils.createPostData(MANIFEST, METADATA, SCRIPT))
+                .when().post(testCases.makeBaseURL("/v1/designs/render"))
+                .then().assertThat().statusCode(200)
+                .and().assertThat().contentType("application/json")
+                .and().assertThat().body("checksum", Matchers.equalTo(CHECKSUM))
+                .and().assertThat().body("errors", Matchers.empty());
+    }
+
+    @Test
+    @DisplayName("Should allow a POST request on /v1/designs/render and return status code 200 when script has errors")
+    public void shouldAllowPostRequestOnDesignsSlashRenderAndReturnStatusCode200WhenScriptHasErrors() throws MalformedURLException {
+        final String authorization = testCases.makeAuthorization("test", Authority.ADMIN);
+
+        given().config(TestUtils.getRestAssuredConfig())
+                .with().header(AUTHORIZATION, authorization)
+                .and().contentType("application/json")
+                .and().body(TestUtils.createPostData(MANIFEST, METADATA, SCRIPT_WITH_ERRORS))
+                .when().post(testCases.makeBaseURL("/v1/designs/render"))
+                .then().assertThat().statusCode(200)
+                .and().assertThat().contentType("application/json")
+                .and().assertThat().body("checksum", Matchers.notNullValue())
+                .and().assertThat().body("errors", Matchers.empty());
+    }
+
+    @Test
+    @DisplayName("Should allow a POST request on /v1/designs/render and return status code 200 when manifest is invalid")
+    public void shouldAllowPostRequestOnDesignsSlashRenderAndReturnStatusCode200WhenManifestIsInvalid() throws MalformedURLException {
+        final String authorization = testCases.makeAuthorization("test", Authority.ADMIN);
+
+        given().config(TestUtils.getRestAssuredConfig())
+                .with().header(AUTHORIZATION, authorization)
+                .and().contentType("application/json")
+                .and().body(TestUtils.createPostData(INVALID_MANIFEST, METADATA, SCRIPT))
+                .when().post(testCases.makeBaseURL("/v1/designs/render"))
+                .then().assertThat().statusCode(200)
+                .and().assertThat().contentType("application/json")
+                .and().assertThat().body("checksum", Matchers.nullValue())
+                .and().assertThat().body("errors", Matchers.hasSize(1));
+    }
+
+    @Test
+    @DisplayName("Should forbid a POST request on /v1/designs/render when user is not authenticated")
+    public void shouldForbidPostRequestOnDesignsSlashRenderWhenUserIsNotAuthenticated() throws MalformedURLException {
+        given().config(TestUtils.getRestAssuredConfig())
+                .and().contentType("application/json")
+                .and().body(TestUtils.createPostData(MANIFEST, METADATA, SCRIPT))
+                .when().post(testCases.makeBaseURL("/v1/designs/render"))
+                .then().assertThat().statusCode(403);
+    }
+
+    @Test
+    @DisplayName("Should forbid a POST request on /v1/designs/render when user is not authorized")
+    public void shouldForbidPostRequestOnDesignsSlashRenderWhenUserIsNotAuthorized() throws MalformedURLException {
+        final String authorization = testCases.makeAuthorization("test", Authority.GUEST);
+
+        given().config(TestUtils.getRestAssuredConfig())
+                .with().header(AUTHORIZATION, authorization)
+                .and().contentType("application/json")
+                .and().body(TestUtils.createPostData(MANIFEST, METADATA, SCRIPT))
+                .when().post(testCases.makeBaseURL("/v1/designs/render"))
+                .then().assertThat().statusCode(403);
+    }
+
+    @Test
+    @DisplayName("Should allow a GET request on /v1/designs/image and return status code 200 when image exists")
+    public void shouldAllowGetRequestOnDesignsSlashImageAndReturnStatusCode200WhenImageExists() throws IOException {
+        final String authorization = testCases.makeAuthorization("test", Authority.ADMIN);
+
+        given().config(TestUtils.getRestAssuredConfig())
+                .with().header(AUTHORIZATION, authorization)
+                .and().contentType("application/json")
+                .and().body(TestUtils.createPostData(MANIFEST, METADATA, SCRIPT))
+                .when().post(testCases.makeBaseURL("/v1/designs/render"))
+                .then().assertThat().statusCode(200)
+                .and().assertThat().contentType("application/json")
+                .and().assertThat().body("checksum", Matchers.equalTo(CHECKSUM))
+                .and().assertThat().body("errors", Matchers.empty());
+
+        byte[] result = given().config(TestUtils.getRestAssuredConfig())
+                .with().header(AUTHORIZATION, authorization)
+                .and().accept("image/png")
+                .when().get(testCases.makeBaseURL("/v1/designs/image/" + CHECKSUM))
+                .then().assertThat().statusCode(200)
+                .and().assertThat().contentType("image/png")
+                .and().extract().asByteArray();
+
+        final BufferedImage image = ImageIO.read(new ByteArrayInputStream(result));
+
+        SoftAssertions softly = new SoftAssertions();
+        softly.assertThat(image.getWidth()).isEqualTo(512);
+        softly.assertThat(image.getHeight()).isEqualTo(512);
+        softly.assertAll();
+    }
+
+    @Test
+    @DisplayName("Should allow a GET request on /v1/designs/image and return status code 404 when image does not exist")
+    public void shouldAllowGetRequestOnDesignsSlashImageAndReturnStatusCode404WhenImageDoesNotExist() throws IOException {
+        final String authorization = testCases.makeAuthorization("test", Authority.ADMIN);
+
+        given().config(TestUtils.getRestAssuredConfig())
+                .with().header(AUTHORIZATION, authorization)
+                .and().accept("image/png")
+                .and().queryParam("checksum", "123")
+                .when().get(testCases.makeBaseURL("/v1/designs/image/123"))
+                .then().assertThat().statusCode(404);
+    }
+
+    @Test
+    @DisplayName("Should forbid a GET request on /v1/designs/image when user is not authenticated")
+    public void shouldForbidGetRequestOnDesignsSlashImageWhenUserIsNotAuthenticated() throws MalformedURLException {
+        given().config(TestUtils.getRestAssuredConfig())
+                .and().accept("image/png")
+                .when().get(testCases.makeBaseURL("/v1/designs/image/" + CHECKSUM))
+                .then().assertThat().statusCode(403);
+    }
+
+    @Test
+    @DisplayName("Should forbid a GET request on /v1/designs/image when user is not authorized")
+    public void shouldForbidGetRequestOnDesignsSlashImageWhenUserIsNotAuthorized() throws MalformedURLException {
+        final String authorization = testCases.makeAuthorization("test", Authority.GUEST);
+
+        given().config(TestUtils.getRestAssuredConfig())
+                .with().header(AUTHORIZATION, authorization)
+                .and().accept("image/png")
+                .when().get(testCases.makeBaseURL("/v1/designs/image/" + CHECKSUM))
+                .then().assertThat().statusCode(403);
     }
 
     private String getContent(String resource) throws IOException {

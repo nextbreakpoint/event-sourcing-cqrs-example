@@ -295,6 +295,10 @@ public class Verticle extends AbstractVerticle {
 
             final Handler<RoutingContext> uploadDesignHandler = new AccessHandler(jwtProvider, Factory.createUploadDesignHandler(), onAccessDenied, List.of(ADMIN));
 
+            final Handler<RoutingContext> renderDesignHandler = new AccessHandler(jwtProvider, Factory.createRenderDesignHandler(s3AsyncClient, s3Bucket), onAccessDenied, List.of(ADMIN));
+
+            final Handler<RoutingContext> getImageHandler = new AccessHandler(jwtProvider, Factory.createGetImageHandler(s3AsyncClient, s3Bucket), onAccessDenied, List.of(ADMIN));
+
             final Handler<RoutingContext> apiV1DocsHandler = new OpenApiHandler(vertx.getDelegate(), executor, "api-v1.yaml");
 
             final HealthCheckHandler healthCheckHandler = HealthCheckHandler.createWithHealthChecks(HealthChecks.create(vertx));
@@ -341,6 +345,12 @@ public class Verticle extends AbstractVerticle {
                         routerBuilder.operation("uploadDesign")
                                 .handler(context -> uploadDesignHandler.handle(RoutingContext.newInstance(context)));
 
+                        routerBuilder.operation("renderDesign")
+                                .handler(context -> renderDesignHandler.handle(RoutingContext.newInstance(context)));
+
+                        routerBuilder.operation("getImage")
+                                .handler(context -> getImageHandler.handle(RoutingContext.newInstance(context)));
+
                         routerBuilder.operation("validateDesignOptions")
                                 .handler(context -> ResponseHelper.sendNoContent(RoutingContext.newInstance(context)));
 
@@ -348,6 +358,12 @@ public class Verticle extends AbstractVerticle {
                                 .handler(context -> ResponseHelper.sendNoContent(RoutingContext.newInstance(context)));
 
                         routerBuilder.operation("uploadDesignOptions")
+                                .handler(context -> ResponseHelper.sendNoContent(RoutingContext.newInstance(context)));
+
+                        routerBuilder.operation("renderDesignOptions")
+                                .handler(context -> ResponseHelper.sendNoContent(RoutingContext.newInstance(context)));
+
+                        routerBuilder.operation("getImageOptions")
                                 .handler(context -> ResponseHelper.sendNoContent(RoutingContext.newInstance(context)));
 
                         final Router router = Router.newInstance(routerBuilder.createRouter());

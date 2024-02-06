@@ -145,6 +145,76 @@ paths:
 #      security:
 #        - design_auth:
 #            - admin
+  /v1/designs/render:
+    options:
+      operationId: renderDesignOptions
+      responses:
+        204:
+          description: No Content
+    post:
+      tags:
+        - designs
+        - render
+      summary: Render a design
+      operationId: renderDesign
+      requestBody:
+        description: Design data
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Design'
+      responses:
+        200:
+          description: Render result and errors
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RenderDesignResponse'
+        400:
+          description: Invalid request
+        401:
+          description: Missing authentication
+        403:
+          description: User not authorized
+#      security:
+#        - design_auth:
+#            - admin
+  /v1/designs/image/{checksum}:
+    options:
+      operationId: getImageOptions
+      responses:
+        204:
+          description: No Content
+    get:
+      tags:
+        - designs
+        - get
+      summary: Get rendered image
+      operationId: getImage
+      parameters:
+        - name: checksum
+          in: path
+          description: checksum of design
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Image data
+          content:
+            image/png:
+              {}
+        400:
+          description: Invalid request
+        401:
+          description: Missing authentication
+        403:
+          description: User not authorized
+        404:
+          description: Tile not found
+#      security:
+#        - design_auth:
+#            - admin
 components:
   schemas:
     Design:
@@ -186,6 +256,18 @@ components:
         - manifest
         - metadata
         - script
+    RenderDesignResponse:
+      type: object
+      properties:
+        checksum:
+          type: string
+        errors:
+          type: array
+          items:
+            type: string
+      required:
+        - checksum
+        - errors
 #  securitySchemes:
 #    design_auth:
 #      type: oauth2

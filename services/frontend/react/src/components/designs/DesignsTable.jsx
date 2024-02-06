@@ -310,6 +310,7 @@ let EnhancedTable = class EnhancedTable extends React.Component {
                     component.props.handleUploadedDesign(design)
                     component.props.handleShowCreateDialog()
                 } else {
+                    console.log("Can't upload the file: errors = " + response.data.errors)
                     component.props.handleShowErrorMessage("Can't upload the file")
                 }
             } else {

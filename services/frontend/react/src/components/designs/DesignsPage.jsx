@@ -3,7 +3,7 @@ import PropTypes from 'prop-types'
 
 import Header from '../shared/Header'
 import Footer from '../shared/Footer'
-import DesignForm from '../shared/DesignForm'
+import DesignPreview from '../shared/DesignPreview'
 import DesignsTable from './DesignsTable'
 
 import Button from '@mui/material/Button'
@@ -112,6 +112,7 @@ let DesignsPage = class DesignsPage extends React.Component {
                                 component.props.handleShowErrorMessage("Can't create the design")
                             })
                      } else {
+                        console.log("Can't create the design: status = " + result.status)
                         component.props.handleShowErrorMessage("Can't create the design")
                      }
                 } else {
@@ -242,20 +243,10 @@ let DesignsPage = class DesignsPage extends React.Component {
                     </Grid>
                 </Grid>
                 {this.props.account.role == 'admin' && (
-                    <Dialog className="dialog" open={this.props.show_create_design} onClose={this.props.handleHideCreateDialog} scroll={"paper"} TransitionComponent={SlideTransition}>
+                    <Dialog className="dialog" open={this.props.show_create_design} onClose={this.props.handleHideCreateDialog} scroll={"paper"} maxWidth={"xl"} fullWidth={true} TransitionComponent={SlideTransition}>
                         <DialogTitle>Create New Design</DialogTitle>
                         <DialogContent>
-{/*                             <Grid container xs={12} justify="space-between" alignItems="center" className="container"> */}
-{/*                                 <Grid item xs={6}> */}
-{/*                                     <Map center={[0, 0]} zoom={2} attributionControl={false} dragging={false} zoomControl={false} scrollWheelZoom={false} touchZoom={false}> */}
-{/*                                         {this.renderMapLayer(url)} */}
-{/*                                     </Map> */}
-{/*                                 </Grid> */}
-{/*                                 <Grid item xs={6}> */}
-{/*                                     <DesignForm script={script} metadata={metadata} onScriptChanged={this.handleScriptChanged} onMetadataChanged={this.handleMetadataChanged}/> */}
-{/*                                 </Grid> */}
-{/*                             </Grid> */}
-                            <DesignForm script={script} metadata={metadata} onScriptChanged={this.handleScriptChanged} onMetadataChanged={this.handleMetadataChanged}/>
+                            <DesignPreview script={script} metadata={metadata} config={this.props.config} onScriptChanged={this.handleScriptChanged} onMetadataChanged={this.handleMetadataChanged}/>
                         </DialogContent>
                         <DialogActions>
                             <Button variant="outlined" color="primary" onClick={this.props.handleHideCreateDialog} color="primary">
@@ -268,7 +259,7 @@ let DesignsPage = class DesignsPage extends React.Component {
                     </Dialog>
                 )}
                 {this.props.account.role == 'admin' && (
-                    <Dialog className="dialog" open={this.props.show_delete_designs} onClose={this.props.handleHideConfirmDelete} scroll={"paper"} TransitionComponent={FadeTransition}>
+                    <Dialog className="dialog" open={this.props.show_delete_designs} onClose={this.props.handleHideConfirmDelete} scroll={"paper"} maxWidth={"xl"} fullWidth={true} TransitionComponent={FadeTransition}>
                         <DialogTitle>Delete Designs</DialogTitle>
                         <DialogContent>
                             {this.props.selected.length == 1 ? (<p>Do you want to delete {this.props.selected.length} item?</p>) : (<p>Do you want to delete {this.props.selected.length} items?</p>)}

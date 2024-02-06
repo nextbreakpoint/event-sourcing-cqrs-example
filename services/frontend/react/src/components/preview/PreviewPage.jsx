@@ -214,6 +214,7 @@ let PreviewPage = class PreviewPage extends React.Component {
                                 component.props.handleShowErrorMessage("Can't publish the design")
                             })
                      } else {
+                        console.log("Can't publish the design: " + result.status)
                         component.props.handleShowErrorMessage("Can't publish the design")
                      }
                 } else {
@@ -266,6 +267,7 @@ let PreviewPage = class PreviewPage extends React.Component {
                                 component.props.handleShowErrorMessage("Can't unpublish the design")
                             })
                      } else {
+                        console.log("Can't unpublish the design: " + result.status)
                         component.props.handleShowErrorMessage("Can't unpublish the design")
                      }
                 } else {
@@ -311,7 +313,7 @@ let PreviewPage = class PreviewPage extends React.Component {
                     </Grid>
                     <Grid container xs={12} justify="space-between" alignItems="center" className="container">
                         <Grid item xs={6}>
-                            <div className="preview">
+                            <div className="map-preview">
                                 <MapContainer center={[0, 0]} zoom={2} attributionControl={false} dragging={false} zoomControl={false} doubleClickZoom={false} scrollWheelZoom={false} touchZoom={false}>
                                     <TileLayer url={url} detectRetina={false} bounds={[[-180, -180],[180, 180]]} noWrap={true} minZoom={2} maxZoom={2} tileSize={256} updateWhenIdle={true} updateWhenZooming={false} updateInterval={500} keepBuffer={2}/>
                                 </MapContainer>

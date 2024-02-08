@@ -109,6 +109,18 @@ paths:
           required: false
           schema:
             type: boolean
+        - name: from
+          in: query
+          description: page from
+          required: false
+          schema:
+            type: integer
+        - name: size
+          in: query
+          description: page size
+          required: false
+          schema:
+            type: integer
       responses:
         200:
           description: Return designs

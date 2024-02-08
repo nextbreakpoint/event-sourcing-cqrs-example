@@ -18,8 +18,7 @@ import {
     getDesignsStatus,
     getRevision,
     loadDesigns,
-    getPage,
-    getRowsPerPage,
+    getPagination,
     loadDesignsSuccess,
     showErrorMessage
 } from '../../actions/designs'
@@ -86,7 +85,7 @@ let Designs = class Designs extends React.Component {
             return percentage
         }
 
-        axios.get(component.props.config.api_url + '/v1/designs?draft=true&from=' + (component.props.page * component.props.rowsPerPage) + '&size=' + component.props.rowsPerPage, config)
+        axios.get(component.props.config.api_url + '/v1/designs?draft=true&from=' + (component.props.pagination.page * component.props.pagination.pageSize) + '&size=' + component.props.pagination.pageSize, config)
             .then(function (response) {
                 if (response.status == 200) {
                     console.log("Designs loaded")
@@ -118,8 +117,7 @@ Designs.propTypes = {
     account: PropTypes.object.isRequired,
     status: PropTypes.object.isRequired,
     revision: PropTypes.string.isRequired,
-    page: PropTypes.number,
-    rowsPerPage: PropTypes.number
+    pagination: PropTypes.object
 }
 
 const mapStateToProps = state => ({
@@ -128,8 +126,7 @@ const mapStateToProps = state => ({
     designs: getDesigns(state),
     status: getDesignsStatus(state),
     revision: getRevision(state),
-    page: getPage(state),
-    rowsPerPage: getRowsPerPage(state)
+    pagination: getPagination(state)
 })
 
 const mapDispatchToProps = dispatch => ({

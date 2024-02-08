@@ -1,7 +1,7 @@
 import * as Types from '../../constants/ActionTypes'
 
 const initialState = {
-    data: []
+    selection: []
 }
 
 function reducer (state = initialState, action) {
@@ -9,15 +9,15 @@ function reducer (state = initialState, action) {
     case Types.DESIGNS_SELECTION_UPDATE:
       return {
         ...state,
-        data: action.selected
+        selection: action.selection
       }
     default:
       return state
   }
 }
 
-export const getSelected = (state) => {
-    return state.designs.selection.data
+export const getSelection = (state) => {
+    return state.designs.selection.selection
 }
 
 export default reducer

@@ -33,9 +33,9 @@ import {
 } from '../../actions/account'
 
 import {
-    getSelected,
     getDesigns,
     getRevision,
+    getSelection,
     showDeleteDesigns,
     hideDeleteDesigns,
     showCreateDesign,
@@ -136,7 +136,7 @@ let DesignsPage = class DesignsPage extends React.Component {
             withCredentials: true
         }
 
-        let promises = this.props.selected
+        let promises = this.props.selection
             .map((uuid) => {
                 return axios.delete(component.props.config.api_url + '/v1/designs/' + uuid + '?draft=true', config)
             })
@@ -185,8 +185,8 @@ let DesignsPage = class DesignsPage extends React.Component {
     }
 
     handleModify = () => {
-        if (this.props.selected[0]) {
-            window.location = this.props.config.web_url + "/admin/designs/" + this.props.selected[0] + ".html"
+        if (this.props.selection[0]) {
+            window.location = this.props.config.web_url + "/admin/designs/" + this.props.selection[0] + ".html"
         }
     }
 
@@ -262,7 +262,7 @@ let DesignsPage = class DesignsPage extends React.Component {
                     <Dialog className="dialog" open={this.props.show_delete_designs} onClose={this.props.handleHideConfirmDelete} scroll={"paper"} maxWidth={"xl"} fullWidth={true} TransitionComponent={FadeTransition}>
                         <DialogTitle>Delete Designs</DialogTitle>
                         <DialogContent>
-                            {this.props.selected.length == 1 ? (<p>Do you want to delete {this.props.selected.length} item?</p>) : (<p>Do you want to delete {this.props.selected.length} items?</p>)}
+                            {this.props.selection.length == 1 ? (<p>Do you want to delete {this.props.selection.length} item?</p>) : (<p>Do you want to delete {this.props.selection.length} items?</p>)}
                         </DialogContent>
                         <DialogActions>
                             <Button variant="outlined" color="primary" onClick={this.props.handleHideConfirmDelete} color="primary">
@@ -305,9 +305,9 @@ let DesignsPage = class DesignsPage extends React.Component {
 DesignsPage.propTypes = {
     config: PropTypes.object.isRequired,
     account: PropTypes.object.isRequired,
-    selected: PropTypes.array.isRequired,
     designs: PropTypes.array.isRequired,
     revision: PropTypes.number.isRequired,
+    selection: PropTypes.array.isRequired,
     show_create_design: PropTypes.bool.isRequired,
     show_delete_designs: PropTypes.bool.isRequired,
     show_error_message: PropTypes.bool.isRequired,
@@ -320,8 +320,8 @@ const mapStateToProps = state => ({
     config: getConfig(state),
     account: getAccount(state),
     designs: getDesigns(state),
-    selected: getSelected(state),
     revision: getRevision(state),
+    selection: getSelection(state),
     show_create_design: getShowCreateDesign(state),
     show_delete_designs: getShowDeleteDesigns(state),
     show_error_message: getShowErrorMessage(state),
@@ -331,8 +331,8 @@ const mapStateToProps = state => ({
 })
 
 const mapDispatchToProps = dispatch => ({
-    handleChangeSelected: (selected) => {
-        dispatch(setDesignsSelection(selected))
+    handleChangeSelected: (selection) => {
+        dispatch(setDesignsSelection(selection))
     },
     handleHideConfirmDelete: () => {
         dispatch(hideDeleteDesigns())

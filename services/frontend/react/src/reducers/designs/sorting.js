@@ -1,8 +1,10 @@
 import * as Types from '../../constants/ActionTypes'
 
 const initialState = {
-    order: 'desc',
-    orderBy: 'modified'
+    sorting: [{
+        field: 'created',
+        sort: 'desc'
+    }]
 }
 
 function reducer (state = initialState, action) {
@@ -10,20 +12,15 @@ function reducer (state = initialState, action) {
     case Types.DESIGNS_SORTING_UPDATE:
       return {
         ...state,
-        order: action.order,
-        orderBy: action.orderBy
+        sorting: action.sorting
       }
     default:
       return state
   }
 }
 
-export const getOrder = (state) => {
-    return state.designs.sorting.order
-}
-
-export const getOrderBy = (state) => {
-    return state.designs.sorting.orderBy
+export const getSorting = (state) => {
+    return state.designs.sorting.sorting
 }
 
 export default reducer

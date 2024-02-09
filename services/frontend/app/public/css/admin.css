@@ -179,3 +179,17 @@ footer a, footer a:active, footer a:hover, footer a:visited {
     padding: 2%;
     text-align: center;
 }
+
+a.link:hover {
+    text-decoration: underline;
+}
+
+a.image img {
+    margin: 16px;
+    border-radius: 16px;
+    border: 2px solid transparent;
+}
+
+a.image:hover img {
+    border: 2px solid rgb(200, 200, 200);
+}

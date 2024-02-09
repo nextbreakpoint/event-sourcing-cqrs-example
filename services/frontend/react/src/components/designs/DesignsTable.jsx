@@ -283,15 +283,13 @@ let EnhancedTable = class EnhancedTable extends React.Component {
 //     }, [rowCount, setRowCountState])
 
 
-// /admin/designs/" + design.uuid + '.html'
-
   render() {
     const { config, designs, account, sorting, selection, pagination, total } = this.props
 
     let rows = designs.map(design => {
        return {
             id: design.uuid,
-            image: config.api_url + "/v1/designs/" + design.uuid + "/0/0/0/256.png?draft=true&t=" + design.checksum + "&r=" + design.preview_percentage,
+            image: { url: config.api_url + "/v1/designs/" + design.uuid + "/0/0/0/256.png?draft=true&t=" + design.checksum + "&r=" + design.preview_percentage, uuid: design.uuid },
             uuid: design.uuid,
             created: design.created,
             updated: design.updated,
@@ -301,12 +299,6 @@ let EnhancedTable = class EnhancedTable extends React.Component {
         }
     })
 
-{/* <DataGrid */}
-{/*   loading={isLoading} */}
-{/*   paginationModel={paginationModel} */}
-{/*   paginationMode="server" */}
-{/*   onPaginationModelChange={setPaginationModel} */}
-{/* /> */}
     return (
       <Paper className="designs" square={true}>
         <EnhancedTableToolbar role={account.role} numSelected={selection.length} onDownload={this.handleDownload} onUpload={this.handleUpload} onCreate={this.props.handleShowCreateDialog} onDelete={this.props.handleShowDeleteDialog} onModify={this.handleModify}/>
@@ -319,8 +311,9 @@ let EnhancedTable = class EnhancedTable extends React.Component {
                     headerName: 'Image',
                     sortable: false,
                     hideable: false,
+                    filterable: false,
                     minWidth: 300,
-                    renderCell: (params) => <img src={params.value} />
+                    renderCell: (params) => <a class="image" href={"/admin/designs/" + params.value.uuid + ".html"}><img src={params.value.url} /></a>
                 },
                 {
                     field: 'uuid',
@@ -328,7 +321,7 @@ let EnhancedTable = class EnhancedTable extends React.Component {
                     headerName: 'UUID',
                     hideable: false,
                     flex: 1.5,
-                    renderCell: (params) => <a href={"/admin/designs/" + params.value + ".html"}>{params.value}</a>
+                    renderCell: (params) => <a class="link" href={"/admin/designs/" + params.value + ".html"}>{params.value}</a>
                 },
                 {
                     field: 'created',
@@ -363,6 +356,7 @@ let EnhancedTable = class EnhancedTable extends React.Component {
                     type: 'string',
                     headerName: 'Percentage',
                     hideable: false,
+                    filterable: false,
                     flex: 0.5
                 }
             ]}
@@ -378,6 +372,7 @@ let EnhancedTable = class EnhancedTable extends React.Component {
             autoHeight
             getRowHeight={() => 'auto'}
             getEstimatedRowHeight={() => 256}
+//             loading={isLoading}
             checkboxSelection
             disableRowSelectionOnClick
             keepNonExistentRowsSelected
@@ -385,6 +380,7 @@ let EnhancedTable = class EnhancedTable extends React.Component {
             onRowSelectionModelChange={(selection) => {
               this.props.handleChangeSelection(selection);
             }}
+//             paginationMode="server"
             paginationModel={pagination}
             onPaginationModelChange={(pagination) => {
               this.props.handleChangePagination(pagination);

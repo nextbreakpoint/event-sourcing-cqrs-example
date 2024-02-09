@@ -64,6 +64,8 @@ let Designs = class Designs extends React.Component {
     }
 
     loadDesigns = (revision) => {
+        console.log("Load designs")
+
         let component = this
 
         let config = {

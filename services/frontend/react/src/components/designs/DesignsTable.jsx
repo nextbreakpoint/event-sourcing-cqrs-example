@@ -226,65 +226,64 @@ let EnhancedTable = class EnhancedTable extends React.Component {
       }
   }
 
-//   loadDesigns = (pagination, revision) => {
-//     console.log("Load designs")
-//
-//     let component = this
-//
-//     let config = {
-//         timeout: 30000,
-//         withCredentials: true
-//     }
-//
-//     component.props.handleLoadDesigns()
-//     component.props.handleChangePagination(pagination)
-//
-//     console.log("page " + pagination.page)
-//
-//     function computePercentage(design, levels) {
-//         let total = levels.map(i => design.tiles[i].total)
-//             .reduce((previousValue, currentValue) => previousValue + currentValue, 0)
-//
-//         let completed = levels.map(i => design.tiles[i].completed)
-//             .reduce((previousValue, currentValue) => previousValue + currentValue, 0)
-//
-//         let percentage = Math.round((completed * 100.0) / total)
-//
-//         return percentage
-//     }
-//
-//     axios.get(component.props.config.api_url + '/v1/designs?draft=true&from=' + (pagination.page * pagination.pageSize) + '&size=' + pagination.pageSize, config)
-//         .then(function (response) {
-//             if (response.status == 200) {
-//                 console.log("Designs loaded")
-//                 let designs = response.data.designs.map((design) => { return { uuid: design.uuid, checksum: design.checksum, revision: design.revision, levels: design.levels, created: design.created, updated: design.updated, draft: design.levels != 8, published: design.published, percentage: computePercentage(design, [0,1,2,3,4,5,6,7]), preview_percentage: computePercentage(design, [0,1,2]) }})
-//                 let total = response.data.total
-//                 component.props.handleLoadDesignsSuccess(designs, total, revision)
-//             } else {
-//                 console.log("Can't load designs: status = " + content.status)
-//                 component.props.handleLoadDesignsSuccess([], 0, 0)
-//                 component.props.handleShowErrorMessage("Can't load designs")
-//             }
-//         })
-//         .catch(function (error) {
-//             console.log("Can't load designs " + error)
-//             component.props.handleLoadDesignsSuccess([], 0, 0)
-//             component.props.handleShowErrorMessage("Can't load designs")
-//         })
-//   }
+  loadDesigns = (revision, pagination) => {
+    console.log("Load designs")
+
+    let component = this
+
+    let config = {
+        timeout: 30000,
+        withCredentials: true
+    }
+
+    component.props.handleLoadDesigns()
+
+    console.log("page " + pagination.page)
+
+    function computePercentage(design, levels) {
+        let total = levels.map(i => design.tiles[i].total)
+            .reduce((previousValue, currentValue) => previousValue + currentValue, 0)
+
+        let completed = levels.map(i => design.tiles[i].completed)
+            .reduce((previousValue, currentValue) => previousValue + currentValue, 0)
+
+        let percentage = Math.round((completed * 100.0) / total)
+
+        return percentage
+    }
+
+    axios.get(component.props.config.api_url + '/v1/designs?draft=true&from=' + (pagination.page * pagination.pageSize) + '&size=' + pagination.pageSize, config)
+        .then(function (response) {
+            if (response.status == 200) {
+                console.log("Designs loaded")
+                let designs = response.data.designs.map((design) => { return { uuid: design.uuid, checksum: design.checksum, revision: design.revision, levels: design.levels, created: design.created, updated: design.updated, draft: design.levels != 8, published: design.published, percentage: computePercentage(design, [0,1,2,3,4,5,6,7]), preview_percentage: computePercentage(design, [0,1,2]) }})
+                let total = response.data.total
+                component.props.handleLoadDesignsSuccess(designs, total, revision)
+            } else {
+                console.log("Can't load designs: status = " + content.status)
+                component.props.handleLoadDesignsSuccess([], 0, 0)
+                component.props.handleShowErrorMessage("Can't load designs")
+            }
+        })
+        .catch(function (error) {
+            console.log("Can't load designs " + error)
+            component.props.handleLoadDesignsSuccess([], 0, 0)
+            component.props.handleShowErrorMessage("Can't load designs")
+        })
+  }
 
 //   isSelected = id => this.props.selection.indexOf(id) !== -1
 
-//     let [rowCountState, setRowCountState] = React.useState(rowCount)
-//     React.useEffect(() => {
+//   let [rowCountState, setRowCountState] = React.useState(this.props.total)
+//
+//   React.useEffect(() => {
 //       setRowCountState((prevRowCountState) =>
 //         rowCount !== undefined ? rowCount : prevRowCountState,
 //       )
-//     }, [rowCount, setRowCountState])
-
+//   }, [this.props.total, setRowCountState])
 
   render() {
-    const { config, designs, account, sorting, selection, pagination, total } = this.props
+    const { config, designs, account, revision, sorting, selection, pagination, total } = this.props
 
     let rows = designs.map(design => {
        return {
@@ -380,10 +379,11 @@ let EnhancedTable = class EnhancedTable extends React.Component {
             onRowSelectionModelChange={(selection) => {
               this.props.handleChangeSelection(selection);
             }}
-//             paginationMode="server"
+            paginationMode="server"
             paginationModel={pagination}
             onPaginationModelChange={(pagination) => {
-              this.props.handleChangePagination(pagination);
+              this.props.handleChangePagination(pagination)
+              this.loadDesigns(revision, pagination)
             }}
             sx={{
               [`& .${gridClasses.cell}:focus, & .${gridClasses.cell}:focus-within`]: {

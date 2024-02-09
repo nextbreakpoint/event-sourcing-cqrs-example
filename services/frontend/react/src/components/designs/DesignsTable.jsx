@@ -18,6 +18,7 @@ import IconButton from '@mui/material/IconButton'
 import ButtonBase from '@mui/material/ButtonBase'
 import Tooltip from '@mui/material/Tooltip'
 import Input from '@mui/material/Input'
+import { DataGrid, gridClasses } from '@mui/x-data-grid'
 
 import AddIcon from '@mui/icons-material/Add'
 import EditIcon from '@mui/icons-material/Edit'
@@ -44,12 +45,10 @@ import {
     getTotal,
     getDesigns,
     getRevision,
-    getSelected,
-    getOrder,
-    getOrderBy,
+    getSorting,
+    getSelection,
+    getPagination,
     loadDesigns,
-    getPage,
-    getRowsPerPage,
     loadDesignsSuccess,
     getShowErrorMessage,
     getErrorMessage,
@@ -60,115 +59,6 @@ import {
 
 import axios from 'axios'
 
-function createData(uuid) {
-  return { uuid: uuid }
-}
-
-function desc(a, b, orderBy) {
-  if (b[orderBy] < a[orderBy]) {
-    return -1
-  }
-  if (b[orderBy] > a[orderBy]) {
-    return 1
-  }
-  return 0
-}
-
-function stableSort(array, comparator) {
-  const stabilizedThis = array.map((el, index) => [el, index])
-  stabilizedThis.sort((a, b) => {
-    const order = comparator(a[0], b[0])
-    if (order !== 0) return order
-    return a[1] - b[1]
-  })
-  return stabilizedThis.map(el => el[0])
-}
-
-function getSorting(order, orderBy) {
-  return order === 'desc' ? (a, b) => desc(a, b, orderBy) : (a, b) => -desc(a, b, orderBy)
-}
-
-const cells = [
-  { id: 'image', numeric: false, disablePadding: true, label: 'Preview', enableSort: false, className: 'list-image' },
-//   { id: 'uuid', numeric: false, disablePadding: true, label: 'UUID', enableSort: true, className: '' },
-  { id: 'created', numeric: false, disablePadding: true, label: 'Created', enableSort: true, className: '' },
-  { id: 'updated', numeric: false, disablePadding: true, label: 'Updated', enableSort: true, className: '' },
-//   { id: 'checksum', numeric: false, disablePadding: true, label: 'Checksum', enableSort: true, className: '' },
-  { id: 'draft', numeric: true, disablePadding: true, label: 'Draft', enableSort: true, className: '' },
-  { id: 'published', numeric: false, disablePadding: true, label: 'Published', enableSort: true, className: '' },
-  { id: 'percentage', numeric: true, disablePadding: true, label: 'Progress', enableSort: false, className: '' },
-]
-
-let EnhancedTableHead = class EnhancedTableHead extends React.Component {
-  createSortHandler = property => event => {
-    this.props.onRequestSort(event, property)
-  }
-
-  render() {
-    const { onSelectAllClick, order, orderBy, numSelected, rowCount, role } = this.props
-
-    return (
-      <TableHead>
-        <TableRow className={classNames({["highlight"]: role == 'admin' && numSelected > 0 })}>
-          <TableCell padding="checkbox">
-            {role == 'admin' && <Checkbox
-              indeterminate={numSelected > 0 && numSelected < rowCount}
-              checked={numSelected === rowCount}
-              onChange={onSelectAllClick}
-            />}
-          </TableCell>
-          {cells.map(cell => {
-            return (
-              cell.enableSort == true ? (
-              <TableCell
-                key={cell.id}
-                numeric={cell.numeric}
-                padding={cell.disablePadding ? 'none' : 'default'}
-                sortDirection={orderBy === cell.id ? order : false}
-                className={cell.className}
-              >
-                <Tooltip
-                  title="Sort"
-                  placement={cell.numeric ? 'bottom-end' : 'bottom-start'}
-                  enterDelay={300}
-                >
-                  <TableSortLabel
-                    active={orderBy === cell.id}
-                    direction={order}
-                    onClick={this.createSortHandler(cell.id)}
-                  >
-                    {cell.label}
-                  </TableSortLabel>
-                </Tooltip>
-              </TableCell>
-              ) : (
-              <TableCell
-                key={cell.id}
-                numeric={cell.numeric}
-                padding={cell.disablePadding ? 'none' : 'default'}
-                className={cell.className}
-              >
-                {cell.label}
-              </TableCell>
-              )
-            )
-          }, this)}
-        </TableRow>
-      </TableHead>
-    )
-  }
-}
-
-EnhancedTableHead.propTypes = {
-  numSelected: PropTypes.number.isRequired,
-  onRequestSort: PropTypes.func.isRequired,
-  onSelectAllClick: PropTypes.func.isRequired,
-  order: PropTypes.string.isRequired,
-  orderBy: PropTypes.string.isRequired,
-  rowCount: PropTypes.number.isRequired,
-  role: PropTypes.string.isRequired
-}
-
 let EnhancedTableToolbar = props => {
   const { role, numSelected, onDownload, onUpload, onCreate, onDelete, onModify } = props
 
@@ -177,7 +67,7 @@ let EnhancedTableToolbar = props => {
       <div className="title">
         {role == 'admin' && numSelected > 0 && (
           <Typography color="inherit" variant="subheading">
-            {numSelected} selected
+            {numSelected} {numSelected == 1 ? "row" : "rows"} selected
           </Typography>
         )}
       </div>
@@ -231,58 +121,10 @@ EnhancedTableToolbar.propTypes = {
   role: PropTypes.string
 }
 
-EnhancedTableToolbar = EnhancedTableToolbar
-
 let EnhancedTable = class EnhancedTable extends React.Component {
-  handleRequestSort = (event, property) => {
-    const orderBy = property
-    let order = 'desc'
-
-    if (this.props.orderBy === property && this.props.order === 'desc') {
-      order = 'asc'
-    }
-
-    this.props.handleChangeSorting(order, orderBy)
-
-    const designs = stableSort(this.props.designs, getSorting(order, orderBy))
-
-    this.props.handleLoadDesignsSuccess(designs, this.props.total, this.props.revision)
-  }
-
-  handleSelectAllClick = event => {
-    if (event.target.checked) {
-        this.props.handleChangeSelection(this.props.designs.map(n => n.uuid))
-        return
-    }
-    this.props.handleChangeSelection([])
-  }
-
-  handleClick = (event, id) => {
-    const { selected } = this.props
-    const selectedIndex = selected.indexOf(id)
-    let newSelected = []
-
-    if (selectedIndex === -1) {
-      newSelected = newSelected.concat(selected, id)
-    } else if (selectedIndex === 0) {
-      newSelected = newSelected.concat(selected.slice(1))
-    } else if (selectedIndex === selected.length - 1) {
-      newSelected = newSelected.concat(selected.slice(0, -1))
-    } else if (selectedIndex > 0) {
-      newSelected = newSelected.concat(
-        selected.slice(0, selectedIndex),
-        selected.slice(selectedIndex + 1),
-      )
-    }
-
-    if (this.props.account.role == 'admin') {
-        this.props.handleChangeSelection(newSelected)
-    }
-  }
-
   handleModify = () => {
-      if (this.props.selected[0]) {
-          window.location = this.props.config.web_url + "/admin/designs/" + this.props.selected[0] + ".html"
+      if (this.props.selection[0]) {
+          window.location = this.props.config.web_url + "/admin/designs/" + this.props.selection[0] + ".html"
       }
   }
 
@@ -291,8 +133,8 @@ let EnhancedTable = class EnhancedTable extends React.Component {
 
     let component = this
 
-    let formData = new FormData();
-    formData.append('file', e.target.files[0]);
+    let formData = new FormData()
+    formData.append('file', e.target.files[0])
 
     let config = {
         timeout: 30000,
@@ -325,12 +167,12 @@ let EnhancedTable = class EnhancedTable extends React.Component {
   }
 
   handleDownload = (e) => {
-      if (this.props.selected[0]) {
+      if (this.props.selection[0]) {
         console.log("download")
 
         let component = this
 
-        let uuid = this.props.selected[0]
+        let uuid = this.props.selection[0]
 
         let config = {
             timeout: 30000,
@@ -357,11 +199,11 @@ let EnhancedTable = class EnhancedTable extends React.Component {
                     axios.post(component.props.config.api_url + '/v1/designs/download', design, config)
                         .then(function (response) {
                             if (response.status == 200) {
-                                let url = window.URL.createObjectURL(response.data);
-                                let a = document.createElement('a');
-                                a.href = url;
-                                a.download = uuid + '.zip';
-                                a.click();
+                                let url = window.URL.createObjectURL(response.data)
+                                let a = document.createElement('a')
+                                a.href = url
+                                a.download = uuid + '.zip'
+                                a.click()
                                 component.props.handleShowErrorMessage("The design has been downloaded")
                             } else {
                                 console.log("Can't download the design: status = " + response.status)
@@ -384,158 +226,173 @@ let EnhancedTable = class EnhancedTable extends React.Component {
       }
   }
 
-    loadDesigns = (page, rowsPerPage, revision) => {
-        console.log("Load designs")
+  loadDesigns = (revision, pagination) => {
+    console.log("Load designs")
 
-        let component = this
+    let component = this
 
-        let config = {
-            timeout: 30000,
-            withCredentials: true
-        }
-
-        component.props.handleLoadDesigns()
-        component.props.handleChangePagination(page, rowsPerPage)
-
-        console.log("page " + page)
-
-        function computePercentage(design, levels) {
-            let total = levels.map(i => design.tiles[i].total)
-                .reduce((previousValue, currentValue) => previousValue + currentValue, 0)
-
-            let completed = levels.map(i => design.tiles[i].completed)
-                .reduce((previousValue, currentValue) => previousValue + currentValue, 0)
-
-            let percentage = Math.round((completed * 100.0) / total)
-
-            return percentage
-        }
-
-        axios.get(component.props.config.api_url + '/v1/designs?draft=true&from=' + (page * rowsPerPage) + '&size=' + rowsPerPage, config)
-            .then(function (response) {
-                if (response.status == 200) {
-                    console.log("Designs loaded")
-                    let designs = response.data.designs.map((design) => { return { uuid: design.uuid, checksum: design.checksum, revision: design.revision, levels: design.levels, created: design.created, updated: design.updated, draft: design.levels != 8, published: design.published, percentage: computePercentage(design, [0,1,2,3,4,5,6,7]), preview_percentage: computePercentage(design, [0,1,2]) }})
-                    let total = response.data.total
-                    component.props.handleLoadDesignsSuccess(designs, total, revision)
-                } else {
-                    console.log("Can't load designs: status = " + content.status)
-                    component.props.handleLoadDesignsSuccess([], 0, 0)
-                    component.props.handleShowErrorMessage("Can't load designs")
-                }
-            })
-            .catch(function (error) {
-                console.log("Can't load designs " + error)
-                component.props.handleLoadDesignsSuccess([], 0, 0)
-                component.props.handleShowErrorMessage("Can't load designs")
-            })
+    let config = {
+        timeout: 30000,
+        withCredentials: true
     }
 
-  isSelected = id => this.props.selected.indexOf(id) !== -1
+    component.props.handleLoadDesigns()
+
+    console.log("page " + pagination.page)
+
+    function computePercentage(design, levels) {
+        let total = levels.map(i => design.tiles[i].total)
+            .reduce((previousValue, currentValue) => previousValue + currentValue, 0)
+
+        let completed = levels.map(i => design.tiles[i].completed)
+            .reduce((previousValue, currentValue) => previousValue + currentValue, 0)
+
+        let percentage = Math.round((completed * 100.0) / total)
+
+        return percentage
+    }
+
+    axios.get(component.props.config.api_url + '/v1/designs?draft=true&from=' + (pagination.page * pagination.pageSize) + '&size=' + pagination.pageSize, config)
+        .then(function (response) {
+            if (response.status == 200) {
+                console.log("Designs loaded")
+                let designs = response.data.designs.map((design) => { return { uuid: design.uuid, checksum: design.checksum, revision: design.revision, levels: design.levels, created: design.created, updated: design.updated, draft: design.levels != 8, published: design.published, percentage: computePercentage(design, [0,1,2,3,4,5,6,7]), preview_percentage: computePercentage(design, [0,1,2]) }})
+                let total = response.data.total
+                component.props.handleLoadDesignsSuccess(designs, total, revision)
+            } else {
+                console.log("Can't load designs: status = " + content.status)
+                component.props.handleLoadDesignsSuccess([], 0, 0)
+                component.props.handleShowErrorMessage("Can't load designs")
+            }
+        })
+        .catch(function (error) {
+            console.log("Can't load designs " + error)
+            component.props.handleLoadDesignsSuccess([], 0, 0)
+            component.props.handleShowErrorMessage("Can't load designs")
+        })
+  }
+
+//   isSelected = id => this.props.selection.indexOf(id) !== -1
+
+//   let [rowCountState, setRowCountState] = React.useState(this.props.total)
+//
+//   React.useEffect(() => {
+//       setRowCountState((prevRowCountState) =>
+//         rowCount !== undefined ? rowCount : prevRowCountState,
+//       )
+//   }, [this.props.total, setRowCountState])
 
   render() {
-    const { config, designs, account, order, orderBy, selected, rowsPerPage, page, total } = this.props
-    const emptyRows = 0 //rowsPerPage - Math.min(rowsPerPage, designs.length - page * rowsPerPage)
+    const { config, designs, account, revision, sorting, selection, pagination, total } = this.props
+
+    let rows = designs.map(design => {
+       return {
+            id: design.uuid,
+            image: { url: config.api_url + "/v1/designs/" + design.uuid + "/0/0/0/256.png?draft=true&t=" + design.checksum + "&r=" + design.preview_percentage, uuid: design.uuid },
+            uuid: design.uuid,
+            created: design.created,
+            updated: design.updated,
+            draft: design.draft,
+            published: design.published,
+            percentage: design.percentage + '%'
+        }
+    })
 
     return (
       <Paper className="designs" square={true}>
-        <EnhancedTableToolbar role={account.role} numSelected={selected.length} onDownload={this.handleDownload} onUpload={this.handleUpload} onCreate={this.props.handleShowCreateDialog} onDelete={this.props.handleShowDeleteDialog} onModify={this.handleModify}/>
-          <Table className="table" aria-labelledby="tableTitle">
-            <EnhancedTableHead
-              numSelected={selected.length}
-              order={order}
-              orderBy={orderBy}
-              onSelectAllClick={this.handleSelectAllClick}
-              onRequestSort={this.handleRequestSort}
-              rowCount={designs.length}
-              role={account.role}
-            />
-            <TableBody>
-              {designs.map(design => {
-                  const isSelected = this.isSelected(design.uuid)
-                  return (
-                    <TableRow
-                      hover={false}
-                      onClick={event => this.handleClick(event, design.uuid)}
-                      role="checkbox"
-                      aria-checked={isSelected}
-                      tabIndex={-1}
-                      key={design.uuid}
-                      selected={isSelected}
-                    >
-                      <TableCell padding="checkbox">
-                        {account.role == 'admin' && <Checkbox checked={isSelected} />}
-                      </TableCell>
-                      <TableCell scope="row" padding="none" className="list-image">
-                        <ButtonBase
-                                focusRipple
-                                key={design.uuid}
-                                focusVisibleClassName="focusVisible"
-                                style={{
-                                  width: 256,
-                                  height: 256,
-                                  margin: '8px 0 8px 0',
-                                  borderRadius: '1em'
-                                }}
-                              >
-                            <a href={"/admin/designs/" + design.uuid + ".html"}>
-                                <img className="image" width="256" height="256" src={config.api_url + "/v1/designs/" + design.uuid + "/0/0/0/256.png?draft=true&t=" + design.checksum + "&r=" + design.preview_percentage}/>
-                            </a>
-                        </ButtonBase>
-                      </TableCell>
-                      {
-                      /*<TableCell scope="row" padding="none">
-                        <a href={"/admin/designs/" + design.uuid + '.html'}><pre>{design.uuid}</pre></a>
-                      </TableCell>*/
-                      }
-                      <TableCell scope="row" padding="none">
-                        <pre>{design.created}</pre>
-                      </TableCell>
-                      <TableCell scope="row" padding="none">
-                        <pre>{design.updated}</pre>
-                      </TableCell>
-                      {
-                      /*<TableCell scope="row" padding="none">
-                        <pre>{design.checksum}</pre>
-                      </TableCell>*/
-                      }
-                      <TableCell scope="row" padding="none">
-                        <pre>{design.draft ? 'yes' : 'no'}</pre>
-                      </TableCell>
-                      <TableCell scope="row" padding="none">
-                        <pre>{design.published ? 'yes' : 'no'}</pre>
-                      </TableCell>
-                      <TableCell scope="row" padding="none">
-                        <pre>{design.percentage}%</pre>
-                      </TableCell>
-                    </TableRow>
-                  )
-                })}
-              {emptyRows > 0 && (
-                <TableRow style={{ height: 300 * emptyRows }}>
-                  <TableCell colSpan={3} />
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        <TablePagination
-          component="div"
-          count={total}
-          rowsPerPage={5}
-          rowsPerPageOptions={[5]}
-          page={page}
-          backIconButtonProps={{
-            'aria-label': 'Previous Page',
-          }}
-          nextIconButtonProps={{
-            'aria-label': 'Next Page',
-          }}
-          onPageChange={(event, value) => {
-            this.loadDesigns(value, this.props.rowsPerPage, "0")
-          }}
-          onRowsPerPageChange={event => {
-            this.loadDesigns(this.props.page, event.target.value, "0")
-          }}
+        <EnhancedTableToolbar role={account.role} numSelected={selection.length} onDownload={this.handleDownload} onUpload={this.handleUpload} onCreate={this.props.handleShowCreateDialog} onDelete={this.props.handleShowDeleteDialog} onModify={this.handleModify}/>
+        <DataGrid
+            rowCount={total}
+            columns={[
+                {
+                    field: 'image',
+                    type: 'string',
+                    headerName: 'Image',
+                    sortable: false,
+                    hideable: false,
+                    filterable: false,
+                    minWidth: 300,
+                    renderCell: (params) => <a class="image" href={"/admin/designs/" + params.value.uuid + ".html"}><img src={params.value.url} /></a>
+                },
+                {
+                    field: 'uuid',
+                    type: 'string',
+                    headerName: 'UUID',
+                    hideable: false,
+                    flex: 1.5,
+                    renderCell: (params) => <a class="link" href={"/admin/designs/" + params.value + ".html"}>{params.value}</a>
+                },
+                {
+                    field: 'created',
+                    type: 'string',
+                    headerName: 'Created',
+                    hideable: false,
+                    flex: 1
+                },
+                {
+                    field: 'updated',
+                    type: 'string',
+                    headerName: 'Updated',
+                    hideable: false,
+                    flex: 1
+                },
+                {
+                    field: 'draft',
+                    type: 'boolean',
+                    headerName: 'Draft',
+                    hideable: false,
+                    flex: 0.5
+                },
+                {
+                    field: 'published',
+                    type: 'boolean',
+                    headerName: 'Published',
+                    hideable: false,
+                    flex: 0.5
+                },
+                {
+                    field: 'percentage',
+                    type: 'string',
+                    headerName: 'Percentage',
+                    hideable: false,
+                    filterable: false,
+                    flex: 0.5
+                }
+            ]}
+            rows={rows}
+            initialState={{
+                pagination: {
+                    paginationModel: pagination
+                },
+                sorting: {
+                  sortModel: sorting
+                }
+            }}
+            autoHeight
+            getRowHeight={() => 'auto'}
+            getEstimatedRowHeight={() => 256}
+//             loading={isLoading}
+            checkboxSelection
+            disableRowSelectionOnClick
+            keepNonExistentRowsSelected
+            rowSelectionModel={selection}
+            onRowSelectionModelChange={(selection) => {
+              this.props.handleChangeSelection(selection);
+            }}
+            paginationMode="server"
+            paginationModel={pagination}
+            onPaginationModelChange={(pagination) => {
+              this.props.handleChangePagination(pagination)
+              this.loadDesigns(revision, pagination)
+            }}
+            sx={{
+              [`& .${gridClasses.cell}:focus, & .${gridClasses.cell}:focus-within`]: {
+                outline: 'none'
+              },
+              [`& .${gridClasses.columnHeader}:focus, & .${gridClasses.columnHeader}:focus-within`]: {
+                outline: 'none'
+              }
+            }}
         />
       </Paper>
     )
@@ -548,11 +405,9 @@ EnhancedTable.propTypes = {
     total: PropTypes.number,
     designs: PropTypes.array,
     revision: PropTypes.number,
-    selected: PropTypes.array,
-    order: PropTypes.string,
-    orderBy: PropTypes.string,
-    page: PropTypes.number,
-    rowsPerPage: PropTypes.number
+    sorting: PropTypes.array,
+    selection: PropTypes.array,
+    pagination: PropTypes.object
 }
 
 const mapStateToProps = state => ({
@@ -561,11 +416,9 @@ const mapStateToProps = state => ({
     designs: getDesigns(state),
     total: getTotal(state),
     revision: getRevision(state),
-    selected: getSelected(state),
-    order: getOrder(state),
-    orderBy: getOrderBy(state),
-    page: getPage(state),
-    rowsPerPage: getRowsPerPage(state)
+    sorting: getSorting(state),
+    selection: getSelection(state),
+    pagination: getPagination(state)
 })
 
 const mapDispatchToProps = dispatch => ({
@@ -581,23 +434,23 @@ const mapDispatchToProps = dispatch => ({
     handleHideErrorMessage: () => {
         dispatch(hideErrorMessage())
     },
+    handleUploadedDesign: (design) => {
+        dispatch(setUploadedDesign(design))
+    },
     handleLoadDesigns: () => {
         dispatch(loadDesigns())
     },
     handleLoadDesignsSuccess: (designs, total, revision) => {
         dispatch(loadDesignsSuccess(designs, total, revision))
     },
-    handleChangePagination: (page, rowsPerPage) => {
-        dispatch(setDesignsPagination(page, rowsPerPage))
+    handleChangeSorting: (sorting) => {
+        dispatch(setDesignsSorting(sorting))
     },
-    handleChangeSorting: (order, orderBy) => {
-        dispatch(setDesignsSorting(order, orderBy))
+    handleChangeSelection: (selection) => {
+        dispatch(setDesignsSelection(selection))
     },
-    handleChangeSelection: (selected) => {
-        dispatch(setDesignsSelection(selected))
-    },
-    handleUploadedDesign: (design) => {
-        dispatch(setUploadedDesign(design))
+    handleChangePagination: (pagination) => {
+        dispatch(setDesignsPagination(pagination))
     }
 })
 

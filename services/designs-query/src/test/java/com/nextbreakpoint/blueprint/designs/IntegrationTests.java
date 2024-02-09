@@ -580,6 +580,55 @@ public class IntegrationTests {
             .then().assertThat().statusCode(404);
   }
 
+  @Test
+  @DisplayName("Should allow GET on /v1/designs when user is guest and paginate results")
+  public void shouldAllowGetOnDesignsWhenUserIsGuestAndPaginateResults() throws MalformedURLException {
+    final String authorization = testCases.makeAuthorization("test", Authority.GUEST);
+
+    DesignDocuments results1 = listDesigns(authorization, true, 1, 2);
+
+    List<DesignDocument> sortedResults1 = results1.getDesigns().stream()
+            .sorted(Comparator.comparing(DesignDocument::getUuid))
+            .collect(Collectors.toList());
+
+    assertThat(sortedResults1).hasSize(2);
+
+    SoftAssertions softly = new SoftAssertions();
+    softly.assertThat(sortedResults1.get(0).getUuid()).isEqualTo(DESIGN_ID_2);
+    softly.assertThat(sortedResults1.get(1).getUuid()).isEqualTo(DESIGN_ID_3);
+    softly.assertThat(sortedResults1.get(0).getChecksum()).isEqualTo(Checksum.of(DATA_2));
+    softly.assertThat(sortedResults1.get(1).getChecksum()).isEqualTo(Checksum.of(DATA_3));
+    softly.assertThat(sortedResults1.get(0).getRevision()).isNotNull();
+    softly.assertThat(sortedResults1.get(1).getRevision()).isNotNull();
+    softly.assertThat(sortedResults1.get(0).getCreated()).isNotNull();
+    softly.assertThat(sortedResults1.get(1).getCreated()).isNotNull();
+    softly.assertThat(sortedResults1.get(0).getUpdated()).isNotNull();
+    softly.assertThat(sortedResults1.get(1).getUpdated()).isNotNull();
+    softly.assertThat(sortedResults1.get(0).getLevels()).isEqualTo(LEVELS_DRAFT);
+    softly.assertThat(sortedResults1.get(1).getLevels()).isEqualTo(LEVELS_READY);
+    softly.assertThat(sortedResults1.get(0).getTiles()).isNotNull();
+    softly.assertThat(sortedResults1.get(1).getTiles()).isNotNull();
+    softly.assertAll();
+
+    DesignDocuments results2 = listDesigns(authorization, true, 2, 2);
+
+    List<DesignDocument> sortedResults2 = results2.getDesigns().stream()
+            .sorted(Comparator.comparing(DesignDocument::getUuid))
+            .collect(Collectors.toList());
+
+    assertThat(sortedResults2).hasSize(1);
+
+    SoftAssertions softly2 = new SoftAssertions();
+    softly2.assertThat(sortedResults2.get(0).getUuid()).isEqualTo(DESIGN_ID_3);
+    softly2.assertThat(sortedResults2.get(0).getChecksum()).isEqualTo(Checksum.of(DATA_3));
+    softly2.assertThat(sortedResults2.get(0).getRevision()).isNotNull();
+    softly2.assertThat(sortedResults2.get(0).getCreated()).isNotNull();
+    softly2.assertThat(sortedResults2.get(0).getUpdated()).isNotNull();
+    softly2.assertThat(sortedResults2.get(0).getLevels()).isEqualTo(LEVELS_READY);
+    softly2.assertThat(sortedResults2.get(0).getTiles()).isNotNull();
+    softly2.assertAll();
+  }
+
   private static DesignDocuments listDraftDesigns(String authorization) throws MalformedURLException {
     return listDesigns(authorization, true);
   }
@@ -597,6 +646,15 @@ public class IntegrationTests {
             .with().header(AUTHORIZATION, authorization)
             .and().accept(ContentType.JSON)
             .when().get(testCases.makeBaseURL("/v1/designs" + (draft ? "?draft=true" : "")))
+            .then().assertThat().statusCode(200)
+            .and().extract().body().as(DesignDocuments.class);
+  }
+
+  private static DesignDocuments listDesigns(String authorization, boolean draft, int from, int size) throws MalformedURLException {
+    return given().config(TestUtils.getRestAssuredConfig())
+            .with().header(AUTHORIZATION, authorization)
+            .and().accept(ContentType.JSON)
+            .when().get(testCases.makeBaseURL("/v1/designs?from=" + from + "&size=" + size + (draft ? "&draft=true" : "")))
             .then().assertThat().statusCode(200)
             .and().extract().body().as(DesignDocuments.class);
   }

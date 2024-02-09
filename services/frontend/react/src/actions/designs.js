@@ -42,16 +42,16 @@ export const hideErrorMessage = () => ({
   type: Types.HIDE_ERROR_MESSAGE
 })
 
-export const setDesignsSorting = (order, orderBy) => ({
-  type: Types.DESIGNS_SORTING_UPDATE, order, orderBy
+export const setDesignsSorting = (sorting) => ({
+  type: Types.DESIGNS_SORTING_UPDATE, sorting
 })
 
-export const setDesignsSelection = (selected) => ({
-  type: Types.DESIGNS_SELECTION_UPDATE, selected
+export const setDesignsSelection = (selection) => ({
+  type: Types.DESIGNS_SELECTION_UPDATE, selection
 })
 
-export const setDesignsPagination = (page, rowsPerPage) => ({
-  type: Types.DESIGNS_PAGINATION_UPDATE, page, rowsPerPage
+export const setDesignsPagination = (pagination) => ({
+  type: Types.DESIGNS_PAGINATION_UPDATE, pagination
 })
 
 export const setUploadedDesign = (design) => ({
@@ -106,22 +106,15 @@ export const getUploadedDesign = (state) => {
     return dialog.getUploadedDesign(state)
 }
 
-export const getSelected = (state) => {
-    return selection.getSelected(state)
+export const getSorting = (state) => {
+    return sorting.getSorting(state)
 }
 
-export const getOrder = (state) => {
-    return sorting.getOrder(state)
+export const getSelection = (state) => {
+    return selection.getSelection(state)
 }
 
-export const getOrderBy = (state) => {
-    return sorting.getOrderBy(state)
+export const getPagination = (state) => {
+    return pagination.getPagination(state)
 }
 
-export const getPage = (state) => {
-    return pagination.getPage(state)
-}
-
-export const getRowsPerPage = (state) => {
-    return pagination.getRowsPerPage(state)
-}

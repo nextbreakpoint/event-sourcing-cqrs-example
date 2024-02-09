@@ -290,11 +290,11 @@ let EnhancedTable = class EnhancedTable extends React.Component {
             id: design.uuid,
             image: { url: config.api_url + "/v1/designs/" + design.uuid + "/0/0/0/256.png?draft=true&t=" + design.checksum + "&r=" + design.preview_percentage, uuid: design.uuid },
             uuid: design.uuid,
-            created: design.created,
-            updated: design.updated,
+            created: new Date(design.created),
+            updated: new Date(design.updated),
             draft: design.draft,
             published: design.published,
-            percentage: design.percentage + '%'
+            percentage: design.percentage
         }
     })
 
@@ -324,17 +324,19 @@ let EnhancedTable = class EnhancedTable extends React.Component {
                 },
                 {
                     field: 'created',
-                    type: 'string',
+                    type: 'dataTime',
                     headerName: 'Created',
                     hideable: false,
-                    flex: 1
+                    flex: 1,
+                    renderCell: (params) => <span>{params.value.toLocaleString('en-GB', { timeZone: 'UTC' })}</span>
                 },
                 {
                     field: 'updated',
-                    type: 'string',
+                    type: 'dataTime',
                     headerName: 'Updated',
                     hideable: false,
-                    flex: 1
+                    flex: 1,
+                    renderCell: (params) => <span>{params.value.toLocaleString('en-GB', { timeZone: 'UTC' })}</span>
                 },
                 {
                     field: 'draft',
@@ -352,11 +354,11 @@ let EnhancedTable = class EnhancedTable extends React.Component {
                 },
                 {
                     field: 'percentage',
-                    type: 'string',
+                    type: 'number',
                     headerName: 'Percentage',
                     hideable: false,
-                    filterable: false,
-                    flex: 0.5
+                    flex: 0.5,
+                    renderCell: (params) => <span>{params.value + "%"}</span>
                 }
             ]}
             rows={rows}

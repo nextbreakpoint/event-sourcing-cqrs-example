@@ -50,7 +50,7 @@ router.get('/designs.html', function(req, res, next) {
     authorization = extractToken(req)
 
     let config = {
-        timeout: 10000,
+        timeout: 30000,
         httpsAgent: agent
     }
 
@@ -133,7 +133,7 @@ router.get('/designs/(:uuid).html', function(req, res, next) {
     authorization = extractToken(req)
 
     let config = {
-        timeout: 10000,
+        timeout: 30000,
         httpsAgent: agent
     }
 
@@ -206,7 +206,7 @@ router.get('/designs/(:uuid)/(:zoom)/(:x)/(:y)/(:size).png', function(req, res, 
     authorization = extractToken(req)
 
     let config = {
-        timeout: 10000,
+        timeout: 60000,
         responseType:'stream',
         httpsAgent: agent
     }

@@ -60,8 +60,9 @@ router.get('/designs.html', function(req, res, next) {
 
     req.pause()
 
-    let from = req.query.from ? new Number(req.query.from) : 0
-    let size = req.query.size ? new Number(req.query.size) : 20
+    let page = new Number(req.query.page ? req.query.page : 0)
+    let from = req.query.page ? page * 5 : 0
+    let size = 5
 
     loadAccount(config, req, (account) => {
         if (account !== {}) {
@@ -72,7 +73,8 @@ router.get('/designs.html', function(req, res, next) {
                 req.resume()
                 if (response.status == 200) {
                     if (req.app.get('env') === 'development') {
-                        console.log("designs = " + JSON.stringify(response.data))
+//                        console.log("designs = " + JSON.stringify(response.data))
+                        console.log("designs = " + response.data.total)
                     }
                     let designs = response.data.designs.map((design) => ({
                         uuid: design.uuid,
@@ -83,7 +85,7 @@ router.get('/designs.html', function(req, res, next) {
                         modified: design.modified
                     }))
                     res.render('browse/designs', {
-                        config: {"api_url":appConfig.client_api_url,"web_url":appConfig.client_web_url},
+                        config: { "api_url": appConfig.client_api_url, "web_url": appConfig.client_web_url },
                         layout: 'browse',
                         title: 'Designs',
                         url: appConfig.client_web_url,
@@ -91,14 +93,16 @@ router.get('/designs.html', function(req, res, next) {
                         logout: account.role != null,
                         admin: account.role === 'admin',
                         grid: grid.make(designs, from, size),
-                        next: (response.data.total > from + size) ? from + size : from,
                         show: response.data.total > from + size,
-                        size: size
+                        page: page,
+                        prevPage: page - 1,
+                        nextPage: page + 1,
+                        lastPage: Math.floor(response.data.total / size)
                     })
                 } else {
                     console.log("Can't load designs: status = " + content.status)
                     res.render('browse/designs', {
-                        config: {"api_url":appConfig.client_api_url,"web_url":appConfig.client_web_url},
+                        config: { "api_url": appConfig.client_api_url, "web_url": appConfig.client_web_url },
                         layout: 'browse',
                         title: 'Designs',
                         url: appConfig.client_web_url,
@@ -106,9 +110,11 @@ router.get('/designs.html', function(req, res, next) {
                         logout: account.role != null,
                         admin: account.role === 'admin',
                         grid: [],
-                        next: from,
                         show: false,
-                        size: size
+                        page: page,
+                        prevPage: 0,
+                        nextPage: 0,
+                        lastPage: 0
                     })
                 }
             })
@@ -116,13 +122,82 @@ router.get('/designs.html', function(req, res, next) {
                 req.resume()
                 console.log("Can't load designs " + error)
                 res.render('browse/designs', {
-                    config: {"api_url":appConfig.client_api_url,"web_url":appConfig.client_web_url},
+                    config: { "api_url": appConfig.client_api_url, "web_url": appConfig.client_web_url },
                     layout: 'browse',
                     title: 'Designs',
                     url: appConfig.client_web_url,
                     login: account.role == null,
                     logout: account.role != null,
                     admin: account.role === 'admin',
+                    grid: [],
+                    show: false,
+                    page: 0,
+                    prevPage: 0,
+                    nextPage: 0,
+                    lastPage: 0
+                })
+            })
+    })
+})
+
+router.get('/designs.json', function(req, res, next) {
+    authorization = extractToken(req)
+
+    let config = {
+        timeout: 30000,
+        httpsAgent: agent
+    }
+
+    if (authorization) {
+        config['headers'] = { 'authorization': 'Bearer ' + authorization }
+    }
+
+    req.pause()
+
+    let page = new Number(req.query.page ? req.query.page : 0)
+    let from = req.query.page ? page * 5 : 0
+    let size = 5
+
+    loadAccount(config, req, (account) => {
+        if (account !== {}) {
+            console.log(account)
+        }
+        axios.get(appConfig.server_api_url + '/v1/designs?from=' + from + "&size=" + size, config)
+            .then(function (response) {
+                req.resume()
+                if (response.status == 200) {
+                    if (req.app.get('env') === 'development') {
+//                        console.log("designs = " + JSON.stringify(response.data))
+                        console.log("designs = " + response.data.total)
+                    }
+                    let designs = response.data.designs.map((design) => ({
+                        uuid: design.uuid,
+                        checksum: design.checksum,
+                        location: appConfig.client_web_url + '/browse/designs/' + design.uuid + ".html",
+                        imageUrl: appConfig.client_web_url + '/browse/designs/' + design.uuid + "/0/0/0/256.png?t=" + design.checksum,
+                        baseUrl: appConfig.client_web_url + '/browse/designs',
+                        modified: design.modified
+                    }))
+                    res.render('browse/elements', {
+                        config: { "api_url": appConfig.client_api_url, "web_url": appConfig.client_web_url },
+                        layout: 'designs',
+                        grid: grid.make(designs, from, size)
+                    })
+                } else {
+                    console.log("Can't load designs: status = " + content.status)
+                    res.render('browse/elements', {
+                        config: { "api_url": appConfig.client_api_url, "web_url": appConfig.client_web_url },
+                        layout: 'designs',
+                        grid: []
+                    })
+                }
+            })
+            .catch(function (error) {
+                req.resume()
+                console.log("Can't load designs " + error)
+                res.render('browse/elements', {
+                    config: { "api_url": appConfig.client_api_url, "web_url": appConfig.client_web_url },
+                    layout: 'designs',
                     grid: []
                 })
             })
@@ -161,7 +236,7 @@ router.get('/designs/(:uuid).html', function(req, res, next) {
                         modified: design.modified
                     }
                     res.render('browse/preview', {
-                        config: {"api_url":appConfig.client_api_url,"web_url":appConfig.client_web_url},
+                        config: { "api_url": appConfig.client_api_url, "web_url": appConfig.client_web_url },
                         layout: 'browse',
                         title: 'Designs | ' + req.params.uuid,
                         url: appConfig.client_web_url,
@@ -174,7 +249,7 @@ router.get('/designs/(:uuid).html', function(req, res, next) {
                 } else {
                     console.log("Can't load design: status = " + content.status)
                     res.render('browse/preview', {
-                        config: {"api_url":appConfig.client_api_url,"web_url":appConfig.client_web_url},
+                        config: { "api_url": appConfig.client_api_url, "web_url": appConfig.client_web_url },
                         layout: 'browse',
                         title: 'Designs | ' + req.params.uuid,
                         url: appConfig.client_web_url,
@@ -189,7 +264,7 @@ router.get('/designs/(:uuid).html', function(req, res, next) {
                 req.resume()
                 console.log("Can't load design " + error)
                 res.render('browse/preview', {
-                    config: {"api_url":appConfig.client_api_url,"web_url":appConfig.client_web_url},
+                    config: { "api_url": appConfig.client_api_url, "web_url": appConfig.client_web_url },
                     layout: 'browse',
                     title: 'Designs | ' + req.params.uuid,
                     url: appConfig.client_web_url,

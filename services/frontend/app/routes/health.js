@@ -9,7 +9,7 @@ const appConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'))
 
 router.get('/', function(req, res, next) {
         res.render('health', {
-            content: JSON.stringify({"api_url":appConfig.client_api_url,"web_url":appConfig.client_web_url}),
+            content: JSON.stringify({ "api_url": appConfig.client_api_url, "web_url": appConfig.client_web_url }),
             layout: 'health'
         })
 })

@@ -272,8 +272,6 @@ let EnhancedTable = class EnhancedTable extends React.Component {
         })
   }
 
-//   isSelected = id => this.props.selection.indexOf(id) !== -1
-
 //   let [rowCountState, setRowCountState] = React.useState(this.props.total)
 //
 //   React.useEffect(() => {
@@ -319,7 +317,7 @@ let EnhancedTable = class EnhancedTable extends React.Component {
                     type: 'string',
                     headerName: 'UUID',
                     hideable: false,
-                    flex: 1.5,
+                    flex: 1.0,
                     renderCell: (params) => <a class="link" href={"/admin/designs/" + params.value + ".html"}>{params.value}</a>
                 },
                 {
@@ -327,7 +325,7 @@ let EnhancedTable = class EnhancedTable extends React.Component {
                     type: 'dataTime',
                     headerName: 'Created',
                     hideable: false,
-                    flex: 1,
+                    flex: 0.8,
                     renderCell: (params) => <span>{params.value.toLocaleString('en-GB', { timeZone: 'UTC' })}</span>
                 },
                 {
@@ -335,7 +333,7 @@ let EnhancedTable = class EnhancedTable extends React.Component {
                     type: 'dataTime',
                     headerName: 'Updated',
                     hideable: false,
-                    flex: 1,
+                    flex: 0.8,
                     renderCell: (params) => <span>{params.value.toLocaleString('en-GB', { timeZone: 'UTC' })}</span>
                 },
                 {

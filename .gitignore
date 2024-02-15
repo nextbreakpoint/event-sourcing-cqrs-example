@@ -22,3 +22,4 @@ dependency-reduced-pom.xml
 .gradle
 react/public/js
 **/file-uploads
+package-lock.json

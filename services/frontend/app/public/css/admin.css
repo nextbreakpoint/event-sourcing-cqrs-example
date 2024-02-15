@@ -184,6 +184,10 @@ a.link:hover {
     text-decoration: underline;
 }
 
+a.image {
+    text-align: left;
+}
+
 a.image img {
     margin: 16px;
     border-radius: 16px;

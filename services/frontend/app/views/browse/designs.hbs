@@ -1,41 +1,147 @@
 <body>
     <header><p><b>The Beauty of Chaos</b> | Fractals</p></header>
-    <div class="elements-grid">
-    {{#each grid}}
-    <div class="elements-row">
-    {{#each .}}
-        <div id="{{design.uuid}}" class="element"><a href="{{design.location}}"><img src="{{imageUrl}}" alt="{{design.location}}"/></a></div>
-    {{/each}}
-    </div>
-    {{/each}}
+    <div class="images">
+        <div class="pages" id="pages">
+            <div class="page">
+                {{#each grid}}
+                    <div class="row">
+                    {{#each .}}
+                        <div id="{{design.uuid}}" class="cell"><a href="{{design.location}}"><img src="{{imageUrl}}" alt="{{design.location}}"/></a></div>
+                    {{/each}}
+                    </div>
+                {{/each}}
+            </div>
+        </div>
     </div>
     {{#if show}}
-    <div class="elements-more">
-        <a href="/browse/designs.html?from={{next}}&size={{size}}">Show more</a>
+    <div class="next">
+        <a href="/browse/designs.html?page={{nextPage}}">Show next designs</a>
     </div>
     {{/if}}
     <footer>
         <p>Powered by <a href="https://nextbreakpoint.com">NextBreakpoint</a>{{#if admin}} | <a href="../admin/designs.html">Edit</a>{{/if}}{{#if login}} | <a href="{{config.api_url}}/v1/auth/signin/browse/designs.html">Login</a>{{/if}}{{#if logout}} | <a href="{{config.api_url}}/v1/auth/signout/browse/designs.html">Logout</a>{{/if}}</p>
     </footer>
     <script>
+        function get(url, callback) {
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    if (callback) {
+                        callback(this.responseText);
+                    }
+                }
+            };
+            xhttp.open("GET", url, false);
+            xhttp.send();
+        }
+
+        function configure(page, lastPage) {
+            let pages = document.getElementById("pages");
+
+            pages.replaceChildren();
+
+            if (page > 0) {
+                get("/browse/designs.json?page=" + (page - 1), function(response) {
+                    let pages = document.getElementById("pages");
+                    pages.insertAdjacentHTML('beforeend', response)
+                });
+            }
+
+            get("/browse/designs.json?page=" + page, function(response) {
+                let pages = document.getElementById("pages");
+                pages.insertAdjacentHTML('beforeend', response)
+            });
+
+            if (page < lastPage) {
+                get("/browse/designs.json?page=" + (page + 1), function(response) {
+                    let pages = document.getElementById("pages");
+                    pages.insertAdjacentHTML('beforeend', response)
+                });
+            }
+
+            let nexts = document.querySelectorAll(".next");
+            for (let i = 0; i < nexts.length; i++) {
+                nexts[i].style.visibility = "hidden";
+            }
+        }
+
         function resize() {
+            console.log("resizing");
+
             let size = Math.round(window.innerWidth / 8);
-            let rows = document.querySelectorAll(".elements-row");
+
+            let rows = document.querySelectorAll(".row");
             for (let i = 0; i < rows.length; i++) {
                 rows[i].style.width = (size * 8) + "px";
                 rows[i].style.height = size + "px";
             }
-            let elements = document.querySelectorAll(".element");
-            for (let i = 0; i < elements.length; i++) {
-                elements[i].style.width = size + "px";
-                elements[i].style.height = size + "px";
+
+            let cells = document.querySelectorAll(".cell");
+            for (let i = 0; i < cells.length; i++) {
+                cells[i].style.width = size + "px";
+                cells[i].style.height = size + "px";
             }
         }
+
         domReady(function(event) {
+            var page = {{page}};
+            let lastPage = {{lastPage}};
+
+            let pages = document.getElementById("pages");
+            var pageHeight = pages.children[0].getBoundingClientRect().height;
+
+            console.log("page = " + page);
+            console.log("lastPage = " + lastPage);
+            console.log("pageHeight = " + pageHeight);
+
             window.addEventListener('resize', function(e) {
                 resize();
             });
+
+            window.addEventListener('wheel', function(e) {
+                let pages = document.getElementById("pages");
+                let size = Math.round(window.innerWidth / 8);
+
+                if (e.deltaMode == 0 && e.deltaY != 0) {
+                    var top = new Number(pages.style.top.substring(0, pages.style.top.length - 2)) - e.deltaY;
+
+                    if (page < lastPage && top < -pageHeight) {
+                        page = page + 1;
+                        console.log("page = " + page);
+                        pages.children[0].remove();
+                        get("/browse/designs.json?page=" + page, function(response) {
+                            pages.insertAdjacentHTML('beforeend', response)
+                            resize();
+                        });
+                        top += pageHeight;
+                    }
+
+                    if (page > 0 && top > 0) {
+                        page = page - 1;
+                        console.log("page = " + page);
+                        pages.children[pages.children.length - 1].remove();
+                        get("/browse/designs.json?page=" + page, function(response) {
+                            pages.insertAdjacentHTML('afterbegin', response)
+                            resize();
+                        });
+                        top -= pageHeight;
+                    }
+
+                    if (top > pageHeight * page) {
+                        top = pageHeight * page;
+                    }
+
+                    if (top < -pageHeight * (lastPage - 1)) {
+                        top = -pageHeight * (lastPage - 1);
+                    }
+
+                    pages.style.top = top + "px";
+                }
+            });
+
+            configure(page, lastPage);
+            resize();
+            pageHeight = pages.children[0].getBoundingClientRect().height;
         })
-        resize();
     </script>
 </body>

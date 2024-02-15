@@ -3,7 +3,7 @@ import * as Types from '../../constants/ActionTypes'
 const initialState = {
     pagination: {
         page: 0,
-        pageSize: 5
+        pageSize: 20
     }
 }
 

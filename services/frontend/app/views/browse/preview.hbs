@@ -6,7 +6,7 @@
     </footer>
     <input type="hidden" id="uuid" value="{{uuid}}"/>
     <script>
-        domReady(function(event) {
+        function configure() {
             var map = L.map('fractal').setView([0, 0], 3);
 
             var url = '{{config.api_url}}/v1/designs/{{design.uuid}}/{z}/{x}/{y}/256.png?t={{design.checksum}}';
@@ -30,7 +30,7 @@
             map.attributionControl.setPrefix('');
 
             layer.addTo(map);
-        });
+        }
         function resize() {
             let width = window.innerWidth;
             let height = window.innerHeight;
@@ -44,7 +44,8 @@
             window.addEventListener('resize', function(e) {
                 resize();
             });
+            resize();
+            configure();
         })
-        resize();
     </script>
 </body>

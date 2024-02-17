@@ -2,15 +2,15 @@
     <header><p><b>The Beauty of Chaos</b> | Fractals</p></header>
     <div class="images" id="images">
         <div class="pages" id="pages">
-            <div class="page">
-                {{#each grid}}
-                    <div class="row">
-                    {{#each .}}
-                        <div id="{{design.uuid}}" class="cell"><a href="{{design.location}}"><img src="{{imageUrl}}" alt="{{design.location}}"/></a></div>
-                    {{/each}}
-                    </div>
-                {{/each}}
-            </div>
+{{!--             <div class="page" id="page-{{page}}"> --}}
+{{!--                 {{#each grid}} --}}
+{{!--                     <div class="row"> --}}
+{{!--                     {{#each .}} --}}
+{{!--                         <div id="{{design.uuid}}" class="cell"><a href="{{design.location}}"><img src="{{imageUrl}}" alt="{{design.location}}"/></a></div> --}}
+{{!--                     {{/each}} --}}
+{{!--                     </div> --}}
+{{!--                 {{/each}} --}}
+{{!--             </div> --}}
         </div>
     </div>
     {{#if show}}
@@ -23,108 +23,126 @@
     </footer>
     <script>
         domReady(function(event) {
-            function get(url, async, callback) {
-                var xhttp = new XMLHttpRequest();
-                xhttp.onreadystatechange = function() {
-                    if (this.readyState == 4 && this.status == 200) {
-                        if (callback) {
-                            callback(this.responseText);
-                        }
-                    }
-                };
-                xhttp.open("GET", url, async);
-                xhttp.send();
-            }
-
             function configure(page, lastPage, callback) {
-                get("/browse/designs.json?page=" + page, true, function(response) {
-                    let pages = document.getElementById("pages");
+                console.log("configure pages");
 
+                let nexts = document.querySelectorAll(".next");
+                for (let i = 0; i < nexts.length; i++) {
+                    nexts[i].style.visibility = "hidden";
+                }
+
+                fetch("/browse/designs.json?page=" + page + "&t=" + Date.now(), true, function(response) {
+                    pagesData["page-" + page] = JSON.parse(response);
+
+                    let pages = document.getElementById("pages");
                     pages.replaceChildren();
-                    pages.insertAdjacentHTML('beforeend', response)
-                    resize();
-                    callback();
+                    pages.insertAdjacentHTML('beforeend', "<div class=\"page\" id=\"slot-0\"/>");
+                    pages.insertAdjacentHTML('beforeend', "<div class=\"page\" id=\"slot-1\"/>");
+                    pages.insertAdjacentHTML('beforeend', "<div class=\"page\" id=\"slot-2\"/>");
 
                     if (page > 0) {
-                        get("/browse/designs.json?page=" + (page - 1), false, function(response) {
-                            let pages = document.getElementById("pages");
-                            pages.insertAdjacentHTML('afterbegin', response)
-                            resize();
+                        fetch("/browse/designs.json?page=" + (page - 1) + "&t=" + Date.now(), false, function(response) {
+                            pagesData["page-" + (page - 1)] = JSON.parse(response);
                         });
                     }
 
                     if (page < lastPage) {
-                        get("/browse/designs.json?page=" + (page + 1), false, function(response) {
-                            let pages = document.getElementById("pages");
-                            pages.insertAdjacentHTML('beforeend', response)
-                            resize();
+                        fetch("/browse/designs.json?page=" + (page + 1) + "&t=" + Date.now(), false, function(response) {
+                            pagesData["page-" + (page + 1)] = JSON.parse(response);
                         });
                     }
+
+                    resizePages();
+                    renderPages(page, 0);
+                    callback();
                 });
+            }
 
-                let nexts = document.querySelectorAll(".next");
+            function renderGrid() {
+                html = "";
+                for (let i = 0; i < 16; i++) {
+                    html += renderRow();
+                }
+                return html;
+            }
 
-                for (let i = 0; i < nexts.length; i++) {
-                    nexts[i].style.visibility = "hidden";
+            function renderRow() {
+                html = "";
+                for (let i = 0; i < 8; i++) {
+                    html += renderCell();
+                }
+                return "<div class=\"row\">" + html + "</div>";
+            }
+
+            function renderCell() {
+//                 return "<span class=\"cell\"><a href=\"" + cell.design.location + "\"><img src=\"" + cell.imageUrl + "\" alt=\"" + cell.design.location + "\"/></a></span>";
+                return "<span class=\"cell\"><a href=\"\"><img src=\"data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20460%20215%22%3E%3C%2Fsvg%3E\" alt=\"\"/></a></span>";
+            }
+
+            function updatePages(page) {
+                console.log("update pages");
+
+                delete pagesData["page-" + (page - 2)];
+                delete pagesData["page-" + (page + 2)];
+
+                if (page < lastPage - 1 && !pagesData["page-" + (page + 1)]) {
+                    pagesData["page-" + (page + 1)] = [];
+                    fetch("/browse/designs.json?page=" + (page + 1) + "&t=" + Date.now(), true, function(response) {
+                        if (pagesData["page-" + (page + 1)]) {
+                            pagesData["page-" + (page + 1)] = JSON.parse(response);
+                        }
+                    });
+                }
+
+                if (page > 0 && !pagesData["page-" + (page - 1)]) {
+                    pagesData["page-" + (page - 1)] = [];
+                    fetch("/browse/designs.json?page=" + (page - 1) + "&t=" + Date.now(), true, function(response) {
+                        if (pagesData["page-" + (page - 1)]) {
+                            pagesData["page-" + (page - 1)] = JSON.parse(response);
+                        }
+                    });
                 }
             }
 
-            function setup() {
-                window.addEventListener('resize', function(e) {
-                    resize();
-                });
+            function resizePages() {
+                console.log("resize pages");
 
-                window.addEventListener('wheel', function(e) {
-                    let pages = document.getElementById("pages");
-                    let images = document.getElementById("images");
-                    let size = Math.round(window.innerWidth / 8);
-                    let extraHeight = images.clientHeight;
-                    let pageHeight = pages.children[0].clientHeight;
+                let pageElement0 = document.getElementById("slot-0");
+                let pageElement1 = document.getElementById("slot-1");
+                let pageElement2 = document.getElementById("slot-2");
 
-                    if (e.deltaMode == 0 && e.deltaY != 0) {
-                        var top = new Number(pages.style.top.substring(0, pages.style.top.length - 2)) - e.deltaY;
+                pageElement0.innerHTML = renderGrid();
+                pageElement1.innerHTML = renderGrid();
+                pageElement2.innerHTML = renderGrid();
 
-                        if (top > pageHeight * page) {
-                            top = pageHeight * page;
-                        }
+                let images = document.getElementById("images");
+                imagesWidth = images.clientWidth;
+                imagesHeight = images.clientHeight;
 
-                        if (top < -pageHeight * lastPage) {
-                            top = -pageHeight * lastPage;
-                        }
+                let cellSize = resizeGrid(imagesWidth);
 
-                        if (page < lastPage && top < -pageHeight) {
-                            page = page + 1;
-                            console.log("page = " + page);
-                            pages.children[0].remove();
-                            get("/browse/designs.json?page=" + page, false, function(response) {
-                                let pages = document.getElementById("pages");
-                                pages.insertAdjacentHTML('beforeend', response)
-                                resize();
-                            });
-                            top += pageHeight;
-                        }
+                let pageData = pagesData["page-" + page];
+                pageHeight = pageData.length * cellSize;
 
-                        if (page > 0 && top > 0) {
-                            page = page - 1;
-                            console.log("page = " + page);
-                            pages.children[pages.children.length - 1].remove();
-                            get("/browse/designs.json?page=" + page, false, function(response) {
-                                let pages = document.getElementById("pages");
-                                pages.insertAdjacentHTML('afterbegin', response)
-                                resize();
-                            });
-                            top -= pageHeight;
-                        }
+                pageElement0.style.height = pageHeight + 'px';
+                pageElement1.style.height = pageHeight + 'px';
+                pageElement2.style.height = pageHeight + 'px';
 
-                        pages.style.top = top + "px";
-                    }
-                });
+                let pages = document.getElementById("pages");
+                pages.style.marginTop = -pageHeight + "px";
+
+                console.log("pageHeight = " + pageHeight);
+                console.log("imagesWidth = " + imagesWidth);
+                console.log("imagesHeight = " + imagesHeight);
+
+                pages.style.top = clampScrolling(page, new Number(pages.style.top.substring(0, pages.style.top.length - 2))) + "px";
             }
 
-            function resize() {
-                console.log("resizing");
+            function resizeGrid(width) {
+                console.log("resize grid");
 
-                let size = Math.round(window.innerWidth / 8);
+                let size = Math.round(width / 8);
+                console.log("cells size " + size);
 
                 let rows = document.querySelectorAll(".row");
                 for (let i = 0; i < rows.length; i++) {
@@ -137,10 +155,138 @@
                     cells[i].style.width = size + "px";
                     cells[i].style.height = size + "px";
                 }
+
+                return size;
             }
 
+            function clampScrolling(page, value) {
+                if (page == 0 && value > 0) {
+                    value = 0;
+                }
+
+                if (page == lastPage - 1 && value < -(pageHeight - imagesHeight)) {
+                    value = -(pageHeight - imagesHeight);
+                }
+
+                return value;
+            }
+
+            function updatePage(page, value) {
+                if (page < lastPage && value < -pageHeight) {
+                    console.log("next page");
+                    page = page + 1;
+                    console.log("page = " + page);
+                    updatePages(page);
+                } else if (page > 0 && value > 0) {
+                    console.log("prev page");
+                    page = page - 1;
+                    console.log("page = " + page);
+                    updatePages(page);
+                }
+
+                return page;
+            }
+
+            function renderPage(page, value, slot) {
+                console.log("render page " + page);
+
+                let rows = document.querySelectorAll("#" + slot + " .row");
+
+                let pageData = pagesData["page-" + page];
+
+                if (pageData && pageData.length == rows.length) {
+                    for (let i = 0; i < pageData.length; i++) {
+                        let rowTop = rows[i].getBoundingClientRect().top;
+                        let rowBottom = rows[i].getBoundingClientRect().bottom;
+
+                        if (rowBottom > 0 && rowTop < imagesHeight) {
+                            rows[i].style.border = "1px solid red";
+
+                            let images = rows[i].getElementsByTagName("img");
+                            let links = rows[i].getElementsByTagName("a");
+
+                            let rowData = pageData[i];
+
+                            if (rowData.length == images.length) {
+                                for (let j = 0; j < rowData.length; j++) {
+                                    if (images[j].src != rowData[j].imageUrl) {
+                                       images[j].src = rowData[j].imageUrl;
+                                       images[j].alt = rowData[j].design.location;
+                                    }
+                                    if (links[j].href != rowData[j].design.location) {
+                                       links[j].href = rowData[j].design.location;
+                                    }
+                                }
+                            } else {
+                                console.log("cells mismatch");
+                            }
+                        } else {
+                            rows[i].style.border = "1px solid yellow";
+                        }
+                    }
+                } else {
+                    console.log("rows mismatch");
+                }
+            }
+
+            function renderPages(page, value) {
+                console.log("render pages " + page);
+
+                if (page > 0) {
+                    renderPage(page - 1, value, "slot-0");
+                }
+
+                if (page >= 0) {
+                    renderPage(page, value, "slot-1");
+                }
+
+                if (page < lastPage) {
+                    renderPage(page + 1, value, "slot-2");
+                }
+            }
+
+            function setup() {
+                window.addEventListener('resize', function(e) {
+                    resizePages();
+                });
+
+                window.addEventListener('wheel', function(e) {
+                    if (pageHeight > 0 && e.deltaMode == 0 && e.deltaY != 0) {
+                        let pages = document.getElementById("pages");
+
+                        var top = new Number(pages.style.top.substring(0, pages.style.top.length - 2)) - e.deltaY;
+
+                        top = clampScrolling(page, top);
+
+                        newPage = updatePage(page, top);
+
+                        if (newPage < page) {
+                            top -= pageHeight;
+                        } else if (newPage > page) {
+                            top += pageHeight;
+                        }
+
+                        page = newPage;
+
+                        pages.style.top = top + "px";
+
+                        if (timeout) {
+                            clearTimeout(timeout);
+                        }
+                        timeout = setTimeout(function() {
+                            renderPages(page, top);
+                        }, 250);
+                    }
+                });
+            }
+
+            var timeout = null;
             var page = {{page}};
             let lastPage = {{lastPage}};
+            var pageHeight = 0;
+            var imagesWidth = 0;
+            var imagesHeight = 0;
+            var pagesData = {};
 
             console.log("page = " + page);
             console.log("lastPage = " + lastPage);

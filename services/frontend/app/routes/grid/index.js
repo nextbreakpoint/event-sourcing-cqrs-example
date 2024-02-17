@@ -33,8 +33,10 @@ let pattern2a = [
 ]
 
 let pattern4a = [
-    [ [0,1,0,0], [0,1,0,1], [1,1,0,0], [1,1,0,1], [2,1,0,0], [2,1,0,1], [3,1,0,0], [3,1,0,1] ],
-    [ [0,1,1,0], [0,1,1,1], [1,1,1,0], [1,1,1,1], [2,1,1,0], [2,1,1,1], [3,1,1,0], [3,1,1,1] ]
+    [ [0,2,0,1], [0,2,0,2], [1,2,0,1], [1,2,0,2], [2,2,0,1], [2,2,0,2], [3,2,0,1], [3,2,0,2] ],
+    [ [0,2,1,1], [0,2,1,2], [1,2,1,1], [1,2,1,2], [2,2,1,1], [2,2,1,2], [3,2,1,1], [3,2,1,2] ],
+    [ [0,2,2,1], [0,2,2,2], [1,2,2,1], [1,2,2,2], [2,2,2,1], [2,2,2,2], [3,2,2,1], [3,2,2,2] ],
+    [ [0,2,3,1], [0,2,3,2], [1,2,3,1], [1,2,3,2], [2,2,3,1], [2,2,3,2], [3,2,3,1], [3,2,3,2] ]
 ]
 
 let pattern5a = [
@@ -49,6 +51,13 @@ let pattern5b = [
     [ [0,1,1,0], [0,1,1,1], [1,1,1,0], [1,1,1,1], [4,2,1,0], [4,2,1,1], [4,2,1,2], [4,2,1,3] ],
     [ [2,1,0,0], [2,1,0,1], [3,1,0,0], [3,1,0,1], [4,2,2,0], [4,2,2,1], [4,2,2,2], [4,2,2,3] ],
     [ [2,1,1,0], [2,1,1,1], [3,1,1,0], [3,1,1,1], [4,2,3,0], [4,2,3,1], [4,2,3,2], [4,2,3,3] ]
+]
+
+let pattern5c = [
+    [ [0,1,0,0], [0,1,0,1], [4,2,0,0], [4,2,0,1], [4,2,0,2], [4,2,0,3], [1,1,0,0], [1,1,0,1] ],
+    [ [0,1,1,0], [0,1,1,1], [4,2,1,0], [4,2,1,1], [4,2,1,2], [4,2,1,3], [1,1,1,0], [1,1,1,1] ],
+    [ [2,1,0,0], [2,1,0,1], [4,2,2,0], [4,2,2,1], [4,2,2,2], [4,2,2,3], [3,1,0,0], [3,1,0,1] ],
+    [ [2,1,1,0], [2,1,1,1], [4,2,3,0], [4,2,3,1], [4,2,3,2], [4,2,3,3], [3,1,1,0], [3,1,1,1] ]
 ]
 
 let addOffset = function(pattern, offset) {
@@ -79,10 +88,13 @@ let mergePatterns = function(patterns) {
 }
 
 let patterns = [
-    mergePatterns([ pattern1a, pattern2a, pattern4a, pattern1a, pattern5a, pattern5b, pattern2a ]),
-    mergePatterns([ pattern2a, pattern4a, pattern1a, pattern5b, pattern1a, pattern2a, pattern5a ]),
-    mergePatterns([ pattern4a, pattern2a, pattern5b, pattern1a, pattern2a, pattern1a, pattern5a ]),
-    mergePatterns([ pattern4a, pattern2a, pattern4a, pattern5b, pattern5a ])
+    mergePatterns([ pattern1a, pattern5a, pattern2a, pattern2a ]),
+    mergePatterns([ pattern5b, pattern2a, pattern1a, pattern2a ]),
+    mergePatterns([ pattern2a, pattern5c, pattern2a, pattern1a ]),
+    mergePatterns([ pattern2a, pattern1a, pattern2a, pattern5b ]),
+    mergePatterns([ pattern1a, pattern2a, pattern5c, pattern2a ]),
+    mergePatterns([ pattern1a, pattern4a, pattern1a, pattern4a ]),
+    mergePatterns([ pattern2a, pattern4a, pattern2a, pattern2a ])
 ]
 
 Instance.prototype.make = function (designs, from, size) {
@@ -103,6 +115,7 @@ Instance.prototype.make = function (designs, from, size) {
             return cell
         })
     })
+    console.log("cells = " + cells.length);
     return cells
 }
 

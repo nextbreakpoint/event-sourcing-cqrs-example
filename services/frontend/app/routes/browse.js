@@ -95,9 +95,7 @@ router.get('/designs.html', function(req, res, next) {
                         grid: grid.make(designs, from, size),
                         show: response.data.total > from + size,
                         page: page,
-                        prevPage: page - 1,
-                        nextPage: page + 1,
-                        lastPage: Math.floor(response.data.total / size)
+                        lastPage: Math.ceil(response.data.total / size)
                     })
                 } else {
                     console.log("Can't load designs: status = " + content.status)
@@ -112,8 +110,6 @@ router.get('/designs.html', function(req, res, next) {
                         grid: [],
                         show: false,
                         page: page,
-                        prevPage: 0,
-                        nextPage: 0,
                         lastPage: 0
                     })
                 }
@@ -132,8 +128,6 @@ router.get('/designs.html', function(req, res, next) {
                     grid: [],
                     show: false,
                     page: 0,
-                    prevPage: 0,
-                    nextPage: 0,
                     lastPage: 0
                 })
             })
@@ -178,28 +172,31 @@ router.get('/designs.json', function(req, res, next) {
                         baseUrl: appConfig.client_web_url + '/browse/designs',
                         modified: design.modified
                     }))
-                    res.render('browse/elements', {
-                        config: { "api_url": appConfig.client_api_url, "web_url": appConfig.client_web_url },
-                        layout: 'designs',
-                        grid: grid.make(designs, from, size)
-                    })
+//                    res.render('browse/elements', {
+//                        config: { "api_url": appConfig.client_api_url, "web_url": appConfig.client_web_url },
+//                        layout: 'designs',
+//                        grid: grid.make(designs, from, size)
+//                    })
+                    res.send(grid.make(designs, from, size))
                 } else {
                     console.log("Can't load designs: status = " + content.status)
-                    res.render('browse/elements', {
-                        config: { "api_url": appConfig.client_api_url, "web_url": appConfig.client_web_url },
-                        layout: 'designs',
-                        grid: []
-                    })
+//                    res.render('browse/elements', {
+//                        config: { "api_url": appConfig.client_api_url, "web_url": appConfig.client_web_url },
+//                        layout: 'designs',
+//                        grid: []
+//                    })
+                    res.send(grid.make([], from, size))
                 }
             })
             .catch(function (error) {
                 req.resume()
                 console.log("Can't load designs " + error)
-                res.render('browse/elements', {
-                    config: { "api_url": appConfig.client_api_url, "web_url": appConfig.client_web_url },
-                    layout: 'designs',
-                    grid: []
-                })
+//                res.render('browse/elements', {
+//                    config: { "api_url": appConfig.client_api_url, "web_url": appConfig.client_web_url },
+//                    layout: 'designs',
+//                    grid: []
+//                })
+                res.send(grid.make([], from, size))
             })
     })
 })

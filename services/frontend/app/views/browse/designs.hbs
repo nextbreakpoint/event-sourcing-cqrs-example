@@ -26,9 +26,12 @@
             function configure(page, lastPage, callback) {
                 console.log("configure pages");
 
-                let nexts = document.querySelectorAll(".next");
-                for (let i = 0; i < nexts.length; i++) {
-                    nexts[i].style.visibility = "hidden";
+                console.log("current page = " + page);
+                console.log("last page = " + lastPage);
+
+                let links = document.querySelectorAll(".next");
+                for (let i = 0; i < links.length; i++) {
+                    links[i].style.visibility = "hidden";
                 }
 
                 fetch("/browse/designs.json?page=" + page + "&t=" + Date.now(), true, function(response) {
@@ -52,7 +55,7 @@
                         });
                     }
 
-                    resizePages();
+                    resizePages(page);
                     callback();
                 });
             }
@@ -74,36 +77,45 @@
             }
 
             function renderCell() {
-//                 return "<span class=\"cell\"><a href=\"" + cell.design.location + "\"><img src=\"" + cell.imageUrl + "\" alt=\"" + cell.design.location + "\"/></a></span>";
                 return "<span class=\"cell\"><a href=\"\"><img src=\"data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20460%20215%22%3E%3C%2Fsvg%3E\" alt=\"\"/></a></span>";
             }
 
-            function updatePages(page) {
-                console.log("update pages");
+            function refreshPages(page) {
+                console.log("refresh pages");
+
+                console.log("page = " + page);
 
                 delete pagesData["page-" + (page - 2)];
                 delete pagesData["page-" + (page + 2)];
 
                 if (page < lastPage - 1 && !pagesData["page-" + (page + 1)]) {
                     pagesData["page-" + (page + 1)] = [];
+                    console.log("loading page data " + (page + 1));
                     fetch("/browse/designs.json?page=" + (page + 1) + "&t=" + Date.now(), true, function(response) {
                         if (pagesData["page-" + (page + 1)]) {
+                            console.log("loaded page data " + (page + 1));
                             pagesData["page-" + (page + 1)] = JSON.parse(response);
+                        } else {
+                            console.log("discard loaded page data " + (page + 1));
                         }
                     });
                 }
 
                 if (page > 0 && !pagesData["page-" + (page - 1)]) {
                     pagesData["page-" + (page - 1)] = [];
+                    console.log("loading page data " + (page - 1));
                     fetch("/browse/designs.json?page=" + (page - 1) + "&t=" + Date.now(), true, function(response) {
                         if (pagesData["page-" + (page - 1)]) {
+                            console.log("loaded page data " + (page - 1));
                             pagesData["page-" + (page - 1)] = JSON.parse(response);
+                        } else {
+                            console.log("discard loaded page data " + (page - 1));
                         }
                     });
                 }
             }
 
-            function resizePages() {
+            function resizePages(page) {
                 console.log("resize pages");
 
                 let pageElement0 = document.getElementById("slot-0");
@@ -139,6 +151,22 @@
                 pages.style.top = top + "px";
 
                 renderPages(page, top);
+            }
+
+            function swapPages(page, newPage) {
+                console.log("swap pages");
+
+                let pageElement0 = document.getElementById("slot-0");
+                let pageElement1 = document.getElementById("slot-1");
+                let pageElement2 = document.getElementById("slot-2");
+
+                if (page > newPage) {
+                    pageElement0.innerHTML = pageElement1.innerHTML;
+                    pageElement1.innerHTML = pageElement2.innerHTML;
+                } else {
+                    pageElement2.innerHTML = pageElement1.innerHTML;
+                    pageElement1.innerHTML = pageElement0.innerHTML;
+                }
             }
 
             function resizeGrid(width) {
@@ -177,14 +205,14 @@
             function updatePage(page, value) {
                 if (page < lastPage && value < -pageHeight) {
                     console.log("next page");
+                    swapPages(page, page - 1);
                     page = page + 1;
-                    console.log("page = " + page);
-                    updatePages(page);
+                    refreshPages(page);
                 } else if (page > 0 && value > 0) {
                     console.log("prev page");
+                    swapPages(page, page + 1);
                     page = page - 1;
-                    console.log("page = " + page);
-                    updatePages(page);
+                    refreshPages(page);
                 }
 
                 return page;
@@ -310,7 +338,7 @@
 
             function setup() {
                 window.addEventListener('resize', function(e) {
-                    resizePages();
+                    resizePages(page);
                 });
 
                 window.addEventListener('wheel', function(e) {
@@ -351,9 +379,6 @@
             var imagesWidth = 0;
             var imagesHeight = 0;
             var pagesData = {};
-
-            console.log("page = " + page);
-            console.log("lastPage = " + lastPage);
 
             configure(page, lastPage, setup);
         })

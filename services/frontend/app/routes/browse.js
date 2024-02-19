@@ -60,9 +60,9 @@ router.get('/designs.html', function(req, res, next) {
 
     req.pause()
 
+    let size = 10
     let page = new Number(req.query.page ? req.query.page : 0)
-    let from = req.query.page ? page * 5 : 0
-    let size = 5
+    let from = req.query.page ? page * size : 0
 
     loadAccount(config, req, (account) => {
         if (account !== {}) {
@@ -148,9 +148,9 @@ router.get('/designs.json', function(req, res, next) {
 
     req.pause()
 
+    let size = 10
     let page = new Number(req.query.page ? req.query.page : 0)
-    let from = req.query.page ? page * 5 : 0
-    let size = 5
+    let from = req.query.page ? page * size : 0
 
     loadAccount(config, req, (account) => {
         if (account !== {}) {
@@ -172,30 +172,15 @@ router.get('/designs.json', function(req, res, next) {
                         baseUrl: appConfig.client_web_url + '/browse/designs',
                         modified: design.modified
                     }))
-//                    res.render('browse/elements', {
-//                        config: { "api_url": appConfig.client_api_url, "web_url": appConfig.client_web_url },
-//                        layout: 'designs',
-//                        grid: grid.make(designs, from, size)
-//                    })
                     res.send(grid.make(designs, from, size))
                 } else {
                     console.log("Can't load designs: status = " + content.status)
-//                    res.render('browse/elements', {
-//                        config: { "api_url": appConfig.client_api_url, "web_url": appConfig.client_web_url },
-//                        layout: 'designs',
-//                        grid: []
-//                    })
                     res.send(grid.make([], from, size))
                 }
             })
             .catch(function (error) {
                 req.resume()
                 console.log("Can't load designs " + error)
-//                res.render('browse/elements', {
-//                    config: { "api_url": appConfig.client_api_url, "web_url": appConfig.client_web_url },
-//                    layout: 'designs',
-//                    grid: []
-//                })
                 res.send(grid.make([], from, size))
             })
     })

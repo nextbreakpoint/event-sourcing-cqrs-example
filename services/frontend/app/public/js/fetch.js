@@ -1,11 +1,21 @@
 (function(exports) {
-    function fetch(url, async, callback) {
+    function fetch(url, async, onCompleted, onFailure) {
         xhttp = new XMLHttpRequest();
         xhttp.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
-                if (callback) {
-                    callback(this.responseText);
+                if (onCompleted) {
+                    onCompleted(this.responseText);
                 }
+            }
+        };
+        xhttp.onabort = function(e) {
+            if (onFailure) {
+                onFailure(e);
+            }
+        };
+        xhttp.onerror = function(e) {
+            if (onFailure) {
+                onFailure(e);
             }
         };
         xhttp.open("GET", url, async);

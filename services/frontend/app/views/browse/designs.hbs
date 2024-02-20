@@ -46,17 +46,23 @@
                     if (page > 0) {
                         fetch("/browse/designs.json?page=" + (page - 1) + "&t=" + Date.now(), false, function(response) {
                             pagesData["page-" + (page - 1)] = JSON.parse(response);
+                        }, function(error) {
+                            console.log(error);
                         });
                     }
 
                     if (page < lastPage) {
                         fetch("/browse/designs.json?page=" + (page + 1) + "&t=" + Date.now(), false, function(response) {
                             pagesData["page-" + (page + 1)] = JSON.parse(response);
+                        }, function(error) {
+                            console.log(error);
                         });
                     }
 
                     resizePages(page);
                     callback();
+                }, function(error) {
+                    console.log(error);
                 });
             }
 
@@ -88,7 +94,7 @@
                 delete pagesData["page-" + (page - 2)];
                 delete pagesData["page-" + (page + 2)];
 
-                if (page < lastPage - 1 && !pagesData["page-" + (page + 1)]) {
+                if (page < lastPage && !pagesData["page-" + (page + 1)]) {
                     pagesData["page-" + (page + 1)] = [];
                     console.log("loading page data " + (page + 1));
                     fetch("/browse/designs.json?page=" + (page + 1) + "&t=" + Date.now(), true, function(response) {
@@ -98,6 +104,8 @@
                         } else {
                             console.log("discard loaded page data " + (page + 1));
                         }
+                    }, function(error) {
+                        console.log(error);
                     });
                 }
 
@@ -111,6 +119,8 @@
                         } else {
                             console.log("discard loaded page data " + (page - 1));
                         }
+                    }, function(error) {
+                        console.log(error);
                     });
                 }
             }
@@ -146,11 +156,13 @@
                 console.log("imagesWidth = " + imagesWidth);
                 console.log("imagesHeight = " + imagesHeight);
 
-                let top = clampScrolling(page, new Number(pages.style.top.substring(0, pages.style.top.length - 2)));
+                let newScroll = clampScrolling(page, scroll);
 
-                pages.style.top = top + "px";
+                scroll = newScroll;
 
-                renderPages(page, top);
+                pages.style.top = newScroll + "px";
+
+                renderPages(page, newScroll);
             }
 
             function swapPages(page, newPage) {
@@ -163,9 +175,15 @@
                 if (page > newPage) {
                     pageElement0.innerHTML = pageElement1.innerHTML;
                     pageElement1.innerHTML = pageElement2.innerHTML;
+                    if (newPage < lastPage) {
+                        resetPage("slot-2");
+                    }
                 } else {
                     pageElement2.innerHTML = pageElement1.innerHTML;
                     pageElement1.innerHTML = pageElement0.innerHTML;
+                    if (newPage > 0) {
+                        resetPage("slot-0");
+                    }
                 }
             }
 
@@ -173,7 +191,6 @@
                 console.log("resize grid");
 
                 let size = Math.round(width / 8);
-                console.log("cells size " + size);
 
                 let rows = document.querySelectorAll(".row");
                 for (let i = 0; i < rows.length; i++) {
@@ -195,7 +212,7 @@
                     value = 0;
                 }
 
-                if (page == lastPage - 1 && value < -(pageHeight - imagesHeight)) {
+                if (page == lastPage && value < -(pageHeight - imagesHeight)) {
                     value = -(pageHeight - imagesHeight);
                 }
 
@@ -204,12 +221,10 @@
 
             function updatePage(page, value) {
                 if (page < lastPage && value < -pageHeight) {
-                    console.log("next page");
                     swapPages(page, page - 1);
                     page = page + 1;
                     refreshPages(page);
                 } else if (page > 0 && value > 0) {
-                    console.log("prev page");
                     swapPages(page, page + 1);
                     page = page - 1;
                     refreshPages(page);
@@ -228,85 +243,74 @@
                     return;
                 }
 
-                if (pageData.length == rows.length) {
-                    for (let i = 0; i < pageData.length; i++) {
-                        let rowTop = rows[i].getBoundingClientRect().top;
-                        let rowBottom = rows[i].getBoundingClientRect().bottom;
-
-                        let images = rows[i].getElementsByTagName("img");
-                        let links = rows[i].getElementsByTagName("a");
-
-                        let rowData = pageData[i];
-
-                        if (rowBottom > -imagesHeight && rowTop < imagesHeight * 2) {
-//                             rows[i].style.border = "1px solid red";
-
-                            if (rowData.length == images.length) {
-                                for (let j = 0; j < rowData.length; j++) {
-                                    if (images[j].src != rowData[j].imageUrl) {
-                                       images[j].src = rowData[j].imageUrl;
-                                       images[j].alt = rowData[j].design.location;
-                                    }
-                                    if (links[j].href != rowData[j].design.location) {
-                                       links[j].href = rowData[j].design.location;
-                                    }
-                                }
-                            } else {
-                                console.log("cells mismatch");
-                            }
-                        }
-                    }
-                } else {
-                    console.log("rows mismatch");
-                }
-            }
-
-            function clearPage(page, value, slot) {
-                let rows = document.querySelectorAll("#" + slot + " .row");
-
-                let pageData = pagesData["page-" + page];
-
-                if (!pageData) {
-                    console.log("data not found");
+                if (pageData.length != rows.length) {
+                    console.log("page data and rows mismatch");
                     return;
                 }
 
-                if (pageData.length == rows.length) {
-                    for (let i = 0; i < pageData.length; i++) {
-                        let rowTop = rows[i].getBoundingClientRect().top;
-                        let rowBottom = rows[i].getBoundingClientRect().bottom;
+                for (let i = 0; i < pageData.length; i++) {
+                    let rowTop = rows[i].getBoundingClientRect().top;
+                    let rowBottom = rows[i].getBoundingClientRect().bottom;
 
-                        let images = rows[i].getElementsByTagName("img");
-                        let links = rows[i].getElementsByTagName("a");
+                    let images = rows[i].getElementsByTagName("img");
+                    let links = rows[i].getElementsByTagName("a");
 
-                        let rowData = pageData[i];
+                    let rowData = pageData[i];
 
-                        if (rowBottom < -imagesHeight || rowTop > imagesHeight * 2) {
-//                             rows[i].style.border = "1px solid yellow";
+                    if (rowData.length != images.length) {
+                        console.log("row data and images mismatch");
+                        break;
+                    }
 
-                            if (rowData.length == images.length) {
-                                for (let j = 0; j < rowData.length; j++) {
-                                    if (images[j].src != "") {
-                                       images[j].src = "data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20460%20215%22%3E%3C%2Fsvg%3E";
-                                       images[j].alt = "";
-                                    }
-                                    if (links[j].href != "") {
-                                       links[j].href = "";
-                                    }
-                                }
-                            } else {
-                                console.log("cells mismatch");
+                    if (images.length != links.length) {
+                        console.log("images and links mismatch");
+                        break;
+                    }
+
+                    if (rowBottom > -imagesHeight && rowTop < imagesHeight * 2) {
+//                         if (rowBottom > 0 && rowTop < imagesHeight) {
+//                             rows[i].style.border = "1px solid red";
+
+                        for (let j = 0; j < rowData.length; j++) {
+                            if (images[j].src != rowData[j].imageUrl) {
+                               images[j].src = rowData[j].imageUrl;
+                               images[j].alt = rowData[j].design.location;
+                            }
+                            if (links[j].href != rowData[j].design.location) {
+                               links[j].href = rowData[j].design.location;
                             }
                         }
                     }
-                } else {
-                    console.log("rows mismatch");
+                }
+            }
+
+            function resetPage(slot) {
+                let rows = document.querySelectorAll("#" + slot + " .row");
+
+                for (let i = 0; i < rows.length; i++) {
+                    let images = rows[i].getElementsByTagName("img");
+                    let links = rows[i].getElementsByTagName("a");
+
+                    if (images.length != links.length) {
+                        console.log("images and links mismatch");
+                        break;
+                    }
+
+//                     rows[i].style.border = "1px solid green";
+
+                    for (let j = 0; j < images.length; j++) {
+                        if (images[j].src != "") {
+                           images[j].src = "data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20460%20215%22%3E%3C%2Fsvg%3E";
+                           images[j].alt = "";
+                        }
+                        if (links[j].href != "") {
+                           links[j].href = "";
+                        }
+                    }
                 }
             }
 
             function renderPages(page, value) {
-//                 console.log("render pages " + page);
-
                 if (page > 0) {
                     renderPage(page - 1, value, "slot-0");
                 }
@@ -315,24 +319,8 @@
                     renderPage(page, value, "slot-1");
                 }
 
-                if (page < lastPage - 1) {
+                if (page < lastPage) {
                     renderPage(page + 1, value, "slot-2");
-                }
-            }
-
-            function clearPages(page, value) {
-//                 console.log("clear pages " + page);
-
-                if (page > 0) {
-                    clearPage(page - 1, value, "slot-0");
-                }
-
-                if (page >= 0) {
-                    clearPage(page, value, "slot-1");
-                }
-
-                if (page < lastPage - 1) {
-                    clearPage(page + 1, value, "slot-2");
                 }
             }
 
@@ -345,40 +333,57 @@
                     if (pageHeight > 0 && e.deltaMode == 0 && e.deltaY != 0) {
                         let pages = document.getElementById("pages");
 
-                        var top = new Number(pages.style.top.substring(0, pages.style.top.length - 2)) - e.deltaY;
+                        newScroll = scroll - e.deltaY;
 
-                        top = clampScrolling(page, top);
+                        newScroll = clampScrolling(page, newScroll);
 
-                        newPage = updatePage(page, top);
+                        newPage = updatePage(page, newScroll);
 
                         if (newPage < page) {
-                            top -= pageHeight;
+                            newScroll -= pageHeight;
                         } else if (newPage > page) {
-                            top += pageHeight;
+                            newScroll += pageHeight;
                         }
 
+                        pages.style.top = scroll + "px";
+
                         page = newPage;
+                        scroll = newScroll;
 
-                        pages.style.top = top + "px";
-
-                        clearPages(page, top);
                         if (timeout) {
                             clearTimeout(timeout);
                         }
+
                         timeout = setTimeout(function() {
-                            renderPages(page, top);
+                            history.replaceState({ scroll:newScroll, page:newPage }, "", document.location.href);
+//                             console.log("replace state " + JSON.stringify(history.state));
+                            renderPages(newPage, newScroll);
                         }, 200);
+                    }
+                });
+
+                window.addEventListener("popstate", function(e) {
+                    if (e.state) {
+                        page = e.state.page;
+                        scroll = e.state.scroll;
                     }
                 });
             }
 
             var timeout = null;
-            var page = {{page}};
             let lastPage = {{lastPage}};
             var pageHeight = 0;
             var imagesWidth = 0;
             var imagesHeight = 0;
             var pagesData = {};
+            var page = {{page}};
+            var scroll = {{scroll}};
+
+            if (history.state) {
+//                 console.log("state " + JSON.stringify(history.state));
+                page = history.state.page;
+                scroll = history.state.scroll;
+            }
 
             configure(page, lastPage, setup);
         })

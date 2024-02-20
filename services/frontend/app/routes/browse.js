@@ -63,6 +63,7 @@ router.get('/designs.html', function(req, res, next) {
     let size = 10
     let page = new Number(req.query.page ? req.query.page : 0)
     let from = req.query.page ? page * size : 0
+    let scroll = req.query.scroll ? scroll : 0
 
     loadAccount(config, req, (account) => {
         if (account !== {}) {
@@ -95,7 +96,8 @@ router.get('/designs.html', function(req, res, next) {
                         grid: grid.make(designs, from, size),
                         show: response.data.total > from + size,
                         page: page,
-                        lastPage: Math.ceil(response.data.total / size)
+                        lastPage: Math.ceil(response.data.total / size) - 1,
+                        scroll: scroll
                     })
                 } else {
                     console.log("Can't load designs: status = " + content.status)
@@ -110,7 +112,8 @@ router.get('/designs.html', function(req, res, next) {
                         grid: [],
                         show: false,
                         page: page,
-                        lastPage: 0
+                        lastPage: 0,
+                        scroll: 0
                     })
                 }
             })
@@ -128,7 +131,8 @@ router.get('/designs.html', function(req, res, next) {
                     grid: [],
                     show: false,
                     page: 0,
-                    lastPage: 0
+                    lastPage: 0,
+                    scroll: 0
                 })
             })
     })

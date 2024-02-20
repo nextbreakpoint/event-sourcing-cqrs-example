@@ -1,5 +1,5 @@
 <body>
-    <header><p><b>The Beauty of Chaos</b> | <a href="../designs.html">Fractals</a> | {{uuid}}</p></header>
+    <header><p><b>The Beauty of Chaos</b> | <a href="../designs.html?page={{page}}&scroll={{scroll}}">Fractals</a> | {{uuid}}</p></header>
     <div id="fractal" class="preview"></div>
     <footer>
         <p>Powered by <a href="https://nextbreakpoint.com">NextBreakpoint</a>{{#if admin}} | <a href="../../admin/designs/{{uuid}}.html">Edit</a>{{/if}}{{#if login}} | <a href="{{config.api_url}}/v1/auth/signin/browse/designs/{{uuid}}.html">Login</a>{{/if}}{{#if logout}} | <a href="{{config.api_url}}/v1/auth/signout/browse/designs/{{uuid}}.html">Logout</a>{{/if}}</p>
@@ -31,6 +31,7 @@
 
             layer.addTo(map);
         }
+
         function resize() {
             let width = window.innerWidth;
             let height = window.innerHeight;
@@ -40,6 +41,7 @@
                 elements[i].style.height = height + "px";
             }
         }
+
         domReady(function(event) {
             window.addEventListener('resize', function(e) {
                 resize();

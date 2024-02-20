@@ -60,10 +60,11 @@ router.get('/designs.html', function(req, res, next) {
 
     req.pause()
 
+    let page = req.query.page ? new Number(req.query.page) : 0
+    let scroll = req.query.scroll ? new Number(req.query.scroll) : 0
+
     let size = 10
-    let page = new Number(req.query.page ? req.query.page : 0)
-    let from = req.query.page ? page * size : 0
-    let scroll = req.query.scroll ? scroll : 0
+    let from = page * size
 
     loadAccount(config, req, (account) => {
         if (account !== {}) {
@@ -152,9 +153,11 @@ router.get('/designs.json', function(req, res, next) {
 
     req.pause()
 
+    let page = req.query.page ? new Number(req.query.page) : 0
+    let scroll = req.query.scroll ? new Number(req.query.scroll) : 0
+
     let size = 10
-    let page = new Number(req.query.page ? req.query.page : 0)
-    let from = req.query.page ? page * size : 0
+    let from = page * size
 
     loadAccount(config, req, (account) => {
         if (account !== {}) {
@@ -204,6 +207,9 @@ router.get('/designs/(:uuid).html', function(req, res, next) {
 
     req.pause()
 
+    let page = req.query.page ? new Number(req.query.page) : 0
+    let scroll = req.query.scroll ? new Number(req.query.scroll) : 0
+
     loadAccount(config, req, (account) => {
         axios.get(appConfig.server_api_url + '/v1/designs/' + req.params.uuid, config)
             .then(function (response) {
@@ -230,7 +236,9 @@ router.get('/designs/(:uuid).html', function(req, res, next) {
                         login: account.role == null,
                         logout: account.role != null,
                         admin: account.role === 'admin',
-                        design: design
+                        design: design,
+                        page: page,
+                        scroll: scroll
                     })
                 } else {
                     console.log("Can't load design: status = " + content.status)
@@ -242,7 +250,9 @@ router.get('/designs/(:uuid).html', function(req, res, next) {
                         uuid: req.params.uuid,
                         login: account.role == null,
                         logout: account.role != null,
-                        admin: account.role === 'admin'
+                        admin: account.role === 'admin',
+                        page: 0,
+                        scroll: 0
                     })
                 }
             })
@@ -257,7 +267,9 @@ router.get('/designs/(:uuid).html', function(req, res, next) {
                     uuid: req.params.uuid,
                     login: account.role == null,
                     logout: account.role != null,
-                    admin: account.role === 'admin'
+                    admin: account.role === 'admin',
+                    page: 0,
+                    scroll: 0
                 })
             })
     })

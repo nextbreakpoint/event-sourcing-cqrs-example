@@ -277,7 +277,7 @@
                                images[j].alt = rowData[j].design.location;
                             }
                             if (links[j].href != rowData[j].design.location) {
-                               links[j].href = rowData[j].design.location;
+                               links[j].href = rowData[j].design.location + "?page=" + page + "&scroll=" + scroll;
                             }
                         }
                     }
@@ -361,13 +361,13 @@
                         }, 200);
                     }
                 });
-
-                window.addEventListener("popstate", function(e) {
-                    if (e.state) {
-                        page = e.state.page;
-                        scroll = e.state.scroll;
-                    }
-                });
+//
+//                 window.addEventListener("popstate", function(e) {
+//                     if (e.state) {
+//                         page = e.state.page;
+//                         scroll = e.state.scroll;
+//                     }
+//                 });
             }
 
             var timeout = null;

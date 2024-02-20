@@ -1,21 +1,26 @@
-var express = require('express')
-var https = require('https')
-var axios = require('axios')
-var fs = require('fs')
-var grid = require('./grid')
+let express = require('express')
+let https = require('https')
+let axios = require('axios')
+let fs = require('fs')
+let grid = require('./grid')
 
-var router = express.Router()
+let router = express.Router()
 
-var configPath = process.env.CONFIG_PATH
+let configPath = process.env.CONFIG_PATH
 
-var secretsPath = process.env.SECRETS_PATH
+let secretsPath = process.env.SECRETS_PATH
 
-const agent = new https.Agent({
+let agent = new https.Agent({
 //    rejectUnauthorized: false
 //    ca: fs.readFileSync(secretsPath + '/ca_cert.pem')
 })
 
-const appConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'))
+let appConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'))
+
+let config = {
+    "api_url": appConfig.client_api_url,
+    "web_url": appConfig.client_web_url
+}
 
 extractToken = (req) => {
     let authorization = req.headers.authorization
@@ -87,7 +92,7 @@ router.get('/designs.html', function(req, res, next) {
                         modified: design.modified
                     }))
                     res.render('browse/designs', {
-                        config: { "api_url": appConfig.client_api_url, "web_url": appConfig.client_web_url },
+                        config: config,
                         layout: 'browse',
                         title: 'Designs',
                         url: appConfig.client_web_url,
@@ -103,7 +108,7 @@ router.get('/designs.html', function(req, res, next) {
                 } else {
                     console.log("Can't load designs: status = " + content.status)
                     res.render('browse/designs', {
-                        config: { "api_url": appConfig.client_api_url, "web_url": appConfig.client_web_url },
+                        config: config,
                         layout: 'browse',
                         title: 'Designs',
                         url: appConfig.client_web_url,
@@ -122,7 +127,7 @@ router.get('/designs.html', function(req, res, next) {
                 req.resume()
                 console.log("Can't load designs " + error)
                 res.render('browse/designs', {
-                    config: { "api_url": appConfig.client_api_url, "web_url": appConfig.client_web_url },
+                    config: config,
                     layout: 'browse',
                     title: 'Designs',
                     url: appConfig.client_web_url,
@@ -228,7 +233,7 @@ router.get('/designs/(:uuid).html', function(req, res, next) {
                         modified: design.modified
                     }
                     res.render('browse/preview', {
-                        config: { "api_url": appConfig.client_api_url, "web_url": appConfig.client_web_url },
+                        config: config,
                         layout: 'browse',
                         title: 'Designs | ' + req.params.uuid,
                         url: appConfig.client_web_url,
@@ -243,7 +248,7 @@ router.get('/designs/(:uuid).html', function(req, res, next) {
                 } else {
                     console.log("Can't load design: status = " + content.status)
                     res.render('browse/preview', {
-                        config: { "api_url": appConfig.client_api_url, "web_url": appConfig.client_web_url },
+                        config: config,
                         layout: 'browse',
                         title: 'Designs | ' + req.params.uuid,
                         url: appConfig.client_web_url,
@@ -260,7 +265,7 @@ router.get('/designs/(:uuid).html', function(req, res, next) {
                 req.resume()
                 console.log("Can't load design " + error)
                 res.render('browse/preview', {
-                    config: { "api_url": appConfig.client_api_url, "web_url": appConfig.client_web_url },
+                    config: config,
                     layout: 'browse',
                     title: 'Designs | ' + req.params.uuid,
                     url: appConfig.client_web_url,

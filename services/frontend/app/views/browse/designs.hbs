@@ -233,10 +233,10 @@
                 return page;
             }
 
-            function renderPage(page, value, slot) {
+            function renderPage(page, index, value, slot) {
                 let rows = document.querySelectorAll("#" + slot + " .row");
 
-                let pageData = pagesData["page-" + page];
+                let pageData = pagesData["page-" + index];
 
                 if (!pageData) {
                     console.log("data not found");
@@ -312,15 +312,15 @@
 
             function renderPages(page, value) {
                 if (page > 0) {
-                    renderPage(page - 1, value, "slot-0");
+                    renderPage(page, page - 1, value, "slot-0");
                 }
 
                 if (page >= 0) {
-                    renderPage(page, value, "slot-1");
+                    renderPage(page, page, value, "slot-1");
                 }
 
                 if (page < lastPage) {
-                    renderPage(page + 1, value, "slot-2");
+                    renderPage(page, page + 1, value, "slot-2");
                 }
             }
 

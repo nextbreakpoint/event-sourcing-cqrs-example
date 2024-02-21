@@ -23,56 +23,77 @@
     </footer>
     <script>
         domReady(function(event) {
-            function configure(page, lastPage, callback) {
-                console.log("configure pages");
+            function configure(onCompleted) {
+                console.log("configure");
 
-                console.log("current page = " + page);
-                console.log("last page = " + lastPage);
+                console.log("current page = " + state.page);
+                console.log("last page = " + state.lastPage);
 
                 let links = document.querySelectorAll(".next");
                 for (let i = 0; i < links.length; i++) {
                     links[i].style.visibility = "hidden";
                 }
 
-                function handleResponse(response) {
-                    pagesData["page-" + page] = JSON.parse(response);
+                let pages = document.getElementById("pages");
+                pages.replaceChildren();
+                pages.insertAdjacentHTML('beforeend', "<div class=\"page\" id=\"slot-0\"/>");
+                pages.insertAdjacentHTML('beforeend', "<div class=\"page\" id=\"slot-1\"/>");
+                pages.insertAdjacentHTML('beforeend', "<div class=\"page\" id=\"slot-2\"/>");
 
-                    let pages = document.getElementById("pages");
-                    pages.replaceChildren();
-                    pages.insertAdjacentHTML('beforeend', "<div class=\"page\" id=\"slot-0\"/>");
-                    pages.insertAdjacentHTML('beforeend', "<div class=\"page\" id=\"slot-1\"/>");
-                    pages.insertAdjacentHTML('beforeend', "<div class=\"page\" id=\"slot-2\"/>");
+                function handleResponse(page, response) {
+                    console.log("loaded page data " + page);
+                    state.pagesData["page-" + page] = JSON.parse(response);
+
+                    function handleResponse(page, response) {
+                        if (state.pagesData["page-" + page]) {
+                            console.log("loaded page data " + page);
+                            state.pagesData["page-" + page] = JSON.parse(response);
+                            renderPages(state.page, state.scroll);
+                        } else {
+                            console.log("discard loaded page data " + page);
+                        }
+                    }
+
+                    function handleError(page, submitRequest) {
+                        if (state.pagesData["page-" + page]) {
+                            console.log("An error occurred while loading data from server. Retrying in 5 seconds...");
+                            setTimeout(submitRequest, 5000);
+                        }
+                    }
 
                     function submitRequest(page) {
-                        fetch("/browse/designs.json?page=" + page + "&t=" + Date.now(), false, function(response) {
-                            pagesData["page-" + page] = JSON.parse(response);
-                        }, function(e) {
-                            console.log("An error occurred while loading data from server. Retrying in 5 seconds...");
-                            setTimeout(function() { submitRequest(page); }, 5000);
-                        });
+                        state.pagesData["page-" + page] = [];
+                        console.log("loading page data " + page);
+                        fetch("/browse/designs.json?page=" + page + "&t=" + Date.now(), true, function (response) { handleResponse(page, response); }, function(e) { handleError(page, function () { submitRequest(page); }); });
                     }
 
                     if (page > 0) {
                         submitRequest(page - 1);
                     }
 
-                    if (page < lastPage) {
+                    if (page < state.lastPage) {
                         submitRequest(page + 1);
                     }
 
-                    resizePages(page);
+                    resizePages();
 
-                    callback();
+                    onCompleted();
                 }
 
-                function submitRequest() {
-                    fetch("/browse/designs.json?page=" + page + "&t=" + Date.now(), true, handleResponse, function(e) {
+                function handleError(page, submitRequest) {
+                    if (state.pagesData["page-" + page]) {
                         console.log("An error occurred while loading data from server. Retrying in 5 seconds...");
                         setTimeout(submitRequest, 5000);
-                    });
+                    }
                 }
 
-                submitRequest();
+                function submitRequest(page) {
+                    state.pagesData["page-" + page] = [];
+                    console.log("loading page data " + page);
+                    fetch("/browse/designs.json?page=" + page + "&t=" + Date.now(), true, function (response) { handleResponse(page, response); }, function(e) { handleError(page, function () { submitRequest(page); }); });
+                }
+
+                submitRequest(state.page);
             }
 
             function renderGrid() {
@@ -96,75 +117,52 @@
             }
 
             function refreshPages(page) {
-                console.log("refresh pages");
+                console.log("refresh page " + page);
 
-                console.log("page = " + page);
+                delete state.pagesData["page-" + (page - 2)];
+                delete state.pagesData["page-" + (page + 2)];
 
-                delete pagesData["page-" + (page - 2)];
-                delete pagesData["page-" + (page + 2)];
-
-                if (page < lastPage && !pagesData["page-" + (page + 1)]) {
-                    pagesData["page-" + (page + 1)] = [];
-                    console.log("loading page data " + (page + 1));
-
-                    function handlerResponse(response) {
-                        if (pagesData["page-" + (page + 1)]) {
-                            console.log("loaded page data " + (page + 1));
-                            pagesData["page-" + (page + 1)] = JSON.parse(response);
-                            renderPages(page, scroll);
-                        } else {
-                            console.log("discard loaded page data " + (page + 1));
-                        }
+                function handlerResponse(page, response) {
+                    if (state.pagesData["page-" + page]) {
+                        console.log("loaded page data " + page);
+                        state.pagesData["page-" + page] = JSON.parse(response);
+                        renderPages(state.page, state.scroll);
+                    } else {
+                        console.log("discard loaded page data " + page);
                     }
-
-                    function submitRequest() {
-                        fetch("/browse/designs.json?page=" + (page + 1) + "&t=" + Date.now(), true, handlerResponse, function(e) {
-                            if (pagesData["page-" + (page + 1)]) {
-                                console.log("An error occurred while loading data from server. Retrying in 5 seconds...");
-                                setTimeout(submitRequest, 5000);
-                            }
-                        });
-                    }
-
-                    if (loadTimeout1) {
-                        clearTimeout(loadTimeout1);
-                    }
-
-                    loadTimeout1 = setTimeout(submitRequest, 200);
                 }
 
-                if (page > 0 && !pagesData["page-" + (page - 1)]) {
-                    pagesData["page-" + (page - 1)] = [];
-                    console.log("loading page data " + (page - 1));
+                function handlerError(page, submitRequest) {
+                    if (state.pagesData["page-" + page]) {
+                        console.log("An error occurred while loading data from server. Retrying in 5 seconds...");
+                        setTimeout(submitRequest, 5000);
+                    }
+                }
 
-                    function handlerResponse(response) {
-                        if (pagesData["page-" + (page - 1)]) {
-                            console.log("loaded page data " + (page - 1));
-                            pagesData["page-" + (page - 1)] = JSON.parse(response);
-                            renderPages(page, scroll);
-                        } else {
-                            console.log("discard loaded page data " + (page - 1));
-                        }
+                function submitRequest(page) {
+                    state.pagesData["page-" + page] = [];
+                    console.log("loading page data " + page);
+                    fetch("/browse/designs.json?page=" + page + "&t=" + Date.now(), true, function (response) { handlerResponse(page, response); }, function(e) { handlerError(page, function () { submitRequest(page); }); });
+                }
+
+                if (page < state.lastPage && !state.pagesData["page-" + (page + 1)]) {
+                    if (state.loadTimeout1) {
+                        clearTimeout(state.loadTimeout1);
                     }
 
-                    function submitRequest() {
-                        fetch("/browse/designs.json?page=" + (page - 1) + "&t=" + Date.now(), true, handlerResponse, function(e) {
-                            if (pagesData["page-" + (page - 1)]) {
-                                console.log("An error occurred while loading data from server. Retrying in 5 seconds...");
-                                setTimeout(submitRequest, 5000);
-                            }
-                        });
+                    state.loadTimeout1 = setTimeout(function() { submitRequest(page + 1); }, 200);
+                }
+
+                if (page > 0 && !state.pagesData["page-" + (page - 1)]) {
+                    if (state.loadTimeout2) {
+                        clearTimeout(state.loadTimeout2);
                     }
 
-                    if (loadTimeout2) {
-                        clearTimeout(loadTimeout2);
-                    }
-
-                    loadTimeout2 = setTimeout(submitRequest, 200);
+                    state.loadTimeout2 = setTimeout(function() { submitRequest(page - 1); }, 200);
                 }
             }
 
-            function resizePages(page) {
+            function resizePages() {
                 console.log("resize pages");
 
                 let pageElement0 = document.getElementById("slot-0");
@@ -176,13 +174,16 @@
                 pageElement2.innerHTML = renderGrid();
 
                 let images = document.getElementById("images");
-                imagesWidth = images.clientWidth;
-                imagesHeight = images.clientHeight;
+                let imagesWidth = images.clientWidth;
+                let imagesHeight = images.clientHeight;
+                state.imagesWidth = imagesWidth;
+                state.imagesHeight = imagesHeight;
 
                 let cellSize = resizeGrid(imagesWidth);
 
-                let pageData = pagesData["page-" + page];
-                pageHeight = pageData.length * cellSize;
+                let pageData = state.pagesData["page-" + state.page];
+                let pageHeight = pageData.length * cellSize;
+                state.pageHeight = pageHeight;
 
                 pageElement0.style.height = pageHeight + 'px';
                 pageElement1.style.height = pageHeight + 'px';
@@ -195,13 +196,13 @@
                 console.log("imagesWidth = " + imagesWidth);
                 console.log("imagesHeight = " + imagesHeight);
 
-                let newScroll = clampScrolling(page, scroll);
+                let newScroll = clampScrolling(state.page, state.scroll);
 
-                scroll = newScroll;
+                state.scroll = newScroll;
 
                 pages.style.top = newScroll + "px";
 
-                renderPages(page, newScroll);
+                renderPages(state.page, newScroll);
             }
 
             function swapPages(page, newPage) {
@@ -214,14 +215,14 @@
                 if (page > newPage) {
                     pageElement0.innerHTML = pageElement1.innerHTML;
                     pageElement1.innerHTML = pageElement2.innerHTML;
-                    if (newPage < lastPage) {
-                        resetPage("slot-2");
+                    if (newPage < state.lastPage) {
+                        resetPage(page, newPage, "slot-2");
                     }
                 } else {
                     pageElement2.innerHTML = pageElement1.innerHTML;
                     pageElement1.innerHTML = pageElement0.innerHTML;
                     if (newPage > 0) {
-                        resetPage("slot-0");
+                        resetPage(page, newPage, "slot-0");
                     }
                 }
             }
@@ -251,15 +252,15 @@
                     value = 0;
                 }
 
-                if (page == lastPage && value < -(pageHeight - imagesHeight)) {
-                    value = -(pageHeight - imagesHeight);
+                if (page == state.lastPage && value < -(state.pageHeight - state.imagesHeight)) {
+                    value = -(state.pageHeight - state.imagesHeight);
                 }
 
                 return value;
             }
 
             function updatePage(page, value) {
-                if (page < lastPage && value < -pageHeight) {
+                if (page < state.lastPage && value < -state.pageHeight) {
                     swapPages(page, page - 1);
                     page = page + 1;
                     refreshPages(page);
@@ -275,7 +276,7 @@
             function renderPage(page, index, value, slot) {
                 let rows = document.querySelectorAll("#" + slot + " .row");
 
-                let pageData = pagesData["page-" + index];
+                let pageData = state.pagesData["page-" + index];
 
                 if (!pageData) {
                     console.log("data not found");
@@ -287,28 +288,25 @@
                     return;
                 }
 
-                for (let i = 0; i < pageData.length; i++) {
-                    let rowTop = rows[i].getBoundingClientRect().top;
-                    let rowBottom = rows[i].getBoundingClientRect().bottom;
+                function refreshRow(row, rowData) {
+                    let rowTop = row.getBoundingClientRect().top;
+                    let rowBottom = row.getBoundingClientRect().bottom;
 
-                    let images = rows[i].getElementsByTagName("img");
-                    let links = rows[i].getElementsByTagName("a");
-
-                    let rowData = pageData[i];
+                    let images = row.getElementsByTagName("img");
+                    let links = row.getElementsByTagName("a");
 
                     if (rowData.length != images.length) {
                         console.log("row data and images mismatch");
-                        break;
+                        return;
                     }
 
                     if (images.length != links.length) {
                         console.log("images and links mismatch");
-                        break;
+                        return;
                     }
 
-                    if (rowBottom > -imagesHeight && rowTop < imagesHeight * 2) {
-//                         if (rowBottom > 0 && rowTop < imagesHeight) {
-//                             rows[i].style.border = "1px solid red";
+                    if (rowBottom > -state.imagesHeight && rowTop < state.imagesHeight * 2) {
+//                         row.style.border = "1px solid red";
 
                         for (let j = 0; j < rowData.length; j++) {
                             if (images[j].src != rowData[j].imageUrl) {
@@ -316,26 +314,37 @@
                                images[j].alt = rowData[j].design.location;
                             }
                             if (links[j].href != rowData[j].design.location) {
-                               links[j].href = rowData[j].design.location + "?page=" + page + "&scroll=" + scroll;
+//                                links[j].href = rowData[j].design.location + "?page=" + page + "&scroll=" + state.scroll;
+                               links[j].href = rowData[j].design.location;
                             }
                         }
                     }
                 }
+
+                if (page > index) {
+                    for (let i = pageData.length - 1; i >= 0; i--) {
+                        refreshRow(rows[i], pageData[i]);
+                    }
+                } else {
+                    for (let i = 0; i < pageData.length; i++) {
+                        refreshRow(rows[i], pageData[i]);
+                    }
+                }
             }
 
-            function resetPage(slot) {
+            function resetPage(page, index, slot) {
                 let rows = document.querySelectorAll("#" + slot + " .row");
 
-                for (let i = 0; i < rows.length; i++) {
-                    let images = rows[i].getElementsByTagName("img");
-                    let links = rows[i].getElementsByTagName("a");
+                function resetRow(row) {
+                    let images = row.getElementsByTagName("img");
+                    let links = row.getElementsByTagName("a");
 
                     if (images.length != links.length) {
                         console.log("images and links mismatch");
-                        break;
+                        return;
                     }
 
-//                     rows[i].style.border = "1px solid green";
+//                     row.style.border = "1px solid green";
 
                     for (let j = 0; j < images.length; j++) {
                         if (images[j].src != "") {
@@ -345,6 +354,16 @@
                         if (links[j].href != "") {
                            links[j].href = "";
                         }
+                    }
+                }
+
+                if (page > index) {
+                    for (let i = rows.length - 1; i >= 0; i--) {
+                        resetRow(rows[i]);
+                    }
+                } else {
+                    for (let i = 0; i < rows.length; i++) {
+                        resetRow(rows[i]);
                     }
                 }
             }
@@ -358,36 +377,35 @@
                     renderPage(page, page, value, "slot-1");
                 }
 
-                if (page < lastPage) {
+                if (page < state.lastPage) {
                     renderPage(page, page + 1, value, "slot-2");
                 }
             }
 
             function setup() {
                 window.addEventListener('resize', function(e) {
-                    resizePages(page);
+                    resizePages();
                 });
 
                 window.addEventListener('wheel', function(e) {
-                    if (pageHeight > 0 && e.deltaMode == 0 && e.deltaY != 0) {
-                        let pages = document.getElementById("pages");
+                    if (state.pageHeight > 0 && e.deltaMode == 0 && e.deltaY != 0) {
+                        newScroll = state.scroll - e.deltaY;
 
-                        newScroll = scroll - e.deltaY;
+                        newScroll = clampScrolling(state.page, newScroll);
 
-                        newScroll = clampScrolling(page, newScroll);
+                        newPage = updatePage(state.page, newScroll);
 
-                        newPage = updatePage(page, newScroll);
-
-                        if (newPage < page) {
-                            newScroll -= pageHeight;
-                        } else if (newPage > page) {
-                            newScroll += pageHeight;
+                        if (newPage < state.page) {
+                            newScroll -= state.pageHeight;
+                        } else if (newPage > state.page) {
+                            newScroll += state.pageHeight;
                         }
 
-                        page = newPage;
-                        scroll = newScroll;
+                        state.page = newPage;
+                        state.scroll = newScroll;
 
-                        pages.style.top = scroll + "px";
+                        let pages = document.getElementById("pages");
+                        pages.style.top = newScroll + "px";
 
                         function handleScroll() {
                             history.replaceState({ scroll:newScroll, page:newPage }, "", document.location.href);
@@ -395,40 +413,42 @@
                             renderPages(newPage, newScroll);
                         }
 
-                        if (scrollTimeout) {
-                            clearTimeout(scrollTimeout);
+                        if (state.scrollTimeout) {
+                            clearTimeout(state.scrollTimeout);
                         }
 
-                        scrollTimeout = setTimeout(handleScroll, 200);
+                        state.scrollTimeout = setTimeout(handleScroll, 200);
                     }
                 });
 //
 //                 window.addEventListener("popstate", function(e) {
 //                     if (e.state) {
-//                         page = e.state.page;
-//                         scroll = e.state.scroll;
+//                         state.page = e.state.page;
+//                         state.scroll = e.state.scroll;
 //                     }
 //                 });
             }
 
-            var scrollTimeout = null;
-            var loadTimeout1 = null;
-            var loadTimeout2 = null;
-            var lastPage = {{lastPage}};
-            var pageHeight = 0;
-            var imagesWidth = 0;
-            var imagesHeight = 0;
-            var pagesData = {};
-            var page = {{page}};
-            var scroll = {{scroll}};
+            var state = {
+                scrollTimeout: null,
+                loadTimeout1: null,
+                loadTimeout2: null,
+                lastPage: {{lastPage}},
+                pageHeight: 0,
+                imagesWidth: 0,
+                imagesHeight: 0,
+                pagesData: {},
+                page: {{page}},
+                scroll: {{scroll}}
+            }
 
             if (history.state) {
 //                 console.log("state " + JSON.stringify(history.state));
-                page = history.state.page;
-                scroll = history.state.scroll;
+                state.page = history.state.page;
+                state.scroll = history.state.scroll;
             }
 
-            configure(page, lastPage, setup);
+            configure(setup);
         })
     </script>
 </body>

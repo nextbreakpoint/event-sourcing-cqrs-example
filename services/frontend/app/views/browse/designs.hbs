@@ -34,7 +34,7 @@
                     links[i].style.visibility = "hidden";
                 }
 
-                fetch("/browse/designs.json?page=" + page + "&t=" + Date.now(), true, function(response) {
+                function handleResponse(response) {
                     pagesData["page-" + page] = JSON.parse(response);
 
                     let pages = document.getElementById("pages");
@@ -43,27 +43,36 @@
                     pages.insertAdjacentHTML('beforeend', "<div class=\"page\" id=\"slot-1\"/>");
                     pages.insertAdjacentHTML('beforeend', "<div class=\"page\" id=\"slot-2\"/>");
 
-                    if (page > 0) {
-                        fetch("/browse/designs.json?page=" + (page - 1) + "&t=" + Date.now(), false, function(response) {
-                            pagesData["page-" + (page - 1)] = JSON.parse(response);
-                        }, function(error) {
-                            console.log(error);
+                    function submitRequest(page) {
+                        fetch("/browse/designs.json?page=" + page + "&t=" + Date.now(), false, function(response) {
+                            pagesData["page-" + page] = JSON.parse(response);
+                        }, function(e) {
+                            console.log("An error occurred while loading data from server. Retrying in 5 seconds...");
+                            setTimeout(function() { submitRequest(page); }, 5000);
                         });
+                    }
+
+                    if (page > 0) {
+                        submitRequest(page - 1);
                     }
 
                     if (page < lastPage) {
-                        fetch("/browse/designs.json?page=" + (page + 1) + "&t=" + Date.now(), false, function(response) {
-                            pagesData["page-" + (page + 1)] = JSON.parse(response);
-                        }, function(error) {
-                            console.log(error);
-                        });
+                        submitRequest(page + 1);
                     }
 
                     resizePages(page);
+
                     callback();
-                }, function(error) {
-                    console.log(error);
-                });
+                }
+
+                function submitRequest() {
+                    fetch("/browse/designs.json?page=" + page + "&t=" + Date.now(), true, handleResponse, function(e) {
+                        console.log("An error occurred while loading data from server. Retrying in 5 seconds...");
+                        setTimeout(submitRequest, 5000);
+                    });
+                }
+
+                submitRequest();
             }
 
             function renderGrid() {
@@ -97,31 +106,53 @@
                 if (page < lastPage && !pagesData["page-" + (page + 1)]) {
                     pagesData["page-" + (page + 1)] = [];
                     console.log("loading page data " + (page + 1));
-                    fetch("/browse/designs.json?page=" + (page + 1) + "&t=" + Date.now(), true, function(response) {
+
+                    function handlerResponse(response) {
                         if (pagesData["page-" + (page + 1)]) {
                             console.log("loaded page data " + (page + 1));
                             pagesData["page-" + (page + 1)] = JSON.parse(response);
+                            renderPages(page, scroll);
                         } else {
                             console.log("discard loaded page data " + (page + 1));
                         }
-                    }, function(error) {
-                        console.log(error);
-                    });
+                    }
+
+                    function submitRequest() {
+                        fetch("/browse/designs.json?page=" + (page + 1) + "&t=" + Date.now(), true, handlerResponse, function(e) {
+                            if (pagesData["page-" + (page + 1)]) {
+                                console.log("An error occurred while loading data from server. Retrying in 5 seconds...");
+                                setTimeout(submitRequest, 5000);
+                            }
+                        });
+                    }
+
+                    submitRequest();
                 }
 
                 if (page > 0 && !pagesData["page-" + (page - 1)]) {
                     pagesData["page-" + (page - 1)] = [];
                     console.log("loading page data " + (page - 1));
-                    fetch("/browse/designs.json?page=" + (page - 1) + "&t=" + Date.now(), true, function(response) {
+
+                    function handlerResponse(response) {
                         if (pagesData["page-" + (page - 1)]) {
                             console.log("loaded page data " + (page - 1));
                             pagesData["page-" + (page - 1)] = JSON.parse(response);
+                            renderPages(page, scroll);
                         } else {
                             console.log("discard loaded page data " + (page - 1));
                         }
-                    }, function(error) {
-                        console.log(error);
-                    });
+                    }
+
+                    function submitRequest() {
+                        fetch("/browse/designs.json?page=" + (page - 1) + "&t=" + Date.now(), true, handlerResponse, function(e) {
+                            if (pagesData["page-" + (page - 1)]) {
+                                console.log("An error occurred while loading data from server. Retrying in 5 seconds...");
+                                setTimeout(submitRequest, 5000);
+                            }
+                        });
+                    }
+
+                    submitRequest();
                 }
             }
 

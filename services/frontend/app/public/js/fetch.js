@@ -1,10 +1,15 @@
 (function(exports) {
     function fetch(url, async, onCompleted, onFailure) {
         xhttp = new XMLHttpRequest();
-        xhttp.onreadystatechange = function() {
+        xhttp.onreadystatechange = function(e) {
             if (this.readyState == 4 && this.status == 200) {
                 if (onCompleted) {
                     onCompleted(this.responseText);
+                }
+            }
+            if (this.readyState == 4 && this.status >= 400) {
+                if (onFailure) {
+                    onFailure(e);
                 }
             }
         };

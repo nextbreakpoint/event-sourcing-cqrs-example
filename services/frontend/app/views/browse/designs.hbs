@@ -35,7 +35,7 @@
                 }
 
                 let pages = document.getElementById("pages");
-                pages.replaceChildren();
+//                 pages.replaceChildren();
                 pages.insertAdjacentHTML('beforeend', "<div class=\"page\" id=\"slot-0\"/>");
                 pages.insertAdjacentHTML('beforeend', "<div class=\"page\" id=\"slot-1\"/>");
                 pages.insertAdjacentHTML('beforeend', "<div class=\"page\" id=\"slot-2\"/>");
@@ -388,7 +388,10 @@
                 });
 
                 window.addEventListener('wheel', function(e) {
-                    if (state.pageHeight > 0 && e.deltaMode == 0 && e.deltaY != 0) {
+                    // for firefox
+                    let deltaY = e.deltaY
+
+                    if (state.pageHeight > 0 && e.deltaMode == 0 && deltaY != 0) {
                         newScroll = state.scroll - e.deltaY;
 
                         newScroll = clampScrolling(state.page, newScroll);

@@ -126,7 +126,11 @@
                         });
                     }
 
-                    submitRequest();
+                    if (loadTimeout1) {
+                        clearTimeout(loadTimeout1);
+                    }
+
+                    loadTimeout1 = setTimeout(submitRequest, 200);
                 }
 
                 if (page > 0 && !pagesData["page-" + (page - 1)]) {
@@ -152,7 +156,11 @@
                         });
                     }
 
-                    submitRequest();
+                    if (loadTimeout2) {
+                        clearTimeout(loadTimeout2);
+                    }
+
+                    loadTimeout2 = setTimeout(submitRequest, 200);
                 }
             }
 
@@ -376,20 +384,22 @@
                             newScroll += pageHeight;
                         }
 
-                        pages.style.top = scroll + "px";
-
                         page = newPage;
                         scroll = newScroll;
 
-                        if (timeout) {
-                            clearTimeout(timeout);
-                        }
+                        pages.style.top = scroll + "px";
 
-                        timeout = setTimeout(function() {
+                        function handleScroll() {
                             history.replaceState({ scroll:newScroll, page:newPage }, "", document.location.href);
 //                             console.log("replace state " + JSON.stringify(history.state));
                             renderPages(newPage, newScroll);
-                        }, 200);
+                        }
+
+                        if (scrollTimeout) {
+                            clearTimeout(scrollTimeout);
+                        }
+
+                        scrollTimeout = setTimeout(handleScroll, 200);
                     }
                 });
 //
@@ -401,7 +411,9 @@
 //                 });
             }
 
-            var timeout = null;
+            var scrollTimeout = null;
+            var loadTimeout1 = null;
+            var loadTimeout2 = null;
             var lastPage = {{lastPage}};
             var pageHeight = 0;
             var imagesWidth = 0;

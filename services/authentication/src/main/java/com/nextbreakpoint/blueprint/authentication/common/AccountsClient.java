@@ -27,23 +27,23 @@ public class AccountsClient {
         this.adminUsers = Objects.requireNonNull(adminUsers);
     }
 
-    public Single<JsonArray> findAccounts(String jwtAccessToken, String email) {
+    public Single<JsonArray> findAccounts(String jwtAccessToken, String login) {
         return webClient.get("/v1/accounts")
                 .putHeader(AUTHORIZATION, Authentication.makeAuthorization(jwtAccessToken))
                 .putHeader(ACCEPT, APPLICATION_JSON)
-                .addQueryParam("email", email)
+                .addQueryParam("login", login)
                 .rxSend()
                 .flatMap(response -> getSuccessfulResponseOrError(response, "Cannot find account", 200))
                 .map(HttpResponse::bodyAsJsonArray)
                 .onErrorResumeNext(this::getAuthenticationError);
     }
 
-    public Single<JsonObject> createAccount(String jwtAccessToken, String email, String name) {
+    public Single<JsonObject> createAccount(String jwtAccessToken, String login, String name) {
         return webClient.post("/v1/accounts")
                 .putHeader(AUTHORIZATION, Authentication.makeAuthorization(jwtAccessToken))
                 .putHeader(CONTENT_TYPE, APPLICATION_JSON)
                 .putHeader(ACCEPT, APPLICATION_JSON)
-                .rxSendJsonObject(makeAccount(email, name))
+                .rxSendJsonObject(makeAccount(login, name))
                 .flatMap(response -> getSuccessfulResponseOrError(response, "Cannot create account", 201))
                 .map(HttpResponse::bodyAsJsonObject)
                 .onErrorResumeNext(this::getAuthenticationError);
@@ -75,14 +75,14 @@ public class AccountsClient {
         }
     }
 
-    private JsonObject makeAccount(String email, String name) {
+    private JsonObject makeAccount(String login, String name) {
         return new JsonObject()
-                .put("email", email)
+                .put("login", login)
                 .put("name", name)
-                .put("role", getAuthority(email));
+                .put("role", getAuthority(login));
     }
 
-    private String getAuthority(String userEmail) {
-        return adminUsers.contains(userEmail) ? Authority.ADMIN : Authority.GUEST;
+    private String getAuthority(String login) {
+        return adminUsers.contains(login) ? Authority.ADMIN : Authority.GUEST;
     }
 }

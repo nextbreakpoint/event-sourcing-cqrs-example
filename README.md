@@ -145,7 +145,7 @@ Create a GitHub OAuth application like:
 
 then export the application secrets:
 
-    export GITHUB_ACCOUNT_EMAIL=your-account-id
+    export GITHUB_ACCOUNT_ID=your-account-id
     export GITHUB_CLIENT_ID=your-client-id
     export GITHUB_CLIENT_SECRET=your-client-secret
 
@@ -285,7 +285,7 @@ where minikube-ip is the address of Minikube:
 
 then export the application secrets:
 
-    export GITHUB_ACCOUNT_EMAIL=your-account-id
+    export GITHUB_ACCOUNT_ID=your-account-id
     export GITHUB_CLIENT_ID=your-client-id
     export GITHUB_CLIENT_SECRET=your-client-secret
 

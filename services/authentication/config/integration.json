@@ -25,5 +25,5 @@
 
   "cookie_domain": "localhost",
 
-  "admin_users": ["${GITHUB_ACCOUNT_EMAIL}"]
+  "admin_users": ["${GITHUB_ACCOUNT_ID}"]
 }

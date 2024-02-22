@@ -17,24 +17,24 @@ class ListAccountsRequestMapperTest {
     @Test
     void shouldCreateRequest() {
         when(context.request()).thenReturn(httpRequest);
-        when(httpRequest.getParam("email")).thenReturn("test@localhost");
+        when(httpRequest.getParam("login")).thenReturn("test-login");
 
         final var request = mapper.transform(context);
 
         SoftAssertions softly = new SoftAssertions();
-        softly.assertThat(request.getEmail()).isPresent().hasValue("test@localhost");
+        softly.assertThat(request.getLogin()).isPresent().hasValue("test-login");
         softly.assertAll();
     }
 
     @Test
     void shouldNotReturnAnEmailWhenEmailIsMissing() {
         when(context.request()).thenReturn(httpRequest);
-        when(httpRequest.getParam("email")).thenReturn(null);
+        when(httpRequest.getParam("login")).thenReturn(null);
 
         final var request = mapper.transform(context);
 
         SoftAssertions softly = new SoftAssertions();
-        softly.assertThat(request.getEmail()).isNotPresent();
+        softly.assertThat(request.getLogin()).isNotPresent();
         softly.assertAll();
     }
 }

@@ -11,11 +11,14 @@ import rx.Single;
 
 import java.util.Objects;
 
-import static com.nextbreakpoint.blueprint.common.core.ContentType.APPLICATION_JSON;
+import static com.nextbreakpoint.blueprint.common.core.ContentType.GITHUB_JSON;
 import static com.nextbreakpoint.blueprint.common.core.Headers.ACCEPT;
 import static com.nextbreakpoint.blueprint.common.core.Headers.AUTHORIZATION;
 
 public class GitHubClient {
+    public static final String GITHUB_API_VERSION = "X-GitHub-Api-Version";
+    public static final String GITHUB_API_VERSION_VALUE = "2022-11-28";
+
     private final WebClient webClient;
 
     public GitHubClient(WebClient webClient) {
@@ -25,7 +28,8 @@ public class GitHubClient {
     public Single<String> fetchUserEmail(String accessToken) {
         return webClient.get("/user/emails")
                 .putHeader(AUTHORIZATION, Authentication.makeAuthorization(accessToken))
-                .putHeader(ACCEPT, APPLICATION_JSON)
+                .putHeader(ACCEPT, GITHUB_JSON)
+                .putHeader(GITHUB_API_VERSION, GITHUB_API_VERSION_VALUE)
                 .rxSend()
                 .flatMap(response -> getSuccessfulResponseOrError(response, "Cannot retrieve user's emails", 200))
                 .flatMap(response -> findPrimaryEmail(response.bodyAsJsonArray()))
@@ -35,7 +39,8 @@ public class GitHubClient {
     public Single<JsonObject> fetchUserInfo(String accessToken) {
         return webClient.get("/user")
                 .putHeader(AUTHORIZATION, Authentication.makeAuthorization(accessToken))
-                .putHeader(ACCEPT, APPLICATION_JSON)
+                .putHeader(ACCEPT, GITHUB_JSON)
+                .putHeader(GITHUB_API_VERSION, GITHUB_API_VERSION_VALUE)
                 .rxSend()
                 .flatMap(response -> getSuccessfulResponseOrError(response, "Cannot retrieve user's details", 200))
                 .map(HttpResponse::bodyAsJsonObject)

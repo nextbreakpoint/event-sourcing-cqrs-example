@@ -66,11 +66,11 @@ spec:
                 secretKeyRef:
                   name: {{ $root.Values.secretName | default "authentication" | quote }}
                   key: KEYSTORE_SECRET
-            - name: GITHUB_ACCOUNT_EMAIL
+            - name: GITHUB_ACCOUNT_ID
               valueFrom:
                 secretKeyRef:
                   name: {{ $root.Values.secretName | default "authentication" | quote }}
-                  key: GITHUB_ACCOUNT_EMAIL
+                  key: GITHUB_ACCOUNT_ID
             - name: GITHUB_CLIENT_ID
               valueFrom:
                 secretKeyRef:

@@ -53,8 +53,8 @@ case $COMMAND in
       echo "Selected version: $VERSION"
     fi
 
-    if [[ -z $GITHUB_ACCOUNT_EMAIL ]]; then
-      echo "Missing variable: GITHUB_ACCOUNT_EMAIL"
+    if [[ -z $GITHUB_ACCOUNT_ID ]]; then
+      echo "Missing variable: GITHUB_ACCOUNT_ID"
       exit 1
     fi
 
@@ -71,14 +71,14 @@ case $COMMAND in
     docker compose -f docker-compose-services.yaml -p services up -d --wait
     ;;
   stop)
-    export GITHUB_ACCOUNT_EMAIL=""
+    export GITHUB_ACCOUNT_ID=""
     export GITHUB_CLIENT_ID=""
     export GITHUB_CLIENT_SECRET=""
 
     docker compose -f docker-compose-services.yaml -p services down
     ;;
   destroy)
-    export GITHUB_ACCOUNT_EMAIL=""
+    export GITHUB_ACCOUNT_ID=""
     export GITHUB_CLIENT_ID=""
     export GITHUB_CLIENT_SECRET=""
 

@@ -15,10 +15,10 @@ public class InsertAccountRequestMapper implements Mapper<RoutingContext, Insert
 
         final JsonObject bodyAsJson = context.body().asJsonObject();
 
-        final String email = bodyAsJson.getString("email");
+        final String login = bodyAsJson.getString("login");
 
-        if (email == null) {
-            throw new IllegalStateException("the request's body doesn't contain the required properties: email is missing");
+        if (login == null) {
+            throw new IllegalStateException("the request's body doesn't contain the required properties: login is missing");
         }
 
         final String name = bodyAsJson.getString("name");
@@ -35,6 +35,6 @@ public class InsertAccountRequestMapper implements Mapper<RoutingContext, Insert
 
         final UUID uuid = UUID.randomUUID();
 
-        return new InsertAccountRequest(uuid, name, email, role);
+        return new InsertAccountRequest(uuid, name, login, role);
     }
 }

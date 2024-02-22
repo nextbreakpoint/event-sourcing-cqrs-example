@@ -10,7 +10,7 @@
     <parent>
         <groupId>com.nextbreakpoint</groupId>
         <artifactId>com.nextbreakpoint.blueprint.service</artifactId>
-        <version>1.0.4-wip-aa18cd0e-1707259080</version>
+        <version>1.0.4-wip-b0c6b949-1708638357</version>
     </parent>
     <repositories>
         <repository>
@@ -87,7 +87,7 @@
                                 <GITHUB_OAUTH_URL>http://localhost:39002</GITHUB_OAUTH_URL>
                                 <GITHUB_CLIENT_ID>111</GITHUB_CLIENT_ID>
                                 <GITHUB_CLIENT_SECRET>222</GITHUB_CLIENT_SECRET>
-                                <GITHUB_ACCOUNT_EMAIL>admin@localhost</GITHUB_ACCOUNT_EMAIL>
+                                <GITHUB_ACCOUNT_ID>admin</GITHUB_ACCOUNT_ID>
                             </environmentVariables>
                         </configuration>
                     </execution>
@@ -103,7 +103,7 @@
                                 <GITHUB_OAUTH_URL>https://github.com</GITHUB_OAUTH_URL>
                                 <GITHUB_CLIENT_ID>${env.GITHUB_CLIENT_ID}</GITHUB_CLIENT_ID>
                                 <GITHUB_CLIENT_SECRET>${env.GITHUB_CLIENT_SECRET}</GITHUB_CLIENT_SECRET>
-                                <GITHUB_ACCOUNT_EMAIL>${env.GITHUB_ACCOUNT_EMAIL}</GITHUB_ACCOUNT_EMAIL>
+                                <GITHUB_ACCOUNT_ID>${env.GITHUB_ACCOUNT_ID}</GITHUB_ACCOUNT_ID>
                             </environmentVariables>
                         </configuration>
                     </execution>

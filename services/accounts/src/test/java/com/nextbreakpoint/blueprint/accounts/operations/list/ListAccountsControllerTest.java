@@ -22,7 +22,7 @@ class ListAccountsControllerTest {
         final List<String> accounts = List.of(UUID.randomUUID().toString(), UUID.randomUUID().toString());
 
         final var request = ListAccountsRequest.builder()
-                .withEmail("test@localhost")
+                .withLogin("test-login")
                 .build();
 
         final var response = ListAccountsResponse.builder()
@@ -41,7 +41,7 @@ class ListAccountsControllerTest {
     @Test
     void shouldReturnErrorWhenStoreFails() {
         final var request = ListAccountsRequest.builder()
-                .withEmail("test@localhost")
+                .withLogin("test-login")
                 .build();
 
         final var exception = new RuntimeException("some error");

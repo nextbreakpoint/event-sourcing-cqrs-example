@@ -45,6 +45,8 @@ import static org.hamcrest.CoreMatchers.startsWith;
 @DisplayName("Test authentication pact")
 @ExtendWith(PactConsumerTestExt.class)
 public class PactConsumerTests {
+  private static final String GITHUB_API_VERSION = "2022-11-28";
+
   private static final TestCases testCases = new TestCases();
 
   private static final StubServer githubStub = new StubServer(Integer.parseInt("39002"));
@@ -89,7 +91,7 @@ public class PactConsumerTests {
             .uponReceiving("request to retrieve accounts")
             .method("GET")
             .path("/v1/accounts")
-            .matchQuery("email", "test[@]localhost")
+            .matchQuery("login", "test-login")
             .matchHeader("Accept", "application/json", "application/json")
             .matchHeader("Authorization", "Bearer .+", "Bearer abcdef")
             .willRespondWith()
@@ -124,7 +126,7 @@ public class PactConsumerTests {
             .uponReceiving("request to retrieve empty accounts")
             .method("GET")
             .path("/v1/accounts")
-            .matchQuery("email", "test[@]localhost")
+            .matchQuery("login", "test-login")
             .matchHeader("Accept", "application/json", "application/json")
             .matchHeader("Authorization", "Bearer .+", "Bearer abcdef")
             .willRespondWith()
@@ -141,7 +143,7 @@ public class PactConsumerTests {
             .matchHeader("Authorization", "Bearer .+", "Bearer abcdef")
             .body(
                     new PactDslJsonBody()
-                            .stringValue("email", "test@localhost")
+                            .stringValue("login", "test")
                             .stringValue("name", "test")
                             .stringValue("role", "guest")
             )
@@ -167,12 +169,9 @@ public class PactConsumerTests {
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"access_token\":\"abcdef\"}"));
 
     whenHttp(githubStub)
-            .match(get(TestConstants.OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"))
-            .then(status(HttpStatus.OK_200), stringContent("{\"name\":\"test\"}"));
-
-    whenHttp(githubStub)
-            .match(get(TestConstants.OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
-            .then(status(HttpStatus.OK_200), stringContent("[{\"email\":\"test@localhost\", \"primary\":true}]"));
+            .match(get(TestConstants.OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"),
+                    withHeader("accept", "application/vnd.github+json"), withHeader("X-GitHub-Api-Version", GITHUB_API_VERSION))
+            .then(status(HttpStatus.OK_200), stringContent("{\"name\":\"test\",\"login\":\"test-login\"}"));
 
     given().config(TestUtils.getRestAssuredConfig())
             .with().param("code", "xxx")
@@ -182,8 +181,8 @@ public class PactConsumerTests {
             .and().header("Location", startsWith(expectedProtocol + "://" + expectedHost + ":" + expectedPort + "/some/content"));
 
     verifyHttp(githubStub).once(post(TestConstants.OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
-            .then().once(get(TestConstants.OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
-            .then().once(get(TestConstants.OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"));
+            .then().once(get(TestConstants.OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"),
+                    withHeader("accept", "application/vnd.github+json"), withHeader("X-GitHub-Api-Version", GITHUB_API_VERSION));
   }
 
   @Test
@@ -197,8 +196,9 @@ public class PactConsumerTests {
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"access_token\":\"abcdef\"}"));
 
     whenHttp(githubStub)
-            .match(get(TestConstants.OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
-            .then(status(HttpStatus.OK_200), stringContent("[{\"email\":\"test@localhost\", \"primary\":true}]"));
+            .match(get(TestConstants.OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"),
+            withHeader("accept", "application/vnd.github+json"), withHeader("X-GitHub-Api-Version", GITHUB_API_VERSION))
+            .then(status(HttpStatus.OK_200), stringContent("{\"name\":\"test\",\"login\":\"test-login\"}"));
 
     given().config(TestUtils.getRestAssuredConfig())
             .with().param("code", "xxx")
@@ -208,8 +208,8 @@ public class PactConsumerTests {
             .and().header("Location", startsWith(expectedProtocol + "://" + expectedHost + ":" + expectedPort + "/some/content"));
 
     verifyHttp(githubStub).once(post(TestConstants.OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
-            .then().once(get(TestConstants.OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
-            .then().never(get(TestConstants.OAUTH_USER_PATH));
+            .then().once(get(TestConstants.OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"),
+                    withHeader("accept", "application/vnd.github+json"), withHeader("X-GitHub-Api-Version", GITHUB_API_VERSION));
   }
 
   @Test

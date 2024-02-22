@@ -40,5 +40,5 @@ data:
 
       "cookie_domain": {{ $root.Values.clientDomain | default "localhost" | quote }},
 
-      "admin_users": ["${GITHUB_ACCOUNT_EMAIL}"]
+      "admin_users": ["${GITHUB_ACCOUNT_ID}"]
     }

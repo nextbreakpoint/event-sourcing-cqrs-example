@@ -34,11 +34,11 @@ public class MySQLStore implements Store {
     private static final String ERROR_DELETE_ACCOUNT = "An error occurred while deleting an account";
     private static final String ERROR_FIND_ACCOUNTS = "An error occurred while loading accounts";
 
-    private static final String INSERT_ACCOUNT = "INSERT INTO ACCOUNT (ACCOUNT_UUID, ACCOUNT_NAME, ACCOUNT_EMAIL, ACCOUNT_AUTHORITIES, ACCOUNT_CREATED) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)";
-    private static final String SELECT_ACCOUNT = "SELECT ACCOUNT_UUID, ACCOUNT_NAME, ACCOUNT_EMAIL, ACCOUNT_AUTHORITIES, ACCOUNT_CREATED FROM ACCOUNT WHERE ACCOUNT_UUID = ?";
+    private static final String INSERT_ACCOUNT = "INSERT INTO ACCOUNT (ACCOUNT_UUID, ACCOUNT_NAME, ACCOUNT_LOGIN, ACCOUNT_AUTHORITIES, ACCOUNT_CREATED) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)";
+    private static final String SELECT_ACCOUNT = "SELECT ACCOUNT_UUID, ACCOUNT_NAME, ACCOUNT_LOGIN, ACCOUNT_AUTHORITIES, ACCOUNT_CREATED FROM ACCOUNT WHERE ACCOUNT_UUID = ?";
     private static final String DELETE_ACCOUNT = "DELETE FROM ACCOUNT WHERE ACCOUNT_UUID = ?";
-    private static final String SELECT_ACCOUNTS = "SELECT ACCOUNT_UUID, ACCOUNT_NAME, ACCOUNT_EMAIL, ACCOUNT_AUTHORITIES, ACCOUNT_CREATED FROM ACCOUNT";
-    private static final String SELECT_ACCOUNTS_BY_EMAIL = "SELECT ACCOUNT_UUID, ACCOUNT_NAME, ACCOUNT_EMAIL, ACCOUNT_AUTHORITIES, ACCOUNT_CREATED FROM ACCOUNT WHERE ACCOUNT_EMAIL = ?";
+    private static final String SELECT_ACCOUNTS = "SELECT ACCOUNT_UUID, ACCOUNT_NAME, ACCOUNT_LOGIN, ACCOUNT_AUTHORITIES, ACCOUNT_CREATED FROM ACCOUNT";
+    private static final String SELECT_ACCOUNTS_BY_EMAIL = "SELECT ACCOUNT_UUID, ACCOUNT_NAME, ACCOUNT_LOGIN, ACCOUNT_AUTHORITIES, ACCOUNT_CREATED FROM ACCOUNT WHERE ACCOUNT_LOGIN = ?";
 
     private static final SQLOptions OPTIONS = new SQLOptions()
             .setTransactionIsolation(TransactionIsolation.READ_UNCOMMITTED)
@@ -137,7 +137,7 @@ public class MySQLStore implements Store {
     }
 
     private Single<ResultSet> selectAccounts(SQLConnection conn, ListAccountsRequest request) {
-        if (request.getEmail().isPresent()) {
+        if (request.getLogin().isPresent()) {
             return conn.rxQueryWithParams(SELECT_ACCOUNTS_BY_EMAIL, makeListParams(request));
         } else {
             return conn.rxQuery(SELECT_ACCOUNTS);
@@ -168,7 +168,7 @@ public class MySQLStore implements Store {
         return new JsonArray()
                 .add(request.getUuid().toString())
                 .add(request.getName())
-                .add(request.getEmail())
+                .add(request.getLogin())
                 .add(request.getAuthorities());
     }
 
@@ -182,8 +182,8 @@ public class MySQLStore implements Store {
 
     private JsonArray makeListParams(ListAccountsRequest request) {
         final JsonArray params = new JsonArray();
-        if (request.getEmail().isPresent()) {
-            params.add(request.getEmail().get());
+        if (request.getLogin().isPresent()) {
+            params.add(request.getLogin().get());
         }
         return params;
     }

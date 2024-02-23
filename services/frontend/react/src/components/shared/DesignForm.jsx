@@ -3,6 +3,7 @@ import PropTypes from 'prop-types'
 
 import Button from '@mui/material/Button'
 import Grid from '@mui/material/Grid'
+import Typography from '@mui/material/Typography'
 
 import ScriptEditor from './ScriptEditor'
 import MetadataEditor from './MetadataEditor'
@@ -26,11 +27,17 @@ let DesignForm = class DesignForm extends React.Component {
     render() {
         return (
             <Grid container justify="space-between" alignItems="stretch" alignContent="space-between">
-                <Grid item xs={7} className="script">
-                    <ScriptEditor initialValue={this.state.script} readOnly={false} onContentChanged={this.handleScriptChanged}/>
+                <Grid item xs={7}>
+                    <div class="form">
+                        <div><Typography variant="body" color="inherit" class="form-label">Script</Typography></div>
+                        <ScriptEditor initialValue={this.state.script} readOnly={false} onContentChanged={this.handleScriptChanged}/>
+                    </div>
                 </Grid>
-                <Grid item xs={5} className="metadata">
-                    <MetadataEditor initialValue={this.state.metadata} readOnly={false} onContentChanged={this.handleMetadataChanged}/>
+                <Grid item xs={5}>
+                    <div class="form">
+                        <div><Typography variant="body" color="inherit" class="form-label">Metadata</Typography></div>
+                        <MetadataEditor initialValue={this.state.metadata} readOnly={false} onContentChanged={this.handleMetadataChanged}/>
+                    </div>
                 </Grid>
             </Grid>
         )

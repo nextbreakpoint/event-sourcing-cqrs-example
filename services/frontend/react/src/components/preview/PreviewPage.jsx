@@ -309,7 +309,7 @@ let PreviewPage = class PreviewPage extends React.Component {
             <React.Fragment>
                 <Grid container justify="space-between" alignItems="center">
                     <Grid item xs={12}>
-                        <Header landing={'/admin/designs/' + uuid + '.html'} titleLink={"/admin/designs.html"} titleText={"Fractals"} titleText2={uuid} browseLink={"/browse/designs/" + uuid + ".html"} browseText={"The Beauty of Chaos"}/>
+                        <Header landing={'/admin/designs/' + uuid + '.html'} titleLink={"/admin/designs.html"} titleText={"Fractals"} browseLink={"/browse/designs/" + uuid + ".html"} browseText={"The Beauty of Chaos"}/>
                     </Grid>
                     <Grid container xs={12} justify="space-between" alignItems="center" className="container">
                         <Grid item xs={6}>
@@ -322,25 +322,32 @@ let PreviewPage = class PreviewPage extends React.Component {
                         <Grid item xs={6}>
                             <div className="details">
                                 <div class="details-item">
-                                    <Typography variant="body" color="inherit">UUID: {design.uuid}</Typography>
+                                    <div><Typography variant="body" color="inherit" class="details-label">UUID</Typography></div>
+                                    <div><Typography variant="body" color="inherit" class="details-value">{design.uuid}</Typography></div>
                                 </div>
                                 <div class="details-item">
-                                    <Typography variant="body" color="inherit">Checksum: {design.checksum}</Typography>
+                                    <div><Typography variant="body" color="inherit" class="details-label">Checksum</Typography></div>
+                                    <div><Typography variant="body" color="inherit" class="details-value">{design.checksum}</Typography></div>
                                 </div>
                                 <div class="details-item">
-                                    <Typography variant="body" color="inherit">Revision: {design.revision}</Typography>
+                                    <div><Typography variant="body" color="inherit" class="details-label">Revision</Typography></div>
+                                    <div><Typography variant="body" color="inherit" class="details-value">{design.revision}</Typography></div>
                                 </div>
                                 <div class="details-item">
-                                    <Typography variant="body" color="inherit">Created: {design.created}</Typography>
+                                    <div><Typography variant="body" color="inherit" class="details-label">Created</Typography></div>
+                                    <div><Typography variant="body" color="inherit" class="details-value">{design.created}</Typography></div>
                                 </div>
                                 <div class="details-item">
-                                    <Typography variant="body" color="inherit">Updated: {design.updated}</Typography>
+                                    <div><Typography variant="body" color="inherit" class="details-label">Updated</Typography></div>
+                                    <div><Typography variant="body" color="inherit" class="details-value">{design.updated}</Typography></div>
                                 </div>
                                 <div class="details-item">
-                                    <Typography variant="body" color="inherit">Draft: {design.draft ? 'Yes' : 'No'}</Typography>
+                                    <div><Typography variant="body" color="inherit" class="details-label">Draft</Typography></div>
+                                    <div><Typography variant="body" color="inherit" class="details-value">{design.draft ? 'Yes' : 'No'}</Typography></div>
                                 </div>
                                 <div class="details-item">
-                                    <Typography variant="body" color="inherit">Completed: {design.percentage}%</Typography>
+                                    <div><Typography variant="body" color="inherit" class="details-label">Completed</Typography></div>
+                                    <div><Typography variant="body" color="inherit" class="details-value">{design.percentage}%</Typography></div>
                                 </div>
                             </div>
                         </Grid>

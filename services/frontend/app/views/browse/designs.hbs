@@ -26,6 +26,7 @@
             function configure(onCompleted) {
                 console.log("configure");
 
+                console.log("current page top = " + state.pageTop);
                 console.log("current page = " + state.page);
                 console.log("last page = " + state.lastPage);
 
@@ -48,7 +49,7 @@
                         if (state.pagesData["page-" + page]) {
                             console.log("loaded page data " + page);
                             state.pagesData["page-" + page] = JSON.parse(response);
-                            renderPages(state.page, state.scroll);
+                            renderPages(state.page, state.pageTop);
                         } else {
                             console.log("discard loaded page data " + page);
                         }
@@ -126,7 +127,7 @@
                     if (state.pagesData["page-" + page]) {
                         console.log("loaded page data " + page);
                         state.pagesData["page-" + page] = JSON.parse(response);
-                        renderPages(state.page, state.scroll);
+                        renderPages(state.page, state.pageTop);
                     } else {
                         console.log("discard loaded page data " + page);
                     }
@@ -196,9 +197,9 @@
                 console.log("imagesWidth = " + imagesWidth);
                 console.log("imagesHeight = " + imagesHeight);
 
-                let newScroll = clampScrolling(state.page, state.scroll);
+                let newScroll = clampScrolling(state.page, state.pageTop);
 
-                state.scroll = newScroll;
+                state.pageTop = newScroll;
 
                 pages.style.top = newScroll + "px";
 
@@ -314,7 +315,7 @@
                                images[j].alt = rowData[j].design.location;
                             }
                             if (links[j].href != rowData[j].design.location) {
-//                                links[j].href = rowData[j].design.location + "?page=" + page + "&scroll=" + state.scroll;
+//                                links[j].href = rowData[j].design.location + "?page=" + page + "&scroll=" + state.pageTop;
                                links[j].href = rowData[j].design.location;
                             }
                         }
@@ -382,7 +383,42 @@
                 }
             }
 
+            function doScroll(pageTop) {
+                newScroll = clampScrolling(state.page, pageTop);
+                newPage = updatePage(state.page, newScroll);
+
+                if (newPage < state.page) {
+                    newScroll -= state.pageHeight;
+                } else if (newPage > state.page) {
+                    newScroll += state.pageHeight;
+                }
+
+                state.page = newPage;
+                state.pageTop = newScroll;
+
+                let pages = document.getElementById("pages");
+                pages.style.top = newScroll + "px";
+
+                function handleScroll() {
+                    history.replaceState({ page:newPage, pageTop:newScroll }, "", document.location.href);
+//                             console.log("replace state " + JSON.stringify(history.state));
+                    renderPages(newPage, newScroll);
+                }
+
+                if (state.scrollTimeout) {
+                    clearTimeout(state.scrollTimeout);
+                }
+
+                state.scrollTimeout = setTimeout(handleScroll, 200);
+            }
+
             function setup() {
+                var touches = {
+                    pageTop: 0,
+                    startY: 0,
+                    endY: 0
+                };
+
                 window.addEventListener('resize', function(e) {
                     resizePages();
                 });
@@ -390,65 +426,64 @@
                 window.addEventListener('wheel', function(e) {
                     // for firefox
                     let deltaY = e.deltaY
+                    let deltaMode = e.deltaMode
 
-                    if (state.pageHeight > 0 && e.deltaMode == 0 && deltaY != 0) {
-                        newScroll = state.scroll - e.deltaY;
-
-                        newScroll = clampScrolling(state.page, newScroll);
-
-                        newPage = updatePage(state.page, newScroll);
-
-                        if (newPage < state.page) {
-                            newScroll -= state.pageHeight;
-                        } else if (newPage > state.page) {
-                            newScroll += state.pageHeight;
-                        }
-
-                        state.page = newPage;
-                        state.scroll = newScroll;
-
-                        let pages = document.getElementById("pages");
-                        pages.style.top = newScroll + "px";
-
-                        function handleScroll() {
-                            history.replaceState({ scroll:newScroll, page:newPage }, "", document.location.href);
-//                             console.log("replace state " + JSON.stringify(history.state));
-                            renderPages(newPage, newScroll);
-                        }
-
-                        if (state.scrollTimeout) {
-                            clearTimeout(state.scrollTimeout);
-                        }
-
-                        state.scrollTimeout = setTimeout(handleScroll, 200);
+                    if (state.pageHeight > 0 && deltaMode == 0 && deltaY != 0) {
+                        doScroll(state.pageTop - deltaY);
                     }
                 });
-//
+
+                window.addEventListener("touchstart", function(e) {
+                    y = 0;
+                    for (i = 0; i < e.touches.length; i++) {
+                        y += e.touches[i].clientY;
+                    }
+                    touches.pageTop = state.pageTop;
+                    touches.startY = y / e.touches.length;
+                    touches.endY = y / e.touches.length;
+
+                    if (state.pageHeight > 0 ) {
+                        doScroll(touches.pageTop + touches.endY - touches.startY);
+                    }
+                });
+
+                window.addEventListener("touchmove", function(e) {
+                    y = 0;
+                    for (i = 0; i < e.touches.length; i++) {
+                        y += e.touches[i].clientY;
+                    }
+                    touches.endY = y / e.touches.length;
+
+                    if (state.pageHeight > 0 ) {
+                        doScroll(touches.pageTop + touches.endY - touches.startY);
+                    }
+                });
+
 //                 window.addEventListener("popstate", function(e) {
 //                     if (e.state) {
 //                         state.page = e.state.page;
-//                         state.scroll = e.state.scroll;
+//                         state.pageTop = e.state.pageTop;
 //                     }
 //                 });
             }
 
             var state = {
-                scrollTimeout: null,
-                loadTimeout1: null,
-                loadTimeout2: null,
+                page: {{page}},
                 lastPage: {{lastPage}},
+                pageTop: {{scroll}},
                 pageHeight: 0,
                 imagesWidth: 0,
                 imagesHeight: 0,
                 pagesData: {},
-                page: {{page}},
-                scroll: {{scroll}}
+                scrollTimeout: null,
+                loadTimeout1: null,
+                loadTimeout2: null
             }
 
             if (history.state) {
 //                 console.log("state " + JSON.stringify(history.state));
                 state.page = history.state.page;
-                state.scroll = history.state.scroll;
+                state.pageTop = history.state.pageTop;
             }
 
             configure(setup);

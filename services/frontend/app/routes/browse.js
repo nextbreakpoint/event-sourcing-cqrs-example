@@ -309,7 +309,7 @@ router.get('/designs/(:uuid)/(:zoom)/(:x)/(:y)/(:size).png', function(req, res, 
             } else if (response.status == 403) {
                 console.log("Can't load image " + error)
                 res.status(403).end()
-            } else
+            } else {
                 console.log("Can't load image " + error)
                 res.status(500).end()
             }

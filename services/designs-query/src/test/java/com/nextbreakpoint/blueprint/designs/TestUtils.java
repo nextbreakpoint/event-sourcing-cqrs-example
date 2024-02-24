@@ -53,8 +53,8 @@ public class TestUtils {
     }
 
     @NotNull
-    public static String createBucketKey(Design design, Tile tile) {
-        return String.format("%s/%d/%04d%04d.png", design.getChecksum(), tile.getLevel(), tile.getRow(), tile.getCol());
+    public static String createTileKey(Design design, Tile tile) {
+        return String.format("tiles/%s/%d/%04d%04d.png", design.getChecksum(), tile.getLevel(), tile.getRow(), tile.getCol());
     }
 
     @NotNull
@@ -91,7 +91,7 @@ public class TestUtils {
     private static Observable<String> generateKeys(Design design, int level) {
         if (design.getLevels() > level) {
             return rx.Observable.from(generateTiles(level))
-                    .map(tile -> TestUtils.createBucketKey(design, tile));
+                    .map(tile -> TestUtils.createTileKey(design, tile));
         } else {
             return Observable.empty();
         }

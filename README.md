@@ -9,8 +9,8 @@ The application can also run on Docker. Docker compose files for running and deb
 
 Here is the list of the required tools and versions:
 
-- Docker 23 (or later version)
-- Minikube 1.31
+- Docker 24 (or later version)
+- Minikube 1.32
 - Kubectl 1.29
 - Helm 3.11
 - Maven 3.9

@@ -52,6 +52,11 @@ spec:
             - name: http
               containerPort: {{ $root.Values.controlPort | default 8080 }}
               protocol: TCP
+            {{- if $root.Values.enableDebug }}
+            - name: debug
+              containerPort: {{ $root.Values.debugPort | default 5555 }}
+              protocol: TCP
+            {{- end}}
           env:
             - name: POD_NAME
               valueFrom:
@@ -87,7 +92,7 @@ spec:
               value: {{ $root.Values.jaegerEndpoint | default "http://jaeger-collector.observability:14250" | quote }}
             {{- if $root.Values.enableDebug }}
             - name: DEBUG_OPTS
-              value: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
+              value: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:{{ $root.Values.debugPort | default 5555 }}"
             {{- end}}
             - name: LOGGING_LEVEL
               value: {{ $root.Values.loggingLevel | default "INFO" | quote }}

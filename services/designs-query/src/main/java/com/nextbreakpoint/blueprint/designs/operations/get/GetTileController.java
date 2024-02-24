@@ -3,6 +3,7 @@ package com.nextbreakpoint.blueprint.designs.operations.get;
 import com.nextbreakpoint.blueprint.common.core.Controller;
 import com.nextbreakpoint.blueprint.common.core.Image;
 import com.nextbreakpoint.blueprint.designs.Store;
+import com.nextbreakpoint.blueprint.designs.common.Bucket;
 import com.nextbreakpoint.blueprint.designs.common.S3Driver;
 import com.nextbreakpoint.blueprint.designs.model.Design;
 import com.nextbreakpoint.blueprint.designs.persistence.dto.LoadDesignRequest;
@@ -32,7 +33,7 @@ public class GetTileController implements Controller<GetTileRequest, GetTileResp
     }
 
     private Single<Image> getImage(GetTileRequest request, Design document) {
-        return driver.getObject(getBucketKey(request, document.getChecksum()))
+        return driver.getObject(createTileKey(request, document.getChecksum()))
                 .map(bytes -> createImage(document, bytes))
                 .doOnError(error -> log.warn("Failed to load image: {}", error.getMessage()));
     }
@@ -41,7 +42,7 @@ public class GetTileController implements Controller<GetTileRequest, GetTileResp
         return Image.builder().withData(bytes).withChecksum(document.getChecksum()).build();
     }
 
-    private static String getBucketKey(GetTileRequest request, String checksum) {
-        return String.format("%s/%d/%04d%04d.png", checksum, request.getLevel(), request.getRow(), request.getCol());
+    private static String createTileKey(GetTileRequest request, String checksum) {
+        return Bucket.createBucketKey(request, checksum);
     }
 }

@@ -348,6 +348,40 @@ class GitHubSignInHandlerTest {
     }
 
     @Test
+    void shouldHandleRequestWhenUserIsAuthenticatedAndAccountDoesNotExistAndUserNameIsMissing() {
+        when(routingContext.isUserAuthenticated()).thenReturn(true);
+        when(routingContext.getSignInRedirectUrl()).thenReturn("http://localhost/signin");
+        when(routingContext.getAccessToken()).thenReturn("abc");
+        when(routingContext.sendRedirectResponse(eq("http://localhost/signin"), any())).thenReturn(Single.just(null));
+        when(tokenProvider.generateToken(NULL_USER_UUID, List.of("platform"))).thenReturn(Single.just("efg"));
+        when(tokenProvider.generateToken("345678", List.of("admin"))).thenReturn(Single.just("cba"));
+        when(githubClient.fetchUserInfo("abc")).thenReturn(Single.just(new JsonObject().put("login", "test-login")));
+        when(accountsClient.findAccounts("efg", "test-login")).thenReturn(Single.just(new JsonArray()));
+        when(accountsClient.createAccount("efg", "test-login", "test-login")).thenReturn(Single.just(new JsonObject().put("uuid", "345678").put("role", "admin")));
+
+        handler.handle(routingContext);
+
+        verify(routingContext).isUserAuthenticated();
+        verify(routingContext).getSignInRedirectUrl();
+        verify(routingContext).getAccessToken();
+        verify(routingContext).sendRedirectResponse(eq("http://localhost/signin"), any());
+        verifyNoMoreInteractions(routingContext);
+
+        verify(tokenProvider).generateToken(NULL_USER_UUID, List.of("platform"));
+        verify(tokenProvider).generateToken("345678", List.of("admin"));
+        verifyNoMoreInteractions(tokenProvider);
+
+        verify(githubClient).fetchUserInfo("abc");
+        verifyNoMoreInteractions(githubClient);
+
+        verify(accountsClient).findAccounts("efg", "test-login");
+        verify(accountsClient).createAccount("efg", "test-login", "test-login");
+        verifyNoMoreInteractions(accountsClient);
+
+        verifyNoInteractions(oauthAdapter);
+    }
+
+    @Test
     void shouldProduceExceptionWhenUserIsAuthenticatedAndAccountDoesNotExistAndCreateAccountFails() {
         final var exception = new RuntimeException();
         when(routingContext.isUserAuthenticated()).thenReturn(true);

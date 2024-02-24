@@ -9,6 +9,7 @@ HOSTNAME="$(minikube ip)"
 PROTOCOL="https"
 
 LOGGING_LEVEL="INFO"
+ENABLE_DEBUG="false"
 
 POSITIONAL_ARGS=()
 
@@ -32,6 +33,7 @@ for i in "$@"; do
       ;;
     --debug)
       LOGGING_LEVEL="DEBUG"
+      ENABLE_DEBUG="true"
       shift
       ;;
     -*|--*)
@@ -65,7 +67,7 @@ if [[ -z $PROTOCOL ]]; then
   exit 1
 fi
 
-COMMON_VALUES="image.tag=${VERSION},replicas=1,clientProtocol=https,clientDomain=${HOSTNAME},enableDebug=false,loggingLevel=${LOGGING_LEVEL}"
+COMMON_VALUES="image.tag=${VERSION},replicas=1,clientProtocol=https,clientDomain=${HOSTNAME},enableDebug=${ENABLE_DEBUG},loggingLevel=${LOGGING_LEVEL}"
 
 helm upgrade --install service-authentication services/authentication/helm -n services --set image.repository=${REPOSITORY}/authentication,${COMMON_VALUES},clientWebUrl=${PROTOCOL}://${HOSTNAME},clientAuthUrl=${PROTOCOL}://${HOSTNAME}
 

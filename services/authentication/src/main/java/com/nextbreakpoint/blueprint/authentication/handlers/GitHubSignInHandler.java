@@ -77,7 +77,7 @@ public class GitHubSignInHandler implements Handler<RoutingContextAdapter> {
     }
 
     private Single<JsonObject> createAccount(GitHubSignInScope scope) {
-        return createAccount(scope.getJwtAccessToken(), scope.getUserInfo().getString("login"), scope.getUserInfo().getString("name"));
+        return createAccount(scope.getJwtAccessToken(), scope.getUserInfo().getString("login"), Optional.ofNullable(scope.getUserInfo().getString("name")).orElse(scope.getUserInfo().getString("login")));
     }
 
     private Single<Cookie> createCookie(GitHubSignInScope scope) {

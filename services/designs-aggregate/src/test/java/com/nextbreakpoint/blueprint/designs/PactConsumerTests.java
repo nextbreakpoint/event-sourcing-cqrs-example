@@ -116,16 +116,16 @@ public class PactConsumerTests {
         return builder
                 .given("kafka topic exists")
                 // the tile render completed events should have same command id of design insert requested event
-                .expectsToReceive("tile render completed with status FAILED for tile 0/00000000.png of design " + DESIGN_ID_2 + " and command " + COMMAND_ID_4)
+                .expectsToReceive("tile render completed with status FAILED for tile 0/00000000 of design " + DESIGN_ID_2 + " and command " + COMMAND_ID_4)
                 .withContent(getTileRenderCompletedMessage(DESIGN_ID_2, COMMAND_ID_4, new UUID(2L, 1L), 0, 0, 0, "FAILED", "0000000000000000-0000000000000001", Checksum.of(DATA_2)))
-                .expectsToReceive("tile render completed with status COMPLETED for tile 1/00010000.png of design " + DESIGN_ID_2 + " and command " + COMMAND_ID_4)
+                .expectsToReceive("tile render completed with status COMPLETED for tile 1/00010000 of design " + DESIGN_ID_2 + " and command " + COMMAND_ID_4)
                 .withContent(getTileRenderCompletedMessage(DESIGN_ID_2, COMMAND_ID_4, new UUID(2L, 2L), 1, 0, 0, "COMPLETED", "0000000000000000-0000000000000001", Checksum.of(DATA_2)))
-                .expectsToReceive("tile render completed with status COMPLETED for tile 1/00010001.png of design " + DESIGN_ID_2 + " and command " + COMMAND_ID_4)
+                .expectsToReceive("tile render completed with status COMPLETED for tile 1/00010001 of design " + DESIGN_ID_2 + " and command " + COMMAND_ID_4)
                 .withContent(getTileRenderCompletedMessage(DESIGN_ID_2, COMMAND_ID_4, new UUID(2L, 3L), 1, 1, 0, "COMPLETED", "0000000000000000-0000000000000001", Checksum.of(DATA_2)))
-                .expectsToReceive("tile render completed with status COMPLETED for tile 2/00020001.png of design " + DESIGN_ID_2 + " and command " + COMMAND_ID_4)
+                .expectsToReceive("tile render completed with status COMPLETED for tile 2/00020001 of design " + DESIGN_ID_2 + " and command " + COMMAND_ID_4)
                 .withContent(getTileRenderCompletedMessage(DESIGN_ID_2, COMMAND_ID_4, new UUID(2L, 4L), 2, 2, 1, "COMPLETED", "0000000000000000-0000000000000001", Checksum.of(DATA_2)))
                 // the tile render completed events with different command id should be discarded
-                .expectsToReceive("tile render completed with status COMPLETED for tile 2/00020002.png of design " + DESIGN_ID_2 + " and command " + COMMAND_ID_5)
+                .expectsToReceive("tile render completed with status COMPLETED for tile 2/00020002 of design " + DESIGN_ID_2 + " and command " + COMMAND_ID_5)
                 .withContent(getTileRenderCompletedMessage(DESIGN_ID_2, COMMAND_ID_5, new UUID(2L, 5L), 2, 2, 2, "COMPLETED", "0000000000000000-0000000000000001", Checksum.of(DATA_2)))
                 .toPact();
     }
@@ -206,7 +206,7 @@ public class PactConsumerTests {
                 .object("data", event5);
 
         return new PactDslJsonBody()
-                .stringValue("key", String.format("%s/%s/%d/%04d%04d.png", designId, commandId, level, row, col))
+                .stringValue("key", "%s/%s/%d/%04d%04d".formatted(designId, commandId, level, row, col))
                 .object("value", payload5);
     }
 

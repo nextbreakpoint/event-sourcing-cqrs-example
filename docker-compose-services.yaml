@@ -73,7 +73,7 @@ services:
       AWS_SECRET_ACCESS_KEY: password
       MINIO_HOST: host.docker.internal
       MINIO_PORT: 9000
-      BUCKET_NAME: tiles
+      BUCKET_NAME: fractals
       KAFKA_HOST: host.docker.internal
       KAFKA_PORT: 9094
       SCHEMA_REGISTRY_HOST: host.docker.internal
@@ -206,7 +206,7 @@ services:
       AWS_SECRET_ACCESS_KEY: password
       MINIO_HOST: host.docker.internal
       MINIO_PORT: 9000
-      BUCKET_NAME: tiles
+      BUCKET_NAME: fractals
       KAFKA_HOST: host.docker.internal
       KAFKA_PORT: 9094
       SCHEMA_REGISTRY_HOST: host.docker.internal
@@ -241,7 +241,7 @@ services:
       AWS_SECRET_ACCESS_KEY: password
       MINIO_HOST: host.docker.internal
       MINIO_PORT: 9000
-      BUCKET_NAME: tiles
+      BUCKET_NAME: fractals
       KAFKA_HOST: host.docker.internal
       KAFKA_PORT: 9094
       SCHEMA_REGISTRY_HOST: host.docker.internal
@@ -276,7 +276,7 @@ services:
       AWS_SECRET_ACCESS_KEY: password
       MINIO_HOST: host.docker.internal
       MINIO_PORT: 9000
-      BUCKET_NAME: tiles
+      BUCKET_NAME: fractals
       KAFKA_HOST: host.docker.internal
       KAFKA_PORT: 9094
       SCHEMA_REGISTRY_HOST: host.docker.internal
@@ -311,7 +311,7 @@ services:
       AWS_SECRET_ACCESS_KEY: password
       MINIO_HOST: host.docker.internal
       MINIO_PORT: 9000
-      BUCKET_NAME: tiles
+      BUCKET_NAME: fractals
       KAFKA_HOST: host.docker.internal
       KAFKA_PORT: 9094
       SCHEMA_REGISTRY_HOST: host.docker.internal

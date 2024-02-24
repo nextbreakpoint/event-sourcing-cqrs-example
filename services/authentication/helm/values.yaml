@@ -32,3 +32,5 @@ githubOAuthUrl:
 
 authApiUrl:
 accountsApiUrl:
+
+enableDebug:

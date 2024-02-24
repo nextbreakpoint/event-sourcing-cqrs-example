@@ -67,27 +67,27 @@ public class VerifyRenderPact {
     public void kafkaTopicExists() {
     }
 
-    @PactVerifyProvider("tile render requested for tile 0/00000000.png of design 00000000-0000-0000-0000-000000000001 with checksum 1")
+    @PactVerifyProvider("tile render requested for tile 0/00000000 of design 00000000-0000-0000-0000-000000000001 with checksum 1")
     public String produceTileRenderRequested1() {
         return produceTileRenderRequested(DESIGN_ID_1, 0, 0, 0, COMMAND_ID_1, DATA_1, Checksum.of(DATA_1), REVISION_0);
     }
 
-    @PactVerifyProvider("tile render requested for tile 4/00010002.png of design 00000000-0000-0000-0000-000000000002 with checksum 2")
+    @PactVerifyProvider("tile render requested for tile 4/00010002 of design 00000000-0000-0000-0000-000000000002 with checksum 2")
     public String produceTileRenderRequested2() {
         return produceTileRenderRequested(DESIGN_ID_2, 4, 1, 2, COMMAND_ID_2, DATA_2, Checksum.of(DATA_2), REVISION_1);
     }
 
-    @PactVerifyProvider("tile render requested for tile 5/00010002.png of design 00000000-0000-0000-0000-000000000002 with checksum 2")
+    @PactVerifyProvider("tile render requested for tile 5/00010002 of design 00000000-0000-0000-0000-000000000002 with checksum 2")
     public String produceTileRenderRequested3() {
         return produceTileRenderRequested(DESIGN_ID_2, 5, 1, 2, COMMAND_ID_2, DATA_2, Checksum.of(DATA_2), REVISION_1);
     }
 
-    @PactVerifyProvider("tile render requested for tile 6/00010002.png of design 00000000-0000-0000-0000-000000000002 with checksum 2")
+    @PactVerifyProvider("tile render requested for tile 6/00010002 of design 00000000-0000-0000-0000-000000000002 with checksum 2")
     public String produceTileRenderRequested4() {
         return produceTileRenderRequested(DESIGN_ID_2, 6, 1, 2, COMMAND_ID_2, DATA_2, Checksum.of(DATA_2), REVISION_1);
     }
 
-    @PactVerifyProvider("tile render requested for tile 7/00010002.png of design 00000000-0000-0000-0000-000000000002 with checksum 2")
+    @PactVerifyProvider("tile render requested for tile 7/00010002 of design 00000000-0000-0000-0000-000000000002 with checksum 2")
     public String produceTileRenderRequested5() {
         return produceTileRenderRequested(DESIGN_ID_2, 7, 1, 2, COMMAND_ID_2, DATA_2, Checksum.of(DATA_2), REVISION_1);
     }

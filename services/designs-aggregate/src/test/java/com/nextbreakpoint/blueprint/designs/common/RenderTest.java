@@ -159,7 +159,7 @@ public class RenderTest {
                                 .setRow(0)
                                 .setCol(0)
                                 .build(),
-                        "%s/%s/%d/%04d%04d.png".formatted(DESIGN_ID_1, COMMAND_ID_1, 0, 0, 0)
+                        "%s/%s/%d/%04d%04d".formatted(DESIGN_ID_1, COMMAND_ID_1, 0, 0, 0)
                 ),
                 Arguments.of(
                         TileRenderRequested.newBuilder()
@@ -172,7 +172,7 @@ public class RenderTest {
                                 .setRow(1)
                                 .setCol(2)
                                 .build(),
-                        "%s/%s/%d/%04d%04d.png".formatted(DESIGN_ID_2, COMMAND_ID_2, 3, 1, 2)
+                        "%s/%s/%d/%04d%04d".formatted(DESIGN_ID_2, COMMAND_ID_2, 3, 1, 2)
                 )
         );
     }

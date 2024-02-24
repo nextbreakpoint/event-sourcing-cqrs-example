@@ -1,4 +1,5 @@
 ```mermaid
+%%{init: {'theme':'neutral'}}%%
 flowchart LR
 
     SDQ(Designs<BR>Query)
@@ -11,15 +12,26 @@ flowchart LR
     SF(Frontend)
     
     K[Kafka]
-    C[Cassandra]
-    D[MySQL]
-    E[Elasticsearch]
-    M[Minio]
+    C[(Cassandra)]
+    D[(MySQL)]
+    E[(Elasticsearch)]
+    M[(Minio)]
     N[Nginx]
     S[Schema<BR>Registry]
     Z[Zookeeper]
-    G[GitHub]
+    G{{GitHub}}
+    
+    U((User))
+    B(Browser)
+    NT{{Network}}
+    LB[LoadBalancer]
 
+    U --> B
+    B --> NT
+    NT --> LB
+    
+    subgraph Kubernetes
+    LB --> N
     K --> Z
     SDQ --> E 
     K --> SDQ
@@ -46,5 +58,6 @@ flowchart LR
     N --> SDQ 
     N --> SDW 
     N --> SDR 
-
+    end
+    
 ```

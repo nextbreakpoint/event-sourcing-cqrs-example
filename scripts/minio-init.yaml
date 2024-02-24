@@ -10,7 +10,7 @@ spec:
       containers:
         - name: minio-init
           image: minio/mc:latest
-#          command: ["sh", "-c", "mc alias set minio http://minio:9000 admin password && (mc rb --force minio/tiles || true) && mc mb minio/tiles"]
-          command: ["sh", "-c", "mc alias set minio http://minio:9000 admin password && mc mb minio/tiles"]
+#          command: ["sh", "-c", "mc alias set minio http://minio:9000 admin password && (mc rb --force minio/fractals || true) && mc mb minio/fractals"]
+          command: ["sh", "-c", "mc alias set minio http://minio:9000 admin password && mc mb minio/fractals"]
       restartPolicy: Never
   backoffLimit: 4

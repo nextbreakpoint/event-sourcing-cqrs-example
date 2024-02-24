@@ -2,8 +2,8 @@ package com.nextbreakpoint.blueprint.designs.operations.render;
 
 import com.nextbreakpoint.blueprint.common.core.Checksum;
 import com.nextbreakpoint.blueprint.common.core.Controller;
+import com.nextbreakpoint.blueprint.designs.common.Bucket;
 import com.nextbreakpoint.blueprint.designs.common.BundleUtils;
-import com.nextbreakpoint.blueprint.designs.common.Render;
 import com.nextbreakpoint.blueprint.designs.common.S3Driver;
 import com.nextbreakpoint.nextfractal.core.common.Bundle;
 import com.nextbreakpoint.nextfractal.core.common.TileGenerator;
@@ -32,7 +32,7 @@ public class RenderDesignController implements Controller<RenderDesignRequest, R
 
             final String checksum = Checksum.of(encodeData(request));
 
-            return driver.getObject(Render.getCacheKey(checksum))
+            return driver.getObject(Bucket.createCacheKey(checksum))
                     .map(image -> null)
                     .onErrorResumeNext(error -> saveImage(tileRequest, checksum))
                     .map(result -> makeResponse(checksum, List.of()))
@@ -46,7 +46,7 @@ public class RenderDesignController implements Controller<RenderDesignRequest, R
 
     private Single<Void> saveImage(TileRequest tileRequest, String checksum) {
         return Single.fromCallable(() -> TileGenerator.generateImage(tileRequest))
-                .flatMap(image -> driver.putObject(Render.getCacheKey(checksum), image));
+                .flatMap(image -> driver.putObject(Bucket.createCacheKey(checksum), image));
     }
 
     private static RenderDesignResponse makeResponse(String checksum, List<String> errors) {

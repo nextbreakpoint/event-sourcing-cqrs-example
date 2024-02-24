@@ -25,3 +25,4 @@ serviceAccount: default
 
 clientDomain:
 
+enableDebug:

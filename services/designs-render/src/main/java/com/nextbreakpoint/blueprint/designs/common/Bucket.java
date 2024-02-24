@@ -6,6 +6,10 @@ public class Bucket {
     private Bucket() {}
 
     public static String createBucketKey(TileRenderRequested event) {
-        return String.format("%s/%d/%04d%04d.png", event.getChecksum(), event.getLevel(), event.getRow(), event.getCol());
+        return "tiles/%s/%d/%04d%04d.png".formatted(event.getChecksum(), event.getLevel(), event.getRow(), event.getCol());
+    }
+
+    public static String createCacheKey(String checksum) {
+        return "cache/%s.png".formatted(checksum);
     }
 }

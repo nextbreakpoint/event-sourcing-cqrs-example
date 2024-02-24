@@ -7,15 +7,11 @@ public class Render {
     private Render() {}
 
     public static String createRenderKey(TileRenderRequested event) {
-        return String.format("%s/%s/%d/%04d%04d.png", event.getDesignId(), event.getCommandId(), event.getLevel(), event.getRow(), event.getCol());
+        return "%s/%s/%d/%04d%04d".formatted(event.getDesignId(), event.getCommandId(), event.getLevel(), event.getRow(), event.getCol());
     }
 
     public static String createRenderKey(TileRenderCompleted event) {
-        return String.format("%s/%s/%d/%04d%04d.png", event.getDesignId(), event.getCommandId(), event.getLevel(), event.getRow(), event.getCol());
-    }
-
-    public static String getCacheKey(String checksum) {
-        return "/cache/" + checksum;
+        return "%s/%s/%d/%04d%04d".formatted(event.getDesignId(), event.getCommandId(), event.getLevel(), event.getRow(), event.getCol());
     }
 
     public static String getTopicName(String topicPrefix, int level) {

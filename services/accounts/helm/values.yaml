@@ -26,3 +26,5 @@ serviceAccount: default
 clientDomain:
 
 databaseName: accounts
+
+enableDebug:

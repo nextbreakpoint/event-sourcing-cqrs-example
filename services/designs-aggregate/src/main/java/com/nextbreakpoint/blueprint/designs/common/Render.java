@@ -12,11 +12,11 @@ public class Render {
     private Render() {}
 
     public static String createRenderKey(TileRenderRequested event) {
-        return String.format("%s/%s/%d/%04d%04d.png", event.getDesignId(), event.getCommandId(), event.getLevel(), event.getRow(), event.getCol());
+        return String.format("%s/%s/%d/%04d%04d", event.getDesignId(), event.getCommandId(), event.getLevel(), event.getRow(), event.getCol());
     }
 
     public static String createRenderKey(TileRenderCompleted event) {
-        return String.format("%s/%s/%d/%04d%04d.png", event.getDesignId(), event.getCommandId(), event.getLevel(), event.getRow(), event.getCol());
+        return String.format("%s/%s/%d/%04d%04d", event.getDesignId(), event.getCommandId(), event.getLevel(), event.getRow(), event.getCol());
     }
 
     public static String getTopicName(String topicPrefix, int level) {

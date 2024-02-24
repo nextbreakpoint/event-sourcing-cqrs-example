@@ -303,7 +303,13 @@ router.get('/designs/(:uuid)/(:zoom)/(:x)/(:y)/(:size).png', function(req, res, 
             if (response.status == 200) {
                 res.set('Cache-Control', 'public, max-age=3600, immutable')
                 response.data.pipe(res, {end:true})
-            } else {
+            } else if (response.status == 404) {
+                console.log("Can't find image " + error)
+                res.status(404).end()
+            } else if (response.status == 403) {
+                console.log("Can't load image " + error)
+                res.status(403).end()
+            } else
                 console.log("Can't load image " + error)
                 res.status(500).end()
             }

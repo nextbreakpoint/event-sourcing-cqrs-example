@@ -178,10 +178,6 @@ footer a, footer a:active, footer a:hover, footer a:visited {
      color: red;
 }
 
-.title {
-   flex: 0 0 auto;
-}
-
 .upload-file input {
     display: none;
 }

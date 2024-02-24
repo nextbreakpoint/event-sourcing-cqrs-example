@@ -18,7 +18,7 @@ import IconButton from '@mui/material/IconButton'
 import ButtonBase from '@mui/material/ButtonBase'
 import Tooltip from '@mui/material/Tooltip'
 import Input from '@mui/material/Input'
-import { DataGrid, gridClasses } from '@mui/x-data-grid'
+import { DataGrid, gridClasses, GridFooterContainer, GridFooter } from '@mui/x-data-grid'
 
 import AddIcon from '@mui/icons-material/Add'
 import EditIcon from '@mui/icons-material/Edit'
@@ -63,14 +63,14 @@ let EnhancedTableToolbar = props => {
   const { role, numSelected, onDownload, onUpload, onCreate, onDelete, onModify } = props
 
   return (
-    <Toolbar className={classNames("toolbar", {["highlight"]: role == 'admin' && numSelected > 0 })}>
-      <div className="title">
-        {role == 'admin' && numSelected > 0 && (
-          <Typography color="inherit" variant="subheading">
-            {numSelected} {numSelected == 1 ? "row" : "rows"} selected
-          </Typography>
-        )}
-      </div>
+    <Toolbar className="toolbar">
+{/*       <div className="title"> */}
+{/*         {role == 'admin' && numSelected > 0 && ( */}
+{/*           <Typography color="inherit" variant="subheading"> */}
+{/*             {numSelected} {numSelected == 1 ? "row" : "rows"} selected */}
+{/*           </Typography> */}
+{/*         )} */}
+{/*       </div> */}
       <div className="spacer" />
       {role == 'admin' && (
           <div className="actions">
@@ -283,6 +283,17 @@ let EnhancedTable = class EnhancedTable extends React.Component {
   render() {
     const { config, designs, account, revision, sorting, selection, pagination, total } = this.props
 
+    let CustomFooter = () => {
+        return (
+            <GridFooterContainer className={classNames({["highlight"]: account.role == 'admin' && selection.length > 0 })}>
+                <EnhancedTableToolbar role={account.role} numSelected={selection.length} onDownload={this.handleDownload} onUpload={this.handleUpload} onCreate={this.props.handleShowCreateDialog} onDelete={this.props.handleShowDeleteDialog} onModify={this.handleModify}/>
+                <GridFooter sx={{
+                    border: 'none'
+                }} />
+            </GridFooterContainer>
+        );
+    }
+
     let rows = designs.map(design => {
        return {
             id: design.uuid,
@@ -298,8 +309,8 @@ let EnhancedTable = class EnhancedTable extends React.Component {
 
     return (
       <Paper className="designs" square={true}>
-        <EnhancedTableToolbar role={account.role} numSelected={selection.length} onDownload={this.handleDownload} onUpload={this.handleUpload} onCreate={this.props.handleShowCreateDialog} onDelete={this.props.handleShowDeleteDialog} onModify={this.handleModify}/>
         <DataGrid
+            components={{Footer: CustomFooter}}
             rowCount={total}
             columns={[
                 {
@@ -385,13 +396,16 @@ let EnhancedTable = class EnhancedTable extends React.Component {
               this.props.handleChangePagination(pagination)
               this.loadDesigns(revision, pagination)
             }}
+            pageSizeOptions={[5, 10, 20]}
             sx={{
-              [`& .${gridClasses.cell}:focus, & .${gridClasses.cell}:focus-within`]: {
-                outline: 'none'
-              },
-              [`& .${gridClasses.columnHeader}:focus, & .${gridClasses.columnHeader}:focus-within`]: {
-                outline: 'none'
-              }
+                display: "flex",
+                flexDirection: "column-reverse",
+                [`& .${gridClasses.cell}:focus, & .${gridClasses.cell}:focus-within`]: {
+                    outline: 'none'
+                },
+                [`& .${gridClasses.columnHeader}:focus, & .${gridClasses.columnHeader}:focus-within`]: {
+                    outline: 'none'
+                }
             }}
         />
       </Paper>

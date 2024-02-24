@@ -43,6 +43,10 @@
         <elasticsearch-java.version>8.11.3</elasticsearch-java.version>
         <kotlin-stdlib.version>1.9.22</kotlin-stdlib.version>
         <kotlin-runtime.version>1.2.71</kotlin-runtime.version>
+        <slf4j-api.version>2.0.11</slf4j-api.version>
+        <guava.version>33.0.0-jre</guava.version>
+        <logredactor.version>1.0.12</logredactor.version>
+        <commons-compress.version>1.26.0</commons-compress.version>
         <junit5jupiter.version>5.10.1</junit5jupiter.version>
         <junit5platform.version>1.10.1</junit5platform.version>
         <mockito.version>5.8.0</mockito.version>
@@ -82,10 +86,6 @@
         <pactbroker.port>9292</pactbroker.port>
         <nexus.host>localhost</nexus.host>
         <nexus.port>38081</nexus.port>
-        <slf4j-api.version>2.0.11</slf4j-api.version>
-        <guava.version>33.0.0-jre</guava.version>
-        <logredactor.version>1.0.12</logredactor.version>
-        <commons-compress.version>1.25.0</commons-compress.version>
     </properties>
     <build>
         <pluginManagement>

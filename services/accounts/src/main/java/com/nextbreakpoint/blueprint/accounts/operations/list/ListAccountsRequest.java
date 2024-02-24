@@ -8,13 +8,13 @@ import java.util.Optional;
 @Data
 @Builder(setterPrefix = "with")
 public class ListAccountsRequest {
-    private final String email;
+    private final String login;
 
-    public ListAccountsRequest(String email) {
-        this.email = email;
+    public ListAccountsRequest(String login) {
+        this.login = login;
     }
 
-    public Optional<String> getEmail() {
-        return Optional.ofNullable(email);
+    public Optional<String> getLogin() {
+        return Optional.ofNullable(login);
     }
 }

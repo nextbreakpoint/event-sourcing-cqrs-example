@@ -21,9 +21,9 @@ public class TestUtils {
     }
 
     @NotNull
-    public static Map<String, Object> createPostData(String email, String role) {
+    public static Map<String, Object> createPostData(String login, String role) {
         final Map<String, Object> data = new HashMap<>();
-        data.put("email", email);
+        data.put("login", login);
         data.put("name", "test");
         data.put("role", role);
         return data;

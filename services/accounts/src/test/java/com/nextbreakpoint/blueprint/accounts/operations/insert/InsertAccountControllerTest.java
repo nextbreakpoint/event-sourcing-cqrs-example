@@ -23,7 +23,7 @@ class InsertAccountControllerTest {
         final var request = InsertAccountRequest.builder()
                 .withUuid(uuid)
                 .withName("test")
-                .withEmail("test@localhost")
+                .withLogin("test-login")
                 .withAuthorities("admin")
                 .build();
 
@@ -51,7 +51,7 @@ class InsertAccountControllerTest {
         final var request = InsertAccountRequest.builder()
                 .withUuid(uuid)
                 .withName("test")
-                .withEmail("test@localhost")
+                .withLogin("test-login")
                 .withAuthorities("admin")
                 .build();
 

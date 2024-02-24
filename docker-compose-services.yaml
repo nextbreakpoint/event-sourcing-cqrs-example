@@ -41,7 +41,7 @@ services:
       GITHUB_OAUTH_URL: https://github.com
       GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
       GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET}
-      GITHUB_ACCOUNT_EMAIL: ${GITHUB_ACCOUNT_EMAIL}
+      GITHUB_ACCOUNT_ID: ${GITHUB_ACCOUNT_ID}
       DEBUG_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:35101
       LOGGING_LEVEL: ${LOGGING_LEVEL:-INFO}
     ports:
@@ -73,7 +73,7 @@ services:
       AWS_SECRET_ACCESS_KEY: password
       MINIO_HOST: host.docker.internal
       MINIO_PORT: 9000
-      BUCKET_NAME: tiles
+      BUCKET_NAME: fractals
       KAFKA_HOST: host.docker.internal
       KAFKA_PORT: 9094
       SCHEMA_REGISTRY_HOST: host.docker.internal
@@ -206,7 +206,7 @@ services:
       AWS_SECRET_ACCESS_KEY: password
       MINIO_HOST: host.docker.internal
       MINIO_PORT: 9000
-      BUCKET_NAME: tiles
+      BUCKET_NAME: fractals
       KAFKA_HOST: host.docker.internal
       KAFKA_PORT: 9094
       SCHEMA_REGISTRY_HOST: host.docker.internal
@@ -241,7 +241,7 @@ services:
       AWS_SECRET_ACCESS_KEY: password
       MINIO_HOST: host.docker.internal
       MINIO_PORT: 9000
-      BUCKET_NAME: tiles
+      BUCKET_NAME: fractals
       KAFKA_HOST: host.docker.internal
       KAFKA_PORT: 9094
       SCHEMA_REGISTRY_HOST: host.docker.internal
@@ -276,7 +276,7 @@ services:
       AWS_SECRET_ACCESS_KEY: password
       MINIO_HOST: host.docker.internal
       MINIO_PORT: 9000
-      BUCKET_NAME: tiles
+      BUCKET_NAME: fractals
       KAFKA_HOST: host.docker.internal
       KAFKA_PORT: 9094
       SCHEMA_REGISTRY_HOST: host.docker.internal
@@ -311,7 +311,7 @@ services:
       AWS_SECRET_ACCESS_KEY: password
       MINIO_HOST: host.docker.internal
       MINIO_PORT: 9000
-      BUCKET_NAME: tiles
+      BUCKET_NAME: fractals
       KAFKA_HOST: host.docker.internal
       KAFKA_PORT: 9094
       SCHEMA_REGISTRY_HOST: host.docker.internal

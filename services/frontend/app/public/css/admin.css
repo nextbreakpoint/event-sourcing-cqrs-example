@@ -1,5 +1,6 @@
 body {
     font-family: "Roboto";
+    font-size: 14pt;
     color: #080808;
     min-width: 800px;
     max-width: 2600px;
@@ -7,30 +8,19 @@ body {
 }
 
 header {
-    font-size: 1.8em;
-    padding: 10px;
+    font-size: 1.5em;
+    padding: 1em 0.2em 1em 0.2em;
 }
 
 footer {
-    font-size: 1.6em;
-    padding: 24px;
+    font-size: 1.2em;
+    padding: 1.5em;
     text-align: center;
-}
-
-.controls .button {
-    margin: 1%;
 }
 
 .container {
-    background-color: #ededed;
     text-align: center;
-    padding: 5% 0;
-}
-
-.list-image {
-    padding-left: 24px !important;
-    padding-right: 24px !important;
-    text-align: center !important;
+    padding: 2em 1em 2em 1em;
 }
 
 a, a:active, a:hover, a:visited {
@@ -48,23 +38,43 @@ footer a, footer a:active, footer a:hover, footer a:visited {
     text-decoration: none !important;
 }
 
-.controls {
-    padding: 2%;
+.toolbar {
+    margin-top: 1em;
     text-align: right;
+}
+
+.controls {
+    padding: 2em 0.2em;
+    text-align: right;
+}
+
+.controls .button {
+    margin: 0.5em;
+    box-shadow: rgba(0, 0, 0, 0.2) 0px 2px 4px -1px, rgba(0, 0, 0, 0.14) 0px 4px 5px 0px, rgba(0, 0, 0, 0.12) 0px 1px 10px 0px;
 }
 
 .details {
     text-align: left;
-    overflow: scroll;
-    padding: 2%;
+    margin-left: 1em;
 }
 
 .details-item {
-    padding: 2%;
-    border: 2px solid rgb(219, 219, 219);
-    border-radius: 0.4em;
+    padding: 0.4em;
     background-color: rgb(253, 253, 253);
-    margin: 2%;
+    border-radius: 0.4em;
+    box-shadow: rgba(0, 0, 0, 0.2) 0px 2px 4px -1px, rgba(0, 0, 0, 0.14) 0px 4px 5px 0px, rgba(0, 0, 0, 0.12) 0px 1px 10px 0px;
+    margin: 0.8em 0.4em;
+    font-size: 1em;
+    overflow: scroll;
+}
+
+.details-label {
+    display: inline-block;
+    font-weight: bold;
+}
+
+.details-value {
+    display: inline-block;
 }
 
 .image-preview {
@@ -73,26 +83,37 @@ footer a, footer a:active, footer a:hover, footer a:visited {
 }
 
 .image-preview img {
-    border-radius: 3%;
+    margin: 0.5em;
+    border-radius: 1em;
+    box-shadow: rgba(0, 0, 0, 0.2) 0px 2px 4px -1px, rgba(0, 0, 0, 0.14) 0px 4px 5px 0px, rgba(0, 0, 0, 0.12) 0px 1px 10px 0px;
 }
 
 .map-preview {
-    text-align: center;
-    padding: 2%;
+    margin: 0 0.5em;
+    box-shadow: rgba(0, 0, 0, 0.2) 0px 2px 4px -1px, rgba(0, 0, 0, 0.14) 0px 4px 5px 0px, rgba(0, 0, 0, 0.12) 0px 1px 10px 0px;
 }
 
-.script {
-    padding-left: 2%;
-    padding-right: 1%;
+.form {
+    border-radius: 1em;
+    padding: 0.6em;
+    margin: 0.5em;
+    margin-left: 0.5em;
+    margin-right: 0.5em;
+    background-color: rgb(253, 253, 253);
+    box-shadow: rgba(0, 0, 0, 0.2) 0px 2px 4px -1px, rgba(0, 0, 0, 0.14) 0px 4px 5px 0px, rgba(0, 0, 0, 0.12) 0px 1px 10px 0px;
+    text-align: left;
 }
 
-.metadata {
-    padding-left: 1%;
-    padding-right: 2%;
+.form-label {
+    padding-bottom: 0.6em;
+    display: inline-block;
+    font-weight: bold;
+    width: 100%;
+    margin-bottom: 1em;
 }
 
 .status {
-    padding: 2%;
+    padding: 0.4em;
 }
 
 .image {
@@ -108,12 +129,8 @@ footer a, footer a:active, footer a:hover, footer a:visited {
 }
 
 .editor {
-    border: 2px solid rgb(219, 219, 219);
-    padding: 2%;
     height: 600px;
     overflow: scroll;
-    border-radius: 0.4em;
-    background-color: rgb(253, 253, 253);
     text-align: left;
 }
 
@@ -161,10 +178,6 @@ footer a, footer a:active, footer a:hover, footer a:visited {
      color: red;
 }
 
-.title {
-   flex: 0 0 auto;
-}
-
 .upload-file input {
     display: none;
 }
@@ -176,7 +189,7 @@ footer a, footer a:active, footer a:hover, footer a:visited {
 .message {
     width: 100%;
     overflow-wrap: break-word;
-    padding: 2%;
+    padding: 0.5em;
     text-align: center;
 }
 
@@ -184,12 +197,16 @@ a.link:hover {
     text-decoration: underline;
 }
 
+a.image {
+    text-align: left;
+}
+
 a.image img {
-    margin: 16px;
-    border-radius: 16px;
-    border: 2px solid transparent;
+    margin: 1em;
+    border-radius: 1em;
+    box-shadow: rgba(0, 0, 0, 0.2) 0px 2px 4px -1px, rgba(0, 0, 0, 0.14) 0px 4px 5px 0px, rgba(0, 0, 0, 0.12) 0px 1px 10px 0px;
 }
 
 a.image:hover img {
-    border: 2px solid rgb(200, 200, 200);
+    box-shadow: rgba(0, 0, 0, 0.4) 0px 2px 4px -1px, rgba(0, 0, 0, 0.18) 0px 4px 5px 0px, rgba(0, 0, 0, 0.2) 0px 1px 10px 0px;
 }

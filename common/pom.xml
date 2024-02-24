@@ -8,7 +8,7 @@
     <parent>
         <groupId>com.nextbreakpoint</groupId>
         <artifactId>com.nextbreakpoint.blueprint</artifactId>
-        <version>1.0.4-wip-aa18cd0e-1707259080</version>
+        <version>1.0.4-wip-ed3bb4db-1708776317</version>
     </parent>
     <modules>
         <module>modules/core</module>

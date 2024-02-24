@@ -95,9 +95,11 @@ public class IntegrationTests {
     testCases.deleteData();
     testCases.getSteps().reset();
 
-    final Design design1 = new Design(DESIGN_ID_1, USER_ID_1, UUID.randomUUID(), DATA_1, Checksum.of(DATA_1), REVISION_0, "CREATED", false, LEVELS_DRAFT, LevelTiles.getTiles(LEVELS_DRAFT, 0.5f), FORMATTER.format(Instant.now()), FORMATTER.format(Instant.now()));
-    final Design design2 = new Design(DESIGN_ID_2, USER_ID_1, UUID.randomUUID(), DATA_2, Checksum.of(DATA_2), REVISION_0, "UPDATED", false, LEVELS_DRAFT, LevelTiles.getTiles(LEVELS_DRAFT, 1.0f), FORMATTER.format(Instant.now()), FORMATTER.format(Instant.now()));
-    final Design design3 = new Design(DESIGN_ID_3, USER_ID_1, UUID.randomUUID(), DATA_3, Checksum.of(DATA_3), REVISION_0, "UPDATED", true, LEVELS_READY, LevelTiles.getTiles(LEVELS_READY, 1.0f), FORMATTER.format(Instant.now()), FORMATTER.format(Instant.now()));
+    final Instant now = Instant.now();
+
+    final Design design1 = new Design(DESIGN_ID_1, USER_ID_1, UUID.randomUUID(), DATA_1, Checksum.of(DATA_1), REVISION_0, "CREATED", false, LEVELS_DRAFT, LevelTiles.getTiles(LEVELS_DRAFT, 0.5f), FORMATTER.format(now.minusSeconds(10)), FORMATTER.format(now));
+    final Design design2 = new Design(DESIGN_ID_2, USER_ID_1, UUID.randomUUID(), DATA_2, Checksum.of(DATA_2), REVISION_0, "UPDATED", false, LEVELS_DRAFT, LevelTiles.getTiles(LEVELS_DRAFT, 1.0f), FORMATTER.format(now.minusSeconds(20)), FORMATTER.format(now));
+    final Design design3 = new Design(DESIGN_ID_3, USER_ID_1, UUID.randomUUID(), DATA_3, Checksum.of(DATA_3), REVISION_0, "UPDATED", true, LEVELS_READY, LevelTiles.getTiles(LEVELS_READY, 1.0f), FORMATTER.format(now.minusSeconds(30)), FORMATTER.format(now));
 
     List.of(design1, design2, design3).forEach(testCases::insertDraftDesign);
     List.of(design3).forEach(testCases::insertDesign);

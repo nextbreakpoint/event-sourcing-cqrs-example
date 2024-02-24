@@ -1,32 +1,30 @@
 body {
-    font-family: Roboto;
+    font-family: "Roboto";
     font-size: 14pt;
     color: #080808;
     padding: 0;
     margin: 0;
     border: 0;
-    font-size: 0;
 }}
 
-p, div {
+p, span, div {
     padding: 0;
     margin: 0;
     border: 0;
 }
 
 header {
-    font-size: 20pt;
+    font-size: 1.5em;
     left: 1%;
-    top: 0;
+    top: 1%;
     position: fixed;
     display: block;
     text-align: left;
     z-index: 10;
-    margin-top: 1%;
     padding: 2%;
     background: #fdfdfd;
     opacity: 0.6;
-    border-radius: 50pt;
+    border-radius: 1.2em;
 }
 
 header p {
@@ -35,18 +33,17 @@ header p {
 }
 
 footer {
-    font-size: 18pt;
+    font-size: 1.2em;
     right: 1%;
-    bottom: 0;
+    bottom: 1%;
     position: fixed;
     display: block;
     text-align: left;
     z-index: 10;
-    margin-bottom: 1%;
     padding: 1.5%;
     background: #fdfdfd;
     opacity: 0.6;
-    border-radius: 50pt;
+    border-radius: 1.2em;
 }
 
 footer p {
@@ -54,38 +51,51 @@ footer p {
     margin: 0;
 }
 
-.elements-grid {
+.images {
+    display: block;
+    position: absolute;
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+}
+
+.pages {
+    display: block;
+    position: relative;
+    width: 100%;
+}
+
+.page {
     display: block;
     position: relative;
     text-align: center;
     font-size: 0;
     width: 100%;
     z-index: 5;
-    overflow: hidden;
 }
 
-.elements-row {
+.row {
     display: block;
 }
 
-.element {
+.cell {
     display: inline-block;
+    width: 12%;
 }
 
-.element img {
+.cell img {
     width: 100%;
     height: 100%;
 }
 
-.elements-more {
-    font-size: 18pt;
+.next {
+    font-size: 1.5em;
     left: 1%;
-    bottom: 0;
+    bottom: 1%;
     position: fixed;
     display: block;
     text-align: center;
     z-index: 10;
-    margin-bottom: 1%;
     padding: 1.5%;
     background: #fdfdfd;
     opacity: 0.6;
@@ -113,19 +123,43 @@ a, a:active, a:hover, a:visited {
 }
 
 @media (max-width: 800px) {
-    .element-label {
-        font-size: 0.8em;
+    header {
+        font-size: 1.2em;
+    }
+
+    footer {
+        font-size: 1.0em;
+    }
+
+    .next {
+        font-size: 1.2em;
     }
 }
 
 @media (max-width: 600px) {
-    .element-label {
-        font-size: 0.6em;
+    header {
+        font-size: 1.0em;
+    }
+
+    footer {
+        font-size: 0.8em;
+    }
+
+    .next {
+        font-size: 1.0em;
     }
 }
 
 @media (max-width: 300px) {
-    .element-label {
-        font-size: 0.4em;
+    header {
+        font-size: 0.8em;
+    }
+
+    footer {
+        font-size: 0.6em;
+    }
+
+    .next {
+        font-size: 0.8em;
     }
 }

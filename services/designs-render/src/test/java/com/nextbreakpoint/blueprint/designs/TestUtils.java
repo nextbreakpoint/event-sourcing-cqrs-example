@@ -20,18 +20,18 @@ public class TestUtils {
     private TestUtils() {}
 
     @NotNull
-    public static String createBucketKey(TileRenderRequested event) {
-        return String.format("%s/%d/%04d%04d.png", event.getChecksum(), event.getLevel(), event.getRow(), event.getCol());
-    }
-
-    @NotNull
     public static String createRenderKey(TileRenderRequested event) {
-        return String.format("%s/%s/%d/%04d%04d.png", event.getDesignId(), event.getCommandId(), event.getLevel(), event.getRow(), event.getCol());
+        return "%s/%s/%d/%04d%04d".formatted(event.getDesignId(), event.getCommandId(), event.getLevel(), event.getRow(), event.getCol());
     }
 
     @NotNull
-    public static String getCacheKey(String checksum) {
-        return "/cache/" + checksum;
+    public static String createTileKey(TileRenderRequested event) {
+        return "tiles/%s/%d/%04d%04d.png".formatted(event.getChecksum(), event.getLevel(), event.getRow(), event.getCol());
+    }
+
+    @NotNull
+    public static String createCacheKey(String checksum) {
+        return "cache/%s.png".formatted(checksum);
     }
 
     @NotNull

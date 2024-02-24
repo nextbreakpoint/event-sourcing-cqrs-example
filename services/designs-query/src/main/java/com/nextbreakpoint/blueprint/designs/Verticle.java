@@ -303,7 +303,7 @@ public class Verticle extends AbstractVerticle {
             healthCheckHandler.register("kafka-topic-events", 2000, future -> checkTopic(healthKafkaConsumer, eventsTopic, future));
             healthCheckHandler.register("elasticsearch-index-main", 2000, future -> checkTable(store, future, "designs"));
             healthCheckHandler.register("elasticsearch-index-draft", 2000, future -> checkTable(store, future, "designs_draft"));
-            healthCheckHandler.register("bucket-tiles", 2000, future -> checkBucket(s3AsyncClient, s3Bucket, future));
+            healthCheckHandler.register("bucket", 2000, future -> checkBucket(s3AsyncClient, s3Bucket, future));
 
             final URL resource = RouterBuilder.class.getClassLoader().getResource("api-v1.yaml");
 

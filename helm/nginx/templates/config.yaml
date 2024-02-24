@@ -87,7 +87,23 @@ data:
                     set $upstream_location designs-render.services.svc.cluster.local:8080;
                     proxy_pass http://$upstream_location$request_uri;
                 }
-                    
+        
+                location /v1/designs/render {
+                    limit_except OPTIONS POST {
+                        allow all;
+                    }
+                    set $upstream_location designs-render.services.svc.cluster.local:8080;
+                    proxy_pass http://$upstream_location$request_uri;
+                }
+      
+                location /v1/designs/image {
+                    limit_except OPTIONS GET {
+                        allow all;
+                    }
+                    set $upstream_location designs-render.services.svc.cluster.local:8080;
+                    proxy_pass http://$upstream_location$request_uri;
+                }
+
                 location /v1/designs {
                     limit_except GET OPTIONS POST PUT PATCH DELETE {
                         allow all;

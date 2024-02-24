@@ -10,7 +10,7 @@ import static com.nextbreakpoint.blueprint.designs.TestConstants.INVALID_MANIFES
 import static com.nextbreakpoint.blueprint.designs.TestConstants.MANIFEST;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.METADATA;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.SCRIPT;
-import static com.nextbreakpoint.blueprint.designs.TestUtils.getCacheKey;
+import static com.nextbreakpoint.blueprint.designs.TestUtils.createCacheKey;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -27,7 +27,7 @@ class RenderDesignControllerTest {
 
     @Test
     void shouldCacheImageWhenImageDoesNotExist() {
-        final String key = getCacheKey(CHECKSUM);
+        final String key = createCacheKey(CHECKSUM);
 
         when(driver.getObject(key)).thenReturn(Single.error(new RuntimeException()));
         when(driver.putObject(eq(key), any())).thenReturn(Single.just(null));
@@ -51,7 +51,7 @@ class RenderDesignControllerTest {
 
     @Test
     void shouldReturnCachedImageWhenImageAlreadyExists() {
-        final String key = getCacheKey(CHECKSUM);
+        final String key = createCacheKey(CHECKSUM);
 
         when(driver.getObject(key)).thenReturn(Single.just(new byte[] { 0, 1, 2 }));
 
@@ -90,7 +90,7 @@ class RenderDesignControllerTest {
 
     @Test
     void shouldReturnAnErrorWhenImageCannotBeSaved() {
-        final String key = getCacheKey(CHECKSUM);
+        final String key = createCacheKey(CHECKSUM);
 
         when(driver.getObject(key)).thenReturn(Single.error(new RuntimeException()));
         when(driver.putObject(eq(key), any())).thenReturn(Single.error(new RuntimeException()));

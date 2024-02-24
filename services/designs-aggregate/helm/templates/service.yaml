@@ -19,5 +19,11 @@ spec:
       targetPort: http
       protocol: TCP
       name: http
+    {{- if $root.Values.enableDebug }}
+    - port: {{ $root.Values.debugPort | default 5555 }}
+      targetPort: debug
+      protocol: TCP
+      name: debug
+    {{- end}}
   selector:
     component: {{ $root.Values.name | default "designs-aggregate" | quote }}

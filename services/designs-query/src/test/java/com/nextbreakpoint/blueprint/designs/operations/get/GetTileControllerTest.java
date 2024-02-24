@@ -54,7 +54,7 @@ class GetTileControllerTest {
                 .withDesign(design)
                 .build();
 
-        final var key = String.format("%s/%d/%04d%04d.png", design.getChecksum(), request.getLevel(), request.getRow(), request.getCol());
+        final var key = "tiles/%s/%d/%04d%04d.png".formatted(design.getChecksum(), request.getLevel(), request.getRow(), request.getCol());
 
         when(store.loadDesign(loadRequest)).thenReturn(Single.just(loadResponse));
         when(driver.getObject(key)).thenReturn(Single.just(new byte[]{0, 1, 2}));
@@ -141,7 +141,7 @@ class GetTileControllerTest {
                 .withDesign(design)
                 .build();
 
-        final var key = String.format("%s/%d/%04d%04d.png", design.getChecksum(), request.getLevel(), request.getRow(), request.getCol());
+        final var key = "tiles/%s/%d/%04d%04d.png".formatted(design.getChecksum(), request.getLevel(), request.getRow(), request.getCol());
 
         when(store.loadDesign(loadRequest)).thenReturn(Single.just(loadResponse));
 

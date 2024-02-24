@@ -22,14 +22,14 @@ class InsertAccountRequestMapperTest {
     void shouldCreateRequest() {
         when(context.request()).thenReturn(httpRequest);
         when(context.body()).thenReturn(requestBody);
-        when(requestBody.asJsonObject()).thenReturn(JsonObject.of("email", "test@localhost", "name", "test", "role", "admin"));
+        when(requestBody.asJsonObject()).thenReturn(JsonObject.of("login", "test-login", "name", "test", "role", "admin"));
 
         final var request = mapper.transform(context);
 
         SoftAssertions softly = new SoftAssertions();
         softly.assertThat(request.getUuid()).isNotNull();
         softly.assertThat(request.getName()).isEqualTo("test");
-        softly.assertThat(request.getEmail()).isEqualTo("test@localhost");
+        softly.assertThat(request.getLogin()).isEqualTo("test-login");
         softly.assertThat(request.getAuthorities()).isEqualTo("admin");
         softly.assertAll();
     }
@@ -45,21 +45,21 @@ class InsertAccountRequestMapperTest {
     }
 
     @Test
-    void shouldThrowExceptionWhenBodyDoesNotContainEmail() {
+    void shouldThrowExceptionWhenBodyDoesNotContainLogin() {
         when(context.request()).thenReturn(httpRequest);
         when(context.body()).thenReturn(requestBody);
         when(requestBody.asJsonObject()).thenReturn(JsonObject.of("name", "test", "role", "admin"));
 
         assertThatThrownBy(() -> mapper.transform(context))
                 .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("body doesn't contain the required properties: email is missing");
+                .hasMessageContaining("body doesn't contain the required properties: login is missing");
     }
 
     @Test
     void shouldThrowExceptionWhenBodyDoesNotContainName() {
         when(context.request()).thenReturn(httpRequest);
         when(context.body()).thenReturn(requestBody);
-        when(requestBody.asJsonObject()).thenReturn(JsonObject.of("email", "test@localhost", "role", "admin"));
+        when(requestBody.asJsonObject()).thenReturn(JsonObject.of("login", "test-login", "role", "admin"));
 
         assertThatThrownBy(() -> mapper.transform(context))
                 .isInstanceOf(IllegalStateException.class)
@@ -70,7 +70,7 @@ class InsertAccountRequestMapperTest {
     void shouldThrowExceptionWhenBodyDoesNotContainRole() {
         when(context.request()).thenReturn(httpRequest);
         when(context.body()).thenReturn(requestBody);
-        when(requestBody.asJsonObject()).thenReturn(JsonObject.of("email", "test@localhost", "name", "test"));
+        when(requestBody.asJsonObject()).thenReturn(JsonObject.of("login", "test-login", "name", "test"));
 
         assertThatThrownBy(() -> mapper.transform(context))
                 .isInstanceOf(IllegalStateException.class)

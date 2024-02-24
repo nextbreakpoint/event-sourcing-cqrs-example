@@ -14,7 +14,7 @@ public class GitHubSignInScope {
     private String oauthAccessToken;
     private String jwtAccessToken;
     private String redirectTo;
-    private String userEmail;
+    private JsonObject userInfo;
     private JsonArray accounts;
     private JsonObject account;
     private Cookie cookie;

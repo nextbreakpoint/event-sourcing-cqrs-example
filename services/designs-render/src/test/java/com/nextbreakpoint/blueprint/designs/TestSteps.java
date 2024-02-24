@@ -188,7 +188,7 @@ public class TestSteps {
         public Thens theImageShouldHasBeenCreated() {
             var lastMessage = (OutputMessage<Object>) context.getObject("outputMessage");
             var tileRenderRequested = TestUtils.extractTileRenderRequestedEvent(lastMessage);
-            var bytes = actions.getImage(TestUtils.createBucketKey(tileRenderRequested));
+            var bytes = actions.getImage(TestUtils.createTileKey(tileRenderRequested));
             assertThat(bytes).isNotEmpty();
             return this;
         }

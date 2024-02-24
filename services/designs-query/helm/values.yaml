@@ -27,3 +27,5 @@ clientDomain:
 
 s3Endpoint:
 s3Bucket:
+
+enableDebug:

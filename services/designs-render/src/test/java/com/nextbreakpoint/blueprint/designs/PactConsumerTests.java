@@ -68,15 +68,15 @@ public class PactConsumerTests {
     @Pact(consumer = "designs-render")
     public V4Pact shouldStartRenderingAnImageWhenReceivingATileRenderRequestedMessage(MessagePactBuilder builder) {
         return builder.given("kafka topic exists")
-                .expectsToReceive("tile render requested for tile 0/00000000.png of design " + DESIGN_ID_1 + " with checksum 1")
+                .expectsToReceive("tile render requested for tile 0/00000000 of design " + DESIGN_ID_1 + " with checksum 1")
                 .withContent(getTileRenderRequestedMessage(DESIGN_ID_1, COMMAND_ID_1, new UUID(2L, 1L), DATA_1, REVISION_0, 0, 0, 0))
-                .expectsToReceive("tile render requested for tile 4/00010002.png of design " + DESIGN_ID_2 + " with checksum 2")
+                .expectsToReceive("tile render requested for tile 4/00010002 of design " + DESIGN_ID_2 + " with checksum 2")
                 .withContent(getTileRenderRequestedMessage(DESIGN_ID_2, COMMAND_ID_2, new UUID(2L, 2L), DATA_2, REVISION_1, 4, 1, 2))
-                .expectsToReceive("tile render requested for tile 5/00010002.png of design " + DESIGN_ID_2 + " with checksum 2")
+                .expectsToReceive("tile render requested for tile 5/00010002 of design " + DESIGN_ID_2 + " with checksum 2")
                 .withContent(getTileRenderRequestedMessage(DESIGN_ID_2, COMMAND_ID_2, new UUID(2L, 3L), DATA_2, REVISION_1, 5, 1, 2))
-                .expectsToReceive("tile render requested for tile 6/00010002.png of design " + DESIGN_ID_2 + " with checksum 2")
+                .expectsToReceive("tile render requested for tile 6/00010002 of design " + DESIGN_ID_2 + " with checksum 2")
                 .withContent(getTileRenderRequestedMessage(DESIGN_ID_2, COMMAND_ID_2, new UUID(2L, 4L), DATA_2, REVISION_1, 6, 1, 2))
-                .expectsToReceive("tile render requested for tile 7/00010002.png of design " + DESIGN_ID_2 + " with checksum 2")
+                .expectsToReceive("tile render requested for tile 7/00010002 of design " + DESIGN_ID_2 + " with checksum 2")
                 .withContent(getTileRenderRequestedMessage(DESIGN_ID_2, COMMAND_ID_2, new UUID(2L, 5L), DATA_2, REVISION_1, 7, 1, 2))
                 .toPact();
     }
@@ -100,7 +100,7 @@ public class PactConsumerTests {
                 .stringValue("source", MESSAGE_SOURCE);
 
         return new PactDslJsonBody()
-                .stringValue("key", String.format("%s/%s/%d/%04d%04d.png", designId, commandId, level, row, col))
+                .stringValue("key", String.format("%s/%s/%d/%04d%04d", designId, commandId, level, row, col))
                 .object("value", payload1);
     }
 

@@ -10,7 +10,7 @@
     <parent>
         <groupId>com.nextbreakpoint</groupId>
         <artifactId>com.nextbreakpoint.blueprint.service</artifactId>
-        <version>1.0.4-wip-aa18cd0e-1707259080</version>
+        <version>1.0.4-wip-ed3bb4db-1708776317</version>
     </parent>
     <repositories>
         <repository>
@@ -68,7 +68,7 @@
                         <AWS_SECRET_ACCESS_KEY>password</AWS_SECRET_ACCESS_KEY>
                         <MINIO_HOST>localhost</MINIO_HOST>
                         <MINIO_PORT>9000</MINIO_PORT>
-                        <BUCKET_NAME>tiles</BUCKET_NAME>
+                        <BUCKET_NAME>fractals</BUCKET_NAME>
                         <KAFKA_HOST>localhost</KAFKA_HOST>
                         <KAFKA_PORT>9093</KAFKA_PORT>
                         <SCHEMA_REGISTRY_HOST>localhost</SCHEMA_REGISTRY_HOST>

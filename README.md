@@ -9,8 +9,8 @@ The application can also run on Docker. Docker compose files for running and deb
 
 Here is the list of the required tools and versions:
 
-- Docker 23 (or later version)
-- Minikube 1.31
+- Docker 24 (or later version)
+- Minikube 1.32
 - Kubectl 1.29
 - Helm 3.11
 - Maven 3.9
@@ -145,7 +145,7 @@ Create a GitHub OAuth application like:
 
 then export the application secrets:
 
-    export GITHUB_ACCOUNT_EMAIL=your-account-id
+    export GITHUB_ACCOUNT_ID=your-account-id
     export GITHUB_CLIENT_ID=your-client-id
     export GITHUB_CLIENT_SECRET=your-client-secret
 
@@ -285,7 +285,7 @@ where minikube-ip is the address of Minikube:
 
 then export the application secrets:
 
-    export GITHUB_ACCOUNT_EMAIL=your-account-id
+    export GITHUB_ACCOUNT_ID=your-account-id
     export GITHUB_CLIENT_ID=your-client-id
     export GITHUB_CLIENT_SECRET=your-client-secret
 

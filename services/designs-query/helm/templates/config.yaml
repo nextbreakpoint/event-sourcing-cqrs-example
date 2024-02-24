@@ -33,5 +33,5 @@ data:
       "events_topic": {{ $root.Values.eventsTopic | default "events" | quote }},
 
       "s3_endpoint": {{ $root.Values.s3Endpoint | default "http://minio.platform:9000" | quote }},
-      "s3_bucket": {{ $root.Values.s3Bucket | default "tiles" | quote }}
+      "s3_bucket": {{ $root.Values.s3Bucket | default "fractals" | quote }}
     }

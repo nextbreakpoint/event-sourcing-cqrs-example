@@ -57,7 +57,7 @@ public class IntegrationTests {
   public void shouldAllowOptionsRequestWithoutAccessToken() throws MalformedURLException {
     given().config(TestUtils.getRestAssuredConfig())
             .with().header("Origin", testCases.getOriginUrl())
-            .when().queryParam("email", "test@localhost")
+            .when().queryParam("login", "test-login")
             .when().options(testCases.makeBaseURL("/v1/accounts"))
             .then().assertThat().statusCode(204)
             .and().header("Access-Control-Allow-Origin", testCases.getOriginUrl())
@@ -72,7 +72,7 @@ public class IntegrationTests {
 
     given().config(TestUtils.getRestAssuredConfig())
             .with().header("Origin", testCases.getOriginUrl())
-            .when().options(testCases.makeBaseURL("/v1/accounts/" + UUID.randomUUID().toString()))
+            .when().options(testCases.makeBaseURL("/v1/accounts/" + UUID.randomUUID()))
             .then().assertThat().statusCode(204)
             .and().header("Access-Control-Allow-Origin", testCases.getOriginUrl())
             .and().header("Access-Control-Allow-Credentials", "true");
@@ -83,7 +83,7 @@ public class IntegrationTests {
   public void shouldForbidGetRequestWithoutAccessToken() throws MalformedURLException {
     given().config(TestUtils.getRestAssuredConfig())
             .with().accept(ContentType.JSON)
-            .when().queryParam("email", "test@localhost")
+            .when().queryParam("login", "test-login")
             .when().get(testCases.makeBaseURL("/v1/accounts"))
             .then().assertThat().statusCode(403);
 
@@ -94,7 +94,7 @@ public class IntegrationTests {
 
     given().config(TestUtils.getRestAssuredConfig())
             .with().accept(ContentType.JSON)
-            .when().get(testCases.makeBaseURL("/v1/accounts/" + UUID.randomUUID().toString()))
+            .when().get(testCases.makeBaseURL("/v1/accounts/" + UUID.randomUUID()))
             .then().assertThat().statusCode(403);
   }
 
@@ -134,7 +134,7 @@ public class IntegrationTests {
     given().config(TestUtils.getRestAssuredConfig())
             .with().header(AUTHORIZATION, otherAuthorization)
             .and().accept(ContentType.JSON)
-            .when().queryParam("email", "test@localhost")
+            .when().queryParam("login", "test-login")
             .when().get(testCases.makeBaseURL("/v1/accounts"))
             .then().assertThat().statusCode(403);
 
@@ -163,7 +163,7 @@ public class IntegrationTests {
     given().config(TestUtils.getRestAssuredConfig())
             .with().header(AUTHORIZATION, adminAuthorization)
             .and().accept(ContentType.JSON)
-            .when().queryParam("email", "test@localhost")
+            .when().queryParam("login", "test-login")
             .when().get(testCases.makeBaseURL("/v1/accounts"))
             .then().assertThat().statusCode(200);
 
@@ -187,11 +187,11 @@ public class IntegrationTests {
   public void shouldCreateAndDeleteDesigns() throws MalformedURLException {
     final String authorization = testCases.makeAuthorization("test", Authority.ADMIN);
 
-    final String email1 = "user1@localhost";
-    final String email2 = "user2@localhost";
+    final String login1 = "test-login-1";
+    final String login2 = "test-login-2";
 
-    final Map<String, Object> account1 = TestUtils.createPostData(email1, "guest");
-    final Map<String, Object> account2 = TestUtils.createPostData(email2, "guest");
+    final Map<String, Object> account1 = TestUtils.createPostData(login1, "guest");
+    final Map<String, Object> account2 = TestUtils.createPostData(login2, "guest");
 
     final String uuid1 = createAccount(authorization, account1);
 
@@ -209,9 +209,9 @@ public class IntegrationTests {
 
     assertThat(getAccounts(authorization)).contains(uuid1, uuid2);
 
-    assertThat(findAccount(authorization, email1)).contains(uuid1);
+    assertThat(findAccount(authorization, login1)).contains(uuid1);
 
-    assertThat(findAccount(authorization, email2)).contains(uuid2);
+    assertThat(findAccount(authorization, login2)).contains(uuid2);
 
     deleteAccount(authorization, uuid1);
 
@@ -223,11 +223,11 @@ public class IntegrationTests {
     assertThat(getAccounts(authorization)).doesNotContain(uuid1, uuid2);
   }
 
-  private static String[] findAccount(String authorization, String email) throws MalformedURLException {
+  private static String[] findAccount(String authorization, String login) throws MalformedURLException {
     return given().config(TestUtils.getRestAssuredConfig())
             .and().header(AUTHORIZATION, authorization)
             .and().accept(ContentType.JSON)
-            .and().queryParam("email", email)
+            .and().queryParam("login", login)
             .when().get(testCases.makeBaseURL("/v1/accounts"))
             .then().assertThat().statusCode(200)
             .and().contentType(ContentType.JSON)

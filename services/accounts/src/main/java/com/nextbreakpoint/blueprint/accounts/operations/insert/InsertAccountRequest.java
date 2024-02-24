@@ -11,13 +11,13 @@ import java.util.UUID;
 public class InsertAccountRequest {
     private final UUID uuid;
     private final String name;
-    private final String email;
+    private final String login;
     private final String authorities;
 
-    public InsertAccountRequest(UUID uuid, String name, String email, String authorities) {
+    public InsertAccountRequest(UUID uuid, String name, String login, String authorities) {
         this.uuid = Objects.requireNonNull(uuid);
         this.name = Objects.requireNonNull(name);
+        this.login = Objects.requireNonNull(login);
         this.authorities = Objects.requireNonNull(authorities);
-        this.email = Objects.requireNonNull(email);
     }
 }

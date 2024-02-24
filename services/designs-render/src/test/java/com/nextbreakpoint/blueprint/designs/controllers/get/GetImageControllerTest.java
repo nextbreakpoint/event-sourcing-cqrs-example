@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 import rx.Single;
 
 import static com.nextbreakpoint.blueprint.designs.TestConstants.CHECKSUM;
-import static com.nextbreakpoint.blueprint.designs.TestUtils.getCacheKey;
+import static com.nextbreakpoint.blueprint.designs.TestUtils.createCacheKey;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -21,7 +21,7 @@ class GetImageControllerTest {
 
     @Test
     void shouldReturnCachedImageWhenImageExists() {
-        final String key = getCacheKey(CHECKSUM);
+        final String key = createCacheKey(CHECKSUM);
 
         when(driver.getObject(key)).thenReturn(Single.just(new byte[] { 0, 1, 2 }));
 
@@ -40,7 +40,7 @@ class GetImageControllerTest {
 
     @Test
     void shouldReturnEmptyImageWhenImageDoesNotExist() {
-        final String key = getCacheKey(CHECKSUM);
+        final String key = createCacheKey(CHECKSUM);
 
         when(driver.getObject(key)).thenReturn(Single.error(new RuntimeException()));
 

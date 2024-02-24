@@ -22,6 +22,7 @@ import static com.xebialabs.restito.semantics.Condition.parameter;
 import static com.xebialabs.restito.semantics.Condition.post;
 import static com.xebialabs.restito.semantics.Condition.withHeader;
 import static com.xebialabs.restito.semantics.Condition.withPostBody;
+import static com.xebialabs.restito.semantics.Condition.withPostBodyContainingJsonPath;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.startsWith;
@@ -30,6 +31,8 @@ import static org.hamcrest.CoreMatchers.startsWith;
 @Tag("integration")
 @DisplayName("Verify behaviour of authentication service")
 public class IntegrationTests {
+  private static final String GITHUB_API_VERSION = "2022-11-28";
+
   private static final TestCases testCases = new TestCases();
 
   private static final StubServer accountsStub = new StubServer(Integer.parseInt("39001"));
@@ -97,19 +100,16 @@ public class IntegrationTests {
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"access_token\":\"abcdef\"}"));
 
     whenHttp(githubStub)
-            .match(get(TestConstants.OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"))
-            .then(status(HttpStatus.OK_200), stringContent("{\"name\":\"test\"}"));
-
-    whenHttp(githubStub)
-            .match(get(TestConstants.OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
-            .then(status(HttpStatus.OK_200), stringContent("[{\"email\":\"test@localhost\", \"primary\":true}]"));
+            .match(get(TestConstants.OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"),
+                    withHeader("accept", "application/vnd.github+json"), withHeader("X-GitHub-Api-Version", GITHUB_API_VERSION))
+            .then(status(HttpStatus.OK_200), stringContent("{\"name\":\"test\",\"login\":\"test-login\"}"));
 
     whenHttp(accountsStub)
-            .match(get(TestConstants.ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"))
+            .match(get(TestConstants.ACCOUNTS_PATH), parameter("login", "test-login"), withHeader("Authorization"))
             .then(status(HttpStatus.OK_200), stringContent("[]"));
 
     whenHttp(accountsStub)
-            .match(post(TestConstants.ACCOUNTS_PATH), withPostBody(), withHeader("Authorization"))
+            .match(post(TestConstants.ACCOUNTS_PATH), withPostBodyContainingJsonPath("login", "test-login"), withPostBodyContainingJsonPath("name", "test"), withPostBodyContainingJsonPath("role", "guest"), withHeader("Authorization"))
             .then(status(HttpStatus.CREATED_201), stringContent("{\"role\":\"guest\", \"uuid\":\"" + TestConstants.ACCOUNT_UUID + "\"}"));
 
     given().config(TestUtils.getRestAssuredConfig())
@@ -120,13 +120,13 @@ public class IntegrationTests {
             .and().header("Location", startsWith(expectedProtocol + "://" + expectedHost + ":" + expectedPort + "/content/designs"));
 
     verifyHttp(accountsStub)
-            .once(post(TestConstants.ACCOUNTS_PATH), withPostBody(), withHeader("authorization"));
-//          .once(get(ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"))
+            .once(get(TestConstants.ACCOUNTS_PATH), parameter("login", "test-login"), withHeader("Authorization"))
+            .then().once(post(TestConstants.ACCOUNTS_PATH), withPostBody(), withHeader("authorization"));
 
     verifyHttp(githubStub)
             .once(post(TestConstants.OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
-            .then().once(get(TestConstants.OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
-            .then().once(get(TestConstants.OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"));
+            .then().once(get(TestConstants.OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"),
+                    withHeader("accept", "application/vnd.github+json"), withHeader("X-GitHub-Api-Version", GITHUB_API_VERSION));
   }
 
   @Test
@@ -137,11 +137,12 @@ public class IntegrationTests {
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"access_token\":\"abcdef\"}"));
 
     whenHttp(githubStub)
-            .match(get(TestConstants.OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
-            .then(status(HttpStatus.OK_200), stringContent("[{\"email\":\"test@localhost\", \"primary\":true}]"));
+            .match(get(TestConstants.OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"),
+                    withHeader("accept", "application/vnd.github+json"), withHeader("X-GitHub-Api-Version", GITHUB_API_VERSION))
+            .then(status(HttpStatus.OK_200), stringContent("{\"name\":\"test\",\"login\":\"test-login\"}"));
 
     whenHttp(accountsStub)
-            .match(get(TestConstants.ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"))
+            .match(get(TestConstants.ACCOUNTS_PATH), parameter("login", "test-login"), withHeader("Authorization"))
             .then(status(HttpStatus.OK_200), stringContent("[\"" + TestConstants.ACCOUNT_UUID + "\"]"));
 
     whenHttp(accountsStub)
@@ -156,13 +157,13 @@ public class IntegrationTests {
             .and().header("Location", startsWith(expectedProtocol + "://" + expectedHost + ":" + expectedPort + "/content/designs"));
 
     verifyHttp(accountsStub)
-            .once(get(TestConstants.ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"))
+            .once(get(TestConstants.ACCOUNTS_PATH), parameter("login", "test-login"), withHeader("Authorization"))
             .then().once(get(TestConstants.ACCOUNTS_PATH + "/" + TestConstants.ACCOUNT_UUID));
 
     verifyHttp(githubStub)
             .once(post(TestConstants.OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
-            .then().once(get(TestConstants.OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
-            .then().never(get(TestConstants.OAUTH_USER_PATH));
+            .then().once(get(TestConstants.OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"),
+                    withHeader("accept", "application/vnd.github+json"), withHeader("X-GitHub-Api-Version", GITHUB_API_VERSION));
   }
 
   @Test
@@ -181,7 +182,7 @@ public class IntegrationTests {
 
     verifyHttp(githubStub)
             .once(post(TestConstants.OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
-            .then().never(get(TestConstants.OAUTH_USER_EMAILS_PATH));
+            .then().never(get(TestConstants.OAUTH_USER_PATH));
   }
 
   @Test
@@ -192,7 +193,8 @@ public class IntegrationTests {
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"access_token\":\"abcdef\"}"));
 
     whenHttp(githubStub)
-            .match(get(TestConstants.OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
+            .match(get(TestConstants.OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"),
+                    withHeader("accept", "application/vnd.github+json"), withHeader("X-GitHub-Api-Version", GITHUB_API_VERSION))
             .then(status(HttpStatus.INTERNAL_SERVER_ERROR_500));
 
     given().config(TestUtils.getRestAssuredConfig())
@@ -207,8 +209,8 @@ public class IntegrationTests {
 
     verifyHttp(githubStub)
             .once(post(TestConstants.OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
-            .then().once(get(TestConstants.OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
-            .then().never(get(TestConstants.OAUTH_USER_PATH));
+            .then().once(get(TestConstants.OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"),
+                    withHeader("accept", "application/vnd.github+json"), withHeader("X-GitHub-Api-Version", GITHUB_API_VERSION));
   }
 
   @Test
@@ -219,11 +221,12 @@ public class IntegrationTests {
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"access_token\":\"abcdef\"}"));
 
     whenHttp(githubStub)
-            .match(get(TestConstants.OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
-            .then(status(HttpStatus.OK_200), stringContent("[{\"email\":\"test@localhost\", \"primary\":true}]"));
+            .match(get(TestConstants.OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"),
+                    withHeader("accept", "application/vnd.github+json"), withHeader("X-GitHub-Api-Version", GITHUB_API_VERSION))
+            .then(status(HttpStatus.OK_200), stringContent("{\"name\":\"test\",\"login\":\"test-login\"}"));
 
     whenHttp(accountsStub)
-            .match(get(TestConstants.ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"))
+            .match(get(TestConstants.ACCOUNTS_PATH), parameter("login", "test-login"), withHeader("Authorization"))
             .then(status(HttpStatus.INTERNAL_SERVER_ERROR_500));
 
     given().config(TestUtils.getRestAssuredConfig())
@@ -234,13 +237,13 @@ public class IntegrationTests {
             .and().header("Location", startsWith(expectedProtocol + "://" + expectedHost + ":" + expectedPort + "/error/403"));
 
     verifyHttp(accountsStub)
-            .once(get(TestConstants.ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"))
+            .once(get(TestConstants.ACCOUNTS_PATH), parameter("login", "test-login"), withHeader("Authorization"))
             .then().never(post(TestConstants.ACCOUNTS_PATH));
 
     verifyHttp(githubStub)
             .once(post(TestConstants.OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
-            .then().once(get(TestConstants.OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
-            .then().never(get(TestConstants.OAUTH_USER_PATH));
+            .then().once(get(TestConstants.OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"),
+                    withHeader("accept", "application/vnd.github+json"), withHeader("X-GitHub-Api-Version", GITHUB_API_VERSION));
   }
 
   @Test
@@ -251,11 +254,12 @@ public class IntegrationTests {
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"access_token\":\"abcdef\"}"));
 
     whenHttp(githubStub)
-            .match(get(TestConstants.OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
-            .then(status(HttpStatus.OK_200), stringContent("[{\"email\":\"test@localhost\", \"primary\":true}]"));
+            .match(get(TestConstants.OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"),
+                    withHeader("accept", "application/vnd.github+json"), withHeader("X-GitHub-Api-Version", GITHUB_API_VERSION))
+            .then(status(HttpStatus.OK_200), stringContent("{\"name\":\"test\",\"login\":\"test-login\"}"));
 
     whenHttp(accountsStub)
-            .match(get(TestConstants.ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"))
+            .match(get(TestConstants.ACCOUNTS_PATH), parameter("login", "test-login"), withHeader("Authorization"))
             .then(status(HttpStatus.OK_200), stringContent("x"));
 
     given().config(TestUtils.getRestAssuredConfig())
@@ -266,13 +270,13 @@ public class IntegrationTests {
             .and().header("Location", startsWith(expectedProtocol + "://" + expectedHost + ":" + expectedPort + "/error/500"));
 
     verifyHttp(accountsStub)
-            .once(get(TestConstants.ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"))
+            .once(get(TestConstants.ACCOUNTS_PATH), parameter("login", "test-login"), withHeader("Authorization"))
             .then().never(post(TestConstants.ACCOUNTS_PATH));
 
     verifyHttp(githubStub)
             .once(post(TestConstants.OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
-            .then().once(get(TestConstants.OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
-            .then().never(get(TestConstants.OAUTH_USER_PATH));
+            .then().once(get(TestConstants.OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"),
+                    withHeader("accept", "application/vnd.github+json"), withHeader("X-GitHub-Api-Version", GITHUB_API_VERSION));
   }
 
   @Test
@@ -283,15 +287,12 @@ public class IntegrationTests {
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"access_token\":\"abcdef\"}"));
 
     whenHttp(githubStub)
-            .match(get(TestConstants.OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"))
-            .then(status(HttpStatus.OK_200), stringContent("{\"name\":\"test\"}"));
-
-    whenHttp(githubStub)
-            .match(get(TestConstants.OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
-            .then(status(HttpStatus.OK_200), stringContent("[{\"email\":\"test@localhost\", \"primary\":true}]"));
+            .match(get(TestConstants.OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"),
+                    withHeader("accept", "application/vnd.github+json"), withHeader("X-GitHub-Api-Version", GITHUB_API_VERSION))
+            .then(status(HttpStatus.OK_200), stringContent("{\"name\":\"test\",\"login\":\"test-login\"}"));
 
     whenHttp(accountsStub)
-            .match(get(TestConstants.ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"))
+            .match(get(TestConstants.ACCOUNTS_PATH), parameter("login", "test-login"), withHeader("Authorization"))
             .then(status(HttpStatus.OK_200), stringContent("[]"));
 
     whenHttp(accountsStub)
@@ -310,8 +311,8 @@ public class IntegrationTests {
 
     verifyHttp(githubStub)
             .once(post(TestConstants.OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
-            .then().once(get(TestConstants.OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
-            .then().once(get(TestConstants.OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"));
+            .then().once(get(TestConstants.OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"),
+                    withHeader("accept", "application/vnd.github+json"), withHeader("X-GitHub-Api-Version", GITHUB_API_VERSION));
   }
 
   @Test
@@ -322,15 +323,12 @@ public class IntegrationTests {
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"access_token\":\"abcdef\"}"));
 
     whenHttp(githubStub)
-            .match(get(TestConstants.OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
-            .then(status(HttpStatus.OK_200), stringContent("[{\"name\":\"test\"}]"));
-
-    whenHttp(githubStub)
-            .match(get(TestConstants.OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
-            .then(status(HttpStatus.OK_200), stringContent("[{\"email\":\"test@localhost\", \"primary\":true}]"));
+            .match(get(TestConstants.OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"),
+                    withHeader("accept", "application/vnd.github+json"), withHeader("X-GitHub-Api-Version", GITHUB_API_VERSION))
+            .then(status(HttpStatus.OK_200), stringContent("{\"name\":\"test\",\"login\":\"test-login\"}"));
 
     whenHttp(accountsStub)
-            .match(get(TestConstants.ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"))
+            .match(get(TestConstants.ACCOUNTS_PATH), parameter("login", "test-login"), withHeader("Authorization"))
             .then(status(HttpStatus.OK_200), stringContent("[\"" + TestConstants.ACCOUNT_UUID + "\"]"));
 
     whenHttp(accountsStub)
@@ -345,13 +343,13 @@ public class IntegrationTests {
             .and().header("Location", startsWith(expectedProtocol + "://" + expectedHost + ":" + expectedPort + "/error/403"));
 
     verifyHttp(accountsStub)
-            .once(get(TestConstants.ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"))
+            .once(get(TestConstants.ACCOUNTS_PATH), parameter("login", "test-login"), withHeader("Authorization"))
             .then().once(get(TestConstants.ACCOUNTS_PATH + "/" + TestConstants.ACCOUNT_UUID));
 
     verifyHttp(githubStub)
             .once(post(TestConstants.OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
-            .then().once(get(TestConstants.OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
-            .then().never(get(TestConstants.OAUTH_USER_PATH));
+            .then().once(get(TestConstants.OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"),
+                    withHeader("accept", "application/vnd.github+json"), withHeader("X-GitHub-Api-Version", GITHUB_API_VERSION));
   }
 
   @Test
@@ -362,11 +360,12 @@ public class IntegrationTests {
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"access_token\":\"abcdef\"}"));
 
     whenHttp(githubStub)
-            .match(get(TestConstants.OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
-            .then(status(HttpStatus.OK_200), stringContent("[{\"email\":\"test@localhost\", \"primary\":true}]"));
+            .match(get(TestConstants.OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"),
+                    withHeader("accept", "application/vnd.github+json"), withHeader("X-GitHub-Api-Version", GITHUB_API_VERSION))
+            .then(status(HttpStatus.OK_200), stringContent("{\"name\":\"test\",\"login\":\"test-login\"}"));
 
     whenHttp(accountsStub)
-            .match(get(TestConstants.ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"))
+            .match(get(TestConstants.ACCOUNTS_PATH), parameter("login", "test-login"), withHeader("Authorization"))
             .then(status(HttpStatus.OK_200), stringContent("[\"" + TestConstants.ACCOUNT_UUID + "\"]"));
 
     whenHttp(accountsStub)
@@ -392,13 +391,13 @@ public class IntegrationTests {
             .and().header("Location", startsWith(expectedProtocol + "://" + expectedHost + ":" + expectedPort + "/error/403"));
 
     verifyHttp(accountsStub)
-            .times(2, get(TestConstants.ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"))
+            .times(2, get(TestConstants.ACCOUNTS_PATH), parameter("login", "test-login"), withHeader("Authorization"))
             .then().once(get(TestConstants.ACCOUNTS_PATH + "/" + TestConstants.ACCOUNT_UUID));
 
     verifyHttp(githubStub)
             .times(2, post(TestConstants.OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
-            .then().once(get(TestConstants.OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
-            .then().never(get(TestConstants.OAUTH_USER_PATH));
+            .then().once(get(TestConstants.OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"),
+                    withHeader("accept", "application/vnd.github+json"), withHeader("X-GitHub-Api-Version", GITHUB_API_VERSION));
   }
 
   @Test
@@ -409,11 +408,12 @@ public class IntegrationTests {
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"access_token\":\"abcdef\"}"));
 
     whenHttp(githubStub)
-            .match(get(TestConstants.OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
-            .then(status(HttpStatus.OK_200), stringContent("[{\"email\":\"test@localhost\", \"primary\":true}]"));
+            .match(get(TestConstants.OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"),
+                    withHeader("accept", "application/vnd.github+json"), withHeader("X-GitHub-Api-Version", GITHUB_API_VERSION))
+            .then(status(HttpStatus.OK_200), stringContent("{\"name\":\"test\",\"login\":\"test-login\"}"));
 
     whenHttp(accountsStub)
-            .match(get(TestConstants.ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"))
+            .match(get(TestConstants.ACCOUNTS_PATH), parameter("login", "test-login"), withHeader("Authorization"))
             .then(status(HttpStatus.OK_200), stringContent("[\"" + TestConstants.ACCOUNT_UUID + "\"]"));
 
     whenHttp(accountsStub)
@@ -428,13 +428,13 @@ public class IntegrationTests {
             .and().header("Location", startsWith(expectedProtocol + "://" + expectedHost + ":" + expectedPort + "/error/500"));
 
     verifyHttp(accountsStub)
-            .once(get(TestConstants.ACCOUNTS_PATH), parameter("email", "test@localhost"), withHeader("Authorization"))
+            .once(get(TestConstants.ACCOUNTS_PATH), parameter("login", "test-login"), withHeader("Authorization"))
             .then().once(get(TestConstants.ACCOUNTS_PATH + "/" + TestConstants.ACCOUNT_UUID));
 
     verifyHttp(githubStub)
             .once(post(TestConstants.OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
-            .then().once(get(TestConstants.OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
-            .then().never(get(TestConstants.OAUTH_USER_PATH));
+            .then().once(get(TestConstants.OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"),
+                    withHeader("accept", "application/vnd.github+json"), withHeader("X-GitHub-Api-Version", GITHUB_API_VERSION));
   }
 
   @Test
@@ -445,7 +445,8 @@ public class IntegrationTests {
             .then(status(HttpStatus.OK_200), contentType("application/json"), stringContent("{\"access_token\":\"abcdef\"}"));
 
     whenHttp(githubStub)
-            .match(get(TestConstants.OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
+            .match(get(TestConstants.OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"),
+                    withHeader("accept", "application/vnd.github+json"), withHeader("X-GitHub-Api-Version", GITHUB_API_VERSION))
             .then(status(HttpStatus.OK_200), stringContent("x"));
 
     given().config(TestUtils.getRestAssuredConfig())
@@ -460,8 +461,8 @@ public class IntegrationTests {
 
     verifyHttp(githubStub)
             .once(post(TestConstants.OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
-            .then().once(get(TestConstants.OAUTH_USER_EMAILS_PATH), withHeader("authorization", "Bearer abcdef"))
-            .then().never(get(TestConstants.OAUTH_USER_PATH));
+            .then().once(get(TestConstants.OAUTH_USER_PATH), withHeader("authorization", "Bearer abcdef"),
+                    withHeader("accept", "application/vnd.github+json"), withHeader("X-GitHub-Api-Version", GITHUB_API_VERSION));
   }
 
   @Test
@@ -480,6 +481,6 @@ public class IntegrationTests {
 
     verifyHttp(githubStub)
             .once(post(TestConstants.OAUTH_TOKEN_PATH), withHeader("accept", "application/json,application/x-www-form-urlencoded;q=0.9"))
-            .then().never(get(TestConstants.OAUTH_USER_EMAILS_PATH));
+            .then().never(get(TestConstants.OAUTH_USER_PATH));
   }
 }

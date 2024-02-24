@@ -82,8 +82,8 @@ class GitHubSignInHandlerTest {
         when(routingContext.sendRedirectResponse(eq("http://localhost/signin"), any())).thenReturn(Single.just(null));
         when(tokenProvider.generateToken(NULL_USER_UUID, List.of("platform"))).thenReturn(Single.just("efg"));
         when(tokenProvider.generateToken("123456", List.of("admin"))).thenReturn(Single.just("cba"));
-        when(githubClient.fetchUserEmail("abc")).thenReturn(Single.just("test@localhost"));
-        when(accountsClient.findAccounts("efg", "test@localhost")).thenReturn(Single.just(new JsonArray().add("123456")));
+        when(githubClient.fetchUserInfo("abc")).thenReturn(Single.just(new JsonObject().put("name", "test").put("login", "test-login")));
+        when(accountsClient.findAccounts("efg", "test-login")).thenReturn(Single.just(new JsonArray().add("123456")));
         when(accountsClient.fetchAccount("efg", "123456")).thenReturn(Single.just(new JsonObject().put("uuid", "123456").put("role", "admin")));
 
         handler.handle(routingContext);
@@ -98,10 +98,10 @@ class GitHubSignInHandlerTest {
         verify(tokenProvider).generateToken("123456", List.of("admin"));
         verifyNoMoreInteractions(tokenProvider);
 
-        verify(githubClient).fetchUserEmail("abc");
+        verify(githubClient).fetchUserInfo("abc");
         verifyNoMoreInteractions(githubClient);
 
-        verify(accountsClient).findAccounts("efg", "test@localhost");
+        verify(accountsClient).findAccounts("efg", "test-login");
         verify(accountsClient).fetchAccount("efg", "123456");
         verifyNoMoreInteractions(accountsClient);
 
@@ -117,8 +117,8 @@ class GitHubSignInHandlerTest {
         when(routingContext.sendRedirectResponse(eq("http://localhost/signin"), any())).thenReturn(Single.error(exception));
         when(tokenProvider.generateToken(NULL_USER_UUID, List.of("platform"))).thenReturn(Single.just("efg"));
         when(tokenProvider.generateToken("123456", List.of("admin"))).thenReturn(Single.just("cba"));
-        when(githubClient.fetchUserEmail("abc")).thenReturn(Single.just("test@localhost"));
-        when(accountsClient.findAccounts("efg", "test@localhost")).thenReturn(Single.just(new JsonArray().add("123456")));
+        when(githubClient.fetchUserInfo("abc")).thenReturn(Single.just(new JsonObject().put("name", "test").put("login", "test-login")));
+        when(accountsClient.findAccounts("efg", "test-login")).thenReturn(Single.just(new JsonArray().add("123456")));
         when(accountsClient.fetchAccount("efg", "123456")).thenReturn(Single.just(new JsonObject().put("uuid", "123456").put("role", "admin")));
 
         handler.handle(routingContext);
@@ -134,10 +134,10 @@ class GitHubSignInHandlerTest {
         verify(tokenProvider).generateToken("123456", List.of("admin"));
         verifyNoMoreInteractions(tokenProvider);
 
-        verify(githubClient).fetchUserEmail("abc");
+        verify(githubClient).fetchUserInfo("abc");
         verifyNoMoreInteractions(githubClient);
 
-        verify(accountsClient).findAccounts("efg", "test@localhost");
+        verify(accountsClient).findAccounts("efg", "test-login");
         verify(accountsClient).fetchAccount("efg", "123456");
         verifyNoMoreInteractions(accountsClient);
 
@@ -145,36 +145,13 @@ class GitHubSignInHandlerTest {
     }
 
     @Test
-    void shouldProduceExceptionWhenUserIsAuthenticatedAndFetchUserEmailFails() {
-        final var exception = new RuntimeException();
-        when(routingContext.isUserAuthenticated()).thenReturn(true);
-        when(routingContext.getSignInRedirectUrl()).thenReturn("http://localhost/signin");
-        when(routingContext.getAccessToken()).thenReturn("abc");
-        when(githubClient.fetchUserEmail("abc")).thenReturn(Single.error(exception));
-
-        handler.handle(routingContext);
-
-        verify(routingContext).isUserAuthenticated();
-        verify(routingContext).getSignInRedirectUrl();
-        verify(routingContext).getAccessToken();
-        verify(routingContext).handleException(exception);
-        verifyNoMoreInteractions(routingContext);
-
-        verify(githubClient).fetchUserEmail("abc");
-        verifyNoMoreInteractions(githubClient);
-
-        verifyNoInteractions(oauthAdapter, tokenProvider, accountsClient);
-    }
-
-    @Test
-    void shouldProduceExceptionWhenUserIsAuthenticatedAndFindAccountsFails() {
+    void shouldProduceExceptionWhenUserIsAuthenticatedAndFetchUserInfoFails() {
         final var exception = new RuntimeException();
         when(routingContext.isUserAuthenticated()).thenReturn(true);
         when(routingContext.getSignInRedirectUrl()).thenReturn("http://localhost/signin");
         when(routingContext.getAccessToken()).thenReturn("abc");
         when(tokenProvider.generateToken(NULL_USER_UUID, List.of("platform"))).thenReturn(Single.just("efg"));
-        when(githubClient.fetchUserEmail("abc")).thenReturn(Single.just("test@localhost"));
-        when(accountsClient.findAccounts("efg", "test@localhost")).thenReturn(Single.error(exception));
+        when(githubClient.fetchUserInfo("abc")).thenReturn(Single.error(exception));
 
         handler.handle(routingContext);
 
@@ -187,10 +164,37 @@ class GitHubSignInHandlerTest {
         verify(tokenProvider).generateToken(NULL_USER_UUID, List.of("platform"));
         verifyNoMoreInteractions(tokenProvider);
 
-        verify(githubClient).fetchUserEmail("abc");
+        verify(githubClient).fetchUserInfo("abc");
         verifyNoMoreInteractions(githubClient);
 
-        verify(accountsClient).findAccounts("efg", "test@localhost");
+        verifyNoInteractions(oauthAdapter, accountsClient);
+    }
+
+    @Test
+    void shouldProduceExceptionWhenUserIsAuthenticatedAndFindAccountsFails() {
+        final var exception = new RuntimeException();
+        when(routingContext.isUserAuthenticated()).thenReturn(true);
+        when(routingContext.getSignInRedirectUrl()).thenReturn("http://localhost/signin");
+        when(routingContext.getAccessToken()).thenReturn("abc");
+        when(tokenProvider.generateToken(NULL_USER_UUID, List.of("platform"))).thenReturn(Single.just("efg"));
+        when(githubClient.fetchUserInfo("abc")).thenReturn(Single.just(new JsonObject().put("name", "test").put("login", "test-login")));
+        when(accountsClient.findAccounts("efg", "test-login")).thenReturn(Single.error(exception));
+
+        handler.handle(routingContext);
+
+        verify(routingContext).isUserAuthenticated();
+        verify(routingContext).getSignInRedirectUrl();
+        verify(routingContext).getAccessToken();
+        verify(routingContext).handleException(exception);
+        verifyNoMoreInteractions(routingContext);
+
+        verify(tokenProvider).generateToken(NULL_USER_UUID, List.of("platform"));
+        verifyNoMoreInteractions(tokenProvider);
+
+        verify(githubClient).fetchUserInfo("abc");
+        verifyNoMoreInteractions(githubClient);
+
+        verify(accountsClient).findAccounts("efg", "test-login");
         verifyNoMoreInteractions(accountsClient);
 
         verifyNoInteractions(oauthAdapter);
@@ -203,8 +207,8 @@ class GitHubSignInHandlerTest {
         when(routingContext.getSignInRedirectUrl()).thenReturn("http://localhost/signin");
         when(routingContext.getAccessToken()).thenReturn("abc");
         when(tokenProvider.generateToken(NULL_USER_UUID, List.of("platform"))).thenReturn(Single.just("efg"));
-        when(githubClient.fetchUserEmail("abc")).thenReturn(Single.just("test@localhost"));
-        when(accountsClient.findAccounts("efg", "test@localhost")).thenReturn(Single.just(new JsonArray().add("123456")));
+        when(githubClient.fetchUserInfo("abc")).thenReturn(Single.just(new JsonObject().put("name", "test").put("login", "test-login")));
+        when(accountsClient.findAccounts("efg", "test-login")).thenReturn(Single.just(new JsonArray().add("123456")));
         when(accountsClient.fetchAccount("efg", "123456")).thenReturn(Single.error(exception));
 
         handler.handle(routingContext);
@@ -218,10 +222,10 @@ class GitHubSignInHandlerTest {
         verify(tokenProvider).generateToken(NULL_USER_UUID, List.of("platform"));
         verifyNoMoreInteractions(tokenProvider);
 
-        verify(githubClient).fetchUserEmail("abc");
+        verify(githubClient).fetchUserInfo("abc");
         verifyNoMoreInteractions(githubClient);
 
-        verify(accountsClient).findAccounts("efg", "test@localhost");
+        verify(accountsClient).findAccounts("efg", "test-login");
         verify(accountsClient).fetchAccount("efg", "123456");
         verifyNoMoreInteractions(accountsClient);
 
@@ -252,8 +256,8 @@ class GitHubSignInHandlerTest {
         when(routingContext.getAccessToken()).thenReturn("abc");
         when(routingContext.sendRedirectResponse(eq("http://localhost/signin"), any())).thenReturn(Single.just(null));
         when(tokenProvider.generateToken(NULL_USER_UUID, List.of("platform"))).thenReturn(Single.just("efg"));
-        when(githubClient.fetchUserEmail("abc")).thenReturn(Single.just("test@localhost"));
-        when(accountsClient.findAccounts("efg", "test@localhost")).thenReturn(Single.just(new JsonArray().add("123456")));
+        when(githubClient.fetchUserInfo("abc")).thenReturn(Single.just(new JsonObject().put("name", "test").put("login", "test-login")));
+        when(accountsClient.findAccounts("efg", "test-login")).thenReturn(Single.just(new JsonArray().add("123456")));
         when(accountsClient.fetchAccount("efg", "123456")).thenReturn(Single.just(new JsonObject().put("role", "admin")));
 
         handler.handle(routingContext);
@@ -267,10 +271,10 @@ class GitHubSignInHandlerTest {
         verify(tokenProvider).generateToken(NULL_USER_UUID, List.of("platform"));
         verifyNoMoreInteractions(tokenProvider);
 
-        verify(githubClient).fetchUserEmail("abc");
+        verify(githubClient).fetchUserInfo("abc");
         verifyNoMoreInteractions(githubClient);
 
-        verify(accountsClient).findAccounts("efg", "test@localhost");
+        verify(accountsClient).findAccounts("efg", "test-login");
         verify(accountsClient).fetchAccount("efg", "123456");
         verifyNoMoreInteractions(accountsClient);
 
@@ -284,8 +288,8 @@ class GitHubSignInHandlerTest {
         when(routingContext.getAccessToken()).thenReturn("abc");
         when(routingContext.sendRedirectResponse(eq("http://localhost/signin"), any())).thenReturn(Single.just(null));
         when(tokenProvider.generateToken(NULL_USER_UUID, List.of("platform"))).thenReturn(Single.just("efg"));
-        when(githubClient.fetchUserEmail("abc")).thenReturn(Single.just("test@localhost"));
-        when(accountsClient.findAccounts("efg", "test@localhost")).thenReturn(Single.just(new JsonArray().add("123456")));
+        when(githubClient.fetchUserInfo("abc")).thenReturn(Single.just(new JsonObject().put("name", "test").put("login", "test-login")));
+        when(accountsClient.findAccounts("efg", "test-login")).thenReturn(Single.just(new JsonArray().add("123456")));
         when(accountsClient.fetchAccount("efg", "123456")).thenReturn(Single.just(new JsonObject().put("uuid", "123456")));
 
         handler.handle(routingContext);
@@ -299,10 +303,10 @@ class GitHubSignInHandlerTest {
         verify(tokenProvider).generateToken(NULL_USER_UUID, List.of("platform"));
         verifyNoMoreInteractions(tokenProvider);
 
-        verify(githubClient).fetchUserEmail("abc");
+        verify(githubClient).fetchUserInfo("abc");
         verifyNoMoreInteractions(githubClient);
 
-        verify(accountsClient).findAccounts("efg", "test@localhost");
+        verify(accountsClient).findAccounts("efg", "test-login");
         verify(accountsClient).fetchAccount("efg", "123456");
         verifyNoMoreInteractions(accountsClient);
 
@@ -317,10 +321,9 @@ class GitHubSignInHandlerTest {
         when(routingContext.sendRedirectResponse(eq("http://localhost/signin"), any())).thenReturn(Single.just(null));
         when(tokenProvider.generateToken(NULL_USER_UUID, List.of("platform"))).thenReturn(Single.just("efg"));
         when(tokenProvider.generateToken("345678", List.of("admin"))).thenReturn(Single.just("cba"));
-        when(githubClient.fetchUserEmail("abc")).thenReturn(Single.just("test@localhost"));
-        when(githubClient.fetchUserInfo("abc")).thenReturn(Single.just(new JsonObject().put("name", "test")));
-        when(accountsClient.findAccounts("efg", "test@localhost")).thenReturn(Single.just(new JsonArray()));
-        when(accountsClient.createAccount("efg", "test@localhost", "test")).thenReturn(Single.just(new JsonObject().put("uuid", "345678").put("role", "admin")));
+        when(githubClient.fetchUserInfo("abc")).thenReturn(Single.just(new JsonObject().put("name", "test").put("login", "test-login")));
+        when(accountsClient.findAccounts("efg", "test-login")).thenReturn(Single.just(new JsonArray()));
+        when(accountsClient.createAccount("efg", "test-login", "test")).thenReturn(Single.just(new JsonObject().put("uuid", "345678").put("role", "admin")));
 
         handler.handle(routingContext);
 
@@ -334,44 +337,45 @@ class GitHubSignInHandlerTest {
         verify(tokenProvider).generateToken("345678", List.of("admin"));
         verifyNoMoreInteractions(tokenProvider);
 
-        verify(githubClient).fetchUserEmail("abc");
         verify(githubClient).fetchUserInfo("abc");
         verifyNoMoreInteractions(githubClient);
 
-        verify(accountsClient).findAccounts("efg", "test@localhost");
-        verify(accountsClient).createAccount("efg", "test@localhost", "test");
+        verify(accountsClient).findAccounts("efg", "test-login");
+        verify(accountsClient).createAccount("efg", "test-login", "test");
         verifyNoMoreInteractions(accountsClient);
 
         verifyNoInteractions(oauthAdapter);
     }
 
     @Test
-    void shouldProduceExceptionWhenUserIsAuthenticatedAndAccountDoesNotExistAndFetchUserInfoFails() {
-        final var exception = new RuntimeException();
+    void shouldHandleRequestWhenUserIsAuthenticatedAndAccountDoesNotExistAndUserNameIsMissing() {
         when(routingContext.isUserAuthenticated()).thenReturn(true);
         when(routingContext.getSignInRedirectUrl()).thenReturn("http://localhost/signin");
         when(routingContext.getAccessToken()).thenReturn("abc");
+        when(routingContext.sendRedirectResponse(eq("http://localhost/signin"), any())).thenReturn(Single.just(null));
         when(tokenProvider.generateToken(NULL_USER_UUID, List.of("platform"))).thenReturn(Single.just("efg"));
-        when(githubClient.fetchUserEmail("abc")).thenReturn(Single.just("test@localhost"));
-        when(githubClient.fetchUserInfo("abc")).thenReturn(Single.error(exception));
-        when(accountsClient.findAccounts("efg", "test@localhost")).thenReturn(Single.just(new JsonArray()));
+        when(tokenProvider.generateToken("345678", List.of("admin"))).thenReturn(Single.just("cba"));
+        when(githubClient.fetchUserInfo("abc")).thenReturn(Single.just(new JsonObject().put("login", "test-login")));
+        when(accountsClient.findAccounts("efg", "test-login")).thenReturn(Single.just(new JsonArray()));
+        when(accountsClient.createAccount("efg", "test-login", "test-login")).thenReturn(Single.just(new JsonObject().put("uuid", "345678").put("role", "admin")));
 
         handler.handle(routingContext);
 
         verify(routingContext).isUserAuthenticated();
         verify(routingContext).getSignInRedirectUrl();
         verify(routingContext).getAccessToken();
-        verify(routingContext).handleException(exception);
+        verify(routingContext).sendRedirectResponse(eq("http://localhost/signin"), any());
         verifyNoMoreInteractions(routingContext);
 
         verify(tokenProvider).generateToken(NULL_USER_UUID, List.of("platform"));
+        verify(tokenProvider).generateToken("345678", List.of("admin"));
         verifyNoMoreInteractions(tokenProvider);
 
-        verify(githubClient).fetchUserEmail("abc");
         verify(githubClient).fetchUserInfo("abc");
         verifyNoMoreInteractions(githubClient);
 
-        verify(accountsClient).findAccounts("efg", "test@localhost");
+        verify(accountsClient).findAccounts("efg", "test-login");
+        verify(accountsClient).createAccount("efg", "test-login", "test-login");
         verifyNoMoreInteractions(accountsClient);
 
         verifyNoInteractions(oauthAdapter);
@@ -384,10 +388,9 @@ class GitHubSignInHandlerTest {
         when(routingContext.getSignInRedirectUrl()).thenReturn("http://localhost/signin");
         when(routingContext.getAccessToken()).thenReturn("abc");
         when(tokenProvider.generateToken(NULL_USER_UUID, List.of("platform"))).thenReturn(Single.just("efg"));
-        when(githubClient.fetchUserEmail("abc")).thenReturn(Single.just("test@localhost"));
-        when(githubClient.fetchUserInfo("abc")).thenReturn(Single.just(new JsonObject().put("name", "test")));
-        when(accountsClient.findAccounts("efg", "test@localhost")).thenReturn(Single.just(new JsonArray()));
-        when(accountsClient.createAccount("efg", "test@localhost", "test")).thenReturn(Single.error(exception));
+        when(githubClient.fetchUserInfo("abc")).thenReturn(Single.just(new JsonObject().put("name", "test").put("login", "test-login")));
+        when(accountsClient.findAccounts("efg", "test-login")).thenReturn(Single.just(new JsonArray()));
+        when(accountsClient.createAccount("efg", "test-login", "test")).thenReturn(Single.error(exception));
 
         handler.handle(routingContext);
 
@@ -400,12 +403,11 @@ class GitHubSignInHandlerTest {
         verify(tokenProvider).generateToken(NULL_USER_UUID, List.of("platform"));
         verifyNoMoreInteractions(tokenProvider);
 
-        verify(githubClient).fetchUserEmail("abc");
         verify(githubClient).fetchUserInfo("abc");
         verifyNoMoreInteractions(githubClient);
 
-        verify(accountsClient).findAccounts("efg", "test@localhost");
-        verify(accountsClient).createAccount("efg", "test@localhost", "test");
+        verify(accountsClient).findAccounts("efg", "test-login");
+        verify(accountsClient).createAccount("efg", "test-login", "test");
         verifyNoMoreInteractions(accountsClient);
 
         verifyNoInteractions(oauthAdapter);
@@ -417,10 +419,9 @@ class GitHubSignInHandlerTest {
         when(routingContext.getSignInRedirectUrl()).thenReturn("http://localhost/signin");
         when(routingContext.getAccessToken()).thenReturn("abc");
         when(tokenProvider.generateToken(NULL_USER_UUID, List.of("platform"))).thenReturn(Single.just("efg"));
-        when(githubClient.fetchUserEmail("abc")).thenReturn(Single.just("test@localhost"));
-        when(githubClient.fetchUserInfo("abc")).thenReturn(Single.just(new JsonObject().put("name", "test")));
-        when(accountsClient.findAccounts("efg", "test@localhost")).thenReturn(Single.just(new JsonArray()));
-        when(accountsClient.createAccount("efg", "test@localhost", "test")).thenReturn(Single.just(new JsonObject().put("role", "admin")));
+        when(githubClient.fetchUserInfo("abc")).thenReturn(Single.just(new JsonObject().put("name", "test").put("login", "test-login")));
+        when(accountsClient.findAccounts("efg", "test-login")).thenReturn(Single.just(new JsonArray()));
+        when(accountsClient.createAccount("efg", "test-login", "test")).thenReturn(Single.just(new JsonObject().put("role", "admin")));
 
         handler.handle(routingContext);
 
@@ -433,12 +434,11 @@ class GitHubSignInHandlerTest {
         verify(tokenProvider).generateToken(NULL_USER_UUID, List.of("platform"));
         verifyNoMoreInteractions(tokenProvider);
 
-        verify(githubClient).fetchUserEmail("abc");
         verify(githubClient).fetchUserInfo("abc");
         verifyNoMoreInteractions(githubClient);
 
-        verify(accountsClient).findAccounts("efg", "test@localhost");
-        verify(accountsClient).createAccount("efg", "test@localhost", "test");
+        verify(accountsClient).findAccounts("efg", "test-login");
+        verify(accountsClient).createAccount("efg", "test-login", "test");
         verifyNoMoreInteractions(accountsClient);
 
         verifyNoInteractions(oauthAdapter);
@@ -450,10 +450,9 @@ class GitHubSignInHandlerTest {
         when(routingContext.getSignInRedirectUrl()).thenReturn("http://localhost/signin");
         when(routingContext.getAccessToken()).thenReturn("abc");
         when(tokenProvider.generateToken(NULL_USER_UUID, List.of("platform"))).thenReturn(Single.just("efg"));
-        when(githubClient.fetchUserEmail("abc")).thenReturn(Single.just("test@localhost"));
-        when(githubClient.fetchUserInfo("abc")).thenReturn(Single.just(new JsonObject().put("name", "test")));
-        when(accountsClient.findAccounts("efg", "test@localhost")).thenReturn(Single.just(new JsonArray()));
-        when(accountsClient.createAccount("efg", "test@localhost", "test")).thenReturn(Single.just(new JsonObject().put("uuid", "345678")));
+        when(githubClient.fetchUserInfo("abc")).thenReturn(Single.just(new JsonObject().put("name", "test").put("login", "test-login")));
+        when(accountsClient.findAccounts("efg", "test-login")).thenReturn(Single.just(new JsonArray()));
+        when(accountsClient.createAccount("efg", "test-login", "test")).thenReturn(Single.just(new JsonObject().put("uuid", "345678")));
 
         handler.handle(routingContext);
 
@@ -466,12 +465,11 @@ class GitHubSignInHandlerTest {
         verify(tokenProvider).generateToken(NULL_USER_UUID, List.of("platform"));
         verifyNoMoreInteractions(tokenProvider);
 
-        verify(githubClient).fetchUserEmail("abc");
         verify(githubClient).fetchUserInfo("abc");
         verifyNoMoreInteractions(githubClient);
 
-        verify(accountsClient).findAccounts("efg", "test@localhost");
-        verify(accountsClient).createAccount("efg", "test@localhost", "test");
+        verify(accountsClient).findAccounts("efg", "test-login");
+        verify(accountsClient).createAccount("efg", "test-login", "test");
         verifyNoMoreInteractions(accountsClient);
 
         verifyNoInteractions(oauthAdapter);

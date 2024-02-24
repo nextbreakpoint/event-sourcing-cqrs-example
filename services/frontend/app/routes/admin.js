@@ -1,15 +1,20 @@
-var express = require('express')
-var fs = require('fs')
+let express = require('express')
+let fs = require('fs')
 
-var router = express.Router()
+let router = express.Router()
 
-var configPath = process.env.CONFIG_PATH
+let configPath = process.env.CONFIG_PATH
 
-const appConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'))
+let appConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'))
+
+let config = {
+    "api_url": appConfig.client_api_url,
+    "web_url": appConfig.client_web_url
+}
 
 router.get('/designs.html', function(req, res, next) {
     res.render('admin/designs', {
-        config: JSON.stringify({"api_url":appConfig.client_api_url,"web_url":appConfig.client_web_url}),
+        config: JSON.stringify(config),
         layout: 'admin',
         title: 'Designs',
         url: appConfig.client_web_url
@@ -18,10 +23,11 @@ router.get('/designs.html', function(req, res, next) {
 
 router.get('/designs/(:uuid).html', function(req, res, next) {
     res.render('admin/preview', {
-        config: JSON.stringify({"api_url":appConfig.client_api_url,"web_url":appConfig.client_web_url}),
+        config: JSON.stringify(config),
         layout: 'admin',
         title: 'Designs | ' + req.params.uuid,
-        url: appConfig.client_web_url, uuid: req.params.uuid
+        url: appConfig.client_web_url,
+        uuid: req.params.uuid
     })
 })
 

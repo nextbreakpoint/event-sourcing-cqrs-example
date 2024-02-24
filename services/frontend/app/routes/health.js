@@ -1,15 +1,20 @@
-var express = require('express')
-var fs = require('fs')
+let express = require('express')
+let fs = require('fs')
 
-var router = express.Router()
+let router = express.Router()
 
-var configPath = process.env.CONFIG_PATH
+let configPath = process.env.CONFIG_PATH
 
-const appConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'))
+let appConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'))
+
+let config = {
+    "api_url": appConfig.client_api_url,
+    "web_url": appConfig.client_web_url
+}
 
 router.get('/', function(req, res, next) {
         res.render('health', {
-            content: JSON.stringify({"api_url":appConfig.client_api_url,"web_url":appConfig.client_web_url}),
+            content: JSON.stringify(config),
             layout: 'health'
         })
 })

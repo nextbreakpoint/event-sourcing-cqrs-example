@@ -60,14 +60,14 @@ public class VerifyAuthenticationPact {
     context.verifyInteraction();
   }
 
-  @State("account exists for email")
-  public void accountExistsForEmail() throws SQLException {
+  @State("account exists for login")
+  public void accountExistsForLogin() throws SQLException {
     try (Connection connection = DriverManager.getConnection(testCases.getMySqlConnectionUrl(TestConstants.DATABASE_NAME), TestConstants.DATABASE_USERNAME, TestConstants.DATABASE_PASSWORD)) {
       connection.prepareStatement("TRUNCATE ACCOUNT;").execute();
-      PreparedStatement statement = connection.prepareStatement("INSERT INTO ACCOUNT (ACCOUNT_UUID,ACCOUNT_NAME,ACCOUNT_EMAIL,ACCOUNT_AUTHORITIES,ACCOUNT_CREATED) VALUES (?,?,?,?,CURRENT_TIMESTAMP);");
+      PreparedStatement statement = connection.prepareStatement("INSERT INTO ACCOUNT (ACCOUNT_UUID,ACCOUNT_NAME,ACCOUNT_LOGIN,ACCOUNT_AUTHORITIES,ACCOUNT_CREATED) VALUES (?,?,?,?,CURRENT_TIMESTAMP);");
       statement.setString(1, TestConstants.ACCOUNT_UUID.toString());
       statement.setString(2, "test");
-      statement.setString(3, "test@localhost");
+      statement.setString(3, "test-login");
       statement.setString(4, "guest");
       statement.execute();
     }
@@ -77,10 +77,10 @@ public class VerifyAuthenticationPact {
   public void accountExistsForUuid() throws SQLException {
     try (Connection connection = DriverManager.getConnection(testCases.getMySqlConnectionUrl(TestConstants.DATABASE_NAME), TestConstants.DATABASE_USERNAME, TestConstants.DATABASE_PASSWORD)) {
       connection.prepareStatement("TRUNCATE ACCOUNT;").execute();
-      PreparedStatement statement = connection.prepareStatement("INSERT INTO ACCOUNT (ACCOUNT_UUID,ACCOUNT_NAME,ACCOUNT_EMAIL,ACCOUNT_AUTHORITIES,ACCOUNT_CREATED) VALUES (?,?,?,?,CURRENT_TIMESTAMP);");
+      PreparedStatement statement = connection.prepareStatement("INSERT INTO ACCOUNT (ACCOUNT_UUID,ACCOUNT_NAME,ACCOUNT_LOGIN,ACCOUNT_AUTHORITIES,ACCOUNT_CREATED) VALUES (?,?,?,?,CURRENT_TIMESTAMP);");
       statement.setString(1, TestConstants.ACCOUNT_UUID.toString());
       statement.setString(2, "test");
-      statement.setString(3, "test@localhost");
+      statement.setString(3, "test-login");
       statement.setString(4, "guest");
       statement.execute();
     }
@@ -97,10 +97,10 @@ public class VerifyAuthenticationPact {
   public void userHasAdminPermission() throws SQLException {
     try (Connection connection = DriverManager.getConnection(testCases.getMySqlConnectionUrl(TestConstants.DATABASE_NAME), TestConstants.DATABASE_USERNAME, TestConstants.DATABASE_PASSWORD)) {
       connection.prepareStatement("TRUNCATE ACCOUNT;").execute();
-      PreparedStatement statement = connection.prepareStatement("INSERT INTO ACCOUNT (ACCOUNT_UUID,ACCOUNT_NAME,ACCOUNT_EMAIL,ACCOUNT_AUTHORITIES,ACCOUNT_CREATED) VALUES (?,?,?,?,CURRENT_TIMESTAMP);");
+      PreparedStatement statement = connection.prepareStatement("INSERT INTO ACCOUNT (ACCOUNT_UUID,ACCOUNT_NAME,ACCOUNT_LOGIN,ACCOUNT_AUTHORITIES,ACCOUNT_CREATED) VALUES (?,?,?,?,CURRENT_TIMESTAMP);");
       statement.setString(1, TestConstants.ACCOUNT_UUID.toString());
       statement.setString(2, "test");
-      statement.setString(3, "test@localhost");
+      statement.setString(3, "test-login");
       statement.setString(4, "guest");
       statement.execute();
     }

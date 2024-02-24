@@ -50,9 +50,9 @@ public class GitHubSignInHandler implements Handler<RoutingContextAdapter> {
     protected void handleAuthenticatedAccess(RoutingContextAdapter routingContext) {
         Single.just(newScope(routingContext))
                 .flatMap(scope -> getAccessTokenOrFail(scope).map(oauthToken -> scope.toBuilder().withOauthAccessToken(oauthToken).build()))
-                .flatMap(scope -> fetchUserEmail(scope).map(email -> scope.toBuilder().withUserEmail(email).build()))
                 .flatMap(scope -> createPlatformAccessToken().map(accessToken -> scope.toBuilder().withJwtAccessToken(accessToken).build()))
-                .flatMap(scope -> findAccounts(scope.getJwtAccessToken(), scope.getUserEmail()).map(accounts -> scope.toBuilder().withAccounts(accounts).build()))
+                .flatMap(scope -> fetchUserInfo(scope).map(userInfo -> scope.toBuilder().withUserInfo(userInfo).build()))
+                .flatMap(scope -> findAccounts(scope.getJwtAccessToken(), scope.getUserInfo()).map(accounts -> scope.toBuilder().withAccounts(accounts).build()))
                 .flatMap(scope -> fetchOrCreateAccount(scope).map(account -> scope.toBuilder().withAccount(account).build()))
                 .flatMap(scope -> createCookie(scope).map(cookie -> scope.toBuilder().withCookie(cookie).build()))
                 .flatMap(this::sendRedirectResponse)
@@ -77,7 +77,7 @@ public class GitHubSignInHandler implements Handler<RoutingContextAdapter> {
     }
 
     private Single<JsonObject> createAccount(GitHubSignInScope scope) {
-        return fetchUserInfo(scope).flatMap(userInfo -> createAccount(scope.getJwtAccessToken(), scope.getUserEmail(), userInfo.getString("name")));
+        return createAccount(scope.getJwtAccessToken(), scope.getUserInfo().getString("login"), Optional.ofNullable(scope.getUserInfo().getString("name")).orElse(scope.getUserInfo().getString("login")));
     }
 
     private Single<Cookie> createCookie(GitHubSignInScope scope) {
@@ -108,20 +108,16 @@ public class GitHubSignInHandler implements Handler<RoutingContextAdapter> {
         return createToken(uuid, List.of(role)).map(token -> Authentication.createCookie(token, cookieDomain));
     }
 
-    private Single<JsonArray> findAccounts(String jwtAccessToken, String email) {
-        return accountsClient.findAccounts(jwtAccessToken, email);
+    private Single<JsonArray> findAccounts(String jwtAccessToken, JsonObject userInfo) {
+        return accountsClient.findAccounts(jwtAccessToken, userInfo.getString("login"));
     }
 
-    public Single<JsonObject> createAccount(String jwtAccessToken, String email, String name) {
-        return accountsClient.createAccount(jwtAccessToken, email, name);
+    public Single<JsonObject> createAccount(String jwtAccessToken, String login, String name) {
+        return accountsClient.createAccount(jwtAccessToken, login, name);
     }
 
     public Single<JsonObject> fetchAccount(String jwtAccessToken, String accountId) {
         return accountsClient.fetchAccount(jwtAccessToken, accountId);
-    }
-
-    protected Single<String> fetchUserEmail(GitHubSignInScope scope) {
-        return githubClient.fetchUserEmail(scope.getOauthAccessToken());
     }
 
     protected Single<JsonObject> fetchUserInfo(GitHubSignInScope scope) {

@@ -1,5 +1,5 @@
 <body>
-    <header><p><b>The Beauty of Chaos</b> | <a href="../designs.html">Fractals</a> | {{uuid}}</p></header>
+    <header><p><b>The Beauty of Chaos</b> | <a href="../designs.html">Fractals</a></p></header>
     <div id="fractal" class="preview"></div>
     <footer>
         <p>Powered by <a href="https://nextbreakpoint.com">NextBreakpoint</a>{{#if admin}} | <a href="../../admin/designs/{{uuid}}.html">Edit</a>{{/if}}{{#if login}} | <a href="{{config.api_url}}/v1/auth/signin/browse/designs/{{uuid}}.html">Login</a>{{/if}}{{#if logout}} | <a href="{{config.api_url}}/v1/auth/signout/browse/designs/{{uuid}}.html">Logout</a>{{/if}}</p>
@@ -7,44 +7,49 @@
     <input type="hidden" id="uuid" value="{{uuid}}"/>
     <script>
         domReady(function(event) {
-            var map = L.map('fractal').setView([0, 0], 3);
+            function configure() {
+                resize();
 
-            var url = '{{config.api_url}}/v1/designs/{{design.uuid}}/{z}/{x}/{y}/256.png?t={{design.checksum}}';
+                let map = L.map('fractal').setView([0, 0], 3);
 
-            var layer = L.tileLayer(url, {
-                attribution: '',
-                detectRetina: true,
-                bounds: [[-180, -180],[180, 180]],
-                noWrap: true,
-                minZoom: 3,
-                maxZoom: 7,
-                tileSize: 256,
-                updateWhenIdle: true,
-                updateWhenZooming: false,
-                updateInterval: 500,
-                keepBuffer: 2,
-                noWrap: true
-            });
+                let url = '{{config.api_url}}/v1/designs/{{design.uuid}}/{z}/{x}/{y}/256.png?t={{design.checksum}}';
 
-            map.zoomControl.setPosition('bottomleft');
-            map.attributionControl.setPrefix('');
+                let layer = L.tileLayer(url, {
+                    attribution: '',
+                    detectRetina: true,
+                    bounds: [[-180, -180],[180, 180]],
+                    noWrap: true,
+                    minZoom: 3,
+                    maxZoom: 7,
+                    tileSize: 256,
+                    updateWhenIdle: true,
+                    updateWhenZooming: false,
+                    updateInterval: 500,
+                    keepBuffer: 2,
+                    noWrap: true
+                });
 
-            layer.addTo(map);
-        });
-        function resize() {
-            let width = window.innerWidth;
-            let height = window.innerHeight;
-            let elements = document.querySelectorAll(".preview");
-            for (let i = 0; i < elements.length; i++) {
-                elements[i].style.width = width + "px";
-                elements[i].style.height = height + "px";
+                map.zoomControl.setPosition('bottomleft');
+                map.attributionControl.setPrefix('');
+
+                layer.addTo(map);
             }
-        }
-        domReady(function(event) {
+
+            function resize() {
+                let width = window.innerWidth;
+                let height = window.innerHeight;
+                let elements = document.querySelectorAll(".preview");
+                for (let i = 0; i < elements.length; i++) {
+                    elements[i].style.width = width + "px";
+                    elements[i].style.height = height + "px";
+                }
+            }
+
             window.addEventListener('resize', function(e) {
                 resize();
             });
+
+            configure();
         })
-        resize();
     </script>
 </body>

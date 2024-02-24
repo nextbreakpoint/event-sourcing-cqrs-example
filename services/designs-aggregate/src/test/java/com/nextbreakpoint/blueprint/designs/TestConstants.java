@@ -38,7 +38,7 @@ public interface TestConstants {
     String UUID1_REGEXP = "[0-9a-f]{8}-[0-9a-f]{4}-[1][0-9a-f]{3}-[0-9a-f]{4}-[0-9a-f]{12}";
     String UUID6_REGEXP = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
 
-    String KEY_REGEXP = TestConstants.UUID6_REGEXP + "/" + TestConstants.UUID6_REGEXP + "/[0-9]+/[0-9]{4}[0-9]{4}\\.png";
+    String KEY_REGEXP = TestConstants.UUID6_REGEXP + "/" + TestConstants.UUID6_REGEXP + "/[0-9]+/[0-9]{4}[0-9]{4}";
 
     String REVISION_REGEXP = "[0-9]{16}-[0-9]{16}";
 

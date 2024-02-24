@@ -15,8 +15,6 @@ import io.vertx.rxjava.ext.web.RoutingContext;
 import rx.Single;
 
 public class VerticleStub extends Verticle {
-    public static final String DEFAULT_EMAIL = "test@localhost";
-
     public static void main(String[] args) {
         Launcher.main(new String[] { "run", VerticleStub.class.getCanonicalName(), "-conf", args.length > 0 ? args[0] : "config/default.json" });
     }
@@ -35,14 +33,8 @@ public class VerticleStub extends Verticle {
             }
 
             @Override
-            protected Single<String> fetchUserEmail(GitHubSignInScope scope) {
-                final String email = scope.getRoutingContext().getRequestParam("email");
-                return Single.just(email != null ? email : DEFAULT_EMAIL);
-            }
-
-            @Override
             protected Single<JsonObject> fetchUserInfo(GitHubSignInScope scope) {
-                return Single.just(new JsonObject().put("name", "Micky Mouse"));
+                return Single.just(new JsonObject().put("name", "Micky Mouse").put("login", "micky"));
             }
         });
     }

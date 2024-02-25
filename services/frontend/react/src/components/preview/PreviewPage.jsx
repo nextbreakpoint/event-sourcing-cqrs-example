@@ -317,8 +317,8 @@ let PreviewPage = class PreviewPage extends React.Component {
             <React.Fragment>
                 <Grid container justify="space-between" alignItems="center">
                     <Grid item xs={12}>
-                        {design.published == true && <Header landing={'/admin/designs.html'} titleText={"Fractals"} subtitleText={"The Beauty of Chaos"} backText={"Edit designs"} backLink={"/admin/designs.html"} browseText={"Show fractal"} browseLink={"/browse/designs/" + uuid + ".html"}/>}
-                        {design.published == false && <Header landing={'/admin/designs.html'} titleText={"Fractals"} subtitleText={"The Beauty of Chaos"} backText={"Edit designs"} backLink={"/admin/designs.html"}/>}
+                        {design.published == true && <Header landing={'/admin/designs.html'} titleText={"Fractals"} subtitleText={"The Beauty of Chaos"} backText={"Show all designs"} backLink={"/admin/designs.html"} browseText={"Show fractal"} browseLink={"/browse/designs/" + uuid + ".html"}/>}
+                        {design.published == false && <Header landing={'/admin/designs.html'} titleText={"Fractals"} subtitleText={"The Beauty of Chaos"} backText={"Show all designs"} backLink={"/admin/designs.html"}/>}
                     </Grid>
                     <Grid container xs={12} justify="space-between" alignItems="center" className="container">
                         <Grid item xs={6}>

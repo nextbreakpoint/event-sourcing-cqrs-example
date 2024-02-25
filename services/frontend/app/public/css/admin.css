@@ -191,6 +191,8 @@ footer {
     display: none;
 }
 
-.highlight {
-    background-color: rgba(25, 118, 210, 0.08);
+.spacer {
+    display: block;
+    width: 100%;
+    padding: 0.7em;
 }

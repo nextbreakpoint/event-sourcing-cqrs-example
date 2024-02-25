@@ -263,6 +263,7 @@ let DesignsPage = class DesignsPage extends React.Component {
                         <Header landing={'/admin/designs.html'} titleText={"Fractals"} subtitleText={"The Beauty of Chaos"} browseText={"Browse fractals"} browseLink={"/browse/designs.html"}/>
                     </Grid>
                     <Grid item xs={12}>
+                        <div class="spacer"/>
                         <DesignsTable/>
                     </Grid>
                     <Grid item xs={12}>

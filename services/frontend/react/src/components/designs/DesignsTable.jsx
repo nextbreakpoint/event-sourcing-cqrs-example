@@ -23,8 +23,8 @@ import { DataGrid, gridClasses, GridFooterContainer, GridFooter } from '@mui/x-d
 import AddIcon from '@mui/icons-material/Add'
 import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
-import UploadIcon from '@mui/icons-material/ArrowUpward'
-import DownloadIcon from '@mui/icons-material/ArrowDownward'
+import UploadIcon from '@mui/icons-material/Upload'
+import DownloadIcon from '@mui/icons-material/Download'
 import VisibilityIcon from '@mui/icons-material/Visibility'
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff'
 
@@ -85,11 +85,13 @@ let EnhancedTableToolbar = props => {
                   </IconButton>
               </label>
             </Tooltip>
-            <Tooltip title="Download">
-              <IconButton aria-label="Download" onClick={onDownload} disabled={numSelected != 1}>
-                <DownloadIcon />
-              </IconButton>
-            </Tooltip>
+            {numSelected == 1 && (
+              <Tooltip title="Download">
+                <IconButton aria-label="Download" onClick={onDownload}>
+                  <DownloadIcon />
+                </IconButton>
+              </Tooltip>
+            )}
             <Tooltip title="Create">
               <IconButton aria-label="Create" onClick={onCreate}>
                 <AddIcon />
@@ -441,7 +443,7 @@ let EnhancedTable = class EnhancedTable extends React.Component {
         .then(function (response) {
             if (response.status == 200) {
                 console.log("Designs loaded")
-                let designs = response.data.designs.map((design) => { return { uuid: design.uuid, checksum: design.checksum, revision: design.revision, levels: design.levels, created: design.created, updated: design.updated, draft: design.levels != 8, published: design.published, percentage: computePercentage(design, [0,1,2,3,4,5,6,7]), preview_percentage: computePercentage(design, [0,1,2]) }})
+                let designs = response.data.designs.map((design) => { return { uuid: design.uuid, checksum: design.checksum, revision: design.revision, levels: design.levels, created: design.created, updated: design.updated, draft: design.levels != 8, published: design.published, percentage: computePercentage(design, [0,1,2,3,4,5,6,7]), preview_percentage: computePercentage(design, [0,1,2]), json: design.json }})
                 let total = response.data.total
                 component.props.handleLoadDesignsSuccess(designs, total, revision)
             } else {

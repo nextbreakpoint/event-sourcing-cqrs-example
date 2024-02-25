@@ -38,10 +38,13 @@ import {
 
 import {
     showCreateDesign,
+    showUpdateDesign,
     showDeleteDesigns,
     setDesignsSorting,
     setDesignsSelection,
     setDesignsPagination,
+    setSelectedDesign,
+    setUploadedDesign,
     getTotal,
     getDesigns,
     getRevision,
@@ -53,8 +56,7 @@ import {
     getShowErrorMessage,
     getErrorMessage,
     showErrorMessage,
-    hideErrorMessage,
-    setUploadedDesign
+    hideErrorMessage
 } from '../../actions/designs'
 
 import axios from 'axios'
@@ -92,17 +94,17 @@ let EnhancedTableToolbar = props => {
                 <AddIcon />
               </IconButton>
             </Tooltip>
-            {numSelected > 0 && (
-              <Tooltip title="Delete">
-                <IconButton aria-label="Delete" onClick={onDelete}>
-                  <DeleteIcon />
-                </IconButton>
-              </Tooltip>
-            )}
             {numSelected == 1 && (
               <Tooltip title="Modify">
                 <IconButton aria-label="Modify" onClick={onModify}>
                   <EditIcon />
+                </IconButton>
+              </Tooltip>
+            )}
+            {numSelected > 0 && (
+              <Tooltip title="Delete">
+                <IconButton aria-label="Delete" onClick={onDelete}>
+                  <DeleteIcon />
                 </IconButton>
               </Tooltip>
             )}
@@ -122,10 +124,49 @@ EnhancedTableToolbar.propTypes = {
 }
 
 let EnhancedTable = class EnhancedTable extends React.Component {
+//   handleModify = () => {
+//       if (this.props.selection[0]) {
+//           window.location = this.props.config.web_url + "/admin/designs/" + this.props.selection[0] + ".html"
+//       }
+//   }
+
+  handleCreate = () => {
+    console.log("create")
+
+    if (this.props.selection.length == 0) {
+        let default_script = "fractal {\n\torbit [-2.0 - 2.0i,+2.0 + 2.0i] [x,n] {\n\t\tloop [0, 200] (mod2(x) > 40) {\n\t\t\tx = x * x + w;\n\t\t}\n\t}\n\tcolor [#FF000000] {\n\t\tpalette gradient {\n\t\t\t[#FFFFFFFF > #FF000000, 100];\n\t\t\t[#FF000000 > #FFFFFFFF, 100];\n\t\t}\n\t\tinit {\n\t\t\tm = 100 * (1 + sin(mod(x) * 0.2 / pi));\n\t\t}\n\t\trule (n > 0) [1] {\n\t\t\tgradient[m - 1]\n\t\t}\n\t}\n}\n"
+        let default_metadata = "{\n\t\"translation\":\n\t{\n\t\t\"x\":0.0,\n\t\t\"y\":0.0,\n\t\t\"z\":1.0,\n\t\t\"w\":0.0\n\t},\n\t\"rotation\":\n\t{\n\t\t\"x\":0.0,\n\t\t\"y\":0.0,\n\t\t\"z\":0.0,\n\t\t\"w\":0.0\n\t},\n\t\"scale\":\n\t{\n\t\t\"x\":1.0,\n\t\t\"y\":1.0,\n\t\t\"z\":1.0,\n\t\t\"w\":1.0\n\t},\n\t\"point\":\n\t{\n\t\t\"x\":0.0,\n\t\t\"y\":0.0\n\t},\n\t\"julia\":false,\n\t\"options\":\n\t{\n\t\t\"showPreview\":false,\n\t\t\"showTraps\":false,\n\t\t\"showOrbit\":false,\n\t\t\"showPoint\":false,\n\t\t\"previewOrigin\":\n\t\t{\n\t\t\t\"x\":0.0,\n\t\t\t\"y\":0.0\n\t\t},\n\t\t\"previewSize\":\n\t\t{\n\t\t\t\"x\":0.25,\n\t\t\t\"y\":0.25\n\t\t}\n\t}\n}"
+        let default_manifest = "{\"pluginId\":\"Mandelbrot\"}"
+        let design = {manifest: default_manifest, metadata: default_metadata, script: default_script}
+        this.props.handleDesignSelected(design);
+    }
+    if (this.props.selection.length == 1) {
+        let selectedDesign = this.props.designs.find((design) => design.uuid == this.props.selection[0])
+        if (selectedDesign) {
+            let design = JSON.parse(selectedDesign.json)
+            this.props.handleDesignSelected(design);
+        }
+    }
+    this.props.handleShowCreateDialog()
+  }
+
   handleModify = () => {
-      if (this.props.selection[0]) {
-          window.location = this.props.config.web_url + "/admin/designs/" + this.props.selection[0] + ".html"
-      }
+    console.log("modify")
+
+    if (this.props.selection.length == 1) {
+        let selectedDesign = this.props.designs.find((design) => design.uuid == this.props.selection[0])
+        if (selectedDesign) {
+            let design = JSON.parse(selectedDesign.json)
+            this.props.handleDesignSelected(design);
+        }
+    }
+    this.props.handleShowUpdateDialog()
+  }
+
+  handleDelete = () => {
+    console.log("delete")
+
+    this.props.handleShowDeleteDialog()
   }
 
   handleUpload = (e) => {
@@ -286,7 +327,7 @@ let EnhancedTable = class EnhancedTable extends React.Component {
     let CustomFooter = () => {
         return (
             <GridFooterContainer className={classNames({["highlight"]: account.role == 'admin' && selection.length > 0 })}>
-                <EnhancedTableToolbar role={account.role} numSelected={selection.length} onDownload={this.handleDownload} onUpload={this.handleUpload} onCreate={this.props.handleShowCreateDialog} onDelete={this.props.handleShowDeleteDialog} onModify={this.handleModify}/>
+                <EnhancedTableToolbar role={account.role} numSelected={selection.length} onDownload={this.handleDownload} onUpload={this.handleUpload} onCreate={this.handleCreate} onModify={this.handleModify} onDelete={this.handleDelete}/>
                 <GridFooter sx={{
                     border: 'none'
                 }} />
@@ -389,6 +430,13 @@ let EnhancedTable = class EnhancedTable extends React.Component {
             rowSelectionModel={selection}
             onRowSelectionModelChange={(selection) => {
               this.props.handleChangeSelection(selection);
+              if (selection.length == 1) {
+                let selectedDesign = designs.find((design) => design.uuid == selection[0])
+                if (selectedDesign) {
+                    let design = JSON.parse(selectedDesign.json)
+                    this.props.handleDesignSelected(design);
+                }
+              }
             }}
             paginationMode="server"
             paginationModel={pagination}
@@ -442,11 +490,17 @@ const mapDispatchToProps = dispatch => ({
     handleShowCreateDialog: () => {
         dispatch(showCreateDesign())
     },
+    handleShowUpdateDialog: () => {
+        dispatch(showUpdateDesign())
+    },
     handleShowErrorMessage: (error) => {
         dispatch(showErrorMessage(error))
     },
     handleHideErrorMessage: () => {
         dispatch(hideErrorMessage())
+    },
+    handleDesignSelected: (design) => {
+        dispatch(setSelectedDesign(design))
     },
     handleUploadedDesign: (design) => {
         dispatch(setUploadedDesign(design))

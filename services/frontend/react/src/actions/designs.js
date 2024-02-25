@@ -26,6 +26,14 @@ export const hideCreateDesign = () => ({
   type: Types.HIDE_CREATE_DESIGN
 })
 
+export const showUpdateDesign = () => ({
+  type: Types.SHOW_UPDATE_DESIGN
+})
+
+export const hideUpdateDesign = () => ({
+  type: Types.HIDE_UPDATE_DESIGN
+})
+
 export const showDeleteDesigns = () => ({
   type: Types.SHOW_DELETE_DESIGNS
 })
@@ -52,6 +60,14 @@ export const setDesignsSelection = (selection) => ({
 
 export const setDesignsPagination = (pagination) => ({
   type: Types.DESIGNS_PAGINATION_UPDATE, pagination
+})
+
+export const setSelectedDesign = (design) => ({
+  type: Types.SELECTED_DESIGN_CHANGED, present: true, design: design
+})
+
+export const resetSelectedDesign = () => ({
+  type: Types.SELECTED_DESIGN_CHANGED, present: false, design: {}
 })
 
 export const setUploadedDesign = (design) => ({
@@ -86,6 +102,10 @@ export const getShowCreateDesign = (state) => {
     return dialog.getShowCreateDesign(state)
 }
 
+export const getShowUpdateDesign = (state) => {
+    return dialog.getShowUpdateDesign(state)
+}
+
 export const getShowDeleteDesigns = (state) => {
     return dialog.getShowDeleteDesigns(state)
 }
@@ -96,6 +116,14 @@ export const getShowErrorMessage = (state) => {
 
 export const getErrorMessage = (state) => {
     return dialog.getErrorMessage(state)
+}
+
+export const isSelectedDesignPresent = (state) => {
+    return dialog.isSelectedDesignPresent(state)
+}
+
+export const getSelectedDesign = (state) => {
+    return dialog.getSelectedDesign(state)
 }
 
 export const isUploadedDesignPresent = (state) => {

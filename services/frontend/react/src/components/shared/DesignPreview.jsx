@@ -7,13 +7,13 @@ import Grid from '@mui/material/Grid'
 
 import { MapContainer, TileLayer, useMap } from 'react-leaflet'
 
-import DesignForm from '../shared/DesignForm'
+import DesignEditor from '../shared/DesignEditor'
 
 import axios from 'axios'
 
-let manifest = "{\"pluginId\":\"Mandelbrot\"}"
+let default_manifest = "{\"pluginId\":\"Mandelbrot\"}"
 
-export default function DesignPreview(props) {
+let DesignPreview = (props) => {
     let [script, setScript] = useState(props.script)
     let [metadata, setMetadata] = useState(props.metadata)
     let [checksum, setChecksum] = useState(null)
@@ -22,7 +22,7 @@ export default function DesignPreview(props) {
 
     useEffect(() => {
         let timeout = setTimeout(() => {
-            handleRender(createDesign(manifest, script, metadata))
+            handleRender(createDesign(default_manifest, script, metadata))
         }, 2000)
 
         return () => {
@@ -84,14 +84,10 @@ export default function DesignPreview(props) {
             })
     }
 
-    let handleScriptChanged = (setScript, value) => {
-        setScript(value)
-        props.onScriptChanged(value)
-    }
-
-    let handleMetadataChanged = (setMetadata, value) => {
-        setMetadata(value)
-        props.onMetadataChanged(value)
+    let handleEditorChanged = (setScript, setMetadata, value) => {
+        setScript(value.script)
+        setMetadata(value.metadata)
+        props.onEditorChanged(value)
     }
 
     return (
@@ -105,9 +101,10 @@ export default function DesignPreview(props) {
                 </Stack>
             </Grid>
             <Grid item xs={6}>
-                <DesignForm script={script} metadata={metadata} onScriptChanged={e => handleScriptChanged(setScript, e)} onMetadataChanged={e => handleMetadataChanged(setMetadata, e)}/>
+                <DesignEditor script={script} metadata={metadata} onEditorChanged={value => handleEditorChanged(setScript, setMetadata, value)}/>
             </Grid>
         </Grid>
     )
 }
 
+export default DesignPreview

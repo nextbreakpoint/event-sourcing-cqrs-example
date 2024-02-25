@@ -3,9 +3,12 @@ import * as Types from '../../constants/ActionTypes'
 const initialState = {
     show_upload_design: false,
     show_create_design: false,
+    show_update_design: false,
     show_delete_designs: false,
     show_error_message: false,
     error_message: "",
+    selected_design_present: false,
+    selected_design: {},
     uploaded_design_present: false,
     uploaded_design: {}
 }
@@ -21,6 +24,16 @@ function reducer (state = initialState, action) {
       return {
         ...state,
         show_create_design: false
+      }
+    case Types.SHOW_UPDATE_DESIGN:
+      return {
+        ...state,
+        show_update_design: true
+      }
+    case Types.HIDE_UPDATE_DESIGN:
+      return {
+        ...state,
+        show_update_design: false
       }
     case Types.SHOW_DELETE_DESIGNS:
       return {
@@ -49,6 +62,12 @@ function reducer (state = initialState, action) {
         uploaded_design_present: action.present,
         uploaded_design: action.design
       }
+    case Types.SELECTED_DESIGN_CHANGED:
+      return {
+        ...state,
+        selected_design_present: action.present,
+        selected_design: action.design
+      }
     default:
       return state
   }
@@ -62,6 +81,10 @@ export const getShowCreateDesign = (state) => {
     return state.designs.dialog.show_create_design
 }
 
+export const getShowUpdateDesign = (state) => {
+    return state.designs.dialog.show_update_design
+}
+
 export const getShowDeleteDesigns = (state) => {
     return state.designs.dialog.show_delete_designs
 }
@@ -72,6 +95,14 @@ export const getShowErrorMessage = (state) => {
 
 export const getErrorMessage = (state) => {
     return state.designs.dialog.error_message
+}
+
+export const isSelectedDesignPresent = (state) => {
+    return state.designs.dialog.selected_design_present
+}
+
+export const getSelectedDesign = (state) => {
+    return state.designs.dialog.selected_design
 }
 
 export const isUploadedDesignPresent = (state) => {

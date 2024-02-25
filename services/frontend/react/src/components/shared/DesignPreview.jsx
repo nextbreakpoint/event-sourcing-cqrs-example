@@ -11,18 +11,17 @@ import DesignEditor from '../shared/DesignEditor'
 
 import axios from 'axios'
 
-let default_manifest = "{\"pluginId\":\"Mandelbrot\"}"
-
 let DesignPreview = (props) => {
     let [script, setScript] = useState(props.script)
     let [metadata, setMetadata] = useState(props.metadata)
+    let [manifest, setManifest] = useState(props.manifest)
     let [checksum, setChecksum] = useState(null)
     let [imageUrl, setImageUrl] = useState(null)
     let [message, setMessage] = useState("Initializing...")
 
     useEffect(() => {
         let timeout = setTimeout(() => {
-            handleRender(createDesign(default_manifest, script, metadata))
+            handleRender(createDesign(manifest, script, metadata))
         }, 2000)
 
         return () => {
@@ -84,10 +83,10 @@ let DesignPreview = (props) => {
             })
     }
 
-    let handleEditorChanged = (setScript, setMetadata, value) => {
-        setScript(value.script)
-        setMetadata(value.metadata)
-        props.onEditorChanged(value)
+    let handleEditorChanged = (setScript, setMetadata, design) => {
+        setScript(design.script)
+        setMetadata(design.metadata)
+        props.onEditorChanged(design)
     }
 
     return (
@@ -101,7 +100,7 @@ let DesignPreview = (props) => {
                 </Stack>
             </Grid>
             <Grid item xs={6}>
-                <DesignEditor script={script} metadata={metadata} onEditorChanged={value => handleEditorChanged(setScript, setMetadata, value)}/>
+                <DesignEditor script={script} metadata={metadata} manifest={manifest} onEditorChanged={design => handleEditorChanged(setScript, setMetadata, design)}/>
             </Grid>
         </Grid>
     )

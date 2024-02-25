@@ -257,7 +257,7 @@ public class Verticle extends AbstractVerticle {
                         final Router mainRouter = Router.router(vertx);
 
                         mainRouter.route().handler(LoggerHandler.create(true, LoggerFormat.DEFAULT));
-                        mainRouter.route().handler(TimeoutHandler.create(10000));
+                        mainRouter.route().handler(TimeoutHandler.create(60000));
                         mainRouter.route().handler(corsHandler);
                         mainRouter.route().handler(BodyHandler.create());
                         mainRouter.route("/*").subRouter(router);

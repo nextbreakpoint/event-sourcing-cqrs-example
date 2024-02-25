@@ -25,6 +25,8 @@ import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
 import UploadIcon from '@mui/icons-material/ArrowUpward'
 import DownloadIcon from '@mui/icons-material/ArrowDownward'
+import VisibilityIcon from '@mui/icons-material/Visibility'
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff'
 
 import { connect } from 'react-redux'
 
@@ -44,7 +46,6 @@ import {
     setDesignsSelection,
     setDesignsPagination,
     setSelectedDesign,
-    setUploadedDesign,
     getTotal,
     getDesigns,
     getRevision,
@@ -62,7 +63,7 @@ import {
 import axios from 'axios'
 
 let EnhancedTableToolbar = props => {
-  const { role, numSelected, onDownload, onUpload, onCreate, onDelete, onModify } = props
+  const { role, numSelected, onDownload, onUpload, onCreate, onDelete, onModify, onPublish, onUnpublish } = props
 
   return (
     <Toolbar className="designs-toolbar">
@@ -108,6 +109,20 @@ let EnhancedTableToolbar = props => {
                 </IconButton>
               </Tooltip>
             )}
+            {numSelected > 0 && (
+              <Tooltip title="Publish">
+                <IconButton aria-label="Publish" onClick={onPublish}>
+                  <VisibilityIcon />
+                </IconButton>
+              </Tooltip>
+            )}
+            {numSelected > 0 && (
+              <Tooltip title="Unpublish">
+                <IconButton aria-label="Unpublish" onClick={onUnpublish}>
+                  <VisibilityOffIcon />
+                </IconButton>
+              </Tooltip>
+            )}
           </div>
       )}
     </Toolbar>
@@ -120,6 +135,8 @@ EnhancedTableToolbar.propTypes = {
   onCreate: PropTypes.func,
   onDelete: PropTypes.func,
   onModify: PropTypes.func,
+  onPublish: PropTypes.func,
+  onUnpublish: PropTypes.func,
   role: PropTypes.string
 }
 
@@ -140,6 +157,7 @@ let EnhancedTable = class EnhancedTable extends React.Component {
         let design = {manifest: default_manifest, metadata: default_metadata, script: default_script}
         this.props.handleDesignSelected(design);
     }
+
     if (this.props.selection.length == 1) {
         let selectedDesign = this.props.designs.find((design) => design.uuid == this.props.selection[0])
         if (selectedDesign) {
@@ -147,20 +165,22 @@ let EnhancedTable = class EnhancedTable extends React.Component {
             this.props.handleDesignSelected(design);
         }
     }
+
     this.props.handleShowCreateDialog()
   }
 
   handleModify = () => {
-    console.log("modify")
-
     if (this.props.selection.length == 1) {
+        console.log("modify")
+
         let selectedDesign = this.props.designs.find((design) => design.uuid == this.props.selection[0])
         if (selectedDesign) {
             let design = JSON.parse(selectedDesign.json)
             this.props.handleDesignSelected(design);
         }
+
+        this.props.handleShowUpdateDialog()
     }
-    this.props.handleShowUpdateDialog()
   }
 
   handleDelete = () => {
@@ -190,7 +210,7 @@ let EnhancedTable = class EnhancedTable extends React.Component {
             if (response.status == 200) {
                 if (response.data.errors.length == 0) {
                     let design = { manifest: response.data.manifest, metadata: response.data.metadata, script: response.data.script }
-                    component.props.handleUploadedDesign(design)
+                    component.props.handleDesignSelected(design)
                     component.props.handleShowCreateDialog()
                 } else {
                     console.log("Can't upload the file: errors = " + response.data.errors)
@@ -267,6 +287,130 @@ let EnhancedTable = class EnhancedTable extends React.Component {
       }
   }
 
+    handlePublish = () => {
+        if (this.props.selection.length > 0) {
+            console.log("publish")
+
+            let component = this
+
+            let config = {
+                timeout: 30000,
+                withCredentials: true
+            }
+
+            let promises = this.props.selection
+                .map((uuid) => {
+                    let selectedDesign = this.props.designs.find((design) => design.uuid == this.props.selection[0])
+                    if (selectedDesign) {
+                        let design = JSON.parse(selectedDesign.json)
+                        design.published = true
+                        return axios.put(component.props.config.api_url + '/v1/designs/' + selectedDesign.uuid, design, config)
+                    }
+                })
+
+            component.props.handleHideErrorMessage()
+
+            axios.all(promises)
+                .then(function (responses) {
+                    let modifiedUuids = responses
+                        .filter((res) => {
+                            return (res.status == 202 || res.status == 200)
+                        })
+                        .map((res) => {
+                            return res.config.url.substring(res.config.url.lastIndexOf("/") + 1)
+                        })
+
+                    let failedUuids = responses
+                        .filter((res) => {
+                            return (res.status != 202 && res.status != 200)
+                        })
+                        .map((res) => {
+                            return res.config.url.substring(res.config.url.lastIndexOf("/") + 1)
+                        })
+
+                    let designs = component.props.designs
+                        .filter((design) => {
+                            return !modifiedUuids.includes(design.uuid)
+                        })
+                        .map((design) => {
+                            return { uuid: design.uuid, selected: design.selected }
+                        })
+
+                    if (failedUuids.length == 0) {
+                        component.props.handleShowErrorMessage("Your request has been received. The designs will be updated shortly")
+                    } else {
+                        component.props.handleShowErrorMessage("Can't update the designs")
+                    }
+                })
+                .catch(function (error) {
+                    console.log("Can't update the designs: " + error)
+                    component.props.handleShowErrorMessage("Can't update the designs")
+                })
+        }
+    }
+
+    handleUnpublish = () => {
+        if (this.props.selection.length > 0) {
+            console.log("unpublish")
+
+            let component = this
+
+            let config = {
+                timeout: 30000,
+                withCredentials: true
+            }
+
+            let promises = this.props.selection
+                .map((uuid) => {
+                    let selectedDesign = this.props.designs.find((design) => design.uuid == this.props.selection[0])
+                    if (selectedDesign) {
+                        let design = JSON.parse(selectedDesign.json)
+                        design.published = false
+                        return axios.put(component.props.config.api_url + '/v1/designs/' + selectedDesign.uuid, design, config)
+                    }
+                })
+
+            component.props.handleHideErrorMessage()
+
+            axios.all(promises)
+                .then(function (responses) {
+                    let modifiedUuids = responses
+                        .filter((res) => {
+                            return (res.status == 202 || res.status == 200)
+                        })
+                        .map((res) => {
+                            return res.config.url.substring(res.config.url.lastIndexOf("/") + 1)
+                        })
+
+                    let failedUuids = responses
+                        .filter((res) => {
+                            return (res.status != 202 && res.status != 200)
+                        })
+                        .map((res) => {
+                            return res.config.url.substring(res.config.url.lastIndexOf("/") + 1)
+                        })
+
+                    let designs = component.props.designs
+                        .filter((design) => {
+                            return !modifiedUuids.includes(design.uuid)
+                        })
+                        .map((design) => {
+                            return { uuid: design.uuid, selected: design.selected }
+                        })
+
+                    if (failedUuids.length == 0) {
+                        component.props.handleShowErrorMessage("Your request has been received. The designs will be updated shortly")
+                    } else {
+                        component.props.handleShowErrorMessage("Can't update the designs")
+                    }
+                })
+                .catch(function (error) {
+                    console.log("Can't update the designs: " + error)
+                    component.props.handleShowErrorMessage("Can't update the designs")
+                })
+        }
+    }
+
   loadDesigns = (revision, pagination) => {
     console.log("Load designs")
 
@@ -327,7 +471,7 @@ let EnhancedTable = class EnhancedTable extends React.Component {
     let CustomFooter = () => {
         return (
             <GridFooterContainer className={classNames({["highlight"]: account.role == 'admin' && selection.length > 0 })}>
-                <EnhancedTableToolbar role={account.role} numSelected={selection.length} onDownload={this.handleDownload} onUpload={this.handleUpload} onCreate={this.handleCreate} onModify={this.handleModify} onDelete={this.handleDelete}/>
+                <EnhancedTableToolbar role={account.role} numSelected={selection.length} onDownload={this.handleDownload} onUpload={this.handleUpload} onCreate={this.handleCreate} onModify={this.handleModify} onDelete={this.handleDelete} onPublish={this.handlePublish} onUnpublish={this.handleUnpublish}/>
                 <GridFooter sx={{
                     border: 'none'
                 }} />
@@ -501,9 +645,6 @@ const mapDispatchToProps = dispatch => ({
     },
     handleDesignSelected: (design) => {
         dispatch(setSelectedDesign(design))
-    },
-    handleUploadedDesign: (design) => {
-        dispatch(setUploadedDesign(design))
     },
     handleLoadDesigns: () => {
         dispatch(loadDesigns())

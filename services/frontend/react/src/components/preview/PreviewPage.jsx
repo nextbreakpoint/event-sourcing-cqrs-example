@@ -309,6 +309,7 @@ let PreviewPage = class PreviewPage extends React.Component {
 
         let script = this.state.design.script ? this.state.design.script : this.props.design.script
         let metadata = this.state.design.metadata ? this.state.design.metadata : this.props.design.metadata
+        let manifest = this.state.design.manifest ? this.state.design.manifest : this.props.design.manifest
 
         const url = this.props.config.api_url + '/v1/designs/' + uuid + '/{z}/{x}/{y}/256.png?draft=true&t=' + design.checksum + '&r=' + design.preview_percentage
 
@@ -417,7 +418,7 @@ let PreviewPage = class PreviewPage extends React.Component {
                     <Dialog className="dialog" open={this.props.show_update_design} onClose={this.props.handleHideUpdateDialog} scroll={"paper"} maxWidth={"xl"} fullWidth={true} TransitionComponent={SlideTransition}>
                         <DialogTitle>Modify Existing Design</DialogTitle>
                         <DialogContent>
-                            <DesignPreview script={script} metadata={metadata} config={this.props.config} onEditorChanged={this.handleEditorChanged}/>
+                            <DesignPreview script={script} metadata={metadata} manifest={manifest} config={this.props.config} onEditorChanged={this.handleEditorChanged}/>
                         </DialogContent>
                         <DialogActions>
                             <Button variant="outlined" color="primary" onClick={this.props.handleHideUpdateDialog} color="primary">

@@ -11,17 +11,18 @@ import MetadataEditor from './MetadataEditor'
 let DesignEditor = class DesignEditor extends React.Component {
     state = {
         script: this.props.script,
-        metadata: this.props.metadata
+        metadata: this.props.metadata,
+        manifest: this.props.manifest
     }
 
-    handleScriptChanged = (value) => {
-        this.setState({script: value})
-        this.props.onEditorChanged({...this.state, script: value})
+    handleScriptChanged = (script) => {
+        this.setState({script: script})
+        this.props.onEditorChanged({...this.state, script: script})
     }
 
-    handleMetadataChanged = (value) => {
-        this.setState({metadata: value})
-        this.props.onEditorChanged({...this.state, metadata: value})
+    handleMetadataChanged = (metadata) => {
+        this.setState({metadata: metadata})
+        this.props.onEditorChanged({...this.state, metadata: metadata})
     }
 
     render() {
@@ -47,6 +48,7 @@ let DesignEditor = class DesignEditor extends React.Component {
 DesignEditor.propTypes = {
   script: PropTypes.string.isRequired,
   metadata: PropTypes.string.isRequired,
+  manifest: PropTypes.string.isRequired,
   onEditorChanged: PropTypes.func.isRequired
 }
 

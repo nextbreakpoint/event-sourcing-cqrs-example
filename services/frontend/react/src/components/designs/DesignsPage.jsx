@@ -48,12 +48,8 @@ import {
     getErrorMessage,
     showErrorMessage,
     hideErrorMessage,
-    isSelectedDesignPresent,
     getSelectedDesign,
-    resetSelectedDesign,
-    isUploadedDesignPresent,
-    getUploadedDesign,
-    resetUploadedDesign
+    setSelectedDesign
 } from '../../actions/designs'
 
 import axios from 'axios'
@@ -66,19 +62,7 @@ function FadeTransition(props) {
   return <Fade in="true" {...props} />
 }
 
-let default_script = "fractal {\n\torbit [-2.0 - 2.0i,+2.0 + 2.0i] [x,n] {\n\t\tloop [0, 200] (mod2(x) > 40) {\n\t\t\tx = x * x + w;\n\t\t}\n\t}\n\tcolor [#FF000000] {\n\t\tpalette gradient {\n\t\t\t[#FFFFFFFF > #FF000000, 100];\n\t\t\t[#FF000000 > #FFFFFFFF, 100];\n\t\t}\n\t\tinit {\n\t\t\tm = 100 * (1 + sin(mod(x) * 0.2 / pi));\n\t\t}\n\t\trule (n > 0) [1] {\n\t\t\tgradient[m - 1]\n\t\t}\n\t}\n}\n"
-let default_metadata = "{\n\t\"translation\":\n\t{\n\t\t\"x\":0.0,\n\t\t\"y\":0.0,\n\t\t\"z\":1.0,\n\t\t\"w\":0.0\n\t},\n\t\"rotation\":\n\t{\n\t\t\"x\":0.0,\n\t\t\"y\":0.0,\n\t\t\"z\":0.0,\n\t\t\"w\":0.0\n\t},\n\t\"scale\":\n\t{\n\t\t\"x\":1.0,\n\t\t\"y\":1.0,\n\t\t\"z\":1.0,\n\t\t\"w\":1.0\n\t},\n\t\"point\":\n\t{\n\t\t\"x\":0.0,\n\t\t\"y\":0.0\n\t},\n\t\"julia\":false,\n\t\"options\":\n\t{\n\t\t\"showPreview\":false,\n\t\t\"showTraps\":false,\n\t\t\"showOrbit\":false,\n\t\t\"showPoint\":false,\n\t\t\"previewOrigin\":\n\t\t{\n\t\t\t\"x\":0.0,\n\t\t\t\"y\":0.0\n\t\t},\n\t\t\"previewSize\":\n\t\t{\n\t\t\t\"x\":0.25,\n\t\t\t\"y\":0.25\n\t\t}\n\t}\n}"
-let default_manifest = "{\"pluginId\":\"Mandelbrot\"}"
-
 let DesignsPage = class DesignsPage extends React.Component {
-    state = {
-        design: {
-            manifest: default_manifest,
-            metadata: default_metadata,
-            script: default_script
-        }
-    }
-
     handleCreate = () => {
         console.log("create")
 
@@ -149,7 +133,7 @@ let DesignsPage = class DesignsPage extends React.Component {
 
         let design = this.createDesign()
 
-        let selectedDesign = this.props.designs.find((design) => design.uuid == this.props.selection[0])
+        let uuid = this.props.selection[0]
 
         component.props.handleHideErrorMessage()
 
@@ -159,7 +143,7 @@ let DesignsPage = class DesignsPage extends React.Component {
                      let result = response.data
                      console.log(result)
                      if (result.status == "ACCEPTED") {
-                        axios.put(component.props.config.api_url + '/v1/designs/' + selectedDesign.uuid, design, config)
+                        axios.put(component.props.config.api_url + '/v1/designs/' + uuid, design, config)
                             .then(function (response) {
                                 if (response.status == 202 || response.status == 200) {
                                     component.props.handleShowErrorMessage("Your request has been received. The design will be updated shortly")
@@ -246,19 +230,15 @@ let DesignsPage = class DesignsPage extends React.Component {
     }
 
     handleModify = () => {
-        if (this.props.selection[0]) {
+        if (this.props.selection.length == 1) {
             window.location = this.props.config.web_url + "/admin/designs/" + this.props.selection[0] + ".html"
         }
     }
 
-    handleEditorChanged = (value) => {
-        if (this.props.selected_design_present == true) {
-            this.props.resetSelectedDesign()
-        }
-        if (this.props.uploaded_design_present == true) {
-            this.props.resetUploadedDesign()
-        }
-        this.setState({design: {...this.state.design, script: value.script, metadata: value.metadata}})
+    handleEditorChanged = (design) => {
+        console.log("changed " + JSON.stringify(design));
+
+        this.props.handleDesignSelected(design);
     }
 
     handleClose = (event, reason) => {
@@ -266,20 +246,11 @@ let DesignsPage = class DesignsPage extends React.Component {
           return
         }
 
-        this.props.resetUploadedDesign()
         this.props.handleHideErrorMessage()
     }
 
     createDesign = () => {
-        if (this.props.selected_design_present == true) {
-            return { manifest: this.props.selected_design.manifest, script: this.props.selected_design.script, metadata: this.props.selected_design.metadata }
-        }
-
-        if (this.props.uploaded_design_present == true) {
-            return { manifest: this.props.uploaded_design.manifest, script: this.props.uploaded_design.script, metadata: this.props.uploaded_design.metadata }
-        }
-
-        return { manifest: this.state.design.manifest, script: this.state.design.script, metadata: this.state.design.metadata }
+        return this.props.selected_design
     }
 
     render() {
@@ -302,7 +273,7 @@ let DesignsPage = class DesignsPage extends React.Component {
                     <Dialog className="dialog" open={this.props.show_create_design} onClose={this.props.handleHideCreateDialog} scroll={"paper"} maxWidth={"xl"} fullWidth={true} TransitionComponent={SlideTransition}>
                         <DialogTitle>Create New Design</DialogTitle>
                         <DialogContent>
-                            <DesignPreview script={design.script} metadata={design.metadata} config={this.props.config} onEditorChanged={this.handleEditorChanged}/>
+                            <DesignPreview script={design.script} metadata={design.metadata} manifest={design.manifest} config={this.props.config} onEditorChanged={this.handleEditorChanged}/>
                         </DialogContent>
                         <DialogActions>
                             <Button variant="outlined" color="primary" onClick={this.props.handleHideCreateDialog} color="primary">
@@ -318,7 +289,7 @@ let DesignsPage = class DesignsPage extends React.Component {
                     <Dialog className="dialog" open={this.props.show_update_design} onClose={this.props.handleHideUpdateDialog} scroll={"paper"} maxWidth={"xl"} fullWidth={true} TransitionComponent={SlideTransition}>
                         <DialogTitle>Modify Existing Design</DialogTitle>
                         <DialogContent>
-                            <DesignPreview script={design.script} metadata={design.metadata} config={this.props.config} onEditorChanged={this.handleEditorChanged}/>
+                            <DesignPreview script={design.script} metadata={design.metadata} manifest={design.manifest} config={this.props.config} onEditorChanged={this.handleEditorChanged}/>
                         </DialogContent>
                         <DialogActions>
                             <Button variant="outlined" color="primary" onClick={this.props.handleHideUpdateDialog} color="primary">
@@ -385,10 +356,7 @@ DesignsPage.propTypes = {
     show_delete_designs: PropTypes.bool.isRequired,
     show_error_message: PropTypes.bool.isRequired,
     error_message: PropTypes.string.isRequired,
-    selected_design_present: PropTypes.bool.isRequired,
-    uploaded_design: PropTypes.object.isRequired,
-    selected_design_present: PropTypes.bool.isRequired,
-    uploaded_design: PropTypes.object.isRequired
+    selected_design: PropTypes.object.isRequired
 }
 
 const mapStateToProps = state => ({
@@ -402,10 +370,7 @@ const mapStateToProps = state => ({
     show_delete_designs: getShowDeleteDesigns(state),
     show_error_message: getShowErrorMessage(state),
     error_message: getErrorMessage(state),
-    selected_design_present: isSelectedDesignPresent(state),
-    selected_design: getSelectedDesign(state),
-    uploaded_design_present: isUploadedDesignPresent(state),
-    uploaded_design: getUploadedDesign(state)
+    selected_design: getSelectedDesign(state)
 })
 
 const mapDispatchToProps = dispatch => ({
@@ -427,11 +392,8 @@ const mapDispatchToProps = dispatch => ({
     handleHideErrorMessage: () => {
         dispatch(hideErrorMessage())
     },
-    resetSelectedDesign: () => {
-        dispatch(resetSelectedDesign())
-    },
-    resetUploadedDesign: () => {
-        dispatch(resetUploadedDesign())
+    handleDesignSelected: (design) => {
+        dispatch(setSelectedDesign(design))
     }
 })
 

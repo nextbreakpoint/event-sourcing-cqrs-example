@@ -13,6 +13,17 @@ let makeRandom = function() {
 	}
 }
 
+let pattern1 = [
+    [ [0,3,0,0], [0,3,0,1], [0,3,0,2], [0,3,0,3], [0,3,0,4], [0,3,0,5], [0,3,0,6], [0,3,0,7] ],
+    [ [0,3,1,0], [0,3,1,1], [0,3,1,2], [0,3,1,3], [0,3,1,4], [0,3,1,5], [0,3,1,6], [0,3,1,7] ],
+    [ [0,3,2,0], [0,3,2,1], [0,3,2,2], [0,3,2,3], [0,3,2,4], [0,3,2,5], [0,3,2,6], [0,3,2,7] ],
+    [ [0,3,3,0], [0,3,3,1], [0,3,3,2], [0,3,3,3], [0,3,3,4], [0,3,3,5], [0,3,3,6], [0,3,3,7] ],
+    [ [0,3,4,0], [0,3,4,1], [0,3,4,2], [0,3,4,3], [0,3,4,4], [0,3,4,5], [0,3,4,6], [0,3,4,7] ],
+    [ [0,3,5,0], [0,3,5,1], [0,3,5,2], [0,3,5,3], [0,3,5,4], [0,3,5,5], [0,3,5,6], [0,3,5,7] ],
+    [ [0,3,6,0], [0,3,6,1], [0,3,6,2], [0,3,6,3], [0,3,6,4], [0,3,6,5], [0,3,6,6], [0,3,6,7] ],
+    [ [0,3,7,0], [0,3,7,1], [0,3,7,2], [0,3,7,3], [0,3,7,4], [0,3,7,5], [0,3,7,6], [0,3,7,7] ]
+]
+
 let pattern1a = [
     [ [0,3,2,0], [0,3,2,1], [0,3,2,2], [0,3,2,3], [0,3,2,4], [0,3,2,5], [0,3,2,6], [0,3,2,7] ],
     [ [0,3,3,0], [0,3,3,1], [0,3,3,2], [0,3,3,3], [0,3,3,4], [0,3,3,5], [0,3,3,6], [0,3,3,7] ],
@@ -97,6 +108,20 @@ let patterns = [
     mergePatterns([ pattern2a, pattern4a, pattern2a, pattern2a ])
 ]
 
+function render(designs, pattern) {
+    return pattern.map((row) => {
+        return row.map((col) => {
+            let design = designs[col[0] % designs.length]
+            let url = design.baseUrl + "/" + design.uuid + "/" + col[1] + "/" + col[3] + "/" + col[2] + "/256.png?t=" + design.checksum
+            let cell = {
+                design: design,
+                imageUrl: url
+            }
+            return cell
+        })
+    })
+}
+
 function Instance() {
     var self = this
 }
@@ -108,23 +133,15 @@ Instance.prototype.make = function (designs, from, size) {
         return []
     }
 
+    if (designs.length == 1) {
+        return render(designs, pattern1)
+    }
+
     let patternIdx = (Math.round(random() * (patterns.length - 1)) + from / size) % patterns.length
 
     let pattern = patterns[patternIdx]
 
-    let cells = pattern.map((row) => {
-        return row.map((col) => {
-            let design = designs[col[0] % designs.length]
-            let url = design.baseUrl + "/" + design.uuid + "/" + col[1] + "/" + col[3] + "/" + col[2] + "/256.png?t=" + design.checksum
-            let cell = {
-                design: design,
-                imageUrl: url
-            }
-            return cell
-        })
-    })
-
-    return cells
+    return render(designs, pattern)
 }
 
 module.exports = new Instance()

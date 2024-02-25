@@ -63,7 +63,7 @@ let EnhancedTableToolbar = props => {
   const { role, numSelected, onDownload, onUpload, onCreate, onDelete, onModify } = props
 
   return (
-    <Toolbar className="toolbar">
+    <Toolbar className="designs-toolbar">
 {/*       <div className="title"> */}
 {/*         {role == 'admin' && numSelected > 0 && ( */}
 {/*           <Typography color="inherit" variant="subheading"> */}
@@ -71,9 +71,9 @@ let EnhancedTableToolbar = props => {
 {/*           </Typography> */}
 {/*         )} */}
 {/*       </div> */}
-      <div className="spacer" />
+{/*       <div className="spacer" /> */}
       {role == 'admin' && (
-          <div className="actions">
+          <div className="toolbar-actions">
             <Tooltip title="Upload">
               <label htmlFor="uploadFile">
                   <Input className="upload-file" id="uploadFile" accept="application/zip" type="file" onChange={onUpload} />

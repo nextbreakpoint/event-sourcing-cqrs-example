@@ -95,13 +95,13 @@ export default function DesignPreview(props) {
     }
 
     return (
-        <Grid container justify="space-between" alignItems="stretch" alignContent="space-between">
+        <Grid container justify="space-between" alignItems="stretch" alignContent="space-between" className="design-editor">
             <Grid item xs={6}>
                 <Stack direction="column" alignItems="center" justifyContent="space-between">
-                  <div className="image-preview">
+                  <div className="editor-preview">
                       {imageUrl != null && (<img src={imageUrl}/>)}
                   </div>
-                  <div className="message">{message}</div>
+                  <div className="editor-message">{message}</div>
                 </Stack>
             </Grid>
             <Grid item xs={6}>

@@ -5,6 +5,7 @@ body {
     padding: 0;
     margin: 0;
     border: 0;
+    background: #ededed;
 }}
 
 p, span, div {
@@ -13,10 +14,14 @@ p, span, div {
     border: 0;
 }
 
+a, a:active, a:hover, a:visited {
+    color: #222222;
+}
+
 header {
-    font-size: 1.5em;
-    left: 1%;
-    top: 1%;
+    font-size: 1.4em;
+    left: 0%;
+    top: 2%;
     position: fixed;
     display: block;
     text-align: left;
@@ -24,7 +29,7 @@ header {
     padding: 2%;
     background: #fdfdfd;
     opacity: 0.6;
-    border-radius: 1.2em;
+    border-radius: 0 1.2em 1.2em 0;
 }
 
 header p {
@@ -34,16 +39,16 @@ header p {
 
 footer {
     font-size: 1.2em;
-    right: 1%;
+    right: 0%;
     bottom: 1%;
     position: fixed;
     display: block;
     text-align: left;
     z-index: 10;
-    padding: 1.5%;
+    padding: 1.2%;
     background: #fdfdfd;
     opacity: 0.6;
-    border-radius: 1.2em;
+    border-radius: 1.2em 0 0 1.2em;
 }
 
 footer p {
@@ -51,21 +56,66 @@ footer p {
     margin: 0;
 }
 
-.images {
+navigation.images {
+    font-size: 1.2em;
+    left: 0%;
+    bottom: 1%;
+    position: fixed;
+    display: block;
+    text-align: center;
+    z-index: 10;
+    padding: 1.2%;
+    background: #fdfdfd;
+    opacity: 0.6;
+    border-radius: 0 1.2em 1.2em 0;
+    float: left;
+}
+
+navigation.close {
+    font-size: 1.4em;
+    right: 0%;
+    top: 2%;
+    position: fixed;
+    display: block;
+    text-align: center;
+    z-index: 10;
+    padding: 1.2%;
+    background: #fdfdfd;
+    opacity: 0.6;
+    border-radius: 1.2em 0 0 1.2em;
+}
+
+navigation.images .home {
+    display: inline-block;
+    float: left;
+}
+
+navigation.images .next {
+    display: inline-block;
+    float: left;
+}
+
+navigation.images .spacer {
+    display: inline-block;
+    float: left;
+    padding: 0 0.6em 0 0.6em;
+}
+
+section.images {
     display: block;
     position: absolute;
-    overflow: hidden;
+    overflow: scroll;
     width: 100%;
     height: 100%;
 }
 
-.pages {
+section.images .pages {
     display: block;
     position: relative;
     width: 100%;
 }
 
-.page {
+section.images .page {
     display: block;
     position: relative;
     text-align: center;
@@ -74,47 +124,33 @@ footer p {
     z-index: 5;
 }
 
-.row {
-    display: block;
+section.images .row, section.preview .row {
+    display: inline-block;
+    float: left;
+    width: 104%;
 }
 
-.cell {
+section.images .cell, section.preview .cell {
     display: inline-block;
+    float: left;
     width: 12%;
 }
 
-.cell img {
+section.images .cell img, section.preview .cell img {
     width: 100%;
     height: 100%;
 }
 
-.next {
-    font-size: 1.5em;
-    left: 1%;
-    bottom: 1%;
-    position: fixed;
-    display: block;
-    text-align: center;
-    z-index: 10;
-    padding: 1.5%;
-    background: #fdfdfd;
-    opacity: 0.6;
-    border-radius: 50pt;
-}
-
-.preview {
+section.preview {
     display: inline-block;
     position: relative;
     overflow: hidden;
+    font-size: 0;
     padding: 0;
     z-index: 5;
 }
 
-a, a:active, a:hover, a:visited {
-    color: #222222;
-}
-
-.leaflet-container {
+section.preview .leaflet-container {
     width: 100%;
     position: relative;
     display: inline-block;
@@ -134,6 +170,10 @@ a, a:active, a:hover, a:visited {
     .next {
         font-size: 1.2em;
     }
+
+    .close {
+        font-size: 1.2em;
+    }
 }
 
 @media (max-width: 600px) {
@@ -148,6 +188,10 @@ a, a:active, a:hover, a:visited {
     .next {
         font-size: 1.0em;
     }
+
+    .close {
+        font-size: 1.0em;
+    }
 }
 
 @media (max-width: 300px) {
@@ -160,6 +204,10 @@ a, a:active, a:hover, a:visited {
     }
 
     .next {
+        font-size: 0.8em;
+    }
+
+    .close {
         font-size: 0.8em;
     }
 }

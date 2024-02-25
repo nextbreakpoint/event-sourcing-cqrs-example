@@ -309,18 +309,19 @@ let PreviewPage = class PreviewPage extends React.Component {
             <React.Fragment>
                 <Grid container justify="space-between" alignItems="center">
                     <Grid item xs={12}>
-                        <Header landing={'/admin/designs/' + uuid + '.html'} titleLink={"/admin/designs.html"} titleText={"Fractals"} browseLink={"/browse/designs/" + uuid + ".html"} browseText={"The Beauty of Chaos"}/>
+                        {design.published == true && <Header landing={'/admin/designs.html'} titleText={"Fractals"} subtitleText={"The Beauty of Chaos"} backText={"Edit designs"} backLink={"/admin/designs.html"} browseText={"Show fractal"} browseLink={"/browse/designs/" + uuid + ".html"}/>}
+                        {design.published == false && <Header landing={'/admin/designs.html'} titleText={"Fractals"} subtitleText={"The Beauty of Chaos"} backText={"Edit designs"} backLink={"/admin/designs.html"}/>}
                     </Grid>
                     <Grid container xs={12} justify="space-between" alignItems="center" className="container">
                         <Grid item xs={6}>
-                            <div className="map-preview">
+                            <div className="design-preview">
                                 <MapContainer center={[0, 0]} zoom={2} attributionControl={false} dragging={false} zoomControl={false} doubleClickZoom={false} scrollWheelZoom={false} touchZoom={false}>
                                     <TileLayer url={url} detectRetina={false} bounds={[[-180, -180],[180, 180]]} noWrap={true} minZoom={2} maxZoom={2} tileSize={256} updateWhenIdle={true} updateWhenZooming={false} updateInterval={500} keepBuffer={2}/>
                                 </MapContainer>
                             </div>
                         </Grid>
                         <Grid item xs={6}>
-                            <div className="details">
+                            <div className="design-details">
                                 <div class="details-item">
                                     <div><Typography variant="body" color="inherit" class="details-label">UUID</Typography></div>
                                     <div><Typography variant="body" color="inherit" class="details-value">{design.uuid}</Typography></div>
@@ -353,9 +354,9 @@ let PreviewPage = class PreviewPage extends React.Component {
                         </Grid>
                     </Grid>
                     <Grid container xs={12} justify="space-between" alignItems="top-center" className="container">
-                        <Grid item xs={12}>
+                        <Grid item xs={12} className="design-editor">
                             <DesignForm script={script} metadata={metadata} onScriptChanged={this.handleScriptChanged} onMetadataChanged={this.handleMetadataChanged}/>
-                            <div className="controls">
+                            <div className="design-controls">
                                 {this.props.account.role == 'admin' && (
                                     <Button className="button" variant="outlined" color="primary" onClick={this.handleDownload}>
                                       Download

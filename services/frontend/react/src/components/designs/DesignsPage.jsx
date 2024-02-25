@@ -233,7 +233,7 @@ let DesignsPage = class DesignsPage extends React.Component {
             <React.Fragment>
                 <Grid container justify="space-between" alignItems="center">
                     <Grid item xs={12}>
-                        <Header landing={'/admin/designs.html'} titleText={"Fractals"} browseLink={"/browse/designs.html"} browseText={"The Beauty of Chaos"}/>
+                        <Header landing={'/admin/designs.html'} titleText={"Fractals"} subtitleText={"The Beauty of Chaos"} browseText={"Browse fractals"} browseLink={"/browse/designs.html"}/>
                     </Grid>
                     <Grid item xs={12}>
                         <DesignsTable/>

@@ -1,5 +1,6 @@
 body {
     font-family: "Roboto";
+    font-weight: 100;
     font-size: 14pt;
     color: #080808;
     padding: 0;
@@ -35,6 +36,19 @@ header {
 header p {
     padding: 0;
     margin: 0;
+}
+
+header .title {
+    font-weight: 300;
+}
+
+header .subtitle {
+}
+
+header .separator {
+    display: inline-block;
+    text-align: center;
+    width: 1em;
 }
 
 footer {

@@ -1,5 +1,6 @@
 body {
     font-family: "Roboto";
+    font-weight: 100;
     font-size: 14pt;
     color: #080808;
     min-width: 800px;
@@ -42,6 +43,22 @@ header {
 
 header .grow {
     flex-grow: 1;
+}
+
+header .title {
+    font-weight: 300;
+}
+
+header .subtitle {
+}
+
+header .account {
+}
+
+header .separator {
+    display: inline-block;
+    text-align: center;
+    width: 1em;
 }
 
 footer {

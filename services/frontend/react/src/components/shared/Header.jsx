@@ -42,17 +42,20 @@ let Header = class Header extends React.Component {
     }
 
     render() {
-        const { titleText, subtitleText, backText, backLink, browseText, browseLink } = this.props
+        const { titleText, subtitleText, backText, backLink, browseText, browseLink, account } = this.props
 
         return (
             <AppBar position="static">
                 <Toolbar className="header">
-                  <Typography variant="title" color="inherit" className="grow"><b>{titleText}</b> | {subtitleText}</Typography>
+                  <div class="grow">
+                      <Typography variant="title" color="inherit"><span class="title">{titleText}</span><span class="separator">|</span><span class="subtitle">{subtitleText}</span></Typography>
+                      {account.role != 'anonymous' && <Typography variant="subtitle" color="inherit"><span class="separator">.</span><span class="account">Welcome {account.name}</span></Typography>}
+                  </div>
                   <navigation>
                       {browseLink != null && <Button color="inherit" onClick={this.handleBrowse}>{browseText}</Button>}
                       {backLink != null && <Button color="inherit" onClick={this.handleBack}>{backText}</Button>}
-                      {this.props.account.role == 'anonymous' && <Button color="inherit" onClick={this.handleLogin}>Login</Button>}
-                      {this.props.account.role != 'anonymous' && <Button color="inherit" onClick={this.handleLogout}>Logout</Button>}
+                      {account.role == 'anonymous' && <Button color="inherit" onClick={this.handleLogin}>Login</Button>}
+                      {account.role != 'anonymous' && <Button color="inherit" onClick={this.handleLogout}>Logout</Button>}
                   </navigation>
                 </Toolbar>
             </AppBar>

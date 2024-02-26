@@ -5,11 +5,6 @@ import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
-import Link from '@mui/material/Link';
-import IconButton from '@mui/material/IconButton';
-import Menu from '@mui/material/Menu';
-import MenuItem from '@mui/material/MenuItem';
-import MenuIcon from '@mui/icons-material/Menu';
 
 import { connect } from 'react-redux'
 
@@ -29,16 +24,12 @@ import Cookies from 'universal-cookie'
 const cookies = new Cookies()
 
 let Header = class Header extends React.Component {
-    state = {
-        anchorEl: null
+    handleBack = () => {
+        window.location = this.props.backLink
     }
 
-    handleNavigateContentDesigns = () => {
-        window.location = this.props.config.web_url + "/browse/designs.html"
-    }
-
-    handleNavigateAdminDesigns = () => {
-        window.location = this.props.config.web_url + "/admin/designs.html"
+    handleBrowse = () => {
+        window.location = this.props.browseLink
     }
 
     handleLogin = () => {
@@ -47,61 +38,34 @@ let Header = class Header extends React.Component {
 
     handleLogout = () => {
         cookies.remove('token', {domain: window.location.hostname, path: '/'})
-
         this.props.handleAccountLoaded({ role: 'anonymous', name: 'Stranger' })
     }
 
-    handleMenu = event => {
-        this.setState({ anchorEl: event.currentTarget })
-    }
-
-    handleClose = () => {
-        this.setState({ anchorEl: null })
-    }
-
     render() {
-        const { titleLink, titleText, titleText2, browseLink, browseText } = this.props
-        const { anchorEl } = this.state
-        const open = Boolean(anchorEl)
+        const { titleText, subtitleText, backText, backLink, browseText, browseLink } = this.props
 
         return (
             <AppBar position="static">
                 <Toolbar className="header">
-                  <Typography variant="title" color="inherit" className="grow">{browseLink != null && <span className="browse"><Link href={browseLink}>{browseText}</Link></span>} | {titleLink != null && <span><Link href={titleLink}>{titleText}</Link></span>}{titleLink == null && <span>{titleText}</span>}</Typography>
-                  {this.props.account.role == 'anonymous' && <Button color="inherit" onClick={this.handleLogin}>Login</Button>}
-                  {this.props.account.role != 'anonymous' && <Button color="inherit" onClick={this.handleLogout}>Logout</Button>}
+                  <Typography variant="title" color="inherit" className="grow"><b>{titleText}</b> | {subtitleText}</Typography>
+                  <navigation>
+                      {browseLink != null && <Button color="inherit" onClick={this.handleBrowse}>{browseText}</Button>}
+                      {backLink != null && <Button color="inherit" onClick={this.handleBack}>{backText}</Button>}
+                      {this.props.account.role == 'anonymous' && <Button color="inherit" onClick={this.handleLogin}>Login</Button>}
+                      {this.props.account.role != 'anonymous' && <Button color="inherit" onClick={this.handleLogout}>Logout</Button>}
+                  </navigation>
                 </Toolbar>
             </AppBar>
         )
     }
 }
 
-//                   <IconButton className={"menu-button"} color="inherit" aria-label="Menu">
-//                     <MenuIcon onClick={this.handleMenu}/>
-//                   </IconButton>
-//                   <Menu
-//                     id="menu-appbar"
-//                     anchorEl={anchorEl}
-//                     anchorOrigin={{
-//                       vertical: 'top',
-//                       horizontal: 'right',
-//                     }}
-//                     transformOrigin={{
-//                       vertical: 'top',
-//                       horizontal: 'right',
-//                     }}
-//                     open={open}
-//                     onClose={this.handleClose}
-//                   >
-//                     <MenuItem onClick={this.handleNavigateContentDesigns}>Browse</MenuItem>
-//                     <MenuItem onClick={this.handleNavigateAdminDesigns}>Admin</MenuItem>
-//                   </Menu>
-
 Header.propTypes = {
     landing: PropTypes.string.isRequired,
     titleLink: PropTypes.string.isRequired,
-    titleText: PropTypes.string.isRequired,
-    titleText2: PropTypes.string.isRequired,
+    subtitleText: PropTypes.string.isRequired,
+    backLink: PropTypes.string.isRequired,
+    backText: PropTypes.string.isRequired,
     browseLink: PropTypes.string.isRequired,
     browseText: PropTypes.string.isRequired
 }

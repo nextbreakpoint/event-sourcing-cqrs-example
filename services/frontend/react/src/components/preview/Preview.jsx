@@ -95,6 +95,7 @@ let Preview = class Preview extends React.Component {
                     design.metadata = data.metadata
                     design.script = data.script
                     design.draft = design.levels != 8
+                    design.published = design.published
                     design.percentage = computePercentage(design, [0,1,2,3,4,5,6,7])
                     design.preview_percentage = computePercentage(design, [0,1,2])
                     console.log(design)

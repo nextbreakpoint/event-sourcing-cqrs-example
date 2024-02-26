@@ -8,20 +8,21 @@ import Typography from '@mui/material/Typography'
 import ScriptEditor from './ScriptEditor'
 import MetadataEditor from './MetadataEditor'
 
-let DesignForm = class DesignForm extends React.Component {
+let DesignEditor = class DesignEditor extends React.Component {
     state = {
         script: this.props.script,
-        metadata: this.props.metadata
+        metadata: this.props.metadata,
+        manifest: this.props.manifest
     }
 
-    handleScriptChanged = (value) => {
-        this.setState({script: value})
-        this.props.onScriptChanged(value)
+    handleScriptChanged = (script) => {
+        this.setState({script: script})
+        this.props.onEditorChanged({...this.state, script: script})
     }
 
-    handleMetadataChanged = (value) => {
-        this.setState({metadata: value})
-        this.props.onMetadataChanged(value)
+    handleMetadataChanged = (metadata) => {
+        this.setState({metadata: metadata})
+        this.props.onEditorChanged({...this.state, metadata: metadata})
     }
 
     render() {
@@ -44,11 +45,11 @@ let DesignForm = class DesignForm extends React.Component {
     }
 }
 
-DesignForm.propTypes = {
+DesignEditor.propTypes = {
   script: PropTypes.string.isRequired,
   metadata: PropTypes.string.isRequired,
-  onScriptChanged: PropTypes.func.isRequired,
-  onMetadataChanged: PropTypes.func.isRequired
+  manifest: PropTypes.string.isRequired,
+  onEditorChanged: PropTypes.func.isRequired
 }
 
-export default DesignForm
+export default DesignEditor

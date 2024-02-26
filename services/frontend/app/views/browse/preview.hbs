@@ -1,6 +1,19 @@
 <body>
-    <header><p><b>The Beauty of Chaos</b> | <a href="../designs.html">Fractals</a></p></header>
-    <div id="fractal" class="preview"></div>
+    <header><p><b>Fractals</b> | The Beauty of Chaos</p></header>
+    <section id="preview" class="preview">
+        {{#each data}}
+            <div class="row">
+            {{#each .}}
+                <div class="cell"><img src="{{imageUrl}}"/></div>
+            {{/each}}
+            </div>
+        {{/each}}
+    </section>
+    <navigation class="close">
+        <div>
+            <a href="/browse/designs.html">Show all designs</a>
+        </div>
+    </navigation>
     <footer>
         <p>Powered by <a href="https://nextbreakpoint.com">NextBreakpoint</a>{{#if admin}} | <a href="../../admin/designs/{{uuid}}.html">Edit</a>{{/if}}{{#if login}} | <a href="{{config.api_url}}/v1/auth/signin/browse/designs/{{uuid}}.html">Login</a>{{/if}}{{#if logout}} | <a href="{{config.api_url}}/v1/auth/signout/browse/designs/{{uuid}}.html">Logout</a>{{/if}}</p>
     </footer>
@@ -8,9 +21,12 @@
     <script>
         domReady(function(event) {
             function configure() {
+                let preview = document.getElementById("preview");
+                preview.innerHTML = "";
+
                 resize();
 
-                let map = L.map('fractal').setView([0, 0], 3);
+                let map = L.map('preview').setView([0, 0], 4);
 
                 let url = '{{config.api_url}}/v1/designs/{{design.uuid}}/{z}/{x}/{y}/256.png?t={{design.checksum}}';
 
@@ -18,8 +34,7 @@
                     attribution: '',
                     detectRetina: true,
                     bounds: [[-180, -180],[180, 180]],
-                    noWrap: true,
-                    minZoom: 3,
+                    minZoom: 2,
                     maxZoom: 7,
                     tileSize: 256,
                     updateWhenIdle: true,

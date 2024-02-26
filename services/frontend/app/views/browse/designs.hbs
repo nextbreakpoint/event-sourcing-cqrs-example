@@ -1,23 +1,35 @@
 <body>
-    <header><p><b>The Beauty of Chaos</b> | Fractals</p></header>
-    <div class="images" id="images">
+    <header><p><b>Fractals</b> | The Beauty of Chaos</p></header>
+    <section class="images" id="images">
         <div class="pages" id="pages">
-{{!--             <div class="page" id="page-{{page}}"> --}}
-{{!--                 {{#each grid}} --}}
-{{!--                     <div class="row"> --}}
-{{!--                     {{#each .}} --}}
-{{!--                         <div id="{{design.uuid}}" class="cell"><a href="{{design.location}}"><img src="{{imageUrl}}" alt="{{design.location}}"/></a></div> --}}
-{{!--                     {{/each}} --}}
-{{!--                     </div> --}}
-{{!--                 {{/each}} --}}
-{{!--             </div> --}}
+            <div class="page">
+                {{#each data}}
+                    <div class="row">
+                    {{#each .}}
+                        <div class="cell"><a href="{{design.location}}"><img src="{{imageUrl}}" alt="{{design.location}}"/></a></div>
+                    {{/each}}
+                    </div>
+                {{/each}}
+            </div>
         </div>
-    </div>
-    {{#if show}}
-    <div class="next">
-        <a href="/browse/designs.html?page={{nextPage}}">Show next designs</a>
-    </div>
-    {{/if}}
+    </section>
+    <navigation class="images">
+        {{#if showHome}}
+        <div class="home">
+            <a href="/browse/designs.html">Return to beginning</a>
+        </div>
+        {{/if}}
+        {{#if showHome}}
+        {{#if showNext}}
+        <div class="spacer">|</div>
+        {{/if}}
+        {{/if}}
+        {{#if showNext}}
+        <div class="next">
+            <a href="/browse/designs.html?page={{nextPage}}">Show next designs</a>
+        </div>
+        {{/if}}
+    </navigation>
     <footer>
         <p>Powered by <a href="https://nextbreakpoint.com">NextBreakpoint</a>{{#if admin}} | <a href="../admin/designs.html">Edit</a>{{/if}}{{#if login}} | <a href="{{config.api_url}}/v1/auth/signin/browse/designs.html">Login</a>{{/if}}{{#if logout}} | <a href="{{config.api_url}}/v1/auth/signout/browse/designs.html">Logout</a>{{/if}}</p>
     </footer>
@@ -30,13 +42,16 @@
                 console.log("current page = " + state.page);
                 console.log("last page = " + state.lastPage);
 
-                let links = document.querySelectorAll(".next");
-                for (let i = 0; i < links.length; i++) {
-                    links[i].style.visibility = "hidden";
+                let navigation = document.querySelectorAll("navigation");
+                for (let i = 0; i < navigation.length; i++) {
+                    navigation[i].style.visibility = "hidden";
                 }
 
+                let images = document.getElementById("images");
+                images.style.overflow = "hidden";
+
                 let pages = document.getElementById("pages");
-//                 pages.replaceChildren();
+                pages.innerHTML = "";
                 pages.insertAdjacentHTML('beforeend', "<div class=\"page\" id=\"slot-0\"/>");
                 pages.insertAdjacentHTML('beforeend', "<div class=\"page\" id=\"slot-1\"/>");
                 pages.insertAdjacentHTML('beforeend', "<div class=\"page\" id=\"slot-2\"/>");

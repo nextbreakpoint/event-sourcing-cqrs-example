@@ -3,7 +3,7 @@ import PropTypes from 'prop-types'
 
 import Header from '../shared/Header'
 import Footer from '../shared/Footer'
-import DesignForm from '../shared/DesignForm'
+import DesignPreview from '../shared/DesignPreview'
 
 import { MapContainer, TileLayer, useMap } from 'react-leaflet'
 
@@ -37,10 +37,14 @@ import {
 import {
     getDesign,
     getRevision,
+    showUpdateDesign,
+    hideUpdateDesign,
+    getShowUpdateDesign,
     getShowErrorMessage,
     getErrorMessage,
     showErrorMessage,
-    hideErrorMessage
+    hideErrorMessage,
+    hideUpdateDialog
 } from '../../actions/preview'
 
 import axios from 'axios'
@@ -56,6 +60,12 @@ function FadeTransition(props) {
 let PreviewPage = class PreviewPage extends React.Component {
     state = {
         design: {}
+    }
+
+    handleModify = (e) => {
+        console.log("modify")
+
+        this.props.handleShowUpdateDialog()
     }
 
     handleDownload = (e) => {
@@ -152,6 +162,7 @@ let PreviewPage = class PreviewPage extends React.Component {
                             .then(function (response) {
                                 if (response.status == 202 || response.status == 200) {
                                     component.props.handleShowErrorMessage("Your request has been received. The design will be updated shortly")
+                                    component.props.handleHideUpdateDialog()
                                 } else {
                                     console.log("Can't update the design: status = " + response.status)
                                     component.props.handleShowErrorMessage("Can't update the design")
@@ -281,12 +292,8 @@ let PreviewPage = class PreviewPage extends React.Component {
             })
     }
 
-    handleScriptChanged = (value) => {
-        this.setState({design: {...this.state.design, script: value}})
-    }
-
-    handleMetadataChanged = (value) => {
-        this.setState({design: {...this.state.design, metadata: value}})
+    handleEditorChanged = (value) => {
+        this.setState({design: {...this.state.design, script: value.script, metadata: value.metadata}})
     }
 
     handleClose = (event, reason) => {
@@ -302,6 +309,7 @@ let PreviewPage = class PreviewPage extends React.Component {
 
         let script = this.state.design.script ? this.state.design.script : this.props.design.script
         let metadata = this.state.design.metadata ? this.state.design.metadata : this.props.design.metadata
+        let manifest = this.state.design.manifest ? this.state.design.manifest : this.props.design.manifest
 
         const url = this.props.config.api_url + '/v1/designs/' + uuid + '/{z}/{x}/{y}/256.png?draft=true&t=' + design.checksum + '&r=' + design.preview_percentage
 
@@ -309,18 +317,19 @@ let PreviewPage = class PreviewPage extends React.Component {
             <React.Fragment>
                 <Grid container justify="space-between" alignItems="center">
                     <Grid item xs={12}>
-                        <Header landing={'/admin/designs/' + uuid + '.html'} titleLink={"/admin/designs.html"} titleText={"Fractals"} browseLink={"/browse/designs/" + uuid + ".html"} browseText={"The Beauty of Chaos"}/>
+                        {design.published == true && <Header landing={'/admin/designs.html'} titleText={"Fractals"} subtitleText={"The Beauty of Chaos"} backText={"Show all designs"} backLink={"/admin/designs.html"} browseText={"Show fractal"} browseLink={"/browse/designs/" + uuid + ".html"}/>}
+                        {design.published == false && <Header landing={'/admin/designs.html'} titleText={"Fractals"} subtitleText={"The Beauty of Chaos"} backText={"Show all designs"} backLink={"/admin/designs.html"}/>}
                     </Grid>
                     <Grid container xs={12} justify="space-between" alignItems="center" className="container">
                         <Grid item xs={6}>
-                            <div className="map-preview">
+                            <div className="design-preview">
                                 <MapContainer center={[0, 0]} zoom={2} attributionControl={false} dragging={false} zoomControl={false} doubleClickZoom={false} scrollWheelZoom={false} touchZoom={false}>
                                     <TileLayer url={url} detectRetina={false} bounds={[[-180, -180],[180, 180]]} noWrap={true} minZoom={2} maxZoom={2} tileSize={256} updateWhenIdle={true} updateWhenZooming={false} updateInterval={500} keepBuffer={2}/>
                                 </MapContainer>
                             </div>
                         </Grid>
                         <Grid item xs={6}>
-                            <div className="details">
+                            <div className="design-details">
                                 <div class="details-item">
                                     <div><Typography variant="body" color="inherit" class="details-label">UUID</Typography></div>
                                     <div><Typography variant="body" color="inherit" class="details-value">{design.uuid}</Typography></div>
@@ -353,17 +362,16 @@ let PreviewPage = class PreviewPage extends React.Component {
                         </Grid>
                     </Grid>
                     <Grid container xs={12} justify="space-between" alignItems="top-center" className="container">
-                        <Grid item xs={12}>
-                            <DesignForm script={script} metadata={metadata} onScriptChanged={this.handleScriptChanged} onMetadataChanged={this.handleMetadataChanged}/>
-                            <div className="controls">
+                        <Grid item xs={12} className="design-editor">
+                            <div className="design-controls">
                                 {this.props.account.role == 'admin' && (
                                     <Button className="button" variant="outlined" color="primary" onClick={this.handleDownload}>
                                       Download
                                     </Button>
                                 )}
                                 {this.props.account.role == 'admin' && (
-                                    <Button className="button" variant="outlined" color="primary" onClick={this.handleUpdate}>
-                                      Update
+                                    <Button className="button" variant="outlined" color="primary" onClick={this.handleModify}>
+                                      Modify
                                     </Button>
                                 )}
                                 {this.props.account.role == 'admin' && (
@@ -406,6 +414,22 @@ let PreviewPage = class PreviewPage extends React.Component {
                     </IconButton>
                   ]}
                 />
+                {this.props.account.role == 'admin' && (
+                    <Dialog className="dialog" open={this.props.show_update_design} onClose={this.props.handleHideUpdateDialog} scroll={"paper"} maxWidth={"xl"} fullWidth={true} TransitionComponent={SlideTransition}>
+                        <DialogTitle>Modify Existing Design</DialogTitle>
+                        <DialogContent>
+                            <DesignPreview script={script} metadata={metadata} manifest={manifest} config={this.props.config} onEditorChanged={this.handleEditorChanged}/>
+                        </DialogContent>
+                        <DialogActions>
+                            <Button variant="outlined" color="primary" onClick={this.props.handleHideUpdateDialog} color="primary">
+                              Cancel
+                            </Button>
+                            <Button variant="outlined" color="primary" onClick={this.handleUpdate} color="primary" autoFocus>
+                              Update
+                            </Button>
+                        </DialogActions>
+                    </Dialog>
+                )}
             </React.Fragment>
         )
     }
@@ -427,6 +451,7 @@ const mapStateToProps = state => ({
     account: getAccount(state),
     design: getDesign(state),
     revision: getRevision(state),
+    show_update_design: getShowUpdateDesign(state),
     show_error_message: getShowErrorMessage(state),
     error_message: getErrorMessage(state)
 })
@@ -437,6 +462,12 @@ const mapDispatchToProps = dispatch => ({
     },
     handleHideErrorMessage: () => {
         dispatch(hideErrorMessage())
+    },
+    handleShowUpdateDialog: () => {
+        dispatch(showUpdateDesign())
+    },
+    handleHideUpdateDialog: () => {
+        dispatch(hideUpdateDesign())
     }
 })
 

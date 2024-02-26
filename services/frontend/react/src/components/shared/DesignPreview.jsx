@@ -7,15 +7,14 @@ import Grid from '@mui/material/Grid'
 
 import { MapContainer, TileLayer, useMap } from 'react-leaflet'
 
-import DesignForm from '../shared/DesignForm'
+import DesignEditor from '../shared/DesignEditor'
 
 import axios from 'axios'
 
-let manifest = "{\"pluginId\":\"Mandelbrot\"}"
-
-export default function DesignPreview(props) {
+let DesignPreview = (props) => {
     let [script, setScript] = useState(props.script)
     let [metadata, setMetadata] = useState(props.metadata)
+    let [manifest, setManifest] = useState(props.manifest)
     let [checksum, setChecksum] = useState(null)
     let [imageUrl, setImageUrl] = useState(null)
     let [message, setMessage] = useState("Initializing...")
@@ -84,30 +83,27 @@ export default function DesignPreview(props) {
             })
     }
 
-    let handleScriptChanged = (setScript, value) => {
-        setScript(value)
-        props.onScriptChanged(value)
-    }
-
-    let handleMetadataChanged = (setMetadata, value) => {
-        setMetadata(value)
-        props.onMetadataChanged(value)
+    let handleEditorChanged = (setScript, setMetadata, design) => {
+        setScript(design.script)
+        setMetadata(design.metadata)
+        props.onEditorChanged(design)
     }
 
     return (
-        <Grid container justify="space-between" alignItems="stretch" alignContent="space-between">
+        <Grid container justify="space-between" alignItems="stretch" alignContent="space-between" className="design-editor">
             <Grid item xs={6}>
                 <Stack direction="column" alignItems="center" justifyContent="space-between">
-                  <div className="image-preview">
+                  <div className="editor-preview">
                       {imageUrl != null && (<img src={imageUrl}/>)}
                   </div>
-                  <div className="message">{message}</div>
+                  <div className="editor-message">{message}</div>
                 </Stack>
             </Grid>
             <Grid item xs={6}>
-                <DesignForm script={script} metadata={metadata} onScriptChanged={e => handleScriptChanged(setScript, e)} onMetadataChanged={e => handleMetadataChanged(setMetadata, e)}/>
+                <DesignEditor script={script} metadata={metadata} manifest={manifest} onEditorChanged={design => handleEditorChanged(setScript, setMetadata, design)}/>
             </Grid>
         </Grid>
     )
 }
 
+export default DesignPreview

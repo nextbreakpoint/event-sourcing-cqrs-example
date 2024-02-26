@@ -1,13 +1,21 @@
 import * as Types from '../../constants/ActionTypes'
 
+const default_script = "fractal {\n\torbit [-2.0 - 2.0i,+2.0 + 2.0i] [x,n] {\n\t\tloop [0, 200] (mod2(x) > 40) {\n\t\t\tx = x * x + w;\n\t\t}\n\t}\n\tcolor [#FF000000] {\n\t\tpalette gradient {\n\t\t\t[#FFFFFFFF > #FF000000, 100];\n\t\t\t[#FF000000 > #FFFFFFFF, 100];\n\t\t}\n\t\tinit {\n\t\t\tm = 100 * (1 + sin(mod(x) * 0.2 / pi));\n\t\t}\n\t\trule (n > 0) [1] {\n\t\t\tgradient[m - 1]\n\t\t}\n\t}\n}\n"
+const default_metadata = "{\n\t\"translation\":\n\t{\n\t\t\"x\":0.0,\n\t\t\"y\":0.0,\n\t\t\"z\":1.0,\n\t\t\"w\":0.0\n\t},\n\t\"rotation\":\n\t{\n\t\t\"x\":0.0,\n\t\t\"y\":0.0,\n\t\t\"z\":0.0,\n\t\t\"w\":0.0\n\t},\n\t\"scale\":\n\t{\n\t\t\"x\":1.0,\n\t\t\"y\":1.0,\n\t\t\"z\":1.0,\n\t\t\"w\":1.0\n\t},\n\t\"point\":\n\t{\n\t\t\"x\":0.0,\n\t\t\"y\":0.0\n\t},\n\t\"julia\":false,\n\t\"options\":\n\t{\n\t\t\"showPreview\":false,\n\t\t\"showTraps\":false,\n\t\t\"showOrbit\":false,\n\t\t\"showPoint\":false,\n\t\t\"previewOrigin\":\n\t\t{\n\t\t\t\"x\":0.0,\n\t\t\t\"y\":0.0\n\t\t},\n\t\t\"previewSize\":\n\t\t{\n\t\t\t\"x\":0.25,\n\t\t\t\"y\":0.25\n\t\t}\n\t}\n}"
+const default_manifest = "{\"pluginId\":\"Mandelbrot\"}"
+
 const initialState = {
     show_upload_design: false,
     show_create_design: false,
+    show_update_design: false,
     show_delete_designs: false,
     show_error_message: false,
     error_message: "",
-    uploaded_design_present: false,
-    uploaded_design: {}
+    selected_design: {
+        manifest: default_manifest,
+        metadata: default_metadata,
+        script: default_script
+    }
 }
 
 function reducer (state = initialState, action) {
@@ -21,6 +29,16 @@ function reducer (state = initialState, action) {
       return {
         ...state,
         show_create_design: false
+      }
+    case Types.SHOW_UPDATE_DESIGN:
+      return {
+        ...state,
+        show_update_design: true
+      }
+    case Types.HIDE_UPDATE_DESIGN:
+      return {
+        ...state,
+        show_update_design: false
       }
     case Types.SHOW_DELETE_DESIGNS:
       return {
@@ -43,11 +61,10 @@ function reducer (state = initialState, action) {
         ...state,
         show_error_message: false
       }
-    case Types.UPLOADED_DESIGN_CHANGED:
+    case Types.SELECTED_DESIGN_CHANGED:
       return {
         ...state,
-        uploaded_design_present: action.present,
-        uploaded_design: action.design
+        selected_design: action.design
       }
     default:
       return state
@@ -62,6 +79,10 @@ export const getShowCreateDesign = (state) => {
     return state.designs.dialog.show_create_design
 }
 
+export const getShowUpdateDesign = (state) => {
+    return state.designs.dialog.show_update_design
+}
+
 export const getShowDeleteDesigns = (state) => {
     return state.designs.dialog.show_delete_designs
 }
@@ -74,12 +95,8 @@ export const getErrorMessage = (state) => {
     return state.designs.dialog.error_message
 }
 
-export const isUploadedDesignPresent = (state) => {
-    return state.designs.dialog.uploaded_design_present
-}
-
-export const getUploadedDesign = (state) => {
-    return state.designs.dialog.uploaded_design
+export const getSelectedDesign = (state) => {
+    return state.designs.dialog.selected_design
 }
 
 export default reducer

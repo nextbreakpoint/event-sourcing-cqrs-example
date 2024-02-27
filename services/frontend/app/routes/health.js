@@ -13,10 +13,7 @@ let config = {
 }
 
 router.get('/', function(req, res, next) {
-        res.render('health', {
-            content: JSON.stringify(config),
-            layout: 'health'
-        })
+    res.json(config)
 })
 
 module.exports = router

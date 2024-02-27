@@ -53,6 +53,9 @@ header .subtitle {
 }
 
 header .account {
+    display: inline-block;
+    vertical-align: middle;
+    padding-right: 1em;
 }
 
 header .separator {
@@ -65,6 +68,10 @@ footer {
     font-size: 1.2em;
     padding: 1.5em;
     text-align: center;
+}
+
+navigation {
+    text-align: right;
 }
 
 .container {

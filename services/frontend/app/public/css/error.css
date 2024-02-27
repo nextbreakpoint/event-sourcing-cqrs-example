@@ -87,92 +87,19 @@ navigation.close {
     box-shadow: rgba(0, 0, 0, 0.2) 0px 2px 4px -1px, rgba(0, 0, 0, 0.14) 0px 4px 5px 0px, rgba(0, 0, 0, 0.12) 0px 1px 10px 0px;
 }
 
-navigation.images {
-    font-size: 1.2em;
-    left: 0%;
-    bottom: 0.5em;
+section {
     position: fixed;
     display: block;
-    text-align: center;
-    z-index: 10;
-    padding: 1em;
-    background: #fdfdfd;
-    opacity: 0.6;
-    float: left;
-    border-radius: 0 1.2em 1.2em 0;
-}
-
-navigation.images .home {
-    display: inline-block;
-    float: left;
-}
-
-navigation.images .next {
-    display: inline-block;
-    float: left;
-}
-
-navigation.images .spacer {
-    display: inline-block;
-    float: left;
-    padding: 0 0.6em 0 0.6em;
-}
-
-section.images {
-    display: block;
-    position: absolute;
-    overflow: scroll;
     width: 100%;
     height: 100%;
-}
-
-section.images .pages {
-    display: block;
-    position: relative;
-    width: 100%;
-}
-
-section.images .page {
-    display: block;
-    position: relative;
-    text-align: center;
-    font-size: 0;
-    width: 100%;
-    z-index: 5;
-}
-
-section.images .row, section.preview .row {
-    display: inline-block;
-    float: left;
-    width: 104%;
-}
-
-section.images .cell, section.preview .cell {
-    display: inline-block;
-    float: left;
-    width: 12%;
-}
-
-section.images .cell img, section.preview .cell img {
-    width: 100%;
-    height: 100%;
-}
-
-section.preview {
-    display: inline-block;
-    position: relative;
+    padding: 8em 2em 8em 2em;
     overflow: hidden;
-    font-size: 0;
-    padding: 0;
-    z-index: 5;
+    background: #ebebeb;
+    boxing-size: border-box;
 }
 
-section.preview .leaflet-container {
-    width: 100%;
-    position: relative;
-    display: inline-block;
-    margin: 0px;
-    text-align: center;
+section .error pre {
+    overflow: scroll;
 }
 
 @media (max-width: 800px) {
@@ -182,14 +109,6 @@ section.preview .leaflet-container {
 
     footer {
         font-size: 1.0em;
-    }
-
-    .next {
-        font-size: 1.2em;
-    }
-
-    .close {
-        font-size: 1.2em;
     }
 }
 
@@ -201,14 +120,6 @@ section.preview .leaflet-container {
     footer {
         font-size: 0.8em;
     }
-
-    .next {
-        font-size: 1.0em;
-    }
-
-    .close {
-        font-size: 1.0em;
-    }
 }
 
 @media (max-width: 300px) {
@@ -218,13 +129,5 @@ section.preview .leaflet-container {
 
     footer {
         font-size: 0.6em;
-    }
-
-    .next {
-        font-size: 0.8em;
-    }
-
-    .close {
-        font-size: 0.8em;
     }
 }

@@ -1,99 +1,74 @@
-<body>
-    <header><p><span class="title">Fractals</span><span class="separator">|</span><span class="subtitle">The Beauty of Chaos</span></header>
-    <section class="images" id="images">
-        <div class="pages" id="pages">
-            <div class="page">
-                {{#each data}}
-                    <div class="row">
-                    {{#each .}}
-                        <div class="cell"><a href="{{design.location}}"><img src="{{imageUrl}}" alt="{{design.location}}"/></a></div>
-                    {{/each}}
-                    </div>
+<header>
+    <p><span class="title">Fractals</span><span class="separator">|</span><span class="subtitle">The Beauty of Chaos</span></p>
+</header>
+<section class="images" id="images">
+    <div class="pages" id="pages">
+        <div class="page">
+            {{#each data}}
+                <div class="row">
+                {{#each .}}
+                    <div class="cell"><a href="{{design.location}}"><img src="{{imageUrl}}" alt="{{design.location}}"/></a></div>
                 {{/each}}
-            </div>
+                </div>
+            {{/each}}
         </div>
-    </section>
-    <navigation class="images">
-        {{#if showHome}}
-        <div class="home">
-            <a href="/browse/designs.html">Return to beginning</a>
-        </div>
-        {{/if}}
-        {{#if showHome}}
-        {{#if showNext}}
-        <div class="spacer">|</div>
-        {{/if}}
-        {{/if}}
-        {{#if showNext}}
-        <div class="next">
-            <a href="/browse/designs.html?page={{nextPage}}">Show next designs</a>
-        </div>
-        {{/if}}
-    </navigation>
-    <footer>
-        <p>Powered by <a href="https://nextbreakpoint.com">NextBreakpoint</a>{{#if admin}} | <a href="../admin/designs.html">Edit</a>{{/if}}{{#if login}} | <a href="{{config.api_url}}/v1/auth/signin/browse/designs.html">Login</a>{{/if}}{{#if logout}} | <a href="{{config.api_url}}/v1/auth/signout/browse/designs.html">Logout</a>{{/if}}</p>
-    </footer>
-    <script>
-        domReady(function(event) {
-            function configure(onCompleted) {
-                console.log("configure");
+    </div>
+</section>
+<navigation class="images">
+    {{#if showHome}}
+    <div class="home">
+        <a href="/browse/designs.html">Return to beginning</a>
+    </div>
+    {{/if}}
+    {{#if showHome}}
+    {{#if showNext}}
+    <div class="spacer">|</div>
+    {{/if}}
+    {{/if}}
+    {{#if showNext}}
+    <div class="next">
+        <a href="/browse/designs.html?page={{nextPage}}">Show next designs</a>
+    </div>
+    {{/if}}
+</navigation>
+<footer>
+    <p>Powered by <a href="https://nextbreakpoint.com">NextBreakpoint</a>{{#if admin}} | <a href="../admin/designs.html">Edit</a>{{/if}}{{#if login}} | <a href="{{config.api_url}}/v1/auth/signin/browse/designs.html">Login</a>{{/if}}{{#if logout}} | <a href="{{config.api_url}}/v1/auth/signout/browse/designs.html">Logout</a>{{/if}}</p>
+</footer>
+<script>
+    domReady(function(event) {
+        function configure(onCompleted) {
+            console.log("configure");
 
-                console.log("current page top = " + state.pageTop);
-                console.log("current page = " + state.page);
-                console.log("last page = " + state.lastPage);
+            console.log("current page top = " + state.pageTop);
+            console.log("current page = " + state.page);
+            console.log("last page = " + state.lastPage);
 
-                let navigation = document.querySelectorAll("navigation");
-                for (let i = 0; i < navigation.length; i++) {
-                    navigation[i].style.visibility = "hidden";
-                }
+            let navigation = document.querySelectorAll("navigation");
+            for (let i = 0; i < navigation.length; i++) {
+                navigation[i].style.visibility = "hidden";
+            }
 
-                let images = document.getElementById("images");
-                images.style.overflow = "hidden";
+            let images = document.getElementById("images");
+            images.style.overflow = "hidden";
 
-                let pages = document.getElementById("pages");
-                pages.innerHTML = "";
-                pages.insertAdjacentHTML('beforeend', "<div class=\"page\" id=\"slot-0\"/>");
-                pages.insertAdjacentHTML('beforeend', "<div class=\"page\" id=\"slot-1\"/>");
-                pages.insertAdjacentHTML('beforeend', "<div class=\"page\" id=\"slot-2\"/>");
+            let pages = document.getElementById("pages");
+            pages.innerHTML = "";
+            pages.insertAdjacentHTML('beforeend', "<div class=\"page\" id=\"slot-0\"/>");
+            pages.insertAdjacentHTML('beforeend', "<div class=\"page\" id=\"slot-1\"/>");
+            pages.insertAdjacentHTML('beforeend', "<div class=\"page\" id=\"slot-2\"/>");
+
+            function handleResponse(page, response) {
+                console.log("loaded page data " + page);
+                state.pagesData["page-" + page] = JSON.parse(response);
 
                 function handleResponse(page, response) {
-                    console.log("loaded page data " + page);
-                    state.pagesData["page-" + page] = JSON.parse(response);
-
-                    function handleResponse(page, response) {
-                        if (state.pagesData["page-" + page]) {
-                            console.log("loaded page data " + page);
-                            state.pagesData["page-" + page] = JSON.parse(response);
-                            renderPages(state.page, state.pageTop);
-                        } else {
-                            console.log("discard loaded page data " + page);
-                        }
+                    if (state.pagesData["page-" + page]) {
+                        console.log("loaded page data " + page);
+                        state.pagesData["page-" + page] = JSON.parse(response);
+                        renderPages(state.page, state.pageTop);
+                    } else {
+                        console.log("discard loaded page data " + page);
                     }
-
-                    function handleError(page, submitRequest) {
-                        if (state.pagesData["page-" + page]) {
-                            console.log("An error occurred while loading data from server. Retrying in 5 seconds...");
-                            setTimeout(submitRequest, 5000);
-                        }
-                    }
-
-                    function submitRequest(page) {
-                        state.pagesData["page-" + page] = [];
-                        console.log("loading page data " + page);
-                        fetch("/browse/designs.json?page=" + page + "&t=" + Date.now(), true, function (response) { handleResponse(page, response); }, function(e) { handleError(page, function () { submitRequest(page); }); });
-                    }
-
-                    if (page > 0) {
-                        submitRequest(page - 1);
-                    }
-
-                    if (page < state.lastPage) {
-                        submitRequest(page + 1);
-                    }
-
-                    resizePages();
-
-                    onCompleted();
                 }
 
                 function handleError(page, submitRequest) {
@@ -109,370 +84,396 @@
                     fetch("/browse/designs.json?page=" + page + "&t=" + Date.now(), true, function (response) { handleResponse(page, response); }, function(e) { handleError(page, function () { submitRequest(page); }); });
                 }
 
-                submitRequest(state.page);
-            }
-
-            function renderGrid() {
-                html = "";
-                for (let i = 0; i < 16; i++) {
-                    html += renderRow();
-                }
-                return html;
-            }
-
-            function renderRow() {
-                html = "";
-                for (let i = 0; i < 8; i++) {
-                    html += renderCell();
-                }
-                return "<div class=\"row\">" + html + "</div>";
-            }
-
-            function renderCell() {
-                return "<span class=\"cell\"><a href=\"\"><img src=\"data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20460%20215%22%3E%3C%2Fsvg%3E\" alt=\"\"/></a></span>";
-            }
-
-            function refreshPages(page) {
-                console.log("refresh page " + page);
-
-                delete state.pagesData["page-" + (page - 2)];
-                delete state.pagesData["page-" + (page + 2)];
-
-                function handlerResponse(page, response) {
-                    if (state.pagesData["page-" + page]) {
-                        console.log("loaded page data " + page);
-                        state.pagesData["page-" + page] = JSON.parse(response);
-                        renderPages(state.page, state.pageTop);
-                    } else {
-                        console.log("discard loaded page data " + page);
-                    }
-                }
-
-                function handlerError(page, submitRequest) {
-                    if (state.pagesData["page-" + page]) {
-                        console.log("An error occurred while loading data from server. Retrying in 5 seconds...");
-                        setTimeout(submitRequest, 5000);
-                    }
-                }
-
-                function submitRequest(page) {
-                    state.pagesData["page-" + page] = [];
-                    console.log("loading page data " + page);
-                    fetch("/browse/designs.json?page=" + page + "&t=" + Date.now(), true, function (response) { handlerResponse(page, response); }, function(e) { handlerError(page, function () { submitRequest(page); }); });
-                }
-
-                if (page < state.lastPage && !state.pagesData["page-" + (page + 1)]) {
-                    if (state.loadTimeout1) {
-                        clearTimeout(state.loadTimeout1);
-                    }
-
-                    state.loadTimeout1 = setTimeout(function() { submitRequest(page + 1); }, 200);
-                }
-
-                if (page > 0 && !state.pagesData["page-" + (page - 1)]) {
-                    if (state.loadTimeout2) {
-                        clearTimeout(state.loadTimeout2);
-                    }
-
-                    state.loadTimeout2 = setTimeout(function() { submitRequest(page - 1); }, 200);
-                }
-            }
-
-            function resizePages() {
-                console.log("resize pages");
-
-                let pageElement0 = document.getElementById("slot-0");
-                let pageElement1 = document.getElementById("slot-1");
-                let pageElement2 = document.getElementById("slot-2");
-
-                pageElement0.innerHTML = renderGrid();
-                pageElement1.innerHTML = renderGrid();
-                pageElement2.innerHTML = renderGrid();
-
-                let images = document.getElementById("images");
-                let imagesWidth = images.clientWidth;
-                let imagesHeight = images.clientHeight;
-                state.imagesWidth = imagesWidth;
-                state.imagesHeight = imagesHeight;
-
-                let cellSize = resizeGrid(imagesWidth);
-
-                let pageData = state.pagesData["page-" + state.page];
-                let pageHeight = pageData.length * cellSize;
-                state.pageHeight = pageHeight;
-
-                pageElement0.style.height = pageHeight + 'px';
-                pageElement1.style.height = pageHeight + 'px';
-                pageElement2.style.height = pageHeight + 'px';
-
-                let pages = document.getElementById("pages");
-                pages.style.marginTop = -pageHeight + "px";
-
-                console.log("pageHeight = " + pageHeight);
-                console.log("imagesWidth = " + imagesWidth);
-                console.log("imagesHeight = " + imagesHeight);
-
-                let newScroll = clampScrolling(state.page, state.pageTop);
-
-                state.pageTop = newScroll;
-
-                pages.style.top = newScroll + "px";
-
-                renderPages(state.page, newScroll);
-            }
-
-            function swapPages(page, newPage) {
-                console.log("swap pages");
-
-                let pageElement0 = document.getElementById("slot-0");
-                let pageElement1 = document.getElementById("slot-1");
-                let pageElement2 = document.getElementById("slot-2");
-
-                if (page > newPage) {
-                    pageElement0.innerHTML = pageElement1.innerHTML;
-                    pageElement1.innerHTML = pageElement2.innerHTML;
-                    if (newPage < state.lastPage) {
-                        resetPage(page, newPage, "slot-2");
-                    }
-                } else {
-                    pageElement2.innerHTML = pageElement1.innerHTML;
-                    pageElement1.innerHTML = pageElement0.innerHTML;
-                    if (newPage > 0) {
-                        resetPage(page, newPage, "slot-0");
-                    }
-                }
-            }
-
-            function resizeGrid(width) {
-                console.log("resize grid");
-
-                let size = Math.round(width / 8);
-
-                let rows = document.querySelectorAll(".row");
-                for (let i = 0; i < rows.length; i++) {
-                    rows[i].style.width = (size * 8) + "px";
-                    rows[i].style.height = size + "px";
-                }
-
-                let cells = document.querySelectorAll(".cell");
-                for (let i = 0; i < cells.length; i++) {
-                    cells[i].style.width = size + "px";
-                    cells[i].style.height = size + "px";
-                }
-
-                return size;
-            }
-
-            function clampScrolling(page, value) {
-                if (page == 0 && value > 0) {
-                    value = 0;
-                }
-
-                if (page == state.lastPage && value < -(state.pageHeight - state.imagesHeight)) {
-                    value = -(state.pageHeight - state.imagesHeight);
-                }
-
-                return value;
-            }
-
-            function updatePage(page, value) {
-                if (page < state.lastPage && value < -state.pageHeight) {
-                    swapPages(page, page - 1);
-                    page = page + 1;
-                    refreshPages(page);
-                } else if (page > 0 && value > 0) {
-                    swapPages(page, page + 1);
-                    page = page - 1;
-                    refreshPages(page);
-                }
-
-                return page;
-            }
-
-            function renderPage(page, index, value, slot) {
-                let rows = document.querySelectorAll("#" + slot + " .row");
-
-                let pageData = state.pagesData["page-" + index];
-
-                if (!pageData) {
-                    console.log("data not found");
-                    return;
-                }
-
-                if (pageData.length != rows.length) {
-                    console.log("page data and rows mismatch");
-                    return;
-                }
-
-                function refreshRow(row, rowData) {
-                    let rowTop = row.getBoundingClientRect().top;
-                    let rowBottom = row.getBoundingClientRect().bottom;
-
-                    let images = row.getElementsByTagName("img");
-                    let links = row.getElementsByTagName("a");
-
-                    if (rowData.length != images.length) {
-                        console.log("row data and images mismatch");
-                        return;
-                    }
-
-                    if (images.length != links.length) {
-                        console.log("images and links mismatch");
-                        return;
-                    }
-
-                    if (rowBottom > -state.imagesHeight && rowTop < state.imagesHeight * 2) {
-//                         row.style.border = "1px solid red";
-
-                        for (let j = 0; j < rowData.length; j++) {
-                            if (images[j].src != rowData[j].imageUrl) {
-                               images[j].src = rowData[j].imageUrl;
-                               images[j].alt = rowData[j].design.location;
-                            }
-                            if (links[j].href != rowData[j].design.location) {
-//                                links[j].href = rowData[j].design.location + "?page=" + page + "&scroll=" + state.pageTop;
-                               links[j].href = rowData[j].design.location;
-                            }
-                        }
-                    }
-                }
-
-                if (page > index) {
-                    for (let i = pageData.length - 1; i >= 0; i--) {
-                        refreshRow(rows[i], pageData[i]);
-                    }
-                } else {
-                    for (let i = 0; i < pageData.length; i++) {
-                        refreshRow(rows[i], pageData[i]);
-                    }
-                }
-            }
-
-            function resetPage(page, index, slot) {
-                let rows = document.querySelectorAll("#" + slot + " .row");
-
-                function resetRow(row) {
-                    let images = row.getElementsByTagName("img");
-                    let links = row.getElementsByTagName("a");
-
-                    if (images.length != links.length) {
-                        console.log("images and links mismatch");
-                        return;
-                    }
-
-//                     row.style.border = "1px solid green";
-
-                    for (let j = 0; j < images.length; j++) {
-                        if (images[j].src != "") {
-                           images[j].src = "data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20460%20215%22%3E%3C%2Fsvg%3E";
-                           images[j].alt = "";
-                        }
-                        if (links[j].href != "") {
-                           links[j].href = "";
-                        }
-                    }
-                }
-
-                if (page > index) {
-                    for (let i = rows.length - 1; i >= 0; i--) {
-                        resetRow(rows[i]);
-                    }
-                } else {
-                    for (let i = 0; i < rows.length; i++) {
-                        resetRow(rows[i]);
-                    }
-                }
-            }
-
-            function renderPages(page, value) {
                 if (page > 0) {
-                    renderPage(page, page - 1, value, "slot-0");
-                }
-
-                if (page >= 0) {
-                    renderPage(page, page, value, "slot-1");
+                    submitRequest(page - 1);
                 }
 
                 if (page < state.lastPage) {
-                    renderPage(page, page + 1, value, "slot-2");
+                    submitRequest(page + 1);
+                }
+
+                resizePages();
+
+                onCompleted();
+            }
+
+            function handleError(page, submitRequest) {
+                if (state.pagesData["page-" + page]) {
+                    console.log("An error occurred while loading data from server. Retrying in 5 seconds...");
+                    setTimeout(submitRequest, 5000);
                 }
             }
 
-            function doScroll(pageTop) {
-                newScroll = clampScrolling(state.page, pageTop);
-                newPage = updatePage(state.page, newScroll);
+            function submitRequest(page) {
+                state.pagesData["page-" + page] = [];
+                console.log("loading page data " + page);
+                fetch("/browse/designs.json?page=" + page + "&t=" + Date.now(), true, function (response) { handleResponse(page, response); }, function(e) { handleError(page, function () { submitRequest(page); }); });
+            }
 
-                if (newPage < state.page) {
-                    newScroll -= state.pageHeight;
-                } else if (newPage > state.page) {
-                    newScroll += state.pageHeight;
+            submitRequest(state.page);
+        }
+
+        function renderGrid() {
+            html = "";
+            for (let i = 0; i < 16; i++) {
+                html += renderRow();
+            }
+            return html;
+        }
+
+        function renderRow() {
+            html = "";
+            for (let i = 0; i < 8; i++) {
+                html += renderCell();
+            }
+            return "<div class=\"row\">" + html + "</div>";
+        }
+
+        function renderCell() {
+            return "<span class=\"cell\"><a href=\"\"><img src=\"data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20460%20215%22%3E%3C%2Fsvg%3E\" alt=\"\"/></a></span>";
+        }
+
+        function refreshPages(page) {
+            console.log("refresh page " + page);
+
+            delete state.pagesData["page-" + (page - 2)];
+            delete state.pagesData["page-" + (page + 2)];
+
+            function handlerResponse(page, response) {
+                if (state.pagesData["page-" + page]) {
+                    console.log("loaded page data " + page);
+                    state.pagesData["page-" + page] = JSON.parse(response);
+                    renderPages(state.page, state.pageTop);
+                } else {
+                    console.log("discard loaded page data " + page);
+                }
+            }
+
+            function handlerError(page, submitRequest) {
+                if (state.pagesData["page-" + page]) {
+                    console.log("An error occurred while loading data from server. Retrying in 5 seconds...");
+                    setTimeout(submitRequest, 5000);
+                }
+            }
+
+            function submitRequest(page) {
+                state.pagesData["page-" + page] = [];
+                console.log("loading page data " + page);
+                fetch("/browse/designs.json?page=" + page + "&t=" + Date.now(), true, function (response) { handlerResponse(page, response); }, function(e) { handlerError(page, function () { submitRequest(page); }); });
+            }
+
+            if (page < state.lastPage && !state.pagesData["page-" + (page + 1)]) {
+                if (state.loadTimeout1) {
+                    clearTimeout(state.loadTimeout1);
                 }
 
-                state.page = newPage;
-                state.pageTop = newScroll;
+                state.loadTimeout1 = setTimeout(function() { submitRequest(page + 1); }, 200);
+            }
 
-                let pages = document.getElementById("pages");
-                pages.style.top = newScroll + "px";
+            if (page > 0 && !state.pagesData["page-" + (page - 1)]) {
+                if (state.loadTimeout2) {
+                    clearTimeout(state.loadTimeout2);
+                }
 
-                function handleScroll() {
-                    history.replaceState({ page:newPage, pageTop:newScroll }, "", document.location.href);
+                state.loadTimeout2 = setTimeout(function() { submitRequest(page - 1); }, 200);
+            }
+        }
+
+        function resizePages() {
+            console.log("resize pages");
+
+            let pageElement0 = document.getElementById("slot-0");
+            let pageElement1 = document.getElementById("slot-1");
+            let pageElement2 = document.getElementById("slot-2");
+
+            pageElement0.innerHTML = renderGrid();
+            pageElement1.innerHTML = renderGrid();
+            pageElement2.innerHTML = renderGrid();
+
+            let images = document.getElementById("images");
+            let imagesWidth = images.clientWidth;
+            let imagesHeight = images.clientHeight;
+            state.imagesWidth = imagesWidth;
+            state.imagesHeight = imagesHeight;
+
+            let cellSize = resizeGrid(imagesWidth);
+
+            let pageData = state.pagesData["page-" + state.page];
+            let pageHeight = pageData.length * cellSize;
+            state.pageHeight = pageHeight;
+
+            pageElement0.style.height = pageHeight + 'px';
+            pageElement1.style.height = pageHeight + 'px';
+            pageElement2.style.height = pageHeight + 'px';
+
+            let pages = document.getElementById("pages");
+            pages.style.marginTop = -pageHeight + "px";
+
+            console.log("pageHeight = " + pageHeight);
+            console.log("imagesWidth = " + imagesWidth);
+            console.log("imagesHeight = " + imagesHeight);
+
+            let newScroll = clampScrolling(state.page, state.pageTop);
+
+            state.pageTop = newScroll;
+
+            pages.style.top = newScroll + "px";
+
+            renderPages(state.page, newScroll);
+        }
+
+        function swapPages(page, newPage) {
+            console.log("swap pages");
+
+            let pageElement0 = document.getElementById("slot-0");
+            let pageElement1 = document.getElementById("slot-1");
+            let pageElement2 = document.getElementById("slot-2");
+
+            if (page > newPage) {
+                pageElement0.innerHTML = pageElement1.innerHTML;
+                pageElement1.innerHTML = pageElement2.innerHTML;
+                if (newPage < state.lastPage) {
+                    resetPage(page, newPage, "slot-2");
+                }
+            } else {
+                pageElement2.innerHTML = pageElement1.innerHTML;
+                pageElement1.innerHTML = pageElement0.innerHTML;
+                if (newPage > 0) {
+                    resetPage(page, newPage, "slot-0");
+                }
+            }
+        }
+
+        function resizeGrid(width) {
+            console.log("resize grid");
+
+            let size = Math.round(width / 8);
+
+            let rows = document.querySelectorAll(".row");
+            for (let i = 0; i < rows.length; i++) {
+                rows[i].style.width = (size * 8) + "px";
+                rows[i].style.height = size + "px";
+            }
+
+            let cells = document.querySelectorAll(".cell");
+            for (let i = 0; i < cells.length; i++) {
+                cells[i].style.width = size + "px";
+                cells[i].style.height = size + "px";
+            }
+
+            return size;
+        }
+
+        function clampScrolling(page, value) {
+            if (page == 0 && value > 0) {
+                value = 0;
+            }
+
+            if (page == state.lastPage && value < -(state.pageHeight - state.imagesHeight)) {
+                value = -(state.pageHeight - state.imagesHeight);
+            }
+
+            return value;
+        }
+
+        function updatePage(page, value) {
+            if (page < state.lastPage && value < -state.pageHeight) {
+                swapPages(page, page - 1);
+                page = page + 1;
+                refreshPages(page);
+            } else if (page > 0 && value > 0) {
+                swapPages(page, page + 1);
+                page = page - 1;
+                refreshPages(page);
+            }
+
+            return page;
+        }
+
+        function renderPage(page, index, value, slot) {
+            let rows = document.querySelectorAll("#" + slot + " .row");
+
+            let pageData = state.pagesData["page-" + index];
+
+            if (!pageData) {
+                console.log("data not found");
+                return;
+            }
+
+            if (pageData.length != rows.length) {
+                console.log("page data and rows mismatch");
+                return;
+            }
+
+            function refreshRow(row, rowData) {
+                let rowTop = row.getBoundingClientRect().top;
+                let rowBottom = row.getBoundingClientRect().bottom;
+
+                let images = row.getElementsByTagName("img");
+                let links = row.getElementsByTagName("a");
+
+                if (rowData.length != images.length) {
+                    console.log("row data and images mismatch");
+                    return;
+                }
+
+                if (images.length != links.length) {
+                    console.log("images and links mismatch");
+                    return;
+                }
+
+                if (rowBottom > -state.imagesHeight && rowTop < state.imagesHeight * 2) {
+//                         row.style.border = "1px solid red";
+
+                    for (let j = 0; j < rowData.length; j++) {
+                        if (images[j].src != rowData[j].imageUrl) {
+                           images[j].src = rowData[j].imageUrl;
+                           images[j].alt = rowData[j].design.location;
+                        }
+                        if (links[j].href != rowData[j].design.location) {
+//                                links[j].href = rowData[j].design.location + "?page=" + page + "&scroll=" + state.pageTop;
+                           links[j].href = rowData[j].design.location;
+                        }
+                    }
+                }
+            }
+
+            if (page > index) {
+                for (let i = pageData.length - 1; i >= 0; i--) {
+                    refreshRow(rows[i], pageData[i]);
+                }
+            } else {
+                for (let i = 0; i < pageData.length; i++) {
+                    refreshRow(rows[i], pageData[i]);
+                }
+            }
+        }
+
+        function resetPage(page, index, slot) {
+            let rows = document.querySelectorAll("#" + slot + " .row");
+
+            function resetRow(row) {
+                let images = row.getElementsByTagName("img");
+                let links = row.getElementsByTagName("a");
+
+                if (images.length != links.length) {
+                    console.log("images and links mismatch");
+                    return;
+                }
+
+//                     row.style.border = "1px solid green";
+
+                for (let j = 0; j < images.length; j++) {
+                    if (images[j].src != "") {
+                       images[j].src = "data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20460%20215%22%3E%3C%2Fsvg%3E";
+                       images[j].alt = "";
+                    }
+                    if (links[j].href != "") {
+                       links[j].href = "";
+                    }
+                }
+            }
+
+            if (page > index) {
+                for (let i = rows.length - 1; i >= 0; i--) {
+                    resetRow(rows[i]);
+                }
+            } else {
+                for (let i = 0; i < rows.length; i++) {
+                    resetRow(rows[i]);
+                }
+            }
+        }
+
+        function renderPages(page, value) {
+            if (page > 0) {
+                renderPage(page, page - 1, value, "slot-0");
+            }
+
+            if (page >= 0) {
+                renderPage(page, page, value, "slot-1");
+            }
+
+            if (page < state.lastPage) {
+                renderPage(page, page + 1, value, "slot-2");
+            }
+        }
+
+        function doScroll(pageTop) {
+            newScroll = clampScrolling(state.page, pageTop);
+            newPage = updatePage(state.page, newScroll);
+
+            if (newPage < state.page) {
+                newScroll -= state.pageHeight;
+            } else if (newPage > state.page) {
+                newScroll += state.pageHeight;
+            }
+
+            state.page = newPage;
+            state.pageTop = newScroll;
+
+            let pages = document.getElementById("pages");
+            pages.style.top = newScroll + "px";
+
+            function handleScroll() {
+                history.replaceState({ page:newPage, pageTop:newScroll }, "", document.location.href);
 //                             console.log("replace state " + JSON.stringify(history.state));
-                    renderPages(newPage, newScroll);
-                }
-
-                if (state.scrollTimeout) {
-                    clearTimeout(state.scrollTimeout);
-                }
-
-                state.scrollTimeout = setTimeout(handleScroll, 200);
+                renderPages(newPage, newScroll);
             }
 
-            function setup() {
-                var touches = {
-                    pageTop: 0,
-                    startY: 0,
-                    endY: 0
-                };
+            if (state.scrollTimeout) {
+                clearTimeout(state.scrollTimeout);
+            }
 
-                window.addEventListener('resize', function(e) {
-                    resizePages();
-                });
+            state.scrollTimeout = setTimeout(handleScroll, 200);
+        }
 
-                window.addEventListener('wheel', function(e) {
-                    // for firefox
-                    let deltaY = e.deltaY
-                    let deltaMode = e.deltaMode
+        function setup() {
+            var touches = {
+                pageTop: 0,
+                startY: 0,
+                endY: 0
+            };
 
-                    if (state.pageHeight > 0 && deltaMode == 0 && deltaY != 0) {
-                        doScroll(state.pageTop - deltaY);
-                    }
-                });
+            window.addEventListener('resize', function(e) {
+                resizePages();
+            });
 
-                window.addEventListener("touchstart", function(e) {
-                    y = 0;
-                    for (i = 0; i < e.touches.length; i++) {
-                        y += e.touches[i].clientY;
-                    }
-                    touches.pageTop = state.pageTop;
-                    touches.startY = y / e.touches.length;
-                    touches.endY = y / e.touches.length;
+            window.addEventListener('wheel', function(e) {
+                // for firefox
+                let deltaY = e.deltaY
+                let deltaMode = e.deltaMode
 
-                    if (state.pageHeight > 0 ) {
-                        doScroll(touches.pageTop + touches.endY - touches.startY);
-                    }
-                });
+                if (state.pageHeight > 0 && deltaMode == 0 && deltaY != 0) {
+                    doScroll(state.pageTop - deltaY);
+                }
+            });
 
-                window.addEventListener("touchmove", function(e) {
-                    y = 0;
-                    for (i = 0; i < e.touches.length; i++) {
-                        y += e.touches[i].clientY;
-                    }
-                    touches.endY = y / e.touches.length;
+            window.addEventListener("touchstart", function(e) {
+                y = 0;
+                for (i = 0; i < e.touches.length; i++) {
+                    y += e.touches[i].clientY;
+                }
+                touches.pageTop = state.pageTop;
+                touches.startY = y / e.touches.length;
+                touches.endY = y / e.touches.length;
 
-                    if (state.pageHeight > 0 ) {
-                        doScroll(touches.pageTop + touches.endY - touches.startY);
-                    }
-                });
+                if (state.pageHeight > 0 ) {
+                    doScroll(touches.pageTop + touches.endY - touches.startY);
+                }
+            });
+
+            window.addEventListener("touchmove", function(e) {
+                y = 0;
+                for (i = 0; i < e.touches.length; i++) {
+                    y += e.touches[i].clientY;
+                }
+                touches.endY = y / e.touches.length;
+
+                if (state.pageHeight > 0 ) {
+                    doScroll(touches.pageTop + touches.endY - touches.startY);
+                }
+            });
 
 //                 window.addEventListener("popstate", function(e) {
 //                     if (e.state) {
@@ -480,28 +481,27 @@
 //                         state.pageTop = e.state.pageTop;
 //                     }
 //                 });
-            }
+        }
 
-            var state = {
-                page: {{page}},
-                lastPage: {{lastPage}},
-                pageTop: {{scroll}},
-                pageHeight: 0,
-                imagesWidth: 0,
-                imagesHeight: 0,
-                pagesData: {},
-                scrollTimeout: null,
-                loadTimeout1: null,
-                loadTimeout2: null
-            }
+        var state = {
+            page: {{page}},
+            lastPage: {{lastPage}},
+            pageTop: {{scroll}},
+            pageHeight: 0,
+            imagesWidth: 0,
+            imagesHeight: 0,
+            pagesData: {},
+            scrollTimeout: null,
+            loadTimeout1: null,
+            loadTimeout2: null
+        }
 
-            if (history.state) {
+        if (history.state) {
 //                 console.log("state " + JSON.stringify(history.state));
-                state.page = history.state.page;
-                state.pageTop = history.state.pageTop;
-            }
+            state.page = history.state.page;
+            state.pageTop = history.state.pageTop;
+        }
 
-            configure(setup);
-        })
-    </script>
-</body>
+        configure(setup);
+    })
+</script>

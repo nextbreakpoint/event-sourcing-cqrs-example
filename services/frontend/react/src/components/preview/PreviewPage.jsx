@@ -17,12 +17,6 @@ import DialogContent from '@mui/material/DialogContent'
 import DialogTitle from '@mui/material/DialogTitle'
 import Slide from '@mui/material/Slide'
 import Fade from '@mui/material/Fade'
-import Snackbar from '@mui/material/Snackbar'
-import IconButton from '@mui/material/IconButton'
-import Input from '@mui/material/Input'
-
-import EditIcon from '@mui/icons-material/Edit'
-import CloseIcon from '@mui/icons-material/Close'
 
 import { connect } from 'react-redux'
 
@@ -296,14 +290,6 @@ let PreviewPage = class PreviewPage extends React.Component {
         this.setState({design: {...this.state.design, script: value.script, metadata: value.metadata}})
     }
 
-    handleClose = (event, reason) => {
-        if (reason === 'clickaway') {
-          return
-        }
-
-        this.props.handleHideErrorMessage()
-    }
-
     render() {
         const { uuid, design } = this.props
 
@@ -315,105 +301,73 @@ let PreviewPage = class PreviewPage extends React.Component {
 
         return (
             <React.Fragment>
-                <Grid container justify="space-between" alignItems="center">
-                    <Grid item xs={12}>
-                        {design.published == true && <Header landing={'/admin/designs.html'} titleText={"Fractals"} subtitleText={"The Beauty of Chaos"} backText={"Show all designs"} backLink={"/admin/designs.html"} browseText={"Show fractal"} browseLink={"/browse/designs/" + uuid + ".html"}/>}
-                        {design.published == false && <Header landing={'/admin/designs.html'} titleText={"Fractals"} subtitleText={"The Beauty of Chaos"} backText={"Show all designs"} backLink={"/admin/designs.html"}/>}
+                <Grid container xs={12} justify="space-between" alignItems="center" className="container">
+                    <Grid item xs={6}>
+                        <div className="design-preview">
+                            <MapContainer center={[0, 0]} zoom={2} attributionControl={false} dragging={false} zoomControl={false} doubleClickZoom={false} scrollWheelZoom={false} touchZoom={false}>
+                                <TileLayer url={url} detectRetina={false} bounds={[[-180, -180],[180, 180]]} noWrap={true} minZoom={2} maxZoom={2} tileSize={256} updateWhenIdle={true} updateWhenZooming={false} updateInterval={500} keepBuffer={2}/>
+                            </MapContainer>
+                        </div>
                     </Grid>
-                    <Grid container xs={12} justify="space-between" alignItems="center" className="container">
-                        <Grid item xs={6}>
-                            <div className="design-preview">
-                                <MapContainer center={[0, 0]} zoom={2} attributionControl={false} dragging={false} zoomControl={false} doubleClickZoom={false} scrollWheelZoom={false} touchZoom={false}>
-                                    <TileLayer url={url} detectRetina={false} bounds={[[-180, -180],[180, 180]]} noWrap={true} minZoom={2} maxZoom={2} tileSize={256} updateWhenIdle={true} updateWhenZooming={false} updateInterval={500} keepBuffer={2}/>
-                                </MapContainer>
+                    <Grid item xs={6}>
+                        <div className="design-details">
+                            <div class="details-item">
+                                <div><Typography variant="body" color="inherit" class="details-label">UUID</Typography></div>
+                                <div><Typography variant="body" color="inherit" class="details-value">{design.uuid}</Typography></div>
                             </div>
-                        </Grid>
-                        <Grid item xs={6}>
-                            <div className="design-details">
-                                <div class="details-item">
-                                    <div><Typography variant="body" color="inherit" class="details-label">UUID</Typography></div>
-                                    <div><Typography variant="body" color="inherit" class="details-value">{design.uuid}</Typography></div>
-                                </div>
-                                <div class="details-item">
-                                    <div><Typography variant="body" color="inherit" class="details-label">Checksum</Typography></div>
-                                    <div><Typography variant="body" color="inherit" class="details-value">{design.checksum}</Typography></div>
-                                </div>
-                                <div class="details-item">
-                                    <div><Typography variant="body" color="inherit" class="details-label">Revision</Typography></div>
-                                    <div><Typography variant="body" color="inherit" class="details-value">{design.revision}</Typography></div>
-                                </div>
-                                <div class="details-item">
-                                    <div><Typography variant="body" color="inherit" class="details-label">Created</Typography></div>
-                                    <div><Typography variant="body" color="inherit" class="details-value">{design.created}</Typography></div>
-                                </div>
-                                <div class="details-item">
-                                    <div><Typography variant="body" color="inherit" class="details-label">Updated</Typography></div>
-                                    <div><Typography variant="body" color="inherit" class="details-value">{design.updated}</Typography></div>
-                                </div>
-                                <div class="details-item">
-                                    <div><Typography variant="body" color="inherit" class="details-label">Draft</Typography></div>
-                                    <div><Typography variant="body" color="inherit" class="details-value">{design.draft ? 'Yes' : 'No'}</Typography></div>
-                                </div>
-                                <div class="details-item">
-                                    <div><Typography variant="body" color="inherit" class="details-label">Completed</Typography></div>
-                                    <div><Typography variant="body" color="inherit" class="details-value">{design.percentage}%</Typography></div>
-                                </div>
+                            <div class="details-item">
+                                <div><Typography variant="body" color="inherit" class="details-label">Checksum</Typography></div>
+                                <div><Typography variant="body" color="inherit" class="details-value">{design.checksum}</Typography></div>
                             </div>
-                        </Grid>
-                    </Grid>
-                    <Grid container xs={12} justify="space-between" alignItems="top-center" className="container">
-                        <Grid item xs={12} className="design-editor">
-                            <div className="design-controls">
-                                {this.props.account.role == 'admin' && (
-                                    <Button className="button" variant="outlined" color="primary" onClick={this.handleDownload}>
-                                      Download
-                                    </Button>
-                                )}
-                                {this.props.account.role == 'admin' && (
-                                    <Button className="button" variant="outlined" color="primary" onClick={this.handleModify}>
-                                      Modify
-                                    </Button>
-                                )}
-                                {this.props.account.role == 'admin' && (
-                                    <Button disabled={design.published == true} className="button" variant="outlined" color="primary" onClick={this.handlePublish}>
-                                      Publish
-                                    </Button>
-                                )}
-                                {this.props.account.role == 'admin' && (
-                                    <Button disabled={design.published == false} className="button" variant="outlined" color="primary" onClick={this.handleUnpublish}>
-                                      Unpublish
-                                    </Button>
-                                )}
+                            <div class="details-item">
+                                <div><Typography variant="body" color="inherit" class="details-label">Revision</Typography></div>
+                                <div><Typography variant="body" color="inherit" class="details-value">{design.revision}</Typography></div>
                             </div>
-                        </Grid>
-                    </Grid>
-                    <Grid item xs={12}>
-                        <Footer/>
+                            <div class="details-item">
+                                <div><Typography variant="body" color="inherit" class="details-label">Created</Typography></div>
+                                <div><Typography variant="body" color="inherit" class="details-value">{design.created}</Typography></div>
+                            </div>
+                            <div class="details-item">
+                                <div><Typography variant="body" color="inherit" class="details-label">Updated</Typography></div>
+                                <div><Typography variant="body" color="inherit" class="details-value">{design.updated}</Typography></div>
+                            </div>
+                            <div class="details-item">
+                                <div><Typography variant="body" color="inherit" class="details-label">Draft</Typography></div>
+                                <div><Typography variant="body" color="inherit" class="details-value">{design.draft ? 'Yes' : 'No'}</Typography></div>
+                            </div>
+                            <div class="details-item">
+                                <div><Typography variant="body" color="inherit" class="details-label">Completed</Typography></div>
+                                <div><Typography variant="body" color="inherit" class="details-value">{design.percentage}%</Typography></div>
+                            </div>
+                        </div>
                     </Grid>
                 </Grid>
-                <Snackbar
-                  anchorOrigin={{
-                    vertical: 'top',
-                    horizontal: 'right',
-                  }}
-                  open={this.props.show_error_message}
-                  autoHideDuration={6000}
-                  onClose={this.handleClose}
-                  ContentProps={{
-                    'aria-describedby': 'message-id',
-                  }}
-                  message={<span id="message-id">{this.props.error_message}</span>}
-                  action={[
-                    <IconButton
-                      key="close"
-                      aria-label="Close"
-                      color="inherit"
-                      onClick={this.handleClose}
-                    >
-                      <CloseIcon />
-                    </IconButton>
-                  ]}
-                />
+                <Grid container xs={12} justify="space-between" alignItems="top-center" className="container">
+                    <Grid item xs={12} className="design-editor">
+                        <div className="design-controls">
+                            {this.props.account.role == 'admin' && (
+                                <Button className="button" variant="outlined" color="primary" onClick={this.handleDownload}>
+                                  Download
+                                </Button>
+                            )}
+                            {this.props.account.role == 'admin' && (
+                                <Button className="button" variant="outlined" color="primary" onClick={this.handleModify}>
+                                  Modify
+                                </Button>
+                            )}
+                            {this.props.account.role == 'admin' && (
+                                <Button disabled={design.published == true} className="button" variant="outlined" color="primary" onClick={this.handlePublish}>
+                                  Publish
+                                </Button>
+                            )}
+                            {this.props.account.role == 'admin' && (
+                                <Button disabled={design.published == false} className="button" variant="outlined" color="primary" onClick={this.handleUnpublish}>
+                                  Unpublish
+                                </Button>
+                            )}
+                        </div>
+                    </Grid>
+                </Grid>
                 {this.props.account.role == 'admin' && (
                     <Dialog className="dialog" open={this.props.show_update_design} onClose={this.props.handleHideUpdateDialog} scroll={"paper"} maxWidth={"xl"} fullWidth={true} TransitionComponent={SlideTransition}>
                         <DialogTitle>Modify Existing Design</DialogTitle>

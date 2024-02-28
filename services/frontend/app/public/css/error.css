@@ -19,115 +19,39 @@ a, a:active, a:hover, a:visited {
     color: #222222;
 }
 
-header {
-    font-size: 1.4em;
-    left: 0%;
-    top: 1em;
-    position: fixed;
-    display: block;
-    text-align: left;
-    z-index: 10;
-    padding: 1.2em;
-    background: #fdfdfd;
-    opacity: 0.6;
-    border-radius: 0 1.2em 1.2em 0;
-    box-shadow: rgba(0, 0, 0, 0.2) 0px 2px 4px -1px, rgba(0, 0, 0, 0.14) 0px 4px 5px 0px, rgba(0, 0, 0, 0.12) 0px 1px 10px 0px;
+h1 {
+    padding: 2%;
+    width: 100%;
+    box-sizing: border-box;
 }
 
-header p {
-    padding: 0;
-    margin: 0;
+h2 {
+    padding: 2%;
+    width: 100%;
+    box-sizing: border-box;
 }
 
-header .title {
-    font-weight: 300;
-}
-
-header .subtitle {
-}
-
-header .separator {
-    display: inline-block;
-    text-align: center;
-    width: 1em;
-}
-
-footer {
-    font-size: 1.2em;
-    right: 0%;
-    bottom: 0.5em;
-    position: fixed;
-    display: block;
-    text-align: left;
-    z-index: 10;
-    padding: 1em;
-    background: #fdfdfd;
-    opacity: 0.6;
-    border-radius: 1.2em 0 0 1.2em;
-    box-shadow: rgba(0, 0, 0, 0.2) 0px 2px 4px -1px, rgba(0, 0, 0, 0.14) 0px 4px 5px 0px, rgba(0, 0, 0, 0.12) 0px 1px 10px 0px;
-}
-
-footer p {
-    padding: 0;
-    margin: 0;
-}
-
-navigation.close {
-    font-size: 1.4em;
-    right: 0%;
-    top: 1em;
-    position: fixed;
-    display: block;
-    text-align: center;
-    z-index: 10;
-    padding: 1.2em;
-    background: #fdfdfd;
-    opacity: 0.6;
-    border-radius: 1.2em 0 0 1.2em;
-    box-shadow: rgba(0, 0, 0, 0.2) 0px 2px 4px -1px, rgba(0, 0, 0, 0.14) 0px 4px 5px 0px, rgba(0, 0, 0, 0.12) 0px 1px 10px 0px;
+h3 {
+    padding: 0 2% 0 2%;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 section {
-    position: fixed;
-    display: block;
     width: 100%;
     height: 100%;
-    padding: 8em 2em 8em 2em;
-    overflow: hidden;
-    background: #ebebeb;
-    boxing-size: border-box;
 }
 
-section .error pre {
+section div {
+    padding: 0 2% 0 2%;
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+section pre {
+    width: 100%;
+    box-sizing: border-box;
     overflow: scroll;
 }
 
-@media (max-width: 800px) {
-    header {
-        font-size: 1.2em;
-    }
-
-    footer {
-        font-size: 1.0em;
-    }
-}
-
-@media (max-width: 600px) {
-    header {
-        font-size: 1.0em;
-    }
-
-    footer {
-        font-size: 0.8em;
-    }
-}
-
-@media (max-width: 300px) {
-    header {
-        font-size: 0.8em;
-    }
-
-    footer {
-        font-size: 0.6em;
-    }
-}

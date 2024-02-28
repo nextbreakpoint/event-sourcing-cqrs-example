@@ -79,6 +79,13 @@ navigation {
     padding: 2em 1em 2em 1em;
 }
 
+.designs-loading, .design-loading {
+    margin-top: 2em;
+    text-align:center;
+    font-size: 1.5em;
+    min-height: 300px;
+}
+
 .designs-toolbar {
     margin-top: 1em;
     text-align: left;

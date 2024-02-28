@@ -1,7 +1,16 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 
+import Header from '../shared/Header'
+import Footer from '../shared/Footer'
 import Message from '../shared/Message'
+
+import Grid from '@mui/material/Grid'
+import Snackbar from '@mui/material/Snackbar'
+import IconButton from '@mui/material/IconButton'
+import Input from '@mui/material/Input'
+
+import CloseIcon from '@mui/icons-material/Close'
 
 import { connect } from 'react-redux'
 
@@ -20,7 +29,10 @@ import {
     loadDesign,
     loadDesignSuccess,
     loadDesignFailure,
-    showErrorMessage
+    getShowErrorMessage,
+    getErrorMessage,
+    showErrorMessage,
+    hideErrorMessage
 } from '../../actions/preview'
 
 import axios from 'axios'
@@ -116,9 +128,53 @@ let Preview = class Preview extends React.Component {
             })
     }
 
+    handleClose = (event, reason) => {
+        if (reason === 'clickaway') {
+          return
+        }
+
+        this.props.handleHideErrorMessage()
+    }
+
     render() {
         return (
-            this.props.design ? (this.props.children) : (<Message error={this.props.status.error} text={this.props.status.message}/>)
+            <React.Fragment>
+                <Grid container justify="space-between" alignItems="center">
+                    <Grid item xs={12}>
+                        {(this.props.design && this.props.design.published == true) && <Header landing={'/admin/designs.html'} titleText={"Fractals"} subtitleText={"The Beauty of Chaos"} backText={"Show all designs"} backLink={"/admin/designs.html"} browseText={"Show fractal"} browseLink={"/browse/designs/" + this.props.uuid + ".html"}/>}
+                        {(!this.props.design || this.props.design.published == false) && <Header landing={'/admin/designs.html'} titleText={"Fractals"} subtitleText={"The Beauty of Chaos"} backText={"Show all designs"} backLink={"/admin/designs.html"}/>}
+                    </Grid>
+                    <Grid item xs={12}>
+                        {this.props.design ? (this.props.children) : (<div class="designs-loading"><Message error={this.props.status.error} text={this.props.status.message}/></div>)}
+                    </Grid>
+                    <Grid item xs={12}>
+                        <Footer/>
+                    </Grid>
+                </Grid>
+                <Snackbar
+                  anchorOrigin={{
+                    vertical: 'top',
+                    horizontal: 'right',
+                  }}
+                  open={this.props.show_error_message}
+                  autoHideDuration={6000}
+                  onClose={this.handleClose}
+                  ContentProps={{
+                    'aria-describedby': 'message-id',
+                  }}
+                  message={<span id="message-id">{this.props.error_message}</span>}
+                  action={[
+                    <IconButton
+                      key="close"
+                      aria-label="Close"
+                      color="inherit"
+                      onClick={this.handleClose}
+                    >
+                      <CloseIcon />
+                    </IconButton>
+                  ]}
+                />
+            </React.Fragment>
         )
     }
 }
@@ -128,7 +184,9 @@ Preview.propTypes = {
     account: PropTypes.object.isRequired,
     status: PropTypes.object.isRequired,
     revision: PropTypes.string.isRequired,
-    uuid: PropTypes.string.isRequired
+    uuid: PropTypes.string.isRequired,
+    show_error_message: PropTypes.bool.isRequired,
+    error_message: PropTypes.string.isRequired
 }
 
 const mapStateToProps = state => ({
@@ -136,12 +194,17 @@ const mapStateToProps = state => ({
     account: getAccount(state),
     design: getDesign(state),
     status: getDesignStatus(state),
-    revision: getRevision(state)
+    revision: getRevision(state),
+    show_error_message: getShowErrorMessage(state),
+    error_message: getErrorMessage(state)
 })
 
 const mapDispatchToProps = dispatch => ({
     handleShowErrorMessage: (error) => {
         dispatch(showErrorMessage(error))
+    },
+    handleHideErrorMessage: () => {
+        dispatch(hideErrorMessage())
     },
     handleLoadDesign: () => {
         dispatch(loadDesign())

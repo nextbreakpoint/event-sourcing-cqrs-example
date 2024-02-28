@@ -463,7 +463,7 @@ let EnhancedTable = class EnhancedTable extends React.Component {
 //
 //   React.useEffect(() => {
 //       setRowCountState((prevRowCountState) =>
-//         rowCount !== undefined ? rowCount : prevRowCountState,
+//         this.props.total !== undefined ? this.props.total : prevRowCountState,
 //       )
 //   }, [this.props.total, setRowCountState])
 
@@ -496,6 +496,7 @@ let EnhancedTable = class EnhancedTable extends React.Component {
 
     return (
       <Paper className="designs" square={true}>
+        <div class="spacer"/>
         <DataGrid
             components={{Footer: CustomFooter}}
             rowCount={total}

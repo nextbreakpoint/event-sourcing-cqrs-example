@@ -1,7 +1,16 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 
+import Header from '../shared/Header'
+import Footer from '../shared/Footer'
 import Message from '../shared/Message'
+
+import Grid from '@mui/material/Grid'
+import Snackbar from '@mui/material/Snackbar'
+import IconButton from '@mui/material/IconButton'
+import Input from '@mui/material/Input'
+
+import CloseIcon from '@mui/icons-material/Close'
 
 import { connect } from 'react-redux'
 
@@ -20,7 +29,11 @@ import {
     loadDesigns,
     getPagination,
     loadDesignsSuccess,
-    showErrorMessage
+    loadDesignsFailure,
+    getShowErrorMessage,
+    getErrorMessage,
+    showErrorMessage,
+    hideErrorMessage
 } from '../../actions/designs'
 
 import axios from 'axios'
@@ -96,20 +109,63 @@ let Designs = class Designs extends React.Component {
                     component.props.handleLoadDesignsSuccess(designs, total, revision)
                 } else {
                     console.log("Can't load designs: status = " + content.status)
-                    component.props.handleLoadDesignsSuccess([], 0, 0)
+                    component.props.handleLoadDesignsFailure("Can't load designs")
                     component.props.handleShowErrorMessage("Can't load designs")
                 }
             })
             .catch(function (error) {
                 console.log("Can't load designs " + error)
-                component.props.handleLoadDesignsSuccess([], 0, 0)
+                component.props.handleLoadDesignsFailure("Can't load designs")
                 component.props.handleShowErrorMessage("Can't load designs")
             })
     }
 
+    handleClose = (event, reason) => {
+        if (reason === 'clickaway') {
+          return
+        }
+
+        this.props.handleHideErrorMessage()
+    }
+
     render() {
         return (
-            this.props.designs ? (this.props.children) : (<Message error={this.props.status.error} text={this.props.status.message}/>)
+            <React.Fragment>
+                <Grid container justify="space-between" alignItems="center">
+                    <Grid item xs={12}>
+                        <Header landing={'/admin/designs.html'} titleText={"Fractals"} subtitleText={"The Beauty of Chaos"} browseText={"Browse fractals"} browseLink={"/browse/designs.html"}/>
+                    </Grid>
+                    <Grid item xs={12}>
+                        {this.props.designs ? (this.props.children) : (<div class="design-loading"><Message error={this.props.status.error} text={this.props.status.message}/></div>)}
+                    </Grid>
+                    <Grid item xs={12}>
+                        <Footer/>
+                    </Grid>
+                </Grid>
+                <Snackbar
+                  anchorOrigin={{
+                    vertical: 'top',
+                    horizontal: 'right',
+                  }}
+                  open={this.props.show_error_message}
+                  autoHideDuration={6000}
+                  onClose={this.handleClose}
+                  ContentProps={{
+                    'aria-describedby': 'message-id',
+                  }}
+                  message={<span id="message-id">{this.props.error_message}</span>}
+                  action={[
+                    <IconButton
+                      key="close"
+                      aria-label="Close"
+                      color="inherit"
+                      onClick={this.handleClose}
+                    >
+                      <CloseIcon />
+                    </IconButton>
+                  ]}
+                />
+            </React.Fragment>
         )
     }
 }
@@ -119,7 +175,9 @@ Designs.propTypes = {
     account: PropTypes.object.isRequired,
     status: PropTypes.object.isRequired,
     revision: PropTypes.string.isRequired,
-    pagination: PropTypes.object
+    pagination: PropTypes.object,
+    show_error_message: PropTypes.bool.isRequired,
+    error_message: PropTypes.string.isRequired
 }
 
 const mapStateToProps = state => ({
@@ -128,18 +186,26 @@ const mapStateToProps = state => ({
     designs: getDesigns(state),
     status: getDesignsStatus(state),
     revision: getRevision(state),
-    pagination: getPagination(state)
+    pagination: getPagination(state),
+    show_error_message: getShowErrorMessage(state),
+    error_message: getErrorMessage(state)
 })
 
 const mapDispatchToProps = dispatch => ({
     handleShowErrorMessage: (error) => {
         dispatch(showErrorMessage(error))
     },
+    handleHideErrorMessage: () => {
+        dispatch(hideErrorMessage())
+    },
     handleLoadDesigns: () => {
         dispatch(loadDesigns())
     },
     handleLoadDesignsSuccess: (designs, total, revision) => {
         dispatch(loadDesignsSuccess(designs, total, revision))
+    },
+    handleLoadDesignsFailure: (designs, total, revision) => {
+        dispatch(loadDesignsFailure(designs, total, revision))
     }
 })
 

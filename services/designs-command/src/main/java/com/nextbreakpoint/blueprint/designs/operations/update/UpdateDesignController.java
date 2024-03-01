@@ -6,6 +6,8 @@ import com.nextbreakpoint.blueprint.common.core.MessageEmitter;
 import com.nextbreakpoint.blueprint.common.core.OutputMessage;
 import com.nextbreakpoint.blueprint.common.core.ResultStatus;
 import com.nextbreakpoint.blueprint.common.vertx.MessageFactory;
+import com.nextbreakpoint.blueprint.designs.common.DesignsRenderClient;
+import io.vertx.core.json.JsonObject;
 import lombok.extern.log4j.Log4j2;
 import rx.Single;
 
@@ -15,15 +17,18 @@ import java.util.Objects;
 public class UpdateDesignController implements Controller<UpdateDesignRequest, UpdateDesignResponse> {
     private final String messageSource;
     private final MessageEmitter<DesignUpdateCommand> emitter;
+    private final DesignsRenderClient designsRenderClient;
 
-    public UpdateDesignController(String messageSource, MessageEmitter<DesignUpdateCommand> emitter) {
+    public UpdateDesignController(String messageSource, MessageEmitter<DesignUpdateCommand> emitter, DesignsRenderClient designsRenderClient) {
         this.messageSource = Objects.requireNonNull(messageSource);
         this.emitter = Objects.requireNonNull(emitter);
+        this.designsRenderClient = Objects.requireNonNull(designsRenderClient);
     }
 
     @Override
     public Single<UpdateDesignResponse> onNext(UpdateDesignRequest request) {
         return Single.just(request)
+                .flatMap(this::validateDesign)
                 .map(this::createCommand)
                 .doOnSuccess(command -> log.info("Processing update command {}", command.getDesignId()))
                 .map(this::createMessage)
@@ -31,6 +36,16 @@ public class UpdateDesignController implements Controller<UpdateDesignRequest, U
                 .map(ignore -> createResponse(request))
                 .doOnError(err -> log.error("Can't process update command", err))
                 .onErrorReturn(err -> createResponse(request, err));
+    }
+
+    private Single<UpdateDesignRequest> validateDesign(UpdateDesignRequest request) {
+        return designsRenderClient.validateDesign(request.getToken(), new JsonObject(request.getJson()))
+                .map(response -> response.getString("status"))
+                .flatMap(status -> handleResponse(request, status));
+    }
+
+    private Single<UpdateDesignRequest> handleResponse(UpdateDesignRequest request, String status) {
+        return status.equals("ACCEPTED") ? Single.just(request) : Single.error(new RuntimeException("Design was rejected"));
     }
 
     private DesignUpdateCommand createCommand(UpdateDesignRequest request) {

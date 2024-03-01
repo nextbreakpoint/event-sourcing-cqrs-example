@@ -32,6 +32,8 @@ public interface TestConstants {
 
     String DATABASE_KEYSPACE = "test_designs_command";
 
+    String DESIGNS_RENDER_VALIDATE_PATH = "/v1/designs/validate";
+
     UUID USER_ID_1 = new UUID(0L, 1L);
     UUID USER_ID_2 = new UUID(0L, 2L);
 
@@ -42,4 +44,6 @@ public interface TestConstants {
     UUID COMMAND_ID_1 = new UUID(1L, 1L);
     UUID COMMAND_ID_2 = new UUID(1L, 2L);
     UUID COMMAND_ID_3 = new UUID(1L, 3L);
+
+    String TOKEN = "abc";
 }

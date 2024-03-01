@@ -187,6 +187,8 @@ public class Verticle extends AbstractVerticle {
 
             final Handler<RoutingContext> metricsHandler = PrometheusScrapingHandler.create();
 
+            //TODO register accounts health check
+
             final URL resource = RouterBuilder.class.getClassLoader().getResource("api-v1.yaml");
 
             if (resource == null) {

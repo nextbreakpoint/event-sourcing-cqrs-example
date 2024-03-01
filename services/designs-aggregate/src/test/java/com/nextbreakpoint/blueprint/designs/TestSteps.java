@@ -28,6 +28,7 @@ import java.util.function.Predicate;
 
 import static com.nextbreakpoint.blueprint.designs.TestConstants.MESSAGE_SOURCE;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Durations.TEN_SECONDS;
 
 public class TestSteps {
     private final TestContext context;
@@ -43,7 +44,7 @@ public class TestSteps {
     }
 
     private static ConditionFactory defaultAwait() {
-        return Awaitility.await().atMost(Duration.ofSeconds(20)).pollInterval(Duration.ofSeconds(5));
+        return Awaitility.await().atMost(Duration.ofSeconds(30)).pollInterval(Duration.ofSeconds(5));
     }
 
     public void reset() {

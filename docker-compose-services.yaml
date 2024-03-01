@@ -36,7 +36,7 @@ services:
       JAEGER_ATTRIBUTES: service.name=authentication,service.version=${VERSION},service.namespace=designs,environment=dev
       JAEGER_ENDPOINT: http://host.docker.internal:14250
       KEYSTORE_SECRET: secret
-      ACCOUNTS_URL: http://accounts:30110
+      ACCOUNTS_URL: http://host.docker.internal:8000
       GITHUB_API_URL: https://api.github.com
       GITHUB_OAUTH_URL: https://github.com
       GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
@@ -103,6 +103,7 @@ services:
       JAEGER_ATTRIBUTES: service.name=designs-command,service.version=${VERSION},service.namespace=designs,environment=dev
       JAEGER_ENDPOINT: http://host.docker.internal:14250
       KEYSTORE_SECRET: secret
+      DESIGNS_RENDER_URL: http://host.docker.internal:8000
       DATABASE_HOST: host.docker.internal
       DATABASE_USERNAME: verticle
       DATABASE_PASSWORD: password
@@ -172,7 +173,6 @@ services:
       JAEGER_ATTRIBUTES: service.name=designs-watch,service.version=${VERSION},service.namespace=designs,environment=dev
       JAEGER_ENDPOINT: http://host.docker.internal:14250
       KEYSTORE_SECRET: secret
-      CONSUL_HOST: host.docker.internal
       KAFKA_HOST: host.docker.internal
       KAFKA_PORT: 9094
       SCHEMA_REGISTRY_HOST: host.docker.internal

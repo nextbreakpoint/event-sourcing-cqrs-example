@@ -72,17 +72,14 @@ class DesignCommandControllerTest {
         @Test
         void shouldReturnErrorWhenStoreFails() {
             final RuntimeException exception = new RuntimeException();
-            final Store mockedStore = mock();
-            when(mockedStore.appendMessage(any(InputMessage.class))).thenReturn(Single.error(exception));
+            when(store.appendMessage(any(InputMessage.class))).thenReturn(Single.error(exception));
 
             final var commandMessage = TestFactory.createInputMessage(aMessageId(), "001", dateTime, aDesignInsertCommand(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1));
 
-            final var insertController = new DesignCommandController.DesignInsertCommandController(MESSAGE_SOURCE, mockedStore, insertEmitter);
-
             assertThatThrownBy(() -> insertController.onNext(commandMessage).toCompletable().await()).isEqualTo(exception);
 
-            verify(mockedStore).appendMessage(commandMessage);
-            verifyNoMoreInteractions(mockedStore);
+            verify(store).appendMessage(commandMessage);
+            verifyNoMoreInteractions(store);
 
             verifyNoInteractions(insertEmitter);
         }
@@ -90,23 +87,20 @@ class DesignCommandControllerTest {
         @Test
         void shouldReturnErrorWhenEmitterFails() {
             final RuntimeException exception = new RuntimeException();
-            final MessageEmitter<DesignInsertRequested> mockedEmitter = mock();
-            when(mockedEmitter.send(any(OutputMessage.class))).thenReturn(Single.error(exception));
+            when(insertEmitter.send(any(OutputMessage.class))).thenReturn(Single.error(exception));
 
             final var commandMessage = TestFactory.createInputMessage(aMessageId(), "001", dateTime, aDesignInsertCommand(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1));
             final var expectedOutputMessage = TestFactory.createOutputMessage(aMessageId(), aDesignInsertRequested(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1));
 
             when(store.appendMessage(any())).thenReturn(Single.just(null));
 
-            final var insertController = new DesignCommandController.DesignInsertCommandController(MESSAGE_SOURCE, store, mockedEmitter);
-
             assertThatThrownBy(() -> insertController.onNext(commandMessage).toCompletable().await()).isEqualTo(exception);
 
             verify(store).appendMessage(commandMessage);
             verifyNoMoreInteractions(store);
 
-            verify(mockedEmitter).send(assertArg(message -> hasExpectedDesignInsertRequested(message, expectedOutputMessage)));
-            verifyNoMoreInteractions(mockedEmitter);
+            verify(insertEmitter).send(assertArg(message -> hasExpectedDesignInsertRequested(message, expectedOutputMessage)));
+            verifyNoMoreInteractions(insertEmitter);
         }
     }
 
@@ -132,17 +126,14 @@ class DesignCommandControllerTest {
         @Test
         void shouldReturnErrorWhenStoreFails() {
             final var exception = new RuntimeException();
-            final Store mockedStore = mock();
-            when(mockedStore.appendMessage(any(InputMessage.class))).thenReturn(Single.error(exception));
+            when(store.appendMessage(any(InputMessage.class))).thenReturn(Single.error(exception));
 
             final var commandMessage = TestFactory.createInputMessage(aMessageId(), "001", dateTime, aDesignUpdateCommand(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1, true));
 
-            final var updateController = new DesignCommandController.DesignUpdateCommandController(MESSAGE_SOURCE, mockedStore, updateEmitter);
-
             assertThatThrownBy(() -> updateController.onNext(commandMessage).toCompletable().await()).isEqualTo(exception);
 
-            verify(mockedStore).appendMessage(commandMessage);
-            verifyNoMoreInteractions(mockedStore);
+            verify(store).appendMessage(commandMessage);
+            verifyNoMoreInteractions(store);
 
             verifyNoInteractions(insertEmitter);
         }
@@ -150,23 +141,20 @@ class DesignCommandControllerTest {
         @Test
         void shouldReturnErrorWhenEmitterFails() {
             final var exception = new RuntimeException();
-            final MessageEmitter<DesignUpdateRequested> mockedEmitter = mock();
-            when(mockedEmitter.send(any(OutputMessage.class))).thenReturn(Single.error(exception));
+            when(updateEmitter.send(any(OutputMessage.class))).thenReturn(Single.error(exception));
 
             final var commandMessage = TestFactory.createInputMessage(aMessageId(), "001", dateTime, aDesignUpdateCommand(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1, true));
             final var expectedOutputMessage = TestFactory.createOutputMessage(aMessageId(), aDesignUpdateRequested(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1, true));
 
             when(store.appendMessage(any())).thenReturn(Single.just(null));
 
-            final var updateController = new DesignCommandController.DesignUpdateCommandController(MESSAGE_SOURCE, store, mockedEmitter);
-
             assertThatThrownBy(() -> updateController.onNext(commandMessage).toCompletable().await()).isEqualTo(exception);
 
             verify(store).appendMessage(commandMessage);
             verifyNoMoreInteractions(store);
 
-            verify(mockedEmitter).send(assertArg(message -> hasExpectedDesignUpdateRequested(message, expectedOutputMessage)));
-            verifyNoMoreInteractions(mockedEmitter);
+            verify(updateEmitter).send(assertArg(message -> hasExpectedDesignUpdateRequested(message, expectedOutputMessage)));
+            verifyNoMoreInteractions(updateEmitter);
         }
     }
 
@@ -192,17 +180,14 @@ class DesignCommandControllerTest {
         @Test
         void shouldReturnErrorWhenStoreFails() {
             final var exception = new RuntimeException();
-            final Store mockedStore = mock();
-            when(mockedStore.appendMessage(any(InputMessage.class))).thenReturn(Single.error(exception));
+            when(store.appendMessage(any(InputMessage.class))).thenReturn(Single.error(exception));
 
             final var commandMessage = TestFactory.createInputMessage(aMessageId(), "001", dateTime, aDesignDeleteCommand(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1));
 
-            final var deleteController = new DesignCommandController.DesignDeleteCommandController(MESSAGE_SOURCE, mockedStore, deleteEmitter);
-
             assertThatThrownBy(() -> deleteController.onNext(commandMessage).toCompletable().await()).isEqualTo(exception);
 
-            verify(mockedStore).appendMessage(commandMessage);
-            verifyNoMoreInteractions(mockedStore);
+            verify(store).appendMessage(commandMessage);
+            verifyNoMoreInteractions(store);
 
             verifyNoInteractions(insertEmitter);
         }
@@ -210,23 +195,20 @@ class DesignCommandControllerTest {
         @Test
         void shouldReturnErrorWhenEmitterFails() {
             final var exception = new RuntimeException();
-            final MessageEmitter<DesignDeleteRequested> mockedEmitter = mock();
-            when(mockedEmitter.send(any(OutputMessage.class))).thenReturn(Single.error(exception));
+            when(deleteEmitter.send(any(OutputMessage.class))).thenReturn(Single.error(exception));
 
             final var commandMessage = TestFactory.createInputMessage(aMessageId(), "001", dateTime, aDesignDeleteCommand(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1));
             final var expectedOutputMessage = TestFactory.createOutputMessage(aMessageId(), aDesignDeleteRequested(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1));
 
             when(store.appendMessage(any())).thenReturn(Single.just(null));
 
-            final var deleteController = new DesignCommandController.DesignDeleteCommandController(MESSAGE_SOURCE, store, mockedEmitter);
-
             assertThatThrownBy(() -> deleteController.onNext(commandMessage).toCompletable().await()).isEqualTo(exception);
 
             verify(store).appendMessage(commandMessage);
             verifyNoMoreInteractions(store);
 
-            verify(mockedEmitter).send(assertArg(message -> hasExpectedDesignDeleteRequested(message, expectedOutputMessage)));
-            verifyNoMoreInteractions(mockedEmitter);
+            verify(deleteEmitter).send(assertArg(message -> hasExpectedDesignDeleteRequested(message, expectedOutputMessage)));
+            verifyNoMoreInteractions(deleteEmitter);
         }
     }
 

@@ -80,7 +80,6 @@ let DesignsPage = class DesignsPage extends React.Component {
                                 if (response.status == 202 || response.status == 201) {
                                     component.props.handleShowErrorMessage("Your request has been received. The designs will be updated shortly")
                                     component.props.handleHideCreateDialog()
-                                    component.props.resetUploadedDesign()
                                 } else {
                                     console.log("Can't create the design: status = " + response.status)
                                     component.props.handleShowErrorMessage("Can't create the design")

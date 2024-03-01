@@ -1,6 +1,7 @@
 package com.nextbreakpoint.blueprint.designs.operations.insert;
 
 import com.nextbreakpoint.blueprint.common.core.Mapper;
+import com.nextbreakpoint.blueprint.designs.common.Authentication;
 import io.vertx.core.json.JsonObject;
 import io.vertx.rxjava.ext.web.RoutingContext;
 
@@ -45,6 +46,12 @@ public class InsertDesignRequestMapper implements Mapper<RoutingContext, InsertD
 
         final JsonObject principal = context.user().principal();
 
+        final String token = Authentication.getToken(context);
+
+        if (token == null) {
+            throw new IllegalStateException("authentication token is required");
+        }
+
         try {
             final UUID owner = UUID.fromString(principal.getString("user"));
 
@@ -53,6 +60,7 @@ public class InsertDesignRequestMapper implements Mapper<RoutingContext, InsertD
                     .withUuid(UUID.randomUUID())
                     .withChange(UUID.randomUUID())
                     .withJson(json)
+                    .withToken(token)
                     .build();
         } catch (Exception e) {
             throw new IllegalStateException("invalid request: " + e.getMessage());

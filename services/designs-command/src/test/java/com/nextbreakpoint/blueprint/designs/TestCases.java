@@ -12,6 +12,7 @@ import com.nextbreakpoint.blueprint.common.test.KafkaTestPolling;
 import com.nextbreakpoint.blueprint.common.test.TestContext;
 import com.nextbreakpoint.blueprint.common.vertx.Records;
 import io.restassured.http.ContentType;
+import io.restassured.response.Response;
 import io.vertx.rxjava.core.RxHelper;
 import io.vertx.rxjava.core.Vertx;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -28,7 +29,6 @@ import java.util.function.Predicate;
 
 import static com.nextbreakpoint.blueprint.common.core.Headers.AUTHORIZATION;
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.notNullValue;
 
 public class TestCases {
     private final TestScenario scenario = new TestScenario();
@@ -134,7 +134,7 @@ public class TestCases {
                 .withKeyspace(TestConstants.DATABASE_KEYSPACE)
                 .withUsername("admin")
                 .withPassword("password")
-                .withContactPoints(new String[] { scenario.getCassandraHost() })
+                .withContactPoints(new String[]{scenario.getCassandraHost()})
                 .withPort(scenario.getCassandraPort())
                 .build();
     }
@@ -154,37 +154,38 @@ public class TestCases {
                 .build();
     }
 
-    private String submitInsertDesignRequest(String authorization, Map<String, String> design) throws MalformedURLException {
-        return given().config(TestUtils.getRestAssuredConfig())
+    private void submitInsertDesignRequest(String authorization, Map<String, String> design) throws MalformedURLException {
+        final Response response = given().config(TestUtils.getRestAssuredConfig())
                 .and().header(AUTHORIZATION, authorization)
                 .and().contentType(ContentType.JSON)
                 .and().accept(ContentType.JSON)
                 .and().body(design)
                 .when().post(makeBaseURL("/v1/designs"))
-                .then().assertThat().statusCode(202)
-                .and().contentType(ContentType.JSON)
-                .and().body("uuid", notNullValue())
-                .and().extract().response().body().jsonPath().getString("uuid");
+                .then().extract().response();
+
+        context.putObject("response", response);
     }
 
     private void submitUpdateDesignRequest(String authorization, Map<String, String> design, String uuid) throws MalformedURLException {
-        given().config(TestUtils.getRestAssuredConfig())
+        final Response response = given().config(TestUtils.getRestAssuredConfig())
                 .and().header(AUTHORIZATION, authorization)
                 .and().contentType(ContentType.JSON)
                 .and().accept(ContentType.JSON)
                 .and().body(design)
                 .when().put(makeBaseURL("/v1/designs/" + uuid))
-                .then().assertThat().statusCode(202)
-                .and().contentType(ContentType.JSON);
+                .then().extract().response();
+
+        context.putObject("response", response);
     }
 
     private void submitDeleteDesignRequest(String authorization, String uuid) throws MalformedURLException {
-        given().config(TestUtils.getRestAssuredConfig())
+        final Response response = given().config(TestUtils.getRestAssuredConfig())
                 .and().header(AUTHORIZATION, authorization)
                 .and().accept(ContentType.JSON)
                 .when().delete(makeBaseURL("/v1/designs/" + uuid))
-                .then().assertThat().statusCode(202)
-                .and().contentType(ContentType.JSON);
+                .then().extract().response();
+
+        context.putObject("response", response);
     }
 
     private class TestActionsImpl implements TestActions {
@@ -210,8 +211,8 @@ public class TestCases {
         }
 
         @Override
-        public UUID submitInsertDesignRequest(String authorization, Map<String, String> design) throws MalformedURLException {
-            return UUID.fromString(TestCases.this.submitInsertDesignRequest(authorization, design));
+        public void submitInsertDesignRequest(String authorization, Map<String, String> design) throws MalformedURLException {
+            TestCases.this.submitInsertDesignRequest(authorization, design);
         }
 
         @Override

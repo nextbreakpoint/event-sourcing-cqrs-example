@@ -73,7 +73,6 @@ public class IntegrationTests {
   public void reset() {
     RestAssured.reset();
 
-
     if (accountsStub != null) {
       accountsStub.clear();
     }

@@ -10,7 +10,7 @@
     <parent>
         <groupId>com.nextbreakpoint</groupId>
         <artifactId>com.nextbreakpoint.blueprint.service</artifactId>
-        <version>1.0.4-wip-ed3bb4db-1708776317</version>
+        <version>1.0.4-wip-2fac32d9-1709314636</version>
     </parent>
     <repositories>
         <repository>
@@ -73,6 +73,7 @@
                         <configuration>
                             <environmentVariables>
                                 <LOGGING_LEVEL>DEBUG</LOGGING_LEVEL>
+                                <DESIGNS_RENDER_URL>http://localhost:39001</DESIGNS_RENDER_URL>
                                 <DATABASE_KEYSPACE>test_designs_command</DATABASE_KEYSPACE>
                                 <COMMANDS_TOPIC>test-designs-command-commands</COMMANDS_TOPIC>
                                 <EVENTS_TOPIC>test-designs-command-events</EVENTS_TOPIC>
@@ -84,6 +85,12 @@
                         <goals>
                             <goal>exec</goal>
                         </goals>
+                        <configuration>
+                            <environmentVariables>
+                                <LOGGING_LEVEL>DEBUG</LOGGING_LEVEL>
+                                <DESIGNS_RENDER_URL>http://localhost:30124</DESIGNS_RENDER_URL>
+                            </environmentVariables>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>

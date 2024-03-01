@@ -25,6 +25,9 @@ import com.nextbreakpoint.blueprint.common.vertx.Records;
 import com.nextbreakpoint.blueprint.common.vertx.ResponseHelper;
 import com.nextbreakpoint.blueprint.common.vertx.Server;
 import com.nextbreakpoint.blueprint.common.vertx.ServerConfig;
+import com.nextbreakpoint.blueprint.common.vertx.WebClientConfig;
+import com.nextbreakpoint.blueprint.common.vertx.WebClientFactory;
+import com.nextbreakpoint.blueprint.designs.common.DesignsRenderClient;
 import com.nextbreakpoint.blueprint.designs.persistence.CassandraStore;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.binder.kafka.KafkaClientMetrics;
@@ -184,6 +187,18 @@ public class Verticle extends AbstractVerticle {
             final String keyDeserializer = "org.apache.kafka.common.serialization.StringDeserializer";
             final String valDeserializer = "io.confluent.kafka.serializers.KafkaAvroDeserializer";
 
+            final String designsRenderUrl = config.getString("server_designs_render_url");
+
+            final String clientKeyStorePath = config.getString("client_keystore_path");
+
+            final String clientKeyStoreSecret = config.getString("client_keystore_secret");
+
+            final String clientTrustStorePath = config.getString("client_truststore_path");
+
+            final String clientTrustStoreSecret = config.getString("client_truststore_secret");
+
+            final Boolean verifyHost = Boolean.parseBoolean(config.getString("client_verify_host"));
+
             final MeterRegistry registry = BackendRegistries.getDefaultNow();
 
             final JWTProviderConfig jwtProviderConfig = JWTProviderConfig.builder()
@@ -268,10 +283,20 @@ public class Verticle extends AbstractVerticle {
 
             final CorsHandler corsHandler = CorsHandlerFactory.createWithAll(originPattern, List.of(COOKIE, AUTHORIZATION, CONTENT_TYPE, ACCEPT, X_XSRF_TOKEN), List.of(COOKIE, CONTENT_TYPE, X_XSRF_TOKEN));
 
+            final WebClientConfig webClientConfig = WebClientConfig.builder()
+                    .withVerifyHost(verifyHost)
+                    .withKeyStorePath(clientKeyStorePath)
+                    .withKeyStoreSecret(clientKeyStoreSecret)
+                    .withTrustStorePath(clientTrustStorePath)
+                    .withTrustStoreSecret(clientTrustStoreSecret)
+                    .build();
+
+            final DesignsRenderClient designsRenderClient = new DesignsRenderClient(WebClientFactory.create(vertx, designsRenderUrl, webClientConfig));
+
             final Handler<RoutingContext> onAccessDenied = routingContext -> routingContext.response().setStatusCode(403).setStatusMessage("Access denied").end();
 
-            final Handler<RoutingContext> insertDesignHandler = new AccessHandler(jwtProvider, Factory.createInsertDesignHandler(commandKafkaProducer, commandsTopic, messageSource), onAccessDenied, List.of(ADMIN));
-            final Handler<RoutingContext> updateDesignHandler = new AccessHandler(jwtProvider, Factory.createUpdateDesignHandler(commandKafkaProducer, commandsTopic, messageSource), onAccessDenied, List.of(ADMIN));
+            final Handler<RoutingContext> insertDesignHandler = new AccessHandler(jwtProvider, Factory.createInsertDesignHandler(commandKafkaProducer, commandsTopic, messageSource, designsRenderClient), onAccessDenied, List.of(ADMIN));
+            final Handler<RoutingContext> updateDesignHandler = new AccessHandler(jwtProvider, Factory.createUpdateDesignHandler(commandKafkaProducer, commandsTopic, messageSource, designsRenderClient), onAccessDenied, List.of(ADMIN));
             final Handler<RoutingContext> deleteDesignHandler = new AccessHandler(jwtProvider, Factory.createDeleteDesignHandler(commandKafkaProducer, commandsTopic, messageSource), onAccessDenied, List.of(ADMIN));
 
             final Handler<RoutingContext> apiV1DocsHandler = new OpenApiHandler(vertx.getDelegate(), executor, "api-v1.yaml");
@@ -283,6 +308,7 @@ public class Verticle extends AbstractVerticle {
             healthCheckHandler.register("kafka-topic-events", 2000, future -> checkTopic(healthKafkaConsumer, eventsTopic, future));
             healthCheckHandler.register("kafka-topic-commands", 2000, future -> checkTopic(healthKafkaConsumer, commandsTopic, future));
             healthCheckHandler.register("cassandra-table-message", 2000, future -> checkTable(store, future, "MESSAGE"));
+            //TODO register designs render health check
 
             final URL resource = RouterBuilder.class.getClassLoader().getResource("api-v1.yaml");
 

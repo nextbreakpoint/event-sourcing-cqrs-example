@@ -48,7 +48,7 @@ class InsertDesignControllerTest {
         when(emitter.send(any())).thenReturn(Single.just(null));
 
         final JsonObject response = JsonObject.of().put("status", "ACCEPTED").put("errors", JsonArray.of());
-        when(designsRenderClient.validateDesign(anyString(), eq(new JsonObject(DATA_1)))).thenReturn(Single.just(response));
+        when(designsRenderClient.validateDesign(anyString(), eq(DATA_1))).thenReturn(Single.just(response));
 
         final var actualResponse = controller.onNext(request)
                 .doOnError(Assertions::fail).toBlocking().value();
@@ -57,7 +57,7 @@ class InsertDesignControllerTest {
 
         final var expectedOutputMessage = TestFactory.createOutputMessage(aMessageId(), aDesignInsertCommand(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1));
 
-        verify(designsRenderClient).validateDesign(anyString(), eq(new JsonObject(DATA_1)));
+        verify(designsRenderClient).validateDesign(anyString(), eq(DATA_1));
         verifyNoMoreInteractions(designsRenderClient);
 
         verify(emitter).send(hasExpectedValues(expectedOutputMessage));
@@ -73,14 +73,14 @@ class InsertDesignControllerTest {
         when(emitter.send(any())).thenReturn(Single.just(null));
 
         final JsonObject response = JsonObject.of().put("status", "REJECTED").put("errors", JsonArray.of("some error"));
-        when(designsRenderClient.validateDesign(anyString(), eq(new JsonObject(DATA_1)))).thenReturn(Single.just(response));
+        when(designsRenderClient.validateDesign(anyString(), eq(DATA_1))).thenReturn(Single.just(response));
 
         final var actualResponse = controller.onNext(request)
                 .doOnError(Assertions::fail).toBlocking().value();
 
         assertThat(actualResponse).isEqualTo(expectedResponse);
 
-        verify(designsRenderClient).validateDesign(anyString(), eq(new JsonObject(DATA_1)));
+        verify(designsRenderClient).validateDesign(anyString(), eq(DATA_1));
         verifyNoMoreInteractions(designsRenderClient);
 
         verifyNoInteractions(emitter);
@@ -92,7 +92,7 @@ class InsertDesignControllerTest {
         when(emitter.send(any(OutputMessage.class))).thenReturn(Single.error(exception));
 
         final JsonObject response = JsonObject.of().put("status", "ACCEPTED").put("errors", JsonArray.of());
-        when(designsRenderClient.validateDesign(anyString(), eq(new JsonObject(DATA_1)))).thenReturn(Single.just(response));
+        when(designsRenderClient.validateDesign(anyString(), eq(DATA_1))).thenReturn(Single.just(response));
 
         final var request = aRequest(USER_ID_1, DESIGN_ID_1, COMMAND_ID_1, DATA_1, TOKEN);
 
@@ -105,7 +105,7 @@ class InsertDesignControllerTest {
 
         final var expectedOutputMessage = TestFactory.createOutputMessage(aMessageId(), aDesignInsertCommand(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1, DATA_1));
 
-        verify(designsRenderClient).validateDesign(anyString(), eq(new JsonObject(DATA_1)));
+        verify(designsRenderClient).validateDesign(anyString(), eq(DATA_1));
         verifyNoMoreInteractions(designsRenderClient);
 
         verify(emitter).send(hasExpectedValues(expectedOutputMessage));
@@ -115,7 +115,7 @@ class InsertDesignControllerTest {
     @Test
     void shouldReturnErrorWhenValidationFails() {
         final var exception = new RuntimeException("Some error");
-        when(designsRenderClient.validateDesign(anyString(), any(JsonObject.class))).thenReturn(Single.error(exception));
+        when(designsRenderClient.validateDesign(anyString(), anyString())).thenReturn(Single.error(exception));
 
         final var request = aRequest(USER_ID_1, DESIGN_ID_1, COMMAND_ID_1, DATA_1, TOKEN);
 
@@ -128,7 +128,7 @@ class InsertDesignControllerTest {
 
         assertThat(actualResponse).isEqualTo(expectedResponse);
 
-        verify(designsRenderClient).validateDesign(anyString(), eq(new JsonObject(DATA_1)));
+        verify(designsRenderClient).validateDesign(anyString(), eq(DATA_1));
         verifyNoMoreInteractions(designsRenderClient);
 
         verifyNoInteractions(emitter);

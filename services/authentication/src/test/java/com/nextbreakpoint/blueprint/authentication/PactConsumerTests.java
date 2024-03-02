@@ -143,7 +143,7 @@ public class PactConsumerTests {
             .matchHeader("Authorization", "Bearer .+", "Bearer abcdef")
             .body(
                     new PactDslJsonBody()
-                            .stringValue("login", "test")
+                            .stringValue("login", "test-login")
                             .stringValue("name", "test")
                             .stringValue("role", "guest")
             )

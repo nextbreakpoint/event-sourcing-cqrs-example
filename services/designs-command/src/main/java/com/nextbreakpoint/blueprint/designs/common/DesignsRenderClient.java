@@ -23,19 +23,18 @@ public class DesignsRenderClient {
         this.webClient = Objects.requireNonNull(webClient);
     }
 
-    public Single<JsonObject> validateDesign(String jwtAccessToken, JsonObject payload) {
+    public Single<JsonObject> validateDesign(String jwtAccessToken, String payload) {
         return webClient.post("/v1/designs/validate")
                 .putHeader(AUTHORIZATION, Authentication.makeAuthorization(jwtAccessToken))
                 .putHeader(CONTENT_TYPE, APPLICATION_JSON)
                 .putHeader(ACCEPT, APPLICATION_JSON)
-                .rxSendJsonObject(payload)
+                .rxSendBuffer(Buffer.buffer(payload))
                 .flatMap(response -> getSuccessfulResponseOrError(response, "Cannot validate design", 200))
                 .map(HttpResponse::bodyAsJsonObject)
                 .onErrorResumeNext(this::getAuthenticationError);
     }
 
     private Single<HttpResponse<Buffer>> getSuccessfulResponseOrError(HttpResponse<Buffer> response, String message, int statusCode) {
-        System.out.printf(response.bodyAsString());
         if (response.statusCode() != statusCode) {
             return Single.error(Failure.accessDenied(message));
         } else {

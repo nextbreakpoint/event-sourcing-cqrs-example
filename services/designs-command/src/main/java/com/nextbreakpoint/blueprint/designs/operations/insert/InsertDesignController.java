@@ -8,7 +8,6 @@ import com.nextbreakpoint.blueprint.common.core.ResultStatus;
 import com.nextbreakpoint.blueprint.common.vertx.MessageFactory;
 import com.nextbreakpoint.blueprint.designs.common.DesignRejectedException;
 import com.nextbreakpoint.blueprint.designs.common.DesignsRenderClient;
-import io.vertx.core.json.JsonObject;
 import lombok.extern.log4j.Log4j2;
 import rx.Single;
 
@@ -40,7 +39,7 @@ public class InsertDesignController implements Controller<InsertDesignRequest, I
     }
 
     private Single<InsertDesignRequest> validateDesign(InsertDesignRequest request) {
-        return designsRenderClient.validateDesign(request.getToken(), new JsonObject(request.getJson()))
+        return designsRenderClient.validateDesign(request.getToken(), request.getJson())
                 .map(response -> response.getString("status"))
                 .flatMap(status -> handleResponse(request, status));
     }

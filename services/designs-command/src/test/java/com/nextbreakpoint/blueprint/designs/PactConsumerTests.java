@@ -28,6 +28,7 @@ import java.util.Map;
 
 import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_ID_1;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_INSERT_COMMAND;
+import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_UPDATE_COMMAND;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.INVALID_MANIFEST;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.MANIFEST;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.METADATA;
@@ -60,7 +61,7 @@ public class PactConsumerTests {
   }
 
   @Pact(consumer = "designs-command")
-  public V4Pact validateDesign(PactBuilder builder) {
+  public V4Pact designIsAccepted(PactBuilder builder) {
     final Map<String, String> headers = new HashMap<>();
     headers.put("Content-Type", "application/json");
     return builder.usingLegacyDsl()
@@ -84,6 +85,14 @@ public class PactConsumerTests {
                             .stringValue("status", "ACCEPTED")
                             .array("errors")
             )
+            .toPact(V4Pact.class);
+  }
+
+  @Pact(consumer = "designs-command")
+  public V4Pact designIsRejected(PactBuilder builder) {
+    final Map<String, String> headers = new HashMap<>();
+    headers.put("Content-Type", "application/json");
+    return builder.usingLegacyDsl()
             .uponReceiving("request to validate an invalid design")
             .method("POST")
             .path("/v1/designs/validate")
@@ -103,14 +112,14 @@ public class PactConsumerTests {
                     new PactDslJsonBody()
                             .stringValue("status", "REJECTED")
                             .array("errors")
-                            .stringValue("Some error")
+                            .stringValue("Factory not found none")
             )
             .toPact(V4Pact.class);
   }
 
   @Test
   @EnabledOnOs(OS.MAC)
-  @PactTestFor(providerName = "designs-render", pactMethod = "validateDesign", pactVersion = PactSpecVersion.V4)
+  @PactTestFor(providerName = "designs-render", pactMethod = "designIsAccepted", pactVersion = PactSpecVersion.V4)
   @MockServerConfig(providerName = "designs-render", port = "39001", implementation = MockServerImplementation.KTorServer)
   @DisplayName("should produce an insert command when user is authenticated and design is accepted")
   public void shouldProduceAnInsertDesignCommandWhenUserIsAuthenticatedAndDesignIsAccepted(MockServer mockServer) throws IOException {
@@ -133,7 +142,7 @@ public class PactConsumerTests {
 
   @Test
   @EnabledOnOs(OS.MAC)
-  @PactTestFor(providerName = "designs-render", pactMethod = "validateDesign", pactVersion = PactSpecVersion.V4)
+  @PactTestFor(providerName = "designs-render", pactMethod = "designIsRejected", pactVersion = PactSpecVersion.V4)
   @MockServerConfig(providerName = "designs-render", port = "39001", implementation = MockServerImplementation.KTorServer)
   @DisplayName("should not produce an insert command when user is authenticated and design is rejected")
   public void shouldNotProduceAnInsertDesignCommandWhenUserIsAuthenticatedAndDesignIsRejected(MockServer mockServer) throws IOException {
@@ -151,7 +160,7 @@ public class PactConsumerTests {
 
   @Test
   @EnabledOnOs(OS.LINUX)
-  @PactTestFor(providerName = "designs-render", pactMethod = "validateDesign", pactVersion = PactSpecVersion.V4)
+  @PactTestFor(providerName = "designs-render", pactMethod = "designIsAccepted", pactVersion = PactSpecVersion.V4)
   @MockServerConfig(providerName = "designs-render", port = "39001", hostInterface = "172.17.0.1", implementation = MockServerImplementation.KTorServer)
   @DisplayName("should produce an insert command when user is authenticated and design is accepted")
   public void shouldProduceAnInsertDesignCommandWhenUserIsAuthenticatedAndDesignIsAcceptedWorkaround(MockServer mockServer) throws IOException {
@@ -160,7 +169,7 @@ public class PactConsumerTests {
 
   @Test
   @EnabledOnOs(OS.LINUX)
-  @PactTestFor(providerName = "designs-render", pactMethod = "validateDesign", pactVersion = PactSpecVersion.V4)
+  @PactTestFor(providerName = "designs-render", pactMethod = "designIsRejected", pactVersion = PactSpecVersion.V4)
   @MockServerConfig(providerName = "designs-render", port = "39001", hostInterface = "172.17.0.1", implementation = MockServerImplementation.KTorServer)
   @DisplayName("should not produce an insert command when user is authenticated and design is rejected")
   public void shouldNotProduceAnInsertDesignCommandWhenUserIsAuthenticatedAndDesignIsRejectedWorkaround(MockServer mockServer) throws IOException {
@@ -169,7 +178,7 @@ public class PactConsumerTests {
 
   @Test
   @EnabledOnOs(OS.MAC)
-  @PactTestFor(providerName = "designs-render", pactMethod = "validateDesign", pactVersion = PactSpecVersion.V4)
+  @PactTestFor(providerName = "designs-render", pactMethod = "designIsAccepted", pactVersion = PactSpecVersion.V4)
   @MockServerConfig(providerName = "designs-render", port = "39001", implementation = MockServerImplementation.KTorServer)
   @DisplayName("should produce an update command when user is authenticated and design is accepted")
   public void shouldProduceAnUpdateDesignCommandWhenUserIsAuthenticatedAndDesignIsAccepted(MockServer mockServer) throws IOException {
@@ -185,7 +194,7 @@ public class PactConsumerTests {
             .and().submitUpdateDesignRequest()
             .then().requestIsAccepted()
             .and().responseContainsDesignId()
-            .and().aCommandMessageShouldBePublished(DESIGN_INSERT_COMMAND)
+            .and().aCommandMessageShouldBePublished(DESIGN_UPDATE_COMMAND)
             .and().aDesignUpdateCommandMessageShouldBeSaved()
             .and().aDesignUpdateRequestedMessageShouldBePublished()
             .and().theDesignUpdateRequestedEventShouldHaveExpectedValues();
@@ -193,7 +202,7 @@ public class PactConsumerTests {
 
   @Test
   @EnabledOnOs(OS.MAC)
-  @PactTestFor(providerName = "designs-render", pactMethod = "validateDesign", pactVersion = PactSpecVersion.V4)
+  @PactTestFor(providerName = "designs-render", pactMethod = "designIsRejected", pactVersion = PactSpecVersion.V4)
   @MockServerConfig(providerName = "designs-render", port = "39001", implementation = MockServerImplementation.KTorServer)
   @DisplayName("should not produce an update command when user is authenticated and design is rejected")
   public void shouldNotProduceAnUpdateDesignCommandWhenUserIsAuthenticatedAndDesignIsRejected(MockServer mockServer) throws IOException {
@@ -212,7 +221,7 @@ public class PactConsumerTests {
 
   @Test
   @EnabledOnOs(OS.LINUX)
-  @PactTestFor(providerName = "designs-render", pactMethod = "validateDesign", pactVersion = PactSpecVersion.V4)
+  @PactTestFor(providerName = "designs-render", pactMethod = "designIsAccepted", pactVersion = PactSpecVersion.V4)
   @MockServerConfig(providerName = "designs-render", port = "39001", hostInterface = "172.17.0.1", implementation = MockServerImplementation.KTorServer)
   @DisplayName("should produce an update command when user is authenticated and design is accepted")
   public void shouldProduceAnUpdateDesignCommandWhenUserIsAuthenticatedAndDesignIsAcceptedWorkaround(MockServer mockServer) throws IOException {
@@ -221,7 +230,7 @@ public class PactConsumerTests {
 
   @Test
   @EnabledOnOs(OS.LINUX)
-  @PactTestFor(providerName = "designs-render", pactMethod = "validateDesign", pactVersion = PactSpecVersion.V4)
+  @PactTestFor(providerName = "designs-render", pactMethod = "designIsRejected", pactVersion = PactSpecVersion.V4)
   @MockServerConfig(providerName = "designs-render", port = "39001", hostInterface = "172.17.0.1", implementation = MockServerImplementation.KTorServer)
   @DisplayName("should not produce an update command when user is authenticated and design is rejected")
   public void shouldNotProduceAnUpdateDesignCommandWhenUserIsAuthenticatedAndDesignIsRejectedWorkaround(MockServer mockServer) throws IOException {

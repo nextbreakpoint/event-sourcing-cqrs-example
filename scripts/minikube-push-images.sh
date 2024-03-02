@@ -17,7 +17,7 @@ for i in "$@"; do
       REPOSITORY="${i#*=}"
       shift
       ;;
-    -*|--*)
+    -*)
       echo "Unknown option $i"
       exit 1
       ;;
@@ -49,8 +49,8 @@ services=(
   frontend
 )
 
-for service in ${services[@]}; do
+for service in "${services[@]}"; do
   echo "load image: ${REPOSITORY}/$service:${VERSION}"
-  docker tag ${REPOSITORY}/$service:${VERSION} localhost:5000/${REPOSITORY}/$service:${VERSION}
-  docker push localhost:5000/${REPOSITORY}/$service:${VERSION}
+  docker tag "${REPOSITORY}/$service:${VERSION}" "localhost:5000/${REPOSITORY}/$service:${VERSION}"
+  docker push "localhost:5000/${REPOSITORY}/$service:${VERSION}"
 done

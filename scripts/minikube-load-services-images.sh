@@ -35,7 +35,7 @@ for i in "$@"; do
 done
 
 if [[ -z $VERSION ]]; then
-  export VERSION=$(mvn -q help:evaluate -Dexpression=project.version -DforceStdout)
+  VERSION=$(mvn -q help:evaluate -Dexpression=project.version -DforceStdout)
   echo "Selected version: $VERSION"
 fi
 
@@ -55,19 +55,19 @@ services=(
   frontend
 )
 
-if [[ ! -z $BUILD_SERVICES ]]; then
-  services=(
-    $BUILD_SERVICES
-  )
+if [[ -n $BUILD_SERVICES ]]; then
+  IFS=" " read -r -a services <<< "$BUILD_SERVICES"
 fi
 
 echo -n "Loading services:"
-for service in ${services[@]}; do
-  echo -n " "$service
+for service in "${services[@]}"; do
+  echo -n " $service"
 done
 echo ""
 
-for service in ${services[@]}; do
+export VERSION
+
+for service in "${services[@]}"; do
   echo "load image: ${REPOSITORY}/$service:${VERSION}"
-  minikube image load ${REPOSITORY}/$service:${VERSION}
+  minikube image load "${REPOSITORY}/$service:${VERSION}"
 done

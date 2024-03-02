@@ -31,6 +31,10 @@ for i in "$@"; do
       VERSION="${i#*=}"
       shift
       ;;
+    -*)
+      echo "Unknown option $i"
+      exit 1
+      ;;
     *)
       POSITIONAL_ARGS+=("$1")
       shift
@@ -43,13 +47,10 @@ if [[ -z $COMMAND ]]; then
   exit 1
 fi
 
-export LOGGING_LEVEL
-export VERSION
-
 case $COMMAND in
   start)
     if [[ -z $VERSION ]]; then
-      export VERSION=$(mvn -q help:evaluate -Dexpression=project.version -DforceStdout)
+      VERSION=$(mvn -q help:evaluate -Dexpression=project.version -DforceStdout)
       echo "Selected version: $VERSION"
     fi
 
@@ -68,9 +69,13 @@ case $COMMAND in
       exit 1
     fi
 
+    export VERSION
+    export LOGGING_LEVEL
     docker compose -f docker-compose-services.yaml -p services up -d --wait
     ;;
   stop)
+    export VERSION
+    export LOGGING_LEVEL
     export GITHUB_ACCOUNT_ID=""
     export GITHUB_CLIENT_ID=""
     export GITHUB_CLIENT_SECRET=""
@@ -78,6 +83,8 @@ case $COMMAND in
     docker compose -f docker-compose-services.yaml -p services down
     ;;
   destroy)
+    export VERSION
+    export LOGGING_LEVEL
     export GITHUB_ACCOUNT_ID=""
     export GITHUB_CLIENT_ID=""
     export GITHUB_CLIENT_SECRET=""

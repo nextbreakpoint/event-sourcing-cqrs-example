@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.nextbreakpoint</groupId>
     <artifactId>com.nextbreakpoint.blueprint</artifactId>
-    <version>1.0.4-wip-2fac32d9-1709314636</version>
+    <version>1.0.4-wip-046509ed-1709379521</version>
     <packaging>pom</packaging>
     <licenses>
         <license>
@@ -1016,10 +1016,10 @@
             </modules>
         </profile>
         <profile>
-            <id>services</id>
+            <id>service</id>
             <activation>
                 <property>
-                    <name>services</name>
+                    <name>service</name>
                     <value>true</value>
                 </property>
             </activation>

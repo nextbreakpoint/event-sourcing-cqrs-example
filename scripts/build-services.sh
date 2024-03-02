@@ -16,7 +16,6 @@ NEXUS_USERNAME=admin
 NEXUS_PASSWORD=password
 
 CLEAN="true"
-PACKAGE="true"
 DEPLOY="true"
 IMAGES="true"
 UNIT_TESTS="true"
@@ -76,14 +75,6 @@ for i in "$@"; do
       ;;
     --skip-clean)
       CLEAN="false"
-      shift
-      ;;
-    --skip-package)
-      PACKAGE="false"
-      shift
-      ;;
-    --skip-deploy)
-      DEPLOY="false"
       shift
       ;;
     --skip-images)
@@ -195,10 +186,6 @@ if [[ $CLEAN == "false" ]]; then
   echo "Skipping clean"
 fi
 
-if [[ $PACKAGE == "false" ]]; then
-  echo "Skipping package"
-fi
-
 if [[ $DEPLOY == "false" ]]; then
   echo "Skipping deploy"
 fi
@@ -273,17 +260,13 @@ export NPM_REGISTRY="http://${DOCKER_NEXUS_HOST}:${NEXUS_PORT}/repository/npmjs-
 export NPM_AUTH="//${DOCKER_NEXUS_HOST}:${NEXUS_PORT}/repository/npmjs-proxy/:_auth ${TOKEN}"
 
 if [ "$CLEAN" == "true" ]; then
-  mvn clean ${MAVEN_ARGS} -e -Dconfluent=true -Dcommon=true -Dservices=true -Dplatform=true -Dnexus=true
+  mvn clean ${MAVEN_ARGS} -e -Dconfluent=true -Dcommon=true -Dservice=true -Dservices=true -Dnexus=true
 fi
 
-mvn versions:set versions:commit ${MAVEN_ARGS} -e -DnewVersion=${VERSION} -Dconfluent=true -Dcommon=true -Dservices=true -Dplatform=true
-
-if [ "$PACKAGE" == "true" ]; then
-  mvn package -s settings.xml ${MAVEN_ARGS} -Dconfluent=true -Dcommon=true -Dservices=true -Dplatform=true -Dnexus=true -DskipTests=true
-fi
+mvn versions:set versions:commit ${MAVEN_ARGS} -e -DnewVersion=${VERSION} -Dconfluent=true -Dcommon=true -Dservice=true -Dservices=true
 
 if [ "$DEPLOY" == "true" ]; then
-  mvn deploy -s settings.xml ${MAVEN_ARGS} -Dconfluent=true -Dcommon=true -Dservices=true -Dnexus=true
+  mvn deploy -s settings.xml ${MAVEN_ARGS} -Dconfluent=true -Dcommon=true -Dservice=true -Dnexus=true -DskipTests=true
 fi
 
 if [ "$IMAGES" == "true" ]; then
@@ -308,7 +291,7 @@ if [ "$INTEGRATION_TESTS" == "true" ]; then
 
 for service in "${services[@]}"; do
   pushd "services/$service"
-   JAEGER_SERVICE_NAME=$service mvn verify -s settings.xml ${MAVEN_ARGS} -Dgroups=integration -Ddocker.host=${TEST_DOCKER_HOST}
+   JAEGER_SERVICE_NAME=$service mvn verify -s settings.xml -D${service}=true ${MAVEN_ARGS} -Dgroups=integration -Ddocker.host=${TEST_DOCKER_HOST}
   popd
 done
 

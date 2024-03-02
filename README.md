@@ -57,7 +57,7 @@ Export Nexus password:
 
 Create Maven repositories:
 
-    ./scripts/create-maven-repositories.sh --nexus-host=localhost --nexus-port=8082 --nexus-username=admin --nexus-password=${NEXUS_PASSWORD}
+    ./scripts/create-nexus-repositories.sh --nexus-host=localhost --nexus-port=8082 --nexus-username=admin --nexus-password=${NEXUS_PASSWORD}
 
 Build services:
 
@@ -324,7 +324,7 @@ Create Kafka topics:
 
 Wait until Cassandra is ready:
 
-    ./scripts/wait-for.sh --timeout=60 --command="kubectl -n platform logs --tail=100 -l component=cassandra | grep 'Starting listening for CQL'"
+    ./scripts/wait-for.sh --timeout=60 --command="kubectl -n platform logs --tail=1000 -l component=cassandra | grep 'Starting listening for CQL'"
 
 Create Cassandra tables:
 
@@ -332,7 +332,7 @@ Create Cassandra tables:
 
 Wait until Elasticsearch is ready:
 
-    ./scripts/wait-for.sh --timeout=60 --command="kubectl -n platform logs --tail=100 -l component=elasticsearch | grep '\"message\":\"started'"
+    ./scripts/wait-for.sh --timeout=60 --command="kubectl -n platform logs --tail=1000 -l component=elasticsearch | grep '\"message\":\"started'"
 
 Create Elasticsearch indices:
 
@@ -350,7 +350,7 @@ Deploy services:
 
     ./scripts/helm-install-services.sh 
 
-Create observability resources:
+Create observability resources (jaeger might fail if not ready. please retry):
 
     ./scripts/kube-create-observability-resources.sh
 
@@ -494,7 +494,7 @@ Export variables:
 
 Create Maven repositories:
 
-    ./scripts/create-maven-repositories.sh --nexus-host=${NEXUS_HOST} --nexus-port=${NEXUS_PORT} --nexus-username=${NEXUS_USERNAME} --nexus-password=${NEXUS_PASSWORD}
+    ./scripts/create-nexus-repositories.sh --nexus-host=${NEXUS_HOST} --nexus-port=${NEXUS_PORT} --nexus-username=${NEXUS_USERNAME} --nexus-password=${NEXUS_PASSWORD}
 
 Select Docker engine running on Minikube:
 
@@ -531,7 +531,7 @@ Export variables:
 
 Create Maven repositories:
 
-    ./scripts/create-maven-repositories.sh --nexus-host=${NEXUS_HOST} --nexus-port=${NEXUS_PORT} --nexus-username=${NEXUS_USERNAME} --nexus-password=${NEXUS_PASSWORD}
+    ./scripts/create-nexus-repositories.sh --nexus-host=${NEXUS_HOST} --nexus-port=${NEXUS_PORT} --nexus-username=${NEXUS_USERNAME} --nexus-password=${NEXUS_PASSWORD}
 
 Reset Docker environment variables to use local Docker engine:
 

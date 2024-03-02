@@ -39,7 +39,7 @@ for i in "$@"; do
       SERVICE="${i#*=}"
       shift
       ;;
-    -*|--*)
+    -*)
       echo "Unknown option $i"
       exit 1
       ;;
@@ -84,6 +84,6 @@ export NEXUS_PASSWORD
 
 echo "Starting service $SERVICE, hold tight..."
 
-pushd services/$SERVICE
-  mvn compile org.codehaus.mojo:exec-maven-plugin:exec@${TARGET} -s settings.xml ${MAVEN_ARGS} -Dcommon=true -Dservice=true -Dplatform=true -Dnexus=true
+pushd "services/$SERVICE"
+  mvn compile org.codehaus.mojo:exec-maven-plugin:exec@${TARGET} -s settings.xml ${MAVEN_ARGS} -Dcommon=true -Dservice=true -Dservices=true -Dnexus=true
 popd

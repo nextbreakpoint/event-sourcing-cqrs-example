@@ -8,7 +8,7 @@ if [ $? -eq 0 ]
 
 then
 
-pipeline/create-maven-repositories.sh
+pipeline/create-nexus-repositories.sh
 
 else
 

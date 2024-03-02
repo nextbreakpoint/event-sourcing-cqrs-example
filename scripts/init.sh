@@ -43,8 +43,8 @@ cat <<EOF >/tmp/data.json
 }
 EOF
 
-function makeIndex {
-    RESULT=$(curl -s --head http://localhost:9200/$1 | head -n 1 | cut -d$' ' -f2)
+makeIndex() {
+    RESULT=$(curl -s --head "http://localhost:9200/$1" | head -n 1 | cut -d$' ' -f2)
     if [ "$RESULT" = "200" ]
     then
         echo "Index $1 already exists"

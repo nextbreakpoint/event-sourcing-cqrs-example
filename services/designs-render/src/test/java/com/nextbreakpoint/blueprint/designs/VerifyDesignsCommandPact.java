@@ -49,7 +49,7 @@ public class VerifyDesignsCommandPact {
   @ExtendWith(PactVerificationInvocationContextProvider.class)
   @DisplayName("Verify interaction")
   public void pactVerificationTestTemplate(PactVerificationContext context, HttpRequest request) {
-    final String authorization = testCases.makeAuthorization(Authentication.NULL_USER_UUID, Authority.ADMIN);
+    final String authorization = testCases.makeAuthorization(TestConstants.USER_ID_1.toString(), Authority.ADMIN);
     request.setHeader(Headers.AUTHORIZATION, authorization);
     context.verifyInteraction();
   }

@@ -121,7 +121,7 @@ for i in "$@"; do
       USE_PLATFORM="true"
       shift
       ;;
-    -*|--*)
+    -*)
       echo "Unknown option $i"
       exit 1
       ;;
@@ -230,15 +230,13 @@ services=(
   frontend
 )
 
-if [[ ! -z $BUILD_SERVICES ]]; then
-  services=(
-    $BUILD_SERVICES
-  )
+if [[ -n $BUILD_SERVICES ]]; then
+  IFS=" " read -r -a services <<< "$BUILD_SERVICES"
 fi
 
 echo -n "Building services:"
 for service in "${services[@]}"; do
-  echo -n " "$service
+  echo -n " $service"
 done
 echo ""
 
@@ -269,14 +267,16 @@ fi
 export NEXUS_USERNAME
 export NEXUS_PASSWORD
 
+TOKEN=$(echo -n "${NEXUS_USERNAME}:${NEXUS_PASSWORD}" | base64)
+
 export NPM_REGISTRY="http://${DOCKER_NEXUS_HOST}:${NEXUS_PORT}/repository/npmjs-proxy/"
-export NPM_AUTH="//${DOCKER_NEXUS_HOST}:${NEXUS_PORT}/repository/npmjs-proxy/:_auth $(echo -n ${NEXUS_USERNAME}:${NEXUS_PASSWORD} | base64)"
+export NPM_AUTH="//${DOCKER_NEXUS_HOST}:${NEXUS_PORT}/repository/npmjs-proxy/:_auth ${TOKEN}"
 
 if [ "$CLEAN" == "true" ]; then
   mvn clean ${MAVEN_ARGS} -e -Dconfluent=true -Dcommon=true -Dservices=true -Dplatform=true -Dnexus=true
 fi
 
-mvn versions:set versions:commit ${MAVEN_ARGS} -e -DnewVersion=$VERSION -Dconfluent=true -Dcommon=true -Dservices=true -Dplatform=true
+mvn versions:set versions:commit ${MAVEN_ARGS} -e -DnewVersion=${VERSION} -Dconfluent=true -Dcommon=true -Dservices=true -Dplatform=true
 
 if [ "$PACKAGE" == "true" ]; then
   mvn package -s settings.xml ${MAVEN_ARGS} -Dconfluent=true -Dcommon=true -Dservices=true -Dplatform=true -Dnexus=true -DskipTests=true
@@ -289,8 +289,8 @@ fi
 if [ "$IMAGES" == "true" ]; then
 
 for service in "${services[@]}"; do
-  pushd services/$service
-   docker build --progress=plain -t ${REPOSITORY}/$service:${VERSION} --build-arg maven_args="${DOCKER_MAVEN_ARGS}" --build-arg npm_registry="${NPM_REGISTRY}" --build-arg npm_auth="${NPM_AUTH}" .
+  pushd "services/$service"
+   docker build --progress=plain -t "${REPOSITORY}/$service:${VERSION}" --build-arg maven_args="${DOCKER_MAVEN_ARGS}" --build-arg npm_registry="${NPM_REGISTRY}" --build-arg npm_auth="${NPM_AUTH}" .
   popd
 done
 
@@ -304,66 +304,36 @@ else
   export START_PLATFORM="true"
 fi
 
-set +e
-
 if [ "$INTEGRATION_TESTS" == "true" ]; then
 
-error=0
-
 for service in "${services[@]}"; do
-  pushd services/$service
+  pushd "services/$service"
    JAEGER_SERVICE_NAME=$service mvn verify -s settings.xml ${MAVEN_ARGS} -Dgroups=integration -Ddocker.host=${TEST_DOCKER_HOST}
-   if [ $? != 0 ]; then
-     error=1
-   fi
   popd
 done
 
-if [ $error == 1 ]; then
-  echo "ERROR: integration tests failed"
-  exit 2
 fi
 
-fi
+set +e
 
 export pact_do_not_track=true
 
 if [ "$PACT_TESTS" == "true" ]; then
 
-error=0
-
 for service in "${services[@]}"; do
-  pushd services/$service
+  pushd "services/$service"
    JAEGER_SERVICE_NAME=$service mvn verify -s settings.xml ${MAVEN_ARGS} -Dgroups=pact -Ddocker.host=${TEST_DOCKER_HOST}
-   if [ $? != 0 ]; then
-     error=1
-   fi
   popd
 done
-
-if [ $error == 1 ]; then
-  echo "ERROR: pact tests failed"
-  exit 2
-fi
 
 fi
 
 if [ "$PACT_VERIFY" == "true" ]; then
 
-error=0
-
 for service in "${services[@]}"; do
-  pushd services/$service
+  pushd "services/$service"
    JAEGER_SERVICE_NAME=$service mvn verify -s settings.xml ${MAVEN_ARGS} -Dgroups=pact-verify -Ddocker.host=${TEST_DOCKER_HOST}
-   if [ $? != 0 ]; then
-     error=1
-   fi
   popd
 done
-
-if [ $error == 1 ]; then
-  echo "ERROR: pact verification failed"
-  exit 2
-fi
 
 fi

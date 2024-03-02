@@ -237,7 +237,7 @@ if [[ ! -z $BUILD_SERVICES ]]; then
 fi
 
 echo -n "Building services:"
-for service in ${services[@]}; do
+for service in "${services[@]}"; do
   echo -n " "$service
 done
 echo ""
@@ -288,7 +288,7 @@ fi
 
 if [ "$IMAGES" == "true" ]; then
 
-for service in ${services[@]}; do
+for service in "${services[@]}"; do
   pushd services/$service
    docker build --progress=plain -t ${REPOSITORY}/$service:${VERSION} --build-arg maven_args="${DOCKER_MAVEN_ARGS}" --build-arg npm_registry="${NPM_REGISTRY}" --build-arg npm_auth="${NPM_AUTH}" .
   popd
@@ -304,36 +304,66 @@ else
   export START_PLATFORM="true"
 fi
 
+set +e
+
 if [ "$INTEGRATION_TESTS" == "true" ]; then
 
-for service in ${services[@]}; do
+error=0
+
+for service in "${services[@]}"; do
   pushd services/$service
    JAEGER_SERVICE_NAME=$service mvn verify -s settings.xml ${MAVEN_ARGS} -Dgroups=integration -Ddocker.host=${TEST_DOCKER_HOST}
+   if [ $? != 0 ]; then
+     error=1
+   fi
   popd
 done
 
+if [ $error == 1 ]; then
+  echo "ERROR: integration tests failed"
+  exit 2
 fi
 
-set +e
+fi
 
 export pact_do_not_track=true
 
 if [ "$PACT_TESTS" == "true" ]; then
 
-for service in ${services[@]}; do
+error=0
+
+for service in "${services[@]}"; do
   pushd services/$service
    JAEGER_SERVICE_NAME=$service mvn verify -s settings.xml ${MAVEN_ARGS} -Dgroups=pact -Ddocker.host=${TEST_DOCKER_HOST}
+   if [ $? != 0 ]; then
+     error=1
+   fi
   popd
 done
+
+if [ $error == 1 ]; then
+  echo "ERROR: pact tests failed"
+  exit 2
+fi
 
 fi
 
 if [ "$PACT_VERIFY" == "true" ]; then
 
-for service in ${services[@]}; do
+error=0
+
+for service in "${services[@]}"; do
   pushd services/$service
    JAEGER_SERVICE_NAME=$service mvn verify -s settings.xml ${MAVEN_ARGS} -Dgroups=pact-verify -Ddocker.host=${TEST_DOCKER_HOST}
+   if [ $? != 0 ]; then
+     error=1
+   fi
   popd
 done
+
+if [ $error == 1 ]; then
+  echo "ERROR: pact verification failed"
+  exit 2
+fi
 
 fi

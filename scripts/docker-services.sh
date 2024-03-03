@@ -47,6 +47,12 @@ if [[ -z $COMMAND ]]; then
   exit 1
 fi
 
+if [[ -z $GITHUB_ACCOUNT_ID ]]; then
+if [[ -f ./secrets/github.env ]]; then
+  source ./secrets/github.env
+fi
+fi
+
 case $COMMAND in
   start)
     if [[ -z $VERSION ]]; then
@@ -71,6 +77,9 @@ case $COMMAND in
 
     export VERSION
     export LOGGING_LEVEL
+    export GITHUB_ACCOUNT_ID
+    export GITHUB_CLIENT_ID
+    export GITHUB_CLIENT_SECRET
     docker compose -f docker-compose-services.yaml -p services up -d --wait
     ;;
   stop)

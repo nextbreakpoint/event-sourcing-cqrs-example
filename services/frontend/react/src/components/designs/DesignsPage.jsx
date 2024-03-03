@@ -197,15 +197,7 @@ let DesignsPage = class DesignsPage extends React.Component {
                         return res.config.url.substring(res.config.url.lastIndexOf("/") + 1)
                     })
 
-                let designs = component.props.designs
-                    .filter((design) => {
-                        return !deletedUuids.includes(design.uuid)
-                    })
-                    .map((design) => {
-                        return { uuid: design.uuid, selected: design.selected }
-                    })
-
-                component.props.handleChangeSelected([])
+                component.props.handleChangeSelection([])
 
                 if (failedUuids.length == 0) {
                     component.props.handleShowErrorMessage("Your request has been received. The designs will be updated shortly")
@@ -323,7 +315,7 @@ const mapStateToProps = state => ({
 })
 
 const mapDispatchToProps = dispatch => ({
-    handleChangeSelected: (selection) => {
+    handleChangeSelection: (selection) => {
         dispatch(setDesignsSelection(selection))
     },
     handleHideConfirmDelete: () => {

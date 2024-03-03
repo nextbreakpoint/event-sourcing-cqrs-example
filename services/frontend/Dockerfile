@@ -5,6 +5,7 @@ ADD react /react
 WORKDIR /react
 RUN cat package.json
 RUN rm -fR node_modules
+RUN rm -fR package-lock.json
 RUN npm config set registry $npm_registry
 RUN npm config set $npm_auth
 RUN npm -dd --fetch-timeout=600000 install
@@ -18,6 +19,7 @@ COPY /app /app
 WORKDIR /app
 RUN cat package.json
 RUN rm -fR node_modules
+RUN rm -fR package-lock.json
 RUN npm config set registry $npm_registry
 RUN npm config set $npm_auth
 RUN npm -dd --fetch-timeout=600000 install

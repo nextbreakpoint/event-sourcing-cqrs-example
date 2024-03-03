@@ -32,6 +32,9 @@ public interface TestConstants {
 
     String REVISION_REGEXP = "[0-9]{16}-[0-9]{16}";
 
+    UUID USER_ID_1 = new UUID(0L, 1L);
+    UUID USER_ID_2 = new UUID(0L, 2L);
+
     UUID DESIGN_ID_1 = new UUID(0L, 1L);
     UUID DESIGN_ID_2 = new UUID(0L, 2L);
 

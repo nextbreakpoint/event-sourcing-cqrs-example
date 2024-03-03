@@ -10,7 +10,7 @@
     <parent>
         <groupId>com.nextbreakpoint</groupId>
         <artifactId>com.nextbreakpoint.blueprint.service</artifactId>
-        <version>1.0.4-wip-ed3bb4db-1708776317</version>
+        <version>1.0.4-wip-046509ed-1709379521</version>
     </parent>
     <repositories>
         <repository>
@@ -64,7 +64,6 @@
                         <JAEGER_ATTRIBUTES>service.name=designs-watch,service.version=${project.version},service.namespace=designs,environment=dev</JAEGER_ATTRIBUTES>
                         <JAEGER_ENDPOINT>http://localhost:14250</JAEGER_ENDPOINT>
                         <KEYSTORE_SECRET>secret</KEYSTORE_SECRET>
-                        <CONSUL_HOST>localhost</CONSUL_HOST>
                         <KAFKA_HOST>localhost</KAFKA_HOST>
                         <KAFKA_PORT>9093</KAFKA_PORT>
                         <SCHEMA_REGISTRY_HOST>localhost</SCHEMA_REGISTRY_HOST>

@@ -1,4 +1,5 @@
 {
+  "environment": "development",
   "client_web_url": "http://localhost:8000",
   "client_api_url": "http://localhost:8000",
   "server_api_url": "http://localhost:8000"

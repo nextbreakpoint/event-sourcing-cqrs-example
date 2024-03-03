@@ -14,6 +14,7 @@ import com.nextbreakpoint.blueprint.common.vertx.MessageConsumed;
 import com.nextbreakpoint.blueprint.common.vertx.MessageFailed;
 import com.nextbreakpoint.blueprint.common.vertx.Records;
 import com.nextbreakpoint.blueprint.common.vertx.TemplateHandler;
+import com.nextbreakpoint.blueprint.designs.common.DesignsRenderClient;
 import com.nextbreakpoint.blueprint.designs.controllers.DesignCommandController;
 import com.nextbreakpoint.blueprint.designs.operations.delete.DeleteDesignController;
 import com.nextbreakpoint.blueprint.designs.operations.delete.DeleteDesignRequest;
@@ -38,20 +39,20 @@ import org.apache.kafka.clients.producer.KafkaProducer;
 public class Factory {
     private Factory() {}
 
-    public static Handler<RoutingContext> createInsertDesignHandler(KafkaProducer<String, com.nextbreakpoint.blueprint.common.commands.avro.Payload> producer, String topic, String messageSource) {
+    public static Handler<RoutingContext> createInsertDesignHandler(KafkaProducer<String, Payload> producer, String topic, String messageSource, DesignsRenderClient designsRenderClient) {
         return TemplateHandler.<RoutingContext, InsertDesignRequest, InsertDesignResponse, String>builder()
                 .withInputMapper(new InsertDesignRequestMapper())
-                .withController(new InsertDesignController(messageSource, createCommandMessageEmitter(producer, topic)))
+                .withController(new InsertDesignController(messageSource, createCommandMessageEmitter(producer, topic), designsRenderClient))
                 .withOutputMapper(new InsertDesignResponseMapper())
                 .onSuccess(new JsonConsumer(202))
                 .onFailure(new ErrorConsumer())
                 .build();
     }
 
-    public static Handler<RoutingContext> createUpdateDesignHandler(KafkaProducer<String, com.nextbreakpoint.blueprint.common.commands.avro.Payload> producer, String topic, String messageSource) {
+    public static Handler<RoutingContext> createUpdateDesignHandler(KafkaProducer<String, Payload> producer, String topic, String messageSource, DesignsRenderClient designsRenderClient) {
         return TemplateHandler.<RoutingContext, UpdateDesignRequest, UpdateDesignResponse, String>builder()
                 .withInputMapper(new UpdateDesignRequestMapper())
-                .withController(new UpdateDesignController(messageSource, createCommandMessageEmitter(producer, topic)))
+                .withController(new UpdateDesignController(messageSource, createCommandMessageEmitter(producer, topic), designsRenderClient))
                 .withOutputMapper(new UpdateDesignResponseMapper())
                 .onSuccess(new JsonConsumer(202))
                 .onFailure(new ErrorConsumer())

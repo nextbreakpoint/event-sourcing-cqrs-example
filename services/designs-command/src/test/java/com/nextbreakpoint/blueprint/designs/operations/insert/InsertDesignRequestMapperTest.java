@@ -1,5 +1,6 @@
 package com.nextbreakpoint.blueprint.designs.operations.insert;
 
+import com.nextbreakpoint.blueprint.common.core.Headers;
 import io.vertx.core.json.JsonObject;
 import io.vertx.rxjava.core.http.HttpServerRequest;
 import io.vertx.rxjava.ext.auth.User;
@@ -35,6 +36,7 @@ class InsertDesignRequestMapperTest {
         when(context.body()).thenReturn(requestBody);
         when(user.principal()).thenReturn(JsonObject.of("user", userId));
         when(requestBody.asJsonObject()).thenReturn(JsonObject.of("manifest", MANIFEST, "metadata", METADATA, "script", SCRIPT));
+        when(httpRequest.getHeader(Headers.AUTHORIZATION)).thenReturn("Bearer abc");
 
         final var request = mapper.transform(context);
 
@@ -43,6 +45,7 @@ class InsertDesignRequestMapperTest {
         softly.assertThat(request.getOwner()).isEqualTo(userId);
         softly.assertThat(request.getChange()).isNotNull();
         softly.assertThat(request.getJson()).isEqualTo("{\"manifest\":\"{\\\"pluginId\\\":\\\"Mandelbrot\\\"}\",\"metadata\":\"{\\\"translation\\\":{\\\"x\\\":0.0,\\\"y\\\":0.0,\\\"z\\\":1.0,\\\"w\\\":0.0},\\\"rotation\\\":{\\\"x\\\":0.0,\\\"y\\\":0.0,\\\"z\\\":0.0,\\\"w\\\":0.0},\\\"scale\\\":{\\\"x\\\":1.0,\\\"y\\\":1.0,\\\"z\\\":1.0,\\\"w\\\":1.0},\\\"point\\\":{\\\"x\\\":0.0,\\\"y\\\":0.0},\\\"julia\\\":false,\\\"options\\\":{\\\"showPreview\\\":false,\\\"showTraps\\\":false,\\\"showOrbit\\\":false,\\\"showPoint\\\":false,\\\"previewOrigin\\\":{\\\"x\\\":0.0,\\\"y\\\":0.0},\\\"previewSize\\\":{\\\"x\\\":0.25,\\\"y\\\":0.25}}}\",\"script\":\"fractal {\\norbit [-2.0 - 2.0i,+2.0 + 2.0i] [x,n] {\\nloop [0, 200] (mod2(x) > 40) {\\nx = x * x + w;\\n}\\n}\\ncolor [#FF000000] {\\npalette gradient {\\n[#FFFFFFFF > #FF000000, 100];\\n[#FF000000 > #FFFFFFFF, 100];\\n}\\ninit {\\nm = 100 * (1 + sin(mod(x) * 0.2 / pi));\\n}\\nrule (n > 0) [1] {\\ngradient[m - 1]\\n}\\n}\\n}\\n\"}");
+        softly.assertThat(request.getToken()).isEqualTo("abc");
         softly.assertAll();
     }
 
@@ -122,9 +125,23 @@ class InsertDesignRequestMapperTest {
         when(context.body()).thenReturn(requestBody);
         when(user.principal()).thenReturn(JsonObject.of("user", "abc"));
         when(requestBody.asJsonObject()).thenReturn(JsonObject.of("manifest", MANIFEST, "metadata", METADATA, "script", SCRIPT));
+        when(httpRequest.getHeader(Headers.AUTHORIZATION)).thenReturn("Bearer abc");
 
         assertThatThrownBy(() -> mapper.transform(context))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("invalid request");
+    }
+
+    @Test
+    void shouldThrowExceptionWhenTokenIsMissing() {
+        when(context.request()).thenReturn(httpRequest);
+        when(context.user()).thenReturn(user);
+        when(context.body()).thenReturn(requestBody);
+        when(user.principal()).thenReturn(JsonObject.of("user", "abc"));
+        when(requestBody.asJsonObject()).thenReturn(JsonObject.of("manifest", MANIFEST, "metadata", METADATA, "script", SCRIPT));
+
+        assertThatThrownBy(() -> mapper.transform(context))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("authentication token is required");
     }
 }

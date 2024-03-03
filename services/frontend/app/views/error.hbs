@@ -1,3 +1,20 @@
-<h1>{{message}}</h1>
-<h2>{{error.status}}</h2>
-<pre>{{error.stack}}</pre>
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Error</title>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no"/>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{url}}/css/error.css"/>
+  </head>
+  <body>
+    <h1>We are sorry but something went wrong...</h1>
+    <section>
+        <h2>{{message}}</h2>
+        <h3>{{error.status}}</h3>
+        <div><pre>{{error.stack}}</pre></div>
+    </section>
+  </body>
+</html>

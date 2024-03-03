@@ -25,4 +25,6 @@ serviceAccount: default
 
 clientDomain:
 
+designsRenderApiUrl:
+
 enableDebug:

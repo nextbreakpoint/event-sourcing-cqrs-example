@@ -126,22 +126,22 @@ function Instance() {
     var self = this
 }
 
-Instance.prototype.make = function (designs, from, size) {
+Instance.prototype.make = function (designs, from, size, rows) {
     var random = makeRandom()
 
-    if (designs.length == 0) {
-        return []
-    }
-
-    if (designs.length == 1) {
+    if (rows == 8 && designs.length == 1) {
         return render(designs, pattern1)
     }
 
-    let patternIdx = (Math.round(random() * (patterns.length - 1)) + from / size) % patterns.length
+    if (rows == 16 && designs.length > 0) {
+        let patternIdx = (Math.round(random() * (patterns.length - 1)) + from / size) % patterns.length
 
-    let pattern = patterns[patternIdx]
+        let pattern = patterns[patternIdx]
 
-    return render(designs, pattern)
+        return render(designs, pattern)
+    }
+
+    return []
 }
 
 module.exports = new Instance()

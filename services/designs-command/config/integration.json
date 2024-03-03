@@ -7,6 +7,10 @@
 
   "origin_pattern": "http://localhost(:[0-9]+)?",
 
+  "client_verify_host": "false",
+
+  "server_designs_render_url": "${DESIGNS_RENDER_URL}",
+
   "cassandra_cluster": "datacenter1",
   "cassandra_keyspace": "${DATABASE_KEYSPACE}",
   "cassandra_username": "${DATABASE_USERNAME}",

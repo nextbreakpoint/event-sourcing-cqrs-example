@@ -22,6 +22,10 @@ data:
 
       "origin_pattern": "{{ $root.Values.clientProtocol | default "http" }}://{{ $root.Values.clientDomain | default "localhost" }}(:[0-9]+)?",
 
+      "client_verify_host": "{{ $root.Values.clientVerifyHost | default "false" }}",
+                        
+      "server_designs_render_url": {{ $root.Values.designsRenderApiUrl | default "http://designs-render:8080" | quote }},
+
       "cassandra_cluster": {{ $root.Values.datacenter | default "datacenter1" | quote }},
       "cassandra_keyspace": {{ $root.Values.cassandraKeyspace | default "designs_command" | quote }},
       "cassandra_username": "${DATABASE_USERNAME}",

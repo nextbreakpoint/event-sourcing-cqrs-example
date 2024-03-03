@@ -213,6 +213,7 @@ let EnhancedTable = class EnhancedTable extends React.Component {
                 if (response.data.errors.length == 0) {
                     let design = { manifest: response.data.manifest, metadata: response.data.metadata, script: response.data.script }
                     component.props.handleDesignSelected(design)
+                    component.props.handleChangeSelection([])
                     component.props.handleShowCreateDialog()
                 } else {
                     console.log("Can't upload the file: errors = " + response.data.errors)
@@ -302,51 +303,24 @@ let EnhancedTable = class EnhancedTable extends React.Component {
 
             let promises = this.props.selection
                 .map((uuid) => {
-                    let selectedDesign = this.props.designs.find((design) => design.uuid == this.props.selection[0])
-                    if (selectedDesign) {
-                        let design = JSON.parse(selectedDesign.json)
-                        design.published = true
-                        return axios.put(component.props.config.api_url + '/v1/designs/' + selectedDesign.uuid, design, config)
-                    }
+                    return axios.get(component.props.config.api_url + '/v1/designs/' + uuid + "?draft=true", config)
                 })
-
-            component.props.handleHideErrorMessage()
 
             axios.all(promises)
                 .then(function (responses) {
-                    let modifiedUuids = responses
+                    let designs = responses
                         .filter((res) => {
-                            return (res.status == 202 || res.status == 200)
+                            return res.status == 200
                         })
                         .map((res) => {
-                            return res.config.url.substring(res.config.url.lastIndexOf("/") + 1)
+                            return res.data
                         })
 
-                    let failedUuids = responses
-                        .filter((res) => {
-                            return (res.status != 202 && res.status != 200)
-                        })
-                        .map((res) => {
-                            return res.config.url.substring(res.config.url.lastIndexOf("/") + 1)
-                        })
-
-                    let designs = component.props.designs
-                        .filter((design) => {
-                            return !modifiedUuids.includes(design.uuid)
-                        })
-                        .map((design) => {
-                            return { uuid: design.uuid, selected: design.selected }
-                        })
-
-                    if (failedUuids.length == 0) {
-                        component.props.handleShowErrorMessage("Your request has been received. The designs will be updated shortly")
-                    } else {
-                        component.props.handleShowErrorMessage("Can't update the designs")
-                    }
+                        component.updateDesigns(designs, (design) => design.published = true);
                 })
                 .catch(function (error) {
-                    console.log("Can't update the designs: " + error)
-                    component.props.handleShowErrorMessage("Can't update the designs")
+                    console.log("Can't publish the designs: " + error)
+                    component.props.handleShowErrorMessage("Can't publish the designs")
                 })
         }
     }
@@ -364,15 +338,51 @@ let EnhancedTable = class EnhancedTable extends React.Component {
 
             let promises = this.props.selection
                 .map((uuid) => {
-                    let selectedDesign = this.props.designs.find((design) => design.uuid == this.props.selection[0])
-                    if (selectedDesign) {
-                        let design = JSON.parse(selectedDesign.json)
-                        design.published = false
-                        return axios.put(component.props.config.api_url + '/v1/designs/' + selectedDesign.uuid, design, config)
-                    }
+                    return axios.get(component.props.config.api_url + '/v1/designs/' + uuid + "?draft=true", config)
                 })
 
+            axios.all(promises)
+                .then(function (responses) {
+                    let designs = responses
+                        .filter((res) => {
+                            return res.status == 200
+                        })
+                        .map((res) => {
+                            return res.data
+                        })
+
+                        component.updateDesigns(designs, (design) => design.published = false);
+                })
+                .catch(function (error) {
+                    console.log("Can't unpublish the designs: " + error)
+                    component.props.handleShowErrorMessage("Can't unpublish the designs")
+                })
+        }
+    }
+
+    updateDesigns = (designs, callback) => {
+        if (designs.length > 0) {
+            let component = this
+
+            let config = {
+                timeout: 30000,
+                withCredentials: true
+            }
+
             component.props.handleHideErrorMessage()
+
+            let promises = this.props.selection
+                .map((uuid) => {
+                    return designs.find((design) => design.uuid == uuid)
+                })
+                .filter((selectedDesign) => {
+                    return selectedDesign !== undefined
+                })
+                .map((selectedDesign) => {
+                    let design = JSON.parse(selectedDesign.json)
+                    callback(design)
+                    return axios.put(component.props.config.api_url + '/v1/designs/' + selectedDesign.uuid, design, config)
+                })
 
             axios.all(promises)
                 .then(function (responses) {
@@ -392,23 +402,19 @@ let EnhancedTable = class EnhancedTable extends React.Component {
                             return res.config.url.substring(res.config.url.lastIndexOf("/") + 1)
                         })
 
-                    let designs = component.props.designs
-                        .filter((design) => {
-                            return !modifiedUuids.includes(design.uuid)
-                        })
-                        .map((design) => {
-                            return { uuid: design.uuid, selected: design.selected }
-                        })
+                    component.props.handleChangeSelection([])
 
                     if (failedUuids.length == 0) {
                         component.props.handleShowErrorMessage("Your request has been received. The designs will be updated shortly")
                     } else {
-                        component.props.handleShowErrorMessage("Can't update the designs")
+                        console.log("Failed to unpublish designs: " + JSON.stringify(failedUuids))
+
+                        component.props.handleShowErrorMessage("Can't unpublish the designs")
                     }
                 })
                 .catch(function (error) {
-                    console.log("Can't update the designs: " + error)
-                    component.props.handleShowErrorMessage("Can't update the designs")
+                    console.log("Can't unpublish the designs: " + error)
+                    component.props.handleShowErrorMessage("Can't unpublish the designs")
                 })
         }
     }
@@ -463,7 +469,7 @@ let EnhancedTable = class EnhancedTable extends React.Component {
 //
 //   React.useEffect(() => {
 //       setRowCountState((prevRowCountState) =>
-//         rowCount !== undefined ? rowCount : prevRowCountState,
+//         this.props.total !== undefined ? this.props.total : prevRowCountState,
 //       )
 //   }, [this.props.total, setRowCountState])
 
@@ -496,6 +502,7 @@ let EnhancedTable = class EnhancedTable extends React.Component {
 
     return (
       <Paper className="designs" square={true}>
+        <div class="spacer"/>
         <DataGrid
             components={{Footer: CustomFooter}}
             rowCount={total}

@@ -99,7 +99,7 @@ router.get('/designs.html', function(req, res, next) {
                         login: account.role == null,
                         logout: account.role != null,
                         admin: account.role === 'admin',
-                        data: grid.make(designs, from, size),
+                        data: grid.make(designs, from, size, 16),
                         showNext: response.data.total > from + size,
                         showHome: from != 0,
                         page: page,
@@ -189,7 +189,7 @@ router.get('/designs.json', function(req, res, next) {
                         baseUrl: appConfig.client_web_url + '/browse/designs',
                         modified: design.modified
                     }))
-                    res.send(grid.make(designs, from, size))
+                    res.send(grid.make(designs, from, size, 16))
                 } else {
                     console.log("Can't load designs: status = " + content.status)
                     res.send(grid.make([], from, size))
@@ -242,7 +242,7 @@ router.get('/designs/(:uuid).html', function(req, res, next) {
                         title: 'Designs | ' + req.params.uuid,
                         url: appConfig.client_web_url,
                         uuid: req.params.uuid,
-                        data: grid.make(designs, 0, 1),
+                        data: grid.make(designs, 0, 1, 8),
                         login: account.role == null,
                         logout: account.role != null,
                         admin: account.role === 'admin',

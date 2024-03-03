@@ -18,7 +18,7 @@ public interface TestActions {
 
     String makeAuthorization(UUID userId, String authority);
 
-    UUID submitInsertDesignRequest(String authorization, Map<String, String> design) throws MalformedURLException;
+    void submitInsertDesignRequest(String authorization, Map<String, String> design) throws MalformedURLException;
 
     void submitUpdateDesignRequest(String authorization, Map<String, String> design, UUID designId) throws MalformedURLException;
 

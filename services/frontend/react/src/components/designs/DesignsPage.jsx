@@ -1,8 +1,6 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 
-import Header from '../shared/Header'
-import Footer from '../shared/Footer'
 import DesignPreview from '../shared/DesignPreview'
 import DesignsTable from './DesignsTable'
 
@@ -14,13 +12,6 @@ import DialogContent from '@mui/material/DialogContent'
 import DialogTitle from '@mui/material/DialogTitle'
 import Slide from '@mui/material/Slide'
 import Fade from '@mui/material/Fade'
-import Snackbar from '@mui/material/Snackbar'
-import IconButton from '@mui/material/IconButton'
-
-import AddIcon from '@mui/icons-material/Add'
-import EditIcon from '@mui/icons-material/Edit'
-import DeleteIcon from '@mui/icons-material/Delete'
-import CloseIcon from '@mui/icons-material/Close'
 
 import { connect } from 'react-redux'
 
@@ -89,7 +80,6 @@ let DesignsPage = class DesignsPage extends React.Component {
                                 if (response.status == 202 || response.status == 201) {
                                     component.props.handleShowErrorMessage("Your request has been received. The designs will be updated shortly")
                                     component.props.handleHideCreateDialog()
-                                    component.props.resetUploadedDesign()
                                 } else {
                                     console.log("Can't create the design: status = " + response.status)
                                     component.props.handleShowErrorMessage("Can't create the design")
@@ -207,15 +197,7 @@ let DesignsPage = class DesignsPage extends React.Component {
                         return res.config.url.substring(res.config.url.lastIndexOf("/") + 1)
                     })
 
-                let designs = component.props.designs
-                    .filter((design) => {
-                        return !deletedUuids.includes(design.uuid)
-                    })
-                    .map((design) => {
-                        return { uuid: design.uuid, selected: design.selected }
-                    })
-
-                component.props.handleChangeSelected([])
+                component.props.handleChangeSelection([])
 
                 if (failedUuids.length == 0) {
                     component.props.handleShowErrorMessage("Your request has been received. The designs will be updated shortly")
@@ -241,14 +223,6 @@ let DesignsPage = class DesignsPage extends React.Component {
         this.props.handleDesignSelected(design);
     }
 
-    handleClose = (event, reason) => {
-        if (reason === 'clickaway') {
-          return
-        }
-
-        this.props.handleHideErrorMessage()
-    }
-
     createDesign = () => {
         return this.props.selected_design
     }
@@ -258,18 +232,7 @@ let DesignsPage = class DesignsPage extends React.Component {
 
         return (
             <React.Fragment>
-                <Grid container justify="space-between" alignItems="center">
-                    <Grid item xs={12}>
-                        <Header landing={'/admin/designs.html'} titleText={"Fractals"} subtitleText={"The Beauty of Chaos"} browseText={"Browse fractals"} browseLink={"/browse/designs.html"}/>
-                    </Grid>
-                    <Grid item xs={12}>
-                        <div class="spacer"/>
-                        <DesignsTable/>
-                    </Grid>
-                    <Grid item xs={12}>
-                        <Footer/>
-                    </Grid>
-                </Grid>
+                <DesignsTable/>
                 {this.props.account.role == 'admin' && (
                     <Dialog className="dialog" open={this.props.show_create_design} onClose={this.props.handleHideCreateDialog} scroll={"paper"} maxWidth={"xl"} fullWidth={true} TransitionComponent={SlideTransition}>
                         <DialogTitle>Create New Design</DialogTitle>
@@ -318,29 +281,6 @@ let DesignsPage = class DesignsPage extends React.Component {
                         </DialogActions>
                     </Dialog>
                 )}
-                <Snackbar
-                  anchorOrigin={{
-                    vertical: 'top',
-                    horizontal: 'right',
-                  }}
-                  open={this.props.show_error_message}
-                  autoHideDuration={6000}
-                  onClose={this.handleClose}
-                  ContentProps={{
-                    'aria-describedby': 'message-id',
-                  }}
-                  message={<span id="message-id">{this.props.error_message}</span>}
-                  action={[
-                    <IconButton
-                      key="close"
-                      aria-label="Close"
-                      color="inherit"
-                      onClick={this.handleClose}
-                    >
-                      <CloseIcon />
-                    </IconButton>
-                  ]}
-                />
             </React.Fragment>
         )
     }
@@ -375,7 +315,7 @@ const mapStateToProps = state => ({
 })
 
 const mapDispatchToProps = dispatch => ({
-    handleChangeSelected: (selection) => {
+    handleChangeSelection: (selection) => {
         dispatch(setDesignsSelection(selection))
     },
     handleHideConfirmDelete: () => {

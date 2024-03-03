@@ -1,0 +1,57 @@
+body {
+    font-family: "Roboto";
+    font-weight: 100;
+    font-size: 14pt;
+    color: #080808;
+    padding: 0;
+    margin: 0;
+    border: 0;
+    background: #ededed;
+}}
+
+p, span, div {
+    padding: 0;
+    margin: 0;
+    border: 0;
+}
+
+a, a:active, a:hover, a:visited {
+    color: #222222;
+}
+
+h1 {
+    padding: 2%;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+h2 {
+    padding: 2%;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+h3 {
+    padding: 0 2% 0 2%;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+section {
+    width: 100%;
+    height: 100%;
+}
+
+section div {
+    padding: 0 2% 0 2%;
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+section pre {
+    width: 100%;
+    box-sizing: border-box;
+    overflow: scroll;
+}
+

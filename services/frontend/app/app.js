@@ -3,11 +3,16 @@ let createError = require('http-errors');
 let express = require('express');
 let logger = require('morgan');
 let path = require('path');
+let fs = require('fs')
 
 let indexRouter = require('./routes/index');
 let adminRouter = require('./routes/admin');
 let browseRouter = require('./routes/browse');
 let healthRouter = require('./routes/health');
+
+let configPath = process.env.CONFIG_PATH
+
+let appConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'))
 
 let app = express();
 
@@ -16,7 +21,7 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'hbs');
 app.set('view options', { layout: false });
 
-app.use(logger('dev'));
+app.use(logger('combined'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
@@ -35,13 +40,12 @@ app.use(function(req, res, next) {
 
 // error handler
 app.use(function(err, req, res, next) {
-    // set locals, only providing error in development
-    res.locals.message = err.message;
-    res.locals.error = req.app.get('env') === 'development' ? err : {};
-
-    // render the error page
     res.status(err.status || 500);
-    res.render('error');
+    res.render('error', {
+        url: appConfig.client_web_url,
+        message: err.message,
+        error: appConfig.environment === 'development' ? err : {}
+    });
 });
 
 module.exports = app;

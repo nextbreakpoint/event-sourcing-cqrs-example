@@ -1,8 +1,10 @@
 package com.nextbreakpoint.blueprint.designs;
 
 import com.nextbreakpoint.blueprint.common.core.Authority;
+import com.xebialabs.restito.server.StubServer;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
+import org.glassfish.grizzly.http.util.HttpStatus;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -16,6 +18,7 @@ import java.net.MalformedURLException;
 import java.util.UUID;
 
 import static com.nextbreakpoint.blueprint.common.core.Headers.AUTHORIZATION;
+import static com.nextbreakpoint.blueprint.common.core.Headers.CONTENT_TYPE;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.*;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_DELETE_COMMAND;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_ID_1;
@@ -27,6 +30,15 @@ import static com.nextbreakpoint.blueprint.designs.TestConstants.METADATA;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.SCRIPT;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.USER_ID_1;
 import static com.nextbreakpoint.blueprint.designs.TestConstants.USER_ID_2;
+import static com.xebialabs.restito.builder.stub.StubHttp.whenHttp;
+import static com.xebialabs.restito.semantics.Action.header;
+import static com.xebialabs.restito.semantics.Action.status;
+import static com.xebialabs.restito.semantics.Action.stringContent;
+import static com.xebialabs.restito.semantics.Condition.get;
+import static com.xebialabs.restito.semantics.Condition.parameter;
+import static com.xebialabs.restito.semantics.Condition.post;
+import static com.xebialabs.restito.semantics.Condition.withHeader;
+import static com.xebialabs.restito.semantics.Condition.withPostBody;
 import static io.restassured.RestAssured.given;
 
 @Tag("docker")
@@ -35,9 +47,15 @@ import static io.restassured.RestAssured.given;
 public class IntegrationTests {
     private static TestCases testCases = new TestCases("DesignsCommandIntegrationTests");
 
+    private static final StubServer designsRenderStub = new StubServer(Integer.parseInt("39001"));
+
     @BeforeAll
     public static void before() {
         System.setProperty("http.port", "30121");
+
+        if (designsRenderStub != null) {
+            designsRenderStub.start();
+        }
 
         testCases.before();
     }
@@ -45,17 +63,22 @@ public class IntegrationTests {
     @AfterAll
     public static void after() {
         testCases.after();
+
+        if (designsRenderStub != null) {
+            designsRenderStub.stop();
+        }
     }
 
     @BeforeEach
-    public void beforeEach() {
-        testCases.deleteData();
-        testCases.getSteps().reset();
-    }
-
-    @AfterEach
     public void reset() {
         RestAssured.reset();
+
+        if (designsRenderStub != null) {
+            designsRenderStub.clear();
+        }
+
+        testCases.deleteData();
+        testCases.getSteps().reset();
     }
 
     @Test
@@ -154,6 +177,10 @@ public class IntegrationTests {
     @Test
     @DisplayName("Should send a message after accepting a POST request on /v1/designs")
     public void shouldSendAMessageAfterAcceptingAPostRequestOnDesigns() throws IOException {
+        whenHttp(designsRenderStub)
+                .match(post(TestConstants.DESIGNS_RENDER_VALIDATE_PATH), withHeader("Authorization"), withPostBody())
+                .then(status(HttpStatus.OK_200), header(CONTENT_TYPE, "application/json"), stringContent("{\"status\":\"ACCEPTED\",\"errors\":[]}"));
+
         testCases.getSteps()
                 .given().theUserId(USER_ID_1)
                 .and().theManifest(MANIFEST)
@@ -163,7 +190,9 @@ public class IntegrationTests {
                 .when().discardReceivedCommands()
                 .and().discardReceivedEvents()
                 .and().submitInsertDesignRequest()
-                .then().aCommandMessageShouldBePublished(DESIGN_INSERT_COMMAND)
+                .then().requestIsAccepted()
+                .and().responseContainsDesignId()
+                .and().aCommandMessageShouldBePublished(DESIGN_INSERT_COMMAND)
                 .and().aDesignInsertCommandMessageShouldBeSaved()
                 .and().aDesignInsertRequestedMessageShouldBePublished()
                 .and().theDesignInsertRequestedEventShouldHaveExpectedValues();
@@ -172,6 +201,10 @@ public class IntegrationTests {
     @Test
     @DisplayName("Should send a message after accepting a PUT request on /v1/designs/id")
     public void shouldSendAMessageAfterAcceptingAPutRequestOnDesigns() throws IOException {
+        whenHttp(designsRenderStub)
+                .match(post(TestConstants.DESIGNS_RENDER_VALIDATE_PATH), withHeader("Authorization"), withPostBody())
+                .then(status(HttpStatus.OK_200), header(CONTENT_TYPE, "application/json"), stringContent("{\"status\":\"ACCEPTED\",\"errors\":[]}"));
+
         testCases.getSteps()
                 .given().theUserId(USER_ID_1)
                 .and().theDesignId(DESIGN_ID_1)
@@ -182,7 +215,8 @@ public class IntegrationTests {
                 .when().discardReceivedCommands()
                 .and().discardReceivedEvents()
                 .and().submitUpdateDesignRequest()
-                .then().aCommandMessageShouldBePublished(DESIGN_UPDATE_COMMAND)
+                .then().requestIsAccepted()
+                .and().aCommandMessageShouldBePublished(DESIGN_UPDATE_COMMAND)
                 .and().aDesignUpdateCommandMessageShouldBeSaved()
                 .and().aDesignUpdateRequestedMessageShouldBePublished()
                 .and().theDesignUpdateRequestedEventShouldHaveExpectedValues();
@@ -198,9 +232,49 @@ public class IntegrationTests {
                 .when().discardReceivedCommands()
                 .and().discardReceivedEvents()
                 .and().submitDeleteDesignRequest()
-                .then().aCommandMessageShouldBePublished(DESIGN_DELETE_COMMAND)
+                .then().requestIsAccepted()
+                .and().aCommandMessageShouldBePublished(DESIGN_DELETE_COMMAND)
                 .and().aDesignDeleteCommandMessageShouldBeSaved()
                 .and().aDesignDeleteRequestedMessageShouldBePublished()
                 .and().theDesignDeleteRequestedEventShouldHaveExpectedValues();
+    }
+
+    @Test
+    @DisplayName("Should not send a message after rejecting a POST request on /v1/designs")
+    public void shouldNotSendAMessageAfterRejectingAPostRequestOnDesigns() throws IOException {
+        whenHttp(designsRenderStub)
+                .match(post(TestConstants.DESIGNS_RENDER_VALIDATE_PATH), withHeader("Authorization"), withPostBody())
+                .then(status(HttpStatus.OK_200), header(CONTENT_TYPE, "application/json"), stringContent("{\"status\":\"REJECTED\",\"errors\":[\"some error\"]}"));
+
+        testCases.getSteps()
+                .given().theUserId(USER_ID_1)
+                .and().theManifest(MANIFEST)
+                .and().theMetadata(METADATA)
+                .and().theScript(SCRIPT)
+                .and().anAuthorization(Authority.ADMIN)
+                .when().discardReceivedCommands()
+                .and().discardReceivedEvents()
+                .and().submitInsertDesignRequest()
+                .then().requestIsRejected();
+    }
+
+    @Test
+    @DisplayName("Should not send a message after rejecting a PUT request on /v1/designs/id")
+    public void shouldNotSendAMessageAfterRejectingAPutRequestOnDesigns() throws IOException {
+        whenHttp(designsRenderStub)
+                .match(post(TestConstants.DESIGNS_RENDER_VALIDATE_PATH), withHeader("Authorization"), withPostBody())
+                .then(status(HttpStatus.OK_200), header(CONTENT_TYPE, "application/json"), stringContent("{\"status\":\"REJECTED\",\"errors\":[\"some error\"]}"));
+
+        testCases.getSteps()
+                .given().theUserId(USER_ID_1)
+                .and().theDesignId(DESIGN_ID_1)
+                .and().theManifest(MANIFEST)
+                .and().theMetadata(METADATA)
+                .and().theScript(SCRIPT)
+                .and().anAuthorization(Authority.ADMIN)
+                .when().discardReceivedCommands()
+                .and().discardReceivedEvents()
+                .and().submitUpdateDesignRequest()
+                .then().requestIsRejected();
     }
 }

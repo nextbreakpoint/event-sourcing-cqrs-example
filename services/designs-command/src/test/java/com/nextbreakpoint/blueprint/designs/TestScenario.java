@@ -61,6 +61,7 @@ public class TestScenario {
           .withEnv("SCHEMA_REGISTRY_PORT", "8081")
           .withEnv("COMMANDS_TOPIC", TestConstants.COMMANDS_TOPIC_NAME + "-" + uniqueTestId)
           .withEnv("EVENTS_TOPIC", TestConstants.EVENTS_TOPIC_NAME + "-" + uniqueTestId)
+          .withEnv("DESIGNS_RENDER_URL", "http://" + dockerHost + ":39001")
           .withFileSystemBind("../../secrets/keystore_auth.jceks", "/secrets/keystore_auth.jceks", BindMode.READ_ONLY)
           .withFileSystemBind("config/integration.json", "/etc/config.json", BindMode.READ_ONLY)
           .withExposedPorts(HTTP_PORT, DEBUG_PORT)

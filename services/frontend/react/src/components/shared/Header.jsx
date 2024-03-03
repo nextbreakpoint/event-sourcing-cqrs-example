@@ -42,17 +42,20 @@ let Header = class Header extends React.Component {
     }
 
     render() {
-        const { titleText, subtitleText, backText, backLink, browseText, browseLink } = this.props
+        const { titleText, subtitleText, backText, backLink, browseText, browseLink, account } = this.props
 
         return (
             <AppBar position="static">
                 <Toolbar className="header">
-                  <Typography variant="title" color="inherit" className="grow"><b>{titleText}</b> | {subtitleText}</Typography>
-                  <navigation>
-                      {browseLink != null && <Button color="inherit" onClick={this.handleBrowse}>{browseText}</Button>}
-                      {backLink != null && <Button color="inherit" onClick={this.handleBack}>{backText}</Button>}
-                      {this.props.account.role == 'anonymous' && <Button color="inherit" onClick={this.handleLogin}>Login</Button>}
-                      {this.props.account.role != 'anonymous' && <Button color="inherit" onClick={this.handleLogout}>Logout</Button>}
+                  <div class="grow">
+                      <Typography variant="title" color="inherit"><span class="title">{titleText}</span><span class="separator">|</span><span class="subtitle">{subtitleText}</span></Typography>
+                  </div>
+                  <navigation class="grow">
+                      {account.role != 'anonymous' && <Typography variant="button" color="inherit" className="account">Welcome {account.name},</Typography>}
+                      {browseLink != null && <Button color="inherit" variant="text" onClick={this.handleBrowse}>{browseText}</Button>}
+                      {backLink != null && <Button color="inherit" variant="text" onClick={this.handleBack}>{backText}</Button>}
+                      {account.role == 'anonymous' && <Button color="inherit" variant="text" onClick={this.handleLogin}>Login</Button>}
+                      {account.role != 'anonymous' && <Button color="inherit" variant="text" onClick={this.handleLogout}>Logout</Button>}
                   </navigation>
                 </Toolbar>
             </AppBar>

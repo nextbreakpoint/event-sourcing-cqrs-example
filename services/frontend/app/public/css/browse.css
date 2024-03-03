@@ -1,5 +1,6 @@
 body {
     font-family: "Roboto";
+    font-weight: 100;
     font-size: 14pt;
     color: #080808;
     padding: 0;
@@ -21,15 +22,16 @@ a, a:active, a:hover, a:visited {
 header {
     font-size: 1.4em;
     left: 0%;
-    top: 2%;
+    top: 1em;
     position: fixed;
     display: block;
     text-align: left;
     z-index: 10;
-    padding: 2%;
+    padding: 1.2em;
     background: #fdfdfd;
     opacity: 0.6;
     border-radius: 0 1.2em 1.2em 0;
+    box-shadow: rgba(0, 0, 0, 0.2) 0px 2px 4px -1px, rgba(0, 0, 0, 0.14) 0px 4px 5px 0px, rgba(0, 0, 0, 0.12) 0px 1px 10px 0px;
 }
 
 header p {
@@ -37,18 +39,32 @@ header p {
     margin: 0;
 }
 
+header .title {
+    font-weight: 300;
+}
+
+header .subtitle {
+}
+
+header .separator {
+    display: inline-block;
+    text-align: center;
+    width: 1em;
+}
+
 footer {
     font-size: 1.2em;
     right: 0%;
-    bottom: 1%;
+    bottom: 0.5em;
     position: fixed;
     display: block;
     text-align: left;
     z-index: 10;
-    padding: 1.2%;
+    padding: 1em;
     background: #fdfdfd;
     opacity: 0.6;
     border-radius: 1.2em 0 0 1.2em;
+    box-shadow: rgba(0, 0, 0, 0.2) 0px 2px 4px -1px, rgba(0, 0, 0, 0.14) 0px 4px 5px 0px, rgba(0, 0, 0, 0.12) 0px 1px 10px 0px;
 }
 
 footer p {
@@ -56,33 +72,34 @@ footer p {
     margin: 0;
 }
 
-navigation.images {
-    font-size: 1.2em;
-    left: 0%;
-    bottom: 1%;
-    position: fixed;
-    display: block;
-    text-align: center;
-    z-index: 10;
-    padding: 1.2%;
-    background: #fdfdfd;
-    opacity: 0.6;
-    border-radius: 0 1.2em 1.2em 0;
-    float: left;
-}
-
 navigation.close {
     font-size: 1.4em;
     right: 0%;
-    top: 2%;
+    top: 1em;
     position: fixed;
     display: block;
     text-align: center;
     z-index: 10;
-    padding: 1.2%;
+    padding: 1.2em;
     background: #fdfdfd;
     opacity: 0.6;
     border-radius: 1.2em 0 0 1.2em;
+    box-shadow: rgba(0, 0, 0, 0.2) 0px 2px 4px -1px, rgba(0, 0, 0, 0.14) 0px 4px 5px 0px, rgba(0, 0, 0, 0.12) 0px 1px 10px 0px;
+}
+
+navigation.images {
+    font-size: 1.2em;
+    left: 0%;
+    bottom: 0.5em;
+    position: fixed;
+    display: block;
+    text-align: center;
+    z-index: 10;
+    padding: 1em;
+    background: #fdfdfd;
+    opacity: 0.6;
+    float: left;
+    border-radius: 0 1.2em 1.2em 0;
 }
 
 navigation.images .home {

@@ -308,7 +308,7 @@ public class Verticle extends AbstractVerticle {
 
             eventsKafkaPolling = new KafkaMessagePolling<>(eventsKafkaConsumer, Records.createEventInputRecordMapper(), eventsMessageHandlers, KafkaMessageConsumer.Simple.create(eventsMessageHandlers, registry), registry, KafkaRecordsQueue.Simple.create(), -1, 20);
 
-            bufferKafkaPolling = new KafkaMessagePolling<>(bufferKafkaConsumer, Records.createEventInputRecordMapper(), bufferMessageHandlers, KafkaMessageConsumer.Buffered.create(bufferMessageHandlers, registry), registry, KafkaRecordsQueue.Simple.create(), 2500, 100);
+            bufferKafkaPolling = new KafkaMessagePolling<>(bufferKafkaConsumer, Records.createEventInputRecordMapper(), bufferMessageHandlers, KafkaMessageConsumer.Buffered.create(bufferMessageHandlers, registry), registry, KafkaRecordsQueue.Simple.create(), 2500, 1000);
 
             renderKafkaPolling0 = new KafkaMessagePolling<>(renderKafkaConsumer0, Records.createEventInputRecordMapper(), renderMessageHandlers, KafkaMessageConsumer.Simple.create(renderMessageHandlers, registry), registry, KafkaRecordsQueue.Compacted.create(), -1, 10);
             renderKafkaPolling1 = new KafkaMessagePolling<>(renderKafkaConsumer1, Records.createEventInputRecordMapper(), renderMessageHandlers, KafkaMessageConsumer.Simple.create(renderMessageHandlers, registry), registry, KafkaRecordsQueue.Compacted.create(), -1, 10);

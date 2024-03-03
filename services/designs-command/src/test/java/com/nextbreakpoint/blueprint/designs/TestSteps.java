@@ -8,6 +8,7 @@ import com.nextbreakpoint.blueprint.common.events.avro.DesignInsertRequested;
 import com.nextbreakpoint.blueprint.common.events.avro.DesignUpdateRequested;
 import com.nextbreakpoint.blueprint.common.test.TestContext;
 import com.nextbreakpoint.blueprint.designs.TestActions.Source;
+import io.restassured.response.Response;
 import org.awaitility.Awaitility;
 import org.awaitility.core.ConditionFactory;
 
@@ -23,6 +24,7 @@ import static com.nextbreakpoint.blueprint.designs.TestConstants.DESIGN_UPDATE_R
 import static com.nextbreakpoint.blueprint.designs.TestConstants.MESSAGE_SOURCE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Durations.ONE_SECOND;
+import static org.awaitility.Durations.TEN_SECONDS;
 
 public class TestSteps {
     private final TestContext context;
@@ -38,7 +40,7 @@ public class TestSteps {
     }
 
     private static ConditionFactory defaultAwait() {
-        return Awaitility.await().atMost(Duration.ofMinutes(20)).pollInterval(ONE_SECOND);
+        return Awaitility.await().atMost(TEN_SECONDS).pollInterval(ONE_SECOND);
     }
 
     public void reset() {
@@ -120,8 +122,7 @@ public class TestSteps {
             var manifest = (String) context.getObject("manifest");
             var metadata = (String) context.getObject("metadata");
             var script = (String) context.getObject("script");
-            var designId = actions.submitInsertDesignRequest(authorization, TestUtils.createPostData(manifest, metadata, script));
-            context.putObject("designId", designId);
+            actions.submitInsertDesignRequest(authorization, TestUtils.createPostData(manifest, metadata, script));
             return this;
         }
 
@@ -315,6 +316,41 @@ public class TestSteps {
                         InputMessage<DesignDeleteRequested> eventMessage = Messages.asSpecificMessage(message, data -> (DesignDeleteRequested) data);
                         TestAssertions.assertExpectedDesignDeleteRequestedEvent(eventMessage.getValue().getData(), designId, userId);
                     });
+
+            return this;
+        }
+
+        public Thens responseContainsDesignId() {
+            final Response response = (Response) context.getObject("response");
+
+            assertThat(response.getContentType()).isEqualTo("application/json");
+            assertThat(response.body().jsonPath().getString("uuid")).isNotNull();
+
+            context.putObject("designId", UUID.fromString(response.body().jsonPath().getString("uuid")));
+
+            return this;
+        }
+
+        public Thens requestIsAccepted() {
+            final Response response = (Response) context.getObject("response");
+
+            assertThat(response.statusCode()).isEqualTo(202);
+            assertThat(response.getContentType()).isEqualTo("application/json");
+            assertThat(response.body().jsonPath().getString("uuid")).isNotNull();
+            assertThat(response.body().jsonPath().getString("status")).isEqualTo("SUCCESS");
+            assertThat(response.body().jsonPath().getString("error")).isNull();
+
+            return this;
+        }
+
+        public Thens requestIsRejected() {
+            final Response response = (Response) context.getObject("response");
+
+            assertThat(response.statusCode()).isEqualTo(202);
+            assertThat(response.getContentType()).isEqualTo("application/json");
+            assertThat(response.body().jsonPath().getString("uuid")).isNotNull();
+            assertThat(response.body().jsonPath().getString("status")).isEqualTo("FAILURE");
+            assertThat(response.body().jsonPath().getString("error")).isNotNull();
 
             return this;
         }

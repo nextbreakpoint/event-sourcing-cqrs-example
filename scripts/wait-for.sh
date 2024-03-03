@@ -17,6 +17,10 @@ for i in "$@"; do
       COMMAND="${i#*=}"
       shift
       ;;
+    -*)
+      echo "Unknown option $i"
+      exit 1
+      ;;
     *)
       POSITIONAL_ARGS+=("$1")
       shift

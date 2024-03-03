@@ -16,7 +16,6 @@ NEXUS_USERNAME=admin
 NEXUS_PASSWORD=password
 
 CLEAN="true"
-PACKAGE="true"
 DEPLOY="true"
 IMAGES="true"
 UNIT_TESTS="true"
@@ -78,14 +77,6 @@ for i in "$@"; do
       CLEAN="false"
       shift
       ;;
-    --skip-package)
-      PACKAGE="false"
-      shift
-      ;;
-    --skip-deploy)
-      DEPLOY="false"
-      shift
-      ;;
     --skip-images)
       IMAGES="false"
       shift
@@ -121,7 +112,7 @@ for i in "$@"; do
       USE_PLATFORM="true"
       shift
       ;;
-    -*|--*)
+    -*)
       echo "Unknown option $i"
       exit 1
       ;;
@@ -195,10 +186,6 @@ if [[ $CLEAN == "false" ]]; then
   echo "Skipping clean"
 fi
 
-if [[ $PACKAGE == "false" ]]; then
-  echo "Skipping package"
-fi
-
 if [[ $DEPLOY == "false" ]]; then
   echo "Skipping deploy"
 fi
@@ -230,15 +217,13 @@ services=(
   frontend
 )
 
-if [[ ! -z $BUILD_SERVICES ]]; then
-  services=(
-    $BUILD_SERVICES
-  )
+if [[ -n $BUILD_SERVICES ]]; then
+  IFS=" " read -r -a services <<< "$BUILD_SERVICES"
 fi
 
 echo -n "Building services:"
-for service in ${services[@]}; do
-  echo -n " "$service
+for service in "${services[@]}"; do
+  echo -n " $service"
 done
 echo ""
 
@@ -269,28 +254,26 @@ fi
 export NEXUS_USERNAME
 export NEXUS_PASSWORD
 
+TOKEN=$(echo -n "${NEXUS_USERNAME}:${NEXUS_PASSWORD}" | base64)
+
 export NPM_REGISTRY="http://${DOCKER_NEXUS_HOST}:${NEXUS_PORT}/repository/npmjs-proxy/"
-export NPM_AUTH="//${DOCKER_NEXUS_HOST}:${NEXUS_PORT}/repository/npmjs-proxy/:_auth $(echo -n ${NEXUS_USERNAME}:${NEXUS_PASSWORD} | base64)"
+export NPM_AUTH="//${DOCKER_NEXUS_HOST}:${NEXUS_PORT}/repository/npmjs-proxy/:_auth ${TOKEN}"
 
 if [ "$CLEAN" == "true" ]; then
-  mvn clean ${MAVEN_ARGS} -e -Dconfluent=true -Dcommon=true -Dservices=true -Dplatform=true -Dnexus=true
+  mvn clean ${MAVEN_ARGS} -e -Dconfluent=true -Dcommon=true -Dservice=true -Dservices=true -Dnexus=true
 fi
 
-mvn versions:set versions:commit ${MAVEN_ARGS} -e -DnewVersion=$VERSION -Dconfluent=true -Dcommon=true -Dservices=true -Dplatform=true
-
-if [ "$PACKAGE" == "true" ]; then
-  mvn package -s settings.xml ${MAVEN_ARGS} -Dconfluent=true -Dcommon=true -Dservices=true -Dplatform=true -Dnexus=true -DskipTests=true
-fi
+mvn versions:set versions:commit ${MAVEN_ARGS} -e -DnewVersion=${VERSION} -Dconfluent=true -Dcommon=true -Dservice=true -Dservices=true
 
 if [ "$DEPLOY" == "true" ]; then
-  mvn deploy -s settings.xml ${MAVEN_ARGS} -Dconfluent=true -Dcommon=true -Dservices=true -Dnexus=true
+  mvn deploy -s settings.xml ${MAVEN_ARGS} -Dconfluent=true -Dcommon=true -Dservice=true -Dnexus=true -DskipTests=true
 fi
 
 if [ "$IMAGES" == "true" ]; then
 
-for service in ${services[@]}; do
-  pushd services/$service
-   docker build --progress=plain -t ${REPOSITORY}/$service:${VERSION} --build-arg maven_args="${DOCKER_MAVEN_ARGS}" --build-arg npm_registry="${NPM_REGISTRY}" --build-arg npm_auth="${NPM_AUTH}" .
+for service in "${services[@]}"; do
+  pushd "services/$service"
+   docker build --progress=plain -t "${REPOSITORY}/$service:${VERSION}" --build-arg maven_args="${DOCKER_MAVEN_ARGS}" --build-arg npm_registry="${NPM_REGISTRY}" --build-arg npm_auth="${NPM_AUTH}" .
   popd
 done
 
@@ -306,9 +289,9 @@ fi
 
 if [ "$INTEGRATION_TESTS" == "true" ]; then
 
-for service in ${services[@]}; do
-  pushd services/$service
-   JAEGER_SERVICE_NAME=$service mvn verify -s settings.xml ${MAVEN_ARGS} -Dgroups=integration -Ddocker.host=${TEST_DOCKER_HOST}
+for service in "${services[@]}"; do
+  pushd "services/$service"
+   JAEGER_SERVICE_NAME=$service mvn verify -s settings.xml -D${service}=true ${MAVEN_ARGS} -Dgroups=integration -Ddocker.host=${TEST_DOCKER_HOST}
   popd
 done
 
@@ -320,8 +303,8 @@ export pact_do_not_track=true
 
 if [ "$PACT_TESTS" == "true" ]; then
 
-for service in ${services[@]}; do
-  pushd services/$service
+for service in "${services[@]}"; do
+  pushd "services/$service"
    JAEGER_SERVICE_NAME=$service mvn verify -s settings.xml ${MAVEN_ARGS} -Dgroups=pact -Ddocker.host=${TEST_DOCKER_HOST}
   popd
 done
@@ -330,8 +313,8 @@ fi
 
 if [ "$PACT_VERIFY" == "true" ]; then
 
-for service in ${services[@]}; do
-  pushd services/$service
+for service in "${services[@]}"; do
+  pushd "services/$service"
    JAEGER_SERVICE_NAME=$service mvn verify -s settings.xml ${MAVEN_ARGS} -Dgroups=pact-verify -Ddocker.host=${TEST_DOCKER_HOST}
   popd
 done

@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.nextbreakpoint</groupId>
         <artifactId>com.nextbreakpoint.blueprint</artifactId>
-        <version>1.0.4-wip-ed3bb4db-1708776317</version>
+        <version>1.0.4-wip-046509ed-1709379521</version>
     </parent>
     <packaging>pom</packaging>
     <dependencyManagement>
@@ -296,22 +296,118 @@
         </plugins>
     </build>
     <profiles>
+<!--        <profile>-->
+<!--            <id>platform</id>-->
+<!--            <activation>-->
+<!--                <property>-->
+<!--                    <name>platform</name>-->
+<!--                    <value>true</value>-->
+<!--                </property>-->
+<!--            </activation>-->
+<!--            <modules>-->
+<!--                <module>frontend</module>-->
+<!--                <module>authentication</module>-->
+<!--                <module>accounts</module>-->
+<!--                <module>designs-query</module>-->
+<!--                <module>designs-command</module>-->
+<!--                <module>designs-aggregate</module>-->
+<!--                <module>designs-watch</module>-->
+<!--                <module>designs-render</module>-->
+<!--            </modules>-->
+<!--        </profile>-->
         <profile>
-            <id>platform</id>
+            <id>frontend</id>
             <activation>
                 <property>
-                    <name>platform</name>
+                    <name>frontend</name>
                     <value>true</value>
                 </property>
             </activation>
             <modules>
                 <module>frontend</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>authentication</id>
+            <activation>
+                <property>
+                    <name>authentication</name>
+                    <value>true</value>
+                </property>
+            </activation>
+            <modules>
                 <module>authentication</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>accounts</id>
+            <activation>
+                <property>
+                    <name>accounts</name>
+                    <value>true</value>
+                </property>
+            </activation>
+            <modules>
                 <module>accounts</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>designs-query</id>
+            <activation>
+                <property>
+                    <name>designs-query</name>
+                    <value>true</value>
+                </property>
+            </activation>
+            <modules>
                 <module>designs-query</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>designs-command</id>
+            <activation>
+                <property>
+                    <name>designs-command</name>
+                    <value>true</value>
+                </property>
+            </activation>
+            <modules>
                 <module>designs-command</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>designs-aggregate</id>
+            <activation>
+                <property>
+                    <name>designs-aggregate</name>
+                    <value>true</value>
+                </property>
+            </activation>
+            <modules>
                 <module>designs-aggregate</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>designs-watch</id>
+            <activation>
+                <property>
+                    <name>designs-watch</name>
+                    <value>true</value>
+                </property>
+            </activation>
+            <modules>
                 <module>designs-watch</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>designs-render</id>
+            <activation>
+                <property>
+                    <name>designs-render</name>
+                    <value>true</value>
+                </property>
+            </activation>
+            <modules>
                 <module>designs-render</module>
             </modules>
         </profile>

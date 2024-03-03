@@ -1,5 +1,6 @@
 body {
     font-family: "Roboto";
+    font-weight: 100;
     font-size: 14pt;
     color: #080808;
     min-width: 800px;
@@ -44,15 +45,45 @@ header .grow {
     flex-grow: 1;
 }
 
+header .title {
+    font-weight: 300;
+}
+
+header .subtitle {
+}
+
+header .account {
+    display: inline-block;
+    vertical-align: middle;
+    padding-right: 1em;
+}
+
+header .separator {
+    display: inline-block;
+    text-align: center;
+    width: 1em;
+}
+
 footer {
     font-size: 1.2em;
     padding: 1.5em;
     text-align: center;
 }
 
+navigation {
+    text-align: right;
+}
+
 .container {
     text-align: center;
     padding: 2em 1em 2em 1em;
+}
+
+.designs-loading, .design-loading {
+    margin-top: 2em;
+    text-align:center;
+    font-size: 1.5em;
+    min-height: 300px;
 }
 
 .designs-toolbar {

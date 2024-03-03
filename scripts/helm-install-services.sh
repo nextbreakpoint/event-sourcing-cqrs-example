@@ -36,7 +36,7 @@ for i in "$@"; do
       ENABLE_DEBUG="true"
       shift
       ;;
-    -*|--*)
+    -*)
       echo "Unknown option $i"
       exit 1
       ;;
@@ -48,7 +48,7 @@ for i in "$@"; do
 done
 
 if [[ -z $VERSION ]]; then
-  export VERSION=$(mvn -q help:evaluate -Dexpression=project.version -DforceStdout)
+  VERSION=$(mvn -q help:evaluate -Dexpression=project.version -DforceStdout)
   echo "Selected version: $VERSION"
 fi
 
@@ -69,14 +69,14 @@ fi
 
 COMMON_VALUES="image.tag=${VERSION},replicas=1,clientProtocol=https,clientDomain=${HOSTNAME},enableDebug=${ENABLE_DEBUG},loggingLevel=${LOGGING_LEVEL}"
 
-helm upgrade --install service-authentication services/authentication/helm -n services --set image.repository=${REPOSITORY}/authentication,${COMMON_VALUES},clientWebUrl=${PROTOCOL}://${HOSTNAME},clientAuthUrl=${PROTOCOL}://${HOSTNAME}
+helm upgrade --install service-authentication services/authentication/helm -n services --set "image.repository=${REPOSITORY}/authentication,${COMMON_VALUES},clientWebUrl=${PROTOCOL}://${HOSTNAME},clientAuthUrl=${PROTOCOL}://${HOSTNAME}"
 
-helm upgrade --install service-accounts services/accounts/helm -n services --set image.repository=${REPOSITORY}/accounts,${COMMON_VALUES}
+helm upgrade --install service-accounts services/accounts/helm -n services --set "image.repository=${REPOSITORY}/accounts,${COMMON_VALUES}"
 
-helm upgrade --install service-designs-query services/designs-query/helm -n services --set image.repository=${REPOSITORY}/designs-query,${COMMON_VALUES}
-helm upgrade --install service-designs-command services/designs-command/helm -n services --set image.repository=${REPOSITORY}/designs-command,${COMMON_VALUES}
-helm upgrade --install service-designs-aggregate services/designs-aggregate/helm -n services --set image.repository=${REPOSITORY}/designs-aggregate,${COMMON_VALUES}
-helm upgrade --install service-designs-watch services/designs-watch/helm -n services --set image.repository=${REPOSITORY}/designs-watch,${COMMON_VALUES}
-helm upgrade --install service-designs-render services/designs-render/helm -n services --set image.repository=${REPOSITORY}/designs-render,${COMMON_VALUES}
+helm upgrade --install service-designs-query services/designs-query/helm -n services --set "image.repository=${REPOSITORY}/designs-query,${COMMON_VALUES}"
+helm upgrade --install service-designs-command services/designs-command/helm -n services --set "image.repository=${REPOSITORY}/designs-command,${COMMON_VALUES}"
+helm upgrade --install service-designs-aggregate services/designs-aggregate/helm -n services --set "image.repository=${REPOSITORY}/designs-aggregate,${COMMON_VALUES}"
+helm upgrade --install service-designs-watch services/designs-watch/helm -n services --set "image.repository=${REPOSITORY}/designs-watch,${COMMON_VALUES}"
+helm upgrade --install service-designs-render services/designs-render/helm -n services --set "image.repository=${REPOSITORY}/designs-render,${COMMON_VALUES}"
 
-helm upgrade --install service-frontend services/frontend/helm -n services --set image.repository=${REPOSITORY}/frontend,image.tag=${VERSION},replicas=1,clientWebUrl=${PROTOCOL}://${HOSTNAME},clientApiUrl=${PROTOCOL}://${HOSTNAME},enableDebug=false,loggingLevel=${LOGGING_LEVEL}
+helm upgrade --install service-frontend services/frontend/helm -n services --set "image.repository=${REPOSITORY}/frontend,image.tag=${VERSION},replicas=1,clientWebUrl=${PROTOCOL}://${HOSTNAME},clientApiUrl=${PROTOCOL}://${HOSTNAME},enableDebug=false,loggingLevel=${LOGGING_LEVEL}"

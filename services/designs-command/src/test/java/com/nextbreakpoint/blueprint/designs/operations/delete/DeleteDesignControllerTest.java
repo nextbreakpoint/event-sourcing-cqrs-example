@@ -52,14 +52,13 @@ class DeleteDesignControllerTest {
     @Test
     void shouldReturnErrorWhenEmitterFails() {
         final var exception = new RuntimeException("Some error");
-        final MessageEmitter<DesignDeleteCommand> mockedEmitter = mock();
-        when(mockedEmitter.send(any(OutputMessage.class))).thenReturn(Single.error(exception));
+        when(emitter.send(any(OutputMessage.class))).thenReturn(Single.error(exception));
 
         final var request = aRequest(USER_ID_1, DESIGN_ID_1, COMMAND_ID_1);
 
         final var expectedResponse = aResponse(DESIGN_ID_1, ResultStatus.FAILURE, "Some error");
 
-        final var controller = new DeleteDesignController(MESSAGE_SOURCE, mockedEmitter);
+        final var controller = new DeleteDesignController(MESSAGE_SOURCE, emitter);
 
         final var actualResponse = controller.onNext(request)
                 .doOnError(Assertions::fail).toBlocking().value();
@@ -68,8 +67,8 @@ class DeleteDesignControllerTest {
 
         final var expectedOutputMessage = TestFactory.createOutputMessage(aMessageId(), aDesignDeleteCommand(DESIGN_ID_1, COMMAND_ID_1, USER_ID_1));
 
-        verify(mockedEmitter).send(hasExpectedValues(expectedOutputMessage));
-        verifyNoMoreInteractions(mockedEmitter);
+        verify(emitter).send(hasExpectedValues(expectedOutputMessage));
+        verifyNoMoreInteractions(emitter);
     }
 
     @NotNull

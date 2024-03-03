@@ -3,15 +3,17 @@
 </header>
 <section class="images" id="images">
     <div class="pages" id="pages">
-        <div class="page">
-            {{#each data}}
-                <div class="row">
-                {{#each .}}
-                    <div class="cell"><a href="{{design.location}}"><img src="{{imageUrl}}" alt="{{design.location}}"/></a></div>
+        <noscript>
+            <div class="page">
+                {{#each data}}
+                    <div class="row">
+                    {{#each .}}
+                        <div class="cell"><a href="{{design.location}}"><img src="{{imageUrl}}" alt="{{design.location}}"/></a></div>
+                    {{/each}}
+                    </div>
                 {{/each}}
-                </div>
-            {{/each}}
-        </div>
+            </div>
+        </noscript>
     </div>
 </section>
 <navigation class="images">
@@ -52,7 +54,6 @@
             images.style.overflow = "hidden";
 
             let pages = document.getElementById("pages");
-            pages.innerHTML = "";
             pages.insertAdjacentHTML('beforeend', "<div class=\"page\" id=\"slot-0\"/>");
             pages.insertAdjacentHTML('beforeend', "<div class=\"page\" id=\"slot-1\"/>");
             pages.insertAdjacentHTML('beforeend', "<div class=\"page\" id=\"slot-2\"/>");

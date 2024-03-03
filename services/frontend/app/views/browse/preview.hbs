@@ -2,13 +2,15 @@
     <p><span class="title">Fractals</span><span class="separator">|</span><span class="subtitle">The Beauty of Chaos</span></p>
 </header>
 <section id="preview" class="preview">
-    {{#each data}}
-        <div class="row">
-        {{#each .}}
-            <div class="cell"><img src="{{imageUrl}}"/></div>
+    <noscript>
+        {{#each data}}
+            <div class="row">
+            {{#each .}}
+                <div class="cell"><img src="{{imageUrl}}"/></div>
+            {{/each}}
+            </div>
         {{/each}}
-        </div>
-    {{/each}}
+    </noscript>
 </section>
 <navigation class="close">
     <div>

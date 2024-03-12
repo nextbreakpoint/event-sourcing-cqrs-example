@@ -37,7 +37,7 @@ export default function MetadataEditor({ initialValue, readOnly, onContentChange
         if (onContentChanged) {
             onContentChanged(editorState.getCurrentContent().getPlainText())
         }
-    })
+    }, [onContentChanged])
 
     return (
       <div class="editor">

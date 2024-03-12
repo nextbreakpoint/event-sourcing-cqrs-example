@@ -4,9 +4,9 @@ import Cookies from 'universal-cookie'
 import axios from 'axios'
 
 export default function useAccount({ appConfig, onLoadAccount, onLoadAccountSuccess, onLoadAccountFailure }) {
-  const onLoadAccountCallback = useCallback(() => onLoadAccount())
-  const onLoadAccountSuccessCallback = useCallback((account) => onLoadAccountSuccess(account))
-  const onLoadAccountFailureCallback = useCallback((error) => onLoadAccountFailure(error))
+  const onLoadAccountCallback = useCallback(() => onLoadAccount(), [onLoadAccount])
+  const onLoadAccountSuccessCallback = useCallback((account) => onLoadAccountSuccess(account), [onLoadAccountSuccess])
+  const onLoadAccountFailureCallback = useCallback((error) => onLoadAccountFailure(error), [onLoadAccountFailure])
 
   const cookiesRef = useRef(new Cookies())
   const abortControllerRef = useRef(new AbortController())

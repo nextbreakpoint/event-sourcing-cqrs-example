@@ -1,20 +1,16 @@
-import { useRef, useCallback, useEffect } from 'react'
+import { useRef, useEffect } from 'react'
 
 import Cookies from 'universal-cookie'
 import axios from 'axios'
 
 export default function useAccount({ appConfig, onLoadAccount, onLoadAccountSuccess, onLoadAccountFailure }) {
-  const onLoadAccountCallback = useCallback(() => onLoadAccount(), [onLoadAccount])
-  const onLoadAccountSuccessCallback = useCallback((account) => onLoadAccountSuccess(account), [onLoadAccountSuccess])
-  const onLoadAccountFailureCallback = useCallback((error) => onLoadAccountFailure(error), [onLoadAccountFailure])
-
   const cookiesRef = useRef(new Cookies())
   const abortControllerRef = useRef(new AbortController())
 
   useEffect(() => {
     console.log("Loading account...")
 
-    onLoadAccountCallback()
+    onLoadAccount()
 
     const cookies = cookiesRef.current
     const controller = abortControllerRef.current
@@ -30,23 +26,23 @@ export default function useAccount({ appConfig, onLoadAccount, onLoadAccountSucc
             if (response.status == 200) {
                 console.log("Account loaded")
                 let { role, name } = response.data
-                onLoadAccountSuccessCallback({ role, name })
+                onLoadAccountSuccess({ role, name })
             } else if (response.status == 403) {
                 console.log("Not authenticated")
                 cookies.remove('token', {domain: window.location.hostname})
-                onLoadAccountSuccessCallback({ "role": "anonymous", "name": "Stranger" })
+                onLoadAccountSuccess({ "role": "anonymous", "name": "Stranger" })
             } else {
                 console.log("Can't load account: status = " + response.status)
                 cookies.remove('token', {domain: window.location.hostname})
-                onLoadAccountSuccessCallback({ "role": "anonymous", "name": "Stranger" })
+                onLoadAccountSuccess({ "role": "anonymous", "name": "Stranger" })
             }
         })
         .catch(function (error) {
             console.log("Can't load account: " + error)
             cookies.remove('token', {domain: window.location.hostname})
-            onLoadAccountSuccessCallback({ "role": "anonymous", "name": "Stranger" })
+            onLoadAccountSuccess({ "role": "anonymous", "name": "Stranger" })
         })
     return () => { controller.abort() }
-  }, [appConfig])
+  }, [appConfig, onLoadAccount, onLoadAccountSuccess, onLoadAccountFailure])
 }
 

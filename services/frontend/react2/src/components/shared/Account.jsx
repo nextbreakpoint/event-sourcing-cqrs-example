@@ -1,5 +1,5 @@
 import React from 'react'
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux'
 import useAccount from '../../hooks/useAccount'
 
@@ -24,11 +24,15 @@ export default function Account(props) {
     const status = useSelector(getAccountStatus)
     const dispatch = useDispatch()
 
+    const onLoadAccountCallback = useCallback(() => dispatch(loadAccount()), [dispatch])
+    const onLoadAccountSuccessCallback = useCallback((account) => dispatch(loadAccountSuccess(account)), [dispatch])
+    const onLoadAccountFailureCallback = useCallback((error) => dispatch(loadAccountFailure(error)), [dispatch])
+
     useAccount({
         appConfig: config,
-        onLoadAccount: () => dispatch(loadAccount()),
-        onLoadAccountSuccess: (account) => dispatch(loadAccountSuccess(account)),
-        onLoadAccountFailure: (error) => dispatch(loadAccountFailure(error))
+        onLoadAccount: onLoadAccountCallback,
+        onLoadAccountSuccess: onLoadAccountSuccessCallback,
+        onLoadAccountFailure: onLoadAccountFailureCallback
     })
 
     return (

@@ -11,16 +11,16 @@ import DesignEditor from '../shared/DesignEditor'
 
 import axios from 'axios'
 
-let DesignPreview = (props) => {
-    let [script, setScript] = useState(props.script)
-    let [metadata, setMetadata] = useState(props.metadata)
-    let [manifest, setManifest] = useState(props.manifest)
-    let [checksum, setChecksum] = useState(null)
-    let [imageUrl, setImageUrl] = useState(null)
-    let [message, setMessage] = useState("Initializing...")
+export default function DesignPreview(props) {
+    const [script, setScript] = useState(props.script)
+    const [metadata, setMetadata] = useState(props.metadata)
+    const [manifest, setManifest] = useState(props.manifest)
+    const [checksum, setChecksum] = useState(null)
+    const [imageUrl, setImageUrl] = useState(null)
+    const [message, setMessage] = useState("Initializing...")
 
     useEffect(() => {
-        let timeout = setTimeout(() => {
+        const timeout = setTimeout(() => {
             handleRender(createDesign(manifest, script, metadata))
         }, 2000)
 
@@ -29,14 +29,14 @@ let DesignPreview = (props) => {
         }
       }, [script, metadata])
 
-    let createDesign = (manifest, script, metadata) => {
+    const createDesign = (manifest, script, metadata) => {
         return { manifest: manifest, script: script, metadata: metadata }
     }
 
-    let handleRender = (design) => {
+    const handleRender = (design) => {
         console.log("render")
 
-        let config = {
+        const config = {
             timeout: 30000,
             metadata: {'content-type': 'application/json'},
             withCredentials: true
@@ -47,14 +47,14 @@ let DesignPreview = (props) => {
         axios.post(props.config.api_url + '/v1/designs/validate', design, config)
             .then(function (response) {
                 if (response.status == 200) {
-                     let result = response.data
+                     const result = response.data
                      console.log(result)
                      if (result.status == "ACCEPTED") {
                         axios.post(props.config.api_url + '/v1/designs/render', design, config)
                             .then(function (response) {
                                 if (response.status == 200) {
                                     console.log("Checksum = " + response.data.checksum)
-                                    let date = new Date()
+                                    const date = new Date()
                                     setChecksum(response.data.checksum)
                                     setImageUrl(props.config.api_url + '/v1/designs/image/' + response.data.checksum + '?t=' + date.getTime())
                                     setMessage("Last updated " + date.toISOString())
@@ -68,7 +68,7 @@ let DesignPreview = (props) => {
                                 setMessage("Can't render the design")
                             })
                      } else {
-                        let errors = result.errors.join(', ');
+                        const errors = result.errors.join(', ');
                         console.log("The design contains some errors: " + errors)
                         setMessage("The design contains some errors: " + errors)
                      }
@@ -83,7 +83,7 @@ let DesignPreview = (props) => {
             })
     }
 
-    let handleEditorChanged = (setScript, setMetadata, design) => {
+    const handleEditorChanged = (setScript, setMetadata, design) => {
         setScript(design.script)
         setMetadata(design.metadata)
         props.onEditorChanged(design)
@@ -105,5 +105,3 @@ let DesignPreview = (props) => {
         </Grid>
     )
 }
-
-export default DesignPreview

@@ -1,4 +1,5 @@
 import React from 'react'
+import { useState, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux'
 import useConfig from '../../hooks/useConfig'
 
@@ -18,10 +19,14 @@ export default function Config(props) {
     const status = useSelector(getConfigStatus)
     const dispatch = useDispatch()
 
+    const onLoadConfigCallback = useCallback(() => dispatch(loadConfig()), [dispatch])
+    const onLoadConfigSuccessCallback = useCallback((config) => dispatch(loadConfigSuccess(config)), [dispatch])
+    const onLoadConfigFailureCallback = useCallback((error) => dispatch(loadConfigFailure(error)), [dispatch])
+
     useConfig({
-        onLoadConfig: () => dispatch(loadConfig()),
-        onLoadConfigSuccess: (account) => dispatch(loadConfigSuccess(account)),
-        onLoadConfigFailure: (error) => dispatch(loadConfigFailure(error))
+        onLoadConfig: onLoadConfigCallback,
+        onLoadConfigSuccess: onLoadConfigSuccessCallback,
+        onLoadConfigFailure: onLoadConfigFailureCallback
     })
 
     return (

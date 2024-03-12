@@ -102,7 +102,7 @@ export default function ScriptEditor({ initialValue, readOnly, onContentChanged 
         if (onContentChanged) {
             onContentChanged(editorState.getCurrentContent().getPlainText())
         }
-    }, [onContentChanged])
+    }, [setEditorState, onContentChanged])
 
     return (
       <div class="editor">

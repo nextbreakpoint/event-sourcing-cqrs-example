@@ -1,93 +1,48 @@
 import React, { useEffect, useState, useCallback } from "react"
-import PropTypes from 'prop-types'
+import { useSelector, useDispatch } from 'react-redux'
+import usePreview from '../../hooks/usePreview'
 
-import Button from '@mui/material/Button'
 import Stack from '@mui/material/Stack'
 import Grid from '@mui/material/Grid'
-
-import { MapContainer, TileLayer, useMap } from 'react-leaflet'
-
 import DesignEditor from '../shared/DesignEditor'
+
+import {
+    getConfig
+} from '../../actions/config'
 
 import axios from 'axios'
 
-export default function DesignPreview(props) {
-    const [script, setScript] = useState(props.script)
-    const [metadata, setMetadata] = useState(props.metadata)
-    const [manifest, setManifest] = useState(props.manifest)
-    const [checksum, setChecksum] = useState(null)
-    const [imageUrl, setImageUrl] = useState(null)
-    const [message, setMessage] = useState("Initializing...")
+export default function DesignPreview({ script, metadata, manifest, onEditorChanged }) {
+    const [ design, setDesign ] = useState({script: script, metadata: metadata, manifest: manifest})
+    const [ message, setMessage ] = useState("Initializing...")
+    const [ imageUrl, setImageUrl ] = useState(null)
+    const config = useSelector(getConfig)
 
-    useEffect(() => {
-        const timeout = setTimeout(() => {
-            handleRender(createDesign(manifest, script, metadata))
-        }, 2000)
+    const onLoadPreviewCallback = useCallback((message) => {
+        setMessage(message)
+    }, [setMessage])
 
-        return () => {
-            clearTimeout(timeout)
-        }
-      }, [script, metadata])
+    const onLoadPreviewSuccessCallback = useCallback((message, checksum, time) => {
+        setMessage(message)
+        setImageUrl(config.api_url + '/v1/designs/image/' + checksum + '?t=' + time)
+    }, [setMessage, setImageUrl])
 
-    const createDesign = (manifest, script, metadata) => {
-        return { manifest: manifest, script: script, metadata: metadata }
-    }
+    const onLoadPreviewFailureCallback = useCallback((message) => {
+        setMessage(message)
+    }, [setMessage])
 
-    const handleRender = (design) => {
-        console.log("render")
+    usePreview({
+        design: design,
+        appConfig: config,
+        onLoadPreview: onLoadPreviewCallback,
+        onLoadPreviewSuccess: onLoadPreviewSuccessCallback,
+        onLoadPreviewFailure: onLoadPreviewFailureCallback
+    })
 
-        const config = {
-            timeout: 30000,
-            metadata: {'content-type': 'application/json'},
-            withCredentials: true
-        }
-
-        setMessage("Rendering...")
-
-        axios.post(props.config.api_url + '/v1/designs/validate', design, config)
-            .then(function (response) {
-                if (response.status == 200) {
-                     const result = response.data
-                     console.log(result)
-                     if (result.status == "ACCEPTED") {
-                        axios.post(props.config.api_url + '/v1/designs/render', design, config)
-                            .then(function (response) {
-                                if (response.status == 200) {
-                                    console.log("Checksum = " + response.data.checksum)
-                                    const date = new Date()
-                                    setChecksum(response.data.checksum)
-                                    setImageUrl(props.config.api_url + '/v1/designs/image/' + response.data.checksum + '?t=' + date.getTime())
-                                    setMessage("Last updated " + date.toISOString())
-                                } else {
-                                    console.log("Can't render the design: status = " + response.status)
-                                    setMessage("Can't render the design")
-                                }
-                            })
-                            .catch(function (error) {
-                                console.log("Can't render the design: " + error)
-                                setMessage("Can't render the design")
-                            })
-                     } else {
-                        const errors = result.errors.join(', ');
-                        console.log("The design contains some errors: " + errors)
-                        setMessage("The design contains some errors: " + errors)
-                     }
-                } else {
-                    console.log("Can't validate the design: status = " + response.status)
-                    setMessage("Can't validate the design")
-                }
-            })
-            .catch(function (error) {
-                console.log("Can't validate the design: " + error)
-                setMessage("Can't validate the design")
-            })
-    }
-
-    const handleEditorChanged = (setScript, setMetadata, design) => {
-        setScript(design.script)
-        setMetadata(design.metadata)
-        props.onEditorChanged(design)
-    }
+    const handleEditorChangedCallback = useCallback((editorState) => {
+        setDesign({...design, script: editorState.script, metadata: editorState.metadata})
+        onEditorChanged({...design, script: editorState.script, metadata: editorState.metadata})
+    }, [design, setDesign])
 
     return (
         <Grid container justify="space-between" alignItems="stretch" alignContent="space-between" className="design-editor">
@@ -100,7 +55,7 @@ export default function DesignPreview(props) {
                 </Stack>
             </Grid>
             <Grid item xs={6}>
-                <DesignEditor script={script} metadata={metadata} manifest={manifest} onEditorChanged={design => handleEditorChanged(setScript, setMetadata, design)}/>
+                <DesignEditor script={design.script} metadata={design.metadata} manifest={design.manifest} onEditorChanged={handleEditorChangedCallback}/>
             </Grid>
         </Grid>
     )

@@ -1,17 +1,29 @@
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useCallback } from 'react'
+import { useDispatch } from 'react-redux'
 
-export default function useConfig({ onLoadConfig, onLoadConfigSuccess, onLoadConfigFailure }) {
-  const configRef = useRef(window.config)
+import {
+    loadConfig,
+    loadConfigSuccess,
+    loadConfigFailure
+} from '../actions/config'
 
-  useEffect(() => {
-    console.log("Loading config...")
+export default function useConfig() {
+    const configRef = useRef(window.config)
+    const dispatch = useDispatch()
 
-    onLoadConfig()
+    const onLoadConfig = useCallback(() => dispatch(loadConfig()), [dispatch])
+    const onLoadConfigSuccess = useCallback((config) => dispatch(loadConfigSuccess(config)), [dispatch])
+    const onLoadConfigFailure = useCallback((error) => dispatch(loadConfigFailure(error)), [dispatch])
 
-    console.log("Config loaded")
+    useEffect(() => {
+        console.log("Loading config...")
 
-    onLoadConfigSuccess(configRef.current)
+        onLoadConfig()
 
-    return () => {}
-  }, [onLoadConfig, onLoadConfigSuccess, onLoadConfigFailure])
+        console.log("Config loaded")
+
+        onLoadConfigSuccess(configRef.current)
+
+        return () => {}
+    }, [onLoadConfig, onLoadConfigSuccess, onLoadConfigFailure])
 }

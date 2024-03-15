@@ -1,55 +1,41 @@
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useCallback } from 'react'
+import { useSelector, useDispatch } from 'react-redux'
 
-import Cookies from 'universal-cookie'
-import axios from 'axios'
+import Accounts from '../commands/accounts'
 
-export default function useAccount({ appConfig, onLoadAccount, onLoadAccountSuccess, onLoadAccountFailure }) {
-  const cookiesRef = useRef(new Cookies())
-  const abortControllerRef = useRef(null)
+import {
+    getConfig
+} from '../actions/config'
 
-  useEffect(() => {
-    const handleAccount = () => {
-        const axiosConfig = {
-            timeout: 5000,
-            withCredentials: true,
-            signal: abortControllerRef.current.signal
+import {
+    loadAccount,
+    loadAccountSuccess,
+    loadAccountFailure
+} from '../actions/account'
+
+export default function useAccount() {
+    const abortControllerRef = useRef(null)
+    const config = useSelector(getConfig)
+    const dispatch = useDispatch()
+
+    const onLoadAccount = useCallback(() => dispatch(loadAccount()), [dispatch])
+    const onLoadAccountSuccess = useCallback((account) => dispatch(loadAccountSuccess(account)), [dispatch])
+    const onLoadAccountFailure = useCallback((error) => dispatch(loadAccountFailure(error)), [dispatch])
+
+    useEffect(() => {
+        abortControllerRef.current = new AbortController()
+
+        const accounts = new Accounts(config, abortControllerRef.current)
+        accounts.onLoadAccount = onLoadAccount
+        accounts.onLoadAccountSuccess = onLoadAccountSuccess
+        accounts.onLoadAccountFailure = onLoadAccountFailure
+        accounts.loadAccount()
+
+        return () => {
+            if (abortControllerRef.current) {
+                abortControllerRef.current.abort()
+            }
         }
-
-        onLoadAccount()
-
-        console.log("Loading account...")
-
-        axios.get(appConfig.api_url + '/v1/accounts/me', axiosConfig)
-            .then(function (response) {
-                if (response.status == 200) {
-                    console.log("Account loaded")
-                    let { role, name } = response.data
-                    onLoadAccountSuccess({ role, name })
-                } else if (response.status == 403) {
-                    console.log("Not authenticated")
-                    cookiesRef.current.remove('token', {domain: window.location.hostname})
-                    onLoadAccountSuccess({ "role": "anonymous", "name": "Stranger" })
-                } else {
-                    console.log("Can't load account: status = " + response.status)
-                    cookiesRef.current.remove('token', {domain: window.location.hostname})
-                    onLoadAccountSuccess({ "role": "anonymous", "name": "Stranger" })
-                }
-            })
-            .catch(function (error) {
-                console.log("Can't load account: " + error)
-                cookiesRef.current.remove('token', {domain: window.location.hostname})
-                onLoadAccountSuccess({ "role": "anonymous", "name": "Stranger" })
-            })
-    }
-
-    abortControllerRef.current = new AbortController()
-    handleAccount()
-
-    return () => {
-        if (abortControllerRef.current) {
-            abortControllerRef.current.abort()
-        }
-    }
-  }, [appConfig, onLoadAccount, onLoadAccountSuccess, onLoadAccountFailure])
+    }, [config, onLoadAccount, onLoadAccountSuccess, onLoadAccountFailure])
 }
 

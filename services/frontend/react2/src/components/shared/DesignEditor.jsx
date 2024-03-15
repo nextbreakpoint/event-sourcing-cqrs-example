@@ -18,9 +18,10 @@ export default function DesignEditor({ initialDesign, onEditorChanged }) {
     }, [design, setDesign, onEditorChanged])
 
     const onMetadataChanged = useCallback((metadata) => {
-        setDesign({...design, metadata: metadata})
+        const newDesign = {...design, metadata: metadata}
+        setDesign(newDesign)
         if (onEditorChanged) {
-            onEditorChanged({...design, metadata: metadata})
+            onEditorChanged(newDesign)
         }
     }, [design, setDesign, onEditorChanged])
 

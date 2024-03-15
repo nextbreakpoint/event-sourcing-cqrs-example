@@ -31,8 +31,11 @@ export default function DesignPreview({ initialDesign, onPreviewChanged }) {
     })
 
     const onEditorChanged = useCallback((editorState) => {
-        setDesign({...design, script: editorState.script, metadata: editorState.metadata})
-        onPreviewChanged({...design, script: editorState.script, metadata: editorState.metadata})
+        const newDesign = {...design, script: editorState.script, metadata: editorState.metadata}
+        setDesign(newDesign)
+        if (onPreviewChanged) {
+            onPreviewChanged(newDesign)
+        }
     }, [design, setDesign])
 
     return (

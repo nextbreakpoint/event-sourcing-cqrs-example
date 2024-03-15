@@ -20,11 +20,10 @@ import {
 } from '../../actions/account'
 
 export default function Header({ landing, titleText, subtitleText, backText, backLink, browseText, browseLink }) {
+    const cookiesRef = useRef(new Cookies())
     const config = useSelector(getConfig)
     const account = useSelector(getAccount)
     const dispatch = useDispatch()
-
-    const cookiesRef = useRef(new Cookies())
 
     const handleBack = useCallback(() => {
         window.location = backLink

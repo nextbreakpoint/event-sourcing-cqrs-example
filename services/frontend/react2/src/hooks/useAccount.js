@@ -25,7 +25,7 @@ export default function useAccount() {
     useEffect(() => {
         abortControllerRef.current = new AbortController()
 
-        const accounts = new Accounts(config, abortControllerRef.current)
+        const accounts = new Accounts(config, abortControllerRef)
         accounts.onLoadAccount = onLoadAccount
         accounts.onLoadAccountSuccess = onLoadAccountSuccess
         accounts.onLoadAccountFailure = onLoadAccountFailure

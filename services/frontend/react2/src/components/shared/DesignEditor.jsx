@@ -8,17 +8,21 @@ import ScriptEditor from './ScriptEditor'
 import MetadataEditor from './MetadataEditor'
 
 export default function DesignEditor({ script, metadata, manifest, onEditorChanged }) {
-    const [ editorState, setEditorState ] = useState({script: script, metadata: metadata, manifest: manifest})
+    const [ design, setDesign ] = useState({script: script, metadata: metadata, manifest: manifest})
 
     const onScriptChanged = useCallback((script) => {
-        setEditorState({...editorState, script: script})
-        onEditorChanged({...editorState, script: script})
-    }, [editorState, setEditorState, onEditorChanged])
+        setDesign({...design, script: script})
+        if (onEditorChanged) {
+            onEditorChanged({...design, script: script})
+        }
+    }, [design, setDesign, onEditorChanged])
 
     const onMetadataChanged = useCallback((metadata) => {
-        setEditorState({...editorState, metadata: metadata})
-        onEditorChanged({...editorState, metadata: metadata})
-    }, [editorState, setEditorState, onEditorChanged])
+        setDesign({...design, metadata: metadata})
+        if (onEditorChanged) {
+            onEditorChanged({...design, metadata: metadata})
+        }
+    }, [design, setDesign, onEditorChanged])
 
     return (
         <Grid container justify="space-between" alignItems="stretch" alignContent="space-between">

@@ -2,9 +2,9 @@ import Cookies from 'universal-cookie'
 import axios from 'axios'
 
 const Accounts = class {
-    constructor(appConfig, abortController) {
+    constructor(appConfig, abortControllerRef) {
         this.appConfig = appConfig
-        this.abortController = abortController
+        this.abortControllerRef = abortControllerRef
     }
 
     onLoadAccount = () => {}
@@ -19,7 +19,7 @@ const Accounts = class {
         const axiosConfig = {
             timeout: 5000,
             withCredentials: true,
-            signal: self.abortController.signal
+            signal: self.abortControllerRef.current.signal
         }
 
         self.onLoadAccount()

@@ -1,76 +1,36 @@
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useCallback } from 'react'
+import { useSelector, useDispatch } from 'react-redux'
 
-import axios from 'axios'
+import Preview from '../commands/preview'
+
+import {
+    getConfig
+} from '../actions/config'
 
 export default function usePreview({ design, appConfig, onLoadPreview, onLoadPreviewSuccess, onLoadPreviewFailure }) {
-  const abortControllerRef = useRef(null)
+    const abortControllerRef = useRef(null)
+    const config = useSelector(getConfig)
+    const dispatch = useDispatch()
 
-  useEffect(() => {
-    const handlePreview = (design) => {
-        const date = new Date()
+    useEffect(() => {
+        const preview = new Preview(config, abortControllerRef)
+        preview.onLoadPreview = onLoadPreview
+        preview.onLoadPreviewSuccess = onLoadPreviewSuccess
+        preview.onLoadPreviewFailure = onLoadPreviewFailure
 
-        const axiosConfig = {
-            timeout: 5000,
-            withCredentials: true,
-            signal: abortControllerRef.current.signal
+        const timeout = setTimeout(() => {
+            abortControllerRef.current = new AbortController()
+            preview.loadPreview(design)
+        }, 2000)
+
+        return () => {
+            if (abortControllerRef.current) {
+                abortControllerRef.current.abort()
+            }
+            if (timeout) {
+                clearTimeout(timeout)
+            }
         }
-
-        onLoadPreview("Rendering...")
-
-        console.log("Validating design...")
-
-        axios.post(appConfig.api_url + '/v1/designs/validate', design, axiosConfig)
-            .then(function (response) {
-                if (response.status == 200) {
-                     console.log("Design validated")
-                     const result = response.data
-                     console.log("Status: " + result.status)
-                     if (result.status == "ACCEPTED") {
-                        console.log("Rendering design...")
-
-                        axios.post(appConfig.api_url + '/v1/designs/render', design, axiosConfig)
-                            .then(function (response) {
-                                if (response.status == 200) {
-                                    console.log("Design rendered")
-                                    onLoadPreviewSuccess("Last updated " + date.toISOString(), response.data.checksum, date.getTime())
-                                } else {
-                                    console.log("Can't render the design: status = " + response.status)
-                                    onLoadPreviewFailure("Can't render the design")
-                                }
-                            })
-                            .catch(function (error) {
-                                console.log("Can't render the design: " + error)
-                                onLoadPreviewFailure("Can't render the design")
-                            })
-                     } else {
-                        const errors = result.errors.join(', ');
-                        console.log("The design contains some errors: " + errors)
-                        onLoadPreviewFailure("The design contains some errors: " + errors)
-                     }
-                } else {
-                    console.log("Can't validate the design: status = " + response.status)
-                    onLoadPreviewFailure("Can't validate the design")
-                }
-            })
-            .catch(function (error) {
-                console.log("Can't validate the design: " + error)
-                onLoadPreviewFailure("Can't validate the design")
-            })
-    }
-
-    const timeout = setTimeout(() => {
-        abortControllerRef.current = new AbortController()
-        handlePreview(design)
-    }, 2000)
-
-    return () => {
-        if (abortControllerRef.current) {
-            abortControllerRef.current.abort()
-        }
-        if (timeout) {
-            clearTimeout(timeout)
-        }
-    }
-  }, [appConfig, design, onLoadPreview, onLoadPreviewSuccess, onLoadPreviewFailure])
+    }, [design, appConfig, onLoadPreview, onLoadPreviewSuccess, onLoadPreviewFailure])
 }
 

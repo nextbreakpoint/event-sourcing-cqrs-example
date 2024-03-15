@@ -237,7 +237,7 @@ let DesignsPage = class DesignsPage extends React.Component {
                     <Dialog className="dialog" open={this.props.show_create_design} onClose={this.props.handleHideCreateDialog} scroll={"paper"} maxWidth={"xl"} fullWidth={true} TransitionComponent={SlideTransition}>
                         <DialogTitle>Create New Design</DialogTitle>
                         <DialogContent>
-                            <DesignPreview script={design.script} metadata={design.metadata} manifest={design.manifest} config={this.props.config} onPreviewChanged={this.handleEditorChanged}/>
+                            <DesignPreview initialDesign={design} config={this.props.config} onPreviewChanged={this.handleEditorChanged}/>
                         </DialogContent>
                         <DialogActions>
                             <Button variant="outlined" color="primary" onClick={this.props.handleHideCreateDialog} color="primary">
@@ -253,7 +253,7 @@ let DesignsPage = class DesignsPage extends React.Component {
                     <Dialog className="dialog" open={this.props.show_update_design} onClose={this.props.handleHideUpdateDialog} scroll={"paper"} maxWidth={"xl"} fullWidth={true} TransitionComponent={SlideTransition}>
                         <DialogTitle>Modify Existing Design</DialogTitle>
                         <DialogContent>
-                            <DesignPreview script={design.script} metadata={design.metadata} manifest={design.manifest} config={this.props.config} onPreviewChanged={this.handleEditorChanged}/>
+                            <DesignPreview initialDesign={design} config={this.props.config} onPreviewChanged={this.handleEditorChanged}/>
                         </DialogContent>
                         <DialogActions>
                             <Button variant="outlined" color="primary" onClick={this.props.handleHideUpdateDialog} color="primary">

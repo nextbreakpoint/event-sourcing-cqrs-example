@@ -7,7 +7,7 @@ import {
     getConfig
 } from '../actions/config'
 
-export default function usePreview({ design, appConfig, onLoadPreview, onLoadPreviewSuccess, onLoadPreviewFailure }) {
+export default function usePreview({ design, onLoadPreview, onLoadPreviewSuccess, onLoadPreviewFailure }) {
     const abortControllerRef = useRef(null)
     const config = useSelector(getConfig)
     const dispatch = useDispatch()
@@ -31,6 +31,6 @@ export default function usePreview({ design, appConfig, onLoadPreview, onLoadPre
                 clearTimeout(timeout)
             }
         }
-    }, [design, appConfig, onLoadPreview, onLoadPreviewSuccess, onLoadPreviewFailure])
+    }, [design, onLoadPreview, onLoadPreviewSuccess, onLoadPreviewFailure])
 }
 

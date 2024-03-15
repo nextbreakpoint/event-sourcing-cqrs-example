@@ -37,7 +37,8 @@ const Preview = class {
                             .then(function (response) {
                                 if (response.status == 200) {
                                     console.log("Design rendered")
-                                    self.onLoadPreviewSuccess("Last updated " + date.toISOString(), response.data.checksum, date.getTime())
+                                    const imageUrl = self.appConfig.api_url + '/v1/designs/image/' + response.data.checksum + '?t=' + date.getTime()
+                                    self.onLoadPreviewSuccess("Last updated " + date.toISOString(), imageUrl)
                                 } else {
                                     console.log("Can't render the design: status = " + response.status)
                                     self.onLoadPreviewFailure("Can't render the design")

@@ -372,7 +372,7 @@ let PreviewPage = class PreviewPage extends React.Component {
                     <Dialog className="dialog" open={this.props.show_update_design} onClose={this.props.handleHideUpdateDialog} scroll={"paper"} maxWidth={"xl"} fullWidth={true} TransitionComponent={SlideTransition}>
                         <DialogTitle>Modify Existing Design</DialogTitle>
                         <DialogContent>
-                            <DesignPreview script={script} metadata={metadata} manifest={manifest} config={this.props.config} onPreviewChanged={this.handleEditorChanged}/>
+                            <DesignPreview initialDesign={design} onPreviewChanged={this.handleEditorChanged}/>
                         </DialogContent>
                         <DialogActions>
                             <Button variant="outlined" color="primary" onClick={this.props.handleHideUpdateDialog} color="primary">

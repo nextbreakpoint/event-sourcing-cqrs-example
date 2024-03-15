@@ -7,8 +7,8 @@ import Typography from '@mui/material/Typography'
 import ScriptEditor from './ScriptEditor'
 import MetadataEditor from './MetadataEditor'
 
-export default function DesignEditor({ script, metadata, manifest, onEditorChanged }) {
-    const [ design, setDesign ] = useState({script: script, metadata: metadata, manifest: manifest})
+export default function DesignEditor({ initialDesign, onEditorChanged }) {
+    const [ design, setDesign ] = useState(initialDesign)
 
     const onScriptChanged = useCallback((script) => {
         setDesign({...design, script: script})
@@ -29,13 +29,13 @@ export default function DesignEditor({ script, metadata, manifest, onEditorChang
             <Grid item xs={7}>
                 <div class="form">
                     <div><Typography variant="body" color="inherit" class="form-label">Script</Typography></div>
-                    <ScriptEditor initialValue={script} readOnly={false} onContentChanged={onScriptChanged}/>
+                    <ScriptEditor initialValue={design.script} readOnly={false} onContentChanged={onScriptChanged}/>
                 </div>
             </Grid>
             <Grid item xs={5}>
                 <div class="form">
                     <div><Typography variant="body" color="inherit" class="form-label">Metadata</Typography></div>
-                    <MetadataEditor initialValue={metadata} readOnly={false} onContentChanged={onMetadataChanged}/>
+                    <MetadataEditor initialValue={design.metadata} readOnly={false} onContentChanged={onMetadataChanged}/>
                 </div>
             </Grid>
         </Grid>

@@ -1,30 +1,22 @@
 import React, { useEffect, useState, useCallback } from "react"
-import { useSelector, useDispatch } from 'react-redux'
 import usePreview from '../../hooks/usePreview'
 
 import Stack from '@mui/material/Stack'
 import Grid from '@mui/material/Grid'
 import DesignEditor from '../shared/DesignEditor'
 
-import {
-    getConfig
-} from '../../actions/config'
-
-import axios from 'axios'
-
-export default function DesignPreview({ script, metadata, manifest, onPreviewChanged }) {
-    const [ design, setDesign ] = useState({script: script, metadata: metadata, manifest: manifest})
+export default function DesignPreview({ initialDesign, onPreviewChanged }) {
+    const [ design, setDesign ] = useState(initialDesign)
     const [ message, setMessage ] = useState("Initializing...")
     const [ imageUrl, setImageUrl ] = useState(null)
-    const config = useSelector(getConfig)
 
     const onLoadPreview = useCallback((message) => {
         setMessage(message)
     }, [setMessage])
 
-    const onLoadPreviewSuccess = useCallback((message, checksum, time) => {
+    const onLoadPreviewSuccess = useCallback((message, imageUrl) => {
         setMessage(message)
-        setImageUrl(config.api_url + '/v1/designs/image/' + checksum + '?t=' + time)
+        setImageUrl(imageUrl)
     }, [setMessage, setImageUrl])
 
     const onLoadPreviewFailure = useCallback((message) => {
@@ -33,7 +25,6 @@ export default function DesignPreview({ script, metadata, manifest, onPreviewCha
 
     usePreview({
         design: design,
-        appConfig: config,
         onLoadPreview: onLoadPreview,
         onLoadPreviewSuccess: onLoadPreviewSuccess,
         onLoadPreviewFailure: onLoadPreviewFailure
@@ -55,7 +46,7 @@ export default function DesignPreview({ script, metadata, manifest, onPreviewCha
                 </Stack>
             </Grid>
             <Grid item xs={6}>
-                <DesignEditor script={design.script} metadata={design.metadata} manifest={design.manifest} onEditorChanged={onEditorChanged}/>
+                <DesignEditor initialDesign={design} onEditorChanged={onEditorChanged}/>
             </Grid>
         </Grid>
     )

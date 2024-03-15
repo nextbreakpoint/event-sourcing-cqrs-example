@@ -26,19 +26,19 @@ export default function Header({ landing, titleText, subtitleText, backText, bac
 
     const cookiesRef = useRef(new Cookies())
 
-    const handleBackCallback = useCallback(() => {
+    const handleBack = useCallback(() => {
         window.location = backLink
     }, [backLink])
 
-    const handleBrowseCallback = useCallback(() => {
+    const handleBrowse = useCallback(() => {
         window.location = browseLink
     }, [browseLink])
 
-    const handleLoginCallback = useCallback(() => {
+    const handleLogin = useCallback(() => {
         window.location = config.api_url + "/v1/auth/signin" + landing
     }, [config, landing])
 
-    const handleLogoutCallback = useCallback(() => {
+    const handleLogout = useCallback(() => {
         cookiesRef.current.remove('token', {domain: window.location.hostname, path: '/'})
         dispatch(loadAccountSuccess({ role: 'anonymous', name: 'Stranger' }))
     }, [dispatch])
@@ -51,10 +51,10 @@ export default function Header({ landing, titleText, subtitleText, backText, bac
               </div>
               <navigation class="grow">
                   {account.role != 'anonymous' && <Typography variant="button" color="inherit" className="account">Welcome {account.name},</Typography>}
-                  {browseLink != null && <Button color="inherit" variant="text" onClick={handleBrowseCallback}>{browseText}</Button>}
-                  {backLink != null && <Button color="inherit" variant="text" onClick={handleBackCallback}>{backText}</Button>}
-                  {account.role == 'anonymous' && <Button color="inherit" variant="text" onClick={handleLoginCallback}>Login</Button>}
-                  {account.role != 'anonymous' && <Button color="inherit" variant="text" onClick={handleLogoutCallback}>Logout</Button>}
+                  {browseLink != null && <Button color="inherit" variant="text" onClick={handleBrowse}>{browseText}</Button>}
+                  {backLink != null && <Button color="inherit" variant="text" onClick={handleBack}>{backText}</Button>}
+                  {account.role == 'anonymous' && <Button color="inherit" variant="text" onClick={handleLogin}>Login</Button>}
+                  {account.role != 'anonymous' && <Button color="inherit" variant="text" onClick={handleLogout}>Logout</Button>}
               </navigation>
             </Toolbar>
         </AppBar>

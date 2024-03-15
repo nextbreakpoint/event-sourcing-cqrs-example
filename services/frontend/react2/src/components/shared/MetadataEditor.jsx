@@ -32,7 +32,7 @@ const compositeDecorator = new CompositeDecorator([
 export default function MetadataEditor({ initialValue, readOnly, onContentChanged }) {
     const [ editorState, setEditorState ] = useState(() => EditorState.createWithContent(ContentState.createFromText(initialValue), compositeDecorator))
 
-    const onChangeCallback = useCallback((editorState) => {
+    const onChange = useCallback((editorState) => {
         setEditorState(editorState)
         if (onContentChanged) {
             onContentChanged(editorState.getCurrentContent().getPlainText())
@@ -41,7 +41,7 @@ export default function MetadataEditor({ initialValue, readOnly, onContentChange
 
     return (
       <div class="editor">
-        <Editor readOnly={readOnly} editorState={editorState} onChange={onChangeCallback}/>
+        <Editor readOnly={readOnly} editorState={editorState} onChange={onChange}/>
       </div>
     )
 }

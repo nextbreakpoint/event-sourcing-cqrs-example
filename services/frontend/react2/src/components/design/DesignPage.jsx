@@ -39,7 +39,7 @@ import {
     showErrorMessage,
     hideErrorMessage,
     hideUpdateDialog
-} from '../../actions/preview'
+} from '../../actions/design'
 
 import axios from 'axios'
 

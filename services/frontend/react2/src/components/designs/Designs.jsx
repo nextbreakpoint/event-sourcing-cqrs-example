@@ -2,16 +2,13 @@ import React from 'react'
 import { useRef, useEffect, useCallback } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import DesignsCommand from '../../commands/designs'
+import useDesigns from '../../hooks/useDesigns'
 
 import Grid from '@mui/material/Grid'
-import Snackbar from '@mui/material/Snackbar'
-import IconButton from '@mui/material/IconButton'
-import Input from '@mui/material/Input'
 import Header from '../shared/Header'
 import Footer from '../shared/Footer'
 import Message from '../shared/Message'
-
-import CloseIcon from '@mui/icons-material/Close'
+import ErrorPopup from '../shared/ErrorPopup'
 
 import {
     getConfig
@@ -35,8 +32,6 @@ import {
     hideErrorMessage
 } from '../../actions/designs'
 
-import axios from 'axios'
-
 export default function Designs(props) {
     const abortControllerRef = useRef(new AbortController())
     const config = useSelector(getConfig)
@@ -56,64 +51,23 @@ export default function Designs(props) {
     const onLoadDesignsFailure = (error) => dispatch(loadDesignsFailure(error))
 
     const doLoadDesigns = useCallback((revision) => {
-        const designs = new DesignsCommand(config, abortControllerRef)
+        const designsCommand = new DesignsCommand(config, abortControllerRef)
 
-        designs.onLoadDesigns = onLoadDesigns
+        designsCommand.onLoadDesigns = onLoadDesigns
 
-        designs.onLoadDesignsSuccess = (designs, total, revision) => {
+        designsCommand.onLoadDesignsSuccess = (designs, total, revision) => {
             onLoadDesignsSuccess(designs, total, revision)
         }
 
-        designs.onLoadDesignsFailure = (error) => {
+        designsCommand.onLoadDesignsFailure = (error) => {
             onLoadDesignsFailure("Can't load designs")
             onShowErrorMessage("Can't load designs")
         }
 
-        designs.load(revision, pagination)
+        designsCommand.load(revision, pagination)
     }, [config, pagination, dispatch])
 
-    useEffect(() => {
-        try {
-            if (typeof(EventSource) !== "undefined") {
-                const source = new EventSource(config.api_url + "/v1/designs/watch?revision=" + revision, { withCredentials: true })
-
-                const revision = "0000000000000000-0000000000000000"
-
-                source.onerror = function(error) {
-                   console.log(error)
-                }
-
-                source.onopen = function() {
-                    doLoadDesigns(revision)
-                }
-
-                source.addEventListener("update",  function(event) {
-                    console.log(event.data)
-                    doLoadDesigns(revision)
-                }, false)
-
-                return () => {
-                    source.close()
-                }
-            } else {
-                console.log("Can't watch resource. EventSource not supported by the browser")
-                doLoadDesigns(revision)
-            }
-        } catch (e) {
-           console.log("Can't watch resource: " + e)
-           doLoadDesigns(revision)
-        }
-
-        return () => {}
-    }, [config, doLoadDesigns])
-
-    const onClose = (event, reason) => {
-        if (reason === 'clickaway') {
-          return
-        }
-
-        onHideErrorMessage()
-    }
+    useDesigns({ doLoadDesigns: doLoadDesigns })
 
     return (
         <React.Fragment>
@@ -128,26 +82,7 @@ export default function Designs(props) {
                     <Footer/>
                 </Grid>
             </Grid>
-            <Snackbar
-              anchorOrigin={{
-                vertical: 'top',
-                horizontal: 'right',
-              }}
-              open={showErrorMessage}
-              autoHideDuration={6000}
-              onClose={onClose}
-              message={errorMessage}
-              action={[
-                <IconButton
-                  key="close"
-                  aria-label="Close"
-                  color="inherit"
-                  onClick={onClose}
-                >
-                  <CloseIcon />
-                </IconButton>
-              ]}
-            />
+            <ErrorPopup showErrorMessage={showErrorMessage} errorMessage={errorMessage} onPopupClose={onHideErrorMessage}/>
         </React.Fragment>
     )
 }

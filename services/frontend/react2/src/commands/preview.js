@@ -10,7 +10,7 @@ const Preview = class {
     onLoadPreviewSuccess = (checksum) => {}
     onLoadPreviewFailure = (error) => {}
 
-    loadPreview(design) {
+    load(design) {
         const self = this
 
         const date = new Date()

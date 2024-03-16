@@ -20,7 +20,7 @@ export default function usePreview({ design, onLoadPreview, onLoadPreviewSuccess
 
         const timeout = setTimeout(() => {
             abortControllerRef.current = new AbortController()
-            preview.loadPreview(design)
+            preview.load(design)
         }, 2000)
 
         return () => {

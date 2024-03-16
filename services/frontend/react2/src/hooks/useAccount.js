@@ -1,7 +1,7 @@
 import { useRef, useEffect, useCallback } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 
-import Accounts from '../commands/accounts'
+import Account from '../commands/account'
 
 import {
     getConfig
@@ -25,11 +25,11 @@ export default function useAccount() {
     useEffect(() => {
         abortControllerRef.current = new AbortController()
 
-        const accounts = new Accounts(config, abortControllerRef)
-        accounts.onLoadAccount = onLoadAccount
-        accounts.onLoadAccountSuccess = onLoadAccountSuccess
-        accounts.onLoadAccountFailure = onLoadAccountFailure
-        accounts.loadAccount()
+        const account = new Account(config, abortControllerRef)
+        account.onLoadAccount = onLoadAccount
+        account.onLoadAccountSuccess = onLoadAccountSuccess
+        account.onLoadAccountFailure = onLoadAccountFailure
+        account.load()
 
         return () => {
             if (abortControllerRef.current) {

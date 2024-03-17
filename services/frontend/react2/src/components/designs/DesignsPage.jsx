@@ -74,7 +74,7 @@ export default function DesignsPage() {
     const onHideConfirmDelete = () => dispatch(hideDeleteDesigns())
 
     const onCreate = () => {
-        let axiosConfig = {
+        const axiosConfig = {
             timeout: 30000,
             metadata: {'content-type': 'application/json'},
             withCredentials: true
@@ -85,7 +85,7 @@ export default function DesignsPage() {
         axios.post(config.api_url + '/v1/designs/validate', design, axiosConfig)
             .then(function (response) {
                 if (response.status == 200) {
-                     let result = response.data
+                     const result = response.data
                      console.log(result)
                      if (result.status == "ACCEPTED") {
                         axios.post(config.api_url + '/v1/designs', design, axiosConfig)
@@ -118,7 +118,7 @@ export default function DesignsPage() {
     }
 
     const onUpdate = (e) => {
-        let axiosConfig = {
+        const axiosConfig = {
             timeout: 30000,
             metadata: {'content-type': 'application/json'},
             withCredentials: true
@@ -135,7 +135,7 @@ export default function DesignsPage() {
         axios.post(config.api_url + '/v1/designs/validate', design, axiosConfig)
             .then(function (response) {
                 if (response.status == 200) {
-                     let result = response.data
+                     const result = response.data
                      console.log(result)
                      if (result.status == "ACCEPTED") {
                         axios.put(config.api_url + '/v1/designs/' + selection[0], design, axiosConfig)
@@ -167,12 +167,12 @@ export default function DesignsPage() {
     }
 
     const onDelete = () => {
-        let axiosConfig = {
+        const axiosConfig = {
             timeout: 30000,
             withCredentials: true
         }
 
-        let promises = selection
+        const promises = selection
            .map((uuid) => {
                 return axios.delete(config.api_url + '/v1/designs/' + uuid + '?draft=true', axiosConfig)
             })
@@ -182,7 +182,7 @@ export default function DesignsPage() {
 
         axios.all(promises)
             .then(function (responses) {
-                let deletedUuids = responses
+                const deletedUuids = responses
                     .filter((res) => {
                         return (res.status == 202 || res.status == 200)
                     })
@@ -190,7 +190,7 @@ export default function DesignsPage() {
                         return res.config.url.substring(res.config.url.lastIndexOf("/") + 1)
                     })
 
-                let failedUuids = responses
+                const failedUuids = responses
                     .filter((res) => {
                         return (res.status != 202 && res.status != 200)
                     })

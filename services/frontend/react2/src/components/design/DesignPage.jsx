@@ -1,7 +1,8 @@
 import React from 'react'
 import { useRef, useState, useEffect, useCallback } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import LoadDesign from '../../commands/loadDesign'
+import DownloadDesign from '../../commands/downloadDesign'
+import UpdateDesign from '../../commands/updateDesign'
 
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
@@ -28,6 +29,7 @@ import {
 
 import {
     getDesign,
+    getRevision,
     showUpdateDesign,
     hideUpdateDesign,
     getShowUpdateDesign,
@@ -37,8 +39,6 @@ import {
     hideErrorMessage,
     hideUpdateDialog
 } from '../../actions/design'
-
-import axios from 'axios'
 
 function SlideTransition(props) {
   return <Slide direction="up" {...props} />
@@ -52,11 +52,12 @@ export default function DesignPage({ uuid }) {
     const abortControllerRef = useRef(new AbortController())
     const config = useSelector(getConfig)
     const account = useSelector(getAccount)
-    const initialDesign = useSelector(getDesign)
+    const design = useSelector(getDesign)
+    const revision = useSelector(getRevision)
     const errorMessage = useSelector(getErrorMessage)
     const showUpdateDialog = useSelector(getShowUpdateDesign)
     const dispatch = useDispatch()
-    const [ design, setDesign ] = useState(initialDesign)
+    const [ editedDesign, setEditedDesign ] = useState(design)
 
     const onShowErrorMessage = (error) => dispatch(showErrorMessage(error))
     const onHideErrorMessage = () => dispatch(hideErrorMessage())
@@ -68,197 +69,106 @@ export default function DesignPage({ uuid }) {
     }
 
     const onDownload = (e) => {
-        const axiosConfig = {
-            timeout: 30000,
-            metadata: {'content-type': 'application/json'},
-            withCredentials: true
+        const command = new DownloadDesign(config, abortControllerRef)
+
+        command.onDownloadDesign = () => {
+            onHideErrorMessage()
         }
 
-        const newDesign = { manifest: design.manifest, metadata: design.metadata, script: design.script }
+        command.onDownloadDesignSuccess = (message) => {
+            onShowErrorMessage(message)
+        }
 
-        onHideErrorMessage()
+        command.onDownloadDesignFailure = (error) => {
+            onShowErrorMessage(error)
+        }
 
-        axios.post(config.api_url + '/v1/designs/validate', newDesign, axiosConfig)
-            .then(function (response) {
-                if (response.status == 200) {
-                     const result = response.data
-                     if (result.status == "ACCEPTED") {
-                        const axiosConfigUpload = {
-                            timeout: 30000,
-                            metadata: {'content-type': 'application/json'},
-                            withCredentials: true,
-                            responseType: "blob"
-                        }
-                        axios.post(config.api_url + '/v1/designs/download', newDesign, axiosConfigUpload)
-                            .then(function (response) {
-                                if (response.status == 200) {
-                                    const url = window.URL.createObjectURL(response.data);
-                                    const a = document.createElement('a');
-                                    a.href = url;
-                                    a.download = uuid + '.zip';
-                                    a.click();
-                                    onShowErrorMessage("The design has been downloaded")
-                                } else {
-                                    console.log("Can't download the design: status = " + response.status)
-                                    onShowErrorMessage("Can't download the design")
-                                }
-                            })
-                            .catch(function (error) {
-                                console.log("Can't download the design: " + error)
-                                onShowErrorMessage("Can't download the design")
-                            })
-                     } else {
-                        console.log("Can't download the design: status = " + result.status)
-                        onShowErrorMessage("Can't download the design")
-                     }
-                } else {
-                    console.log("Can't download the design: status = " + response.status)
-                    onShowErrorMessage("Can't download the design")
-                }
-            })
-            .catch(function (error) {
-                console.log("Can't download the design: " + error)
-                onShowErrorMessage("Can't download the design")
-            })
+        const newDesign = {
+            manifest: design.manifest,
+            metadata: design.metadata,
+            script: design.script
+        }
+
+        command.run(newDesign)
     }
 
     const onUpdate = (e) => {
-        const axiosConfig = {
-            timeout: 30000,
-            metadata: {'content-type': 'application/json'},
-            withCredentials: true
+        const command = new UpdateDesign(config, abortControllerRef)
+
+        command.onUpdateDesign = () => {
+            onHideErrorMessage()
         }
 
-        const newDesign = { manifest: design.manifest, metadata: design.metadata, script: design.script, published: design.published }
+        command.onUpdateDesignSuccess = (message) => {
+            onShowErrorMessage(message)
+            onHideUpdateDialog()
+        }
 
-        onHideErrorMessage()
+        command.onUpdateDesignFailure = (error) => {
+            onShowErrorMessage(error)
+        }
 
-        axios.post(config.api_url + '/v1/designs/validate', newDesign, axiosConfig)
-            .then(function (response) {
-                if (response.status == 200) {
-                     const result = response.data
-                     if (result.status == "ACCEPTED") {
-                        axios.put(config.api_url + '/v1/designs/' + uuid, newDesign, axiosConfig)
-                            .then(function (response) {
-                                if (response.status == 202 || response.status == 200) {
-                                    onShowErrorMessage("Your request has been received. The design will be updated shortly")
-                                    onHideUpdateDialog()
-                                } else {
-                                    console.log("Can't update the design: status = " + response.status)
-                                    onShowErrorMessage("Can't update the design")
-                                }
-                            })
-                            .catch(function (error) {
-                                console.log("Can't update the design: " + error)
-                                onShowErrorMessage("Can't update the design")
-                            })
-                     } else {
-                        console.log("Can't update the design: statue " + result.status)
-                        onShowErrorMessage("Can't update the design")
-                     }
-                } else {
-                    console.log("Can't update the design: status = " + response.status)
-                    onShowErrorMessage("Can't update the design")
-                }
-            })
-            .catch(function (error) {
-                console.log("Can't update the design: " + error)
-                onShowErrorMessage("Can't update the design")
-            })
+        const newDesign = {
+            manifest: editedDesign.manifest,
+            metadata: editedDesign.metadata,
+            script: editedDesign.script
+        }
+
+        command.run(uuid, newDesign)
     }
 
     const onPublish = (e) => {
-        const axiosConfig = {
-            timeout: 30000,
-            metadata: {'content-type': 'application/json'},
-            withCredentials: true
+        const command = new UpdateDesign(config, abortControllerRef)
+
+        command.onUpdateDesign = () => {
+            onHideErrorMessage()
         }
 
-        const newDesign = { manifest: design.manifest, metadata: design.metadata, script: design.script, published: true }
+        command.onUpdateDesignSuccess = (message) => {
+            onShowErrorMessage(message)
+        }
 
-        onHideErrorMessage()
+        command.onUpdateDesignFailure = (error) => {
+            onShowErrorMessage(error)
+        }
 
-        axios.post(config.api_url + '/v1/designs/validate', newDesign, axiosConfig)
-            .then(function (response) {
-                if (response.status == 200) {
-                     const result = response.data
-                     if (result.status == "ACCEPTED") {
-                        axios.put(config.api_url + '/v1/designs/' + uuid, newDesign, axiosConfig)
-                            .then(function (response) {
-                                if (response.status == 202 || response.status == 200) {
-                                    setDesign({...design, published: true})
-                                    onShowErrorMessage("Your request has been received. The design will be updated shortly")
-                                } else {
-                                    console.log("Can't publish the design: status = " + response.status)
-                                    onShowErrorMessage("Can't publish the design")
-                                }
-                            })
-                            .catch(function (error) {
-                                console.log("Can't publish the design: " + error)
-                                onShowErrorMessage("Can't publish the design")
-                            })
-                     } else {
-                        console.log("Can't publish the design: " + result.status)
-                        onShowErrorMessage("Can't publish the design")
-                     }
-                } else {
-                    console.log("Can't publish the design: status = " + response.status)
-                    onShowErrorMessage("Can't publish the design")
-                }
-            })
-            .catch(function (error) {
-                console.log("Can't publish the design: " + error)
-                onShowErrorMessage("Can't publish the design")
-            })
+        const newDesign = {
+            manifest: design.manifest,
+            metadata: design.metadata,
+            script: design.script,
+            published: true
+        }
+
+        command.run(uuid, newDesign)
     }
 
     const onUnpublish = (e) => {
-        const axiosConfig = {
-            timeout: 30000,
-            metadata: {'content-type': 'application/json'},
-            withCredentials: true
+        const command = new UpdateDesign(config, abortControllerRef)
+
+        command.onUpdateDesign = () => {
+            onHideErrorMessage()
         }
 
-        const newDesign = { manifest: design.manifest, metadata: design.metadata, script: design.script, published: false }
+        command.onUpdateDesignSuccess = (message) => {
+            onShowErrorMessage(message)
+        }
 
-        onHideErrorMessage()
+        command.onUpdateDesignFailure = (error) => {
+            onShowErrorMessage(error)
+        }
 
-        axios.post(config.api_url + '/v1/designs/validate', newDesign, axiosConfig)
-            .then(function (response) {
-                if (response.status == 200) {
-                     const result = response.data
-                     if (result.status == "ACCEPTED") {
-                        axios.put(config.api_url + '/v1/designs/' + uuid, newDesign, axiosConfig)
-                            .then(function (response) {
-                                if (response.status == 202 || response.status == 200) {
-                                    setDesign({...design, published: false})
-                                    onShowErrorMessage("Your request has been received. The design will be updated shortly")
-                                } else {
-                                    console.log("Can't unpublish the design: status = " + response.status)
-                                    onShowErrorMessage("Can't unpublish the design")
-                                }
-                            })
-                            .catch(function (error) {
-                                console.log("Can't unpublish the design: " + error)
-                                onShowErrorMessage("Can't unpublish the design")
-                            })
-                     } else {
-                        console.log("Can't unpublish the design: " + result.status)
-                        onShowErrorMessage("Can't unpublish the design")
-                     }
-                } else {
-                    console.log("Can't unpublish the design: status = " + response.status)
-                    onShowErrorMessage("Can't unpublish the design")
-                }
-            })
-            .catch(function (error) {
-                console.log("Can't unpublish the design: " + error)
-                onShowErrorMessage("Can't unpublish the design")
-            })
+        const newDesign = {
+            manifest: design.manifest,
+            metadata: design.metadata,
+            script: design.script,
+            published: false
+        }
+
+        command.run(uuid, newDesign)
     }
 
     const onEditorChanged = (value) => {
-        setDesign({...design, script: value.script, metadata: value.metadata})
+        setEditedDesign({...design, script: value.script, metadata: value.metadata})
     }
 
     return (

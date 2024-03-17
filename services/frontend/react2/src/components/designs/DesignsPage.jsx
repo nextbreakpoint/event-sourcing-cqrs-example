@@ -1,7 +1,9 @@
 import React from 'react'
 import { useRef, useState, useEffect, useCallback } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import LoadDesigns from '../../commands/loadDesigns'
+import UpdateDesign from '../../commands/updateDesign'
+import CreateDesign from '../../commands/createDesign'
+import DeleteDesigns from '../../commands/deleteDesigns'
 
 import Button from '@mui/material/Button'
 import Grid from '@mui/material/Grid'
@@ -42,8 +44,6 @@ import {
     setSelectedDesign
 } from '../../actions/designs'
 
-import axios from 'axios'
-
 function SlideTransition(props) {
   return <Slide direction="up" {...props} />
 }
@@ -74,142 +74,72 @@ export default function DesignsPage() {
     const onHideConfirmDelete = () => dispatch(hideDeleteDesigns())
 
     const onCreate = () => {
-        const axiosConfig = {
-            timeout: 30000,
-            metadata: {'content-type': 'application/json'},
-            withCredentials: true
+        const command = new CreateDesign(config, abortControllerRef)
+
+        command.onCreateDesign = () => {
+            onHideErrorMessage()
         }
 
-        onHideErrorMessage()
+        command.onCreateDesignSuccess = (message) => {
+            onShowErrorMessage(message)
+            onHideCreateDialog()
+        }
 
-        axios.post(config.api_url + '/v1/designs/validate', design, axiosConfig)
-            .then(function (response) {
-                if (response.status == 200) {
-                     const result = response.data
-                     console.log(result)
-                     if (result.status == "ACCEPTED") {
-                        axios.post(config.api_url + '/v1/designs', design, axiosConfig)
-                            .then(function (response) {
-                                if (response.status == 202 || response.status == 201) {
-                                    onShowErrorMessage("Your request has been received. The designs will be updated shortly")
-                                    onHideCreateDialog()
-                                } else {
-                                    console.log("Can't create the design: status = " + response.status)
-                                    onShowErrorMessage("Can't create the design")
-                                }
-                            })
-                            .catch(function (error) {
-                                console.log("Can't create the design: " + error)
-                                onShowErrorMessage("Can't create the design")
-                            })
-                     } else {
-                        console.log("Can't create the design: status = " + result.status)
-                        onShowErrorMessage("Can't create the design")
-                     }
-                } else {
-                    console.log("Can't create the design: status = " + response.status)
-                    onShowErrorMessage("Can't create the design")
-                }
-            })
-            .catch(function (error) {
-                console.log("Can't create the design: " + error)
-                onShowErrorMessage("Can't create the design")
-            })
+        command.onCreateDesignFailure = (error) => {
+            onShowErrorMessage(error)
+        }
+
+        command.run(design)
     }
 
     const onUpdate = (e) => {
-        const axiosConfig = {
-            timeout: 30000,
-            metadata: {'content-type': 'application/json'},
-            withCredentials: true
-        }
-
-        if (selection.length != 1) {
-            console.log("Can't update the design: " + error)
-            onShowErrorMessage("Can't update the design")
+        if (selection.length == 0) {
+            console.log("No design selected")
             return;
         }
 
-        onHideErrorMessage()
+        const command = new UpdateDesign(config, abortControllerRef)
 
-        axios.post(config.api_url + '/v1/designs/validate', design, axiosConfig)
-            .then(function (response) {
-                if (response.status == 200) {
-                     const result = response.data
-                     console.log(result)
-                     if (result.status == "ACCEPTED") {
-                        axios.put(config.api_url + '/v1/designs/' + selection[0], design, axiosConfig)
-                            .then(function (response) {
-                                if (response.status == 202 || response.status == 200) {
-                                    onShowErrorMessage("Your request has been received. The design will be updated shortly")
-                                    onHideUpdateDialog()
-                                } else {
-                                    console.log("Can't update the design: status = " + response.status)
-                                    onShowErrorMessage("Can't update the design")
-                                }
-                            })
-                            .catch(function (error) {
-                                console.log("Can't update the design: " + error)
-                                onShowErrorMessage("Can't update the design")
-                            })
-                     } else {
-                        onShowErrorMessage("Can't update the design")
-                     }
-                } else {
-                    console.log("Can't update the design: status = " + response.status)
-                    onShowErrorMessage("Can't update the design")
-                }
-            })
-            .catch(function (error) {
-                console.log("Can't update the design: " + error)
-                onShowErrorMessage("Can't update the design")
-            })
+        command.onUpdateDesign = () => {
+            onHideErrorMessage()
+        }
+
+        command.onUpdateDesignSuccess = (message) => {
+            onShowErrorMessage(message)
+            onHideUpdateDialog()
+        }
+
+        command.onUpdateDesignFailure = (error) => {
+            onShowErrorMessage(error)
+        }
+
+        command.run(selection[0], design)
     }
 
     const onDelete = () => {
-        const axiosConfig = {
-            timeout: 30000,
-            withCredentials: true
+        if (selection.length == 0) {
+            console.log("No design selected")
+            return;
         }
 
-        const promises = selection
-           .map((uuid) => {
-                return axios.delete(config.api_url + '/v1/designs/' + uuid + '?draft=true', axiosConfig)
-            })
+        const command = new DeleteDesigns(config, abortControllerRef)
 
-        onHideConfirmDelete()
-        onHideErrorMessage()
+        command.onDeleteDesigns = () => {
+            onHideErrorMessage()
+        }
 
-        axios.all(promises)
-            .then(function (responses) {
-                const deletedUuids = responses
-                    .filter((res) => {
-                        return (res.status == 202 || res.status == 200)
-                    })
-                    .map((res) => {
-                        return res.config.url.substring(res.config.url.lastIndexOf("/") + 1)
-                    })
+        command.onDeleteDesignsSuccess = (message) => {
+            onChangeSelection([])
+            onShowErrorMessage(message)
+            onHideConfirmDelete()
+        }
 
-                const failedUuids = responses
-                    .filter((res) => {
-                        return (res.status != 202 && res.status != 200)
-                    })
-                    .map((res) => {
-                        return res.config.url.substring(res.config.url.lastIndexOf("/") + 1)
-                    })
+        command.onDeleteDesignsFailure = (error) => {
+            onChangeSelection([])
+            onShowErrorMessage(error)
+        }
 
-                onChangeSelection([])
-
-                if (failedUuids.length == 0) {
-                    onShowErrorMessage("Your request has been received. The designs will be updated shortly")
-                } else {
-                    onShowErrorMessage("Can't delete the designs")
-                }
-            })
-            .catch(function (error) {
-                console.log("Can't delete the designs: " + error)
-                onShowErrorMessage("Can't delete the designs")
-            })
+        command.run(selection)
     }
 
     const onModify = () => {

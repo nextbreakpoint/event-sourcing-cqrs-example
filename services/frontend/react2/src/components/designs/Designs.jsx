@@ -62,6 +62,7 @@ export default function Designs(props) {
         command.onLoadDesignsFailure = (error) => {
             onLoadDesignsFailure("Can't load designs")
             onShowErrorMessage("Can't load designs")
+            onLoadDesignsSuccess([], 0, 0)
         }
 
         command.run(revision, pagination)

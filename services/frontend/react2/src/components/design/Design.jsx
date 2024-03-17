@@ -65,6 +65,7 @@ export default function Design(props) {
         command.onLoadDesignFailure = (error) => {
             onLoadDesignFailure("Can't load design")
             onShowErrorMessage("Can't load design")
+            onLoadDesignSuccess(null, revision)
         }
 
         command.run(revision, props.uuid)

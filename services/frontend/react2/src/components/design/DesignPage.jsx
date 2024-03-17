@@ -83,13 +83,7 @@ export default function DesignPage({ uuid }) {
             onShowErrorMessage(error)
         }
 
-        const newDesign = {
-            manifest: design.manifest,
-            metadata: design.metadata,
-            script: design.script
-        }
-
-        command.run(newDesign)
+        command.run(uuid)
     }
 
     const onUpdate = (e) => {

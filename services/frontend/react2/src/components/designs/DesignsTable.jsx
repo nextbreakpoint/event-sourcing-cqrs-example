@@ -1,7 +1,11 @@
 import React from 'react'
 import { useRef, useState, useEffect, useCallback } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import LoadDesigns from '../../commands/loadDesigns'
+import DownloadDesign from '../../commands/downloadDesign'
+import UploadDesign from '../../commands/uploadDesign'
+import UpdateDesign from '../../commands/updateDesign'
+import SelectDesigns from '../../commands/selectDesigns'
+import UpdateDesigns from '../../commands/updateDesigns'
 import classNames from 'classnames'
 import FormData from 'form-data'
 
@@ -57,8 +61,6 @@ import {
     hideErrorMessage
 } from '../../actions/designs'
 
-import axios from 'axios'
-
 export default function EnhancedTable() {
     const abortControllerRef = useRef(new AbortController())
     const config = useSelector(getConfig)
@@ -77,17 +79,9 @@ export default function EnhancedTable() {
     const onShowErrorMessage = (error) => dispatch(showErrorMessage(error))
     const onHideErrorMessage = () => dispatch(hideErrorMessage())
     const onDesignSelected = (design) => dispatch(setSelectedDesign(design))
-    const onLoadDesigns = () => dispatch(loadDesigns())
-    const onLoadDesignsSuccess = (designs, total, revision) => dispatch(loadDesignsSuccess(designs, total, revision))
     const onChangeSorting = (sorting) => dispatch(setDesignsSorting(sorting))
     const onChangeSelection = (selection) => dispatch(setDesignsSelection(selection))
     const onChangePagination = (pagination) => dispatch(setDesignsPagination(pagination))
-
-//   onModify = () => {
-//       if (selection[0]) {
-//           window.location = config.web_url + "/admin/designs/" + selection[0] + ".html"
-//       }
-//   }
 
     const onCreate = () => {
         if (selection.length == 0) {
@@ -116,6 +110,8 @@ export default function EnhancedTable() {
 
     const onModify = () => {
         if (selection.length == 1) {
+//           window.location = config.web_url + "/admin/designs/" + selection[0] + ".html"
+
             const selectedDesign = designs.find((design) => design.uuid == selection[0])
             if (selectedDesign) {
                 onDesignSelected(JSON.parse(selectedDesign.json));
@@ -130,274 +126,113 @@ export default function EnhancedTable() {
     }
 
     const onUpload = (e) => {
-        const formData = new FormData()
+        const command = new UploadDesign(config, abortControllerRef)
 
-        formData.append('file', e.target.files[0])
-
-        const axiosConfig = {
-            timeout: 30000,
-            metadata: {'content-type': 'multipart/form-data'},
-            withCredentials: true
+        command.onUploadDesign = () => {
+            onHideErrorMessage()
         }
 
-        onHideErrorMessage()
+        command.onUploadDesignSuccess = (design) => {
+            onDesignSelected(design)
+            onChangeSelection([])
+            onShowCreateDialog()
+        }
 
-        axios.post(config.api_url + '/v1/designs/upload', formData, axiosConfig)
-            .then(function (response) {
-                if (response.status == 200) {
-                    if (response.data.errors.length == 0) {
-                        const design = {
-                            manifest: response.data.manifest,
-                            metadata: response.data.metadata,
-                            script: response.data.script
-                        }
-                        onDesignSelected(design)
-                        onChangeSelection([])
-                        onShowCreateDialog()
-                    } else {
-                        console.log("Can't upload the file: errors = " + response.data.errors)
-                        onShowErrorMessage("Can't upload the file")
-                    }
-                } else {
-                    console.log("Can't upload the file: status = " + response.status)
-                    onShowErrorMessage("Can't upload the file")
-                }
-            })
-            .catch(function (error) {
-                console.log("Can't upload the file: " + error)
-                onShowErrorMessage("Can't upload the file")
-            })
+        command.onUploadDesignFailure = (error) => {
+            onShowErrorMessage(error)
+        }
+
+        command.run(e.target.files[0])
     }
 
     const onDownload = (e) => {
-        if (selection[0]) {
-            const axiosConfig = {
-                timeout: 30000,
-                metadata: {'content-type': 'application/json'},
-                withCredentials: true
+        if (selection.length > 0) {
+            const command = new DownloadDesign(config, abortControllerRef)
+
+            command.onDownloadDesign = () => {
+                onHideErrorMessage()
             }
 
-            onHideErrorMessage()
+            command.onDownloadDesignSuccess = (message) => {
+                onShowErrorMessage(message)
+            }
 
-            const uuid = selection[0]
+            command.onDownloadDesignFailure = (error) => {
+                onShowErrorMessage(error)
+            }
 
-            axios.get(config.api_url + '/v1/designs/' + uuid + '?draft=true', axiosConfig)
-                .then(function (response) {
-                    if (response.status == 200) {
-                        console.log("Design loaded")
-
-                        const design = JSON.parse(response.data.json)
-
-                        const axiosConfig = {
-                            timeout: 30000,
-                            metadata: {'content-type': 'application/json'},
-                            withCredentials: true,
-                            responseType: "blob"
-                        }
-
-                        axios.post(config.api_url + '/v1/designs/download', design, axiosConfig)
-                            .then(function (response) {
-                                if (response.status == 200) {
-                                    const url = window.URL.createObjectURL(response.data)
-                                    const a = document.createElement('a')
-                                    a.href = url
-                                    a.download = uuid + '.zip'
-                                    a.click()
-                                    onShowErrorMessage("The design has been downloaded")
-                                } else {
-                                    console.log("Can't download the design: status = " + response.status)
-                                    onShowErrorMessage("Can't download the design")
-                                }
-                            })
-                            .catch(function (error) {
-                                console.log("Can't download the design: " + error)
-                                onShowErrorMessage("Can't download the design")
-                            })
-                    } else {
-                        console.log("Can't load design: status = " + content.status)
-                        onShowErrorMessage("Can't load design")
-                    }
-                })
-                .catch(function (error) {
-                    console.log("Can't load design: " + error)
-                    onShowErrorMessage("Can't load design")
-                })
+            command.run(selection[0])
         }
     }
 
     const onPublish = () => {
         if (selection.length > 0) {
-            const axiosConfig = {
-                timeout: 30000,
-                withCredentials: true
+            const selectCommand = new SelectDesigns(config, abortControllerRef)
+
+            selectCommand.onSelectDesigns = () => {
+                onHideErrorMessage()
             }
 
-            const promises = selection
-                .map((uuid) => {
-                    return axios.get(config.api_url + '/v1/designs/' + uuid + "?draft=true", axiosConfig)
-                })
+            selectCommand.onSelectDesignsSuccess = (documents) => {
+                const command = new UpdateDesigns(config, abortControllerRef)
 
-            axios.all(promises)
-                .then(function (responses) {
-                    const designs = responses
-                        .filter((res) => {
-                            return res.status == 200
-                        })
-                        .map((res) => {
-                            return res.data
-                        })
+                command.onUpdateDesigns = () => {
+                    onHideErrorMessage()
+                }
 
-                        updateDesigns(designs, (design) => design.published = true);
-                })
-                .catch(function (error) {
-                    console.log("Can't publish the designs: " + error)
-                    onShowErrorMessage("Can't publish the designs")
-                })
+                command.onUpdateDesignsSuccess = (message) => {
+                    onShowErrorMessage(message)
+                    onChangeSelection([])
+                }
+
+                command.onUpdateDesignsFailure = (error) => {
+                    onShowErrorMessage(error)
+                }
+
+                command.run(documents, (design) => design.published = true)
+            }
+
+            selectCommand.onSelectDesignsFailure = (error) => {
+                onShowErrorMessage(error)
+            }
+
+            selectCommand.run(selection)
         }
     }
 
     const onUnpublish = () => {
         if (selection.length > 0) {
-            const axiosConfig = {
-                timeout: 30000,
-                withCredentials: true
+            const selectCommand = new SelectDesigns(config, abortControllerRef)
+
+            selectCommand.onSelectDesigns = () => {
+                onHideErrorMessage()
             }
 
-            const promises = selection
-                .map((uuid) => {
-                    return axios.get(config.api_url + '/v1/designs/' + uuid + "?draft=true", axiosConfig)
-                })
+            selectCommand.onSelectDesignsSuccess = (documents) => {
+                const command = new UpdateDesigns(config, abortControllerRef)
 
-            axios.all(promises)
-                .then(function (responses) {
-                    const designs = responses
-                        .filter((res) => {
-                            return res.status == 200
-                        })
-                        .map((res) => {
-                            return res.data
-                        })
-
-                        updateDesigns(designs, (design) => design.published = false);
-                })
-                .catch(function (error) {
-                    console.log("Can't unpublish the designs: " + error)
-                    onShowErrorMessage("Can't unpublish the designs")
-                })
-        }
-    }
-
-    const updateDesigns = (designs, callback) => {
-        if (designs.length > 0) {
-            const axiosConfig = {
-                timeout: 30000,
-                withCredentials: true
-            }
-
-            onHideErrorMessage()
-
-            const promises = selection
-                .map((uuid) => {
-                    return designs.find((design) => design.uuid == uuid)
-                })
-                .filter((selectedDesign) => {
-                    return selectedDesign !== undefined
-                })
-                .map((selectedDesign) => {
-                    const design = JSON.parse(selectedDesign.json)
-                    callback(design)
-                    return axios.put(config.api_url + '/v1/designs/' + selectedDesign.uuid, design, axiosConfig)
-                })
-
-            axios.all(promises)
-                .then(function (responses) {
-                    const modifiedUuids = responses
-                        .filter((res) => {
-                            return (res.status == 202 || res.status == 200)
-                        })
-                        .map((res) => {
-                            return res.config.url.substring(res.config.url.lastIndexOf("/") + 1)
-                        })
-
-                    const failedUuids = responses
-                        .filter((res) => {
-                            return (res.status != 202 && res.status != 200)
-                        })
-                        .map((res) => {
-                            return res.config.url.substring(res.config.url.lastIndexOf("/") + 1)
-                        })
-
-                    onChangeSelection([])
-
-                    if (failedUuids.length == 0) {
-                        onShowErrorMessage("Your request has been received. The designs will be updated shortly")
-                    } else {
-                        console.log("Failed to unpublish designs: " + JSON.stringify(failedUuids))
-                        onShowErrorMessage("Can't unpublish the designs")
-                    }
-                })
-                .catch(function (error) {
-                    console.log("Can't unpublish the designs: " + error)
-                    onShowErrorMessage("Can't unpublish the designs")
-                })
-        }
-    }
-
-    const loadDesigns = (revision, pagination) => {
-        const axiosConfig = {
-            timeout: 30000,
-            withCredentials: true
-        }
-
-        onLoadDesigns()
-
-        console.log("page " + pagination.page)
-
-        function computePercentage(design, levels) {
-            const total = levels.map(i => design.tiles[i].total)
-                .reduce((previousValue, currentValue) => previousValue + currentValue, 0)
-
-            const completed = levels.map(i => design.tiles[i].completed)
-                .reduce((previousValue, currentValue) => previousValue + currentValue, 0)
-
-            const percentage = Math.round((completed * 100.0) / total)
-
-            return percentage
-        }
-
-        axios.get(config.api_url + '/v1/designs?draft=true&from=' + (pagination.page * pagination.pageSize) + '&size=' + pagination.pageSize, axiosConfig)
-            .then(function (response) {
-                if (response.status == 200) {
-                    console.log("Designs loaded")
-                    const designs = response.data.designs
-                        .map((design) => {
-                            return {
-                                uuid: design.uuid,
-                                checksum: design.checksum,
-                                revision: design.revision,
-                                levels: design.levels,
-                                created: design.created,
-                                updated: design.updated,
-                                draft: design.levels != 8,
-                                published: design.published,
-                                percentage: computePercentage(design, [0,1,2,3,4,5,6,7]),
-                                preview_percentage: computePercentage(design, [0,1,2]),
-                                json: design.json
-                            }
-                        })
-                    const total = response.data.total
-                    onLoadDesignsSuccess(designs, total, revision)
-                } else {
-                    console.log("Can't load designs: status = " + content.status)
-                    onShowErrorMessage("Can't load designs")
-                    onLoadDesignsSuccess([], 0, 0)
+                command.onUpdateDesigns = () => {
+                    onHideErrorMessage()
                 }
-            })
-            .catch(function (error) {
-                console.log("Can't load designs " + error)
-                onShowErrorMessage("Can't load designs")
-                onLoadDesignsSuccess([], 0, 0)
-            })
+
+                command.onUpdateDesignsSuccess = (message) => {
+                    onShowErrorMessage(message)
+                    onChangeSelection([])
+                }
+
+                command.onUpdateDesignsFailure = (error) => {
+                    onShowErrorMessage(error)
+                }
+
+                command.run(documents, (design) => design.published = false)
+            }
+
+            selectCommand.onSelectDesignsFailure = (error) => {
+                onShowErrorMessage(error)
+            }
+
+            selectCommand.run(selection)
+        }
     }
 
 //   const [rowCountState, setRowCountState] = React.useState(total)
@@ -594,8 +429,6 @@ export default function EnhancedTable() {
             paginationModel={pagination}
             onPaginationModelChange={(pagination) => {
               onChangePagination(pagination)
-
-              loadDesigns(revision, pagination)
             }}
             pageSizeOptions={[5, 10, 20]}
             sx={{

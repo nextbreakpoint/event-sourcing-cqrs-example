@@ -14,6 +14,8 @@ const LoadDesigns = class {
     run(revision, pagination) {
         const self = this
 
+        console.log("page " + pagination.page)
+
         const date = new Date()
 
         const axiosConfig = {

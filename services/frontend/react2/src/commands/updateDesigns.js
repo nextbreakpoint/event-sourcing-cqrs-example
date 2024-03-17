@@ -1,36 +1,41 @@
 import axios from 'axios'
 
-const DeleteDesigns = class {
+const UpdateDesigns = class {
     constructor(appConfig, abortControllerRef) {
         this.appConfig = appConfig
         this.abortControllerRef = abortControllerRef
     }
 
-    onDeleteDesigns = () => {}
-    onDeleteDesignsSuccess = (message) => {}
-    onDeleteDesignsFailure = (error) => {}
+    onUpdateDesigns = () => {}
+    onUpdateDesignsSuccess = (message) => {}
+    onUpdateDesignsFailure = (error) => {}
 
-    run(selection) {
+    run(documents, callback) {
         const self = this
 
         const axiosConfig = {
             timeout: 30000,
+            metadata: {'content-type': 'application/json'},
             withCredentials: true,
             signal: self.abortControllerRef.current.signal
         }
 
-        console.log("Deleting designs...")
+        console.log("Updating designs...")
 
-        self.onDeleteDesigns()
+        self.onUpdateDesigns()
 
-        const promises = selection
-           .map((uuid) => {
-                return axios.delete(self.appConfig.api_url + '/v1/designs/' + uuid + '?draft=true', axiosConfig)
+        const promises = documents
+            .filter((document) => {
+                return document !== undefined
+            })
+            .map((document) => {
+                callback(document.design)
+                return axios.put(self.appConfig.api_url + '/v1/designs/' + document.uuid, document.design, axiosConfig)
             })
 
         axios.all(promises)
             .then(function (responses) {
-                const deletedUuids = responses
+                const modifiedUuids = responses
                     .filter((res) => {
                         return (res.status == 202 || res.status == 200)
                     })
@@ -47,16 +52,17 @@ const DeleteDesigns = class {
                     })
 
                 if (failedUuids.length == 0) {
-                    self.onDeleteDesignsSuccess("Your request has been received. The designs will be deleted shortly")
+                    self.onUpdateDesignsSuccess("Your request has been received. The designs will be updated shortly")
                 } else {
-                    self.onDeleteDesignsFailure("Can't delete the designs")
+                    console.log("Failed to update designs: " + JSON.stringify(failedUuids))
+                    self.onUpdateDesignsFailure("Can't update the designs")
                 }
             })
             .catch(function (error) {
-                console.log("Can't delete the designs: " + error)
-                self.onDeleteDesignsFailure("Can't delete the designs")
+                console.log("Can't update the designs: " + error)
+                self.onUpdateDesignsFailure("Can't update the designs")
             })
     }
 }
 
-export default DeleteDesigns
+export default UpdateDesigns

@@ -10,7 +10,7 @@ const DownloadDesign = class {
     onDownloadDesignSuccess = (message) => {}
     onDownloadDesignFailure = (error) => {}
 
-    run(design) {
+    run(uuid) {
         const self = this
 
         const axiosConfig = {
@@ -20,23 +20,24 @@ const DownloadDesign = class {
             signal: self.abortControllerRef.current.signal
         }
 
-        console.log("Downloading design...")
+        console.log("Preparing design for download...")
 
         self.onDownloadDesign()
 
-        axios.post(self.appConfig.api_url + '/v1/designs/validate', design, axiosConfig)
+        axios.get(config.api_url + '/v1/designs/' + uuid + '?draft=true', axiosConfig)
             .then(function (response) {
                 if (response.status == 200) {
                      const result = response.data
                      if (result.status == "ACCEPTED") {
-                        const axiosConfigUpload = {
+                        const design = JSON.parse(response.data.json)
+                        const axiosConfigDownload = {
                             timeout: 30000,
                             metadata: {'content-type': 'application/json'},
                             withCredentials: true,
                             responseType: "blob",
                             signal: self.abortControllerRef.current.signal
                         }
-                        axios.post(self.appConfig.api_url + '/v1/designs/download', design, axiosConfigUpload)
+                        axios.post(self.appConfig.api_url + '/v1/designs/download', design, axiosConfigDownload)
                             .then(function (response) {
                                 if (response.status == 200) {
                                     const url = window.URL.createObjectURL(response.data);
@@ -44,8 +45,8 @@ const DownloadDesign = class {
                                     a.href = url;
                                     a.download = uuid + '.zip';
                                     a.click();
-                                    console.log("Design downloaded")
-                                    self.onDownloadDesignSuccess("The design has been downloaded")
+                                    console.log("Design is ready for download")
+                                    self.onDownloadDesignSuccess("The design will be downloaded shortly")
                                 } else {
                                     console.log("Can't download the design: status = " + response.status)
                                     self.onDownloadDesignFailure("Can't download the design")

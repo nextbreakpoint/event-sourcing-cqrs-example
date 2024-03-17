@@ -91,10 +91,16 @@ export default function EnhancedTable() {
 
     const onCreate = () => {
         if (selection.length == 0) {
-            const default_script = "fractal {\n\torbit [-2.0 - 2.0i,+2.0 + 2.0i] [x,n] {\n\t\tloop [0, 200] (mod2(x) > 40) {\n\t\t\tx = x * x + w;\n\t\t}\n\t}\n\tcolor [#FF000000] {\n\t\tpalette gradient {\n\t\t\t[#FFFFFFFF > #FF000000, 100];\n\t\t\t[#FF000000 > #FFFFFFFF, 100];\n\t\t}\n\t\tinit {\n\t\t\tm = 100 * (1 + sin(mod(x) * 0.2 / pi));\n\t\t}\n\t\trule (n > 0) [1] {\n\t\t\tgradient[m - 1]\n\t\t}\n\t}\n}\n"
-            const default_metadata = "{\n\t\"translation\":\n\t{\n\t\t\"x\":0.0,\n\t\t\"y\":0.0,\n\t\t\"z\":1.0,\n\t\t\"w\":0.0\n\t},\n\t\"rotation\":\n\t{\n\t\t\"x\":0.0,\n\t\t\"y\":0.0,\n\t\t\"z\":0.0,\n\t\t\"w\":0.0\n\t},\n\t\"scale\":\n\t{\n\t\t\"x\":1.0,\n\t\t\"y\":1.0,\n\t\t\"z\":1.0,\n\t\t\"w\":1.0\n\t},\n\t\"point\":\n\t{\n\t\t\"x\":0.0,\n\t\t\"y\":0.0\n\t},\n\t\"julia\":false,\n\t\"options\":\n\t{\n\t\t\"showPreview\":false,\n\t\t\"showTraps\":false,\n\t\t\"showOrbit\":false,\n\t\t\"showPoint\":false,\n\t\t\"previewOrigin\":\n\t\t{\n\t\t\t\"x\":0.0,\n\t\t\t\"y\":0.0\n\t\t},\n\t\t\"previewSize\":\n\t\t{\n\t\t\t\"x\":0.25,\n\t\t\t\"y\":0.25\n\t\t}\n\t}\n}"
-            const default_manifest = "{\"pluginId\":\"Mandelbrot\"}"
-            const design = {manifest: default_manifest, metadata: default_metadata, script: default_script}
+            const script = "fractal {\n\torbit [-2.0 - 2.0i,+2.0 + 2.0i] [x,n] {\n\t\tloop [0, 200] (mod2(x) > 40) {\n\t\t\tx = x * x + w;\n\t\t}\n\t}\n\tcolor [#FF000000] {\n\t\tpalette gradient {\n\t\t\t[#FFFFFFFF > #FF000000, 100];\n\t\t\t[#FF000000 > #FFFFFFFF, 100];\n\t\t}\n\t\tinit {\n\t\t\tm = 100 * (1 + sin(mod(x) * 0.2 / pi));\n\t\t}\n\t\trule (n > 0) [1] {\n\t\t\tgradient[m - 1]\n\t\t}\n\t}\n}\n"
+            const metadata = "{\n\t\"translation\":\n\t{\n\t\t\"x\":0.0,\n\t\t\"y\":0.0,\n\t\t\"z\":1.0,\n\t\t\"w\":0.0\n\t},\n\t\"rotation\":\n\t{\n\t\t\"x\":0.0,\n\t\t\"y\":0.0,\n\t\t\"z\":0.0,\n\t\t\"w\":0.0\n\t},\n\t\"scale\":\n\t{\n\t\t\"x\":1.0,\n\t\t\"y\":1.0,\n\t\t\"z\":1.0,\n\t\t\"w\":1.0\n\t},\n\t\"point\":\n\t{\n\t\t\"x\":0.0,\n\t\t\"y\":0.0\n\t},\n\t\"julia\":false,\n\t\"options\":\n\t{\n\t\t\"showPreview\":false,\n\t\t\"showTraps\":false,\n\t\t\"showOrbit\":false,\n\t\t\"showPoint\":false,\n\t\t\"previewOrigin\":\n\t\t{\n\t\t\t\"x\":0.0,\n\t\t\t\"y\":0.0\n\t\t},\n\t\t\"previewSize\":\n\t\t{\n\t\t\t\"x\":0.25,\n\t\t\t\"y\":0.25\n\t\t}\n\t}\n}"
+            const manifest = "{\"pluginId\":\"Mandelbrot\"}"
+
+            const design = {
+                manifest: manifest,
+                metadata: metadata,
+                script: script
+            }
+
             onDesignSelected(design);
         }
 
@@ -140,7 +146,11 @@ export default function EnhancedTable() {
             .then(function (response) {
                 if (response.status == 200) {
                     if (response.data.errors.length == 0) {
-                        const design = { manifest: response.data.manifest, metadata: response.data.metadata, script: response.data.script }
+                        const design = {
+                            manifest: response.data.manifest,
+                            metadata: response.data.metadata,
+                            script: response.data.script
+                        }
                         onDesignSelected(design)
                         onChangeSelection([])
                         onShowCreateDialog()
@@ -161,8 +171,6 @@ export default function EnhancedTable() {
 
     const onDownload = (e) => {
         if (selection[0]) {
-            const uuid = selection[0]
-
             const axiosConfig = {
                 timeout: 30000,
                 metadata: {'content-type': 'application/json'},
@@ -170,6 +178,8 @@ export default function EnhancedTable() {
             }
 
             onHideErrorMessage()
+
+            const uuid = selection[0]
 
             axios.get(config.api_url + '/v1/designs/' + uuid + '?draft=true', axiosConfig)
                 .then(function (response) {
@@ -323,7 +333,6 @@ export default function EnhancedTable() {
                         onShowErrorMessage("Your request has been received. The designs will be updated shortly")
                     } else {
                         console.log("Failed to unpublish designs: " + JSON.stringify(failedUuids))
-
                         onShowErrorMessage("Can't unpublish the designs")
                     }
                 })
@@ -360,19 +369,34 @@ export default function EnhancedTable() {
             .then(function (response) {
                 if (response.status == 200) {
                     console.log("Designs loaded")
-                    const designs = response.data.designs.map((design) => { return { uuid: design.uuid, checksum: design.checksum, revision: design.revision, levels: design.levels, created: design.created, updated: design.updated, draft: design.levels != 8, published: design.published, percentage: computePercentage(design, [0,1,2,3,4,5,6,7]), preview_percentage: computePercentage(design, [0,1,2]), json: design.json }})
+                    const designs = response.data.designs
+                        .map((design) => {
+                            return {
+                                uuid: design.uuid,
+                                checksum: design.checksum,
+                                revision: design.revision,
+                                levels: design.levels,
+                                created: design.created,
+                                updated: design.updated,
+                                draft: design.levels != 8,
+                                published: design.published,
+                                percentage: computePercentage(design, [0,1,2,3,4,5,6,7]),
+                                preview_percentage: computePercentage(design, [0,1,2]),
+                                json: design.json
+                            }
+                        })
                     const total = response.data.total
                     onLoadDesignsSuccess(designs, total, revision)
                 } else {
                     console.log("Can't load designs: status = " + content.status)
-                    onLoadDesignsSuccess([], 0, 0)
                     onShowErrorMessage("Can't load designs")
+                    onLoadDesignsSuccess([], 0, 0)
                 }
             })
             .catch(function (error) {
                 console.log("Can't load designs " + error)
-                onLoadDesignsSuccess([], 0, 0)
                 onShowErrorMessage("Can't load designs")
+                onLoadDesignsSuccess([], 0, 0)
             })
     }
 
@@ -570,6 +594,7 @@ export default function EnhancedTable() {
             paginationModel={pagination}
             onPaginationModelChange={(pagination) => {
               onChangePagination(pagination)
+
               loadDesigns(revision, pagination)
             }}
             pageSizeOptions={[5, 10, 20]}

@@ -1,7 +1,7 @@
 import Cookies from 'universal-cookie'
 import axios from 'axios'
 
-const Account = class {
+const LoadAccount = class {
     constructor(appConfig, abortControllerRef) {
         this.appConfig = appConfig
         this.abortControllerRef = abortControllerRef
@@ -11,7 +11,7 @@ const Account = class {
     onLoadAccountSuccess = (account) => {}
     onLoadAccountFailure = (error) => {}
 
-    load() {
+    run() {
         const self = this
 
         const cookies = new Cookies()
@@ -50,4 +50,4 @@ const Account = class {
     }
 }
 
-export default Account
+export default LoadAccount

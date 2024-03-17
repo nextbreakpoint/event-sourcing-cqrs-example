@@ -1,7 +1,7 @@
 import axios from 'axios'
 import computePercentage from '../modules/percentage'
 
-const Design = class {
+const LoadDesign = class {
     constructor(appConfig, abortControllerRef) {
         this.appConfig = appConfig
         this.abortControllerRef = abortControllerRef
@@ -11,7 +11,7 @@ const Design = class {
     onLoadDesignSuccess = (design, revision) => {}
     onLoadDesignFailure = (error) => {}
 
-    load(revision, uuid) {
+    run(revision, uuid) {
         const self = this
 
         const date = new Date()
@@ -53,4 +53,4 @@ const Design = class {
     }
 }
 
-export default Design
+export default LoadDesign

@@ -1,7 +1,7 @@
 import { useRef, useEffect, useCallback } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 
-import Preview from '../commands/preview'
+import RenderPreview from '../commands/renderPreview'
 
 import {
     getConfig
@@ -13,14 +13,13 @@ export default function usePreview({ design, onLoadPreview, onLoadPreviewSuccess
     const dispatch = useDispatch()
 
     useEffect(() => {
-        const preview = new Preview(config, abortControllerRef)
-        preview.onLoadPreview = onLoadPreview
-        preview.onLoadPreviewSuccess = onLoadPreviewSuccess
-        preview.onLoadPreviewFailure = onLoadPreviewFailure
-
         const timeout = setTimeout(() => {
             abortControllerRef.current = new AbortController()
-            preview.load(design)
+            const command = new RenderPreview(config, abortControllerRef)
+            command.onLoadPreview = onLoadPreview
+            command.onLoadPreviewSuccess = onLoadPreviewSuccess
+            command.onLoadPreviewFailure = onLoadPreviewFailure
+            command.run(design)
         }, 2000)
 
         return () => {

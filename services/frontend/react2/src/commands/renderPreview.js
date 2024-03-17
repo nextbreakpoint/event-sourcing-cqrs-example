@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const Preview = class {
+const RenderPreview = class {
     constructor(appConfig, abortControllerRef) {
         this.appConfig = appConfig
         this.abortControllerRef = abortControllerRef
@@ -10,7 +10,7 @@ const Preview = class {
     onLoadPreviewSuccess = (checksum) => {}
     onLoadPreviewFailure = (error) => {}
 
-    load(design) {
+    run(design) {
         const self = this
 
         const date = new Date()
@@ -65,4 +65,4 @@ const Preview = class {
     }
 }
 
-export default Preview
+export default RenderPreview

@@ -1,7 +1,7 @@
 import React from 'react'
 import { useRef, useEffect, useCallback } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import DesignsCommand from '../../commands/designs'
+import LoadDesigns from '../../commands/loadDesigns'
 import useDesigns from '../../hooks/useDesigns'
 
 import Grid from '@mui/material/Grid'
@@ -51,20 +51,20 @@ export default function Designs(props) {
     const onLoadDesignsFailure = (error) => dispatch(loadDesignsFailure(error))
 
     const doLoadDesigns = useCallback((revision) => {
-        const designsCommand = new DesignsCommand(config, abortControllerRef)
+        const command = new LoadDesigns(config, abortControllerRef)
 
-        designsCommand.onLoadDesigns = onLoadDesigns
+        command.onLoadDesigns = onLoadDesigns
 
-        designsCommand.onLoadDesignsSuccess = (designs, total, revision) => {
+        command.onLoadDesignsSuccess = (designs, total, revision) => {
             onLoadDesignsSuccess(designs, total, revision)
         }
 
-        designsCommand.onLoadDesignsFailure = (error) => {
+        command.onLoadDesignsFailure = (error) => {
             onLoadDesignsFailure("Can't load designs")
             onShowErrorMessage("Can't load designs")
         }
 
-        designsCommand.load(revision, pagination)
+        command.run(revision, pagination)
     }, [config, pagination, dispatch])
 
     useDesigns({ doLoadDesigns: doLoadDesigns })

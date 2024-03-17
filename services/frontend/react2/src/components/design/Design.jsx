@@ -1,7 +1,7 @@
 import React from 'react'
 import { useRef, useEffect, useCallback } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import DesignCommand from '../../commands/design'
+import LoadDesign from '../../commands/loadDesign'
 import useDesign from '../../hooks/useDesign'
 
 import Grid from '@mui/material/Grid'
@@ -21,7 +21,6 @@ import {
 import {
     getDesign,
     getDesignStatus,
-    getRevision,
     loadDesign,
     loadDesignSuccess,
     loadDesignFailure,
@@ -37,7 +36,6 @@ export default function Design(props) {
     const account = useSelector(getAccount)
     const design = useSelector(getDesign)
     const status = useSelector(getDesignStatus)
-    const revision = useSelector(getRevision)
     const errorMessage = useSelector(getErrorMessage)
     const showErrorMessage = useSelector(getShowErrorMessage)
     const dispatch = useDispatch()
@@ -46,29 +44,30 @@ export default function Design(props) {
     const onHideErrorMessage = () => dispatch(hideErrorMessage())
     const onLoadDesign = () => dispatch(loadDesign())
     const onLoadDesignSuccess = (newDesign, newRevision) => {
-        console.log("Design changed?")
         if (design == undefined || newDesign.checksum != design.checksum || newDesign.revision > design.revision) {
-            console.log("Design changed")
+            console.log("Design has changed")
             dispatch(loadDesignSuccess(newDesign, newRevision))
+        } else {
+            console.log("Design hasn't changed")
         }
     }
     const onLoadDesignFailure = (error) => dispatch(loadDesignFailure(error))
 
     const doLoadDesign = useCallback((revision) => {
-        const designCommand = new DesignCommand(config, abortControllerRef)
+        const command = new LoadDesign(config, abortControllerRef)
 
-        designCommand.onLoadDesigns = onLoadDesign
+        command.onLoadDesigns = onLoadDesign
 
-        designCommand.onLoadDesignSuccess = (design, revision) => {
+        command.onLoadDesignSuccess = (design, revision) => {
             onLoadDesignSuccess(design, revision)
         }
 
-        designCommand.onLoadDesignFailure = (error) => {
+        command.onLoadDesignFailure = (error) => {
             onLoadDesignFailure("Can't load design")
             onShowErrorMessage("Can't load design")
         }
 
-        designCommand.load(revision, props.uuid)
+        command.run(revision, props.uuid)
     }, [config, dispatch, props.uuid])
 
     useDesign({ uuid: props.uuid, doLoadDesign: doLoadDesign })

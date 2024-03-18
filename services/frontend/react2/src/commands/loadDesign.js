@@ -39,7 +39,7 @@ const LoadDesign = class {
                     design.published = design.published
                     design.percentage = computePercentage(design, [0,1,2,3,4,5,6,7])
                     design.preview_percentage = computePercentage(design, [0,1,2])
-                    console.log(design)
+//                    console.log(design)
                     self.onLoadDesignSuccess(design, design.revision)
                 } else {
                     console.log("Can't load design: status = " + response.status)

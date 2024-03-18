@@ -25,7 +25,7 @@ export default function useDesign({ uuid, doLoadDesign }) {
                 }
 
                 source.addEventListener("update",  function(event) {
-                    console.log(event.data)
+//                    console.log(event.data)
                     doLoadDesign(revision)
                 }, false)
 

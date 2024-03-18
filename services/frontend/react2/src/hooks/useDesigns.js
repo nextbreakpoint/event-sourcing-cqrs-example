@@ -25,7 +25,7 @@ export default function useDesigns({ doLoadDesigns }) {
                 }
 
                 source.addEventListener("update",  function(event) {
-                    console.log(event.data)
+//                    console.log(event.data)
                     doLoadDesigns(revision)
                 }, false)
 

@@ -37,21 +37,21 @@ export default function Design(props) {
     const design = useSelector(getDesign)
     const status = useSelector(getDesignStatus)
     const errorMessage = useSelector(getErrorMessage)
-    const showErrorMessage = useSelector(getShowErrorMessage)
+    const isShowErrorMessage = useSelector(getShowErrorMessage)
     const dispatch = useDispatch()
 
-    const onShowErrorMessage = (error) => dispatch(showErrorMessage(error))
-    const onHideErrorMessage = () => dispatch(hideErrorMessage())
-    const onLoadDesign = () => dispatch(loadDesign())
-    const onLoadDesignSuccess = (newDesign, newRevision) => {
+    const onShowErrorMessage = useCallback((error) => dispatch(showErrorMessage(error)), [dispatch])
+    const onHideErrorMessage = useCallback(() => dispatch(hideErrorMessage()), [dispatch])
+    const onLoadDesign = useCallback(() => dispatch(loadDesign()), [dispatch])
+    const onLoadDesignSuccess = useCallback((newDesign, newRevision) => {
         if (design == undefined || newDesign.checksum != design.checksum || newDesign.revision > design.revision) {
             console.log("Design has changed")
             dispatch(loadDesignSuccess(newDesign, newRevision))
         } else {
             console.log("Design hasn't changed")
         }
-    }
-    const onLoadDesignFailure = (error) => dispatch(loadDesignFailure(error))
+    }, [design, dispatch])
+    const onLoadDesignFailure = useCallback((error) => dispatch(loadDesignFailure(error)), [dispatch])
 
     const doLoadDesign = useCallback((revision) => {
         const command = new LoadDesign(config, abortControllerRef)
@@ -63,13 +63,12 @@ export default function Design(props) {
         }
 
         command.onLoadDesignFailure = (error) => {
-            onLoadDesignFailure("Can't load design")
-            onShowErrorMessage("Can't load design")
-            onLoadDesignSuccess(null, revision)
+            onLoadDesignFailure(error)
+            onShowErrorMessage(error)
         }
 
         command.run(revision, props.uuid)
-    }, [config, dispatch, props.uuid])
+    }, [config, props.uuid, onShowErrorMessage, onLoadDesign, onLoadDesignSuccess, onLoadDesignFailure])
 
     useDesign({ uuid: props.uuid, doLoadDesign: doLoadDesign })
 
@@ -87,7 +86,7 @@ export default function Design(props) {
                     <Footer/>
                 </Grid>
             </Grid>
-            <ErrorPopup showErrorMessage={showErrorMessage} errorMessage={errorMessage} onPopupClose={onHideErrorMessage}/>
+            <ErrorPopup showErrorMessage={isShowErrorMessage} errorMessage={errorMessage} onPopupClose={onHideErrorMessage}/>
         </React.Fragment>
     )
 }

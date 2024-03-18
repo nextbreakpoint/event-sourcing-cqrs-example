@@ -42,7 +42,7 @@ const LoadDesign = class {
                     console.log(design)
                     self.onLoadDesignSuccess(design, design.revision)
                 } else {
-                    console.log("Can't load design: status = " + content.status)
+                    console.log("Can't load design: status = " + response.status)
                     self.onLoadDesignFailure("Can't load design")
                 }
             })

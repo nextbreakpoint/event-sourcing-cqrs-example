@@ -48,12 +48,12 @@ const LoadDesigns = class {
                     const total = response.data.total
                     self.onLoadDesignsSuccess(designs, total, revision)
                 } else {
-                    console.log("Can't load designs: status = " + content.status)
+                    console.log("Can't load designs: status = " + response.status)
                     self.onLoadDesignsFailure("Can't load designs")
                 }
             })
             .catch(function (error) {
-                console.log("Can't load designs " + error)
+                console.log("Can't load designs: " + error)
                 self.onLoadDesignsFailure("Can't load designs")
             })
     }

@@ -61,7 +61,7 @@ import {
     hideErrorMessage
 } from '../../actions/designs'
 
-export default function EnhancedTable() {
+const TableToolbar = () => {
     const abortControllerRef = useRef(new AbortController())
     const config = useSelector(getConfig)
     const account = useSelector(getAccount)
@@ -73,17 +73,17 @@ export default function EnhancedTable() {
     const pagination = useSelector(getPagination)
     const dispatch = useDispatch()
 
-    const onShowDeleteDialog = () => dispatch(showDeleteDesigns())
-    const onShowCreateDialog = () => dispatch(showCreateDesign())
-    const onShowUpdateDialog = () => dispatch(showUpdateDesign())
-    const onShowErrorMessage = (error) => dispatch(showErrorMessage(error))
-    const onHideErrorMessage = () => dispatch(hideErrorMessage())
-    const onDesignSelected = (design) => dispatch(setSelectedDesign(design))
-    const onChangeSorting = (sorting) => dispatch(setDesignsSorting(sorting))
-    const onChangeSelection = (selection) => dispatch(setDesignsSelection(selection))
-    const onChangePagination = (pagination) => dispatch(setDesignsPagination(pagination))
+    const onShowDeleteDialog = useCallback(() => dispatch(showDeleteDesigns()), [dispatch])
+    const onShowCreateDialog = useCallback(() => dispatch(showCreateDesign()), [dispatch])
+    const onShowUpdateDialog = useCallback(() => dispatch(showUpdateDesign()), [dispatch])
+    const onShowErrorMessage = useCallback((error) => dispatch(showErrorMessage(error)), [dispatch])
+    const onHideErrorMessage = useCallback(() => dispatch(hideErrorMessage()), [dispatch])
+    const onDesignSelected = useCallback((design) => dispatch(setSelectedDesign(design)), [dispatch])
+    const onChangeSorting = useCallback((sorting) => dispatch(setDesignsSorting(sorting)), [dispatch])
+    const onChangeSelection = useCallback((selection) => dispatch(setDesignsSelection(selection)), [dispatch])
+    const onChangePagination = useCallback((pagination) => dispatch(setDesignsPagination(pagination)), [dispatch])
 
-    const onCreate = () => {
+    const onCreate = useCallback(() => {
         if (selection.length == 0) {
             const script = "fractal {\n\torbit [-2.0 - 2.0i,+2.0 + 2.0i] [x,n] {\n\t\tloop [0, 200] (mod2(x) > 40) {\n\t\t\tx = x * x + w;\n\t\t}\n\t}\n\tcolor [#FF000000] {\n\t\tpalette gradient {\n\t\t\t[#FFFFFFFF > #FF000000, 100];\n\t\t\t[#FF000000 > #FFFFFFFF, 100];\n\t\t}\n\t\tinit {\n\t\t\tm = 100 * (1 + sin(mod(x) * 0.2 / pi));\n\t\t}\n\t\trule (n > 0) [1] {\n\t\t\tgradient[m - 1]\n\t\t}\n\t}\n}\n"
             const metadata = "{\n\t\"translation\":\n\t{\n\t\t\"x\":0.0,\n\t\t\"y\":0.0,\n\t\t\"z\":1.0,\n\t\t\"w\":0.0\n\t},\n\t\"rotation\":\n\t{\n\t\t\"x\":0.0,\n\t\t\"y\":0.0,\n\t\t\"z\":0.0,\n\t\t\"w\":0.0\n\t},\n\t\"scale\":\n\t{\n\t\t\"x\":1.0,\n\t\t\"y\":1.0,\n\t\t\"z\":1.0,\n\t\t\"w\":1.0\n\t},\n\t\"point\":\n\t{\n\t\t\"x\":0.0,\n\t\t\"y\":0.0\n\t},\n\t\"julia\":false,\n\t\"options\":\n\t{\n\t\t\"showPreview\":false,\n\t\t\"showTraps\":false,\n\t\t\"showOrbit\":false,\n\t\t\"showPoint\":false,\n\t\t\"previewOrigin\":\n\t\t{\n\t\t\t\"x\":0.0,\n\t\t\t\"y\":0.0\n\t\t},\n\t\t\"previewSize\":\n\t\t{\n\t\t\t\"x\":0.25,\n\t\t\t\"y\":0.25\n\t\t}\n\t}\n}"
@@ -106,9 +106,9 @@ export default function EnhancedTable() {
         }
 
         onShowCreateDialog()
-    }
+    }, [designs, selection, onDesignSelected, onShowCreateDialog])
 
-    const onModify = () => {
+    const onModify = useCallback(() => {
         if (selection.length == 1) {
 //           window.location = config.web_url + "/admin/designs/" + selection[0] + ".html"
 
@@ -119,13 +119,13 @@ export default function EnhancedTable() {
 
             onShowUpdateDialog()
         }
-    }
+    }, [designs, selection, onDesignSelected, onShowUpdateDialog])
 
-    const onDelete = () => {
+    const onDelete = useCallback(() => {
         onShowDeleteDialog()
-    }
+    }, [onShowDeleteDialog])
 
-    const onUpload = (e) => {
+    const onUpload = useCallback((e) => {
         const command = new UploadDesign(config, abortControllerRef)
 
         command.onUploadDesign = () => {
@@ -143,9 +143,9 @@ export default function EnhancedTable() {
         }
 
         command.run(e.target.files[0])
-    }
+    }, [config, onHideErrorMessage, onShowErrorMessage, onShowCreateDialog, onDesignSelected, onChangeSelection])
 
-    const onDownload = (e) => {
+    const onDownload = useCallback((e) => {
         if (selection.length > 0) {
             const command = new DownloadDesign(config, abortControllerRef)
 
@@ -163,9 +163,9 @@ export default function EnhancedTable() {
 
             command.run(selection[0])
         }
-    }
+    }, [config, selection, onHideErrorMessage, onShowErrorMessage])
 
-    const onPublish = () => {
+    const onPublish = useCallback(() => {
         if (selection.length > 0) {
             const selectCommand = new SelectDesigns(config, abortControllerRef)
 
@@ -187,6 +187,7 @@ export default function EnhancedTable() {
 
                 command.onUpdateDesignsFailure = (error) => {
                     onShowErrorMessage(error)
+                    onChangeSelection([])
                 }
 
                 command.run(documents, (design) => design.published = true)
@@ -198,9 +199,9 @@ export default function EnhancedTable() {
 
             selectCommand.run(selection)
         }
-    }
+    }, [config, selection, onHideErrorMessage, onShowErrorMessage, onChangeSelection])
 
-    const onUnpublish = () => {
+    const onUnpublish = useCallback(() => {
         if (selection.length > 0) {
             const selectCommand = new SelectDesigns(config, abortControllerRef)
 
@@ -222,6 +223,7 @@ export default function EnhancedTable() {
 
                 command.onUpdateDesignsFailure = (error) => {
                     onShowErrorMessage(error)
+                    onChangeSelection([])
                 }
 
                 command.run(documents, (design) => design.published = false)
@@ -233,7 +235,101 @@ export default function EnhancedTable() {
 
             selectCommand.run(selection)
         }
-    }
+    }, [config, selection, onHideErrorMessage, onShowErrorMessage, onChangeSelection])
+
+    return (
+        <Toolbar className="designs-toolbar">
+        {/*       <div className="title"> */}
+        {/*         {account.role == 'admin' && selection.length > 0 && ( */}
+        {/*           <Typography color="inherit" variant="subheading"> */}
+        {/*             {selection.length} {selection.length == 1 ? "row" : "rows"} selected */}
+        {/*           </Typography> */}
+        {/*         )} */}
+        {/*       </div> */}
+        {/*       <div className="spacer" /> */}
+        {account.role == 'admin' && (
+            <div className="toolbar-actions">
+                <Tooltip title="Upload">
+                    <label htmlFor="uploadFile">
+                    <Input className="upload-file" id="uploadFile" accept="application/zip" type="file" onChange={onUpload} />
+                    <IconButton aria-label="Upload" component="span">
+                        <UploadIcon />
+                    </IconButton>
+                    </label>
+                </Tooltip>
+                {selection.length == 1 && (
+                    <Tooltip title="Download">
+                        <IconButton aria-label="Download" onClick={onDownload}>
+                            <DownloadIcon />
+                        </IconButton>
+                    </Tooltip>
+                )}
+                <Tooltip title="Create">
+                    <IconButton aria-label="Create" onClick={onCreate}>
+                        <AddIcon />
+                    </IconButton>
+                </Tooltip>
+                {selection.length == 1 && (
+                    <Tooltip title="Modify">
+                        <IconButton aria-label="Modify" onClick={onModify}>
+                            <EditIcon />
+                        </IconButton>
+                    </Tooltip>
+                )}
+                {selection.length > 0 && (
+                    <Tooltip title="Delete">
+                        <IconButton aria-label="Delete" onClick={onDelete}>
+                            <DeleteIcon />
+                        </IconButton>
+                    </Tooltip>
+                )}
+                {selection.length > 0 && (
+                    <Tooltip title="Publish">
+                        <IconButton aria-label="Publish" onClick={onPublish}>
+                            <VisibilityIcon />
+                        </IconButton>
+                    </Tooltip>
+                )}
+                {selection.length > 0 && (
+                    <Tooltip title="Unpublish">
+                        <IconButton aria-label="Unpublish" onClick={onUnpublish}>
+                            <VisibilityOffIcon />
+                        </IconButton>
+                    </Tooltip>
+                )}
+            </div>
+        )}
+        </Toolbar>
+    )
+}
+
+const CustomFooter = () => {
+    const account = useSelector(getAccount)
+    const selection = useSelector(getSelection)
+
+    return (
+        <GridFooterContainer className={classNames({["highlight"]: account.role == 'admin' && selection.length > 0 })}>
+            <TableToolbar/>
+            <GridFooter sx={{ border: 'none' }}/>
+        </GridFooterContainer>
+    );
+}
+
+export default function EnhancedTable() {
+    const config = useSelector(getConfig)
+    const account = useSelector(getAccount)
+    const designs = useSelector(getDesigns)
+    const total = useSelector(getTotal)
+    const revision = useSelector(getRevision)
+    const sorting = useSelector(getSorting)
+    const selection = useSelector(getSelection)
+    const pagination = useSelector(getPagination)
+    const dispatch = useDispatch()
+
+    const onDesignSelected = useCallback((design) => dispatch(setSelectedDesign(design)), [dispatch])
+    const onChangeSorting = useCallback((sorting) => dispatch(setDesignsSorting(sorting)), [dispatch])
+    const onChangeSelection = useCallback((selection) => dispatch(setDesignsSelection(selection)), [dispatch])
+    const onChangePagination = useCallback((pagination) => dispatch(setDesignsPagination(pagination)), [dispatch])
 
 //   const [rowCountState, setRowCountState] = React.useState(total)
 //
@@ -243,83 +339,7 @@ export default function EnhancedTable() {
 //       )
 //   }, [total, setRowCountState])
 
-    const EnhancedTableToolbar = () => {
-        return (
-            <Toolbar className="designs-toolbar">
-            {/*       <div className="title"> */}
-            {/*         {account.role == 'admin' && selection.length > 0 && ( */}
-            {/*           <Typography color="inherit" variant="subheading"> */}
-            {/*             {selection.length} {selection.length == 1 ? "row" : "rows"} selected */}
-            {/*           </Typography> */}
-            {/*         )} */}
-            {/*       </div> */}
-            {/*       <div className="spacer" /> */}
-            {account.role == 'admin' && (
-                <div className="toolbar-actions">
-                    <Tooltip title="Upload">
-                        <label htmlFor="uploadFile">
-                        <Input className="upload-file" id="uploadFile" accept="application/zip" type="file" onChange={onUpload} />
-                        <IconButton aria-label="Upload" component="span">
-                            <UploadIcon />
-                        </IconButton>
-                        </label>
-                    </Tooltip>
-                    {selection.length == 1 && (
-                        <Tooltip title="Download">
-                            <IconButton aria-label="Download" onClick={onDownload}>
-                                <DownloadIcon />
-                            </IconButton>
-                        </Tooltip>
-                    )}
-                    <Tooltip title="Create">
-                        <IconButton aria-label="Create" onClick={onCreate}>
-                            <AddIcon />
-                        </IconButton>
-                    </Tooltip>
-                    {selection.length == 1 && (
-                        <Tooltip title="Modify">
-                            <IconButton aria-label="Modify" onClick={onModify}>
-                                <EditIcon />
-                            </IconButton>
-                        </Tooltip>
-                    )}
-                    {selection.length > 0 && (
-                        <Tooltip title="Delete">
-                            <IconButton aria-label="Delete" onClick={onDelete}>
-                                <DeleteIcon />
-                            </IconButton>
-                        </Tooltip>
-                    )}
-                    {selection.length > 0 && (
-                        <Tooltip title="Publish">
-                            <IconButton aria-label="Publish" onClick={onPublish}>
-                                <VisibilityIcon />
-                            </IconButton>
-                        </Tooltip>
-                    )}
-                    {selection.length > 0 && (
-                        <Tooltip title="Unpublish">
-                            <IconButton aria-label="Unpublish" onClick={onUnpublish}>
-                                <VisibilityOffIcon />
-                            </IconButton>
-                        </Tooltip>
-                    )}
-                </div>
-            )}
-            </Toolbar>
-        )
-    }
-
-    const CustomFooter = () => {
-        return (
-            <GridFooterContainer className={classNames({["highlight"]: account.role == 'admin' && selection.length > 0 })}>
-                <EnhancedTableToolbar/>
-                <GridFooter sx={{ border: 'none' }}/>
-            </GridFooterContainer>
-        );
-    }
-
-    const getData = (designs) => {
+    const getData = useCallback(() => {
         return designs
             .map(design => {
                 return {
@@ -333,7 +353,7 @@ export default function EnhancedTable() {
                     percentage: design.percentage
                 }
             })
-    }
+    }, [config, designs])
 
     return (
         <Paper className="designs" square={true}>
@@ -399,7 +419,7 @@ export default function EnhancedTable() {
                     renderCell: (params) => <span>{params.value + "%"}</span>
                 }
             ]}
-            rows={getData(designs)}
+            rows={getData()}
             initialState={{
                 pagination: {
                     paginationModel: pagination

@@ -41,14 +41,14 @@ export default function Designs(props) {
     const revision = useSelector(getRevision)
     const pagination = useSelector(getPagination)
     const errorMessage = useSelector(getErrorMessage)
-    const showErrorMessage = useSelector(getShowErrorMessage)
+    const isShowErrorMessage = useSelector(getShowErrorMessage)
     const dispatch = useDispatch()
 
-    const onShowErrorMessage = (error) => dispatch(showErrorMessage(error))
-    const onHideErrorMessage = () => dispatch(hideErrorMessage())
-    const onLoadDesigns = () => dispatch(loadDesigns())
-    const onLoadDesignsSuccess = (designs, total, revision) => dispatch(loadDesignsSuccess(designs, total, revision))
-    const onLoadDesignsFailure = (error) => dispatch(loadDesignsFailure(error))
+    const onShowErrorMessage = useCallback((error) => dispatch(showErrorMessage(error)), [dispatch])
+    const onHideErrorMessage = useCallback(() => dispatch(hideErrorMessage()), [dispatch])
+    const onLoadDesigns = useCallback(() => dispatch(loadDesigns()), [dispatch])
+    const onLoadDesignsSuccess = useCallback((designs, total, revision) => dispatch(loadDesignsSuccess(designs, total, revision)), [dispatch])
+    const onLoadDesignsFailure = useCallback((error) => dispatch(loadDesignsFailure(error)), [dispatch])
 
     const doLoadDesigns = useCallback((revision) => {
         const command = new LoadDesigns(config, abortControllerRef)
@@ -60,13 +60,12 @@ export default function Designs(props) {
         }
 
         command.onLoadDesignsFailure = (error) => {
-            onLoadDesignsFailure("Can't load designs")
-            onShowErrorMessage("Can't load designs")
-            onLoadDesignsSuccess([], 0, 0)
+            onLoadDesignsFailure(error)
+            onShowErrorMessage(error)
         }
 
         command.run(revision, pagination)
-    }, [config, pagination, dispatch])
+    }, [config, pagination, onShowErrorMessage, onLoadDesigns, onLoadDesignsSuccess, onLoadDesignsFailure])
 
     useDesigns({ doLoadDesigns: doLoadDesigns })
 
@@ -83,7 +82,7 @@ export default function Designs(props) {
                     <Footer/>
                 </Grid>
             </Grid>
-            <ErrorPopup showErrorMessage={showErrorMessage} errorMessage={errorMessage} onPopupClose={onHideErrorMessage}/>
+            <ErrorPopup showErrorMessage={isShowErrorMessage} errorMessage={errorMessage} onPopupClose={onHideErrorMessage}/>
         </React.Fragment>
     )
 }

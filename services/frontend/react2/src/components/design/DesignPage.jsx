@@ -59,16 +59,16 @@ export default function DesignPage({ uuid }) {
     const dispatch = useDispatch()
     const [ editedDesign, setEditedDesign ] = useState(design)
 
-    const onShowErrorMessage = (error) => dispatch(showErrorMessage(error))
-    const onHideErrorMessage = () => dispatch(hideErrorMessage())
-    const onShowUpdateDialog = () => dispatch(showUpdateDesign())
-    const onHideUpdateDialog = () => dispatch(hideUpdateDesign())
+    const onShowErrorMessage = useCallback((error) => dispatch(showErrorMessage(error)), [dispatch])
+    const onHideErrorMessage = useCallback(() => dispatch(hideErrorMessage()), [dispatch])
+    const onShowUpdateDialog = useCallback(() => dispatch(showUpdateDesign()), [dispatch])
+    const onHideUpdateDialog = useCallback(() => dispatch(hideUpdateDesign()), [dispatch])
 
-    const onModify = (e) => {
+    const onModify = useCallback((e) => {
         onShowUpdateDialog()
-    }
+    }, [onShowUpdateDialog])
 
-    const onDownload = (e) => {
+    const onDownload = useCallback((e) => {
         const command = new DownloadDesign(config, abortControllerRef)
 
         command.onDownloadDesign = () => {
@@ -84,9 +84,9 @@ export default function DesignPage({ uuid }) {
         }
 
         command.run(uuid)
-    }
+    }, [config, uuid, onHideErrorMessage, onShowErrorMessage])
 
-    const onUpdate = (e) => {
+    const onUpdate = useCallback((e) => {
         const command = new UpdateDesign(config, abortControllerRef)
 
         command.onUpdateDesign = () => {
@@ -109,9 +109,9 @@ export default function DesignPage({ uuid }) {
         }
 
         command.run(uuid, newDesign)
-    }
+    }, [config, editedDesign, uuid, onHideErrorMessage, onShowErrorMessage, onHideUpdateDialog])
 
-    const onPublish = (e) => {
+    const onPublish = useCallback((e) => {
         const command = new UpdateDesign(config, abortControllerRef)
 
         command.onUpdateDesign = () => {
@@ -134,9 +134,9 @@ export default function DesignPage({ uuid }) {
         }
 
         command.run(uuid, newDesign)
-    }
+    }, [config, design, uuid, onHideErrorMessage, onShowErrorMessage])
 
-    const onUnpublish = (e) => {
+    const onUnpublish = useCallback((e) => {
         const command = new UpdateDesign(config, abortControllerRef)
 
         command.onUpdateDesign = () => {
@@ -159,11 +159,11 @@ export default function DesignPage({ uuid }) {
         }
 
         command.run(uuid, newDesign)
-    }
+    }, [config, design, uuid, onHideErrorMessage, onShowErrorMessage])
 
-    const onEditorChanged = (value) => {
+    const onEditorChanged = useCallback((value) => {
         setEditedDesign({...design, script: value.script, metadata: value.metadata})
-    }
+    }, [design, setEditedDesign])
 
     return (
         <React.Fragment>

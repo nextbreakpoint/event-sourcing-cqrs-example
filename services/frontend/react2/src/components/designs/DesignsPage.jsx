@@ -65,15 +65,15 @@ export default function DesignsPage() {
     const isShowDeleteDesigns = useSelector(getShowDeleteDesigns)
     const dispatch = useDispatch()
 
-    const onChangeSelection = (selection) => dispatch(setDesignsSelection(selection))
-    const onDesignSelected = (design) => dispatch(setSelectedDesign(design))
-    const onShowErrorMessage = (error) => dispatch(showErrorMessage(error))
-    const onHideErrorMessage = () => dispatch(hideErrorMessage())
-    const onHideCreateDialog = () => dispatch(hideCreateDesign())
-    const onHideUpdateDialog = () => dispatch(hideUpdateDesign())
-    const onHideConfirmDelete = () => dispatch(hideDeleteDesigns())
+    const onChangeSelection = useCallback((selection) => dispatch(setDesignsSelection(selection)), [dispatch])
+    const onDesignSelected = useCallback((design) => dispatch(setSelectedDesign(design)), [dispatch])
+    const onShowErrorMessage = useCallback((error) => dispatch(showErrorMessage(error)), [dispatch])
+    const onHideErrorMessage = useCallback(() => dispatch(hideErrorMessage()), [dispatch])
+    const onHideCreateDialog = useCallback(() => dispatch(hideCreateDesign()), [dispatch])
+    const onHideUpdateDialog = useCallback(() => dispatch(hideUpdateDesign()), [dispatch])
+    const onHideConfirmDelete = useCallback(() => dispatch(hideDeleteDesigns()), [dispatch])
 
-    const onCreate = () => {
+    const onCreate = useCallback(() => {
         const command = new CreateDesign(config, abortControllerRef)
 
         command.onCreateDesign = () => {
@@ -90,9 +90,9 @@ export default function DesignsPage() {
         }
 
         command.run(design)
-    }
+    }, [config, design, onHideErrorMessage, onShowErrorMessage, onHideCreateDialog])
 
-    const onUpdate = (e) => {
+    const onUpdate = useCallback((e) => {
         if (selection.length == 0) {
             console.log("No design selected")
             return;
@@ -114,11 +114,10 @@ export default function DesignsPage() {
         }
 
         command.run(selection[0], design)
-    }
+    }, [config, design, selection, onHideErrorMessage, onShowErrorMessage, onHideUpdateDialog])
 
-    const onDelete = () => {
+    const onDelete = useCallback(() => {
         if (selection.length == 0) {
-            console.log("No design selected")
             return;
         }
 
@@ -129,30 +128,28 @@ export default function DesignsPage() {
         }
 
         command.onDeleteDesignsSuccess = (message) => {
-            onChangeSelection([])
             onShowErrorMessage(message)
+            onChangeSelection([])
             onHideConfirmDelete()
         }
 
         command.onDeleteDesignsFailure = (error) => {
-            onChangeSelection([])
             onShowErrorMessage(error)
+            onChangeSelection([])
         }
 
         command.run(selection)
-    }
+    }, [config, selection, onHideErrorMessage, onShowErrorMessage, onHideConfirmDelete, onChangeSelection])
 
-    const onModify = () => {
+    const onModify = useCallback(() => {
         if (selection.length == 1) {
             window.location = config.web_url + "/admin/designs/" + selection[0] + ".html"
         }
-    }
+    }, [selection])
 
-    const onEditorChanged = (design) => {
-        console.log(JSON.stringify(design));
-
+    const onEditorChanged = useCallback((design) => {
         onDesignSelected(design);
-    }
+    }, [onDesignSelected])
 
     return (
         <React.Fragment>

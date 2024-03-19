@@ -45,15 +45,15 @@ function reducer (state = initialState, action) {
 }
 
 export const getDesign = (state) => {
-    return state.preview.content.data
+    return state.design.content.data
 }
 
 export const getDesignStatus = (state) => {
-    return state.preview.content.status
+    return state.design.content.status
 }
 
 export const getRevision = (state) => {
-    return state.preview.content.revision
+    return state.design.content.revision
 }
 
 export default reducer

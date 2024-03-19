@@ -35,15 +35,15 @@ function reducer (state = initialState, action) {
 }
 
 export const getShowUpdateDesign = (state) => {
-    return state.preview.dialog.show_update_design
+    return state.design.dialog.show_update_design
 }
 
 export const getShowErrorMessage = (state) => {
-    return state.preview.dialog.show_error_message
+    return state.design.dialog.show_error_message
 }
 
 export const getErrorMessage = (state) => {
-    return state.preview.dialog.error_message
+    return state.design.dialog.error_message
 }
 
 export default reducer

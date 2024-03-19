@@ -22,7 +22,7 @@ router.get('/designs.html', function(req, res, next) {
 })
 
 router.get('/designs/(:uuid).html', function(req, res, next) {
-    res.render('admin/preview', {
+    res.render('admin/design', {
         config: JSON.stringify(config),
         layout: 'admin',
         title: 'Designs | ' + req.params.uuid,

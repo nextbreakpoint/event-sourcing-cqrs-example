@@ -3,7 +3,7 @@ module.exports = {
 
     entry: {
         designs: "./DesignsApp",
-        preview: "./PreviewApp"
+        design: "./DesignApp"
     },
 
     output: {

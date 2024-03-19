@@ -8,8 +8,8 @@ import reducers from './reducers'
 
 import Config from './components/shared/Config'
 import Account from './components/shared/Account'
-import Preview from './components/preview/Preview'
-import PreviewPage from './components/preview/PreviewPage'
+import Design from './components/design/Design'
+import DesignPage from './components/design/DesignPage'
 
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 
@@ -26,9 +26,9 @@ root.render(
         <Config>
             <ThemeProvider theme={theme}>
                 <Account>
-                    <Preview uuid={uuid}>
-                        <PreviewPage uuid={uuid}/>
-                    </Preview>
+                    <Design uuid={uuid}>
+                        <DesignPage uuid={uuid}/>
+                    </Design>
                 </Account>
            </ThemeProvider>
         </Config>

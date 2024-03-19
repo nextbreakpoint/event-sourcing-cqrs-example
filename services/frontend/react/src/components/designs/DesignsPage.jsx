@@ -1,8 +1,9 @@
 import React from 'react'
-import PropTypes from 'prop-types'
-
-import DesignPreview from '../shared/DesignPreview'
-import DesignsTable from './DesignsTable'
+import { useRef, useState, useEffect, useCallback } from 'react'
+import { useSelector, useDispatch } from 'react-redux'
+import UpdateDesign from '../../commands/updateDesign'
+import CreateDesign from '../../commands/createDesign'
+import DeleteDesigns from '../../commands/deleteDesigns'
 
 import Button from '@mui/material/Button'
 import Grid from '@mui/material/Grid'
@@ -12,8 +13,8 @@ import DialogContent from '@mui/material/DialogContent'
 import DialogTitle from '@mui/material/DialogTitle'
 import Slide from '@mui/material/Slide'
 import Fade from '@mui/material/Fade'
-
-import { connect } from 'react-redux'
+import DesignPreview from '../shared/DesignPreview'
+import DesignsTable from './DesignsTable'
 
 import {
     getConfig
@@ -43,8 +44,6 @@ import {
     setSelectedDesign
 } from '../../actions/designs'
 
-import axios from 'axios'
-
 function SlideTransition(props) {
   return <Slide direction="up" {...props} />
 }
@@ -53,289 +52,156 @@ function FadeTransition(props) {
   return <Fade in="true" {...props} />
 }
 
-let DesignsPage = class DesignsPage extends React.Component {
-    handleCreate = () => {
-        console.log("create")
+export default function DesignsPage() {
+    const abortControllerRef = useRef(new AbortController())
+    const config = useSelector(getConfig)
+    const account = useSelector(getAccount)
+    const designs = useSelector(getDesigns)
+    const revision = useSelector(getRevision)
+    const selection = useSelector(getSelection)
+    const design = useSelector(getSelectedDesign)
+    const isShowCreateDesign = useSelector(getShowCreateDesign)
+    const isShowUpdateDesign = useSelector(getShowUpdateDesign)
+    const isShowDeleteDesigns = useSelector(getShowDeleteDesigns)
+    const dispatch = useDispatch()
 
-        let component = this
+    const onChangeSelection = useCallback((selection) => dispatch(setDesignsSelection(selection)), [dispatch])
+    const onDesignSelected = useCallback((design) => dispatch(setSelectedDesign(design)), [dispatch])
+    const onShowErrorMessage = useCallback((error) => dispatch(showErrorMessage(error)), [dispatch])
+    const onHideErrorMessage = useCallback(() => dispatch(hideErrorMessage()), [dispatch])
+    const onHideCreateDialog = useCallback(() => dispatch(hideCreateDesign()), [dispatch])
+    const onHideUpdateDialog = useCallback(() => dispatch(hideUpdateDesign()), [dispatch])
+    const onHideConfirmDelete = useCallback(() => dispatch(hideDeleteDesigns()), [dispatch])
 
-        let config = {
-            timeout: 30000,
-            metadata: {'content-type': 'application/json'},
-            withCredentials: true
+    const onCreate = useCallback(() => {
+        const command = new CreateDesign(config, abortControllerRef)
+
+        command.onCreateDesign = () => {
+            onHideErrorMessage()
         }
 
-        let design = this.createDesign()
-
-        component.props.handleHideErrorMessage()
-
-        axios.post(component.props.config.api_url + '/v1/designs/validate', design, config)
-            .then(function (response) {
-                if (response.status == 200) {
-                     let result = response.data
-                     console.log(result)
-                     if (result.status == "ACCEPTED") {
-                        axios.post(component.props.config.api_url + '/v1/designs', design, config)
-                            .then(function (response) {
-                                if (response.status == 202 || response.status == 201) {
-                                    component.props.handleShowErrorMessage("Your request has been received. The designs will be updated shortly")
-                                    component.props.handleHideCreateDialog()
-                                } else {
-                                    console.log("Can't create the design: status = " + response.status)
-                                    component.props.handleShowErrorMessage("Can't create the design")
-                                }
-                            })
-                            .catch(function (error) {
-                                console.log("Can't create the design: " + error)
-                                component.props.handleShowErrorMessage("Can't create the design")
-                            })
-                     } else {
-                        console.log("Can't create the design: status = " + result.status)
-                        component.props.handleShowErrorMessage("Can't create the design")
-                     }
-                } else {
-                    console.log("Can't create the design: status = " + response.status)
-                    component.props.handleShowErrorMessage("Can't create the design")
-                }
-            })
-            .catch(function (error) {
-                console.log("Can't create the design: " + error)
-                component.props.handleShowErrorMessage("Can't create the design")
-            })
-    }
-
-    handleUpdate = (e) => {
-        console.log("update")
-
-        let component = this
-
-        let config = {
-            timeout: 30000,
-            metadata: {'content-type': 'application/json'},
-            withCredentials: true
+        command.onCreateDesignSuccess = (message) => {
+            onShowErrorMessage(message)
+            onHideCreateDialog()
         }
 
-        if (this.props.selection.length != 1) {
-            console.log("Can't update the design: " + error)
-            component.props.handleShowErrorMessage("Can't update the design")
+        command.onCreateDesignFailure = (error) => {
+            onShowErrorMessage(error)
+        }
+
+        command.run(design)
+    }, [config, design, onHideErrorMessage, onShowErrorMessage, onHideCreateDialog])
+
+    const onUpdate = useCallback((e) => {
+        if (selection.length == 0) {
+            console.log("No design selected")
             return;
         }
 
-        let design = this.createDesign()
+        const command = new UpdateDesign(config, abortControllerRef)
 
-        let uuid = this.props.selection[0]
-
-        component.props.handleHideErrorMessage()
-
-        axios.post(component.props.config.api_url + '/v1/designs/validate', design, config)
-            .then(function (response) {
-                if (response.status == 200) {
-                     let result = response.data
-                     console.log(result)
-                     if (result.status == "ACCEPTED") {
-                        axios.put(component.props.config.api_url + '/v1/designs/' + uuid, design, config)
-                            .then(function (response) {
-                                if (response.status == 202 || response.status == 200) {
-                                    component.props.handleShowErrorMessage("Your request has been received. The design will be updated shortly")
-                                    component.props.handleHideUpdateDialog()
-                                } else {
-                                    console.log("Can't update the design: status = " + response.status)
-                                    component.props.handleShowErrorMessage("Can't update the design")
-                                }
-                            })
-                            .catch(function (error) {
-                                console.log("Can't update the design: " + error)
-                                component.props.handleShowErrorMessage("Can't update the design")
-                            })
-                     } else {
-                        component.props.handleShowErrorMessage("Can't update the design")
-                     }
-                } else {
-                    console.log("Can't update the design: status = " + response.status)
-                    component.props.handleShowErrorMessage("Can't update the design")
-                }
-            })
-            .catch(function (error) {
-                console.log("Can't update the design: " + error)
-                component.props.handleShowErrorMessage("Can't update the design")
-            })
-    }
-
-    handleDelete = () => {
-        console.log("delete")
-
-        let component = this
-
-        let config = {
-            timeout: 30000,
-            withCredentials: true
+        command.onUpdateDesign = () => {
+            onHideErrorMessage()
         }
 
-        let promises = this.props.selection
-            .map((uuid) => {
-                return axios.delete(component.props.config.api_url + '/v1/designs/' + uuid + '?draft=true', config)
-            })
-
-        component.props.handleHideConfirmDelete()
-        component.props.handleHideErrorMessage()
-
-        axios.all(promises)
-            .then(function (responses) {
-                let deletedUuids = responses
-                    .filter((res) => {
-                        return (res.status == 202 || res.status == 200)
-                    })
-                    .map((res) => {
-                        return res.config.url.substring(res.config.url.lastIndexOf("/") + 1)
-                    })
-
-                let failedUuids = responses
-                    .filter((res) => {
-                        return (res.status != 202 && res.status != 200)
-                    })
-                    .map((res) => {
-                        return res.config.url.substring(res.config.url.lastIndexOf("/") + 1)
-                    })
-
-                component.props.handleChangeSelection([])
-
-                if (failedUuids.length == 0) {
-                    component.props.handleShowErrorMessage("Your request has been received. The designs will be updated shortly")
-                } else {
-                    component.props.handleShowErrorMessage("Can't delete the designs")
-                }
-            })
-            .catch(function (error) {
-                console.log("Can't delete the designs: " + error)
-                component.props.handleShowErrorMessage("Can't delete the designs")
-            })
-    }
-
-    handleModify = () => {
-        if (this.props.selection.length == 1) {
-            window.location = this.props.config.web_url + "/admin/designs/" + this.props.selection[0] + ".html"
+        command.onUpdateDesignSuccess = (message) => {
+            onShowErrorMessage(message)
+            onHideUpdateDialog()
         }
-    }
 
-    handleEditorChanged = (design) => {
-        console.log("changed " + JSON.stringify(design));
+        command.onUpdateDesignFailure = (error) => {
+            onShowErrorMessage(error)
+        }
 
-        this.props.handleDesignSelected(design);
-    }
+        command.run(selection[0], design)
+    }, [config, design, selection, onHideErrorMessage, onShowErrorMessage, onHideUpdateDialog])
 
-    createDesign = () => {
-        return this.props.selected_design
-    }
+    const onDelete = useCallback(() => {
+        if (selection.length == 0) {
+            return;
+        }
 
-    render() {
-        let design = this.createDesign()
+        const command = new DeleteDesigns(config, abortControllerRef)
 
-        return (
-            <React.Fragment>
-                <DesignsTable/>
-                {this.props.account.role == 'admin' && (
-                    <Dialog className="dialog" open={this.props.show_create_design} onClose={this.props.handleHideCreateDialog} scroll={"paper"} maxWidth={"xl"} fullWidth={true} TransitionComponent={SlideTransition}>
-                        <DialogTitle>Create New Design</DialogTitle>
-                        <DialogContent>
-                            <DesignPreview script={design.script} metadata={design.metadata} manifest={design.manifest} config={this.props.config} onEditorChanged={this.handleEditorChanged}/>
-                        </DialogContent>
-                        <DialogActions>
-                            <Button variant="outlined" color="primary" onClick={this.props.handleHideCreateDialog} color="primary">
-                              Cancel
-                            </Button>
-                            <Button variant="outlined" color="primary" onClick={this.handleCreate} color="primary" autoFocus>
-                              Create
-                            </Button>
-                        </DialogActions>
-                    </Dialog>
-                )}
-                {this.props.account.role == 'admin' && (
-                    <Dialog className="dialog" open={this.props.show_update_design} onClose={this.props.handleHideUpdateDialog} scroll={"paper"} maxWidth={"xl"} fullWidth={true} TransitionComponent={SlideTransition}>
-                        <DialogTitle>Modify Existing Design</DialogTitle>
-                        <DialogContent>
-                            <DesignPreview script={design.script} metadata={design.metadata} manifest={design.manifest} config={this.props.config} onEditorChanged={this.handleEditorChanged}/>
-                        </DialogContent>
-                        <DialogActions>
-                            <Button variant="outlined" color="primary" onClick={this.props.handleHideUpdateDialog} color="primary">
-                              Cancel
-                            </Button>
-                            <Button variant="outlined" color="primary" onClick={this.handleUpdate} color="primary" autoFocus>
-                              Update
-                            </Button>
-                        </DialogActions>
-                    </Dialog>
-                )}
-                {this.props.account.role == 'admin' && (
-                    <Dialog className="dialog" open={this.props.show_delete_designs} onClose={this.props.handleHideConfirmDelete} scroll={"paper"} maxWidth={"xl"} fullWidth={true} TransitionComponent={FadeTransition}>
-                        <DialogTitle>Delete Designs</DialogTitle>
-                        <DialogContent>
-                            {this.props.selection.length == 1 ? (<p>Do you want to delete {this.props.selection.length} item?</p>) : (<p>Do you want to delete {this.props.selection.length} items?</p>)}
-                        </DialogContent>
-                        <DialogActions>
-                            <Button variant="outlined" color="primary" onClick={this.props.handleHideConfirmDelete} color="primary">
-                              Cancel
-                            </Button>
-                            <Button variant="outlined" color="primary" onClick={this.handleDelete} color="primary" autoFocus>
-                              Delete
-                            </Button>
-                        </DialogActions>
-                    </Dialog>
-                )}
-            </React.Fragment>
-        )
-    }
+        command.onDeleteDesigns = () => {
+            onHideErrorMessage()
+        }
+
+        command.onDeleteDesignsSuccess = (message) => {
+            onShowErrorMessage(message)
+            onChangeSelection([])
+            onHideConfirmDelete()
+        }
+
+        command.onDeleteDesignsFailure = (error) => {
+            onShowErrorMessage(error)
+            onChangeSelection([])
+        }
+
+        command.run(selection)
+    }, [config, selection, onHideErrorMessage, onShowErrorMessage, onHideConfirmDelete, onChangeSelection])
+
+    const onModify = useCallback(() => {
+        if (selection.length == 1) {
+            window.location = config.web_url + "/admin/designs/" + selection[0] + ".html"
+        }
+    }, [selection])
+
+    const onEditorChanged = useCallback((design) => {
+        onDesignSelected(design);
+    }, [onDesignSelected])
+
+    return (
+        <React.Fragment>
+            <DesignsTable/>
+            {account.role == 'admin' && (
+                <Dialog className="dialog" open={isShowCreateDesign} onClose={onHideCreateDialog} scroll={"paper"} maxWidth={"xl"} fullWidth={true} TransitionComponent={SlideTransition}>
+                    <DialogTitle>Create New Design</DialogTitle>
+                    <DialogContent>
+                        <DesignPreview initialDesign={design} config={config} onPreviewChanged={onEditorChanged}/>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button variant="outlined" color="primary" onClick={onHideCreateDialog} color="primary">
+                          Cancel
+                        </Button>
+                        <Button variant="outlined" color="primary" onClick={onCreate} color="primary" autoFocus>
+                          Create
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+            )}
+            {account.role == 'admin' && (
+                <Dialog className="dialog" open={isShowUpdateDesign} onClose={onHideUpdateDialog} scroll={"paper"} maxWidth={"xl"} fullWidth={true} TransitionComponent={SlideTransition}>
+                    <DialogTitle>Modify Existing Design</DialogTitle>
+                    <DialogContent>
+                        <DesignPreview initialDesign={design} config={config} onPreviewChanged={onEditorChanged}/>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button variant="outlined" color="primary" onClick={onHideUpdateDialog} color="primary">
+                          Cancel
+                        </Button>
+                        <Button variant="outlined" color="primary" onClick={onUpdate} color="primary" autoFocus>
+                          Update
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+            )}
+            {account.role == 'admin' && (
+                <Dialog className="dialog" open={isShowDeleteDesigns} onClose={onHideConfirmDelete} scroll={"paper"} maxWidth={"xl"} fullWidth={true} TransitionComponent={FadeTransition}>
+                    <DialogTitle>Delete Designs</DialogTitle>
+                    <DialogContent>
+                        {selection.length == 1 ? (<p>Do you want to delete {selection.length} item?</p>) : (<p>Do you want to delete {selection.length} items?</p>)}
+                    </DialogContent>
+                    <DialogActions>
+                        <Button variant="outlined" color="primary" onClick={onHideConfirmDelete} color="primary">
+                          Cancel
+                        </Button>
+                        <Button variant="outlined" color="primary" onClick={onDelete} color="primary" autoFocus>
+                          Delete
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+            )}
+        </React.Fragment>
+    )
 }
-
-DesignsPage.propTypes = {
-    config: PropTypes.object.isRequired,
-    account: PropTypes.object.isRequired,
-    designs: PropTypes.array.isRequired,
-    revision: PropTypes.number.isRequired,
-    selection: PropTypes.array.isRequired,
-    show_create_design: PropTypes.bool.isRequired,
-    show_update_design: PropTypes.bool.isRequired,
-    show_delete_designs: PropTypes.bool.isRequired,
-    show_error_message: PropTypes.bool.isRequired,
-    error_message: PropTypes.string.isRequired,
-    selected_design: PropTypes.object.isRequired
-}
-
-const mapStateToProps = state => ({
-    config: getConfig(state),
-    account: getAccount(state),
-    designs: getDesigns(state),
-    revision: getRevision(state),
-    selection: getSelection(state),
-    show_create_design: getShowCreateDesign(state),
-    show_update_design: getShowUpdateDesign(state),
-    show_delete_designs: getShowDeleteDesigns(state),
-    show_error_message: getShowErrorMessage(state),
-    error_message: getErrorMessage(state),
-    selected_design: getSelectedDesign(state)
-})
-
-const mapDispatchToProps = dispatch => ({
-    handleChangeSelection: (selection) => {
-        dispatch(setDesignsSelection(selection))
-    },
-    handleHideConfirmDelete: () => {
-        dispatch(hideDeleteDesigns())
-    },
-    handleHideCreateDialog: () => {
-        dispatch(hideCreateDesign())
-    },
-    handleHideUpdateDialog: () => {
-        dispatch(hideUpdateDesign())
-    },
-    handleShowErrorMessage: (error) => {
-        dispatch(showErrorMessage(error))
-    },
-    handleHideErrorMessage: () => {
-        dispatch(hideErrorMessage())
-    },
-    handleDesignSelected: (design) => {
-        dispatch(setSelectedDesign(design))
-    }
-})
-
-export default connect(mapStateToProps, mapDispatchToProps)(DesignsPage)

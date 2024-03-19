@@ -1,7 +1,7 @@
 import * as Types from '../constants/ActionTypes'
 
-import * as content from '../reducers/preview/content'
-import * as dialog from '../reducers/preview/dialog'
+import * as content from '../reducers/design/content'
+import * as dialog from '../reducers/design/dialog'
 
 export const loadDesign = () => ({
   type: Types.DESIGN_LOAD

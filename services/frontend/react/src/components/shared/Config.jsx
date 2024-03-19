@@ -1,54 +1,22 @@
 import React from 'react'
-import PropTypes from 'prop-types'
+import { useSelector } from 'react-redux'
+import useConfig from '../../hooks/useConfig'
 
 import Grid from '@mui/material/Grid'
-
 import Message from './Message'
-
-import { connect } from 'react-redux'
 
 import {
     getConfig,
-    getConfigStatus,
-    loadConfig,
-    loadConfigSuccess,
-    loadConfigFailure
+    getConfigStatus
 } from '../../actions/config'
 
-import axios from 'axios'
+export default function Config(props) {
+    const config = useSelector(getConfig)
+    const status = useSelector(getConfigStatus)
 
-class Config extends React.Component {
-    componentDidMount = () => {
-        this.props.handleLoadConfigSuccess(window.config)
-    }
+    useConfig()
 
-    render() {
-        return (
-            this.props.config ? (this.props.children) : (
-                <div>
-                    <Message error={this.props.status.error} text={this.props.status.message}/>
-                </div>
-            )
-        )
-    }
+    return (
+        config ? props.children : <div><Message error={status.error} text={status.message}/></div>
+    )
 }
-
-const mapStateToProps = state => ({
-    config: getConfig(state),
-    status: getConfigStatus(state)
-})
-
-const mapDispatchToProps = dispatch => ({
-    handleLoadConfig: () => {
-        dispatch(loadConfig())
-    },
-    handleLoadConfigSuccess: (config) => {
-        dispatch(loadConfigSuccess(config))
-    },
-    handleLoadConfigFailure: (error) => {
-        dispatch(loadConfigFailure(error))
-    }
-})
-
-export default connect(mapStateToProps, mapDispatchToProps)(Config)
-

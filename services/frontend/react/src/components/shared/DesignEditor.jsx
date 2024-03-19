@@ -1,55 +1,44 @@
 import React from 'react'
-import PropTypes from 'prop-types'
+import { useState, useCallback } from 'react';
 
 import Button from '@mui/material/Button'
 import Grid from '@mui/material/Grid'
 import Typography from '@mui/material/Typography'
-
 import ScriptEditor from './ScriptEditor'
 import MetadataEditor from './MetadataEditor'
 
-let DesignEditor = class DesignEditor extends React.Component {
-    state = {
-        script: this.props.script,
-        metadata: this.props.metadata,
-        manifest: this.props.manifest
-    }
+export default function DesignEditor({ initialDesign, onEditorChanged }) {
+    const [ design, setDesign ] = useState(initialDesign)
 
-    handleScriptChanged = (script) => {
-        this.setState({script: script})
-        this.props.onEditorChanged({...this.state, script: script})
-    }
+    const onScriptChanged = useCallback((script) => {
+        setDesign({...design, script: script})
+        if (onEditorChanged) {
+            onEditorChanged({...design, script: script})
+        }
+    }, [design, setDesign, onEditorChanged])
 
-    handleMetadataChanged = (metadata) => {
-        this.setState({metadata: metadata})
-        this.props.onEditorChanged({...this.state, metadata: metadata})
-    }
+    const onMetadataChanged = useCallback((metadata) => {
+        const newDesign = {...design, metadata: metadata}
+        setDesign(newDesign)
+        if (onEditorChanged) {
+            onEditorChanged(newDesign)
+        }
+    }, [design, setDesign, onEditorChanged])
 
-    render() {
-        return (
-            <Grid container justify="space-between" alignItems="stretch" alignContent="space-between">
-                <Grid item xs={7}>
-                    <div class="form">
-                        <div><Typography variant="body" color="inherit" class="form-label">Script</Typography></div>
-                        <ScriptEditor initialValue={this.state.script} readOnly={false} onContentChanged={this.handleScriptChanged}/>
-                    </div>
-                </Grid>
-                <Grid item xs={5}>
-                    <div class="form">
-                        <div><Typography variant="body" color="inherit" class="form-label">Metadata</Typography></div>
-                        <MetadataEditor initialValue={this.state.metadata} readOnly={false} onContentChanged={this.handleMetadataChanged}/>
-                    </div>
-                </Grid>
+    return (
+        <Grid container justify="space-between" alignItems="stretch" alignContent="space-between">
+            <Grid item xs={7}>
+                <div class="form">
+                    <div><Typography variant="body" color="inherit" class="form-label">Script</Typography></div>
+                    <ScriptEditor initialValue={design.script} readOnly={false} onContentChanged={onScriptChanged}/>
+                </div>
             </Grid>
-        )
-    }
+            <Grid item xs={5}>
+                <div class="form">
+                    <div><Typography variant="body" color="inherit" class="form-label">Metadata</Typography></div>
+                    <MetadataEditor initialValue={design.metadata} readOnly={false} onContentChanged={onMetadataChanged}/>
+                </div>
+            </Grid>
+        </Grid>
+    )
 }
-
-DesignEditor.propTypes = {
-  script: PropTypes.string.isRequired,
-  metadata: PropTypes.string.isRequired,
-  manifest: PropTypes.string.isRequired,
-  onEditorChanged: PropTypes.func.isRequired
-}
-
-export default DesignEditor

@@ -236,7 +236,7 @@ router.get('/designs/(:uuid).html', function(req, res, next) {
                     }
                     let designs = new Array()
                     designs[0] = design
-                    res.render('browse/preview', {
+                    res.render('browse/design', {
                         config: config,
                         layout: 'browse',
                         title: 'Designs | ' + req.params.uuid,
@@ -250,7 +250,7 @@ router.get('/designs/(:uuid).html', function(req, res, next) {
                     })
                 } else {
                     console.log("Can't load design: status = " + content.status)
-                    res.render('browse/preview', {
+                    res.render('browse/design', {
                         config: config,
                         layout: 'browse',
                         title: 'Designs | ' + req.params.uuid,
@@ -266,7 +266,7 @@ router.get('/designs/(:uuid).html', function(req, res, next) {
             .catch(function (error) {
                 req.resume()
                 console.log("Can't load design " + error)
-                res.render('browse/preview', {
+                res.render('browse/design', {
                     config: config,
                     layout: 'browse',
                     title: 'Designs | ' + req.params.uuid,

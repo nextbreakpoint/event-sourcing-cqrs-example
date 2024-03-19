@@ -7,7 +7,7 @@
     <parent>
         <artifactId>com.nextbreakpoint.blueprint</artifactId>
         <groupId>com.nextbreakpoint</groupId>
-        <version>1.0.4-wip-046509ed-1709379521</version>
+        <version>1.0.4-wip-d53118c7-1710856322</version>
     </parent>
     <packaging>jar</packaging>
     <dependencies>

@@ -263,7 +263,8 @@ if [ "$CLEAN" == "true" ]; then
   mvn clean ${MAVEN_ARGS} -e -Dconfluent=true -Dcommon=true -Dservice=true -Dservices=true -Dnexus=true
 fi
 
-mvn versions:set versions:commit ${MAVEN_ARGS} -e -DnewVersion=${VERSION} -Dconfluent=true -Dcommon=true -Dservice=true -Dservices=true
+mvn versions:set ${MAVEN_ARGS} -e -DnewVersion=${VERSION} -Dconfluent=true -Dcommon=true -Dservice=true -Dservices=true
+mvn versions:commit ${MAVEN_ARGS} -e -DnewVersion=${VERSION} -Dconfluent=true -Dcommon=true -Dservice=true -Dservices=true
 
 if [ "$DEPLOY" == "true" ]; then
   mvn deploy -s settings.xml ${MAVEN_ARGS} -Dconfluent=true -Dcommon=true -Dservice=true -Dnexus=true -DskipTests=true
